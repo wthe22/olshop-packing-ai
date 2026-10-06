@@ -43,29 +43,29 @@ The shown status is the latest mark not undone; `removed` overrides it.
 - **P1** Read the orders CSV. Keep only `Perlu dikirim` / `Menunggu pengambilan` rows; ignore all
   others. Keep only the packing columns (business-process 02).
 - **P2** Compare with the earlier batches of the same day: new orders form batch N.
-- **P3** Pack groups and categories (rules file shared with the app if D16-a).
+- **P3** Pack groups and categories (rules file shared with the app if D2-a).
 - **P4** Read one or more label PDFs. Put each order's pages, unchanged and in their original
-  order, into one PDF per pack group. Groups are printed largest first (D9).
-- **P5** One A4 packing list for the batch (D10-a): categories as headings, one row per pack
+  order, into one PDF per pack group. Groups are printed largest first.
+- **P5** One A4 packing list for the batch: categories as headings, one row per pack
   group, plus a pick summary (units per SKU).
 - **P6** Details in [03-pc-script.md](03-pc-script.md).
 
 ## Android app
 
 ### A1 Import a batch
-- Source per D16. Show the result before saving: new orders, removed orders, changed orders
+- Source per D2. Show the result before saving: new orders, removed orders, changed orders
   (items, quantities or tracking ID), rows ignored because of status.
-- A changed order that was already checked goes back to `unchecked`, with the reason shown.
+- A changed order that was already checked: see D8.
 
 ### A2 Scan to check
 - Phone camera only. Button to switch camera (back/front, or between back lenses).
 - Reads the label QR code or 1D barcode (both hold the tracking ID). Order ID is accepted too.
-- Scan filter with free AND/OR (D8). Typical use: "name contains sepatu AND total quantity = 1".
+- Scan filter with free AND/OR. Typical use: "name contains sepatu AND total quantity = 1".
 - A code stays ignored while it keeps being seen; it counts as a new scan only after it has been
   out of view for 2 s. A label held in front of the camera for 10 s gives one scan.
 - Scanning an order that is already checked gives a duplicate warning and changes nothing.
 - Every result is explained in words: what happened, why, and what to do (05-app-ui).
-- Scan modes, see D18.
+- Scan modes, see D4.
 
 ### A3 Marks and undo
 - Quick buttons: **Checked** · **Wrong packing** · **Label lost/damaged** · **Pending**. No typing.

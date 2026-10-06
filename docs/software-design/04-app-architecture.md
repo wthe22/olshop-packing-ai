@@ -1,13 +1,13 @@
 # 04 — Android App Architecture
 
-Proposal. Nothing here is decided until the owner chooses (D14 for the stack).
+Proposal. Nothing here is decided until the owner chooses (D1 for the stack).
 
 ## What the platform must do
 
 | Need | Detail |
 |---|---|
 | Continuous camera scanning | QR + Code 128, offline, fast repeat, camera switching |
-| Read CSV or batch file | Per D16 |
+| Read CSV or batch file | Per D2 |
 | Local database | A few thousand orders per session |
 | ZIP export/import | Session and settings files |
 | Adaptive layout | Phone and tablet, portrait and landscape |
@@ -35,7 +35,7 @@ Notes:
 ## Modules
 
 ```
-core      import (CSV or batch file per D16), diff, display names, condition engine,
+core      import (CSV or batch file per D2), diff, display names, condition engine,
           status rules, session file format. Pure logic, unit-tested with samples/.
 store     database, session and settings export/import
 scan      camera frames → codes → 2 s ignore rule → lookup → verdict → mark
@@ -49,7 +49,7 @@ Global:
 | Table | Fields |
 |---|---|
 | `scan_filter` | id PK, name, condition (JSON, format of 03-pc-script), create_time |
-| `category` | id PK, code, name, position, condition (JSON). Only if D16-a |
+| `category` | id PK, code, name, position, condition (JSON). Only if D2-a |
 | `setting` | key PK, value |
 
 Per session:
@@ -71,10 +71,10 @@ Per session:
 
 ## Import (app side)
 
-1. Read the file (D16). Rows of other statuses are ignored and counted.
+1. Read the file (D2). Rows of other statuses are ignored and counted.
 2. For each order in the file:
    - not in session → **new**, batch N;
-   - in session, different SKU IDs, quantities or tracking ID → **changed** (D22);
+   - in session, different SKU IDs, quantities or tracking ID → **changed** (D8);
    - in session and removed → back to active (**returned**).
 3. Every active order of the session absent from the file → **removed**.
 4. Update `sku` names from the file.
@@ -87,7 +87,7 @@ Per session:
 3. Two different known orders in one frame → "two labels in view", nothing marked.
 4. Lookup by tracking ID, then Order ID → verdict (see 05-app-ui scan messages):
    unknown code · not in this session · removed · filter rejected · already checked ·
-   ok → mark (Fast) or open card (Inspect) (D18).
+   ok → mark (Fast) or open card (Inspect) (D4).
 5. Write `scan_event`; play the sound/vibration of the verdict; show the message.
 
 ## Session file
@@ -115,7 +115,7 @@ magnitude only.
 ## Build phases
 
 0. **Spike**: camera scanning of printed sample labels on the owner's phone (QR vs 1D,
-   distance, light, switching lens); scans per minute. Decide D14.
+   distance, light, switching lens); scans per minute. Decide D1.
 1. **PC script**: usable on its own from day one.
 2. **App core**: sessions, import, order list, detail, marks, undo.
 3. **Scan**: filters, modes, messages, scan history.

@@ -46,7 +46,7 @@ Phone portrait                       Landscape (phone / tablet)
 └──────────────────────────┘
 ```
 
-- **Mode** (D18): Fast = a scan that passes the filter is marked checked at once.
+- **Mode** (D4): Fast = a scan that passes the filter is marked checked at once.
   Inspect = a scan opens the order card and waits for a tap.
 - **Order card / mark buttons** (one tap, large): **Checked** · **Wrong packing** ·
   **Label lost/damaged** · **Pending**.
@@ -65,7 +65,7 @@ to do.
 | Result | Colour | Message (example) |
 |---|---|---|
 | Marked checked | green | **Checked.** `JY…1234` · A01 · Sepatu ×1 |
-| Re-checked after a problem (D21) | green | **Checked.** Was *wrong packing* (10:20). |
+| Re-checked after a problem (D7) | green | **Checked.** Was *wrong packing* (10:20). |
 | Already checked | yellow | **Already checked** at 10:31 (camera). Nothing changed. If this is a second parcel with the same label, check it. |
 | Filter rejected | orange | **Not for this stack.** `…5678` has total quantity 2; the filter needs 1. Not marked. |
 | Removed order | grey | **No longer to send.** `…5678` was not in the orders CSV of batch 3 (15:10): cancelled or already picked up. Not marked; no action needed. |

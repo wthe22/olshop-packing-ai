@@ -36,7 +36,7 @@ work/2026-10-06/
       27 B01 ×27 Spion Beat — Standard, honda x1.pdf
       …
     not-in-this-batch.pdf         label pages of orders that are not new in this batch (only if any)
-    batch-01.zip                  for the app (only if D16-b)
+    batch-01.zip                  for the app (only if D2-b)
   batch-02/
     …
 ```
