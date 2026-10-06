@@ -31,7 +31,7 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
   (05-app-architecture "Logic in two places").
 - [x] **1.3 Orders.** `orders.py`: read CSV, strip values, filter status, group by Order ID,
   display names, signatures. Tests on testdata.
-- [ ] **1.4 Rules.** `rules.py`: TOML loading + validation, condition parser (grammar in
+- [x] **1.4 Rules.** `rules.py`: TOML loading + validation, condition parser (grammar in
   04-rules-file), evaluator with item-level "any line" semantics, error messages with line and
   column. `testdata/conditions.json` with parse/eval/error cases. Tests.
 - [ ] **1.5 Batches.** `batches.py`: `state.json`, new/removed orders, categories, group

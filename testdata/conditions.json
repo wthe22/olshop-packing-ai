@@ -1,0 +1,1088 @@
+{
+  "about": "Condition-language fixtures shared by the Python script and the Kotlin app (docs/software-design/04-rules-file.md). Shape: about, orders (id -> order fields), cases. A case with 'error' expects parse_condition to raise RulesError with that exact message; otherwise 'text' must parse, format_condition must equal 'canonical', re-parsing the canonical text must give the same AST (round trip), and for each key of 'values' evaluate(condition, that order[, app_values]) must equal the boolean. Positions in error messages are 1-based line and column within the condition text. 'app_fields' true enables category/batch/group (default false rejects them). Fixed error messages: 'line L, col C: expected a condition'; '...: unknown field \"X\"'; '...: field \"X\" is allowed in app scan filters only'; '...: expected a text operator (contains, equals, starts_with) after \"field\"'; '...: expected a number operator (=, !=, <, <=, >, >=) after \"field\"'; '...: expected a string after \"field op\"'; '...: expected an integer after \"field op\"'; \"...: expected ')'\"; '...: unexpected text after the condition'; '...: unterminated string'; '...: bad escape sequence \"\\\\x\"'. All-order IDs, tracking IDs and names are made up.",
+  "orders": {
+    "o1": {
+      "order_id": "580000000000000001",
+      "tracking_id": "JY0000001234",
+      "courier": "J&T Express",
+      "channel": "TikTok",
+      "lines": [
+        {
+          "sku_id": "1730000000000000001",
+          "quantity": 1,
+          "name": "Spion Beat | Kaca Spion Motor",
+          "variation": "honda",
+          "seller_sku": "",
+          "product_category": "Sepeda Motor",
+          "display_name": "Spion Beat — honda"
+        }
+      ]
+    },
+    "o2": {
+      "order_id": "580000000000000002",
+      "tracking_id": "JY0000005678",
+      "courier": "J&T Express",
+      "channel": "Tokopedia",
+      "lines": [
+        {
+          "sku_id": "1730000000000000002",
+          "quantity": 2,
+          "name": "Sepatu Standar Samping Motor | Kanan",
+          "variation": "",
+          "seller_sku": "SELLER-SEPATU",
+          "product_category": "Sepeda Motor",
+          "display_name": "Sepatu Standar Samping Motor"
+        },
+        {
+          "sku_id": "1730000000000000003",
+          "quantity": 1,
+          "name": "Cover Knalpot Beat | FI 2012-2015",
+          "variation": "hitam",
+          "seller_sku": "",
+          "product_category": "Sepeda Motor",
+          "display_name": "Cover Knalpot Beat — hitam"
+        }
+      ]
+    },
+    "o3": {
+      "order_id": "580000000000000003",
+      "tracking_id": "TK01234567890",
+      "courier": "JNE",
+      "channel": "TikTok",
+      "lines": [
+        {
+          "sku_id": "1730000000000000004",
+          "quantity": 1,
+          "name": "Spion \"X\" Khusus",
+          "variation": "",
+          "seller_sku": "",
+          "product_category": "Sepeda Motor",
+          "display_name": "Spion \"X\" Khusus"
+        },
+        {
+          "sku_id": "1730000000000000007",
+          "quantity": 1,
+          "name": "Kunci \"T\" \\ Motor",
+          "variation": "",
+          "seller_sku": "SELLER-7",
+          "product_category": "Tools",
+          "display_name": "Kunci \"T\" \\ Motor"
+        }
+      ]
+    },
+    "o4": {
+      "order_id": "580000000000000004",
+      "tracking_id": "JY0000009999",
+      "courier": "SiCepat",
+      "channel": "Tokopedia",
+      "lines": [
+        {
+          "sku_id": "1730000000000000005",
+          "quantity": 1,
+          "name": "Spion Beat | Kaca Spion Motor",
+          "variation": "honda",
+          "seller_sku": "",
+          "product_category": "Sepeda Motor",
+          "display_name": "Spion Beat — honda"
+        },
+        {
+          "sku_id": "1730000000000000006",
+          "quantity": 2,
+          "name": " Busi Motor | Iridium ",
+          "variation": "",
+          "seller_sku": "",
+          "product_category": "Sparepart Motor",
+          "display_name": "Busi Motor"
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "text": "name contains \"spion\"",
+      "canonical": "name contains \"spion\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "name equals \"spion beat | kaca spion motor\"",
+      "canonical": "name equals \"spion beat | kaca spion motor\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "name starts_with \"spion\"",
+      "canonical": "name starts_with \"spion\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "name starts_with \"sepatu\"",
+      "canonical": "name starts_with \"sepatu\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "name contains \"knalpot\"",
+      "canonical": "name contains \"knalpot\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "display_name contains \"spion beat\"",
+      "canonical": "display_name contains \"spion beat\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "display_name equals \"spion beat — honda\"",
+      "canonical": "display_name equals \"spion beat — honda\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "display_name contains \"hitam\"",
+      "canonical": "display_name contains \"hitam\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "display_name equals \"busi motor\"",
+      "canonical": "display_name equals \"busi motor\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "variation equals \"honda\"",
+      "canonical": "variation equals \"honda\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "variation equals \"\"",
+      "canonical": "variation equals \"\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "variation contains \"hit\"",
+      "canonical": "variation contains \"hit\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "sku_id equals \"1730000000000000001\"",
+      "canonical": "sku_id equals \"1730000000000000001\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "sku_id starts_with \"173\"",
+      "canonical": "sku_id starts_with \"173\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "seller_sku equals \"SELLER-SEPATU\"",
+      "canonical": "seller_sku equals \"SELLER-SEPATU\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "seller_sku starts_with \"seller-\"",
+      "canonical": "seller_sku starts_with \"seller-\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "product_category contains \"sepeda motor\"",
+      "canonical": "product_category contains \"sepeda motor\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "product_category equals \"tools\"",
+      "canonical": "product_category equals \"tools\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "product_category starts_with \"sparepart\"",
+      "canonical": "product_category starts_with \"sparepart\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "courier starts_with \"J&T\"",
+      "canonical": "courier starts_with \"J&T\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "courier equals \"jne\"",
+      "canonical": "courier equals \"jne\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "courier contains \"express\"",
+      "canonical": "courier contains \"express\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "channel equals \"tokopedia\"",
+      "canonical": "channel equals \"tokopedia\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "channel equals \"TikTok\"",
+      "canonical": "channel equals \"TikTok\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "line_quantity = 2",
+      "canonical": "line_quantity = 2",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "line_quantity = 1",
+      "canonical": "line_quantity = 1",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "line_quantity > 1",
+      "canonical": "line_quantity > 1",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "line_quantity <= 1",
+      "canonical": "line_quantity <= 1",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "line_quantity != 2",
+      "canonical": "line_quantity != 2",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "total_quantity = 1",
+      "canonical": "total_quantity = 1",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "total_quantity = 3",
+      "canonical": "total_quantity = 3",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "total_quantity != 3",
+      "canonical": "total_quantity != 3",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "total_quantity >= 3",
+      "canonical": "total_quantity >= 3",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "total_quantity <= 2",
+      "canonical": "total_quantity <= 2",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "total_quantity > 1",
+      "canonical": "total_quantity > 1",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "total_quantity < 3",
+      "canonical": "total_quantity < 3",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "distinct_items = 1",
+      "canonical": "distinct_items = 1",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "distinct_items >= 2",
+      "canonical": "distinct_items >= 2",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "NAME CONTAINS \"SPION\"",
+      "canonical": "name contains \"SPION\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "Total_Quantity >= 3",
+      "canonical": "total_quantity >= 3",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "name CoNtAiNs \"SPION\"",
+      "canonical": "name contains \"SPION\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "NoT name CONTAINS \"spion\"",
+      "canonical": "not name contains \"spion\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "not name contains \"spion\"",
+      "canonical": "not name contains \"spion\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "not name contains \"spion\" and name contains \"knalpot\" or total_quantity = 3",
+      "canonical": "not name contains \"spion\" and name contains \"knalpot\" or total_quantity = 3",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "name contains \"sepatu\" or name contains \"knalpot\" and total_quantity >= 3",
+      "canonical": "name contains \"sepatu\" or name contains \"knalpot\" and total_quantity >= 3",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "(name contains \"sepatu\" or name contains \"busi\") and total_quantity >= 3",
+      "canonical": "(name contains \"sepatu\" or name contains \"busi\") and total_quantity >= 3",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "not not name contains \"spion\"",
+      "canonical": "not not name contains \"spion\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "not (name contains \"sepatu\" or name contains \"busi\")",
+      "canonical": "not (name contains \"sepatu\" or name contains \"busi\")",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "name contains \"busi\" or name contains \"sepatu\" and total_quantity > 2",
+      "canonical": "name contains \"busi\" or name contains \"sepatu\" and total_quantity > 2",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "(not name contains \"spion\") or name contains \"sepatu\"",
+      "canonical": "not name contains \"spion\" or name contains \"sepatu\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "not name contains \"spion\" or not total_quantity >= 3",
+      "canonical": "not name contains \"spion\" or not total_quantity >= 3",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "(name contains \"spion\")",
+      "canonical": "name contains \"spion\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "((name contains \"spion\"))",
+      "canonical": "name contains \"spion\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "not(name contains \"spion\")",
+      "canonical": "not name contains \"spion\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "name contains \"spion\" and line_quantity = 2",
+      "canonical": "name contains \"spion\" and line_quantity = 2",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "name contains \"spion\" and line_quantity = 1",
+      "canonical": "name contains \"spion\" and line_quantity = 1",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "  name   contains\t\"spion\"  ",
+      "canonical": "name contains \"spion\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "not name contains \"sepatu\"\nand (name contains \"spion\" or name contains \"knalpot\")",
+      "canonical": "not name contains \"sepatu\" and (name contains \"spion\" or name contains \"knalpot\")",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "name contains \"spion\"\n  and\n  line_quantity = 1",
+      "canonical": "name contains \"spion\" and line_quantity = 1",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "name equals \"spion \\\"x\\\" khusus\"",
+      "canonical": "name equals \"spion \\\"x\\\" khusus\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "name contains \"\\\"\"",
+      "canonical": "name contains \"\\\"\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "name equals \"kunci \\\"t\\\" \\\\ motor\"",
+      "canonical": "name equals \"kunci \\\"t\\\" \\\\ motor\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "name contains \"\\\\\"",
+      "canonical": "name contains \"\\\\\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "name equals \"cover knalpot beat | fi 2012-2015\"",
+      "canonical": "name equals \"cover knalpot beat | fi 2012-2015\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "name equals \"busi motor | iridium\"",
+      "canonical": "name equals \"busi motor | iridium\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "name starts_with \"busi\"",
+      "canonical": "name starts_with \"busi\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "category equals \"A\"",
+      "canonical": "category equals \"A\"",
+      "app_fields": true,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "category starts_with \"a\"",
+      "canonical": "category starts_with \"a\"",
+      "app_fields": true,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "batch = 1",
+      "canonical": "batch = 1",
+      "app_fields": true,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "batch >= 2",
+      "canonical": "batch >= 2",
+      "app_fields": true,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": false,
+        "o4": false
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "group = 5",
+      "canonical": "group = 5",
+      "app_fields": true,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "group > 5",
+      "canonical": "group > 5",
+      "app_fields": true,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": false,
+        "o4": false
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "batch = 1 and group = 5",
+      "canonical": "batch = 1 and group = 5",
+      "app_fields": true,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "not batch = 2 or group = 5",
+      "canonical": "not batch = 2 or group = 5",
+      "app_fields": true,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": true,
+        "o4": true
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "name contains \"spion\" and batch = 1",
+      "canonical": "name contains \"spion\" and batch = 1",
+      "app_fields": true,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "category equals \"A\" and name contains \"spion\"",
+      "canonical": "category equals \"A\" and name contains \"spion\"",
+      "app_fields": true,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      },
+      "app_values": {
+        "category": "A",
+        "batch": 1,
+        "group": 5
+      }
+    },
+    {
+      "text": "",
+      "error": "line 1, col 1: expected a condition",
+      "app_fields": false
+    },
+    {
+      "text": "   ",
+      "error": "line 1, col 1: expected a condition",
+      "app_fields": false
+    },
+    {
+      "text": "\n\n  ",
+      "error": "line 1, col 1: expected a condition",
+      "app_fields": false
+    },
+    {
+      "text": "foo contains \"x\"",
+      "error": "line 1, col 1: unknown field \"foo\"",
+      "app_fields": false
+    },
+    {
+      "text": "name foo \"x\"",
+      "error": "line 1, col 6: expected a text operator (contains, equals, starts_with) after \"name\"",
+      "app_fields": false
+    },
+    {
+      "text": "name = \"x\"",
+      "error": "line 1, col 6: expected a text operator (contains, equals, starts_with) after \"name\"",
+      "app_fields": false
+    },
+    {
+      "text": "total_quantity contains \"x\"",
+      "error": "line 1, col 16: expected a number operator (=, !=, <, <=, >, >=) after \"total_quantity\"",
+      "app_fields": false
+    },
+    {
+      "text": "name contains 5",
+      "error": "line 1, col 15: expected a string after \"name contains\"",
+      "app_fields": false
+    },
+    {
+      "text": "total_quantity = \"x\"",
+      "error": "line 1, col 18: expected an integer after \"total_quantity =\"",
+      "app_fields": false
+    },
+    {
+      "text": "total_quantity == 3",
+      "error": "line 1, col 17: expected an integer after \"total_quantity =\"",
+      "app_fields": false
+    },
+    {
+      "text": "total_quantity > \"x\"",
+      "error": "line 1, col 18: expected an integer after \"total_quantity >\"",
+      "app_fields": false
+    },
+    {
+      "text": "(name contains \"x\"",
+      "error": "line 1, col 19: expected ')'",
+      "app_fields": false
+    },
+    {
+      "text": "name contains \"x\" extra",
+      "error": "line 1, col 19: unexpected text after the condition",
+      "app_fields": false
+    },
+    {
+      "text": "name contains \"abc",
+      "error": "line 1, col 15: unterminated string",
+      "app_fields": false
+    },
+    {
+      "text": "name contains \"a\\q\"",
+      "error": "line 1, col 17: bad escape sequence \"\\q\"",
+      "app_fields": false
+    },
+    {
+      "text": "category contains \"A\"",
+      "error": "line 1, col 1: field \"category\" is allowed in app scan filters only",
+      "app_fields": false
+    },
+    {
+      "text": "batch = 1",
+      "error": "line 1, col 1: field \"batch\" is allowed in app scan filters only",
+      "app_fields": false
+    },
+    {
+      "text": "group = 1",
+      "error": "line 1, col 1: field \"group\" is allowed in app scan filters only",
+      "app_fields": false
+    },
+    {
+      "text": "name contains \"x\"\nand name foo \"y\"",
+      "error": "line 2, col 10: expected a text operator (contains, equals, starts_with) after \"name\"",
+      "app_fields": false
+    },
+    {
+      "text": "name contains \"x\"\nand total_quantity contains \"y\"",
+      "error": "line 2, col 20: expected a number operator (=, !=, <, <=, >, >=) after \"total_quantity\"",
+      "app_fields": false
+    }
+  ]
+}
