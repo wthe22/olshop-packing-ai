@@ -1,0 +1,27 @@
+# Packing categories for the test data. Order matters: an order goes to the FIRST
+# category whose condition matches. This file is a fixture for the script and the app.
+
+[[category]]
+code = "A"
+name = "Sepatu"
+when = 'name contains "sepatu"'
+
+[[category]]
+code = "B"
+name = "Spion & Knalpot"
+when = '''
+not name contains "sepatu"
+and (name contains "spion" or name contains "knalpot")
+'''
+
+[[category]]
+code = "C"
+name = "Banyak unit"
+when = 'total_quantity >= 3'
+
+# The last category still has a condition, so an order that matches none of A, B, C, Z
+# falls into the automatic "? Uncategorised" category.
+[[category]]
+code = "Z"
+name = "J&T"
+when = 'courier starts_with "J&T"'

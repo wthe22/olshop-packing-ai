@@ -22,14 +22,14 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
 - [x] **1.1 Scaffold.** `script/pyproject.toml` (package `packing`, deps `pypdf`, `fpdf2`,
   extra `dev` = `pytest`), empty modules as in 03-pc-script "Code layout", `.venv` (01-setup),
   one passing placeholder test. Log the venv step in 01-setup.
-- [ ] **1.2 Test data.** `testdata/make_testdata.py` writes `orders-1.csv` and `orders-2.csv`
+- [x] **1.2 Test data.** `testdata/make_testdata.py` writes `orders-1.csv` and `orders-2.csv`
   with the real 65-column header (business-process 02), trailing tabs on ID/time values, BOM,
   made-up IDs. Content covers: multi-line order; same packing list in different line order;
   `Default` variation; name with `|`; row with another status (ignored); order removed in
   export 2; order new in export 2; Tokopedia channel; quantity > 1. Plus
   `testdata/categories.toml` and a hand-checked `testdata/expected.json`
   (05-app-architecture "Logic in two places").
-- [ ] **1.3 Orders.** `orders.py`: read CSV, strip values, filter status, group by Order ID,
+- [x] **1.3 Orders.** `orders.py`: read CSV, strip values, filter status, group by Order ID,
   display names, signatures. Tests on testdata.
 - [ ] **1.4 Rules.** `rules.py`: TOML loading + validation, condition parser (grammar in
   04-rules-file), evaluator with item-level "any line" semantics, error messages with line and

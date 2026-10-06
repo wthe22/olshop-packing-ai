@@ -1,0 +1,30 @@
+{
+  "batches": [
+    {"number": 1, "csv_file": "orders-1.csv", "orders": 14, "groups": 10, "removed": 0},
+    {"number": 2, "csv_file": "orders-2.csv", "orders": 8, "groups": 6, "removed": 1}
+  ],
+  "orders": {
+    "580000000000000001": {"batch": 1, "category": "A", "group": 1},
+    "580000000000000002": {"batch": 1, "category": "A", "group": 1},
+    "580000000000000003": {"batch": 1, "category": "A", "group": 2},
+    "580000000000000004": {"batch": 1, "category": "B", "group": 3},
+    "580000000000000005": {"batch": 1, "category": "B", "group": 3},
+    "580000000000000006": {"batch": 1, "category": "B", "group": 4},
+    "580000000000000007": {"batch": 1, "category": "B", "group": 4},
+    "580000000000000008": {"batch": 1, "category": "B", "group": 5},
+    "580000000000000009": {"batch": 1, "category": "C", "group": 6},
+    "580000000000000010": {"batch": 1, "category": "C", "group": 7},
+    "580000000000000011": {"batch": 1, "category": "C", "group": 6},
+    "580000000000000012": {"batch": 1, "category": "Z", "group": 8},
+    "580000000000000013": {"batch": 1, "category": "Z", "group": 9},
+    "580000000000000014": {"batch": 1, "category": "?", "group": 10},
+    "580000000000000015": {"batch": 2, "category": "A", "group": 1},
+    "580000000000000016": {"batch": 2, "category": "A", "group": 1},
+    "580000000000000017": {"batch": 2, "category": "A", "group": 2},
+    "580000000000000018": {"batch": 2, "category": "B", "group": 3},
+    "580000000000000019": {"batch": 2, "category": "B", "group": 3},
+    "580000000000000020": {"batch": 2, "category": "B", "group": 4},
+    "580000000000000021": {"batch": 2, "category": "C", "group": 5},
+    "580000000000000022": {"batch": 2, "category": "?", "group": 6}
+  }
+}
