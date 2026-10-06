@@ -9,7 +9,25 @@
   (completed orders can also carry a tracking ID).
 - ID and time values end with a tab (`Order ID`, `SKU ID`, `Package ID`, `Zipcode`, all
   `… Time` columns); an empty one is a lone tab.
-- Times are `dd/mm/yyyy hh:mm:ss`.
+- Times are `dd/mm/yyyy hh:mm:ss`, local time (UTC+7).
+- Comma-separated, LF line endings, standard double-quote quoting for values that contain
+  commas. One header row.
+- All 65 columns, in file order: `Order ID`, `Order Status`, `Order Substatus`,
+  `Cancelation/Return Type`, `Normal or Pre-order`, `SKU ID`, `Seller SKU`, `Product Name`,
+  `Variation`, `Quantity`, `Sku Quantity of return`, `SKU Unit Original Price`,
+  `SKU Subtotal Before Discount`, `SKU Platform Discount`, `SKU Seller Discount`,
+  `SKU Subtotal After Discount`, `Shipping Fee After Discount`, `Original Shipping Fee`,
+  `Shipping Fee Seller Discount`, `Shipping Fee Platform Discount`, `Distance Shipping Fee`,
+  `Distance Fee`, `Order Refund Amount`, `Payment platform discount`, `Buyer Service Fee`,
+  `Handling Fee`, `Shipping Insurance`, `Item Insurance`, `Order Amount`, `Created Time`,
+  `Paid Time`, `RTS Time`, `Shipped Time`, `Delivered Time`, `Cancelled Time`, `Cancel By`,
+  `Cancel Reason`, `Fulfillment Type`, `Warehouse Name`, `Tracking ID`, `Delivery Option`,
+  `Shipping Provider Name`, `Buyer Message`, `Buyer Username`, `Recipient`, `Phone #`,
+  `Zipcode`, `Country`, `Province`, `Regency and City`, `Districts`, `Villages`,
+  `Detail Address`, `Additional address information`, `Payment Method`, `Weight(kg)`,
+  `Product Category`, `Package ID`, `Purchase Channel`, `Seller Note`, `Checked Status`,
+  `Checked Marked by`, `Tokopedia Invoice Number`, `Order Channel`, `Creator Handle`.
+  Columns are found by header name, not position.
 - Buyer name, phone and address are partly masked by the platform. Packing does not use them.
 
 ### Columns packing needs
@@ -19,7 +37,7 @@
 | `Order ID` | 18 digits. Printed as text on the label |
 | `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` + 10 digits; SiCepat 12 digits starting `00`; IDX `TK…` 13 characters; J&T Cargo 12 digits |
 | `Package ID` | 19 digits. Exactly one per order in the samples |
-| `SKU ID` | Always filled. The only stable item identifier |
+| `SKU ID` | 19 digits, always filled. The only stable item identifier |
 | `Product Name` | Long (up to ~80 characters). The part before the first `\|` is the short product name, e.g. `Spion Beat \| Kaca Spion Motor …` → `Spion Beat` |
 | `Variation` | Mixed case (`honda`, `Honda`, `HONDA`); `Default` for products without variants |
 | `Seller SKU` | Filled on only 147 of 1,436 lines |
@@ -46,3 +64,6 @@ creator handle, …) are not needed for packing.
   (variation only); SiCepat and IDX labels show none. The label cannot replace the packing list.
 - Label pages are printed exactly as downloaded *(owner)*.
 - Each download is at most 200 pages, so one batch needs several PDF files.
+- The sample label PDFs (downloaded 2026-10-07, 562 pages, 562 orders) only partly match the
+  sample CSVs (2026-10-06): 227 of their orders are in batch 1, 4 are new in batch 2, 331 are
+  in neither.

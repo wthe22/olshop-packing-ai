@@ -1,0 +1,25 @@
+# Packing categories (format: docs/software-design/04-rules-file.md).
+# Order matters: an order goes to the FIRST category whose condition matches.
+# The last category has no condition and catches every remaining order.
+
+[[category]]
+code = "A"
+name = "Sepatu"
+when = 'name contains "sepatu"'
+
+[[category]]
+code = "B"
+name = "Spion & Knalpot"
+when = '''
+not name contains "sepatu"
+and (name contains "spion" or name contains "knalpot")
+'''
+
+[[category]]
+code = "C"
+name = "Motor lainnya"
+when = 'product_category contains "sepeda motor"'
+
+[[category]]
+code = "Z"
+name = "Lainnya"
