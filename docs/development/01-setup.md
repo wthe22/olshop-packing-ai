@@ -43,3 +43,4 @@ One line per one-time step actually done on this PC: date · what · exact comma
 | Date | Step |
 |---|---|
 | 2026-10-06 | Git repository created, remote `origin` = `https://github.com/wthe22/olshop-packing-ai.git`, branch `main` |
+| 2026-10-07 | `.venv` created: `/c/Python314/python.exe -m venv .venv` (Python 3.14.7), `python -m pip install --upgrade pip` (26.2.1), `python -m pip install -e "script[dev]"` → pypdf 6.19.0, fpdf2 2.8.9, pytest 9.1.1 |

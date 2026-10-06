@@ -4,7 +4,7 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 1 not started.**
+Status: **Phase 1 in progress.**
 
 ---
 
@@ -19,7 +19,7 @@ Read: [01-requirements](../software-design/01-requirements.md) (shared rules, P1
 Reference: `script/prototype/packing_list_preview.py` (working layout code for `full` and
 `summary`; reads `samples/` directly; not production code).
 
-- [ ] **1.1 Scaffold.** `script/pyproject.toml` (package `packing`, deps `pypdf`, `fpdf2`,
+- [x] **1.1 Scaffold.** `script/pyproject.toml` (package `packing`, deps `pypdf`, `fpdf2`,
   extra `dev` = `pytest`), empty modules as in 03-pc-script "Code layout", `.venv` (01-setup),
   one passing placeholder test. Log the venv step in 01-setup.
 - [ ] **1.2 Test data.** `testdata/make_testdata.py` writes `orders-1.csv` and `orders-2.csv`

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "packing"
+version = "0.1.0"
+description = "Daily packing: orders CSV + label PDFs -> pack groups, label PDFs per group, A4 packing list"
+requires-python = ">=3.12"
+dependencies = ["pypdf>=6.19", "fpdf2>=2.8.9"]
+
+[project.optional-dependencies]
+dev = ["pytest>=9.1"]
+
+[tool.setuptools]
+packages = ["packing"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
