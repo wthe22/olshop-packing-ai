@@ -1,0 +1,14 @@
+# Confidential real data — never commit
+samples/
+tmp/
+var/
+work/
+
+# Tooling
+.venv/
+target/
+build/
+.gradle/
+.idea/
+local.properties
+node_modules/
