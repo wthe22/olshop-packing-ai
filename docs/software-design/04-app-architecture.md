@@ -45,8 +45,8 @@ Global:
 
 | Table | Fields |
 |---|---|
-| `category` | id PK, code, name, position, condition (JSON, format of 03-pc-script) |
-| `scan_filter` | id PK, name, condition (JSON), create_time |
+| `category` | id PK, code, name, position, condition (stored in the rules-file format, D1) |
+| `scan_filter` | id PK, name, condition (same format), create_time |
 | `setting` | key PK, value |
 
 Per session:

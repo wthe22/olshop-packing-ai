@@ -54,11 +54,11 @@ The shown status is the latest mark not undone; `removed` overrides it.
 - **P1** Read the orders CSV. Keep only `Perlu dikirim` / `Menunggu pengambilan` rows; ignore all
   others. Keep only the packing columns (business-process 02).
 - **P2** Compare with the earlier batches of the same day: new orders form batch N.
-- **P3** Pack groups and categories, from the shared `categories.json`.
+- **P3** Pack groups and categories, from the shared rules file (format: D1).
 - **P4** Read one or more label PDFs. Put each order's pages, unchanged and in their original
   order, into one PDF per pack group, in print order.
 - **P5** One A4 packing list for the batch: categories as headings, one row per pack group,
-  then a pick summary (units per SKU).
+  then a pick summary (units per SKU). Layout: D2.
 - **P6** Details in [03-pc-script.md](03-pc-script.md).
 
 ## Android app
@@ -108,7 +108,8 @@ The shown status is the latest mark not undone; `removed` overrides it.
 - Nothing is kept of a deleted session.
 
 ### A7 Settings
-- Categories (D1), saved scan filters, language, delete-protection time, sounds/vibration.
+- Categories, saved scan filters, language, delete-protection time, sounds/vibration.
 - Settings export/import as a separate `.zip`.
+- Categories can be edited in the app or on the PC; the same rules file moves both ways.
 - Language: Indonesian, English, or System (follow the device; English when the device
   language is neither).

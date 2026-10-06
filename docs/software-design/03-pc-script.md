@@ -49,7 +49,7 @@ work/2026-10-06/
    ignore the rest (count shown). Keep the packing columns. Group rows by Order ID.
 2. **New orders** = orders not in `state.json`. They form batch N. Orders in `state.json` but not
    in the CSV are counted as removed.
-3. **Category**: first matching category of `categories.json`.
+3. **Category**: first matching category of the rules file.
 4. **Pack groups**: signature = sorted `SKU ID×quantity`. Numbered in print order:
    categories in list order → number of orders, largest first → signature text.
 5. **Label pages**: for each label PDF, page by page, find the Order ID (the 18-digit number on
@@ -63,6 +63,8 @@ work/2026-10-06/
    without a label page.
 
 ## Packing list (A4)
+
+Two layouts are open (D2): *summary* (below) and *summary + tracking IDs*.
 
 - A4 portrait, 10 mm margins, Arial. Items 10.5 pt; group numbers and order counts 11.5 pt bold.
 - Header on every page: `Packing list · <day> · Batch N`, `page x/y`; second line: orders ·
@@ -90,7 +92,10 @@ Packing list · 2026-10-06 · Batch 2                                         pa
  …
 ```
 
-## Rules file (`categories.json`)
+## Rules file
+
+File format: D1. Shown here as a JSON tree; the meaning is the same in every format.
+Edited in the app or on the PC; the same file moves both ways.
 
 Ordered list. Condition tree: `all` (AND), `any` (OR), `not`, and leaves
 `{field, op, value}`. Text compare is case-insensitive.
