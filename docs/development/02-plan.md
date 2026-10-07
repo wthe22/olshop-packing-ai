@@ -58,7 +58,7 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
 - [x] **1.11 Packing list (base).** `packing_list.py`: layouts `full`, `summary`, `pick` as in
   03-pc-script. Test: PDFs are produced, page count sane, text contains numbers and tracking IDs
   (via pypdf).
-- [ ] **1.12 Packing list for picks.** Headings = saved PDF number + pick code/name; groups =
+- [x] **1.12 Packing list for picks.** Headings = saved PDF number + pick code/name; groups =
   runs (`3-05`); scope `per-pdf` / `whole` / `none`; error or skip with a message when there is
   no item data. Tests.
 - [ ] **1.13 Command line.** `prepare` with optional `--csv`, `--rules`, `--interactive`,

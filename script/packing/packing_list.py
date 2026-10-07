@@ -4,13 +4,14 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
+from typing import Sequence
 
 from fpdf import FPDF
 
-from .batches import Batch, Group
-from .rules import Category
+from .picks import Run, SavedPdf
 
 LAYOUTS = ("full", "summary", "pick")
+SCOPES = ("per-pdf", "whole")
 
 _FONT_DIR = Path(r"C:\Windows\Fonts")
 _FONTS = {"A": {"": "arial.ttf", "B": "arialbd.ttf"}, "M": {"": "consola.ttf"}}
@@ -26,6 +27,8 @@ _COL_W = 80.0           # pick-summary name wrap width inside the 96 mm column p
 _ROW_H = 5.0            # pick-summary row height
 _BAR_H = 6.5            # heading bar height
 
+_NO_ITEM_DATA = "no item data: the packing list needs labels with packing slip or the orders CSV"
+
 
 class PackingListError(Exception):
     """The PDF cannot be written; the message is shown to the user as is."""
@@ -36,29 +39,50 @@ def write_packing_list(
     layout: str,
     *,
     day: str,
-    batch: Batch,
+    pdfs: Sequence[SavedPdf],
     printed: datetime,
-    missing_labels: frozenset[str] = frozenset(),
 ) -> int:
-    """Write the packing list for `layout`; return the number of pages."""
+    """Write the packing list for `layout`; return the number of pages.
+
+    One call writes one file: the caller passes one saved PDF for scope `per-pdf` and
+    all saved PDFs for scope `whole`.
+    """
     if layout not in LAYOUTS:
         raise ValueError(f"unknown layout {layout!r}; expected one of {', '.join(LAYOUTS)}")
+    if not pdfs:
+        raise ValueError("no saved PDFs to write")
+    # The lists describe items and runs; an order whose lines are unknown cannot be listed.
+    for saved in pdfs:
+        for order in saved.orders:
+            if not order.lines:
+                raise PackingListError(_NO_ITEM_DATA)
 
-    orders = sum(len(g.orders) for g in batch.groups)
-    units = sum(o.total_quantity for g in batch.groups for o in g.orders)
-    title = f"Packing list · {day} · Batch {batch.number}"
+    orders = sum(len(saved.orders) for saved in pdfs)
+    units = sum(o.total_quantity for saved in pdfs for o in saved.orders)
+    runs = sum(len(saved.runs) for saved in pdfs)
     subtitle = (
-        f"{orders:,} orders · {units:,} units · {len(batch.groups):,} groups"
+        f"{orders:,} orders · {units:,} units · {runs:,} runs"
         f" · printed {printed:%H:%M}"
     )
 
-    pdf = _List(title=title, subtitle=subtitle, layout=layout)
+    pdf = _List(title=_title(day, pdfs), subtitle=subtitle, layout=layout)
     pdf.add_page()
     if layout != "pick":
-        pdf.draw_groups(batch, missing_labels)
-    pdf.draw_pick_summary(batch)
+        pdf.draw_pdfs(pdfs)
+    pdf.draw_pick_summary(pdfs)
     pdf.output(str(path))
     return pdf.pages_count
+
+
+def _title(day: str, pdfs: Sequence[SavedPdf]) -> str:
+    """Line 1: one saved PDF is named; several cover a number range."""
+    if len(pdfs) == 1:
+        saved = pdfs[0]
+        return (
+            f"Packing list · {day} · {saved.number}  "
+            f"{saved.category.code}  {saved.category.name}"
+        )
+    return f"Packing list · {day} · saved PDFs {pdfs[0].number}-{pdfs[-1].number}"
 
 
 def _add_fonts(pdf: FPDF) -> None:
@@ -72,29 +96,29 @@ def _add_fonts(pdf: FPDF) -> None:
             pdf.add_font(family, style, str(font))
 
 
-def _by_category(batch: Batch) -> list[tuple[Category, list[Group]]]:
-    """Categories in the order they first appear in batch.groups, with their groups."""
-    seen: dict[str, list[Group]] = {}
-    found: list[Category] = []
-    for group in batch.groups:
-        code = group.category.code
-        if code not in seen:
-            seen[code] = []
-            found.append(group.category)
-        seen[code].append(group)
-    return [(category, seen[category.code]) for category in found]
+def _run_items(run: Run) -> list[str]:
+    """The run's identical lines as display text; any order of the run carries them."""
+    if not run.orders:
+        return []
+    return sorted(f"{line.display_name}  ×{line.quantity}" for line in run.orders[0].lines)
 
 
-def _pick_entries(batch: Batch) -> list[tuple[int, str]]:
-    """One (units, display name) entry per SKU ID, sorted by display name then SKU ID."""
-    units: Counter[str] = Counter()
-    names: dict[str, str] = {}
-    for group in batch.groups:
-        for order in group.orders:
+def _pick_entries(pdfs: Sequence[SavedPdf]) -> list[tuple[int, str]]:
+    """One (units, display name) entry per (name, variation), sorted by display name.
+
+    A slip line carries no SKU ID, so the item key is (name, variation).
+    """
+    units: Counter[tuple[str, str]] = Counter()
+    names: dict[tuple[str, str], str] = {}
+    for saved in pdfs:
+        for order in saved.orders:
             for line in order.lines:
-                units[line.sku_id] += line.quantity
-                names.setdefault(line.sku_id, line.display_name)
-    return [(units[sku], names[sku]) for sku in sorted(units, key=lambda s: (names[s], s))]
+                key = (line.name, line.variation)
+                units[key] += line.quantity
+                names.setdefault(key, line.display_name)
+    return [
+        (units[key], names[key]) for key in sorted(units, key=lambda k: (names[k], k[0], k[1]))
+    ]
 
 
 def _pick_fit(entries: list[tuple[int, str]], avail: float, pdf: _List) -> int:
@@ -147,51 +171,51 @@ class _List(FPDF):
             return True
         return False
 
-    def draw_groups(self, batch: Batch, missing: frozenset[str]) -> None:
-        for category, groups in _by_category(batch):
-            orders = sum(len(g.orders) for g in groups)
-            units = sum(o.total_quantity for g in groups for o in g.orders)
+    def draw_pdfs(self, pdfs: Sequence[SavedPdf]) -> None:
+        for saved in pdfs:
+            orders = len(saved.orders)
+            units = sum(o.total_quantity for o in saved.orders)
             self._need(_BAR_H + _LH * 2)
             self.set_fill_color(225, 225, 225)
             self.set_font("A", "B", 11)
-            self.cell(150, _BAR_H, f" {category.code}  {category.name}", fill=True)
+            self.cell(
+                150, _BAR_H,
+                f" {saved.number}  {saved.category.code}  {saved.category.name}",
+                fill=True,
+            )
             self.set_font("A", "", 9.5)
             self.cell(40, _BAR_H, f"{orders:,} orders · {units:,} units", fill=True,
                       align="R", new_x="LMARGIN", new_y="NEXT")
-            for group in groups:
-                self._group(group, missing)
+            for run in saved.runs:
+                self._run(saved, run)
             self.ln(1.5)
 
-    def _group(self, group: Group, missing: frozenset[str]) -> None:
-        items = sorted(f"{line.display_name}  ×{line.quantity}" for line in group.lines)
+    def _run(self, saved: SavedPdf, run: Run) -> None:
+        label = f"{saved.number}-{run.number:02d}"
+        items = _run_items(run)
         tracking = self._layout == "full"
         self._need(_LH * len(items) + (_TH + 1 if tracking else 0) + 1.2)
         top = self.get_y()
         self.set_font("A", "B", 11.5)
-        self.cell(12, _LH, f"{group.number:02d}")
+        self.cell(12, _LH, label)
         self.set_font("A", "", 10.5)
         for i, text in enumerate(items):
             self.set_xy(_X_ITEMS, top + _LH * i)
             self.cell(158, _LH, text)
         self.set_xy(180, top)
         self.set_font("A", "B", 11.5)
-        self.cell(20, _LH, f"{len(group.orders):,}", align="R")
+        self.cell(20, _LH, f"{len(run.orders):,}", align="R")
         self.set_xy(10, top + _LH * len(items))
         if tracking:
-            self._tracking(group, items, missing)
+            self._tracking(label, run, items)
         line_y = self.get_y() + 0.6
         self.set_draw_color(170, 170, 170)
         self.line(10, line_y, 200, line_y)
         self.set_xy(10, line_y + 0.6)
 
-    def _tracking(self, group: Group, items: list[str], missing: frozenset[str]) -> None:
-        ids = [
-            f"{o.tracking_id} (no label)" if o.order_id in missing else o.tracking_id
-            for o in group.orders
-        ]
-        # a "(no label)" ID is wider than its 6-column cell and may reach into the next one;
-        # accepted, missing labels are rare
-        continued = f"{group.number:02d} (continued)  " + "  /  ".join(items)
+    def _tracking(self, label: str, run: Run, items: list[str]) -> None:
+        ids = [order.tracking_id for order in run.orders]
+        continued = f"{label} (continued)  " + "  /  ".join(items)
         self.set_y(self.get_y() + 0.6)
         self.set_font("M", "", 10)
         for start in range(0, len(ids), _NCOL):
@@ -203,8 +227,8 @@ class _List(FPDF):
                 self.cell(_CW, _TH, tracking_id)
             self.set_xy(10, row_y + _TH)
 
-    def draw_pick_summary(self, batch: Batch) -> None:
-        entries = _pick_entries(batch)
+    def draw_pick_summary(self, pdfs: Sequence[SavedPdf]) -> None:
+        entries = _pick_entries(pdfs)
         if not entries:
             return
         self._need(_BAR_H + min(len(entries), 4) * (_ROW_H + 1) + 2)

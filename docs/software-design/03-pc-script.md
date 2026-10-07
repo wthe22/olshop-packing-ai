@@ -122,7 +122,7 @@ The slip is read by text position, not by reading order: `pypdf`
 1. The text on the label: the courier name, a courier web address, or the label's sort-code
    style. (In the sample only J&T labels print the courier name as text: 517 of 601 pages.)
 2. Else the tracking-ID pattern ([business-process 02](../business-process/02-data-sources.md#columns-packing-needs)):
-   `JY` + 10 digits → J&T Express; `TK` + 11 → IDX. 12 digits alone is ambiguous (SiCepat
+   `JY` + 10 digits → J&T Express; `TKP` + 10 digits → IDX. 12 digits alone is ambiguous (SiCepat
    starts `00`, J&T Cargo is also 12 digits), so it is used only together with step 1's clues.
 3. Unknown → `courier` empty, and a warning lists those orders.
 
@@ -248,7 +248,11 @@ Errors stop the run before anything is written; warnings are listed and the run 
   (one sheet with a section per saved PDF), `none`.
 - A packing list needs item data (CSV or slips). With none, it is skipped with a message (an
   item-level pick stops the run first).
-- Header `Packing list · <day> · <pick>` with the counts and `page x/y`, as before.
+- Header `Packing list · <day> · <n>  <code>  <name>` (scope `per-pdf`) or
+  `Packing list · <day> · saved PDFs <first>-<last>` (scope `whole`), then the counts
+  (`<orders> orders · <units> units · <runs> runs · printed hh:mm`) and `page x/y`.
+- The pick summary counts units per item = (product name, variation), as slip lines have no
+  SKU ID.
 
 ```
 Packing list · 2026-10-07 · 2  B Spion & Knalpot                               page 1/1
