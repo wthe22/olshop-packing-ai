@@ -49,6 +49,7 @@ script/                    PC script (Python)
   pyproject.toml
   packing/                 the package (python -m packing …)
   tests/
+  tools/                   standalone helpers: label PDF -> CSV, CSV diff (see README)
   prototype/               throwaway A4 layout prototype, reference only
 testdata/                  made-up fixtures shared by script and app tests
   make_testdata.py         generates the CSVs from a small description
@@ -64,6 +65,8 @@ work/                      script output with real data, git-ignored
 | Activate Python env | `source .venv/Scripts/activate` |
 | Script tests | `python -m pytest script/tests` |
 | Run the script | `python -m packing prepare --csv … --labels …` (03-pc-script) |
+| Label PDFs → CSV | `python script/tools/extract_labels.py "samples/*Shipping label*.pdf" -o work/labels.csv` |
+| Diff two CSVs | `python script/tools/diff_csv.py A.csv B.csv [--key "Order ID"]` → `<B>-missing.csv`, `<B>-new.csv` |
 | App build (debug APK) | `cd android && ./gradlew assembleDebug` |
 | App unit tests | `cd android && ./gradlew test` |
 | Install on the phone | `cd android && ./gradlew installDebug` (phone on USB, debugging on) |
