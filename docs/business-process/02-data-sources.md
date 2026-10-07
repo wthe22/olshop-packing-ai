@@ -81,4 +81,8 @@ creator handle, …) are not needed for packing.
   and the Order ID and shows the `Customer Message` (= buyer message). In the sample: 1 order
   of 600; every other order is one page.
 - In the sample every slip has one item line and `Qty Total` always equals the sum of `Qty`.
-- The label part also prints `In transit by: dd/mm/yyyy hh:mm` (ship-by deadline).
+- The label part also prints `In transit by: dd/mm/yyyy hh:mm` (ship-by deadline); the plain
+  label export (without slip) does not (0 of 562 sample pages).
+- Tracking IDs are printed as text several times per label. On the spaced-character labels
+  (IDX / Tokopedia style) the tracking ID could not be found as text on 2 of 1,163 sample
+  pages.

@@ -1,2 +1,3 @@
 # Test CSVs must keep LF line endings like the real export (byte-compared in tests)
 testdata/*.csv -text
+testdata/*.pdf binary
