@@ -26,19 +26,16 @@ Decided:
 | 8 | Date/time fields | `paid_time`, `rts_time`, `created_time` (CSV) and `ship_by` (label `In transit by`, works without the CSV) |
 | 9 | Date/time values | One field per time; the value's form decides: `paid_time = "2026-10-06"` (that day) · `paid_time < "14:00"` (time of day, any date) · `paid_time < "2026-10-06 14:00"` (exact moment) |
 | 10 | Numbers | Saved PDFs numbered through the day (1, 2, 3 …); the runs of identical labels inside each numbered 01, 02 …; written `3-05` on the packing list |
+| 11 | CSV and slips both given | The CSV supplies the items; where the slip says something different, the script warns |
+| 12 | CSV-only field without a CSV | `sku_id`, `product_category`, `channel`, `paid_time`, `rts_time`, `created_time` have no value without the CSV: a pick using one stops the run with an error naming the pick and the field |
+| 13 | Courier without the CSV | New field `tracking_id`. `courier` is also deduced from the label, not only from the tracking-ID pattern (e.g. the courier's name or web address printed on the label, the label's sort-code style); only J&T labels print the courier name as text in the sample (517 of 601 pages) |
 
 Item data on the labels: the **Shipping label + Packing slip** export carries product name,
 variation, Seller SKU and quantity per line, but no SKU ID
 ([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)).
 Read by text position (column x-ranges); checked on the 600-order sample.
 
-Open:
-
-- which other fields a condition can use without the CSV (the slip gives name, variation,
-  Seller SKU, quantities; courier and ship-by come from the label part);
-- when both the CSV and labels with packing slips are given, which one supplies the items
-  (CSV, warning where the slip differs; or slip, CSV only adding SKU ID, category, times);
-- what this means for the app (not touched until the PC script is settled).
+Open: what this means for the app (not touched until the PC script is settled).
 
 Built before D1 and still usable: `orders.py`, `rules.py`, `labels.py` (Order ID per page, page
 copying). `packing_list.py` is built for the pack-group layout and will need changes.
