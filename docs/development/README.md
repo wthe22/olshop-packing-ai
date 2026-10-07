@@ -66,7 +66,7 @@ work/                      script output with real data, git-ignored
 | Script tests | `python -m pytest script/tests` |
 | Run the script | `python -m packing prepare --csv … --labels …` (03-pc-script) |
 | Label PDFs → CSV | `python script/tools/extract_labels.py "samples/*Shipping label*.pdf" -o work/labels.csv` |
-| Diff two CSVs | `python script/tools/diff_csv.py A.csv B.csv [--key "Order ID"]` → `<B>-missing.csv`, `<B>-new.csv` |
+| Diff two CSVs | `python script/tools/diff_csv.py A.csv B.csv [--missing f.csv --new f.csv --common f.csv]` (by Order ID; prints the counts and IDs, writes a file only per option) |
 | App build (debug APK) | `cd android && ./gradlew assembleDebug` |
 | App unit tests | `cd android && ./gradlew test` |
 | Install on the phone | `cd android && ./gradlew installDebug` (phone on USB, debugging on) |
