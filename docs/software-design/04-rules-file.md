@@ -81,6 +81,8 @@ integer    = digit { digit }
   value. It does not ignore accents or other differences.
 - Errors give line and column and say what was expected, e.g.
   `line 2, col 18: expected a text operator (contains, equals, starts_with) after "name"`.
+  Inside `categories.toml` the line and column are those of the file itself, not of the
+  condition text.
 
 ### Fields
 

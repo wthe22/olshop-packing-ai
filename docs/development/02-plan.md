@@ -4,7 +4,11 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 1 in progress.**
+Status: **Phase 1 on hold**: design question D1 (picks instead of pack-group files,
+[02-design-questions](../software-design/02-design-questions.md)) waits for a label PDF with
+product names in `samples/`. The tasks below are rewritten once D1 is settled. `rules.py`
+still gives condition-error positions relative to the condition; 04-rules-file now says file
+line and column.
 
 ---
 
