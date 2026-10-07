@@ -24,7 +24,7 @@ its packing slip carry enough for the pick flow.
 |---|---|---|
 | Shipping-label PDFs | yes | One or more files of this download (a download holds at most 200 pages). Either plain **Shipping label** or **Shipping label + Packing slip** ([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)); pages are read as they are, so one download may hold both kinds |
 | Orders CSV | no | The seller-centre export ([business-process 02](../business-process/02-data-sources.md)). Fills values and is checked against the labels; the orders themselves come from the labels |
-| `categories.toml` | yes, unless `--interactive` | Each entry is one pick |
+| `categories.toml` | yes | Each entry is one pick; also the menu of `--interactive` |
 
 Without a slip and without a CSV there is **no item data**: the script warns, only the
 label-level fields work (Order ID, tracking ID, courier, `ship_by`), a pick that uses an item
@@ -46,7 +46,7 @@ python -m packing prepare --labels <label.pdf> [<label.pdf> …] [--csv <orders.
 | `--labels` | required | One or more label PDFs of this download (at most 200 pages each). Wildcards allowed |
 | `--csv` | none | The orders CSV of the same day. Optional |
 | `--rules` | `categories.toml` in the repository root | The picks, in order |
-| `--interactive` | off | The owner types the picks instead of using the rules file |
+| `--interactive` | off | The owner chooses the picks from a menu (below) instead of running the rules file straight through |
 | `--layout` | `full` | What a packing-list sheet shows, comma-separated for several: `full`, `summary`, `pick` |
 | `--packing-list` | `per-pdf` | Packing-list scope: `per-pdf` (one sheet per saved PDF), `whole` (one sheet with a section per saved PDF), `none` |
 | `--day` | today | The day folder |
@@ -54,16 +54,21 @@ python -m packing prepare --labels <label.pdf> [<label.pdf> …] [--csv <orders.
 
 ## Interactive mode
 
-With `--interactive` the rules file is not used. The owner builds the picks:
+With `--interactive` the owner picks from a numbered menu instead of running the rules file
+straight through:
 
-1. The script prints what is left: the number of orders, the number of label pages, and (with
-   item data) the largest remaining contents groups as `product name ×quantity` text.
-2. It prompts for a condition ([04-rules-file.md](04-rules-file.md)); the matching orders are
-   saved as one PDF. An empty line (or `rest`) saves every remaining order as one PDF and ends
-   the mode.
-3. After each pick the script asks whether to append it to the rules file (asking for a `code`
-   and a `name`); answering no leaves the file unchanged. Only type-ins already valid in the
-   file form are offered.
+1. The script prints what is left (orders, label pages) and the `categories.toml` entries that
+   still match at least one remaining order, numbered, each with its order count:
+   ```
+   600 orders left
+     1  A  Sepatu            172
+     2  B  Spion & Knalpot    35
+   1-2 = save that pick · c = type a condition · r = save the rest
+   ```
+2. A number saves that entry's matching orders as one PDF. `c` asks for a condition
+   ([04-rules-file.md](04-rules-file.md)) and saves its matching orders. The menu is shown again
+   with the new counts.
+3. `r` saves every remaining order as one PDF and ends the mode.
 
 ## Per-order data
 
@@ -183,7 +188,7 @@ needed to continue a day.
 
 ## Processing steps of `prepare`
 
-1. **Read the rules file** (unless `--interactive`). Any error stops the run with the line and
+1. **Read the rules file**. Any error stops the run with the line and
    column of `categories.toml` ([04-rules-file.md](04-rules-file.md)).
 2. **Read the label PDFs** in the order given. Per page: the Order ID, the label-level fields
    (`ship_by`, courier text) and — when the page carries a slip — the item lines by text
@@ -193,7 +198,7 @@ needed to continue a day.
 4. **Merge**: fill each value from the CSV, else the slip/label, and warn per difference. Warn
    about CSV orders with no label page.
 5. **Duplicate guard**: drop the orders already in `state.json` from what is left; warn.
-6. **Picks**: `--interactive` asks the owner; else the rules file, entry by entry. Each pick
+6. **Picks**: `--interactive` shows the menu; else the rules file, entry by entry. Each pick
    takes its orders from what is left; the leftovers become the final pick (the rest).
 7. **Runs**: re-order each saved PDF's orders into runs.
 8. **Write** the saved PDFs, the packing list (when asked and item data is present), `state.json`
