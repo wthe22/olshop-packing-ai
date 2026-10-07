@@ -67,3 +67,18 @@ creator handle, …) are not needed for packing.
 - The sample label PDFs (downloaded 2026-10-07, 562 pages, 562 orders) only partly match the
   sample CSVs (2026-10-06): 227 of their orders are in batch 1, 4 are new in batch 2, 331 are
   in neither.
+
+### Label + packing slip (export option)
+
+- The seller centre can export **Shipping label + Packing slip**: same A6 page, the packing
+  slip printed under the label. The sample (downloaded 2026-10-07 07:16, 3 files, 601 pages,
+  600 orders) holds orders of 2026-10-07, none of them in the sample CSVs.
+- Slip table columns: `Product Name` · `SKU` (holds the **variation**, e.g. `Default`,
+  `Carbon, yamaha`) · `Seller SKU` · `Qty`; then `Qty Total:` and `Order ID: …`. **No SKU ID.**
+- Long cells wrap onto several lines inside their column; a wrap after `-` has no space
+  (`FI 2012-` / `2015`). The full Product Name is printed (not cut).
+- An order whose slip does not fit continues on a second page that repeats the table header
+  and the Order ID and shows the `Customer Message` (= buyer message). In the sample: 1 order
+  of 600; every other order is one page.
+- In the sample every slip has one item line and `Qty Total` always equals the sum of `Qty`.
+- The label part also prints `In transit by: dd/mm/yyyy hh:mm` (ship-by deadline).

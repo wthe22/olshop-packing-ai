@@ -21,15 +21,24 @@ Decided:
 | 3 | Inputs | Label PDFs only should work; the orders CSV stays optional (the packing list needs item data). Warn when the label PDFs carry no product name and quantity (they can be left out at export on the seller centre) |
 | 4 | A4 packing list | Owner's choice per run: one sheet per saved PDF, one sheet for the whole run with a section per saved PDF, or none |
 | 5 | Several downloads per day | Normally each download holds only new labels. Guard: the script remembers every order saved that day; an order seen again is left out of the saved PDFs and listed in a warning (Order ID, tracking ID, when first saved) |
+| 6 | Date and time in conditions | Orders from the CSV must be filterable by date, time of day and date+time, on the time fields that matter at packing time |
+| 7 | "Identical contents" (re-ordering, runs) | Always product name + variation + quantity per line, so the result is the same with or without the CSV |
+| 8 | Date/time fields | `paid_time`, `rts_time`, `created_time` (CSV) and `ship_by` (label `In transit by`, works without the CSV) |
+| 9 | Date/time values | One field per time; the value's form decides: `paid_time = "2026-10-06"` (that day) · `paid_time < "14:00"` (time of day, any date) · `paid_time < "2026-10-06 14:00"` (exact moment) |
+| 10 | Numbers | Saved PDFs numbered through the day (1, 2, 3 …); the runs of identical labels inside each numbered 01, 02 …; written `3-05` on the packing list |
 
-Open, until the owner adds a label PDF exported **with product name and quantity** to
-`samples/` (the current samples have none):
+Item data on the labels: the **Shipping label + Packing slip** export carries product name,
+variation, Seller SKU and quantity per line, but no SKU ID
+([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)).
+Read by text position (column x-ranges); checked on the 600-order sample.
 
-- which fields a condition can use without the CSV (what the label text holds and how reliably
-  it can be read);
-- where item data comes from when both the CSV and item text on the labels are present;
-- what replaces batch and group numbers (01-requirements shared rules 3–7), and what that means
-  for the app (not touched until the PC script is settled).
+Open:
+
+- which other fields a condition can use without the CSV (the slip gives name, variation,
+  Seller SKU, quantities; courier and ship-by come from the label part);
+- when both the CSV and labels with packing slips are given, which one supplies the items
+  (CSV, warning where the slip differs; or slip, CSV only adding SKU ID, category, times);
+- what this means for the app (not touched until the PC script is settled).
 
 Built before D1 and still usable: `orders.py`, `rules.py`, `labels.py` (Order ID per page, page
 copying). `packing_list.py` is built for the pack-group layout and will need changes.
