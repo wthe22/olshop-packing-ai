@@ -4,46 +4,55 @@
 
 | Tool | Runs on | Does |
 |---|---|---|
-| **PC script** | Windows PC, Python | Orders CSV + label PDFs → new orders of the batch, categories, pack groups, one label PDF per pack group, A4 packing list |
+| **PC script** | Windows PC, Python | Label PDFs (plain or with a packing slip) and an optional orders CSV → picks, one saved label PDF per pick, optional A4 packing list |
 | **Android app** | Android phone or tablet, portrait and landscape | Sessions and batches, order list, camera scanning to check parcels, marks with undo, session export/import |
 
-Both read the orders CSV. Only the PC script does PDF work. They share one rules file,
-`categories.toml` ([04-rules-file.md](04-rules-file.md)). There is no network connection
-between them; files are moved by hand (USB, cloud folder, chat to self).
+Both can read the orders CSV (for the PC script it is optional). Only the PC script does PDF
+work. They share one rules file, `categories.toml` ([04-rules-file.md](04-rules-file.md)). There
+is no network connection between them; files are moved by hand (USB, cloud folder, chat to
+self).
 
 ## Concepts
 
 | Term | Meaning |
 |---|---|
-| **Session** | One working day of checking in the app. Holds batches, orders and marks. Created, renamed, deleted, exported to a `.zip`, imported again. The script's equivalent is the day folder |
-| **Batch** | One orders-CSV import, numbered 1, 2, … within the day. Holds the orders that were new in that CSV |
+| **Pick** | One entry of `categories.toml` used by the PC script. Its condition selects orders from what is left; the match is written as one **saved PDF** |
+| **Saved PDF** | The output of one pick: that pick's label pages, re-ordered into **runs** and numbered through the day `1`, `2`, `3`, … ([03-pc-script.md](03-pc-script.md)) |
+| **Run** | Inside a saved PDF, consecutive orders with identical **contents**; numbered `01`, `02`, … within the saved PDF and written `3-05` (saved PDF 3, run 05) |
+| **Contents** | The order written as text: per line `product name` + `variation` + `quantity`, lines sorted. The same with or without a CSV. Two orders with the same contents are packed the same way |
+| **Category** | One entry of `categories.toml`: the app's name for what the script calls a pick |
+| **Condition** | A rule in the condition language (free AND / OR / NOT), e.g. `name contains "sepatu" and total_quantity = 1`. Used by picks and by the app's scan filters |
 | **Order** | Key: `Order ID`. Has one tracking ID and one or more item lines |
-| **Item line** | SKU ID + quantity. Name, variation, Seller SKU and product category are looked up by SKU ID from the newest import |
+| **Item line** | Product, variation, quantity and (from the CSV) SKU ID. Comes from the CSV, else the label's packing slip |
 | **Display name** | Product name up to the first `\|`, trimmed; then ` — ` and the variation. A variation of `Default` or empty is left out. Examples: `Spion Beat — Standard, honda`; `Sepatu Standar Samping Motor` |
-| **Signature** | The packing list written as text: the order's lines as `SKU ID×quantity`, sorted by SKU ID as text, joined with `+`. Example: `1730000000000000001×1+1730000000000000002×2` |
-| **Pack group** | All orders of one batch with the same signature. Numbered 01, 02, … in print order within the batch. Written `2-05` (batch 2, group 05) where the batch is not obvious |
-| **Category** | One entry of `categories.toml`. Every order falls into exactly one: the first category whose condition matches |
-| **Condition** | A rule in the condition language (free AND / OR / NOT), e.g. `name contains "sepatu" and total_quantity = 1`. Used by categories and by the app's scan filters |
+| **Session** | One working day of checking in the app. Holds batches, orders and marks. Created, renamed, deleted, exported to a `.zip`, imported again |
+| **Batch** | *App, to be revised.* One orders-CSV import, numbered 1, 2, … within the day |
+| **Pack group** | *App, to be revised.* All orders of one batch with the same signature |
+| **Signature** | *App, to be revised.* The packing list written as text: the order's lines as `SKU ID×quantity`, sorted by SKU ID as text, joined with `+`. Example: `1730000000000000001×1+1730000000000000002×2` |
 | **Scan filter** | A condition active on the app's scan screen. A scanned order that does not match is rejected and not marked |
 | **Mark** | A check result, recorded as an event. Every mark can be undone |
 
-## Shared batch and group rules (script and app give the same numbers)
+## PC script rules (pick flow)
 
-1. Keep only CSV rows with `Order Status = Perlu dikirim` and
-   `Order Substatus = Menunggu pengambilan`. Ignore every other row (count them).
-2. Group the kept rows by `Order ID`. All rows of one order share the tracking ID.
-3. **Batch N** = orders of this CSV that were not in batches 1 … N−1 of the same day.
-4. **Category** of an order = first category in `categories.toml` whose condition matches.
-5. **Pack groups** = orders of batch N with the same signature.
-6. **Group numbers**: sort the groups by (category position in the file, number of orders
-   descending, signature text ascending) and number them 01, 02, … in that order. Numbering
-   runs through all categories (category A may have 01–04, category B 05–14).
-7. **Orders inside a group**: by `RTS Time` ascending, then `Order ID` ascending. This is the
-   order of the label pages and of the tracking IDs on the packing list.
+1. A page's Order ID comes from the label text (two-step search, [03-pc-script.md](03-pc-script.md));
+   a page without one continues the previous order's pages.
+2. Item lines come from the CSV when given, else the label's packing slip; the label gives the
+   label-level fields (tracking ID, courier, `ship_by`). **The CSV wins** over the slip, and
+   each difference is warned.
+3. An order already saved earlier the same day is left out and warned
+   ([03-pc-script.md](03-pc-script.md)).
+4. **Contents** = per line product name + variation + quantity, lines sorted; the same with or
+   without a CSV.
+5. **Picks**: each `categories.toml` entry in file order takes the matching orders from what is
+   left; the last entry may have no condition and takes the rest; the leftovers are the final
+   "rest" pick.
+6. Inside a saved PDF the orders are re-ordered into **runs** (identical contents next to each
+   other), runs sorted by (number of orders descending, contents text ascending), inside a run
+   the download page order.
+7. Saved PDFs are numbered through the day `1`, `2`, …; runs inside `01`, `02`, …; written
+   `3-05`.
 
-So every orders CSV of the day is imported into both, in the same order. The packing list
-header shows the batch's order count and group count; the app's import summary shows the same
-two numbers so a mismatch is seen at once.
+Details: [03-pc-script.md](03-pc-script.md).
 
 ## Order status (app)
 
@@ -60,20 +69,22 @@ The shown status is the latest mark that is not undone; `removed` overrides it.
 
 ## PC script
 
-- **P1** Read one orders CSV (rules 1–2). Keep only the packing columns
-  ([business-process 02](../business-process/02-data-sources.md)).
-- **P2** Find batch N by comparing with the day's earlier batches (rule 3).
-- **P3** Categories and pack groups from `categories.toml` (rules 4–7).
-- **P4** Read one or more label PDFs. Write one PDF per pack group, in print order, containing
-  that group's label pages unchanged. An order's pages stay together and in their original
-  order (an order can span several pages).
-- **P5** Write the packing list in any of three A4 layouts: **full** (groups with their
-  tracking IDs, then pick summary), **summary** (groups without tracking IDs, then pick
-  summary), **pick** (pick summary only). Chosen per run; several at once allowed.
-- **P6** Print a summary on screen and stop with a clear message on any problem.
+- **P1** Read the label PDFs (required) and the optional orders CSV; per order fill each value
+  from the CSV, else the slip/label ([03-pc-script.md](03-pc-script.md)).
+- **P2** Find each order's pages and its item lines; an order can span several pages.
+- **P3** Build the picks from `categories.toml` (each entry = one pick), taken from what is
+  left; the leftovers are the final "rest" pick. Interactive on request.
+- **P4** Write one saved label PDF per pick (pages unchanged), re-ordered into runs and numbered
+  through the day; leave out orders already saved today (warning).
+- **P5** Write the A4 packing list when asked and item data is present (layouts **full**,
+  **summary**, **pick**; scope per saved PDF, whole invocation, or none).
+- **P6** Print a screen summary and `summary.txt`; warn when there is no item data; stop with a
+  clear message on any problem.
 - Details: [03-pc-script.md](03-pc-script.md).
 
 ## Android app
+
+Not yet revised for the pick flow of the PC script; revised before phase 2.
 
 ### A1 Import a batch
 - Read the orders CSV with the shared rules.

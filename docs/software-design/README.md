@@ -5,9 +5,9 @@ What the two tools do and how they are built. Where it disagrees with
 
 | File | Content |
 |---|---|
-| [01-requirements.md](01-requirements.md) | Concepts, order statuses, the shared batch/group rules, feature list of the PC script (P…) and the app (A…) |
-| [02-design-questions.md](02-design-questions.md) | Questions still open for the owner (none at the moment) |
-| [03-pc-script.md](03-pc-script.md) | The PC script: command, day folder, step-by-step processing, the three packing-list layouts, label file names |
+| [01-requirements.md](01-requirements.md) | Concepts, order statuses, the PC script's pick rules, feature list of the PC script (P…) and the app (A…) |
+| [02-design-questions.md](02-design-questions.md) | Questions still open for the owner (D1 the app, D2 interactive mode, D3 packing-list default) |
+| [03-pc-script.md](03-pc-script.md) | The PC script: inputs, command, picks, saved-PDF numbering, the day state, the three packing-list layouts |
 | [04-rules-file.md](04-rules-file.md) | `categories.toml` and the condition language shared by the script and the app |
 | [05-app-architecture.md](05-app-architecture.md) | Android app: stack, modules, database, import, scan pipeline, session and settings files |
 | [06-app-ui.md](06-app-ui.md) | Android app screens, layouts, scan messages, settings |
