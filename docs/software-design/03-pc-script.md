@@ -38,7 +38,7 @@ Run from the repository root with the project virtual environment:
 python -m packing prepare --labels <label.pdf> [<label.pdf> …] [--csv <orders.csv>]
                           [--rules categories.toml] [--interactive]
                           [--layout full,summary,pick] [--packing-list per-pdf|whole|none]
-                          [--day 2026-10-07] [--work work]
+                          [--day 2026-10-07] [--work work] [--redo]
 ```
 
 | Option | Default | Meaning |
@@ -51,6 +51,7 @@ python -m packing prepare --labels <label.pdf> [<label.pdf> …] [--csv <orders.
 | `--packing-list` | `per-pdf` | Packing-list scope: `per-pdf` (one sheet per saved PDF), `whole` (one sheet with a section per saved PDF), `none` |
 | `--day` | today | The day folder |
 | `--work` | `work` | Folder that holds the day folders. Git-ignored: it contains real order data |
+| `--redo` | off | Forget the day's last invocation (its entries in `state.json`, its saved PDFs and packing lists), then run as normal ([D6](02-design-questions.md#d6--redo-after-fixing-categoriestoml)) |
 
 ## Interactive mode
 
@@ -178,7 +179,7 @@ work/2026-10-07/
   "day": "2026-10-07",
   "saved": [
     {"order_id": "580000000000000001", "tracking_id": "JY0000001234",
-     "pdf": 1, "run": 5, "save_time": "2026-10-07T07:40:12+07:00"}
+     "invocation": 1, "pdf": 1, "run": 5, "save_time": "2026-10-07T07:40:12+07:00"}
   ]
 }
 ```

@@ -35,12 +35,12 @@ class CsvError(Exception):
 
 @dataclass(frozen=True)
 class Line:
-    sku_id: str
+    sku_id: str  # "" when the line comes from a packing slip
     quantity: int
     name: str  # full Product Name
-    variation: str  # "" when the CSV says Default
+    variation: str  # "" when the CSV/slip says Default
     seller_sku: str
-    product_category: str
+    product_category: str  # "" when the line comes from a packing slip
     display_name: str
 
 
@@ -49,9 +49,18 @@ class Order:
     order_id: str
     tracking_id: str
     rts_time: datetime | None
-    courier: str  # Shipping Provider Name
+    courier: str  # Shipping Provider Name, or deduced from the label
     channel: str  # Purchase Channel
-    lines: tuple[Line, ...]  # CSV row order
+    lines: tuple[Line, ...]  # CSV row order / slip row order
+    paid_time: datetime | None = None
+    created_time: datetime | None = None
+    ship_by: datetime | None = None  # label "In transit by"
+    buyer_message: str = ""
+
+    @property
+    def contents(self) -> tuple[tuple[str, str, int], ...]:
+        """Identical-contents key (01-requirements): per line (name, variation, quantity), sorted."""
+        return tuple(sorted((line.name, line.variation, line.quantity) for line in self.lines))
 
     @property
     def signature(self) -> str:
