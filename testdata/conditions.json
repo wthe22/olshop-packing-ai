@@ -1,5 +1,5 @@
 {
-  "about": "Condition-language fixtures shared by the Python script and the Kotlin app (docs/software-design/04-rules-file.md). Shape: about, orders (id -> order fields), cases. A case with 'error' expects parse_condition to raise RulesError with that exact message; otherwise 'text' must parse, format_condition must equal 'canonical', re-parsing the canonical text must give the same AST (round trip), and for each key of 'values' evaluate(condition, that order[, app_values]) must equal the boolean. Positions in error messages are 1-based line and column within the condition text. 'app_fields' true enables category/batch/group (default false rejects them). Fixed error messages: 'line L, col C: expected a condition'; '...: unknown field \"X\"'; '...: field \"X\" is allowed in app scan filters only'; '...: expected a text operator (contains, equals, starts_with) after \"field\"'; '...: expected a number operator (=, !=, <, <=, >, >=) after \"field\"'; '...: expected a string after \"field op\"'; '...: expected an integer after \"field op\"'; \"...: expected ')'\"; '...: unexpected text after the condition'; '...: unterminated string'; '...: bad escape sequence \"\\\\x\"'. All-order IDs, tracking IDs and names are made up.",
+  "about": "Condition-language fixtures shared by the Python script and the Kotlin app (docs/software-design/04-rules-file.md). Shape: about, orders (id -> order fields), cases. A case with 'error' expects parse_condition to raise RulesError with that exact message; otherwise 'text' must parse, format_condition must equal 'canonical', re-parsing the canonical text must give the same AST (round trip), and for each key of 'values' evaluate(condition, that order[, app_values]) must equal the boolean. Positions in error messages are 1-based line and column within the condition text. 'app_fields' true enables category/batch/group (default false rejects them). An optional 'fields' list is the expected fields_used(condition) (sorted here for readability, compared as a set). Date/time orders carry ship_by/paid_time/rts_time/created_time as 'YYYY-MM-DDTHH:MM:SS' ISO strings or null (a null field makes every date/time comparison false). Fixed error messages: 'line L, col C: expected a condition'; '...: unknown field \\\"X\\\"'; '...: field \\\"X\\\" is allowed in app scan filters only'; '...: expected a text operator (contains, equals, starts_with) after \\\"field\\\"'; '...: expected a number operator (=, !=, <, <=, >, >=) after \\\"field\\\"'; '...: expected a string after \\\"field op\\\"'; '...: expected an integer after \\\"field op\\\"'; '...: expected a date \\\"YYYY-MM-DD\\\", a time \\\"HH:MM\\\" or a date and time \\\"YYYY-MM-DD HH:MM\\\"'; \\\"...: expected ')'\\\"; '...: unexpected text after the condition'; '...: unterminated string'; '...: bad escape sequence \\\"\\\\\\\\x\\\"'. All-order IDs, tracking IDs and names are made up.",
   "orders": {
     "o1": {
       "order_id": "580000000000000001",
@@ -16,7 +16,11 @@
           "product_category": "Sepeda Motor",
           "display_name": "Spion Beat — honda"
         }
-      ]
+      ],
+      "created_time": "2026-10-06T08:00:00",
+      "paid_time": "2026-10-06T09:15:00",
+      "rts_time": "2026-10-06T10:00:00",
+      "ship_by": "2026-10-07T14:00:00"
     },
     "o2": {
       "order_id": "580000000000000002",
@@ -42,11 +46,15 @@
           "product_category": "Sepeda Motor",
           "display_name": "Cover Knalpot Beat — hitam"
         }
-      ]
+      ],
+      "created_time": "2026-10-06T08:30:00",
+      "paid_time": "2026-10-06T14:00:30",
+      "rts_time": null,
+      "ship_by": "2026-10-06T17:30:00"
     },
     "o3": {
       "order_id": "580000000000000003",
-      "tracking_id": "TK01234567890",
+      "tracking_id": "TKP0123456789",
       "courier": "JNE",
       "channel": "TikTok",
       "lines": [
@@ -68,7 +76,11 @@
           "product_category": "Tools",
           "display_name": "Kunci \"T\" \\ Motor"
         }
-      ]
+      ],
+      "created_time": null,
+      "paid_time": "2026-10-06T23:59:59",
+      "rts_time": "2026-10-07T00:05:00",
+      "ship_by": null
     },
     "o4": {
       "order_id": "580000000000000004",
@@ -94,7 +106,11 @@
           "product_category": "Sparepart Motor",
           "display_name": "Busi Motor"
         }
-      ]
+      ],
+      "created_time": "2026-10-05T22:00:00",
+      "paid_time": null,
+      "rts_time": "2026-10-06T10:00:30",
+      "ship_by": "2026-10-08T09:00:00"
     }
   },
   "cases": [
@@ -1082,6 +1098,298 @@
     {
       "text": "name contains \"x\"\nand total_quantity contains \"y\"",
       "error": "line 2, col 20: expected a number operator (=, !=, <, <=, >, >=) after \"total_quantity\"",
+      "app_fields": false
+    },
+    {
+      "text": "tracking_id starts_with \"JY\"",
+      "canonical": "tracking_id starts_with \"JY\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      },
+      "fields": [
+        "tracking_id"
+      ]
+    },
+    {
+      "text": "tracking_id contains \"5678\"",
+      "canonical": "tracking_id contains \"5678\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "tracking_id equals \"tkp0123456789\"",
+      "canonical": "tracking_id equals \"tkp0123456789\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "rts_time = \"2026-10-06\"",
+      "canonical": "rts_time = \"2026-10-06\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "rts_time < \"2026-10-07\"",
+      "canonical": "rts_time < \"2026-10-07\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "rts_time != \"2026-10-06\"",
+      "canonical": "rts_time != \"2026-10-06\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "rts_time = \"2026-10-07\"",
+      "canonical": "rts_time = \"2026-10-07\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "ship_by < \"2026-10-07\"",
+      "canonical": "ship_by < \"2026-10-07\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "ship_by != \"2026-10-07\"",
+      "canonical": "ship_by != \"2026-10-07\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "created_time < \"2026-10-06\"",
+      "canonical": "created_time < \"2026-10-06\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      },
+      "fields": [
+        "created_time"
+      ]
+    },
+    {
+      "text": "created_time = \"2026-10-05\"",
+      "canonical": "created_time = \"2026-10-05\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "paid_time < \"14:00\"",
+      "canonical": "paid_time < \"14:00\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "paid_time = \"09:15\"",
+      "canonical": "paid_time = \"09:15\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "paid_time >= \"14:00\"",
+      "canonical": "paid_time >= \"14:00\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": true,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "rts_time <= \"10:00\"",
+      "canonical": "rts_time <= \"10:00\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "paid_time != \"14:00\"",
+      "canonical": "paid_time != \"14:00\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": true,
+        "o4": false
+      }
+    },
+    {
+      "text": "paid_time < \"2026-10-06 14:00\"",
+      "canonical": "paid_time < \"2026-10-06 14:00\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "ship_by = \"2026-10-07 14:00\"",
+      "canonical": "ship_by = \"2026-10-07 14:00\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": false
+      }
+    },
+    {
+      "text": "rts_time > \"2026-10-06 10:00\"",
+      "canonical": "rts_time > \"2026-10-06 10:00\"",
+      "app_fields": false,
+      "values": {
+        "o1": false,
+        "o2": false,
+        "o3": true,
+        "o4": true
+      }
+    },
+    {
+      "text": "RTS_TIME = \"2026-10-06\"",
+      "canonical": "rts_time = \"2026-10-06\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      }
+    },
+    {
+      "text": "paid_time < \"14:00\" or name contains \"sepatu\"",
+      "canonical": "paid_time < \"14:00\" or name contains \"sepatu\"",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": true,
+        "o3": false,
+        "o4": false
+      },
+      "fields": [
+        "name",
+        "paid_time"
+      ]
+    },
+    {
+      "text": "not (ship_by < \"2026-10-07\" or tracking_id starts_with \"TK\") and total_quantity >= 1",
+      "canonical": "not (ship_by < \"2026-10-07\" or tracking_id starts_with \"TK\") and total_quantity >= 1",
+      "app_fields": false,
+      "values": {
+        "o1": true,
+        "o2": false,
+        "o3": false,
+        "o4": true
+      },
+      "fields": [
+        "ship_by",
+        "total_quantity",
+        "tracking_id"
+      ]
+    },
+    {
+      "text": "paid_time < \"2026-13-01\"",
+      "error": "line 1, col 13: expected a date \"YYYY-MM-DD\", a time \"HH:MM\" or a date and time \"YYYY-MM-DD HH:MM\"",
+      "app_fields": false
+    },
+    {
+      "text": "rts_time = \"25:00\"",
+      "error": "line 1, col 12: expected a date \"YYYY-MM-DD\", a time \"HH:MM\" or a date and time \"YYYY-MM-DD HH:MM\"",
+      "app_fields": false
+    },
+    {
+      "text": "ship_by < \"2026-10-06 8:00\"",
+      "error": "line 1, col 11: expected a date \"YYYY-MM-DD\", a time \"HH:MM\" or a date and time \"YYYY-MM-DD HH:MM\"",
+      "app_fields": false
+    },
+    {
+      "text": "created_time >= \"2026-02-30\"",
+      "error": "line 1, col 17: expected a date \"YYYY-MM-DD\", a time \"HH:MM\" or a date and time \"YYYY-MM-DD HH:MM\"",
+      "app_fields": false
+    },
+    {
+      "text": "rts_time = 2026",
+      "error": "line 1, col 12: expected a date \"YYYY-MM-DD\", a time \"HH:MM\" or a date and time \"YYYY-MM-DD HH:MM\"",
+      "app_fields": false
+    },
+    {
+      "text": "paid_time equals \"14:00\"",
+      "error": "line 1, col 11: expected a number operator (=, !=, <, <=, >, >=) after \"paid_time\"",
+      "app_fields": false
+    },
+    {
+      "text": "ship_by contains \"x\"",
+      "error": "line 1, col 9: expected a number operator (=, !=, <, <=, >, >=) after \"ship_by\"",
       "app_fields": false
     }
   ]

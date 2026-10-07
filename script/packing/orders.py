@@ -18,6 +18,8 @@ REQUIRED_COLUMNS = (
     "Order Substatus",
     "Tracking ID",
     "RTS Time",
+    "Paid Time",
+    "Created Time",
     "Shipping Provider Name",
     "Purchase Channel",
     "SKU ID",
@@ -26,6 +28,7 @@ REQUIRED_COLUMNS = (
     "Variation",
     "Seller SKU",
     "Product Category",
+    "Buyer Message",
 )
 
 
@@ -137,6 +140,10 @@ def read_orders(path: Path) -> CsvResult:
         )
         rts_raw = values["RTS Time"]
         rts_time = datetime.strptime(rts_raw, TIME_FORMAT) if rts_raw else None
+        paid_raw = values["Paid Time"]
+        paid_time = datetime.strptime(paid_raw, TIME_FORMAT) if paid_raw else None
+        created_raw = values["Created Time"]
+        created_time = datetime.strptime(created_raw, TIME_FORMAT) if created_raw else None
         order = orders.get(order_id)
         if order is None:
             orders[order_id] = Order(
@@ -146,6 +153,9 @@ def read_orders(path: Path) -> CsvResult:
                 courier=values["Shipping Provider Name"],
                 channel=values["Purchase Channel"],
                 lines=(line,),
+                paid_time=paid_time,
+                created_time=created_time,
+                buyer_message=values["Buyer Message"],
             )
         else:
             orders[order_id] = replace(order, lines=order.lines + (line,))

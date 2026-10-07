@@ -2,16 +2,20 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
 
 import pytest
 
 from packing.orders import Line, Order
 from packing.rules import (
+    CSV_ONLY_FIELDS,
+    ITEM_FIELDS,
     UNCATEGORISED,
     RulesError,
     categorize,
     evaluate,
+    fields_used,
     format_condition,
     load_rules,
     parse_condition,
@@ -21,6 +25,10 @@ REPO = Path(__file__).resolve().parents[2]
 TESTDATA = REPO / "testdata"
 
 FIXTURE = json.loads((TESTDATA / "conditions.json").read_text(encoding="utf-8"))
+
+
+def _dt(value: str | None) -> datetime | None:
+    return datetime.fromisoformat(value) if value else None
 
 
 def _order(data: dict) -> Order:
@@ -39,10 +47,13 @@ def _order(data: dict) -> Order:
     return Order(
         order_id=data["order_id"],
         tracking_id=data["tracking_id"],
-        rts_time=None,
+        rts_time=_dt(data.get("rts_time")),
         courier=data["courier"],
         channel=data["channel"],
         lines=lines,
+        paid_time=_dt(data.get("paid_time")),
+        created_time=_dt(data.get("created_time")),
+        ship_by=_dt(data.get("ship_by")),
     )
 
 
@@ -85,6 +96,8 @@ def test_conditions_fixture(case: dict) -> None:
     assert canonical == case["canonical"]
     # Round trip: parse(format(parse(t))) == parse(t).
     assert parse_condition(canonical, app_fields=app_fields) == cond
+    if "fields" in case:
+        assert sorted(fields_used(cond)) == sorted(case["fields"])
 
     app_values = case.get("app_values")
     for key, expected in case["values"].items():
@@ -98,6 +111,29 @@ def test_fixture_shape() -> None:
         assert "text" in case
         assert ("error" in case) ^ ("canonical" in case and "values" in case)
         assert set(case["values"]) <= set(FIXTURE["orders"]) if "values" in case else True
+        if "fields" in case:
+            assert isinstance(case["fields"], list) and case["fields"]
+
+
+def test_field_constants() -> None:
+    assert CSV_ONLY_FIELDS == frozenset(
+        {"sku_id", "product_category", "channel", "paid_time", "rts_time", "created_time"}
+    )
+    assert ITEM_FIELDS == frozenset(
+        {"name", "display_name", "variation", "sku_id", "seller_sku", "product_category",
+         "line_quantity"}
+    )
+
+
+def test_fields_used_collects_every_field() -> None:
+    cond = parse_condition(
+        'paid_time < "14:00" and (name contains "x" or not courier starts_with "J&T")'
+    )
+    assert fields_used(cond) == frozenset({"paid_time", "name", "courier"})
+    assert fields_used(parse_condition("total_quantity = 1")) == frozenset({"total_quantity"})
+    assert fields_used(parse_condition('not tracking_id starts_with "JY"')) == frozenset(
+        {"tracking_id"}
+    )
 
 
 # ------------------------------------------------------------ repo categories
@@ -226,14 +262,14 @@ VALIDATION_CASES = [
     (
         "condition error",
         '[[category]]\ncode = "B"\nname = "N"\nwhen = \'name foo "y"\'\n',
-        'categories.toml: category "B" (when): line 1, col 6: '
+        'categories.toml, line 4, col 14: category "B" (when): '
         'expected a text operator (contains, equals, starts_with) after "name"',
     ),
     (
         "condition error line 2",
         '[[category]]\ncode = "B"\nname = "N"\n'
         'when = \'\'\'name contains "x"\nand name foo "y"\'\'\'\n',
-        'categories.toml: category "B" (when): line 2, col 10: '
+        'categories.toml, line 5, col 10: category "B" (when): '
         'expected a text operator (contains, equals, starts_with) after "name"',
     ),
 ]
@@ -258,6 +294,20 @@ def test_load_rules_toml_syntax_error(tmp_path: Path) -> None:
     message = str(excinfo.value)
     assert message.startswith("categories.toml: ")
     assert "line 1" in message
+
+
+def test_load_rules_time_error_uses_the_file_position(tmp_path: Path) -> None:
+    path = _toml(
+        tmp_path,
+        '[[category]]\ncode = "A"\nname = "One"\nwhen = \'name contains "x"\'\n'
+        '[[category]]\ncode = "B"\nname = "Two"\nwhen = \'rts_time < "13:99"\'\n',
+    )
+    with pytest.raises(RulesError) as excinfo:
+        load_rules(path)
+    assert str(excinfo.value) == (
+        'categories.toml, line 8, col 20: category "B" (when): expected a date "YYYY-MM-DD", '
+        'a time "HH:MM" or a date and time "YYYY-MM-DD HH:MM"'
+    )
 
 
 def test_load_rules_last_category_may_omit_when(tmp_path: Path) -> None:

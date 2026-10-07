@@ -31,13 +31,13 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
   "Logic in two places") and `testdata/conditions.json`.
 - [x] **1.3 Orders (CSV).** `orders.py`: read CSV, strip values, filter status, group by Order
   ID, display names, signatures. Tests on testdata.
-- [ ] **1.4 Orders: paid and created time.** Add `paid_time` and `created_time` to the order
+- [x] **1.4 Orders: paid and created time.** Add `paid_time` and `created_time` to the order
   record (`rts_time` exists); the conditions need them
   ([04-rules-file](../software-design/04-rules-file.md)). Tests.
 - [x] **1.5 Rules (base).** `rules.py`: TOML loading + validation, condition parser (grammar in
   04-rules-file), evaluator with item-level "any line" semantics, error messages with line and
   column. `testdata/conditions.json` with parse/eval/error cases. Tests.
-- [ ] **1.6 Rules: pick-flow fields.** Date/time comparisons (`ship_by`, `paid_time`,
+- [x] **1.6 Rules: pick-flow fields.** Date/time comparisons (`ship_by`, `paid_time`,
   `rts_time`, `created_time`) with the value forms in 04-rules-file; the new text fields
   `tracking_id` and `courier`; the CSV-only check (`sku_id`, `product_category`, `channel` and
   the CSV times error without a CSV); category errors reported with the line and column of

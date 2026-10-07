@@ -10,7 +10,11 @@ from __future__ import annotations
 
 import csv
 import sys
+
+from datetime import datetime, timezone
 from pathlib import Path
+
+from fpdf import FPDF
 
 HEADER = [
     "Order ID", "Order Status", "Order Substatus", "Cancelation/Return Type",
@@ -70,8 +74,8 @@ EXPORT1 = [
      [(SPION, 1, "Standard")], "Tolong bubble wrap, jangan dilipat"),
     # order 004 and 005 share the group S2x1 and have the same RTS Time (Order ID tie-break)
     ("005", "000000000205", "SiCepat REG", "Tokopedia", "06/10/2026 08:30:00", [(SPION, 1, "Standard")]),
-    ("006", "TK00000000106", "IDX", "TikTok", "06/10/2026 08:40:00",
-     [(SPION, 1, "Standard"), (KNALPOT, 1, "Default")]),
+    ("006", "TKP0000000106", "IDX", "TikTok", "06/10/2026 08:40:00",
+     [(SPION, 1, "Standard"), (KNALPOT, 1, "Default")], "Kirim cepat ya, terima kasih"),
     # order 007 is 006 with the two rows in the other line order (same signature)
     ("007", "JY0000000107", "J&T Express", "TikTok", "06/10/2026 08:45:00",
      [(KNALPOT, 1, "Default"), (SPION, 1, "HONDA")]),
@@ -91,7 +95,7 @@ EXPORT2_NEW = [
     # order 018 and 019 share the group S2x1 and have the same RTS Time (Order ID tie-break)
     ("018", "JY0000000118", "J&T Express", "TikTok", "06/10/2026 10:20:00", [(SPION, 1, "Standard")]),
     ("019", "000000000219", "SiCepat REG", "TikTok", "06/10/2026 10:20:00", [(SPION, 1, "Standard")]),
-    ("020", "TK00000000120", "IDX", "TikTok", "06/10/2026 10:30:00",
+    ("020", "TKP0000000120", "IDX", "TikTok", "06/10/2026 10:30:00",
      [(SPION, 1, "Standard"), (KNALPOT, 1, "Default")]),
     ("021", "000000000221", "SiCepat REG", "Tokopedia", "06/10/2026 10:40:00", [(JOK, 3, "Default")]),
     ("022", "000000000222", "SiCepat REG", "TikTok", "06/10/2026 10:50:00", [(FOOTSTEP, 1, "Default")]),
@@ -188,6 +192,252 @@ def main(argv: list[str] | None = None) -> None:
     export2 = _rows([s for s in EXPORT1 if s[0] != "008"]) + _rows(EXPORT2_NEW) + _rows([IGNORED2], ignored=True)
     _write(out_dir / "orders-1.csv", export1)
     _write(out_dir / "orders-2.csv", export2)
+
+    slip_docs, plain_docs = label_documents()
+    _write_label_pdf(out_dir / "labels-slip.pdf", slip_docs)
+    _write_label_pdf(out_dir / "labels-plain.pdf", plain_docs)
+
+
+# --- label PDFs (task 1.14) ----------------------------------------------------------------
+# A6 298 x 420 pt pages, core font Helvetica. The slip columns and rows are placed at the
+# positions seen on the real samples; labels-slip.pdf uses the orders of orders-2.csv (export 2)
+# plus two made-up orders, labels-plain.pdf holds three plain labels with other Order IDs.
+
+PAGE_WIDTH = 298.0
+PAGE_HEIGHT = 420.0
+SLIP_HEADER_Y = 290.0
+SLIP_LINE_STEP = 8.2  # a wrapped line sits this much lower than the line above
+COLUMN_X = {"Product Name": 5.8, "SKU": 129.6, "Seller SKU": 172.2, "Qty": 264.6}
+COLUMN_WRAP = {"Product Name": 25, "SKU": 9, "Seller SKU": 16}
+QTY_X = 268.6
+QTY_TOTAL_X = 252.2
+QTY_TOTAL_VALUE_X = 288.3
+ORDER_ID_X = 208.1
+CUSTOMER_MESSAGE_X = 10.5
+CUSTOMER_MESSAGE_COLON_X = 70.0
+CUSTOMER_MESSAGE_VALUE_X = 86.6
+PDF_CREATION_DATE = datetime(2026, 1, 1, tzinfo=timezone.utc)  # fixed, so the bytes are stable
+
+_DEDUCED_COURIER = {"J&T Express": "J&T Express", "SiCepat REG": "", "IDX": "IDX"}
+
+
+def _label_order_id(suffix: str) -> str:
+    return "580000000000000" + suffix
+
+
+def _ship_by(suffix: str) -> str | None:
+    if suffix == "902":
+        return None
+    return f"07/10/2026 {10 + int(suffix) % 6:02d}:15"
+
+
+def _ship_by_iso(value: str | None) -> str | None:
+    if value is None:
+        return None
+    return datetime.strptime(value, "%d/%m/%Y %H:%M").isoformat()
+
+
+def _wrap(value: str, limit: int) -> list[str]:
+    """Greedy wrap on spaces so that joining the lines with a space rebuilds the value."""
+    if not value:
+        return []
+    lines: list[str] = []
+    current = ""
+    for word in value.split(" "):
+        candidate = f"{current} {word}" if current else word
+        if not current or len(candidate) <= limit:
+            current = candidate
+        else:
+            lines.append(current)
+            current = word
+    lines.append(current)
+    return lines
+
+
+def label_documents() -> tuple[list[dict], list[dict]]:
+    """One document per order for labels-slip.pdf and labels-plain.pdf."""
+    slip = []
+    for spec in [s for s in EXPORT1 if s[0] != "008"] + EXPORT2_NEW:
+        suffix, tracking, courier = spec[0], spec[1], spec[2]
+        message = spec[6] if len(spec) > 6 else ""
+        rows = [
+            {"name": PRODUCTS[sku][0], "variation": variation,
+             "seller_sku": PRODUCTS[sku][1], "qty": qty}
+            for sku, qty, variation in spec[5]
+        ]
+        slip.append({
+            "order_id": _label_order_id(suffix),
+            "tracking": tracking,
+            "courier": _DEDUCED_COURIER[courier],
+            "courier_text": courier == "J&T Express",
+            "ship_by": _ship_by(suffix),
+            "spaced": False,
+            "rows": rows,
+            "qty_total": sum(row["qty"] for row in rows),
+            "has_slip": True,
+            "continuation_message": message if suffix == "004" else None,
+        })
+    # Not in the CSV: a J&T slip whose cells wrap right after '-' and whose Qty Total is wrong.
+    slip.append({
+        "order_id": _label_order_id("901"),
+        "tracking": "JY0000000901",
+        "courier": "J&T Express",
+        "courier_text": True,
+        "ship_by": "07/10/2026 12:45",
+        "spaced": False,
+        "rows": [
+            {
+                "name": "Cover Knalpot Beat FI 2012-2015 Full Set",
+                "name_lines": ["Cover Knalpot Beat", "FI 2012-", "2015 Full Set"],
+                "variation": "Yamaha-Mio",
+                "variation_lines": ["Yamaha-", "Mio"],
+                "seller_sku": "SPION-SCOL-DH-CY",
+                "seller_sku_lines": ["SPION-SCOL-DH-", "CY"],
+                "qty": 1,
+            },
+            {"name": "Spion Beat Samping", "variation": "Default", "seller_sku": "", "qty": 1},
+        ],
+        "qty_total": 3,
+        "has_slip": True,
+        "continuation_message": None,
+    })
+    # Not in the CSV: a SiCepat slip, 12-digit tracking, no courier text -> courier unknown.
+    slip.append({
+        "order_id": _label_order_id("902"),
+        "tracking": "000000000902",
+        "courier": "",
+        "courier_text": False,
+        "ship_by": None,
+        "spaced": False,
+        "rows": [{"name": "Sepatu Standar", "variation": "honda",
+                  "seller_sku": "SELL-SEP-01", "qty": 2}],
+        "qty_total": 2,
+        "has_slip": True,
+        "continuation_message": None,
+    })
+
+    plain = [
+        {"order_id": _label_order_id("701"), "tracking": "JY0000000701",
+         "courier": "J&T Express", "courier_text": True, "ship_by": "07/10/2026 09:00",
+         "spaced": False, "rows": [], "qty_total": None, "has_slip": False,
+         "continuation_message": None},
+        {"order_id": _label_order_id("702"), "tracking": "TKP0000000702",
+         "courier": "IDX", "courier_text": False, "ship_by": "07/10/2026 09:30",
+         "spaced": True, "rows": [], "qty_total": None, "has_slip": False,
+         "continuation_message": None},
+        {"order_id": _label_order_id("703"), "tracking": "000000000703",
+         "courier": "", "courier_text": False, "ship_by": None,
+         "spaced": False, "rows": [], "qty_total": None, "has_slip": False,
+         "continuation_message": None},
+    ]
+    return slip, plain
+
+
+def label_expectations() -> dict[str, dict]:
+    """The hand-checked truth for testdata/expected-labels.json, taken from the documents."""
+    slip_docs, plain_docs = label_documents()
+    expected: dict[str, dict] = {}
+    for doc in slip_docs:
+        pages = 1 + (1 if doc["continuation_message"] is not None else 0)
+        expected[doc["order_id"]] = {
+            "pages": pages,
+            "tracking_id": doc["tracking"],
+            "courier": doc["courier"],
+            "ship_by": _ship_by_iso(doc["ship_by"]),
+            "has_slip": True,
+            "lines": [
+                [row["name"], "" if row["variation"] == "Default" else row["variation"],
+                 row["seller_sku"], row["qty"]]
+                for row in doc["rows"]
+            ],
+            "qty_total": doc["qty_total"],
+            "customer_message": doc["continuation_message"] or "",
+        }
+    for doc in plain_docs:
+        expected[doc["order_id"]] = {
+            "pages": 1,
+            "tracking_id": doc["tracking"],
+            "courier": doc["courier"],
+            "ship_by": _ship_by_iso(doc["ship_by"]),
+            "has_slip": False,
+            "lines": [],
+            "qty_total": None,
+            "customer_message": "",
+        }
+    return expected
+
+
+def _draw_label_page(pdf: FPDF, doc: dict) -> None:
+    pdf.set_font("Helvetica", size=9)
+    spaced = doc["spaced"]
+
+    def put(x: float, y: float, value: str) -> None:
+        pdf.text(x, y, " ".join(value) if spaced else value)
+
+    put(5.8, 20, "Shipping Label")
+    put(5.8, 36, f"Order Id: {doc['order_id']}" if spaced else doc["order_id"])
+    if doc["ship_by"]:
+        put(5.8, 52, f"In transit by: {doc['ship_by']}")
+    for index in range(5):
+        put(5.8, 66 + index * 12, doc["tracking"])
+    if doc["courier_text"]:
+        put(5.8, 130, "www.jet.co.id")
+
+
+def _draw_slip_header(pdf: FPDF) -> None:
+    pdf.set_font("Helvetica", size=9)
+    for word, x in COLUMN_X.items():
+        pdf.text(x, SLIP_HEADER_Y, word)
+
+
+def _draw_slip_table(pdf: FPDF, doc: dict) -> None:
+    _draw_slip_header(pdf)
+    y = SLIP_HEADER_Y + SLIP_LINE_STEP
+    for row in doc["rows"]:
+        name_lines = row.get("name_lines") or _wrap(row["name"], COLUMN_WRAP["Product Name"])
+        variation_lines = row.get("variation_lines") or _wrap(row["variation"], COLUMN_WRAP["SKU"])
+        if row.get("seller_sku_lines") is not None:
+            seller_lines = row["seller_sku_lines"]
+        else:
+            seller_lines = _wrap(row["seller_sku"], COLUMN_WRAP["Seller SKU"])
+        for index, line in enumerate(name_lines):
+            pdf.text(COLUMN_X["Product Name"], y + index * SLIP_LINE_STEP, line)
+        for index, line in enumerate(variation_lines):
+            pdf.text(COLUMN_X["SKU"], y + index * SLIP_LINE_STEP, line)
+        for index, line in enumerate(seller_lines):
+            pdf.text(COLUMN_X["Seller SKU"], y + index * SLIP_LINE_STEP, line)
+        pdf.text(QTY_X, y, str(row["qty"]))
+        y += SLIP_LINE_STEP * max(len(name_lines), len(variation_lines), len(seller_lines), 1)
+    y += SLIP_LINE_STEP
+    pdf.text(QTY_TOTAL_X, y, "Qty Total:")
+    pdf.text(QTY_TOTAL_VALUE_X, y, str(doc["qty_total"]))
+    y += SLIP_LINE_STEP
+    pdf.text(ORDER_ID_X, y, f"Order ID: {doc['order_id']}")
+
+
+def _draw_continuation(pdf: FPDF, doc: dict) -> None:
+    _draw_slip_header(pdf)
+    y = SLIP_HEADER_Y + SLIP_LINE_STEP
+    pdf.text(ORDER_ID_X, y, f"Order ID: {doc['order_id']}")
+    y += SLIP_LINE_STEP
+    pdf.text(CUSTOMER_MESSAGE_X, y, "Customer Message")
+    pdf.text(CUSTOMER_MESSAGE_COLON_X, y, ":")
+    pdf.text(CUSTOMER_MESSAGE_VALUE_X, y, doc["continuation_message"])
+
+
+def _write_label_pdf(path: Path, docs: list[dict]) -> None:
+    pdf = FPDF(unit="pt", format=(PAGE_WIDTH, PAGE_HEIGHT))
+    pdf.set_auto_page_break(False)
+    pdf.set_creation_date(PDF_CREATION_DATE)
+    for doc in docs:
+        pdf.add_page()
+        _draw_label_page(pdf, doc)
+        if doc["has_slip"]:
+            _draw_slip_table(pdf, doc)
+        if doc["continuation_message"] is not None:
+            pdf.add_page()
+            _draw_continuation(pdf, doc)
+    pdf.output(path)
 
 
 if __name__ == "__main__":

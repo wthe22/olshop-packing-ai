@@ -24,6 +24,8 @@ def _row(**overrides):
         "Order Substatus": "Menunggu pengambilan",
         "Tracking ID": "JY0000000101",
         "RTS Time": "06/10/2026 08:00:00",
+        "Paid Time": "06/10/2026 07:30:00",
+        "Created Time": "06/10/2026 07:00:00",
         "Shipping Provider Name": "J&T Express",
         "Purchase Channel": "TikTok",
         "SKU ID": "1730000000000000001",
@@ -32,6 +34,7 @@ def _row(**overrides):
         "Variation": "Default",
         "Seller SKU": "S1",
         "Product Category": "Aksesoris Sepeda Motor",
+        "Buyer Message": "",
     }
     values.update(overrides)
     return [values[name] for name in REQUIRED_COLUMNS]
@@ -115,6 +118,28 @@ def test_rts_time_is_parsed_and_first_row_wins():
     assert orders["580000000000000001"].rts_time == datetime(2026, 10, 6, 8, 0, 0)
     assert orders["580000000000000001"].courier == "J&T Express"
     assert orders["580000000000000005"].channel == "Tokopedia"
+
+
+def test_paid_and_created_time_are_parsed():
+    orders = read_orders(ORDERS1).orders
+    first = orders["580000000000000001"]
+    assert first.paid_time == datetime(2026, 10, 6, 7, 0, 5)
+    assert first.created_time == datetime(2026, 10, 6, 7, 0, 0)
+
+
+def test_buyer_message_is_read_per_order():
+    orders = read_orders(ORDERS1).orders
+    assert orders["580000000000000004"].buyer_message == "Tolong bubble wrap, jangan dilipat"
+    assert orders["580000000000000001"].buyer_message == ""
+
+
+def test_empty_paid_and_created_time_are_none(tmp_path):
+    path = tmp_path / "no-times.csv"
+    rows = [_row(**{"Paid Time": "\t", "Created Time": ""})]
+    _write_csv(path, list(REQUIRED_COLUMNS), rows)
+    order = read_orders(path).orders["580000000000000001"]
+    assert order.paid_time is None
+    assert order.created_time is None
 
 
 def test_missing_required_column_is_named(tmp_path):
