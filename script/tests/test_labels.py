@@ -1,6 +1,9 @@
 """labels.py: Order ID per page, page copying, group file names (test PDFs made here)."""
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -8,8 +11,18 @@ from fpdf import FPDF
 from fpdf.enums import XPos, YPos
 from pypdf import PdfReader
 
+from conftest import TESTDATA
 from packing import labels
-from packing.labels import LabelPage, LabelSet, LabelError, find_order_id, group_file_name
+from packing.labels import (
+    LabelError,
+    LabelPage,
+    LabelSet,
+    deduce_courier,
+    find_order_id,
+    find_ship_by,
+    find_tracking_id,
+    group_file_name,
+)
 from packing.orders import Line
 
 
@@ -191,3 +204,76 @@ def test_items_are_cut_at_100_characters_with_ellipsis():
     items = name[len("05 ×3 ") : -len(".pdf")]
     assert len(items) == 100
     assert items.endswith("…")
+
+
+# --- LabelSet.orders on the committed testdata ---------------------------------------------
+
+def _as_expected(order) -> dict:
+    return {
+        "pages": len(order.pages),
+        "tracking_id": order.tracking_id,
+        "courier": order.courier,
+        "ship_by": order.ship_by.isoformat() if order.ship_by else None,
+        "has_slip": order.has_slip,
+        "lines": [[line.name, line.variation, line.seller_sku, line.quantity] for line in order.lines],
+        "qty_total": order.qty_total,
+        "customer_message": order.customer_message,
+    }
+
+
+def test_orders_on_testdata_match_expected_labels_json():
+    expected = json.loads((TESTDATA / "expected-labels.json").read_text(encoding="utf-8"))
+    orders = LabelSet.open([TESTDATA / "labels-slip.pdf", TESTDATA / "labels-plain.pdf"]).orders()
+    assert list(orders) == list(expected)  # download order
+    for order_id, expected_order in expected.items():
+        assert _as_expected(orders[order_id]) == expected_order, order_id
+
+
+def test_regenerating_the_label_pdfs_gives_identical_bytes(tmp_path):
+    subprocess.run(
+        [sys.executable, str(TESTDATA / "make_testdata.py"), str(tmp_path)],
+        check=True, capture_output=True, text=True,
+    )
+    for name in ("labels-slip.pdf", "labels-plain.pdf"):
+        assert (tmp_path / name).read_bytes() == (TESTDATA / name).read_bytes(), name
+
+
+# --- find_tracking_id / deduce_courier / find_ship_by --------------------------------------
+
+def test_tracking_id_is_never_the_order_id():
+    order_id = "580000000000000001"
+    assert find_tracking_id(f"{order_id} {order_id}", order_id) == ""
+
+
+def test_tracking_id_is_the_most_frequent_token():
+    text = "JY0000001234 junk JY0000001234 JY0000001234 JY0000009999"
+    assert find_tracking_id(text) == "JY0000001234"
+
+
+def test_tracking_id_of_a_spaced_page_uses_the_collapsed_text():
+    assert find_tracking_id("T K P 0 0 0 0 0 0 0 1 0 6 a b c") == "TKP0000000106"
+
+
+def test_courier_from_the_label_text():
+    assert deduce_courier("Shipped with www.jet.co.id today", "JY0000001234") == "J&T Express"
+
+
+def test_courier_from_an_unambiguous_tracking_form():
+    assert deduce_courier("no text clue", "JY0000001234") == "J&T Express"
+    assert deduce_courier("no text clue", "TKP0000000106") == "IDX"
+
+
+def test_ambiguous_tracking_form_alone_gives_an_empty_courier():
+    # 12 digits starting 00 is shared by SiCepat and J&T Cargo.
+    assert deduce_courier("no text clue", "000000000202") == ""
+
+
+def test_courier_is_empty_when_nothing_matches():
+    assert deduce_courier("no text clue", "") == ""
+
+
+def test_ship_by_is_read_from_the_label_and_from_a_spaced_page():
+    assert find_ship_by("In transit by: 07/10/2026 15:30") is not None
+    assert find_ship_by("no deadline here") is None
+    spaced = " ".join("In transit by: 07/10/2026 15:30")
+    assert find_ship_by(spaced).hour == 15  # the collapsed search finds it

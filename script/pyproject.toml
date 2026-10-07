@@ -15,5 +15,8 @@ dev = ["pytest>=9.1"]
 [tool.setuptools]
 packages = ["packing"]
 
+[tool.setuptools.package-data]
+packing = ["*.toml"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

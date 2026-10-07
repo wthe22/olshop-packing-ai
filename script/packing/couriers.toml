@@ -1,0 +1,29 @@
+# Courier deduction data, loaded by packing.labels with tomllib.
+#
+# Each [[courier]] entry has:
+#   name             the courier name deduce_courier() returns
+#   text             case-insensitive substrings searched in the page text and in the
+#                    whitespace-collapsed text; a courier name or web address printed on
+#                    the label (in the sample only J&T prints one)
+#   tracking         optional regex for the tracking-ID form; a token (or a match in the
+#                    collapsed text) must match it fully
+#   tracking_unique  true  = the tracking form alone identifies this courier
+#                    false = another courier shares the form, so it needs a text clue too
+
+[[courier]]
+name = "J&T Express"
+text = ["jet.co.id"]
+tracking = "JY\\d{10}"
+tracking_unique = true
+
+[[courier]]
+name = "IDX"
+text = []
+tracking = "TKP\\d{10}"
+tracking_unique = true
+
+[[courier]]
+name = "SiCepat"
+text = ["sicepat"]
+tracking = "00\\d{10}"
+tracking_unique = false

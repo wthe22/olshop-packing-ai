@@ -35,7 +35,7 @@
 | Column | Use |
 |---|---|
 | `Order ID` | 18 digits. Printed as text on the label |
-| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` + 10 digits; SiCepat 12 digits starting `00`; IDX `TK…` 13 characters; J&T Cargo 12 digits |
+| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` + 10 digits; SiCepat 12 digits starting `00`; IDX `TKP` + 10 digits; J&T Cargo 12 digits |
 | `Package ID` | 19 digits. Exactly one per order in the samples |
 | `SKU ID` | 19 digits, always filled. The only stable item identifier |
 | `Product Name` | Long (up to ~80 characters). The part before the first `\|` is the short product name, e.g. `Spion Beat \| Kaca Spion Motor …` → `Spion Beat` |
