@@ -51,7 +51,7 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
   slips, `Qty Total` cross-check, `Customer Message`). Tests with generated label+slip PDFs.
 - [x] **1.9 Courier deduction.** From the tracking-ID pattern, else the label text (courier
   name, web address, sort-code style); unknown → empty + warning listing the orders. Tests.
-- [ ] **1.10 Picks and day state (`picks.py`).** Merge the CSV over the slip with a warning per
+- [x] **1.10 Picks and day state (`picks.py`).** Merge the CSV over the slip with a warning per
   difference; the contents key; the picks in rules order taking from what is left; the final
   "rest" pick; re-ordering into runs; saved-PDF and run numbering through the day;
   `work/<day>/state.json`; the duplicate guard. Tests. (Replaces `batches.py`.)
@@ -61,7 +61,7 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
 - [x] **1.12 Packing list for picks.** Headings = saved PDF number + pick code/name; groups =
   runs (`3-05`); scope `per-pdf` / `whole` / `none`; error or skip with a message when there is
   no item data. Tests.
-- [ ] **1.13 Command line.** `prepare` with optional `--csv`, `--rules`, `--interactive`,
+- [x] **1.13 Command line.** `prepare` with optional `--csv`, `--rules`, `--interactive`,
   `--layout`, `--packing-list`, `--day`, `--work`; screen summary and `summary.txt`; errors and
   warnings as in 03-pc-script.
 - [x] **1.14 Test data (labels).** `testdata/make_testdata.py` also writes label PDFs (plain

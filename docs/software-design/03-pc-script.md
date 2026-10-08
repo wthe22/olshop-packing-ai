@@ -82,7 +82,7 @@ straight through:
 | `paid_time`, `rts_time`, `created_time` | The CSV (`Paid Time`, `RTS Time`, `Created Time`). CSV-only |
 | `channel` | The CSV `Purchase Channel`. CSV-only |
 | item lines | The CSV rows (product name, variation, `SKU ID`, Seller SKU, quantity, product category); else the slip table |
-| `Customer Message` | The slip's continuation page; else the CSV `Buyer Message` |
+| buyer message | The CSV `Buyer Message`; else the slip's `Customer Message` (continuation page) |
 
 **The CSV wins** over the slip and the label, and every difference is warned (Order ID, field,
 the two values). An order in the CSV with no label page is a warning (a download may be
