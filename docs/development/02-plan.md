@@ -4,7 +4,10 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 1 in progress (design revised for the pick flow).**
+Status: **Phase 1 in progress (design revised for the pick flow).** Code tasks done (270 tests
+pass); left: 1.15 sample run, 1.16 user guide, then the owner review. Open choices with the
+default the code follows: [02-design-questions.md](../software-design/02-design-questions.md)
+(D3–D8).
 
 ---
 
@@ -73,6 +76,29 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
   these orders, so with the CSV every order is warned "not in the CSV" and the slip values are
   used. Then the old plain-label files without slips: expect the "no item data" warning. Record
   the numbers here.
+  - Done so far (reader level, `LabelSet.orders()`): slip files 600 orders in 34.5 s, all with
+    item lines, `Qty Total` = sum on all 600, `ship_by` on all 600, J&T 517, courier unknown
+    83, tracking ID not found 1. Plain files: 562 orders in 22 s, no slip, no `ship_by`
+    (plain labels do not print it), J&T 511, IDX 1, unknown 50, tracking ID not found 1.
+  - First CLI run (slip files, no CSV, repo `categories.toml`) stopped correctly with
+    `error: pick "C" uses field "product_category", which needs the orders CSV`; see
+    [D8](../software-design/02-design-questions.md#d8--example-rules-file-and-labels-only-runs).
+    The CSV-only check now runs before the labels are read (instant error).
+  - Still to run: the slip files with a rules file that has no CSV-only field (e.g. a copy of
+    `categories.toml` with pick C removed, outside the repo or in `work/`); the slip files with
+    `--csv samples/orders-06-1.csv` (expect the D4 warning); the plain files; a second
+    invocation (duplicates skipped); `--redo`; `--interactive`; each layout and scope. Check
+    the saved PDFs and packing lists by eye, page counts = label pages. Print counts only,
+    never real IDs or names.
+- [ ] **1.16 User guide.** `docs/user-guide/README.md` (index) and `docs/user-guide/01-pc-script.md`
+  for the owner (not a developer), under ~250 lines: what it does; setup (link 01-setup);
+  daily use step by step (which export to download, the copy-paste command, what is written to
+  `work/<day>/`, printing); several downloads a day; fixing a mistake (`--redo`); interactive
+  menu with an example session; the rules file with 3-4 example conditions (link 04); all
+  options; every warning/error with what to do. Examples are real output of runs on `testdata/`
+  (made-up data). Add the folder to the table in `docs/README.md` ("how to use a finished tool
+  belongs in `user-guide/`"), to the Docs line in `AGENTS.md`, and point the "Run the script"
+  row of `docs/development/README.md` to it.
 
 **Owner review:** the owner runs `prepare` on a real label download (a rules-file run and an
 interactive run), with and without the CSV, prints the packing list (each layout once) and a few

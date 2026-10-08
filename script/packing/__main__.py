@@ -118,10 +118,13 @@ def _prepare(args: argparse.Namespace, input_fn: Callable[[str], str]) -> int:
     day_dir = Path(args.work) / day
 
     categories = load_rules(Path(args.rules))
+    if not args.interactive and not args.csv:
+        # Fail before the slow label reading; item fields are checked once the labels are read.
+        check_fields(categories, has_csv=False, has_items=True)
+    csv_result = read_orders(Path(args.csv)) if args.csv else None
     label_paths = _expand(args.labels)
     label_set = LabelSet.open(label_paths)
     label_orders = label_set.orders()
-    csv_result = read_orders(Path(args.csv)) if args.csv else None
 
     uses_csv = csv_is_used(label_orders, csv_result)
     slip_pages = sum(

@@ -51,3 +51,15 @@ plain re-run saves nothing.
 1. Saved PDFs `3 Z Lainnya ×393.pdf`, packing lists `packing-list-3.pdf` (per-pdf) or
    `packing-list.pdf` (whole), all directly in `work/<day>/`. **Built for now.**
 2. One subfolder per invocation (`work/<day>/run-1/ …`), numbering still through the day.
+
+## D8 — Example rules file and labels-only runs
+
+The repo's `categories.toml` has pick C `product_category contains "sepeda motor"`. Product
+category is only in the CSV, so with labels alone the run stops
+(`pick "C" uses field "product_category", which needs the orders CSV`).
+
+1. Keep the error; the owner writes picks on label/slip fields (name, variation, courier, …)
+   when running without the CSV. **Built for now.**
+2. Rewrite pick C in the example file on `name` (e.g. `name contains "motor"`).
+3. Skip a pick whose field has no source (warning), and carry on with the next one.
+4. Remember product name → category from every CSV seen, and use it when the CSV is missing.
