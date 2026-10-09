@@ -1,6 +1,7 @@
 # Development
 
-How to set up, build, test and continue the two tools. Design is in
+How to set up, build, test and continue the tools (PC app, Android app; the Python PC script
+is the reference implementation). Design is in
 [`../software-design/`](../software-design/); this folder is about doing the work.
 
 | File | Content |
@@ -45,7 +46,14 @@ docs/
   business-process/        how the work is done; facts about the platform files
   software-design/         what to build
   development/             this folder
-script/                    PC script (Python)
+pc/                        PC app (Rust + Tauri), created in phase 2 (07-pc-app › Code layout)
+  Cargo.toml               workspace
+  crates/engine/           rules, labels/slips → orders, plan, runs, day state (no PDF code)
+  crates/pdf/              PDFium: read text, copy pages, packing lists
+  crates/cli/              developer command line (tests, sample runs)
+  app/                     Tauri app: Svelte screens (src/), Rust commands (src-tauri/)
+  tools/get-pdfium.sh      downloads the pinned pdfium.dll into pc/vendor/ (git-ignored)
+script/                    PC script (Python), reference implementation
   pyproject.toml
   packing/                 the package (python -m packing …)
   tests/
@@ -67,6 +75,9 @@ work/                      script output with real data, git-ignored
 | Run the script | `python -m packing prepare --labels … [--csv …]` (03-pc-script) |
 | Label PDFs → CSV | `python script/tools/extract_labels.py "samples/*Shipping label*.pdf" -o work/labels.csv` |
 | Diff two CSVs | `python script/tools/diff_csv.py A.csv B.csv [--missing f.csv --new f.csv --common f.csv]` (by Order ID; prints the counts and IDs, writes a file only per option) |
+| PC app: Rust tests | `cd pc && cargo test` |
+| PC app: run in development | `cd pc/app && npm run tauri dev` |
+| PC app: installer | `cd pc/app && npm run tauri build` → `pc/target/release/bundle/nsis/` |
 | App build (debug APK) | `cd android && ./gradlew assembleDebug` |
 | App unit tests | `cd android && ./gradlew test` |
 | Install on the phone | `cd android && ./gradlew installDebug` (phone on USB, debugging on) |

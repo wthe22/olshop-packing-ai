@@ -136,7 +136,12 @@ The date is written year-month-day; the time is `HH:MM` without seconds.
 | `group` | number | order | — | **App scan filters only**; meaning revised with the app |
 
 - `sku_id`, `product_category`, `channel`, `paid_time`, `rts_time` and `created_time` need a
-  CSV; a pick using one without a CSV stops the run ([03-pc-script.md](03-pc-script.md)).
+  CSV; a pick using one without a CSV stops the run ([03-pc-script.md](03-pc-script.md)). The
+  PC app reads no CSV, so in its rules these fields are always an error
+  ([07-pc-app.md](07-pc-app.md#fields-the-conditions-can-use)).
+- `product_category` is the platform's category, not the shop's: do not use it in
+  `categories.toml` (pick C of the example above is still to be changed, see
+  [D10](02-design-questions.md#d10--pick-c-product_category-in-categoriestoml)).
 - Item fields need item data (a slip or a CSV); a pick using one with neither stops the run.
 - Categories may use only the fields without "app scan filters only" (a category cannot depend
   on itself or on numbering that is computed after the categories).

@@ -1,0 +1,338 @@
+# 07 — PC App: Behaviour and Architecture
+
+The **PC app** is a Windows desktop program with windows and buttons. It replaces the Python
+command-line script for daily use: the owner adds the day's label downloads, sees the picks
+with their counts, adjusts them if needed, and saves the label PDFs and packing lists — without
+a terminal. The screens are in [08-pc-app-ui.md](08-pc-app-ui.md).
+
+The whole program is written in **Rust** (engine and window), with the screens in
+**Svelte + TypeScript** inside a **Tauri 2** window. The Python script of phase 1
+([03-pc-script.md](03-pc-script.md)) is not used by the app; it stays in the repository as the
+**reference implementation**: the Rust engine must give the same picks, runs and pages on the
+same input ([D3](02-design-questions.md#d3--the-python-script-after-the-rewrite)).
+
+Open choices for the owner are marked *(D2)*, *(D3)*, … and explained in
+[02-design-questions.md](02-design-questions.md). Each says what is **built for now**.
+
+## What carries over from the script, what changes
+
+The reading and sorting rules of [03-pc-script.md](03-pc-script.md) carry over unchanged:
+
+| Rule | Where it is described |
+|---|---|
+| Order ID per page (two-step search), multi-page orders | 03 › *Order ID from the label*, *Multi-page orders* |
+| Reading the packing slip by text position (columns, rows, wrapped cells, `Qty Total` check) | 03 › *Reading the packing slip* |
+| Courier deduction from the label text and the tracking-ID form (`couriers.toml`) | 03 › *Courier deduction* |
+| Picks taken in order from what is left; the rest | 03 › *Picks* |
+| Runs inside a saved PDF (identical contents together, sort order) | 03 › *A saved PDF* |
+| Saved-PDF numbers through the day, run numbers `3-05` | 03 › *Numbering and file names* |
+| Duplicate guard (an order saved earlier the same day is left out, warned) | 03 › *Picks* |
+| The three packing-list layouts `full`, `summary`, `pick` and their look | 03 › *Packing list (A4)* |
+| `categories.toml` and the condition language | [04-rules-file.md](04-rules-file.md) |
+
+What is different in the app (these are owner decisions):
+
+| Topic | Script (phase 1) | App |
+|---|---|---|
+| How it is used | Command typed in Git Bash | Windows program, buttons ([08](08-pc-app-ui.md)) |
+| Orders CSV | Optional input | **Not read at all.** All order data comes from the label and its packing slip |
+| Plain labels (no packing slip) | Allowed with a warning | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
+| Rules file vs interactive menu | Two modes (`--interactive`) | One screen: the rules are applied in order as a proposal; the owner can skip, move or add a pick for this batch before saving ([08 › Plan](08-pc-app-ui.md#3-plan)) |
+| Undo a run | `--redo` (forget the last run) | **Revert** (undo the last batch) and **Amend** (redo the last batch in place), like git |
+| Output folder | `work/<day>/` flat | `labels/<day>/batch <b>/` inside the data folder, one subfolder per batch *(D5)* |
+| Saved-PDF name | Fixed `<n> <code> <name> ×<orders>.pdf` | Suggested the same way; the owner can rename before saving *(D5)* |
+| Packing-list default | `per-pdf`, layout `full` | `per-pdf`, layout `pick` (changeable per batch) |
+| Fields in conditions | Includes the CSV-only fields | Only fields the label/slip carry (below) |
+
+## Words used in this document
+
+| Word | Meaning |
+|---|---|
+| **Batch** | One round of the daily steps ([business-process 01](../business-process/01-packing-workflow.md#daily-steps)): arrange shipment, download the labels (one or more files of up to 200 pages), prepare them in the app. Numbered 1, 2, 3, … within the day. In the app, one **Save** = one batch |
+| **Draft** | A batch that has been read but not saved yet. It lives only in the app's memory; closing the app forgets it and nothing is written |
+| **Plan** | The list of picks of a draft, in order, with their counts. Starts as the `categories.toml` entries in file order |
+| **Data folder** | The folder where the app keeps `categories.toml` and the `labels/` folder with every day's output *(D4)* |
+| **Pick**, **saved PDF**, **run**, **contents** | As in [01-requirements.md](01-requirements.md#concepts) |
+
+## Inputs
+
+| Input | Content |
+|---|---|
+| Label PDFs | The *Shipping label + Packing slip* files of one batch ([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)). One or more files; the seller centre splits a download into files of at most 200 pages |
+| `categories.toml` | In the data folder. Each entry is one pick ([04-rules-file.md](04-rules-file.md)). Edited inside the app ([08 › Categories](08-pc-app-ui.md#5-categories)) or by hand |
+| `couriers.toml` | The courier-deduction data, built into the program (same content as `script/packing/couriers.toml`) |
+| The day's `state.json` | What earlier batches of the same day saved (below) |
+
+### Every page must carry a packing slip
+
+The packing slip is the only source of item data (product name, variation, Seller SKU,
+quantity). A page that is not a continuation page and has no slip table stops the batch:
+
+> **These labels have no packing slip.** 200 of 200 pages are plain shipping labels. In the
+> seller centre, download the labels again with **Shipping label + Packing slip**.
+
+Nothing is written. If only some pages lack the slip, the message names the file and the page
+numbers.
+
+### Fields the conditions can use
+
+Only fields with a source on the label or slip:
+
+| Field | Level | Source |
+|---|---|---|
+| `name`, `display_name`, `variation`, `seller_sku`, `line_quantity` | item | slip |
+| `total_quantity`, `distinct_items` | order | computed from the slip |
+| `tracking_id`, `courier`, `ship_by` | order | label |
+
+A condition that uses a CSV field (`sku_id`, `product_category`, `channel`, `paid_time`,
+`rts_time`, `created_time`) is an error in the rules check, with line and column:
+
+> `line 18, col 8: field "product_category" needs the orders CSV, which the PC app does not read`
+
+The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04. The repository's
+`categories.toml` has such a pick today (pick C); see *(D10)*.
+
+## What happens in one batch
+
+1. **Choose the files** ([08 › New batch](08-pc-app-ui.md#2-new-batch)). Before reading, the
+   app checks each file's fingerprint (size + SHA-256) against `state.json`: a file already
+   used in an earlier batch today is shown as *used in batch 1* and not ticked.
+2. **Read** the files in the order shown (default: by file name, which is download order),
+   page by page, with a progress bar and a Cancel button. Per page: the Order ID, the
+   label-level fields, the slip lines. Pages are grouped into orders (03 rules). Every order
+   gets its **download position** (1, 2, 3, … over all files of the batch); runs keep this
+   order inside a run.
+3. **Check**: no-slip pages stop the batch (above); `Qty Total` differences, unknown couriers
+   and missing tracking IDs are warnings.
+4. **Duplicate guard**: orders already saved today are taken out and listed (Order ID,
+   tracking ID, batch, saved-PDF number, time).
+5. **Plan**: the `categories.toml` entries in file order, each taking its orders from what is
+   left; the leftovers form the last pick, the rest. The owner may change the plan for this
+   batch only: skip a pick, move it up or down, add a one-off condition at any position,
+   rename the file. Every change recounts the whole plan at once (all in memory, no file
+   written).
+6. **Save** (one button):
+   1. Number the saved PDFs from the day's next number (after the last batch's last number).
+   2. Re-order each pick's orders into runs.
+   3. Write everything into a temporary folder `labels/<day>/batch <b>.partial/`: the saved
+      PDFs (pages copied unchanged), the packing lists, `summary.txt`.
+   4. Rename the folder to `batch <b>` and add the batch to `state.json`.
+
+   If anything fails before step 4, the temporary folder is deleted and the day is as before
+   — there is never a half-written batch.
+
+## Day folder
+
+```
+<data folder>/
+  categories.toml
+  labels/
+    2026-10-07/
+      state.json
+      batch 1/
+        1 A Sepatu ×172.pdf
+        2 B Spion & Knalpot ×35.pdf
+        3 Z Lainnya ×393.pdf
+        packing-list-1.pdf
+        packing-list-2.pdf
+        packing-list-3.pdf
+        summary.txt
+      batch 2/
+        4 A Sepatu ×88.pdf
+        5 Z Lainnya ×41.pdf
+        packing-list-4.pdf
+        packing-list-5.pdf
+        summary.txt
+```
+
+- Saved-PDF numbers run through the day (batch 2 starts at 4), so "sort by name" inside a batch
+  folder is printing order, and a number on the packing list is unique for the whole day.
+- Folder and file names follow *(D5)*. Characters not allowed in Windows file names
+  (`\ / : * ? " < > |`) become `-`; a name is cut at 100 characters (ending in `…`).
+- Packing-list files: scope `per-pdf` → `packing-list-<n>.pdf` per saved PDF; scope `whole` →
+  one `packing-list.pdf` per batch; with several layouts the layout is added
+  (`packing-list-3-full.pdf`, `packing-list-3-pick.pdf`).
+- **The day** is today's date on the PC when the app is opened; the Day screen can switch to
+  another day (e.g. a download just after midnight that belongs to the evening before).
+
+### `state.json`
+
+One per day folder. Everything needed to continue the day, revert or amend a batch.
+
+```json
+{
+  "day": "2026-10-07",
+  "batches": [
+    {
+      "batch": 1,
+      "save_time": "2026-10-07T07:40:12+07:00",
+      "files": [
+        {"name": "10-07_07-00-00_Shipping label+Packing slip_1.pdf",
+         "size": 1310720, "sha256": "9f2c…", "pages": 200}
+      ],
+      "pdfs": [
+        {"number": 1, "code": "A", "name": "Sepatu", "file": "1 A Sepatu ×172.pdf",
+         "orders": 172, "runs": 4}
+      ],
+      "packing_list": {"scope": "per-pdf", "layouts": ["pick"]}
+    }
+  ],
+  "saved": [
+    {"order_id": "580000000000000001", "tracking_id": "JY0000001234",
+     "batch": 1, "pdf": 1, "run": 5, "position": 17}
+  ]
+}
+```
+
+| Field | Holds | Why |
+|---|---|---|
+| `batches[].files` | Name, size, SHA-256, page count of each label file read | Recognise a file used twice ("used in batch 1") |
+| `batches[].pdfs` | Each saved PDF: number, pick code/name, file name, counts | Day screen without re-reading the PDFs; revert knows which files are the batch's |
+| `batches[].packing_list` | Scope and layouts chosen | Amend starts with the same choice |
+| `saved[]` | Each saved order: IDs, batch, saved PDF, run, download position | Duplicate guard; amend restores the download order (below) |
+
+The file is written whole each time (write to `state.json.tmp`, then replace), so a crash
+never leaves half a file. The Python script's `state.json` (with `invocation`) is a different
+format; the app does not read `work/`.
+
+## Revert and amend (only the last batch)
+
+Like git: the last batch can be undone (**revert**) or redone in place (**amend**). An earlier
+batch cannot, because later batches' numbers and duplicate guard depend on it.
+
+**Revert last batch** — after a confirmation that names the batch and its files:
+
+1. Delete the folder `batch <b>` (all its saved PDFs, packing lists and summary).
+2. Remove the batch and its orders from `state.json`.
+
+The orders count as "not saved today" again, and the next batch reuses the numbers. If a file
+is open in a PDF viewer, Windows refuses the delete: the app says which file to close and
+changes nothing.
+
+**Amend last batch** — for "I fixed a category, do the last batch again":
+
+1. The app reads the batch's orders back from **its own saved PDFs** *(D6)* — every page of the
+   batch is in them — and puts them back in download order with the `position` stored in
+   `state.json`.
+2. The Plan screen opens with these orders and the current `categories.toml`; the duplicate
+   guard ignores the batch's own orders.
+3. **Save** writes a new `batch <b>.partial/` with the same first number, then replaces the old
+   folder, and replaces the batch in `state.json`. **Cancel** leaves the old batch untouched.
+
+Amend after printing: the printed labels may no longer match the new files. The confirmation
+says so ("Batch 2 was saved at 09:12. If you already printed it, print it again after
+amending.").
+
+## Packing list
+
+- Same layouts as the script ([03 › Packing list](03-pc-script.md#packing-list-a4)), A4, fonts
+  Arial and Consolas from `C:\Windows\Fonts`.
+- Chosen per batch on the Plan screen: scope `per PDF` / `whole batch` / `none`, layouts any of
+  `full`, `summary`, `pick`. Default: `per PDF`, `pick`. The default can be changed in Settings.
+- Header as in 03 with the batch added: `Packing list · 2026-10-07 · batch 1 · 2  B  Spion &
+  Knalpot`.
+
+## Architecture
+
+```
+┌──────────────────────── PC app (one .exe + pdfium.dll) ────────────────────────┐
+│  Window: Svelte + TypeScript (screens of 08)                                   │
+│        │  invoke("read_labels", …) / events ("read-progress")                  │
+│        ▼                                                                       │
+│  packing-app (Tauri 2, Rust): commands, the open draft, settings               │
+│        │                                                                       │
+│        ├──► packing-engine (Rust, no PDF code): rules + conditions, slip and   │
+│        │    label text → orders, couriers, plan, runs, numbering, state.json   │
+│        │                                                                       │
+│        └──► packing-pdf (Rust): page text with positions, copy pages,          │
+│             write packing lists  ──►  PDFium (pdfium.dll)                      │
+└────────────────────────────────────────────────────────────────────────────────┘
+packing-cli (Rust, developer tool): same engine from the command line, for tests
+```
+
+### Stack
+
+| Need | Choice | Note |
+|---|---|---|
+| Language | Rust (stable, edition 2024; installed: 1.98) | One language for engine and window back end |
+| Window | Tauri 2 (`tauri` 2.12) | Uses the Edge WebView2 that comes with Windows 11; small installer |
+| Screens | Svelte 5 + TypeScript + Vite (`create-tauri-app`, template `svelte-ts`) | Plain CSS, no component library. Node 26 installed |
+| PDF: read text with x/y, copy pages unchanged, write the packing list | `pdfium-render` 0.9 + `pdfium.dll` (Chrome's PDF engine; prebuilt by bblanchon/pdfium-binaries) *(D2)* | `PdfPageText` gives each character with its box (replaces pypdf's `visitor_text`); `copy_page_range_from_document` copies pages; `PdfFonts::load_true_type_from_file` + text objects write the packing list. Licences MIT/Apache (wrapper), BSD-3/Apache (PDFium) |
+| TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `categories.toml`, `couriers.toml` |
+| JSON | `serde`, `serde_json` | `state.json`, test fixtures |
+| Dates | `jiff` | `ship_by`, `save_time`, day folder |
+| Fingerprints | `sha2` | Label files used twice |
+| Tests | `cargo test`; `svelte-check` for the screens | Fixtures shared with the Python script in `testdata/` |
+| Installer | Tauri bundler, NSIS (`npm run tauri build`) *(D11)* | `pdfium.dll` bundled as a resource |
+
+### Code layout
+
+```
+pc/
+  Cargo.toml                 workspace: crates/* and app/src-tauri
+  crates/
+    engine/                  package packing-engine
+      src/rules.rs           categories.toml, condition parser/evaluator/printer (04)
+      src/text.rs            a page's text runs with x, y (input from packing-pdf)
+      src/label.rs           Order ID search, label fields, couriers
+      src/slip.rs            slip table by position
+      src/orders.rs          pages → orders, contents key, display names
+      src/plan.rs            plan, picks from what is left, plan edits, runs, numbering
+      src/day.rs             state.json, duplicate guard, revert, amend
+      src/names.rs           file and folder names
+      couriers.toml          built in with include_str!
+    pdf/                     package packing-pdf
+      src/read.rs            open files, page text with positions, page count, progress
+      src/write.rs           copy pages into a saved PDF
+      src/packing_list.rs    the three layouts
+    cli/                     package packing-cli (developer tool, not for daily use)
+  app/
+    package.json, vite.config.ts, src/          Svelte screens
+    src-tauri/                                  package packing-app: commands, settings
+  tools/get-pdfium.sh        downloads the pinned pdfium.dll into pc/vendor/ (git-ignored)
+```
+
+`packing-engine` has no PDF dependency: it takes text runs and returns decisions, so all
+reading and sorting rules are tested without PDF files. `packing-pdf` is the only code that
+touches PDFium.
+
+### Commands between window and Rust
+
+| Command | Does | Returns |
+|---|---|---|
+| `day_overview(day)` | Read `state.json` of the day | Batches, saved PDFs, totals |
+| `list_downloads()` | Label PDFs in the downloads folder changed today *(D9)* | Name, size, time, page count, "used in batch n" |
+| `read_labels(paths)` | Start reading on a worker thread; emits `read-progress {page, pages}` | A draft id, then orders count, duplicates, warnings, or the stop error |
+| `cancel_read()` | Stop reading | — |
+| `plan(draft, edits)` | Apply the plan edits (skip, move, add condition, rename) and recount | Picks with counts, runs (contents × orders), suggested names |
+| `save_batch(draft, plan, packing)` | Steps of *Save* above | Written files, summary |
+| `revert_last(day)` / `start_amend(day)` | Revert / amend | New overview / a draft |
+| `rules_load()` / `rules_check(text or entries, draft?)` / `rules_save(…)` | Categories editor | Entries, errors with line/col, live counts on the open draft |
+| `open_path(path)` / `show_in_folder(path)` | Open a PDF in the default viewer / Explorer | — |
+| `settings_get()` / `settings_set(…)` | Settings | — |
+
+PDFium is not thread-safe: all PDF work runs on one worker thread that owns the PDFium
+library; commands send it jobs. The open draft (orders, the opened label documents) is kept
+by that thread until it is saved, cancelled, or the app closes.
+
+### Settings
+
+Stored by the app in `%APPDATA%\com.wthe22.olshop-packing\settings.json` (not in the data
+folder, because it says where the data folder is):
+
+| Setting | Default |
+|---|---|
+| Data folder | *(D4)* |
+| Downloads folder | `%USERPROFILE%\Downloads` |
+| Packing-list scope / layouts | `per PDF` / `pick` |
+| Language | *(D8)* |
+
+## Testing
+
+| Level | What | Expected |
+|---|---|---|
+| Engine unit tests | Every rule above on hand-built text runs | — |
+| Shared fixtures | `testdata/conditions.json` (parse, print, evaluate, error texts), `testdata/expected-labels.json`, `testdata/expected-picks.json` | The same results as the Python script. Cases that use CSV fields expect the "needs the orders CSV" error in Rust |
+| PDF tests | `testdata/labels-slip.pdf` (made up, from `make_testdata.py`): read, copy, packing list | Page counts, text found in the output |
+| Local sample test (skipped without `samples/`) | The three *Shipping label + Packing slip* sample files | 601 pages, 600 orders, one order on 2 pages, J&T 517 pages; the picks, runs and page counts equal the Python script's on the same files and rules |
+| By eye | Saved PDFs and packing lists from the sample run | Pages identical to the download (rendered side by side), layout as the script's |

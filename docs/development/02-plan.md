@@ -4,17 +4,24 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 1 in progress (design revised for the pick flow).** Code tasks done (270 tests
-pass); left: 1.15 sample run, 1.16 user guide, then the owner review. Owner decisions recorded
-in [02-design-questions.md](../software-design/02-design-questions.md): the app does no PDF work
-and follows its own checking workflow, the PC gets a Tauri 2 + Svelte/TS UI, the orders CSV is
-dropped for now, and D3, D5, D6, D7 are decided (D4, D8 void); only D1 is still open.
+Status: **Phase 2 (PC app) designed, waiting for the owner's review of the design.** The owner
+decided that the PC gets a desktop app written in Rust (a command line is not good for daily
+use), so phase 1 stops with its code done (270 tests) and becomes the reference
+implementation; its two open tasks move into phase 2. Design:
+[07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md);
+open choices D2–D12 in [02-design-questions.md](../software-design/02-design-questions.md)
+(each has a "Built for now"), D1 (Android) stays open until phase 3. Next: owner answers
+D2–D12, then task 2.1.
 
 ---
 
-## Phase 1 — PC script
+## Phase 1 — PC script (stopped: reference implementation)
 
-Usable on its own: from this phase on, the daily labels and packing list come from the script.
+The Python script, built as the daily tool and then replaced by the Rust PC app (phase 2)
+before it was used daily. Its code is finished and tested; it stays as the reference the Rust
+program is compared with ([D3](../software-design/02-design-questions.md#d3--the-python-script-after-the-rewrite)).
+Tasks 1.15 and 1.16 are not done here: the sample run is part of task 2.7, the user guide is
+written for the app in task 2.14. There is no separate owner review of phase 1.
 
 Read: [01-requirements](../software-design/01-requirements.md) (Concepts, PC script rules,
 P1–P6), [03-pc-script](../software-design/03-pc-script.md),
@@ -71,7 +78,8 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
 - [x] **1.14 Test data (labels).** `testdata/make_testdata.py` also writes label PDFs (plain
   and with a slip) with made-up IDs, one 2-page order, wrapped slip cells; plus a hand-checked
   `testdata/expected-picks.json`.
-- [ ] **1.15 Run on the samples** (local, not committed). The three `Shipping label + Packing
+- [ ] **1.15 Run on the samples** (local, not committed). **Moved to 2.7**; the notes below are
+  the Python numbers 2.7 compares with. The three `Shipping label + Packing
   slip` files (601 pages, 600 orders, one order on 2 pages, every page has an Order ID; 517
   pages J&T) with and without the CSV — the sample CSVs are from another day and hold none of
   these orders, so with the CSV every order is warned "not in the CSV" and the slip values are
@@ -82,16 +90,16 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
     83, tracking ID not found 1. Plain files: 562 orders in 22 s, no slip, no `ship_by`
     (plain labels do not print it), J&T 511, IDX 1, unknown 50, tracking ID not found 1.
   - First CLI run (slip files, no CSV, repo `categories.toml`) stopped correctly with
-    `error: pick "C" uses field "product_category", which needs the orders CSV`; see
-    [D8](../software-design/02-design-questions.md#d8--example-rules-file-and-labels-only-runs).
+    `error: pick "C" uses field "product_category", which needs the orders CSV` (pick C:
+    [D10](../software-design/02-design-questions.md#d10--pick-c-product_category-in-categoriestoml)).
     The CSV-only check now runs before the labels are read (instant error).
   - Still to run: the slip files with a rules file that has no CSV-only field (e.g. a copy of
     `categories.toml` with pick C removed, outside the repo or in `work/`); the slip files with
-    `--csv samples/orders-06-1.csv` (expect the D4 warning); the plain files; a second
+    `--csv samples/orders-06-1.csv` (expect the "CSV holds none of the label orders" warning); the plain files; a second
     invocation (duplicates skipped); `--redo`; `--interactive`; each layout and scope. Check
     the saved PDFs and packing lists by eye, page counts = label pages. Print counts only,
     never real IDs or names.
-- [ ] **1.16 User guide.** `docs/user-guide/README.md` (index) and `docs/user-guide/01-pc-script.md`
+- [ ] **1.16 User guide.** **Moved to 2.14** (written for the app, not the script). `docs/user-guide/README.md` (index) and `docs/user-guide/01-pc-script.md`
   for the owner (not a developer), under ~250 lines: what it does; setup (link 01-setup);
   daily use step by step (which export to download, the copy-paste command, what is written to
   `work/<day>/`, printing); several downloads a day; fixing a mistake (`--redo`); interactive
@@ -101,20 +109,85 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
   belongs in `user-guide/`"), to the Docs line in `AGENTS.md`, and point the "Run the script"
   row of `docs/development/README.md` to it.
 
-**Owner review:** the owner runs `prepare` on a real label download (a rules-file run and an
-interactive run), with and without the CSV, prints the packing list (each layout once) and a few
-saved PDFs, and confirms the picks, the numbering, the layout and the file names.
+**Owner review:** none (replaced by the phase-2 review).
 
 ---
 
-## Phase 2 — PC UI (placeholder)
+## Phase 2 — PC app (Rust + Tauri)
 
-Not designed yet. Recorded as a decision in
-[02-design-questions.md](../software-design/02-design-questions.md) (Decided): the PC gets a
-**Tauri 2 + Svelte/TypeScript** UI over the Python command-line script, which stays the engine.
-Tasks are written when the UI design exists (designed in a separate session).
+A Windows program that replaces the script for daily use: label downloads in, picks adjusted on
+screen, saved PDFs and packing lists out, revert/amend of the last batch. Written in Rust;
+screens in Svelte + TypeScript in a Tauri 2 window. Starts only after the owner has reviewed the
+design and answered (or accepted the "Built for now" of) D2–D12.
 
-**Owner review:** the owner runs a normal daily download through the UI, without a terminal.
+Read: [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md),
+[03-pc-script](../software-design/03-pc-script.md) (the reading and sorting rules that carry
+over), [04-rules-file](../software-design/04-rules-file.md),
+[business-process/02-data-sources](../business-process/02-data-sources.md).
+Reference: the Python package `script/packing/` — same rules, tested; port it module by module
+(`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
+
+- [ ] **2.1 PDFium spike** (D2; throwaway code in `pc/spike/`, git-ignored output). Download
+  the pinned `pdfium.dll`; a small Rust program on the three sample *Shipping label + Packing
+  slip* files: Order ID on every page (601 of 601), slip lines dumped as JSON and compared with
+  a dump from the Python `LabelSet.orders()` (600 of 600 equal), copy 10 pages into a new file
+  and compare renders side by side, write one A4 page with Arial and Consolas, time for reading
+  all 601 pages (Python: 34.5 s), size of a packing-list PDF. Record the numbers here and in
+  D2; if a check fails, stop and write the finding into D2 for the owner.
+- [ ] **2.2 Scaffold.** `pc/` Cargo workspace (`crates/engine`, `crates/pdf`, `crates/cli`,
+  `app/src-tauri`), Tauri app from `create-tauri-app` template `svelte-ts` in `pc/app/`,
+  `pc/tools/get-pdfium.sh` (pinned version; output `pc/vendor/`, git-ignored), one passing test
+  per crate, the empty window opens with `npm run tauri dev`. Log Rust/Node versions, the
+  Tauri CLI and the PDFium download in 01-setup. Add `pc/vendor/` and `pc/app/dist/` to
+  `.gitignore`.
+- [ ] **2.3 Engine: rules.** `rules.rs`: `categories.toml` loading and validation, condition
+  parser, evaluator (item-level "any line"), printer, error texts with line/column (also of the
+  TOML file). Only the label/slip fields (07 › *Fields the conditions can use*); CSV fields give
+  the "needs the orders CSV" error. Test: every case of `testdata/conditions.json` (CSV-field
+  cases expect that error).
+- [ ] **2.4 Engine: labels and slips.** `text.rs`, `label.rs`, `slip.rs`, `orders.rs`: Order ID
+  two-step search, multi-page orders, `ship_by`, courier deduction with the built-in
+  `couriers.toml`, slip table by position, `Qty Total` check, no-slip stop, contents key,
+  display names. Tests on hand-built text runs.
+- [ ] **2.5 Engine: plan and day.** `plan.rs`, `day.rs`, `names.rs`: plan from the rules, plan
+  edits (skip, move, add, rename), picks from what is left, runs, numbering through the day,
+  `state.json` (07 format), duplicate guard, file fingerprints, revert, amend, file and folder
+  names. Test: `testdata/expected-picks.json`.
+- [ ] **2.6 PDF crate.** `read.rs` (open, page count, text runs with positions, progress),
+  `write.rs` (copy pages), `packing_list.rs` (the three layouts, port of `packing_list.py`,
+  batch in the header). Worker thread that owns PDFium. Tests on `testdata/labels-slip.pdf`:
+  `testdata/expected-labels.json` matches; written PDFs have the right page counts and text.
+- [ ] **2.7 Developer CLI and sample run** (local, not committed; replaces 1.15).
+  `packing-cli prepare --labels … [--day] [--data]` writes a batch like the app. On the sample
+  slip files with a copy of `categories.toml` without pick C: 601 pages, 600 orders, one order
+  on 2 pages, J&T 517 pages, courier unknown 83, tracking ID not found 1 (the Python numbers of
+  1.15); the picks, runs and page counts equal the Python script's on the same files and rules;
+  a second run saves nothing (all duplicates); revert then run again gives the same files;
+  plain sample files stop with the no-slip message. Check saved PDFs and packing lists by eye.
+  Record the numbers here (counts only, no real IDs).
+- [ ] **2.8 App: frame, Day screen, Settings, first start** (08 › 1, 6, *First start*):
+  data folder choice, day switch, batches from `state.json`, Open / Open folder.
+- [ ] **2.9 App: New batch** (08 › 2): today's downloads list, Add files…, drag-and-drop,
+  "used in batch n", reading with progress and Cancel, stop messages.
+- [ ] **2.10 App: Plan and Save** (08 › 3, 4): picks with counts and runs, skip/move/add,
+  file names, packing-list options, warnings, Save → Day screen.
+- [ ] **2.11 App: Revert and Amend** (07 › *Revert and amend*): confirmations, file-in-use
+  message, amend from the saved PDFs.
+- [ ] **2.12 App: Categories** (08 › 5): rows with live check and counts, Edit as text, save
+  keeping comments.
+- [ ] **2.13 Installer** (D11): `npm run tauri build`, `pdfium.dll` bundled; install on this PC,
+  start from the Start menu, one batch on `testdata/` labels. Log in 01-setup.
+- [ ] **2.14 User guide** (replaces 1.16). `docs/user-guide/README.md` (index) and
+  `docs/user-guide/01-pc-app.md` for the owner (not a developer), under ~250 lines: install and
+  first start; a normal batch step by step with screenshots taken on `testdata/` labels
+  (made-up data); several batches a day; revert and amend; editing categories with 3–4 example
+  conditions (link 04); every message with what to do. Add the folder to `docs/README.md`
+  ("how to use a finished tool belongs in `user-guide/`") and to the Docs line in `AGENTS.md`.
+
+**Owner review:** the owner installs the app and runs a normal day's downloads through it,
+without a terminal: two batches, one category edited and the last batch amended, one batch
+reverted; prints the saved PDFs and packing lists; confirms the picks, numbering, folder and
+file names, and the screens. Then D3 is applied (the Python script deleted or kept).
 
 ---
 

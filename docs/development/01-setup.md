@@ -9,6 +9,10 @@
 | PC script | Project virtual environment `.venv` in the repository root | Created in phase 1, task 1.1 |
 | PC script | `pypdf`, `fpdf2`; for development `pytest` | Declared in `script/pyproject.toml` |
 | PC script | Fonts Arial and Consolas | Come with Windows (`C:\Windows\Fonts`) |
+| PC app | Rust (stable, MSVC toolchain) | Installed: cargo/rustc 1.98.0 |
+| PC app | Node.js + npm | Installed: Node 26.7, npm 11.19 |
+| PC app | Tauri prerequisites: Microsoft C++ Build Tools, WebView2 | WebView2 comes with Windows 11; check the build tools in phase 2, task 2.2 |
+| PC app | `pdfium.dll` (bblanchon/pdfium-binaries, pinned) | Downloaded by `pc/tools/get-pdfium.sh` in task 2.1/2.2 |
 | App | Android Studio (includes a JDK and the Android SDK manager) | Not installed yet. `winget install Google.AndroidStudio`, then first-run wizard with the default SDK |
 | App | Android phone with USB debugging | Settings › About phone › tap *Build number* 7× → Developer options › USB debugging. Phone model and Android version go into the log below |
 | App | `adb` | Comes with the SDK (`%LOCALAPPDATA%\Android\Sdk\platform-tools`); add to `PATH` |

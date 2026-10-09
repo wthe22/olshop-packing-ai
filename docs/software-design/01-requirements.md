@@ -4,11 +4,12 @@
 
 | Tool | Runs on | Does |
 |---|---|---|
-| **PC script** | Windows PC, Python | Label PDFs (plain or with a packing slip) and an optional orders CSV → picks, one saved label PDF per pick, optional A4 packing list |
+| **PC app** | Windows PC, Rust + Tauri window | Label PDFs with packing slip → picks shown and adjusted on screen, one saved label PDF per pick, A4 packing lists; revert/amend of the last batch ([07](07-pc-app.md), [08](08-pc-app-ui.md)) |
+| *PC script* | Windows PC, Python | *Reference implementation of phase 1, replaced by the PC app:* label PDFs and an optional orders CSV → the same picks from the command line ([03](03-pc-script.md)) |
 | **Android app** | Android phone or tablet, portrait and landscape | Sessions and batches, order list, camera scanning to check parcels, marks with undo, session export/import |
 
-Both can read the orders CSV (for the PC script it is optional). Only the PC script does PDF
-work. They share one rules file, `categories.toml` ([04-rules-file.md](04-rules-file.md)). There
+The app reads the orders CSV; the PC app does not (all its data comes from the label and its
+packing slip). Only the PC side does PDF work. They share one rules file, `categories.toml` ([04-rules-file.md](04-rules-file.md)). There
 is no network connection between them; files are moved by hand (USB, cloud folder, chat to
 self).
 
@@ -81,6 +82,25 @@ The shown status is the latest mark that is not undone; `removed` overrides it.
 - **P6** Print a screen summary and `summary.txt`; warn when there is no item data; stop with a
   clear message on any problem.
 - Details: [03-pc-script.md](03-pc-script.md).
+
+## PC app
+
+P2–P6 apply as in the script, with the changes listed in
+[07-pc-app.md](07-pc-app.md#what-carries-over-from-the-script-what-changes). In addition:
+
+- **U1** A Windows program; daily use needs no terminal ([08-pc-app-ui.md](08-pc-app-ui.md)).
+- **U2** Input: one or more *Shipping label + Packing slip* PDFs per batch; plain labels stop
+  the batch with instructions. No orders CSV.
+- **U3** A batch is shown as a plan (the rules in order, with counts and runs) that can be
+  changed for this batch only — skip, move, add a one-off condition, rename a file — before
+  anything is written.
+- **U4** One **Save** writes the batch completely or not at all, into
+  `labels/<day>/batch <b>/`; numbering continues through the day.
+- **U5** The last batch can be reverted (undone) or amended (redone in place).
+- **U6** The day screen lists every batch with its saved PDFs and packing lists, each with an
+  Open button for printing.
+- **U7** `categories.toml` is edited in the app with live checks and counts.
+- **U8** A label file already used today is recognised before reading.
 
 ## Android app
 

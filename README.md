@@ -2,12 +2,14 @@
 
 Tools for the shop's daily packing work (TikTok Shop / Tokopedia orders):
 
-- **PC script** (Python, `script/`): orders CSV + shipping-label PDFs → one label PDF per pack
-  group (pages unchanged) and an A4 packing list.
+- **PC app** (Rust + Tauri, `pc/`): shipping-label PDFs with packing slip → one label PDF per
+  pick (pages unchanged) and A4 packing lists, in a Windows program. Designed (phase 2).
+- **PC script** (Python, `script/`): the same rules from the command line; built in phase 1,
+  now the reference implementation for the PC app.
 - **Android app** (Kotlin, `android/`): checks every packed parcel by scanning its label with
   the phone camera; sessions, batches, marks with undo, export/import.
 
-Status: designed, not implemented. Start with [`docs/development/`](docs/development/).
+Status: see [`docs/development/02-plan.md`](docs/development/02-plan.md). Start with [`docs/development/`](docs/development/).
 
 Documentation: [`docs/`](docs/README.md).
 

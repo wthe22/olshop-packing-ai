@@ -64,6 +64,10 @@ creator handle, …) are not needed for packing.
   (variation only); SiCepat and IDX labels show none. The label cannot replace the packing list.
 - Label pages are printed exactly as downloaded *(owner)*.
 - Each download is at most 200 pages, so one batch needs several PDF files.
+- File names: `MM-DD_HH-MM-SS_Shipping label_<n>.pdf`, or
+  `MM-DD_HH-MM-SS_Shipping label+Packing slip_<n>.pdf` for the slip export: a date and time
+  stamp, then `<n>` = 1, 2, 3 for the files of one download (in the samples the three parts'
+  stamps are 8–12 s apart).
 - The sample label PDFs (downloaded 2026-10-07, 562 pages, 562 orders) only partly match the
   sample CSVs (2026-10-06): 227 of their orders are in batch 1, 4 are new in batch 2, 331 are
   in neither.

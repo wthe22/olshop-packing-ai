@@ -1,5 +1,9 @@
 # 03 — PC Script
 
+> **Reference implementation.** This describes the Python script of phase 1. Daily use moves to
+> the PC app ([07-pc-app.md](07-pc-app.md)), which reuses the reading and sorting rules below;
+> where the two differ (no CSV, slip required, folders, revert/amend), 07 is the design.
+
 A Python command-line script run on the Windows PC after each label download. It implements
 P1–P6 of [01-requirements.md](01-requirements.md). A **pick** selects orders from what is left;
 each pick's orders are written as one **saved PDF** of label pages (see *Concepts* in
