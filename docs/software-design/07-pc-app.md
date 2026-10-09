@@ -19,7 +19,7 @@ good, **frozen** (no new features):
 Rule features added later go into the app only. The fixtures the script is tested against
 (`testdata/`) are not changed for them; app-only cases go into separate fixture files.
 
-The one open choice, the PDF library, is marked *(D2)* and explained in
+The one open choice, the packing-list file size (PDF library *D2*), is explained in
 [02-design-questions.md](02-design-questions.md) with what is **built for now**.
 
 ## What carries over from the script, what changes
@@ -275,7 +275,7 @@ packing-cli (Rust, developer tool): same engine from the command line, for tests
 | Language | Rust (stable, edition 2024; installed: 1.98) | One language for engine and window back end |
 | Window | Tauri 2 (`tauri` 2.12) | Uses the Edge WebView2 that comes with Windows 11 |
 | Screens | Svelte 5 + TypeScript + Vite (`create-tauri-app`, template `svelte-ts`) | Plain CSS, no component library. Node 26 installed |
-| PDF: read text with x/y, copy pages unchanged, write the packing list | `pdfium-render` 0.9 + `pdfium.dll` (Chrome's PDF engine; prebuilt by bblanchon/pdfium-binaries) *(D2)* | `PdfPageText` gives each character with its box (replaces pypdf's `visitor_text`); `copy_page_range_from_document` copies pages; `PdfFonts::load_true_type_from_file` + text objects write the packing list. Licences MIT/Apache (wrapper), BSD-3/Apache (PDFium) |
+| PDF: read text with x/y, copy pages unchanged, write the packing list | `pdfium-render` 0.9.4 + `pdfium.dll` (Chrome's PDF engine; prebuilt by bblanchon/pdfium-binaries, tag `chromium/7881` = the crate's `pdfium_latest`) *(D2)* | `PdfPageText` gives each character with its box (replaces pypdf's `visitor_text`; runs are rebuilt, see *Text runs from PDFium*); `copy_page_range_from_document` copies pages; `PdfFonts::load_true_type_from_file` + text objects write the packing list (whole fonts embedded, D2). Licences MIT/Apache (wrapper), BSD-3/Apache (PDFium) |
 | TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `categories.toml`, `couriers.toml` |
 | JSON | `serde`, `serde_json` | `state.json`, test fixtures |
 | Dates | `jiff` | `ship_by`, `save_time`, day folder |
@@ -315,6 +315,23 @@ pc/
 `packing-engine` has no PDF dependency: it takes text runs and returns decisions, so all
 reading and sorting rules are tested without PDF files. `packing-pdf` is the only code that
 touches PDFium.
+
+### Text runs from PDFium
+
+The slip rules work on *runs* (a piece of text with its x, y), as pypdf gave them. PDFium gives
+characters, so `read.rs` rebuilds the runs (measured in the spike 2.1, `pc/spike/`):
+
+- **Two kinds of file.** The downloaded labels (made by wkhtmltopdf) hold one character per
+  text object; files made by fpdf2 (`testdata/`) hold one whole run per text object. A page
+  whose text objects hold several characters is read one run per text object, characters in
+  their order. Otherwise runs are rebuilt by position: drop the space and line-break
+  characters PDFium adds (their boxes are empty), sort by line then x, start a new run on a new
+  line, a change of font name, or a gap over 5 pt; put a space for a gap over 1 pt. The font
+  name matters: `Qty Total:` (bold) and its value are as close as two words.
+- **Hyphen at a line end.** PDFium reports it as character U+0002; it is read as `-`, so the
+  wrap rule (no space after a trailing `-`) applies.
+- In fpdf2 files runs can overlap in x (a colon drawn over the label text), so those must not
+  be sorted by position.
 
 ### Commands between window and Rust
 

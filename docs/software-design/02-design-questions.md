@@ -71,10 +71,24 @@ three.
    1 MB).
    - Effort: **medium**.
 
-**How it is decided.** The first task of phase 2 is a **spike** (a short throwaway test) with
-option 1 on the sample downloads: an Order ID found on all 601 pages, slip lines equal to the
-Python script's on all 600 orders, copied pages that look identical, a packing-list page with
-both fonts, the time to read 600 pages, and the packing-list file size. If the spike fails, the
-result is written here and option 2 or 3 is tried.
+**What the spike showed (task 2.1, option 1).** PDFium does all three jobs:
 
-**Built for now: option 1**, confirmed or rejected by the spike.
+| Check | Result |
+|---|---|
+| Order ID found | 601 of 601 pages (slip files); 562 of 562 (plain label files) |
+| Slip lines equal to the Python script's | 600 of 600 orders; also 23 of 23 on `testdata/labels-slip.pdf` |
+| Copied pages | 10 pages copied, drawn as images: 0 pixels differ from the originals |
+| Packing list with Arial, Arial bold and Consolas | Written, text reads back |
+| Time to read the 601 pages | 1.6 s (the Python script: 35 s) |
+| Packing-list file size | **About 1.4 MB** for 1 page, 1.6 MB for 5 pages (the script: 62 KB) |
+
+**What is still open: the size of the packing-list file.** PDFium puts the whole of each font
+into the file (Arial alone is about 1 MB). The script's library puts in only the letters used.
+Example: a day with 6 batches gives 6 packing lists of about 1.5 MB each instead of about 60 KB;
+they print the same.
+
+- **A. Accept the bigger files**, PDFium does everything (option 1). Nothing more to build.
+- **B. Write the packing list with `krilla`** (option 3), which puts in only the letters used:
+  files of about 60 KB like the script's; one more library and more work in task 2.6.
+
+**Built for now: A.** Choosing B changes only how task 2.6 writes the packing list.

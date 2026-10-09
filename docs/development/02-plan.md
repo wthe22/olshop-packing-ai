@@ -4,13 +4,13 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app) designed and its choices answered; next: task 2.1.** The owner
+Status: **Phase 2 (PC app): task 2.1 done (PDFium works); next: task 2.2.** The owner
 decided that the PC gets a desktop app written in Rust (a command line is not good for daily
 use), so phase 1 stops with its code done (270 tests) and stays as the reference
 implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
-Open in [02-design-questions.md](../software-design/02-design-questions.md): D2 (PDF library,
-settled by the spike 2.1) and D1 (Android, open until phase 3).
+Open in [02-design-questions.md](../software-design/02-design-questions.md): D2 (only the
+packing-list file size is left; built for now: accept it) and D1 (Android, open until phase 3).
 
 ---
 
@@ -116,7 +116,7 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
 A Windows program that replaces the script for daily use: label downloads in, picks adjusted on
 screen, saved PDFs and packing lists out, revert/amend of the last batch. Written in Rust;
 screens in Svelte + TypeScript in a Tauri 2 window. A portable program folder, no installer.
-The PDF library (D2) is settled by the spike 2.1.
+The PDF library is PDFium (spike 2.1, D2).
 
 Read: [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md),
 [03-pc-script](../software-design/03-pc-script.md) (the reading and sorting rules that carry
@@ -125,13 +125,21 @@ over), [04-rules-file](../software-design/04-rules-file.md),
 Reference: the Python package `script/packing/` — same rules, tested; port it module by module
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-- [ ] **2.1 PDFium spike** (D2; throwaway code in `pc/spike/`, git-ignored output). Download
+- [x] **2.1 PDFium spike** (D2; throwaway code in `pc/spike/`, git-ignored output). Download
   the pinned `pdfium.dll`; a small Rust program on the three sample *Shipping label + Packing
   slip* files: Order ID on every page (601 of 601), slip lines dumped as JSON and compared with
   a dump from the Python `LabelSet.orders()` (600 of 600 equal), copy 10 pages into a new file
   and compare renders side by side, write one A4 page with Arial and Consolas, time for reading
   all 601 pages (Python: 34.5 s), size of a packing-list PDF. Record the numbers here and in
   D2; if a check fails, stop and write the finding into D2 for the owner.
+  - Result (`pc/spike/README.md`): `pdfium-render` 0.9.4 + `chromium/7881`. Order ID on
+    601/601 pages; slip lines equal on 600/600 orders (all sample orders have one line), and on
+    23/23 of `testdata/labels-slip.pdf` (multi-line, wrapped cells, message); plain files
+    562/562 orders equal. 10 copied pages: 0 pixels differ (150 DPI). Fonts page and a 5-page
+    packing list written, text reads back. Reading 601 pages: 1.6 s (Python 35 s on the same
+    PC). Packing list 1.4 MB (1 page) / 1.6 MB (5 pages), whole fonts embedded; Python 62 KB
+    → D2 now asks only about the file size. Run rebuilding from characters → 07 *Text runs
+    from PDFium*.
 - [ ] **2.2 Scaffold.** `pc/` Cargo workspace (`crates/engine`, `crates/pdf`, `crates/cli`,
   `app/src-tauri`), Tauri app from `create-tauri-app` template `svelte-ts` in `pc/app/`,
   `pc/tools/get-pdfium.sh` (pinned version; output `pc/vendor/`, git-ignored), one passing test

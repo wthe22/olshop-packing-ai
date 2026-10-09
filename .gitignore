@@ -3,6 +3,10 @@ samples/
 tmp/
 var/
 work/
+pc/spike/out/
+
+# Downloaded PDFium (pc/tools/get-pdfium.sh)
+pc/vendor/
 
 # Tooling
 .venv/

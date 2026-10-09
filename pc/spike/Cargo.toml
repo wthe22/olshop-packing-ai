@@ -1,0 +1,22 @@
+[package]
+name = "spike"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Standalone: keep this crate out of any enclosing cargo workspace.
+[workspace]
+
+[dependencies]
+# pdfium-render 0.9.4, feature `pdfium_latest` == `pdfium_7881`
+# -> prebuilt pdfium.dll from bblanchon/pdfium-binaries tag `chromium/7881`
+#    (see ../tools/get-pdfium.sh, extracted to ../vendor/pdfium.dll).
+pdfium-render = "0.9.4"
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# same major version pdfium-render pulls in for its `image_latest` feature
+image = "0.25"
+
+[profile.release]
+opt-level = 3
