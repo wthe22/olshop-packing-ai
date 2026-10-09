@@ -190,3 +190,15 @@ Read: 06-app-ui (all layouts, problems page).
   01-setup).
 
 **Owner review:** a full working day with the app.
+
+---
+
+## Phase 7 — PC UI (placeholder)
+
+Not designed yet. Recorded as a decision in
+[02-design-questions.md](../software-design/02-design-questions.md) (Decided): the PC gets a
+**Tauri 2 + Svelte/TypeScript** UI over the Python command-line script, which stays the engine.
+Tasks are written once the design pass produces the UI design. Built last, after the phases
+above.
+
+**Owner review:** the owner runs a normal daily download through the UI, without a terminal.
