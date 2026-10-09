@@ -7,8 +7,8 @@ noted as passed.
 Status: **Phase 1 in progress (design revised for the pick flow).** Code tasks done (270 tests
 pass); left: 1.15 sample run, 1.16 user guide, then the owner review. Owner decisions recorded
 in [02-design-questions.md](../software-design/02-design-questions.md): the app does no PDF work
-and follows its own checking workflow, and the PC gets a Tauri 2 + Svelte/TS UI; still open
-D1, D3, D4, D6, D8 (D5, D7 decided).
+and follows its own checking workflow, the PC gets a Tauri 2 + Svelte/TS UI, the orders CSV is
+dropped for now, and D3, D5, D6, D7 are decided (D4, D8 void); only D1 is still open.
 
 ---
 

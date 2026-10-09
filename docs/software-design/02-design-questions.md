@@ -25,6 +25,14 @@ writes them into the other documents.
   [06-app-ui.md](06-app-ui.md#scan-messages).)
 - **A batch's label download comes in clusters of up to 200 pages** — several files per batch
   ([business-process/01](../business-process/01-packing-workflow.md)).
+- **The orders CSV is dropped from the PC script for now.** The script works from the label PDF
+  and its packing slip only; item data comes from the slip. (Makes D4 and D8 void;
+  [03-pc-script.md](03-pc-script.md) and the CSV-only fields in
+  [04-rules-file.md](04-rules-file.md) are updated in the later design pass.) Note the slip has
+  **no `SKU ID`** ([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)),
+  so a slip-only run identifies items by product name + variation, not by SKU ID.
+- **`product_category` is never used.** It is the platform's category, not the shop's
+  (resolves [D8](#d8--example-rules-file-and-labels-only-runs) even if the CSV returns).
 
 ## D1 — The Android app and the pick flow
 
@@ -41,33 +49,29 @@ The owner chooses the packing-list scope per invocation (`per-pdf`, `whole`, `no
 layouts `full`, `summary`, `pick` keep their look ([03-pc-script.md](03-pc-script.md)). What is
 open is the default:
 
-1. `per-pdf`, layout `full` (a sheet with tracking IDs for every saved PDF). **Built for now.**
+1. `per-pdf`, layout `full` (a sheet with tracking IDs for every saved PDF).
 2. `none`; print on request.
 3. Ask at the end of every run.
 
-Open.
+**Decided: scope `per-pdf`, layout `pick`.**
 
 ## D4 — A CSV that holds none of the label orders
 
-E.g. yesterday's CSV with today's labels. This is the **PC script's** case, not the app's — the
-sample label files run against the sample CSVs are exactly this (each is the other day's file),
-so the run knows no values from the CSV.
+**Void: there is no CSV any more (see Decided).**
 
-1. Warn once, carry on with the item data from the labels. **Built for now.**
+1. Warn once, carry on with the item data from the labels.
 2. Stop: a CSV that matches nothing is probably the wrong file.
 
-Owner asked why this question exists; still open.
-
-## D5 — Plain labels (no packing slip) and no CSV
+## D5 — Plain labels (no packing slip)
 
 The script then knows no items.
 
 1. Allowed: picks on label fields (`courier`, `tracking_id`, `ship_by`) work, pages stay in
    download order, a pick on an item field stops with an error.
-2. Not allowed: stop and ask for labels with packing slip or the CSV.
+2. Not allowed: stop and ask for labels with a packing slip.
 
-**Decided: option 2 — not allowed.** Without a slip and without a CSV the run stops and asks for
-labels with a packing slip, or for the orders CSV.
+**Decided: option 2 — not allowed.** Without a packing slip there is no item data (the CSV is
+gone too), so the run stops and asks for the "Shipping label + Packing slip" export.
 
 ## D6 — Redo after fixing categories.toml
 
@@ -78,14 +82,15 @@ plain re-run saves nothing.
    packing lists, then run as normal. **Built for now.**
 2. No redo; the owner deletes the day folder by hand.
 
-Owner asked what this means; still open.
+**Decided: like git — offer revert and amend of the last run.** The owner can revert the last
+run (undo it) or amend it (redo it in place) instead of deleting the day folder by hand.
 
 ## D7 — Names in the day folder
 
-**Decided: one subfolder per batch, and each group is saved under a name the owner chooses.**
-(Replaces the two options below.) The batch's saved PDFs and packing lists go into that batch's
-subfolder; the owner names each saved group file himself (a suggested name may be offered), and
-the numbering still runs through the day.
+**Decided: `labels/<day>/<batch>/<my group names>.pdf`.**
+A top-level `labels` folder, one folder per day, one subfolder per batch, and inside it each
+group's file is named by the owner (`<my group names>.pdf`; a suggested name may be offered).
+The numbering still runs through the day.
 
 The current behaviour, for reference:
 
@@ -95,15 +100,11 @@ The current behaviour, for reference:
 
 ## D8 — Example rules file and labels-only runs
 
-The repo's `categories.toml` has pick C `product_category contains "sepeda motor"`. Product
-category comes from the orders CSV only (the `Product Category` column,
-[business-process 02](../business-process/02-data-sources.md#columns-packing-needs)), so with
-labels alone the run stops (`pick "C" uses field "product_category", which needs the orders CSV`).
+**Decided: `product_category` is never used.** It is the platform's category, not the shop's, so
+the example file must not rely on it (pick C is changed or dropped). The CSV is also gone
+(see Decided), so the labels-only case is the only case.
 
-1. Keep the error; the owner writes picks on label/slip fields (name, variation, courier, …)
-   when running without the CSV. **Built for now.**
+1. Keep the error; the owner writes picks on label/slip fields (name, variation, courier, …).
 2. Rewrite pick C in the example file on `name` (e.g. `name contains "motor"`).
 3. Skip a pick whose field has no source (warning), and carry on with the next one.
 4. Remember product name → category from every CSV seen, and use it when the CSV is missing.
-
-Owner asked where `product_category` comes from; still open.
