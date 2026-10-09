@@ -84,7 +84,7 @@ The shown status is the latest mark that is not undone; `removed` overrides it.
 
 ## Android app
 
-Not yet revised for the pick flow of the PC script; revised before phase 2.
+Not yet revised for the pick flow of the PC script; revised before phase 3.
 
 ### A1 Import a batch
 - Read the orders CSV with the shared rules.

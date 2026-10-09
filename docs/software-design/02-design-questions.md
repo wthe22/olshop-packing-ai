@@ -39,7 +39,7 @@ writes them into the other documents.
 The PC script now works with picks ([03-pc-script.md](03-pc-script.md)); the app design is still
 the old one: batches, pack groups, group numbers and scan filters on batch/group
 ([01-requirements.md](01-requirements.md) A-sections,
-[05-app-architecture.md](05-app-architecture.md), [06-app-ui.md](06-app-ui.md)). Before phase 2
+[05-app-architecture.md](05-app-architecture.md), [06-app-ui.md](06-app-ui.md)). Before phase 3
 the app is revised as its own checking workflow — not the pick flow, and with no PDF work
 (see **Decided**). Open until then.
 

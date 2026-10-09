@@ -53,7 +53,7 @@ script/                    PC script (Python)
   prototype/               throwaway A4 layout prototype, reference only
 testdata/                  made-up fixtures shared by script and app tests
   make_testdata.py         generates the CSVs from a small description
-android/                   Android app (Gradle project), created in phase 2
+android/                   Android app (Gradle project), created in phase 3
 samples/                   confidential real files, git-ignored
 work/                      script output with real data, git-ignored
 ```

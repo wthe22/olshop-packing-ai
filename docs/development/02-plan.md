@@ -107,19 +107,30 @@ saved PDFs, and confirms the picks, the numbering, the layout and the file names
 
 ---
 
-## Phase 2 — Android camera spike
+## Phase 2 — PC UI (placeholder)
+
+Not designed yet. Recorded as a decision in
+[02-design-questions.md](../software-design/02-design-questions.md) (Decided): the PC gets a
+**Tauri 2 + Svelte/TypeScript** UI over the Python command-line script, which stays the engine.
+Tasks are written when the UI design exists (designed in a separate session).
+
+**Owner review:** the owner runs a normal daily download through the UI, without a terminal.
+
+---
+
+## Phase 3 — Android camera spike
 
 Answers one question before the app is built: does phone-camera scanning of the printed labels
 work fast and reliably enough?
 
 Read: [05-app-architecture](../software-design/05-app-architecture.md) (stack, scan pipeline).
 
-- [ ] **2.1** Install Android Studio and SDK; log in 01-setup.
-- [ ] **2.2** Create `android/` (Kotlin, Compose, `minSdk 26`, application id
+- [ ] **3.1** Install Android Studio and SDK; log in 01-setup.
+- [ ] **3.2** Create `android/` (Kotlin, Compose, `minSdk 26`, application id
   `com.wthe22.packingchecker`), modules `app` + `core` (pure Kotlin).
-- [ ] **2.3** One screen: CameraX preview + ML Kit (bundled), QR + Code 128; shows each decoded
+- [ ] **3.3** One screen: CameraX preview + ML Kit (bundled), QR + Code 128; shows each decoded
   value with time; 2 s rule; lens switch button; beep on new code.
-- [ ] **2.4** Install on the owner's phone (model and Android version → 01-setup log).
+- [ ] **3.4** Install on the owner's phone (model and Android version → 01-setup log).
 
 **Owner review:** scan a stack of real printed labels. Record in this file: scans per minute,
 QR vs barcode which reads first, distance, light, problems. Decide whether anything in the scan
@@ -127,52 +138,52 @@ design changes.
 
 ---
 
-## Phase 3 — App core (no camera)
+## Phase 4 — App core (no camera)
 
 Read: 01-requirements A1, A3, A4, A6; 05-app-architecture (database, import);
 06-app-ui (sessions, orders, import summary).
 
-- [ ] **3.1** `core`: CSV import, display names, signatures, condition language, TOML
+- [ ] **4.1** `core`: CSV import, display names, signatures, condition language, TOML
   read/write, batch diff, group numbering, status from events. JVM tests on `testdata/` must
   match `expected.json` and `conditions.json`; local test on `samples/` must match
   `samples/expected-06.json`.
-- [ ] **3.2** Room database (tables of 05-app-architecture), repositories.
-- [ ] **3.3** Sessions screen: create, rename, open, delete with confirmation.
-- [ ] **3.4** Import CSV with summary and Apply / Cancel.
-- [ ] **3.5** Orders list + detail, filters, search, grouped view.
-- [ ] **3.6** Manual marks and undo; history screen.
-- [ ] **3.7** Strings in English and Indonesian from the start (`values/`, `values-in/`).
+- [ ] **4.2** Room database (tables of 05-app-architecture), repositories.
+- [ ] **4.3** Sessions screen: create, rename, open, delete with confirmation.
+- [ ] **4.4** Import CSV with summary and Apply / Cancel.
+- [ ] **4.5** Orders list + detail, filters, search, grouped view.
+- [ ] **4.6** Manual marks and undo; history screen.
+- [ ] **4.7** Strings in English and Indonesian from the start (`values/`, `values-in/`).
 
 **Owner review:** import a real day (two CSVs), compare numbers with the script's packing list,
 mark and undo some orders by hand.
 
 ---
 
-## Phase 4 — Scanning
+## Phase 5 — Scanning
 
 Read: 01-requirements A2; 05-app-architecture (scan pipeline); 06-app-ui (scan, messages,
 condition editor).
 
-- [ ] **4.1** Scan screen from the spike: pipeline, verdicts, result card, change buttons,
+- [ ] **5.1** Scan screen from the spike: pipeline, verdicts, result card, change buttons,
   recent marks with undo.
-- [ ] **4.2** All scan messages, sounds, vibration; Process/Cancel dialog.
-- [ ] **4.3** Condition editor (boxes + text view, live match count); saved scan filters.
-- [ ] **4.4** Type-last-digits entry.
+- [ ] **5.2** All scan messages, sounds, vibration; Process/Cancel dialog.
+- [ ] **5.3** Condition editor (boxes + text view, live match count); saved scan filters.
+- [ ] **5.4** Type-last-digits entry.
 
 **Owner review:** check a real batch with the app, including filter use, a wrong packing, a
 label problem, a pending order, an accidental scan undone.
 
 ---
 
-## Phase 5 — Files and settings
+## Phase 6 — Files and settings
 
 Read: 01-requirements A6, A7; 05-app-architecture (session file, settings file); 06-app-ui
 (More, settings).
 
-- [ ] **5.1** Session export/import `.zip` (Replace / Keep both).
-- [ ] **5.2** Categories screen; import/export `categories.toml` (file from the script must
+- [ ] **6.1** Session export/import `.zip` (Replace / Keep both).
+- [ ] **6.2** Categories screen; import/export `categories.toml` (file from the script must
   load unchanged; file written by the app must work in the script).
-- [ ] **5.3** Settings export/import `.zip`; language System/English/Indonesia; delete
+- [ ] **6.3** Settings export/import `.zip`; language System/English/Indonesia; delete
   protection; sound/vibration switches.
 
 **Owner review:** move a session to a second device and back; edit categories in the app,
@@ -180,25 +191,13 @@ use the exported file in the script.
 
 ---
 
-## Phase 6 — Layouts and polish
+## Phase 7 — Layouts and polish
 
 Read: 06-app-ui (all layouts, problems page).
 
-- [ ] **6.1** Phone landscape, tablet portrait and landscape (list-detail) for every screen.
-- [ ] **6.2** Problems page.
-- [ ] **6.3** Release build signed with a key kept outside the repository (log where in
+- [ ] **7.1** Phone landscape, tablet portrait and landscape (list-detail) for every screen.
+- [ ] **7.2** Problems page.
+- [ ] **7.3** Release build signed with a key kept outside the repository (log where in
   01-setup).
 
 **Owner review:** a full working day with the app.
-
----
-
-## Phase 7 — PC UI (placeholder)
-
-Not designed yet. Recorded as a decision in
-[02-design-questions.md](../software-design/02-design-questions.md) (Decided): the PC gets a
-**Tauri 2 + Svelte/TypeScript** UI over the Python command-line script, which stays the engine.
-Tasks are written once the design pass produces the UI design. Built last, after the phases
-above.
-
-**Owner review:** the owner runs a normal daily download through the UI, without a terminal.

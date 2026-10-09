@@ -29,7 +29,7 @@ python -m pytest script/tests
 `-e` installs the package in editable mode, so `python -m packing` works from any folder while
 the venv is active.
 
-### Android (phase 2)
+### Android (phase 3)
 
 1. Install Android Studio; run the setup wizard (standard install, accept SDK licences).
 2. Open `android/` in Android Studio once so it downloads Gradle and the SDK platforms; after
