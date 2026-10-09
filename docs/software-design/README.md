@@ -6,7 +6,7 @@ What the two tools do and how they are built. Where it disagrees with
 | File | Content |
 |---|---|
 | [01-requirements.md](01-requirements.md) | Concepts, order statuses, the PC script's pick rules, feature list of the PC script (P…) and the app (A…) |
-| [02-design-questions.md](02-design-questions.md) | Questions still open for the owner (D1 the app, D2 interactive mode, D3 packing-list default) |
+| [02-design-questions.md](02-design-questions.md) | Owner decisions recorded but not yet written into the design, and the questions still open |
 | [03-pc-script.md](03-pc-script.md) | The PC script: inputs, command, picks, saved-PDF numbering, the day state, the three packing-list layouts |
 | [04-rules-file.md](04-rules-file.md) | `categories.toml` and the condition language shared by the script and the app |
 | [05-app-architecture.md](05-app-architecture.md) | Android app: stack, modules, database, import, scan pipeline, session and settings files |

@@ -12,7 +12,8 @@
 1. **Arrange shipment** in the seller centre. Each order gets a tracking ID. The `RTS Time`
    values come in clusters of up to 50 orders, consistent with arranging 50 at a time.
 2. **Download** the shipping-label PDF and **export** the orders CSV, on a PC or on Android
-   *(owner)*. Label downloads come in files of at most 200 pages (samples: 200 + 200 + 162).
+   *(owner)*. A batch's label download comes in clusters of up to 200 pages — several files
+   (samples: 200 + 200 + 162).
 3. **Sort and group** on a PC *(owner)*:
    - Group orders with exactly the same packing list (same items, same quantities).
    - Split the groups by **category** — predefined rules on the items, reused every day.

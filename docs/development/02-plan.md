@@ -5,9 +5,10 @@ finishes the task. A phase is done when all its tasks are ticked **and** the own
 noted as passed.
 
 Status: **Phase 1 in progress (design revised for the pick flow).** Code tasks done (270 tests
-pass); left: 1.15 sample run, 1.16 user guide, then the owner review. Open choices with the
-default the code follows: [02-design-questions.md](../software-design/02-design-questions.md)
-(D3–D8).
+pass); left: 1.15 sample run, 1.16 user guide, then the owner review. Owner decisions recorded
+in [02-design-questions.md](../software-design/02-design-questions.md): the app does no PDF work
+and follows its own checking workflow, and the PC gets a Tauri 2 + Svelte/TS UI; still open
+D1, D3, D4, D6, D8 (D5, D7 decided).
 
 ---
 

@@ -4,13 +4,36 @@ Questions that need the owner's choice. Each lists options; the one marked **Bui
 is what the code does until the owner decides. Add new ones as `D1`, `D2`, …; remove one once
 its answer is written into the other documents.
 
+Owner decisions that change the design are listed under **Decided**, below, until a later pass
+writes them into the other documents.
+
+## Decided (not yet designed)
+
+- **The Android app does no PDF work.** Reading, sorting and grouping the label PDFs, and
+  printing the packing list, stay on the PC. The app never opens the label PDFs.
+- **The Android workflow does not follow the PC workflow.** The app is its own checking
+  workflow, not a mirror of the picks. The app design in
+  [01-requirements.md](01-requirements.md) (A-sections),
+  [05-app-architecture.md](05-app-architecture.md) and [06-app-ui.md](06-app-ui.md) is the old
+  one and is revised later ([D1](#d1--the-android-app-and-the-pick-flow)).
+- **The PC also gets a UI: Tauri 2 + Svelte + TypeScript.** The command-line script
+  ([03-pc-script.md](03-pc-script.md)) is the engine under it.
+- **Scan and the filter (Android).** When the item scanned is not the filtered one, warn that it
+  does not match **and** offer to change the filter so it matches the package scanned: filter on
+  the product only, or on product **and** quantity. (Changes
+  [01-requirements.md](01-requirements.md) A2 and the filter-rejected message in
+  [06-app-ui.md](06-app-ui.md#scan-messages).)
+- **A batch's label download comes in clusters of up to 200 pages** — several files per batch
+  ([business-process/01](../business-process/01-packing-workflow.md)).
+
 ## D1 — The Android app and the pick flow
 
 The PC script now works with picks ([03-pc-script.md](03-pc-script.md)); the app design is still
 the old one: batches, pack groups, group numbers and scan filters on batch/group
 ([01-requirements.md](01-requirements.md) A-sections,
 [05-app-architecture.md](05-app-architecture.md), [06-app-ui.md](06-app-ui.md)). Before phase 2
-the app is revised to match the pick flow. Open until then.
+the app is revised as its own checking workflow — not the pick flow, and with no PDF work
+(see **Decided**). Open until then.
 
 ## D3 — Packing-list default
 
@@ -22,20 +45,29 @@ open is the default:
 2. `none`; print on request.
 3. Ask at the end of every run.
 
+Open.
+
 ## D4 — A CSV that holds none of the label orders
 
-E.g. yesterday's CSV with today's labels.
+E.g. yesterday's CSV with today's labels. This is the **PC script's** case, not the app's — the
+sample label files run against the sample CSVs are exactly this (each is the other day's file),
+so the run knows no values from the CSV.
 
 1. Warn once, carry on with the item data from the labels. **Built for now.**
 2. Stop: a CSV that matches nothing is probably the wrong file.
+
+Owner asked why this question exists; still open.
 
 ## D5 — Plain labels (no packing slip) and no CSV
 
 The script then knows no items.
 
 1. Allowed: picks on label fields (`courier`, `tracking_id`, `ship_by`) work, pages stay in
-   download order, a pick on an item field stops with an error. **Built for now.**
+   download order, a pick on an item field stops with an error.
 2. Not allowed: stop and ask for labels with packing slip or the CSV.
+
+**Decided: option 2 — not allowed.** Without a slip and without a CSV the run stops and asks for
+labels with a packing slip, or for the orders CSV.
 
 ## D6 — Redo after fixing categories.toml
 
@@ -46,7 +78,16 @@ plain re-run saves nothing.
    packing lists, then run as normal. **Built for now.**
 2. No redo; the owner deletes the day folder by hand.
 
+Owner asked what this means; still open.
+
 ## D7 — Names in the day folder
+
+**Decided: one subfolder per batch, and each group is saved under a name the owner chooses.**
+(Replaces the two options below.) The batch's saved PDFs and packing lists go into that batch's
+subfolder; the owner names each saved group file himself (a suggested name may be offered), and
+the numbering still runs through the day.
+
+The current behaviour, for reference:
 
 1. Saved PDFs `3 Z Lainnya ×393.pdf`, packing lists `packing-list-3.pdf` (per-pdf) or
    `packing-list.pdf` (whole), all directly in `work/<day>/`. **Built for now.**
@@ -55,11 +96,14 @@ plain re-run saves nothing.
 ## D8 — Example rules file and labels-only runs
 
 The repo's `categories.toml` has pick C `product_category contains "sepeda motor"`. Product
-category is only in the CSV, so with labels alone the run stops
-(`pick "C" uses field "product_category", which needs the orders CSV`).
+category comes from the orders CSV only (the `Product Category` column,
+[business-process 02](../business-process/02-data-sources.md#columns-packing-needs)), so with
+labels alone the run stops (`pick "C" uses field "product_category", which needs the orders CSV`).
 
 1. Keep the error; the owner writes picks on label/slip fields (name, variation, courier, …)
    when running without the CSV. **Built for now.**
 2. Rewrite pick C in the example file on `name` (e.g. `name contains "motor"`).
 3. Skip a pick whose field has no source (warning), and carry on with the next one.
 4. Remember product name → category from every CSV seen, and use it when the CSV is missing.
+
+Owner asked where `product_category` comes from; still open.
