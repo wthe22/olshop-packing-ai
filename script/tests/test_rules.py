@@ -141,8 +141,8 @@ def test_fields_used_collects_every_field() -> None:
 
 def test_repo_categories_load() -> None:
     cats = load_rules(REPO / "categories.toml")
-    assert [c.code for c in cats] == ["A", "B", "C", "Z"]
-    assert [c.name for c in cats] == ["Sepatu", "Spion & Knalpot", "Motor lainnya", "Lainnya"]
+    assert [c.code for c in cats] == ["A", "B", "Z"]
+    assert [c.name for c in cats] == ["Sepatu", "Spion & Knalpot", "Lainnya"]
     assert cats[-1].when is None
     assert all(c.when is not None for c in cats[:-1])
 
@@ -163,14 +163,7 @@ def test_categorize_first_match_and_uncategorised() -> None:
     cats = load_rules(REPO / "categories.toml")
     assert categorize(ORDERS["o2"], cats).code == "A"  # sepatu
     assert categorize(ORDERS["o1"], cats).code == "B"  # spion
-    # o3 has product_category "Sepeda Motor" (would match C) but B matches first.
     assert categorize(ORDERS["o3"], cats).code == "B"
-
-    sepeda = Order(
-        "580000000000000009", "JY0000000009", None, "JNE", "TikTok",
-        (_line("Velg Motor"),),
-    )
-    assert categorize(sepeda, cats).code == "C"
 
     other = Order(
         "580000000000000010", "JY0000000010", None, "JNE", "TikTok",

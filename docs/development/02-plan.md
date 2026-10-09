@@ -4,22 +4,22 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app) designed, waiting for the owner's review of the design.** The owner
+Status: **Phase 2 (PC app) designed and its choices answered; next: task 2.1.** The owner
 decided that the PC gets a desktop app written in Rust (a command line is not good for daily
-use), so phase 1 stops with its code done (270 tests) and becomes the reference
-implementation; its two open tasks move into phase 2. Design:
-[07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md);
-open choices D2–D12 in [02-design-questions.md](../software-design/02-design-questions.md)
-(each has a "Built for now"), D1 (Android) stays open until phase 3. Next: owner answers
-D2–D12, then task 2.1.
+use), so phase 1 stops with its code done (270 tests) and stays as the reference
+implementation and fallback; its two open tasks move into phase 2. Design:
+[07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
+Open in [02-design-questions.md](../software-design/02-design-questions.md): D2 (PDF library,
+settled by the spike 2.1) and D1 (Android, open until phase 3).
 
 ---
 
 ## Phase 1 — PC script (stopped: reference implementation)
 
 The Python script, built as the daily tool and then replaced by the Rust PC app (phase 2)
-before it was used daily. Its code is finished and tested; it stays as the reference the Rust
-program is compared with ([D3](../software-design/02-design-questions.md#d3--the-python-script-after-the-rewrite)).
+before it was used daily. Its code is finished and tested; it stays for good, frozen, as the reference the
+Rust program is compared with and as a fallback when the app cannot start
+([07-pc-app](../software-design/07-pc-app.md)).
 Tasks 1.15 and 1.16 are not done here: the sample run is part of task 2.7, the user guide is
 written for the app in task 2.14. There is no separate owner review of phase 1.
 
@@ -89,12 +89,10 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
     item lines, `Qty Total` = sum on all 600, `ship_by` on all 600, J&T 517, courier unknown
     83, tracking ID not found 1. Plain files: 562 orders in 22 s, no slip, no `ship_by`
     (plain labels do not print it), J&T 511, IDX 1, unknown 50, tracking ID not found 1.
-  - First CLI run (slip files, no CSV, repo `categories.toml`) stopped correctly with
-    `error: pick "C" uses field "product_category", which needs the orders CSV` (pick C:
-    [D10](../software-design/02-design-questions.md#d10--pick-c-product_category-in-categoriestoml)).
-    The CSV-only check now runs before the labels are read (instant error).
-  - Still to run: the slip files with a rules file that has no CSV-only field (e.g. a copy of
-    `categories.toml` with pick C removed, outside the repo or in `work/`); the slip files with
+  - First CLI run (slip files, no CSV, a rules file with a pick on `product_category`) stopped
+    correctly with `error: pick "C" uses field "product_category", which needs the orders CSV`.
+    The CSV-only check runs before the labels are read (instant error).
+  - Still to run: the slip files with the repository `categories.toml`; the slip files with
     `--csv samples/orders-06-1.csv` (expect the "CSV holds none of the label orders" warning); the plain files; a second
     invocation (duplicates skipped); `--redo`; `--interactive`; each layout and scope. Check
     the saved PDFs and packing lists by eye, page counts = label pages. Print counts only,
@@ -117,8 +115,8 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
 
 A Windows program that replaces the script for daily use: label downloads in, picks adjusted on
 screen, saved PDFs and packing lists out, revert/amend of the last batch. Written in Rust;
-screens in Svelte + TypeScript in a Tauri 2 window. Starts only after the owner has reviewed the
-design and answered (or accepted the "Built for now" of) D2–D12.
+screens in Svelte + TypeScript in a Tauri 2 window. A portable program folder, no installer.
+The PDF library (D2) is settled by the spike 2.1.
 
 Read: [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md),
 [03-pc-script](../software-design/03-pc-script.md) (the reading and sorting rules that carry
@@ -159,35 +157,42 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   `testdata/expected-labels.json` matches; written PDFs have the right page counts and text.
 - [ ] **2.7 Developer CLI and sample run** (local, not committed; replaces 1.15).
   `packing-cli prepare --labels … [--day] [--data]` writes a batch like the app. On the sample
-  slip files with a copy of `categories.toml` without pick C: 601 pages, 600 orders, one order
+  slip files with the repository `categories.toml`: 601 pages, 600 orders, one order
   on 2 pages, J&T 517 pages, courier unknown 83, tracking ID not found 1 (the Python numbers of
   1.15); the picks, runs and page counts equal the Python script's on the same files and rules;
   a second run saves nothing (all duplicates); revert then run again gives the same files;
   plain sample files stop with the no-slip message. Check saved PDFs and packing lists by eye.
   Record the numbers here (counts only, no real IDs).
-- [ ] **2.8 App: frame, Day screen, Settings, first start** (08 › 1, 6, *First start*):
-  data folder choice, day switch, batches from `state.json`, Open / Open folder.
-- [ ] **2.9 App: New batch** (08 › 2): today's downloads list, Add files…, drag-and-drop,
-  "used in batch n", reading with progress and Cancel, stop messages.
+- [ ] **2.8 App: frame, Day screen, Settings, start** (08 › 1, 6, *Start*): finding the data
+  folder (program folder, else ask each start), day switch, batches from `state.json`, Open /
+  Open folder, all screen texts in `src/texts.ts`.
+- [ ] **2.9 App: New batch** (08 › 2): Add files…, drag-and-drop, page counts, "used in batch
+  n", reading with progress and Cancel, stop messages.
 - [ ] **2.10 App: Plan and Save** (08 › 3, 4): picks with counts and runs, skip/move/add,
-  file names, packing-list options, warnings, Save → Day screen.
+  file names (whole name editable, same name twice refused), packing-list options (default one
+  per batch), warnings, the `download/` copy, Save → Day screen.
 - [ ] **2.11 App: Revert and Amend** (07 › *Revert and amend*): confirmations, file-in-use
-  message, amend from the saved PDFs.
-- [ ] **2.12 App: Categories** (08 › 5): rows with live check and counts, Edit as text, save
-  keeping comments.
-- [ ] **2.13 Installer** (D11): `npm run tauri build`, `pdfium.dll` bundled; install on this PC,
-  start from the Start menu, one batch on `testdata/` labels. Log in 01-setup.
+  message, amend from the batch's `download/` copy.
+- [ ] **2.12 App: Categories** (08 › 5): boxes editor (groups, rows, not), text view per
+  category, live check and counts, Edit file as text, save keeping comments and unchanged
+  condition texts. Test: every parse case of `testdata/conditions.json` goes text → boxes →
+  text and gives the printer's text.
+- [ ] **2.13 Portable build** (07 › *Program folder*): `pc/tools/make-portable.sh`
+  (`npm run tauri build -- --no-bundle`, then `Packing.exe` + `pdfium.dll` into
+  `pc/target/portable/Packing/`); copy the folder outside the repository, start it from a
+  shortcut, the first start asks for the data folder, one batch on `testdata/` labels. Log in
+  01-setup.
 - [ ] **2.14 User guide** (replaces 1.16). `docs/user-guide/README.md` (index) and
-  `docs/user-guide/01-pc-app.md` for the owner (not a developer), under ~250 lines: install and
-  first start; a normal batch step by step with screenshots taken on `testdata/` labels
+  `docs/user-guide/01-pc-app.md` for the owner (not a developer), under ~250 lines: setting up the
+  program folder, first start and a new version; a normal batch step by step with screenshots taken on `testdata/` labels
   (made-up data); several batches a day; revert and amend; editing categories with 3–4 example
   conditions (link 04); every message with what to do. Add the folder to `docs/README.md`
   ("how to use a finished tool belongs in `user-guide/`") and to the Docs line in `AGENTS.md`.
 
-**Owner review:** the owner installs the app and runs a normal day's downloads through it,
+**Owner review:** the owner puts the program folder on the PC and runs a normal day's downloads through it,
 without a terminal: two batches, one category edited and the last batch amended, one batch
 reverted; prints the saved PDFs and packing lists; confirms the picks, numbering, folder and
-file names, and the screens. Then D3 is applied (the Python script deleted or kept).
+file names, and the screens.
 
 ---
 

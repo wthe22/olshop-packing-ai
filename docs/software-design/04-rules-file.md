@@ -26,11 +26,6 @@ and (name contains "spion" or name contains "knalpot")
 '''
 
 [[category]]
-code = "C"
-name = "Motor lainnya"
-when = 'product_category contains "sepeda motor"'
-
-[[category]]
 code = "Z"
 name = "Lainnya"
 ```
@@ -140,8 +135,7 @@ The date is written year-month-day; the time is `HH:MM` without seconds.
   PC app reads no CSV, so in its rules these fields are always an error
   ([07-pc-app.md](07-pc-app.md#fields-the-conditions-can-use)).
 - `product_category` is the platform's category, not the shop's: do not use it in
-  `categories.toml` (pick C of the example above is still to be changed, see
-  [D10](02-design-questions.md#d10--pick-c-product_category-in-categoriestoml)).
+  `categories.toml`.
 - Item fields need item data (a slip or a CSV); a pick using one with neither stops the run.
 - Categories may use only the fields without "app scan filters only" (a category cannot depend
   on itself or on numbering that is computed after the categories).

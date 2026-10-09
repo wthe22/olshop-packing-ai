@@ -16,10 +16,5 @@ and (name contains "spion" or name contains "knalpot")
 '''
 
 [[category]]
-code = "C"
-name = "Motor lainnya"
-when = 'product_category contains "sepeda motor"'
-
-[[category]]
 code = "Z"
 name = "Lainnya"

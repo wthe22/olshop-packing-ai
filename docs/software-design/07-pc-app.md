@@ -7,12 +7,20 @@ a terminal. The screens are in [08-pc-app-ui.md](08-pc-app-ui.md).
 
 The whole program is written in **Rust** (engine and window), with the screens in
 **Svelte + TypeScript** inside a **Tauri 2** window. The Python script of phase 1
-([03-pc-script.md](03-pc-script.md)) is not used by the app; it stays in the repository as the
-**reference implementation**: the Rust engine must give the same picks, runs and pages on the
-same input ([D3](02-design-questions.md#d3--the-python-script-after-the-rewrite)).
+([03-pc-script.md](03-pc-script.md)) is not used by the app. It stays in the repository for
+good, **frozen** (no new features):
 
-Open choices for the owner are marked *(D2)*, *(D3)*, … and explained in
-[02-design-questions.md](02-design-questions.md). Each says what is **built for now**.
+- as the **reference implementation**: the Rust engine must give the same picks, runs and pages
+  on the same input;
+- as a **fallback** when the app cannot start (run from Git Bash as in 03). The script and the
+  app do not share day state (`work/<day>/` vs the data folder): orders saved by the script are
+  unknown to the app's duplicate guard, and the other way round.
+
+Rule features added later go into the app only. The fixtures the script is tested against
+(`testdata/`) are not changed for them; app-only cases go into separate fixture files.
+
+The one open choice, the PDF library, is marked *(D2)* and explained in
+[02-design-questions.md](02-design-questions.md) with what is **built for now**.
 
 ## What carries over from the script, what changes
 
@@ -39,9 +47,9 @@ What is different in the app (these are owner decisions):
 | Plain labels (no packing slip) | Allowed with a warning | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
 | Rules file vs interactive menu | Two modes (`--interactive`) | One screen: the rules are applied in order as a proposal; the owner can skip, move or add a pick for this batch before saving ([08 › Plan](08-pc-app-ui.md#3-plan)) |
 | Undo a run | `--redo` (forget the last run) | **Revert** (undo the last batch) and **Amend** (redo the last batch in place), like git |
-| Output folder | `work/<day>/` flat | `labels/<day>/batch <b>/` inside the data folder, one subfolder per batch *(D5)* |
-| Saved-PDF name | Fixed `<n> <code> <name> ×<orders>.pdf` | Suggested the same way; the owner can rename before saving *(D5)* |
-| Packing-list default | `per-pdf`, layout `full` | `per-pdf`, layout `pick` (changeable per batch) |
+| Output folder | `work/<day>/` flat | `labels/<day>/batch <b>/` inside the data folder, one subfolder per batch, with a copy of the batch's label downloads |
+| Saved-PDF name | Fixed `<n> <code> <name> ×<orders>.pdf` | Suggested the same way; the owner can change the whole name before saving |
+| Packing-list default | `per-pdf`, layout `full` | One per batch (`whole`), layout `pick` (changeable per batch) |
 | Fields in conditions | Includes the CSV-only fields | Only fields the label/slip carry (below) |
 
 ## Words used in this document
@@ -51,7 +59,7 @@ What is different in the app (these are owner decisions):
 | **Batch** | One round of the daily steps ([business-process 01](../business-process/01-packing-workflow.md#daily-steps)): arrange shipment, download the labels (one or more files of up to 200 pages), prepare them in the app. Numbered 1, 2, 3, … within the day. In the app, one **Save** = one batch |
 | **Draft** | A batch that has been read but not saved yet. It lives only in the app's memory; closing the app forgets it and nothing is written |
 | **Plan** | The list of picks of a draft, in order, with their counts. Starts as the `categories.toml` entries in file order |
-| **Data folder** | The folder where the app keeps `categories.toml` and the `labels/` folder with every day's output *(D4)* |
+| **Data folder** | The folder where the app keeps `categories.toml` and the `labels/` folder with every day's output. By default the program's own folder ([Program folder](#program-folder-portable)) |
 | **Pick**, **saved PDF**, **run**, **contents** | As in [01-requirements.md](01-requirements.md#concepts) |
 
 ## Inputs
@@ -89,14 +97,14 @@ A condition that uses a CSV field (`sku_id`, `product_category`, `channel`, `pai
 
 > `line 18, col 8: field "product_category" needs the orders CSV, which the PC app does not read`
 
-The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04. The repository's
-`categories.toml` has such a pick today (pick C); see *(D10)*.
+The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04.
 
 ## What happens in one batch
 
-1. **Choose the files** ([08 › New batch](08-pc-app-ui.md#2-new-batch)). Before reading, the
-   app checks each file's fingerprint (size + SHA-256) against `state.json`: a file already
-   used in an earlier batch today is shown as *used in batch 1* and not ticked.
+1. **Choose the files** with **Add files…** or by dropping them on the window
+   ([08 › New batch](08-pc-app-ui.md#2-new-batch)). Each file's fingerprint (size + SHA-256)
+   is checked against `state.json`: a file already used in an earlier batch today is marked
+   *used in batch 1* (it can still be read; its orders are then left out as already saved).
 2. **Read** the files in the order shown (default: by file name, which is download order),
    page by page, with a progress bar and a Cancel button. Per page: the Order ID, the
    label-level fields, the slip lines. Pages are grouped into orders (03 rules). Every order
@@ -115,7 +123,8 @@ The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04. 
    1. Number the saved PDFs from the day's next number (after the last batch's last number).
    2. Re-order each pick's orders into runs.
    3. Write everything into a temporary folder `labels/<day>/batch <b>.partial/`: the saved
-      PDFs (pages copied unchanged), the packing lists, `summary.txt`.
+      PDFs (pages copied unchanged), the packing lists, `summary.txt`, and a copy of the label
+      files read, in `download/` (amend reads them back).
    4. Rename the folder to `batch <b>` and add the batch to `state.json`.
 
    If anything fails before step 4, the temporary folder is deleted and the day is as before
@@ -126,6 +135,7 @@ The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04. 
 ```
 <data folder>/
   categories.toml
+  settings.json
   labels/
     2026-10-07/
       state.json
@@ -133,25 +143,34 @@ The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04. 
         1 A Sepatu ×172.pdf
         2 B Spion & Knalpot ×35.pdf
         3 Z Lainnya ×393.pdf
-        packing-list-1.pdf
-        packing-list-2.pdf
-        packing-list-3.pdf
+        packing-list.pdf
         summary.txt
+        download/
+          10-07_07-00-00_Shipping label+Packing slip_1.pdf
+          10-07_07-00-09_Shipping label+Packing slip_2.pdf
+          10-07_07-00-17_Shipping label+Packing slip_3.pdf
       batch 2/
         4 A Sepatu ×88.pdf
         5 Z Lainnya ×41.pdf
-        packing-list-4.pdf
-        packing-list-5.pdf
+        packing-list.pdf
         summary.txt
+        download/
+          …
 ```
 
-- Saved-PDF numbers run through the day (batch 2 starts at 4), so "sort by name" inside a batch
-  folder is printing order, and a number on the packing list is unique for the whole day.
-- Folder and file names follow *(D5)*. Characters not allowed in Windows file names
-  (`\ / : * ? " < > |`) become `-`; a name is cut at 100 characters (ending in `…`).
-- Packing-list files: scope `per-pdf` → `packing-list-<n>.pdf` per saved PDF; scope `whole` →
-  one `packing-list.pdf` per batch; with several layouts the layout is added
-  (`packing-list-3-full.pdf`, `packing-list-3-pick.pdf`).
+- Saved-PDF numbers run through the day (batch 2 starts at 4), so with the suggested names
+  "sort by name" inside a batch folder is printing order, and a number on the packing list is
+  unique for the whole day.
+- Batch folders are `batch 1`, `batch 2`, …. Saved-PDF names are the owner's: suggested
+  `<n> <code> <name> ×<orders>`, the whole name can be changed
+  ([08 › Plan](08-pc-app-ui.md#3-plan)); two saved PDFs of one batch cannot have the same name.
+  Characters not allowed in Windows file names (`\ / : * ? " < > |`) become `-`; a name is cut
+  at 100 characters (ending in `…`).
+- Packing-list files: scope `whole` (the default) → one `packing-list.pdf` per batch; scope
+  `per-pdf` → `packing-list-<n>.pdf` per saved PDF; with several layouts the layout is added
+  (`packing-list-full.pdf`, `packing-list-3-pick.pdf`).
+- `download/` holds the label files exactly as read (about 1.3 MB per 200 pages, ~4 MB for a
+  day of 600 orders), so amend works even when the originals in Downloads are gone.
 - **The day** is today's date on the PC when the app is opened; the Day screen can switch to
   another day (e.g. a download just after midnight that belongs to the evening before).
 
@@ -174,22 +193,22 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
         {"number": 1, "code": "A", "name": "Sepatu", "file": "1 A Sepatu ×172.pdf",
          "orders": 172, "runs": 4}
       ],
-      "packing_list": {"scope": "per-pdf", "layouts": ["pick"]}
+      "packing_list": {"scope": "whole", "layouts": ["pick"]}
     }
   ],
   "saved": [
     {"order_id": "580000000000000001", "tracking_id": "JY0000001234",
-     "batch": 1, "pdf": 1, "run": 5, "position": 17}
+     "batch": 1, "pdf": 1, "run": 5}
   ]
 }
 ```
 
 | Field | Holds | Why |
 |---|---|---|
-| `batches[].files` | Name, size, SHA-256, page count of each label file read | Recognise a file used twice ("used in batch 1") |
+| `batches[].files` | Name, size, SHA-256, page count of each label file read, in reading order | Recognise a file used twice ("used in batch 1"); amend reads `download/` in this order |
 | `batches[].pdfs` | Each saved PDF: number, pick code/name, file name, counts | Day screen without re-reading the PDFs; revert knows which files are the batch's |
 | `batches[].packing_list` | Scope and layouts chosen | Amend starts with the same choice |
-| `saved[]` | Each saved order: IDs, batch, saved PDF, run, download position | Duplicate guard; amend restores the download order (below) |
+| `saved[]` | Each saved order: IDs, batch, saved PDF, run | Duplicate guard |
 
 The file is written whole each time (write to `state.json.tmp`, then replace), so a crash
 never leaves half a file. The Python script's `state.json` (with `invocation`) is a different
@@ -211,13 +230,12 @@ changes nothing.
 
 **Amend last batch** — for "I fixed a category, do the last batch again":
 
-1. The app reads the batch's orders back from **its own saved PDFs** *(D6)* — every page of the
-   batch is in them — and puts them back in download order with the `position` stored in
-   `state.json`.
+1. The app reads the batch's label files again from its `download/` copy, in the order stored
+   in `state.json`: the same pages in the same order as the first time.
 2. The Plan screen opens with these orders and the current `categories.toml`; the duplicate
    guard ignores the batch's own orders.
-3. **Save** writes a new `batch <b>.partial/` with the same first number, then replaces the old
-   folder, and replaces the batch in `state.json`. **Cancel** leaves the old batch untouched.
+3. **Save** writes a new `batch <b>.partial/` with the same first number and the same
+   `download/` copy, then replaces the old folder, and replaces the batch in `state.json`. **Cancel** leaves the old batch untouched.
 
 Amend after printing: the printed labels may no longer match the new files. The confirmation
 says so ("Batch 2 was saved at 09:12. If you already printed it, print it again after
@@ -228,7 +246,7 @@ amending.").
 - Same layouts as the script ([03 › Packing list](03-pc-script.md#packing-list-a4)), A4, fonts
   Arial and Consolas from `C:\Windows\Fonts`.
 - Chosen per batch on the Plan screen: scope `per PDF` / `whole batch` / `none`, layouts any of
-  `full`, `summary`, `pick`. Default: `per PDF`, `pick`. The default can be changed in Settings.
+  `full`, `summary`, `pick`. Default: `whole batch`, `pick`. The default can be changed in Settings.
 - Header as in 03 with the batch added: `Packing list · 2026-10-07 · batch 1 · 2  B  Spion &
   Knalpot`.
 
@@ -255,7 +273,7 @@ packing-cli (Rust, developer tool): same engine from the command line, for tests
 | Need | Choice | Note |
 |---|---|---|
 | Language | Rust (stable, edition 2024; installed: 1.98) | One language for engine and window back end |
-| Window | Tauri 2 (`tauri` 2.12) | Uses the Edge WebView2 that comes with Windows 11; small installer |
+| Window | Tauri 2 (`tauri` 2.12) | Uses the Edge WebView2 that comes with Windows 11 |
 | Screens | Svelte 5 + TypeScript + Vite (`create-tauri-app`, template `svelte-ts`) | Plain CSS, no component library. Node 26 installed |
 | PDF: read text with x/y, copy pages unchanged, write the packing list | `pdfium-render` 0.9 + `pdfium.dll` (Chrome's PDF engine; prebuilt by bblanchon/pdfium-binaries) *(D2)* | `PdfPageText` gives each character with its box (replaces pypdf's `visitor_text`); `copy_page_range_from_document` copies pages; `PdfFonts::load_true_type_from_file` + text objects write the packing list. Licences MIT/Apache (wrapper), BSD-3/Apache (PDFium) |
 | TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `categories.toml`, `couriers.toml` |
@@ -263,7 +281,7 @@ packing-cli (Rust, developer tool): same engine from the command line, for tests
 | Dates | `jiff` | `ship_by`, `save_time`, day folder |
 | Fingerprints | `sha2` | Label files used twice |
 | Tests | `cargo test`; `svelte-check` for the screens | Fixtures shared with the Python script in `testdata/` |
-| Installer | Tauri bundler, NSIS (`npm run tauri build`) *(D11)* | `pdfium.dll` bundled as a resource |
+| Build | `pc/tools/make-portable.sh`: `npm run tauri build -- --no-bundle`, then the program folder | No installer; `Packing.exe` + `pdfium.dll` in `pc/target/portable/Packing/` ([Program folder](#program-folder-portable)) |
 
 ### Code layout
 
@@ -288,8 +306,10 @@ pc/
     cli/                     package packing-cli (developer tool, not for daily use)
   app/
     package.json, vite.config.ts, src/          Svelte screens
+    src/texts.ts                                every screen text (English)
     src-tauri/                                  package packing-app: commands, settings
   tools/get-pdfium.sh        downloads the pinned pdfium.dll into pc/vendor/ (git-ignored)
+  tools/make-portable.sh     builds the program folder pc/target/portable/Packing/
 ```
 
 `packing-engine` has no PDF dependency: it takes text runs and returns decisions, so all
@@ -301,13 +321,14 @@ touches PDFium.
 | Command | Does | Returns |
 |---|---|---|
 | `day_overview(day)` | Read `state.json` of the day | Batches, saved PDFs, totals |
-| `list_downloads()` | Label PDFs in the downloads folder changed today *(D9)* | Name, size, time, page count, "used in batch n" |
+| `check_files(paths)` | Page count and fingerprint of each chosen file | Name, size, time, page count, "used in batch n" |
 | `read_labels(paths)` | Start reading on a worker thread; emits `read-progress {page, pages}` | A draft id, then orders count, duplicates, warnings, or the stop error |
 | `cancel_read()` | Stop reading | — |
 | `plan(draft, edits)` | Apply the plan edits (skip, move, add condition, rename) and recount | Picks with counts, runs (contents × orders), suggested names |
 | `save_batch(draft, plan, packing)` | Steps of *Save* above | Written files, summary |
 | `revert_last(day)` / `start_amend(day)` | Revert / amend | New overview / a draft |
 | `rules_load()` / `rules_check(text or entries, draft?)` / `rules_save(…)` | Categories editor | Entries, errors with line/col, live counts on the open draft |
+| `condition_to_tree(text)` / `tree_to_condition(tree)` | Boxes editor: condition text → boxes, boxes → text (the engine's parser and printer, so the window has no second parser) | Tree of groups and rows, or an error with line/col / the text |
 | `open_path(path)` / `show_in_folder(path)` | Open a PDF in the default viewer / Explorer | — |
 | `settings_get()` / `settings_set(…)` | Settings | — |
 
@@ -317,15 +338,39 @@ by that thread until it is saved, cancelled, or the app closes.
 
 ### Settings
 
-Stored by the app in `%APPDATA%\com.wthe22.olshop-packing\settings.json` (not in the data
-folder, because it says where the data folder is):
+`settings.json` in the data folder:
 
 | Setting | Default |
 |---|---|
-| Data folder | *(D4)* |
-| Downloads folder | `%USERPROFILE%\Downloads` |
-| Packing-list scope / layouts | `per PDF` / `pick` |
-| Language | *(D8)* |
+| Packing-list scope / layouts | `whole batch` / `pick` |
+
+Where the data folder is, is not a stored setting (next section). The app is in English; every
+screen text is in one file (`pc/app/src/texts.ts`) so another language can be added later.
+
+### Program folder (portable)
+
+There is no installer. The program is one folder, put anywhere the owner can write (e.g.
+`D:\Packing\`, not `Program Files`) and started from a shortcut:
+
+```
+Packing\
+  Packing.exe
+  pdfium.dll
+  categories.toml   ┐
+  settings.json     ├ the data folder (default: the program folder itself)
+  labels\           ┘
+```
+
+- Copying the folder to another PC moves the program and all its data along.
+- **New version**: replace `Packing.exe` and `pdfium.dll`; the data files stay.
+- **Finding the data folder at start**: the app looks for `categories.toml` in its own folder.
+  Found → that folder is the data folder. Not found → the app asks, at every start until it is
+  found: **Use this folder** (writes the built-in `categories.toml` next to the program) or
+  **Choose a folder…** (used until the app closes; the next start asks again). See
+  [08 › Start](08-pc-app-ui.md#start).
+- Settings › Data folder › **Change…** switches to another folder until the app closes.
+- WebView2 keeps its browser cache under `%LOCALAPPDATA%\com.wthe22.olshop-packing\`; it holds
+  no data of the app and is not needed on another PC.
 
 ## Testing
 

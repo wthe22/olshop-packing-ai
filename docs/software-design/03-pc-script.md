@@ -55,7 +55,7 @@ python -m packing prepare --labels <label.pdf> [<label.pdf> …] [--csv <orders.
 | `--packing-list` | `per-pdf` | Packing-list scope: `per-pdf` (one sheet per saved PDF), `whole` (one sheet with a section per saved PDF), `none` |
 | `--day` | today | The day folder |
 | `--work` | `work` | Folder that holds the day folders. Git-ignored: it contains real order data |
-| `--redo` | off | Forget the day's last invocation (its entries in `state.json`, its saved PDFs and packing lists), then run as normal ([D6](02-design-questions.md#d6--redo-after-fixing-categoriestoml)) |
+| `--redo` | off | Forget the day's last invocation (its entries in `state.json`, its saved PDFs and packing lists), then run as normal |
 
 ## Interactive mode
 

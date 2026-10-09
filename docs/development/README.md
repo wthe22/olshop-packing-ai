@@ -41,7 +41,7 @@ is the reference implementation). Design is in
 .gitignore
 README.md                  short project overview
 AGENTS.md                  rules for AI coding agents (same rules as above, condensed)
-categories.toml            the owner's categories (used by the script by default)
+categories.toml            the owner's categories (script default; built into the app for a new data folder)
 docs/
   business-process/        how the work is done; facts about the platform files
   software-design/         what to build
@@ -53,7 +53,8 @@ pc/                        PC app (Rust + Tauri), created in phase 2 (07-pc-app 
   crates/cli/              developer command line (tests, sample runs)
   app/                     Tauri app: Svelte screens (src/), Rust commands (src-tauri/)
   tools/get-pdfium.sh      downloads the pinned pdfium.dll into pc/vendor/ (git-ignored)
-script/                    PC script (Python), reference implementation
+  tools/make-portable.sh   builds the portable program folder (Packing.exe + pdfium.dll)
+script/                    PC script (Python): reference implementation and fallback, frozen
   pyproject.toml
   packing/                 the package (python -m packing …)
   tests/
@@ -77,7 +78,7 @@ work/                      script output with real data, git-ignored
 | Diff two CSVs | `python script/tools/diff_csv.py A.csv B.csv [--missing f.csv --new f.csv --common f.csv]` (by Order ID; prints the counts and IDs, writes a file only per option) |
 | PC app: Rust tests | `cd pc && cargo test` |
 | PC app: run in development | `cd pc/app && npm run tauri dev` |
-| PC app: installer | `cd pc/app && npm run tauri build` → `pc/target/release/bundle/nsis/` |
+| PC app: portable folder | `pc/tools/make-portable.sh` → `pc/target/portable/Packing/` |
 | App build (debug APK) | `cd android && ./gradlew assembleDebug` |
 | App unit tests | `cd android && ./gradlew test` |
 | Install on the phone | `cd android && ./gradlew installDebug` (phone on USB, debugging on) |
