@@ -2240,8 +2240,10 @@ dependencies = [
 name = "packing-cli"
 version = "0.1.0"
 dependencies = [
+ "jiff",
  "packing-engine",
  "packing-pdf",
+ "serde_json",
 ]
 
 [[package]]

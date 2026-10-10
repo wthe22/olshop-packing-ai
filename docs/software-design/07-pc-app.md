@@ -271,7 +271,8 @@ amending.").
 │        └──► packing-pdf (Rust): page text with positions, copy pages,          │
 │             write packing lists  ──►  PDFium (pdfium.dll)                      │
 └────────────────────────────────────────────────────────────────────────────────┘
-packing-cli (Rust, developer tool): same engine from the command line, for tests
+packing-cli (Rust, developer tool): the same engine and the shared batch steps
+(`packing-pdf` `batch.rs`) from the command line, for tests and sample runs
 ```
 
 ### Stack
@@ -309,6 +310,7 @@ pc/
       src/read.rs            open files, page text with positions, page count, progress
       src/write.rs           copy pages into a saved PDF
       src/packing_list.rs    the three layouts
+      src/batch.rs           the batch steps shared by CLI and app: check files, read, duplicate guard, save
     cli/                     package packing-cli (developer tool, not for daily use)
   app/
     package.json, vite.config.js, src/routes/   Svelte screens

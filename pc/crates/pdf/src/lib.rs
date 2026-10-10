@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 
 use pdfium_render::prelude::{Pdfium, PdfiumError};
 
+pub mod batch;
 pub mod packing_list;
 pub mod read;
 pub mod worker;

@@ -77,6 +77,7 @@ work/                      script output with real data, git-ignored
 | Label PDFs → CSV | `python script/tools/extract_labels.py "samples/*Shipping label*.pdf" -o work/labels.csv` |
 | Diff two CSVs | `python script/tools/diff_csv.py A.csv B.csv [--missing f.csv --new f.csv --common f.csv]` (by Order ID; prints the counts and IDs, writes a file only per option) |
 | PC app: Rust tests | `cd pc && cargo test` |
+| Developer CLI (batch steps for tests/sample runs) | `cd pc && cargo run -p packing-cli -- prepare --labels <file>... [--rules <categories.toml>] [--data <dir>] [--day YYYY-MM-DD] [--packing-list whole\|per-pdf\|none] [--layout pick,full,summary]` — also `revert` / `amend`; `--quiet-ids` prints counts only. Writes `<data>/labels/<day>/batch <b>/` (07 › *Day folder*) |
 | PC app: run in development | `cd pc/app && npm run tauri dev` |
 | PC app: portable folder | `pc/tools/make-portable.sh` → `pc/target/portable/Packing/` |
 | App build (debug APK) | `cd android && ./gradlew assembleDebug` |

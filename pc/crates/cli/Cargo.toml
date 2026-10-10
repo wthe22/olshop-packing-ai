@@ -10,5 +10,9 @@ name = "packing-cli"
 path = "src/main.rs"
 
 [dependencies]
+jiff.workspace = true
 packing-engine.workspace = true
 packing-pdf.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
