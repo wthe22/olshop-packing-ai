@@ -7,6 +7,7 @@ pub mod names;
 pub mod orders;
 pub mod plan;
 pub mod rules;
+pub mod rules_edit;
 pub mod slip;
 pub mod text;
 
