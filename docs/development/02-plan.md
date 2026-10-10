@@ -4,7 +4,7 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): tasks 2.1–2.6 done; in progress: 2.7.** The owner
+Status: **Phase 2 (PC app): tasks 2.1–2.7 done; in progress: 2.8.** The owner
 decided that the PC gets a desktop app written in Rust (a command line is not good for daily
 use), so phase 1 stops with its code done (270 tests) and stays as the reference
 implementation and fallback; its two open tasks move into phase 2. Design:
@@ -169,7 +169,7 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   - Result: 23/23 testdata orders equal `expected-labels.json` (24 pages in 0.03 s); plain file
     gives the no-slip stop; copied pages keep their text; packing lists about 1.37 MB. Not
     reproduced: the grey colour of the "(continued)" line (printed black).
-- [ ] **2.7 Developer CLI and sample run** (local, not committed; replaces 1.15).
+- [x] **2.7 Developer CLI and sample run** (local, not committed; replaces 1.15).
   `packing-cli prepare --labels … [--day] [--data]` writes a batch like the app. On the sample
   slip files with the repository `categories.toml`: 601 pages, 600 orders, one order
   on 2 pages, J&T 517 pages, courier unknown 83, tracking ID not found 1 (the Python numbers of
@@ -177,6 +177,15 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   a second run saves nothing (all duplicates); revert then run again gives the same files;
   plain sample files stop with the no-slip message. Check saved PDFs and packing lists by eye.
   Record the numbers here (counts only, no real IDs).
+  - Result (release build, rules = repository `categories.toml`, scope `whole`, layout
+    `pick`): 3 slip files, 601 pages, 600 orders in 2.1 s (Python 41 s); courier unknown 83,
+    tracking ID not found 1. Picks A 564 orders / 4 runs, B 36 orders / 17 runs; every order in
+    the same saved PDF and run as the Python script, same file names, same page counts, same
+    Order ID on every page in the same order. Second run: "All 600 orders were already saved
+    today", nothing written. Revert, then run again: same files. Plain files: stop, "562 of 562
+    pages are plain shipping labels". Saved PDFs 4.7 MB + 0.95 MB (Python 4.75 MB + 1.0 MB)
+    after `write.rs` was changed to one import per saved PDF (page-by-page import gave 51 MB).
+    Packing list 1 page (Python 1). By eye: left for the owner review.
 - [ ] **2.8 App: frame, Day screen, Settings, start** (08 › 1, 6, *Start*): finding the data
   folder (program folder, else ask each start), day switch, batches from `state.json`, Open /
   Open folder, all screen texts in `src/texts.ts`.
