@@ -541,6 +541,33 @@ impl RulesDocument {
         Ok(())
     }
 
+    /// Keep the entries at the given current indices, in that order, and drop the rest (the
+    /// Categories screen's add / delete / move, applied in one step). Each index must be a valid
+    /// position and appear at most once. The kept `Table`s are moved, not rebuilt, so a comment
+    /// or a `when` text attached to an entry survives.
+    pub fn reorder(&mut self, keep: &[usize]) -> Result<(), RulesError> {
+        let len = self.array()?.len();
+        let mut seen = vec![false; len];
+        for &index in keep {
+            if index >= len || seen[index] {
+                return Err(error(format!(
+                    "categories.toml: cannot keep entry #{index} of {len}"
+                )));
+            }
+            seen[index] = true;
+        }
+        let array = self.array_mut()?;
+        let mut tables: Vec<Option<Table>> = (0..len).map(|_| None).collect();
+        for index in (0..len).rev() {
+            tables[index] = Some(array.remove(index));
+        }
+        for (position, &index) in keep.iter().enumerate() {
+            array.insert(position, tables[index].take().expect("table was removed"));
+        }
+        self.renumber();
+        Ok(())
+    }
+
     /// Validate the document as it would be written (04 validation; errors carry the file's
     /// line/col). Returns the categories, ready for the plan.
     pub fn validate(&self) -> Result<Vec<Category>, RulesError> {

@@ -1,22 +1,38 @@
 <script lang="ts">
   // Plan (08 › *3. Plan*): the picks in order with their counts and runs, the per-batch changes
-  // (*Use*, move, add, rename) and the packing-list options; *Save batch* writes the batch.
+  // (*Use*, move, add, rename) and the packing-list options; *Save batch* writes the batch. An
+  // amend uses the same screen, titled *Redo batch `<b>`* with *Save batch `<b>` again*.
   import * as api from "../lib/api";
+  // The plugin's `confirm` (not `window.confirm`, which the dialog plugin patches to a command that
+  // no longer exists) and it must be awaited.
+  import { confirm } from "@tauri-apps/plugin-dialog";
   import { texts } from "../texts";
+  import BoxesEditor from "./BoxesEditor.svelte";
+  import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
 
   let {
     batchNumber,
     read,
     settings,
+    refresh,
     onSaved,
     onCancel,
+    onEditCategories,
   }: {
     batchNumber: number;
     read: api.ReadResult;
     settings: api.Settings | null;
+    /// Bumped when the Categories screen saves, so the plan is recounted (08 › *Window frame*).
+    refresh: number;
     onSaved: (result: api.SaveResult) => void;
     onCancel: () => void;
+    onEditCategories: () => void;
   } = $props();
+
+  // The batch number for the header and the discard confirmation: the amended batch for an amend
+  // (08 › *3. Plan*: *Redo batch 2*), else the next batch number.
+  const batchNo = $derived(read.amend ?? batchNumber);
+  const amending = $derived(read.amend !== null);
 
   // The read result is fixed for the life of the screen; the view is then updated by `plan()`.
   // svelte-ignore state_referenced_locally
@@ -34,13 +50,34 @@
   let saving = $state(false);
   let saveError = $state("");
 
-  // *+ Add a pick for this batch* (08 › *3. Plan*); the boxes editor arrives in 2.12, so the
-  // condition is typed and checked live by the engine's parser.
+  // *+ Add a pick for this batch* (08 › *3. Plan*): the condition is built in the boxes editor
+  // (the same as Categories) with a text view toggle.
   let showAdd = $state(false);
   let addCode = $state("X");
   let addName = $state("");
   let addCondition = $state("");
   let addError = $state("");
+  let addMode = $state<"boxes" | "text">("boxes");
+  let addTree = $state<UiTree>(newTree());
+
+  // Recount after the Categories screen saves (08 › *Window frame*: the draft is kept and the plan
+  // recounted with the new categories).
+  // svelte-ignore state_referenced_locally
+  let lastRefresh = $state(refresh);
+  $effect(() => {
+    if (refresh !== lastRefresh) {
+      lastRefresh = refresh;
+      reload();
+    }
+  });
+
+  async function reload() {
+    try {
+      view = await api.plan([]);
+    } catch (e) {
+      error = String(e);
+    }
+  }
 
   const scopes: { value: api.Scope; label: string }[] = [
     { value: "whole", label: texts.plan.scopeWhole },
@@ -102,13 +139,49 @@
     }
   }
 
-  async function addPick() {
-    addError = "";
+  /// The boxes editor changed: turn the tree into the condition text (the printer's form).
+  async function addTreeChanged() {
     try {
-      await api.checkCondition(addCondition);
+      addCondition = await api.treeToCondition(toRustTree(addTree));
+      addError = "";
     } catch (e) {
       addError = String(e);
-      return;
+    }
+  }
+
+  async function addToBoxes() {
+    try {
+      addTree = fromRustTree(await api.conditionToTree(addCondition));
+      addMode = "boxes";
+      addError = "";
+    } catch (e) {
+      addError = String(e);
+    }
+  }
+
+  function toggleAdd() {
+    showAdd = !showAdd;
+    if (showAdd) {
+      addTree = newTree();
+      addMode = "boxes";
+      addCondition = "";
+      addError = "";
+      addTreeChanged();
+    }
+  }
+
+  async function addPick() {
+    addError = "";
+    if (addMode === "boxes") {
+      await addTreeChanged();
+      if (addError) return;
+    } else {
+      try {
+        await api.checkCondition(addCondition);
+      } catch (e) {
+        addError = String(e);
+        return;
+      }
     }
     await apply([
       {
@@ -140,7 +213,7 @@
   }
 
   async function cancel() {
-    if (!confirm(texts.plan.confirmDiscard(batchNumber))) return;
+    if (!(await confirm(texts.plan.confirmDiscard(batchNo)))) return;
     await api.discardDraft();
     onCancel();
   }
@@ -151,14 +224,29 @@
 <main>
   <div class="bar">
     <h2>
-      {texts.plan.header(
-        batchNumber,
-        read.files,
-        read.pages,
-        read.orders,
-        read.already_saved,
-      )}
+      {#if amending}
+        {texts.plan.amendTitle(batchNo)}
+      {:else}
+        {texts.plan.header(
+          batchNo,
+          read.files,
+          read.pages,
+          read.orders,
+          read.already_saved,
+        )}
+      {/if}
     </h2>
+    {#if amending}
+      <span class="sub">
+        {texts.plan.header(
+          batchNo,
+          read.files,
+          read.pages,
+          read.orders,
+          read.already_saved,
+        )}
+      </span>
+    {/if}
     <span class="grow"></span>
     <button onclick={cancel}>{texts.plan.cancel}</button>
   </div>
@@ -268,34 +356,47 @@
   </table>
 
   <div class="add-bar">
-    <button onclick={() => (showAdd = !showAdd)}>{texts.plan.addPick}</button>
-    <button disabled title={texts.comingSoon.categories}>Edit categories</button>
+    <button onclick={toggleAdd}>{texts.plan.addPick}</button>
+    <button onclick={onEditCategories}>{texts.plan.editCategories}</button>
   </div>
 
   {#if showAdd}
     <div class="add-form">
-      <label>
-        {texts.plan.addCode}
-        <input class="code" bind:value={addCode} />
-      </label>
-      <label>
-        {texts.plan.addName}
-        <input class="name" bind:value={addName} />
-      </label>
-      <label class="grow">
-        {texts.plan.addCondition}
-        <input
-          class="condition-input"
-          bind:value={addCondition}
-          oninput={checkAddCondition}
-        />
-      </label>
-      <button class="primary" onclick={addPick}>{texts.plan.addSubmit}</button>
-      <button onclick={() => (showAdd = false)}>{texts.plan.addCancel}</button>
-      {#if addError}
-        <div class="error add-error">{addError}</div>
-      {/if}
-      <div class="note">{texts.plan.conditionNote}</div>
+      <div class="add-top">
+        <label>
+          {texts.plan.addCode}
+          <input class="code" bind:value={addCode} />
+        </label>
+        <label>
+          {texts.plan.addName}
+          <input class="name" bind:value={addName} />
+        </label>
+        <span class="grow"></span>
+        <button class="primary" onclick={addPick}>{texts.plan.addSubmit}</button>
+        <button onclick={() => (showAdd = false)}>{texts.plan.addCancel}</button>
+      </div>
+      <div class="add-condition">
+        <span class="label">{texts.plan.addCondition}</span>
+        {#if addMode === "boxes"}
+          <BoxesEditor tree={addTree} onEdit={addTreeChanged} />
+          <button class="link" onclick={() => (addMode = "text")}
+            >{texts.categories.textView}</button
+          >
+        {:else}
+          <textarea
+            class="condition-input"
+            rows="2"
+            bind:value={addCondition}
+            oninput={checkAddCondition}
+          ></textarea>
+          <button class="link" disabled={!!addError} onclick={addToBoxes}
+            >{texts.categories.boxes}</button
+          >
+        {/if}
+        {#if addError}
+          <div class="error add-error">{addError}</div>
+        {/if}
+      </div>
     </div>
   {/if}
 
@@ -329,7 +430,7 @@
     <button
       class="primary"
       disabled={view.has_duplicate_names || saving}
-      onclick={save}>{texts.plan.save}</button
+      onclick={save}>{amending ? texts.plan.saveAgain(batchNo) : texts.plan.save}</button
     >
   </div>
 
@@ -480,14 +581,19 @@
 
   .add-form {
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
+    flex-direction: column;
     gap: 0.6rem;
     padding: 0.75rem;
     margin-bottom: 0.75rem;
     border: 1px solid #d5d5d5;
     border-radius: 6px;
     background: #ffffff;
+  }
+
+  .add-top {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.6rem;
   }
 
   .add-form label {
@@ -497,7 +603,7 @@
     font-size: 0.85rem;
   }
 
-  .add-form .grow {
+  .add-top .grow {
     flex: 1;
   }
 
@@ -509,9 +615,30 @@
     width: 12rem;
   }
 
+  .add-condition {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .add-condition .label {
+    font-size: 0.85rem;
+    color: #4a4a4a;
+  }
+
   .add-form .condition-input {
     width: 100%;
     min-width: 16rem;
+    font-family: Consolas, monospace;
+  }
+
+  .link {
+    align-self: flex-start;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #1f6feb;
+    cursor: pointer;
   }
 
   .add-error {
@@ -519,10 +646,11 @@
     margin: 0;
   }
 
-  .note {
-    width: 100%;
+  .sub {
+    margin-left: 0.75rem;
     color: #6a6a6a;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    font-weight: 400;
   }
 
   .foot {
@@ -571,7 +699,6 @@
 
     .condition,
     .tag,
-    .note,
     .muted,
     tr.run td {
       color: #b0b0b0;

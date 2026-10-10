@@ -13,7 +13,8 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, mpsc};
 use std::thread;
 
-use packing_engine::day::{DayState, PackingListChoice};
+use packing_engine::day::{DayState, PackingListChoice, delete_batch_folder};
+use packing_engine::names;
 use packing_engine::orders::{Order, ReadOrder, display_name};
 use packing_engine::plan::{PickResult, Plan};
 use packing_engine::rules::{Category, Condition, evaluate, load_rules, parse_condition};
@@ -22,7 +23,7 @@ use packing_pdf::worker::Progress;
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 
-use crate::{AppState, CATEGORIES_FILE, OpenDraft, commands::day::settings_load};
+use crate::{AmendState, AppState, CATEGORIES_FILE, OpenDraft, commands::day::settings_load};
 
 // ------------------------------------------------------------------------- new batch
 
@@ -57,6 +58,9 @@ pub struct ReadResult {
     total_orders: usize,
     already_saved: usize,
     warnings: Vec<String>,
+    /// The batch being redone when this read is an amend (07 › *Amend*): the Plan screen is then
+    /// titled *Redo batch `<b>`*; `None` for a normal new batch.
+    amend: Option<i64>,
     plan: PlanView,
 }
 
@@ -374,17 +378,33 @@ fn read_draft(
     paths: Vec<PathBuf>,
     on_progress: impl Fn(Progress) + Send + 'static,
 ) -> Result<ReadResult, String> {
+    let day_dir = state.day_dir()?;
+    let day_state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
+    read_into_draft(state, paths, day_state, None, true, on_progress)
+}
+
+/// The shared read: `base_state` supplies the duplicate guard and the day's next number; `amend`
+/// marks the draft as redoing a batch (07 › *Amend*); `sort_by_name` reads a new batch in
+/// file-name order (= download order, 08 › *2. New batch*) and an amend in the given order (its
+/// `download/` copy in the order stored in `state.json`).
+fn read_into_draft(
+    state: &AppState,
+    paths: Vec<PathBuf>,
+    base_state: DayState,
+    amend: Option<AmendState>,
+    sort_by_name: bool,
+    on_progress: impl Fn(Progress) + Send + 'static,
+) -> Result<ReadResult, String> {
     if paths.is_empty() {
         return Err("Choose at least one label file first.".to_string());
     }
     let folder = state.data_folder()?;
-    let day_dir = state.day_dir()?;
     let categories = load_categories(&folder)?;
-    let day_state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
 
-    // Files are read in file-name order (= download time and part number; 08 › *2. New batch*).
     let mut files = paths;
-    files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
+    if sort_by_name {
+        files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
+    }
 
     let cancel = Arc::new(AtomicBool::new(false));
     state.set_cancel(cancel.clone());
@@ -397,8 +417,8 @@ fn read_draft(
     });
 
     let inner = state.with_worker(|worker| {
-        batch::check_files(worker, &files, &day_state).and_then(|checks| {
-            batch::read(worker, &checks, &day_state, cancel.clone(), progress_tx)
+        batch::check_files(worker, &files, &base_state).and_then(|checks| {
+            batch::read(worker, &checks, &base_state, cancel.clone(), progress_tx)
         })
     });
 
@@ -409,7 +429,7 @@ fn read_draft(
         .map_err(|error| error.to_string())?
         .map_err(|error| error.to_string())?;
     let plan = Plan::from_categories(&categories);
-    let first_number = day_state.next_pdf_number();
+    let first_number = base_state.next_pdf_number();
     let read = ReadResult {
         files: draft.files.len(),
         pages: draft.pages,
@@ -417,14 +437,95 @@ fn read_draft(
         total_orders: draft.total_orders,
         already_saved: draft.duplicates.len(),
         warnings: draft.warnings.clone(),
+        amend: amend.as_ref().map(|amend| amend.batch),
         plan: plan_view(&plan, &draft.orders, first_number),
     };
     state.set_draft(OpenDraft {
         draft,
         plan,
         first_number,
+        amend,
     });
     Ok(read)
+}
+
+// ----------------------------------------------------------------------- revert and amend
+
+/// Revert the last batch (07 › *Revert*): delete its folder **first**, so a file open in a PDF
+/// viewer stops with the 08 *file in use* message and changes nothing, then remove the batch and
+/// its orders from `state.json`; the numbers are reused.
+fn revert_last_impl(state: &AppState, day: &str) -> Result<(), String> {
+    state.set_day(day);
+    let day_dir = state.day_dir()?;
+    let mut day_state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
+    let Some(last) = day_state.batches.iter().map(|batch| batch.batch).max() else {
+        return Err("No batch to undo on this day.".to_string());
+    };
+    let folder = day_dir.join(names::batch_folder(last));
+    // Name the open file (07 › *Revert*: "the app says which file to close") and delete nothing
+    // when one is found, so the day is left exactly as it was.
+    if let Some(file) = locked_file(&folder) {
+        return Err(file_in_use(&file));
+    }
+    delete_batch_folder(&day_dir, last).map_err(|error| error.to_string())?;
+    day_state.revert_last();
+    day_state.save(&day_dir).map_err(|error| error.to_string())
+}
+
+/// The 08 *Messages* file-in-use wording, naming the file to close.
+fn file_in_use(path: &Path) -> String {
+    format!(
+        "{} is open in another program. Close it (e.g. the PDF viewer) and try again.",
+        path.display()
+    )
+}
+
+/// The first file inside `folder` (and its subfolders) that another program holds open. A viewer
+/// keeps a PDF with read-only sharing, so opening it for writing fails with a sharing violation
+/// (`ERROR_SHARING_VIOLATION`, 32); that is the file the owner must close before Revert.
+fn locked_file(folder: &Path) -> Option<PathBuf> {
+    let mut stack = vec![folder.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let Ok(entries) = std::fs::read_dir(&dir) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if let Err(error) = std::fs::OpenOptions::new().write(true).open(&path)
+                && error.raw_os_error() == Some(32)
+            {
+                return Some(path);
+            }
+        }
+    }
+    None
+}
+
+/// Amend the last batch (07 › *Amend*): read its `download/` copy again, in the order stored in
+/// `state.json`, with the batch removed from the day state so the duplicate guard ignores its own
+/// orders and the numbers are reused. Returns the plan for the *Redo batch `<b>`* screen.
+fn start_amend_impl(state: &AppState, day: &str) -> Result<ReadResult, String> {
+    state.set_day(day);
+    let day_dir = state.day_dir()?;
+    let day_state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
+    let amend = day_state
+        .amend(&day_dir)
+        .ok_or_else(|| "No batch to redo on this day.".to_string())?;
+    let base_state = amend.state.clone();
+    let amend_state = AmendState {
+        batch: amend.batch,
+        state: amend.state,
+    };
+    read_into_draft(
+        state,
+        amend.files,
+        base_state,
+        Some(amend_state),
+        false,
+        |_| {},
+    )
 }
 
 /// Load `<data>/categories.toml` (08 › *Messages*: a rules error stops the batch with its
@@ -454,7 +555,12 @@ fn save_batch_impl(
     let open = state
         .take_draft()
         .ok_or_else(|| "No batch is open.".to_string())?;
-    let mut day_state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
+    // An amend saves into the state without its batch, so the numbers are reused and the batch is
+    // replaced; a new batch reads the day's state from disk (07 › *Amend*).
+    let mut day_state = match &open.amend {
+        Some(amend) => amend.state.clone(),
+        None => DayState::load(&day_dir).map_err(|error| error.to_string())?,
+    };
     let plan = open.plan.count(&open.draft.orders, open.first_number);
 
     let result = state.with_worker(|worker| {
@@ -589,10 +695,30 @@ pub fn save_batch(
     save_batch_impl(&state, packing)
 }
 
-/// *Cancel* on the Plan screen (08 › *3. Plan*): discard the open batch; nothing was saved.
+/// *Cancel* on the Plan screen (08 › *3. Plan*): discard the open batch; nothing was saved. For an
+/// amend this leaves the original batch untouched (07 › *Amend*).
 #[tauri::command]
 pub fn discard_draft(state: State<'_, AppState>) {
     state.clear_draft();
+}
+
+/// *Revert* the last batch (08 › *1. Day*): delete its folder and forget it. A file open in a PDF
+/// viewer stops with the 08 *file in use* message and changes nothing.
+#[tauri::command]
+pub fn revert_last(state: State<'_, AppState>, day: String) -> Result<(), String> {
+    revert_last_impl(&state, &day)
+}
+
+/// *Amend* the last batch (08 › *1. Day*): read its `download/` copy into a draft and open the
+/// *Redo batch `<b>`* Plan screen. Runs on a blocking thread; no progress is shown.
+#[tauri::command]
+pub async fn start_amend(app: AppHandle, day: String) -> Result<ReadResult, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<AppState>();
+        start_amend_impl(&state, &day)
+    })
+    .await
+    .map_err(|error| format!("the amend task stopped: {error}"))?
 }
 
 #[cfg(test)]
@@ -889,6 +1015,84 @@ mod tests {
             .err()
             .expect("no slip");
         assert!(error.contains("no packing slip"), "{error}");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // ------------------------------------------------------------------ revert / amend (2.11)
+
+    #[test]
+    fn revert_last_deletes_the_folder_and_the_state() {
+        let Some(_vendor) = vendor_dir() else {
+            eprintln!("skipped: run pc/tools/get-pdfium.sh");
+            return;
+        };
+        let dir = temp_dir("revert");
+        std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
+        let state = app_state(&dir);
+
+        read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        let save = save_batch_impl(&state, None).expect("save");
+        assert_eq!(save.batch, 1);
+        let folder = dir.join("labels/2026-10-07/batch 1");
+        assert!(folder.is_dir());
+
+        revert_last_impl(&state, "2026-10-07").expect("revert");
+        assert!(!folder.exists(), "the batch folder is gone");
+        let day_state = DayState::load(&dir.join("labels/2026-10-07")).expect("state");
+        assert!(day_state.batches.is_empty());
+        assert!(day_state.saved.is_empty());
+
+        // The numbers are reused: the next batch is batch 1 again.
+        read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read again");
+        let save = save_batch_impl(&state, None).expect("save again");
+        assert_eq!(save.batch, 1);
+
+        // No batch to undo on an untouched day.
+        assert!(revert_last_impl(&state, "2026-10-08").is_err());
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn amend_reads_the_download_copy_and_replaces_the_batch() {
+        let Some(_vendor) = vendor_dir() else {
+            eprintln!("skipped: run pc/tools/get-pdfium.sh");
+            return;
+        };
+        let dir = temp_dir("amend");
+        std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
+        let state = app_state(&dir);
+
+        read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        assert_eq!(save_batch_impl(&state, None).expect("save").batch, 1);
+        let folder = dir.join("labels/2026-10-07/batch 1");
+        assert!(folder.join("download").is_dir());
+
+        // Amend reads the batch's own download copy; its orders are not seen as already saved.
+        let read = start_amend_impl(&state, "2026-10-07").expect("amend");
+        assert_eq!(read.amend, Some(1));
+        assert_eq!(read.orders, 23);
+        assert_eq!(read.already_saved, 0);
+
+        // Saving again replaces batch 1 (same number, one batch in the state).
+        assert_eq!(save_batch_impl(&state, None).expect("save again").batch, 1);
+        let day_state = DayState::load(&dir.join("labels/2026-10-07")).expect("state");
+        assert_eq!(day_state.batches.len(), 1);
+        assert_eq!(day_state.batches[0].batch, 1);
+        assert!(folder.is_dir());
+
+        // Cancel leaves the old batch untouched.
+        start_amend_impl(&state, "2026-10-07").expect("amend again");
+        state.clear_draft();
+        assert!(folder.is_dir());
+        assert_eq!(
+            DayState::load(&dir.join("labels/2026-10-07"))
+                .expect("state")
+                .batches
+                .len(),
+            1
+        );
 
         std::fs::remove_dir_all(&dir).ok();
     }

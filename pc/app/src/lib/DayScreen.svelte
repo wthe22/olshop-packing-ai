@@ -2,7 +2,7 @@
   // The Day screen (08 › *1. Day*): what has been saved today. Batches come from state.json,
   // each with its stored warnings; *New batch* starts the batch flow.
   import { texts } from "../texts";
-  import type { DayOverview } from "./api";
+  import type { BatchView, DayOverview } from "./api";
 
   let {
     overview,
@@ -10,12 +10,16 @@
     onOpen,
     onOpenFolder,
     onNewBatch,
+    onAmend,
+    onRevert,
   }: {
     overview: DayOverview | null;
     saved: string | null;
     onOpen: (path: string) => void;
     onOpenFolder: (path: string) => void;
     onNewBatch: () => void;
+    onAmend: (batch: BatchView) => void;
+    onRevert: (batch: BatchView) => void;
   } = $props();
 
   // The batch numbers whose *Warnings ▸* is expanded.
@@ -53,15 +57,17 @@
   {:else if overview.batches.length === 0}
     <p class="muted">{texts.day.nothing}</p>
   {:else}
-    {#each overview.batches as batch (batch.batch)}
+    {#each overview.batches as batch, i (batch.batch)}
       <section class="batch">
         <div class="batch-head">
-          {texts.day.batch(
-            batch.batch,
-            batch.time,
-            batch.files,
-            batch.orders,
-          )}
+          <span class="head-text">
+            {texts.day.batch(batch.batch, batch.time, batch.files, batch.orders)}
+          </span>
+          {#if i === 0}
+            <span class="grow"></span>
+            <button onclick={() => onAmend(batch)}>{texts.day.amend}</button>
+            <button onclick={() => onRevert(batch)}>{texts.day.revert}</button>
+          {/if}
         </div>
         {#each batch.pdfs as pdf (pdf.number)}
           <div class="row">
@@ -159,9 +165,16 @@
   }
 
   .batch-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     padding: 0.5rem 0.75rem;
     border-bottom: 1px solid #ececec;
     font-weight: 600;
+  }
+
+  .batch-head .grow {
+    flex: 1;
   }
 
   .row {

@@ -1,9 +1,14 @@
 <script lang="ts">
   // The app shell (08 › *Window frame*, *Start*, *1. Day*, *2. New batch*, *3. Plan*,
-  // *6. Settings*): it finds the data folder, keeps the current day and screen, and routes the
-  // Tauri commands. The batch flow is Day → New batch → Plan → Day.
+  // *5. Categories*, *6. Settings*): it finds the data folder, keeps the current day and screen,
+  // routes the Tauri commands, and opens Categories/Settings over the current screen (an open
+  // draft is kept). The batch flow is Day → New batch → Plan → Day.
   import { onMount } from "svelte";
-  import { open } from "@tauri-apps/plugin-dialog";
+  // Use the plugin's own `confirm`, not `window.confirm`: the dialog plugin patches the global to
+  // call `plugin:dialog|confirm`, a command that no longer exists (it is now `message`), so the
+  // global rejects and the promise it returns is always truthy. The plugin's `confirm` goes through
+  // `message` and must be awaited.
+  import { confirm, open } from "@tauri-apps/plugin-dialog";
   import * as api from "../lib/api";
   import { texts } from "../texts";
   import Frame from "../lib/Frame.svelte";
@@ -11,10 +16,13 @@
   import DayScreen from "../lib/DayScreen.svelte";
   import NewBatchScreen from "../lib/NewBatchScreen.svelte";
   import PlanScreen from "../lib/PlanScreen.svelte";
+  import CategoriesScreen from "../lib/CategoriesScreen.svelte";
   import SettingsScreen from "../lib/SettingsScreen.svelte";
-  import Placeholder from "../lib/Placeholder.svelte";
+  import Overlay from "../lib/Overlay.svelte";
 
-  type Screen = "day" | "new-batch" | "plan" | "categories" | "settings";
+  type Screen = "day" | "new-batch" | "plan";
+  type OverlayId = "categories" | "settings";
+  type NavId = "day" | "categories" | "settings";
 
   let ready = $state(false);
   let needsFolder = $state(true);
@@ -30,6 +38,8 @@
   let about = $state<api.About | null>(null);
   let dayList = $state<string[]>([]);
   let screen = $state<Screen>("day");
+  // Categories/Settings open over the current screen and close back to it (08 › *Window frame*).
+  let overlay = $state<OverlayId | null>(null);
 
   // The batch being prepared: the read result and whether the backend has an open draft.
   let readResult = $state<api.ReadResult | null>(null);
@@ -37,9 +47,14 @@
   // The green *Batch n saved* line on the Day screen, shown for a few seconds (08 › *1. Day*).
   let savedMessage = $state<string | null>(null);
   let savedTimer: ReturnType<typeof setTimeout> | undefined;
+  // Bumped after Categories saves, so the open Plan screen recounts (08 › *Window frame*).
+  let planRefresh = $state(0);
 
   // The batch number the next save will get (continuing the day).
   const nextBatch = $derived((overview?.totals.batches ?? 0) + 1);
+  // The batch number being prepared, for the Categories *In batch `<b>`: n* column; `null` when no
+  // draft is open.
+  const draftBatch = $derived(draftOpen ? (readResult?.amend ?? nextBatch) : null);
 
   async function afterFolder() {
     try {
@@ -76,12 +91,25 @@
       exeDir = info.exe_dir;
       dataFolder = info.data_folder;
       needsFolder = info.data_folder === null;
-      if (!needsFolder) await afterFolder();
+      if (!needsFolder) {
+        await afterFolder();
+        await openCategoriesIfBroken();
+      }
     } catch (e) {
       error = String(e);
     }
     ready = true;
   });
+
+  /// 08 › *Start* step 3: a `categories.toml` with errors opens Categories first.
+  async function openCategoriesIfBroken() {
+    try {
+      const rules = await api.rulesLoad();
+      if (rules.error) overlay = "categories";
+    } catch {
+      // No categories file yet: nothing to open.
+    }
+  }
 
   async function useProgramFolder() {
     busy = true;
@@ -117,7 +145,7 @@
   async function changeFolder() {
     const picked = await pickFolder(texts.settings.change);
     if (!picked) return;
-    if (!confirm(texts.settings.confirmChange(picked, dataFolder ?? ""))) return;
+    if (!(await confirm(texts.settings.confirmChange(picked, dataFolder ?? "")))) return;
     try {
       dataFolder = await api.chooseDataFolder(picked);
       await afterFolder();
@@ -126,11 +154,11 @@
     }
   }
 
-  /// Ask to discard the open batch before leaving it (08 › *Window frame*: changing the day
-  /// while a draft is open asks first).
+  /// Ask to discard the open batch before leaving it (08 › *Window frame*: changing the day while
+  /// a draft is open asks first; Categories and Settings keep it).
   async function leaveBatch(): Promise<boolean> {
     if (!draftOpen) return true;
-    if (!confirm(texts.plan.confirmDiscard(nextBatch))) return false;
+    if (!(await confirm(texts.plan.confirmDiscard(draftBatch ?? nextBatch)))) return false;
     await api.discardDraft();
     draftOpen = false;
     readResult = null;
@@ -139,18 +167,21 @@
 
   function startBatch() {
     savedMessage = null;
+    overlay = null;
     screen = "new-batch";
   }
 
   function onPlan(result: api.ReadResult) {
     readResult = result;
     draftOpen = true;
+    overlay = null;
     screen = "plan";
   }
 
   async function onSaved(result: api.SaveResult) {
     draftOpen = false;
     readResult = null;
+    overlay = null;
     savedMessage = texts.day.saved(result.batch, result.pdfs, result.packing_lists);
     screen = "day";
     await refreshOverview();
@@ -171,6 +202,7 @@
     const next = dayList[dayList.indexOf(day) - delta];
     if (next) {
       day = next;
+      overlay = null;
       refreshOverview();
     }
   }
@@ -178,12 +210,62 @@
   async function goToday() {
     if (!(await leaveBatch())) return;
     day = today;
+    overlay = null;
     refreshOverview();
   }
 
-  async function navigate(next: Screen) {
-    if (!(await leaveBatch())) return;
-    screen = next;
+  // *Day* returns to the day screen; *Categories* and *Settings* open over the current screen
+  // (08 › *Window frame*: an open draft is kept).
+  async function navigate(id: NavId) {
+    if (id === "day") {
+      if (!(await leaveBatch())) return;
+      overlay = null;
+      screen = "day";
+    } else {
+      overlay = id;
+    }
+  }
+
+  function closeOverlay() {
+    overlay = null;
+  }
+
+  function onCategoriesSaved() {
+    overlay = null;
+    planRefresh += 1; // the open Plan screen recounts with the new categories
+  }
+
+  /// *Revert* the newest batch (08 › *1. Day*): confirm, then delete it.
+  async function revert(batch: api.BatchView) {
+    const asked = await confirm(texts.day.confirmRevert(batch.batch, batch.pdfs.length, batch.orders), {
+      title: texts.title,
+      okLabel: texts.day.undoBatch(batch.batch),
+    });
+    if (!asked) return;
+    try {
+      await api.revertLast(day);
+      await refreshOverview();
+    } catch (e) {
+      error = String(e);
+    }
+  }
+
+  /// *Amend* the newest batch (08 › *1. Day*): confirm, then read its download copy into a draft
+  /// and open the *Redo batch `<b>`* Plan screen.
+  async function amend(batch: api.BatchView) {
+    const asked = await confirm(texts.day.confirmAmend(batch.batch, batch.time), {
+      title: texts.title,
+      okLabel: texts.day.redoBatch(batch.batch),
+    });
+    if (!asked) return;
+    busy = true;
+    try {
+      const result = await api.startAmend(day);
+      onPlan(result);
+    } catch (e) {
+      error = String(e);
+    }
+    busy = false;
   }
 
   async function saveSettings(value: api.Settings) {
@@ -217,13 +299,7 @@
 {:else if needsFolder}
   <StartPrompt {exeDir} {busy} onUse={useProgramFolder} onChoose={chooseFolder} />
 {:else}
-  <Frame
-    {day}
-    {screen}
-    onStep={stepDay}
-    onToday={goToday}
-    onNavigate={navigate}
-  />
+  <Frame {day} {screen} {overlay} onStep={stepDay} onToday={goToday} onNavigate={navigate} />
   {#if error}
     <p class="error">{error}</p>
   {/if}
@@ -234,32 +310,38 @@
       onOpen={openFile}
       onOpenFolder={openFolder}
       onNewBatch={startBatch}
+      onAmend={amend}
+      onRevert={revert}
     />
   {:else if screen === "new-batch"}
-    <NewBatchScreen
-      batchNumber={nextBatch}
-      onPlan={onPlan}
-      onCancel={cancelBatch}
-    />
+    <NewBatchScreen batchNumber={nextBatch} onPlan={onPlan} onCancel={cancelBatch} />
   {:else if screen === "plan" && readResult}
     <PlanScreen
       batchNumber={nextBatch}
       read={readResult}
       {settings}
+      refresh={planRefresh}
       onSaved={onSaved}
       onCancel={cancelBatch}
+      onEditCategories={() => (overlay = "categories")}
     />
-  {:else if screen === "categories"}
-    <Placeholder text={texts.comingSoon.categories} />
-  {:else}
-    <SettingsScreen
-      {settings}
-      {about}
-      {dataFolder}
-      onChangeFolder={changeFolder}
-      onOpenFolder={() => dataFolder && openFolder(dataFolder)}
-      onSave={saveSettings}
-    />
+  {/if}
+
+  {#if overlay === "categories"}
+    <Overlay title={texts.categories.title} onClose={closeOverlay}>
+      <CategoriesScreen {draftBatch} onClose={closeOverlay} onSaved={onCategoriesSaved} />
+    </Overlay>
+  {:else if overlay === "settings"}
+    <Overlay title={texts.settings.title} onClose={closeOverlay}>
+      <SettingsScreen
+        {settings}
+        {about}
+        {dataFolder}
+        onChangeFolder={changeFolder}
+        onOpenFolder={() => dataFolder && openFolder(dataFolder)}
+        onSave={saveSettings}
+      />
+    </Overlay>
   {/if}
 {/if}
 

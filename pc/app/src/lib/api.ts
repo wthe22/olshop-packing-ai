@@ -143,6 +143,8 @@ export interface ReadResult {
   total_orders: number;
   already_saved: number;
   warnings: string[];
+  /// The batch being redone when this read is an amend (07 › *Amend*); `null` for a new batch.
+  amend: number | null;
   plan: PlanView;
 }
 
@@ -185,5 +187,72 @@ export const saveBatch = (packing: PackingChoice | null): Promise<SaveResult> =>
   invoke("save_batch", { packing });
 
 export const discardDraft = (): Promise<void> => invoke("discard_draft");
+
+// ------------------------------------------------------------------ Revert / Amend (2.11)
+
+/// *Revert* the last batch (08 › *1. Day*): delete its folder and forget it. A file open in a PDF
+/// viewer stops with the 08 *file in use* message and changes nothing.
+export const revertLast = (day: string): Promise<void> =>
+  invoke("revert_last", { day });
+
+/// *Amend* the last batch (08 › *1. Day*): read its `download/` copy into a draft.
+export const startAmend = (day: string): Promise<ReadResult> =>
+  invoke("start_amend", { day });
+
+// ------------------------------------------------------------------ Categories (2.12)
+
+/// One category entry as the file holds it (08 › *5. Categories*).
+export interface EntryView {
+  code: string;
+  name: string;
+  when: string | null;
+}
+
+/// The Categories screen's first load (08 › *5. Categories*): the whole file text, the entries and
+/// any file-level error.
+export interface RulesLoad {
+  text: string;
+  entries: EntryView[];
+  error: string | null;
+}
+
+/// One entry the screen sends back: its values and the index it had in the loaded file (`origin`),
+/// so the save can keep its comment and unchanged condition text; `null` for a new entry.
+export interface EntryInput {
+  code: string;
+  name: string;
+  when: string | null;
+  origin: number | null;
+}
+
+/// The live check (08 › *5. Categories*): each entry's condition error, a file-level error and the
+/// count each entry takes in the open batch.
+export interface RulesCheck {
+  errors: (string | null)[];
+  general: string | null;
+  counts: number[] | null;
+}
+
+export const rulesLoad = (): Promise<RulesLoad> => invoke("rules_load");
+
+export const rulesCheck = (entries: EntryInput[]): Promise<RulesCheck> =>
+  invoke("rules_check", { entries });
+
+export const rulesCheckText = (text: string): Promise<void> =>
+  invoke("rules_check_text", { text });
+
+export const rulesSave = (entries: EntryInput[]): Promise<void> =>
+  invoke("rules_save", { entries });
+
+export const rulesSaveText = (text: string): Promise<void> =>
+  invoke("rules_save_text", { text });
+
+/// A condition text → boxes tree (the engine's parser); an error carries line/col.
+export const conditionToTree = (text: string): Promise<unknown> =>
+  invoke("condition_to_tree", { text });
+
+/// A boxes tree → the printer's canonical condition text.
+export const treeToCondition = (tree: unknown): Promise<string> =>
+  invoke("tree_to_condition", { tree });
 
 export const about = (): Promise<About> => invoke("about");

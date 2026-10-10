@@ -49,9 +49,7 @@
   }
 </script>
 
-<main>
-  <h2>{texts.settings.title}</h2>
-
+<div class="settings">
   <section>
     <h3>{texts.settings.dataFolder}</h3>
     <div class="row">
@@ -109,16 +107,11 @@
       >{texts.settings.save}</button
     >
   </div>
-</main>
+</div>
 
 <style>
-  main {
-    padding: 1rem 1.5rem;
+  .settings {
     max-width: 48rem;
-  }
-
-  h2 {
-    margin: 0 0 1rem;
   }
 
   section {

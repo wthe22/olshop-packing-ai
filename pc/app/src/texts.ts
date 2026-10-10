@@ -17,11 +17,6 @@ export const texts = {
     nextDay: "Next day",
   },
 
-  // 08 › *Window frame*: Categories (2.12) is not built yet.
-  comingSoon: {
-    categories: "Categories: coming in 2.12.",
-  },
-
   start: {
     // 08 › *Start* step 2: "No packing data next to the program (`D:\Packing\`)."
     noData: (folder: string) => `No packing data next to the program (${folder}).`,
@@ -51,6 +46,17 @@ export const texts = {
     saved: (n: number, pdfs: number, lists: number) =>
       `Batch ${n} saved: ${count(pdfs, "PDF", "PDFs")}, ${count(lists, "packing list", "packing lists")}.`,
     loading: "Loading…",
+    // 08 › *1. Day*: *Amend* and *Revert*, on the newest batch only.
+    amend: "Amend",
+    revert: "Revert",
+    undoBatch: (n: number) => `Undo batch ${n}`,
+    redoBatch: (n: number) => `Redo batch ${n}`,
+    // 08 › *1. Day*: the Revert confirmation, verbatim.
+    confirmRevert: (n: number, pdfs: number, orders: number) =>
+      `Undo batch ${n}? Its ${count(pdfs, "saved PDF", "saved PDFs")}, packing list and download copies are deleted, and its ${count(orders, "order", "orders")} can be saved again. If you already printed them, throw the printed labels away.`,
+    // 08 › *1. Day*: the Amend confirmation, verbatim.
+    confirmAmend: (n: number, time: string) =>
+      `Redo batch ${n} with the current categories? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
   },
 
   // 08 › *2. New batch*.
@@ -105,9 +111,7 @@ export const texts = {
     addCondition: "Condition",
     addSubmit: "Add",
     addCancel: "Cancel",
-    // 08 › *3. Plan*: the condition is typed for now (the boxes editor is 2.12).
-    conditionNote:
-      "Type the condition (the boxes editor comes in 2.12). Example: name contains \"sepatu\"",
+    // 08 › *3. Plan*: the boxes editor is used for the added pick's condition, with a text toggle.
     packingList: "Packing list:",
     scopeWhole: "one for the batch",
     scopePerPdf: "one per PDF",
@@ -116,6 +120,10 @@ export const texts = {
     layoutSummary: "summary",
     layoutPick: "pick",
     save: "Save batch",
+    // 08 › *3. Plan*: an amend uses the same screen, titled *Redo batch 2*, with this button.
+    saveAgain: (n: number) => `Save batch ${n} again`,
+    amendTitle: (n: number) => `Redo batch ${n}`,
+    editCategories: "Edit categories",
     // 08 › *3. Plan*: the second of two PDFs with the same name.
     duplicate: (n: number) => `Same name as PDF ${n}`,
     cancel: "Cancel",
@@ -146,7 +154,82 @@ export const texts = {
     // 08 › *6. Settings*: the PDFium version (D14: version + PDFium version only).
     pdfium: (version: string) => `PDFium ${version}`,
   },
+
+  // 08 › *5. Categories*: the boxes editor and the file editor.
+  categories: {
+    title: "Categories",
+    close: "Close",
+    hint: "Order matters: an order is taken by the first category whose condition matches.",
+    code: "Code",
+    name: "Name",
+    // 08 › *5. Categories*: "In batch 3: 130", in order from what is left.
+    inBatch: (n: number, taken: number) => `In batch ${n}: ${taken}`,
+    boxes: "Boxes",
+    textView: "Text view",
+    takesRest: "no condition: takes the rest",
+    addCategory: "+ Add category",
+    editFile: "Edit file as text",
+    fileText: "File text",
+    cancel: "Cancel",
+    save: "Save",
+    delete: "Delete",
+    confirmDelete: (code: string) => `Delete category ${code}?`,
+    moveUp: "Move up",
+    moveDown: "Move down",
+    allOf: "All of these",
+    anyOf: "Any of these",
+    addCondition: "+ condition",
+    addGroup: "+ group",
+    removeGroup: "× group",
+    not: "not",
+    groupEmpty: "This group is empty",
+    helpExamples: "Help: examples ▸",
+    helpTitle: "Examples",
+    // 04 › *Examples*: the condition language examples shown by *Help: examples ▸*.
+    examples: [
+      "name contains \"sepatu\"",
+      "total_quantity = 1",
+      "tracking_id starts_with \"JY\"",
+      "courier starts_with \"J&T\"",
+      "ship_by < \"2026-10-07 17:00\"",
+      "not name contains \"sepatu\" and (name contains \"spion\" or name contains \"knalpot\")",
+    ],
+  },
 } as const;
+
+// 08 › *5. Categories*: the fields a condition can use (07 › *Fields the conditions can use*),
+// with the plain name and the field type that decides the operators and the value input.
+export type FieldType = "text" | "number" | "time";
+
+export const conditionFields: { value: string; label: string; type: FieldType }[] = [
+  { value: "name", label: "Product name", type: "text" },
+  { value: "display_name", label: "Display name", type: "text" },
+  { value: "variation", label: "Variation", type: "text" },
+  { value: "seller_sku", label: "Seller SKU", type: "text" },
+  { value: "line_quantity", label: "Line quantity", type: "number" },
+  { value: "total_quantity", label: "Total quantity", type: "number" },
+  { value: "distinct_items", label: "Different items", type: "number" },
+  { value: "courier", label: "Courier", type: "text" },
+  { value: "tracking_id", label: "Tracking ID", type: "text" },
+  { value: "ship_by", label: "Ship by", type: "time" },
+];
+
+/// The operators a text field takes (04 › *Grammar*).
+export const textOperators: { value: string; label: string }[] = [
+  { value: "contains", label: "contains" },
+  { value: "equals", label: "equals" },
+  { value: "starts_with", label: "starts_with" },
+];
+
+/// The operators a number or date/time field takes (04 › *Grammar*).
+export const numberOperators: { value: string; label: string }[] = [
+  { value: "=", label: "=" },
+  { value: "!=", label: "≠" },
+  { value: "<", label: "<" },
+  { value: "<=", label: "≤" },
+  { value: ">", label: ">" },
+  { value: ">=", label: "≥" },
+];
 
 // 08 › *Window frame*: the day switch shows e.g. "Wed 7 Oct 2026". Derived from the date, so it
 // is not a fixed screen text; kept here with the other texts.

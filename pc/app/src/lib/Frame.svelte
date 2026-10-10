@@ -1,29 +1,36 @@
 <script lang="ts">
-  // The window frame (08 › *Window frame*): title, the day switch and the navigation.
+  // The window frame (08 › *Window frame*): title, the day switch and the navigation. *Categories*
+  // and *Settings* open over the current screen (08 › *Window frame*); *Day* returns to it.
   import { texts, formatDay } from "../texts";
 
   // The batch flow screens (*new-batch*, *plan*) are not in the nav; none is active there.
-  type Screen = "day" | "new-batch" | "plan" | "categories" | "settings";
+  type Screen = "day" | "new-batch" | "plan";
+  type Overlay = "categories" | "settings" | null;
+  type NavId = "day" | "categories" | "settings";
 
   let {
     day,
     screen,
+    overlay,
     onStep,
     onToday,
     onNavigate,
   }: {
     day: string;
     screen: Screen;
+    overlay: Overlay;
     onStep: (delta: number) => void;
     onToday: () => void;
-    onNavigate: (screen: Screen) => void;
+    onNavigate: (id: NavId) => void;
   } = $props();
 
-  const screens: { id: Screen; label: string }[] = [
+  const items: { id: NavId; label: string }[] = [
     { id: "day", label: texts.nav.day },
     { id: "categories", label: texts.nav.categories },
     { id: "settings", label: texts.nav.settings },
   ];
+
+  const active = (id: NavId) => (overlay ? overlay === id : screen === id);
 </script>
 
 <header>
@@ -47,10 +54,10 @@
   <span class="grow"></span>
 
   <nav>
-    {#each screens as item (item.id)}
+    {#each items as item (item.id)}
       <button
         class="nav"
-        class:active={screen === item.id}
+        class:active={active(item.id)}
         onclick={() => onNavigate(item.id)}>{item.label}</button
       >
     {/each}

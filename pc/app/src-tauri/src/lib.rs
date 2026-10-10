@@ -12,6 +12,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use packing_engine::day::DayState;
 use packing_engine::plan::Plan;
 use packing_pdf::batch::Draft;
 use packing_pdf::worker::PdfWorker;
@@ -38,6 +39,17 @@ pub(crate) struct OpenDraft {
     pub plan: Plan,
     /// The day's next saved-PDF number at the time of reading (08 › *3. Plan*: the numbers `#`).
     pub first_number: i64,
+    /// Set when this draft amends the last batch (07 › *Amend*): Save replaces that batch and the
+    /// plan screen is titled *Redo batch `<b>`*. `None` for a normal new batch.
+    pub amend: Option<AmendState>,
+}
+
+/// An amend in progress: the batch being redone and the day state without it, so Save reuses the
+/// same batch and saved-PDF numbers and the duplicate guard ignores the batch's own orders
+/// (07 › *Revert and amend*).
+pub(crate) struct AmendState {
+    pub batch: i64,
+    pub state: DayState,
 }
 
 /// What the window back end keeps between commands (07 › *Commands between window and Rust*): the
@@ -217,6 +229,15 @@ pub fn run() {
             commands::batch::plan,
             commands::batch::save_batch,
             commands::batch::discard_draft,
+            commands::batch::revert_last,
+            commands::batch::start_amend,
+            commands::rules::rules_load,
+            commands::rules::rules_check,
+            commands::rules::rules_check_text,
+            commands::rules::rules_save,
+            commands::rules::rules_save_text,
+            commands::rules::condition_to_tree,
+            commands::rules::tree_to_condition,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

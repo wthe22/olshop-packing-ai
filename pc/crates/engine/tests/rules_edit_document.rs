@@ -201,3 +201,42 @@ fn invalid_edits_are_errors() {
     assert!(edited.remove(9).is_err());
     assert!(edited.move_to(0, 9).is_err());
 }
+
+#[test]
+fn reorder_keeps_the_chosen_entries_in_order() {
+    let mut edited = doc(SIMPLE); // A, B, Z (Z is the rest entry and must stay last)
+    // Keep B, A, Z: swap the first two.
+    edited.reorder(&[1, 0, 2]).expect("reorder");
+    assert_eq!(codes(&edited), ["B", "A", "Z"].map(String::from));
+    assert_eq!(loaded_codes(&edited), ["B", "A", "Z"].map(String::from));
+
+    // Drop B and keep A, Z.
+    let mut edited = doc(SIMPLE);
+    edited.reorder(&[0, 2]).expect("drop");
+    assert_eq!(codes(&edited), ["A", "Z"].map(String::from));
+    assert_eq!(loaded_codes(&edited), ["A", "Z"].map(String::from));
+
+    // A bad order is refused and nothing changes.
+    let mut edited = doc(SIMPLE);
+    assert!(edited.reorder(&[0, 0]).is_err());
+    assert!(edited.reorder(&[0, 9]).is_err());
+    assert_eq!(codes(&edited), ["A", "B", "Z"].map(String::from));
+}
+
+#[test]
+fn reorder_keeps_a_comment_on_a_moved_entry() {
+    let text = fs::read_to_string(testdata_categories()).expect("read testdata");
+    let mut edited = doc(&text); // A, B, C, Z; a comment sits above Z
+    // Move C to the top; Z stays last, so the file still loads.
+    edited.reorder(&[2, 0, 1, 3]).expect("move C to the top");
+    let out = edited.to_string();
+    assert_eq!(codes(&edited), ["C", "A", "B", "Z"].map(String::from));
+    assert_eq!(
+        loaded_codes(&edited),
+        ["C", "A", "B", "Z"].map(String::from)
+    );
+    assert!(
+        out.contains("# The last category still has a condition"),
+        "the comment above Z is kept:\n{out}"
+    );
+}
