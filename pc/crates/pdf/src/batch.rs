@@ -283,6 +283,7 @@ pub fn save(
         files,
         pdfs,
         packing_list: packing.clone(),
+        warnings: draft.warnings.clone(),
         saved,
     };
 

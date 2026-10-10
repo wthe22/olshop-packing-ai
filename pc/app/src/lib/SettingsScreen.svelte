@@ -1,16 +1,18 @@
 <script lang="ts">
   // Settings (08 › *6. Settings*): the data folder and the packing-list default.
   import { texts } from "../texts";
-  import type { Layout, Scope, Settings } from "./api";
+  import type { About, Layout, Scope, Settings } from "./api";
 
   let {
     settings,
+    about,
     dataFolder,
     onChangeFolder,
     onOpenFolder,
     onSave,
   }: {
     settings: Settings | null;
+    about: About | null;
     dataFolder: string | null;
     onChangeFolder: () => void;
     onOpenFolder: () => void;
@@ -90,6 +92,16 @@
         </label>
       {/each}
     </div>
+  </section>
+
+  <section>
+    <h3>{texts.settings.about}</h3>
+    {#if about}
+      <div class="group">
+        <span>{texts.settings.version(about.version)}</span>
+        <span>{texts.settings.pdfium(about.pdfium)}</span>
+      </div>
+    {/if}
   </section>
 
   <div class="actions">

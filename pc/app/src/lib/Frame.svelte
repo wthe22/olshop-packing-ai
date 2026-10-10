@@ -2,7 +2,8 @@
   // The window frame (08 › *Window frame*): title, the day switch and the navigation.
   import { texts, formatDay } from "../texts";
 
-  type Screen = "day" | "categories" | "settings";
+  // The batch flow screens (*new-batch*, *plan*) are not in the nav; none is active there.
+  type Screen = "day" | "new-batch" | "plan" | "categories" | "settings";
 
   let {
     day,

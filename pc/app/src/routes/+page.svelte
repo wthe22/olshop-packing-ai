@@ -1,6 +1,7 @@
 <script lang="ts">
-  // The app shell (08 › *Window frame*, *Start*, *1. Day*, *6. Settings*): it finds the data
-  // folder, keeps the current day and screen and routes the Tauri commands.
+  // The app shell (08 › *Window frame*, *Start*, *1. Day*, *2. New batch*, *3. Plan*,
+  // *6. Settings*): it finds the data folder, keeps the current day and screen, and routes the
+  // Tauri commands. The batch flow is Day → New batch → Plan → Day.
   import { onMount } from "svelte";
   import { open } from "@tauri-apps/plugin-dialog";
   import * as api from "../lib/api";
@@ -8,10 +9,12 @@
   import Frame from "../lib/Frame.svelte";
   import StartPrompt from "../lib/StartPrompt.svelte";
   import DayScreen from "../lib/DayScreen.svelte";
+  import NewBatchScreen from "../lib/NewBatchScreen.svelte";
+  import PlanScreen from "../lib/PlanScreen.svelte";
   import SettingsScreen from "../lib/SettingsScreen.svelte";
   import Placeholder from "../lib/Placeholder.svelte";
 
-  type Screen = "day" | "categories" | "settings";
+  type Screen = "day" | "new-batch" | "plan" | "categories" | "settings";
 
   let ready = $state(false);
   let needsFolder = $state(true);
@@ -24,8 +27,19 @@
   let dataFolder = $state<string | null>(null);
   let overview = $state<api.DayOverview | null>(null);
   let settings = $state<api.Settings | null>(null);
+  let about = $state<api.About | null>(null);
   let dayList = $state<string[]>([]);
   let screen = $state<Screen>("day");
+
+  // The batch being prepared: the read result and whether the backend has an open draft.
+  let readResult = $state<api.ReadResult | null>(null);
+  let draftOpen = $state(false);
+  // The green *Batch n saved* line on the Day screen, shown for a few seconds (08 › *1. Day*).
+  let savedMessage = $state<string | null>(null);
+  let savedTimer: ReturnType<typeof setTimeout> | undefined;
+
+  // The batch number the next save will get (continuing the day).
+  const nextBatch = $derived((overview?.totals.batches ?? 0) + 1);
 
   async function afterFolder() {
     try {
@@ -36,6 +50,11 @@
     await refreshOverview();
     try {
       settings = await api.settingsGet();
+    } catch (e) {
+      error = String(e);
+    }
+    try {
+      about = await api.about();
     } catch (e) {
       error = String(e);
     }
@@ -107,8 +126,48 @@
     }
   }
 
+  /// Ask to discard the open batch before leaving it (08 › *Window frame*: changing the day
+  /// while a draft is open asks first).
+  async function leaveBatch(): Promise<boolean> {
+    if (!draftOpen) return true;
+    if (!confirm(texts.plan.confirmDiscard(nextBatch))) return false;
+    await api.discardDraft();
+    draftOpen = false;
+    readResult = null;
+    return true;
+  }
+
+  function startBatch() {
+    savedMessage = null;
+    screen = "new-batch";
+  }
+
+  function onPlan(result: api.ReadResult) {
+    readResult = result;
+    draftOpen = true;
+    screen = "plan";
+  }
+
+  async function onSaved(result: api.SaveResult) {
+    draftOpen = false;
+    readResult = null;
+    savedMessage = texts.day.saved(result.batch, result.pdfs, result.packing_lists);
+    screen = "day";
+    await refreshOverview();
+    if (savedTimer) clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => (savedMessage = null), 6000);
+  }
+
+  function cancelBatch() {
+    // From New batch nothing was read; from Plan the screen already discarded the draft.
+    draftOpen = false;
+    readResult = null;
+    screen = "day";
+  }
+
   // The day switch (08 › *Window frame*). `dayList` is newest first.
-  function stepDay(delta: number) {
+  async function stepDay(delta: number) {
+    if (!(await leaveBatch())) return;
     const next = dayList[dayList.indexOf(day) - delta];
     if (next) {
       day = next;
@@ -116,9 +175,15 @@
     }
   }
 
-  function goToday() {
+  async function goToday() {
+    if (!(await leaveBatch())) return;
     day = today;
     refreshOverview();
+  }
+
+  async function navigate(next: Screen) {
+    if (!(await leaveBatch())) return;
+    screen = next;
   }
 
   async function saveSettings(value: api.Settings) {
@@ -157,7 +222,7 @@
     {screen}
     onStep={stepDay}
     onToday={goToday}
-    onNavigate={(next: Screen) => (screen = next)}
+    onNavigate={navigate}
   />
   {#if error}
     <p class="error">{error}</p>
@@ -165,15 +230,31 @@
   {#if screen === "day"}
     <DayScreen
       {overview}
+      saved={savedMessage}
       onOpen={openFile}
       onOpenFolder={openFolder}
-      onNewBatch={() => {}}
+      onNewBatch={startBatch}
+    />
+  {:else if screen === "new-batch"}
+    <NewBatchScreen
+      batchNumber={nextBatch}
+      onPlan={onPlan}
+      onCancel={cancelBatch}
+    />
+  {:else if screen === "plan" && readResult}
+    <PlanScreen
+      batchNumber={nextBatch}
+      read={readResult}
+      {settings}
+      onSaved={onSaved}
+      onCancel={cancelBatch}
     />
   {:else if screen === "categories"}
     <Placeholder text={texts.comingSoon.categories} />
   {:else}
     <SettingsScreen
       {settings}
+      {about}
       {dataFolder}
       onChangeFolder={changeFolder}
       onOpenFolder={() => dataFolder && openFolder(dataFolder)}

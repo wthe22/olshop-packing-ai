@@ -140,6 +140,11 @@ pub struct BatchEntry {
     pub files: Vec<FileEntry>,
     pub pdfs: Vec<PdfEntry>,
     pub packing_list: PackingListChoice,
+    /// The read warnings of the batch, as shown on the Plan screen (07 › *`state.json`*); the Day
+    /// screen *Warnings ▸* reads them without re-reading the files. Defaulted so an older file
+    /// still loads.
+    #[serde(default)]
+    pub warnings: Vec<String>,
 }
 
 /// The day's `state.json`: everything needed to continue, revert or amend a batch.
@@ -412,6 +417,8 @@ pub struct BatchWrite {
     pub files: Vec<FileEntry>,
     pub pdfs: Vec<PdfEntry>,
     pub packing_list: PackingListChoice,
+    /// The read warnings of the batch, stored in `state.json` (07 › *`state.json`*).
+    pub warnings: Vec<String>,
     pub saved: Vec<SavedOrder>,
 }
 
@@ -460,6 +467,7 @@ where
         files: write.files.clone(),
         pdfs: write.pdfs.clone(),
         packing_list: write.packing_list.clone(),
+        warnings: write.warnings.clone(),
     });
     state.saved.extend(write.saved.iter().cloned());
     state.save(day_dir)?;

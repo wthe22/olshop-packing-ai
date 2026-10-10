@@ -28,6 +28,7 @@ export interface BatchView {
   orders: number;
   pdfs: PdfView[];
   packing_lists: string[];
+  warnings: string[];
   folder: string;
 }
 
@@ -49,6 +50,18 @@ export type Layout = "full" | "summary" | "pick";
 export interface Settings {
   scope: Scope;
   layouts: Layout[];
+}
+
+/// The packing-list choice sent to `save_batch` (07 › *Packing list*).
+export interface PackingChoice {
+  scope: Scope;
+  layouts: Layout[];
+}
+
+/// Settings › *About* (08 › *6. Settings*).
+export interface About {
+  version: string;
+  pdfium: string;
 }
 
 export const startInfo = (): Promise<StartInfo> => invoke("start_info");
@@ -74,3 +87,103 @@ export const openPath = (path: string): Promise<void> =>
 
 export const showInFolder = (path: string): Promise<void> =>
   invoke("show_in_folder", { path });
+
+// -------------------------------------------------------------------- New batch / Plan
+
+/// One chosen label file as *New batch* shows it (08 › *2. New batch*).
+export interface FileCheck {
+  path: string;
+  name: string;
+  size: number;
+  time: string;
+  pages: number;
+  used_in_batch: number | null;
+}
+
+/// One run inside a saved PDF, for the expanded row (08 › *3. Plan*).
+export interface RunView {
+  label: string;
+  contents: string;
+  orders: number;
+}
+
+/// One row of the Plan screen (08 › *3. Plan*).
+export interface PlanRow {
+  index: number | null;
+  number: number | null;
+  code: string;
+  name: string;
+  condition: string | null;
+  orders: number;
+  runs: RunView[];
+  pages: number;
+  file_name: string;
+  skipped: boolean;
+  generated: boolean;
+  is_rest: boolean;
+  duplicate_of: number | null;
+  can_use: boolean;
+  can_move_up: boolean;
+  can_move_down: boolean;
+  empty: boolean;
+}
+
+/// The Plan screen's data (08 › *3. Plan*).
+export interface PlanView {
+  rows: PlanRow[];
+  has_duplicate_names: boolean;
+  add_at: number;
+}
+
+/// What reading ends with (08 › *Reading*).
+export interface ReadResult {
+  files: number;
+  pages: number;
+  orders: number;
+  total_orders: number;
+  already_saved: number;
+  warnings: string[];
+  plan: PlanView;
+}
+
+/// What *Save batch* wrote, for the green line (08 › *1. Day*).
+export interface SaveResult {
+  batch: number;
+  pdfs: number;
+  packing_lists: number;
+}
+
+/// The `read-progress` event payload (07 › *Commands between window and Rust*).
+export interface ReadProgress {
+  page: number;
+  pages: number;
+}
+
+/// A plan change from the window (08 › *3. Plan*).
+export type PlanEdit =
+  | { kind: "set_skipped"; index: number; skipped: boolean }
+  | { kind: "move_up"; index: number }
+  | { kind: "move_down"; index: number }
+  | { kind: "add"; at: number; code: string; name: string; condition: string }
+  | { kind: "rename"; index: number; name: string };
+
+export const checkFiles = (paths: string[]): Promise<FileCheck[]> =>
+  invoke("check_files", { paths });
+
+export const readLabels = (paths: string[]): Promise<ReadResult> =>
+  invoke("read_labels", { paths });
+
+export const cancelRead = (): Promise<void> => invoke("cancel_read");
+
+export const checkCondition = (condition: string): Promise<void> =>
+  invoke("check_condition", { condition });
+
+export const plan = (edits: PlanEdit[]): Promise<PlanView> =>
+  invoke("plan", { edits });
+
+export const saveBatch = (packing: PackingChoice | null): Promise<SaveResult> =>
+  invoke("save_batch", { packing });
+
+export const discardDraft = (): Promise<void> => invoke("discard_draft");
+
+export const about = (): Promise<About> => invoke("about");

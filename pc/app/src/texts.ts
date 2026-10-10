@@ -17,10 +17,9 @@ export const texts = {
     nextDay: "Next day",
   },
 
-  // 08 › *Window frame*: Categories (2.12) and New batch (2.9) are not built yet.
+  // 08 › *Window frame*: Categories (2.12) is not built yet.
   comingSoon: {
     categories: "Categories: coming in 2.12.",
-    newBatch: "New batch: coming in 2.9.",
   },
 
   start: {
@@ -45,7 +44,83 @@ export const texts = {
     // 08 › *1. Day* PDF row: "88 orders   3 runs".
     counts: (orders: number, runs: number) =>
       `${count(orders, "order", "orders")}   ${count(runs, "run", "runs")}`,
+    // 08 › *1. Day* card: the batch's stored warnings, expanding to the texts.
+    warnings: (n: number) => `Warnings: ${n} ▸`,
+    warningsNone: "Warnings: none",
+    // 08 › *1. Day*: the green line after *Save batch*, shown for a few seconds.
+    saved: (n: number, pdfs: number, lists: number) =>
+      `Batch ${n} saved: ${count(pdfs, "PDF", "PDFs")}, ${count(lists, "packing list", "packing lists")}.`,
     loading: "Loading…",
+  },
+
+  // 08 › *2. New batch*.
+  newBatch: {
+    title: (n: number) => `New batch ${n}`,
+    cancel: "Cancel",
+    dropHint: "Drop label PDFs here, or",
+    addFiles: "Add files…",
+    pages: (n: number) => `${count(n, "page", "pages")}`,
+    usedInBatch: (n: number) => `used in batch ${n}`,
+    remove: "×",
+    removeTitle: "Remove this file",
+    selected: (files: number, pages: number) =>
+      `Selected: ${count(files, "file", "files")} · ${count(pages, "page", "pages")}`,
+    read: "Read labels",
+    // 08 › *Reading*: "Reading labels …  page 143 of 257 (file 1 of 2)".
+    reading: (page: number, pages: number, file: number, files: number) =>
+      `Reading labels …  page ${page} of ${pages} (file ${file} of ${files})`,
+    back: "Back",
+  },
+
+  // 08 › *3. Plan*.
+  plan: {
+    // 08 › *3. Plan* header: "Batch 3 · 2 files · 257 pages · 256 orders · 0 already saved".
+    header: (
+      batch: number,
+      files: number,
+      pages: number,
+      orders: number,
+      alreadySaved: number,
+    ) =>
+      `Batch ${batch} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
+    warnings: (n: number) => `Warnings: ${n} ▸`,
+    warningsNone: "Warnings: none",
+    use: "Use",
+    hash: "#",
+    pick: "Pick",
+    orders: "Orders",
+    runs: "Runs",
+    fileName: "File name",
+    rest: "(the rest)",
+    // 08 › *3. Plan*: a pick that takes 0 orders.
+    noPdf: "0 orders — no PDF",
+    skipped: "skipped for this batch",
+    moveUp: "Move up",
+    moveDown: "Move down",
+    expand: "Runs",
+    collapse: "Hide runs",
+    addPick: "+ Add a pick for this batch",
+    addCode: "Code",
+    addName: "Name",
+    addCondition: "Condition",
+    addSubmit: "Add",
+    addCancel: "Cancel",
+    // 08 › *3. Plan*: the condition is typed for now (the boxes editor is 2.12).
+    conditionNote:
+      "Type the condition (the boxes editor comes in 2.12). Example: name contains \"sepatu\"",
+    packingList: "Packing list:",
+    scopeWhole: "one for the batch",
+    scopePerPdf: "one per PDF",
+    scopeNone: "none",
+    layoutFull: "full",
+    layoutSummary: "summary",
+    layoutPick: "pick",
+    save: "Save batch",
+    // 08 › *3. Plan*: the second of two PDFs with the same name.
+    duplicate: (n: number) => `Same name as PDF ${n}`,
+    cancel: "Cancel",
+    confirmDiscard: (n: number) =>
+      `Discard batch ${n}? Nothing has been saved.`,
   },
 
   settings: {
@@ -68,6 +143,8 @@ export const texts = {
     save: "Save",
     about: "About",
     version: (version: string) => `Version ${version}`,
+    // 08 › *6. Settings*: the PDFium version (D14: version + PDFium version only).
+    pdfium: (version: string) => `PDFium ${version}`,
   },
 } as const;
 

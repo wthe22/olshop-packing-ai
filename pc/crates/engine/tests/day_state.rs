@@ -96,6 +96,7 @@ fn batch_write(batch: i64, pdfs: Vec<PdfEntry>, saved_orders: Vec<SavedOrder>) -
         files: vec![file_entry("labels_1.pdf", "9f2c")],
         pdfs,
         packing_list: PackingListChoice::default(),
+        warnings: Vec::new(),
         saved: saved_orders,
     }
 }
@@ -127,6 +128,7 @@ fn save_and_load_state_round_trip() {
             scope: Scope::Whole,
             layouts: vec![Layout::Pick],
         },
+        warnings: Vec::new(),
     });
     state.saved.push(saved("580000000000000001", 1, 1, 5));
     state.save(&day).expect("save");
@@ -152,6 +154,7 @@ fn state_json_matches_the_07_format() {
             scope: Scope::Whole,
             layouts: vec![Layout::Pick],
         },
+        warnings: Vec::new(),
     });
     state.saved.push(saved("580000000000000001", 1, 1, 5));
     state.save(&day).expect("save");
@@ -175,6 +178,8 @@ fn state_json_matches_the_07_format() {
     assert_eq!(batch["pdfs"][0]["runs"], 1);
     assert_eq!(batch["packing_list"]["scope"], "whole");
     assert_eq!(batch["packing_list"]["layouts"][0], "pick");
+    // The read warnings are stored per batch (07 › *`state.json`*), defaulted when absent.
+    assert_eq!(batch["warnings"].as_array().map(Vec::len), Some(0));
 
     let entry = &value["saved"][0];
     assert_eq!(entry["order_id"], "580000000000000001");
@@ -184,6 +189,38 @@ fn state_json_matches_the_07_format() {
     assert_eq!(entry["run"], 5);
     // The 07 example keeps no per-order save_time (the batch carries it).
     assert!(entry.get("save_time").is_none());
+}
+
+#[test]
+fn batch_warnings_round_trip_and_default_when_absent() {
+    let dir = TempDir::new("warnings");
+    let day = dir.path().join("2026-10-07");
+
+    let mut state = DayState::new("2026-10-07");
+    let mut write = batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]);
+    write.warnings = vec!["2 orders were already saved today".to_string()];
+    save_batch(&day, &mut state, &write, |_| Ok(())).expect("save batch");
+    assert_eq!(
+        state.batches[0].warnings,
+        vec!["2 orders were already saved today".to_string()]
+    );
+
+    // An older file without the key loads with no warnings.
+    let text = fs::read_to_string(day.join("state.json")).expect("read");
+    let mut value: Value = serde_json::from_str(&text).expect("parse");
+    value["batches"][0]
+        .as_object_mut()
+        .expect("batch object")
+        .remove("warnings");
+    fs::write(
+        day.join("state.json"),
+        serde_json::to_string_pretty(&value).expect("serialize"),
+    )
+    .expect("write");
+    let loaded = DayState::load(&day).expect("load");
+    assert!(loaded.batches[0].warnings.is_empty());
+
+    std::fs::remove_dir_all(dir.path()).ok();
 }
 
 #[test]

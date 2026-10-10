@@ -1,20 +1,31 @@
 <script lang="ts">
-  // The Day screen (08 › *1. Day*): what has been saved today. Batches come from state.json;
-  // *New batch* is a disabled placeholder until 2.9.
+  // The Day screen (08 › *1. Day*): what has been saved today. Batches come from state.json,
+  // each with its stored warnings; *New batch* starts the batch flow.
   import { texts } from "../texts";
   import type { DayOverview } from "./api";
 
   let {
     overview,
+    saved,
     onOpen,
     onOpenFolder,
     onNewBatch,
   }: {
     overview: DayOverview | null;
+    saved: string | null;
     onOpen: (path: string) => void;
     onOpenFolder: (path: string) => void;
     onNewBatch: () => void;
   } = $props();
+
+  // The batch numbers whose *Warnings ▸* is expanded.
+  let openWarnings = $state<number[]>([]);
+
+  function toggleWarnings(batch: number) {
+    openWarnings = openWarnings.includes(batch)
+      ? openWarnings.filter((item) => item !== batch)
+      : [...openWarnings, batch];
+  }
 
   const join = (folder: string, file: string) => `${folder}\\${file}`;
 </script>
@@ -30,12 +41,12 @@
         )}
       {/if}
     </span>
-    <button
-      disabled
-      title={texts.comingSoon.newBatch}
-      onclick={onNewBatch}>{texts.day.newBatch}</button
-    >
+    <button class="primary" onclick={onNewBatch}>{texts.day.newBatch}</button>
   </div>
+
+  {#if saved}
+    <p class="saved">{saved}</p>
+  {/if}
 
   {#if !overview}
     <p class="muted">{texts.day.loading}</p>
@@ -72,11 +83,25 @@
               >
             </span>
           {/each}
+          {#if batch.warnings.length === 0}
+            <span class="muted">{texts.day.warningsNone}</span>
+          {:else}
+            <button class="link" onclick={() => toggleWarnings(batch.batch)}>
+              {texts.day.warnings(batch.warnings.length)}
+            </button>
+          {/if}
           <span class="grow"></span>
           <button onclick={() => onOpenFolder(batch.folder)}
             >{texts.day.openFolder}</button
           >
         </div>
+        {#if openWarnings.includes(batch.batch)}
+          <ul class="warnings">
+            {#each batch.warnings as warning}
+              <li>{warning}</li>
+            {/each}
+          </ul>
+        {/if}
       </section>
     {/each}
   {/if}
@@ -100,6 +125,30 @@
 
   .muted {
     color: #6a6a6a;
+  }
+
+  .saved {
+    margin: 0 0 0.75rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid #a6d8a6;
+    border-radius: 4px;
+    background: #eaf7ea;
+    color: #1f6f2f;
+  }
+
+  .link {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #1f6feb;
+    cursor: pointer;
+  }
+
+  .warnings {
+    margin: 0;
+    padding: 0.4rem 0.75rem 0.6rem 2rem;
+    color: #4a4a4a;
+    font-size: 0.9rem;
   }
 
   .batch {
@@ -172,8 +221,15 @@
     }
 
     .counts,
-    .muted {
+    .muted,
+    .warnings {
       color: #b0b0b0;
+    }
+
+    .saved {
+      border-color: #4a7a4a;
+      background: #1f3320;
+      color: #a6d8a6;
     }
   }
 </style>

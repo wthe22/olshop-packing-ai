@@ -4,7 +4,7 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): tasks 2.1–2.8 done; in progress: 2.9–2.10.** The owner
+Status: **Phase 2 (PC app): tasks 2.1–2.10 done; in progress: 2.11 and 2.12.** The owner
 decided that the PC gets a desktop app written in Rust (a command line is not good for daily
 use), so phase 1 stops with its code done (270 tests) and stays as the reference
 implementation and fallback; its two open tasks move into phase 2. Design:
@@ -190,9 +190,9 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   folder (program folder, else ask each start), day switch, batches from `state.json`, Open /
   Open folder, all screen texts in `src/texts.ts`. Batch warnings on the Day screen and the
   Settings *About* row are done in 2.10.
-- [ ] **2.9 App: New batch** (08 › 2): Add files…, drag-and-drop, page counts, "used in batch
+- [x] **2.9 App: New batch** (08 › 2): Add files…, drag-and-drop, page counts, "used in batch
   n", reading with progress and Cancel, stop messages.
-- [ ] **2.10 App: Plan and Save** (08 › 3, 4): picks with counts and runs, skip/move/add,
+- [x] **2.10 App: Plan and Save** (08 › 3, 4): picks with counts and runs, skip/move/add,
   file names (whole name editable, same name twice refused), packing-list options (default one
   per batch), warnings, the `download/` copy, Save → Day screen.
 - [ ] **2.11 App: Revert and Amend** (07 › *Revert and amend*): confirmations, file-in-use
@@ -200,7 +200,11 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
 - [ ] **2.12 App: Categories** (08 › 5): boxes editor (groups, rows, not), text view per
   category, live check and counts, Edit file as text, save keeping comments and unchanged
   condition texts. Test: every parse case of `testdata/conditions.json` goes text → boxes →
-  text and gives the printer's text.
+  text and gives the printer's text. Engine part done (`rules_edit.rs`: 66/66 round trips).
+  Still in 2.12: Categories and Settings open over the current screen and keep an open draft
+  (08 › *Window frame*; 2.10 asks to discard it instead), **Edit categories** on the Plan
+  screen, the boxes editor in the *Add a pick* form, and "categories.toml has errors →
+  Categories opens first" at start (08 › *Start*).
 - [ ] **2.13 Portable build** (07 › *Program folder*): `pc/tools/make-portable.sh`
   (`npm run tauri build -- --no-bundle`, then `Packing.exe` + `pdfium.dll` into
   `pc/target/portable/Packing/`); copy the folder outside the repository, start it from a

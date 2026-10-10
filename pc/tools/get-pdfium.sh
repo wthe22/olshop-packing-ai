@@ -5,6 +5,7 @@
 # The tag is pinned to match the pdfium-render version in pc/crates/pdf/Cargo.toml:
 #   pdfium-render 0.9.4  -- feature `pdfium_latest` == `pdfium_7881`
 #   -> bblanchon release tag `chromium/7881`
+# The same tag is the constant `PDFIUM_VERSION` in pc/crates/pdf/src/lib.rs (Settings › About).
 #
 # Re-run to re-download; the file is verified against SHA256 below.
 set -euo pipefail
