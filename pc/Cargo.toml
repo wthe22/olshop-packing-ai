@@ -15,6 +15,7 @@ pdfium-render = "=0.9.4"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.11"
 toml = "1"
 packing-engine = { path = "crates/engine" }
 packing-pdf = { path = "crates/pdf" }
