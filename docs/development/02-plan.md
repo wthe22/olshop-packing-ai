@@ -4,7 +4,7 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): tasks 2.1–2.4 done; in progress: 2.5 and 2.6.** The owner
+Status: **Phase 2 (PC app): tasks 2.1–2.6 done; in progress: 2.7.** The owner
 decided that the PC gets a desktop app written in Rust (a command line is not good for daily
 use), so phase 1 stops with its code done (270 tests) and stays as the reference
 implementation and fallback; its two open tasks move into phase 2. Design:
@@ -161,11 +161,14 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   edits (skip, move, add, rename), picks from what is left, runs, numbering through the day,
   `state.json` (07 format), duplicate guard, file fingerprints, revert, amend, file and folder
   names. Test: `testdata/expected-picks.json`.
-- [ ] **2.6 PDF crate.** `read.rs` (open, page count, text runs with positions, progress),
+- [x] **2.6 PDF crate.** `read.rs` (open, page count, text runs with positions, progress),
   `write.rs` (copy pages), `packing_list.rs` (the three layouts, port of `packing_list.py`,
   batch in the header; about 1.5 MB per batch, whole fonts). Worker thread that owns PDFium.
   Tests on `testdata/labels-slip.pdf`: `testdata/expected-labels.json` matches; written PDFs
   have the right page counts and text.
+  - Result: 23/23 testdata orders equal `expected-labels.json` (24 pages in 0.03 s); plain file
+    gives the no-slip stop; copied pages keep their text; packing lists about 1.37 MB. Not
+    reproduced: the grey colour of the "(continued)" line (printed black).
 - [ ] **2.7 Developer CLI and sample run** (local, not committed; replaces 1.15).
   `packing-cli prepare --labels … [--day] [--data]` writes a batch like the app. On the sample
   slip files with the repository `categories.toml`: 601 pages, 600 orders, one order
