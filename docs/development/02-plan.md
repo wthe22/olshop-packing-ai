@@ -9,8 +9,9 @@ decided that the PC gets a desktop app written in Rust (a command line is not go
 use), so phase 1 stops with its code done (270 tests) and stays as the reference
 implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
-Open in [02-design-questions.md](../software-design/02-design-questions.md): D2 (only the
-packing-list file size is left; built for now: accept it) and D1 (Android, open until phase 3).
+Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
+until phase 3). D2 (the PDF library) is answered: PDFium does all three PDF jobs, and the bigger
+packing-list files (about 1.5 MB instead of 60 KB) are accepted.
 
 ---
 
@@ -116,7 +117,8 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
 A Windows program that replaces the script for daily use: label downloads in, picks adjusted on
 screen, saved PDFs and packing lists out, revert/amend of the last batch. Written in Rust;
 screens in Svelte + TypeScript in a Tauri 2 window. A portable program folder, no installer.
-The PDF library is PDFium (spike 2.1, D2).
+The PDF library is PDFium for all three PDF jobs — read the text with its positions, copy pages
+unchanged, write the packing list (spike 2.1; the bigger packing-list files are accepted).
 
 Read: [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md),
 [03-pc-script](../software-design/03-pc-script.md) (the reading and sorting rules that carry
@@ -138,7 +140,7 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     562/562 orders equal. 10 copied pages: 0 pixels differ (150 DPI). Fonts page and a 5-page
     packing list written, text reads back. Reading 601 pages: 1.6 s (Python 35 s on the same
     PC). Packing list 1.4 MB (1 page) / 1.6 MB (5 pages), whole fonts embedded; Python 62 KB
-    → D2 now asks only about the file size. Run rebuilding from characters → 07 *Text runs
+    → accepted, so D2 is answered. Run rebuilding from characters → 07 *Text runs
     from PDFium*.
 - [ ] **2.2 Scaffold.** `pc/` Cargo workspace (`crates/engine`, `crates/pdf`, `crates/cli`,
   `app/src-tauri`), Tauri app from `create-tauri-app` template `svelte-ts` in `pc/app/`,
@@ -161,8 +163,9 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   names. Test: `testdata/expected-picks.json`.
 - [ ] **2.6 PDF crate.** `read.rs` (open, page count, text runs with positions, progress),
   `write.rs` (copy pages), `packing_list.rs` (the three layouts, port of `packing_list.py`,
-  batch in the header). Worker thread that owns PDFium. Tests on `testdata/labels-slip.pdf`:
-  `testdata/expected-labels.json` matches; written PDFs have the right page counts and text.
+  batch in the header; about 1.5 MB per batch, whole fonts). Worker thread that owns PDFium.
+  Tests on `testdata/labels-slip.pdf`: `testdata/expected-labels.json` matches; written PDFs
+  have the right page counts and text.
 - [ ] **2.7 Developer CLI and sample run** (local, not committed; replaces 1.15).
   `packing-cli prepare --labels … [--day] [--data]` writes a batch like the app. On the sample
   slip files with the repository `categories.toml`: 601 pages, 600 orders, one order

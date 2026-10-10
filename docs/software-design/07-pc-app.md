@@ -19,8 +19,12 @@ good, **frozen** (no new features):
 Rule features added later go into the app only. The fixtures the script is tested against
 (`testdata/`) are not changed for them; app-only cases go into separate fixture files.
 
-The one open choice, the packing-list file size (PDF library *D2*), is explained in
-[02-design-questions.md](02-design-questions.md) with what is **built for now**.
+The PDF library is **PDFium** for all three PDF jobs: read the text with its positions, copy
+pages unchanged, write the packing list. Its packing lists are larger than the script's —
+about 1.5 MB per batch instead of about 60 KB, because PDFium writes the whole of each font
+into the file — and that is accepted; they print the same. Only the packing-list writer could
+later be replaced by one that embeds only the letters used, if the size ever becomes a
+problem; nothing else in the program would change.
 
 ## What carries over from the script, what changes
 
@@ -249,6 +253,8 @@ amending.").
   `full`, `summary`, `pick`. Default: `whole batch`, `pick`. The default can be changed in Settings.
 - Header as in 03 with the batch added: `Packing list · 2026-10-07 · batch 1 · 2  B  Spion &
   Knalpot`.
+- **File size.** About 1.4 MB for one page, 1.6 MB for five (the script's: 62 KB), because
+  PDFium writes each whole font into the file. Accepted; the printed result is the same.
 
 ## Architecture
 
@@ -275,7 +281,7 @@ packing-cli (Rust, developer tool): same engine from the command line, for tests
 | Language | Rust (stable, edition 2024; installed: 1.98) | One language for engine and window back end |
 | Window | Tauri 2 (`tauri` 2.12) | Uses the Edge WebView2 that comes with Windows 11 |
 | Screens | Svelte 5 + TypeScript + Vite (`create-tauri-app`, template `svelte-ts`) | Plain CSS, no component library. Node 26 installed |
-| PDF: read text with x/y, copy pages unchanged, write the packing list | `pdfium-render` 0.9.4 + `pdfium.dll` (Chrome's PDF engine; prebuilt by bblanchon/pdfium-binaries, tag `chromium/7881` = the crate's `pdfium_latest`) *(D2)* | `PdfPageText` gives each character with its box (replaces pypdf's `visitor_text`; runs are rebuilt, see *Text runs from PDFium*); `copy_page_range_from_document` copies pages; `PdfFonts::load_true_type_from_file` + text objects write the packing list (whole fonts embedded, D2). Licences MIT/Apache (wrapper), BSD-3/Apache (PDFium) |
+| PDF: read text with x/y, copy pages unchanged, write the packing list | `pdfium-render` 0.9.4 + `pdfium.dll` (Chrome's PDF engine; prebuilt by bblanchon/pdfium-binaries, tag `chromium/7881` = the crate's `pdfium_latest`) | `PdfPageText` gives each character with its box (replaces pypdf's `visitor_text`; runs are rebuilt, see *Text runs from PDFium*); `copy_page_range_from_document` copies pages; `PdfFonts::load_true_type_from_file` + text objects write the packing list (whole fonts embedded, so the file is about 1.5 MB — accepted). Licences MIT/Apache (wrapper), BSD-3/Apache (PDFium) |
 | TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `categories.toml`, `couriers.toml` |
 | JSON | `serde`, `serde_json` | `state.json`, test fixtures |
 | Dates | `jiff` | `ship_by`, `save_time`, day folder |
