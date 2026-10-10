@@ -148,7 +148,7 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   per crate, the empty window opens with `npm run tauri dev`. Log Rust/Node versions, the
   Tauri CLI and the PDFium download in 01-setup. `pc/vendor/` is git-ignored; the
   front-end output `pc/app/build/` is ignored by the template's `pc/app/.gitignore`.
-- [ ] **2.3 Engine: rules.** `rules.rs`: `categories.toml` loading and validation, condition
+- [x] **2.3 Engine: rules.** `rules.rs`: `categories.toml` loading and validation, condition
   parser, evaluator (item-level "any line"), printer, error texts with line/column (also of the
   TOML file). Only the label/slip fields (07 › *Fields the conditions can use*); CSV fields give
   the "needs the orders CSV" error. Test: every case of `testdata/conditions.json` (CSV-field
