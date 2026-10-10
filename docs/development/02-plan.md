@@ -157,7 +157,7 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   two-step search, multi-page orders, `ship_by`, courier deduction with the built-in
   `couriers.toml`, slip table by position, `Qty Total` check, no-slip stop, contents key,
   display names. Tests on hand-built text runs.
-- [ ] **2.5 Engine: plan and day.** `plan.rs`, `day.rs`, `names.rs`: plan from the rules, plan
+- [x] **2.5 Engine: plan and day.** `plan.rs`, `day.rs`, `names.rs`: plan from the rules, plan
   edits (skip, move, add, rename), picks from what is left, runs, numbering through the day,
   `state.json` (07 format), duplicate guard, file fingerprints, revert, amend, file and folder
   names. Test: `testdata/expected-picks.json`.

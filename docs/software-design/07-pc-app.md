@@ -117,7 +117,7 @@ The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04.
 3. **Check**: no-slip pages stop the batch (above); `Qty Total` differences, unknown couriers
    and missing tracking IDs are warnings.
 4. **Duplicate guard**: orders already saved today are taken out and listed (Order ID,
-   tracking ID, batch, saved-PDF number, time).
+   tracking ID, batch, saved-PDF number, time; the time is the batch's `save_time`).
 5. **Plan**: the `categories.toml` entries in file order, each taking its orders from what is
    left; the leftovers form the last pick, the rest. The owner may change the plan for this
    batch only: skip a pick, move it up or down, add a one-off condition at any position,

@@ -33,3 +33,21 @@ batch/group ([01-requirements.md](01-requirements.md) A-sections,
 [05-app-architecture.md](05-app-architecture.md), [06-app-ui.md](06-app-ui.md)). Before phase 3
 the app is revised as its own checking workflow — not the pick flow, and with no PDF work (see
 **Decided**). Open until then.
+
+## D13 — Unticking the rest row
+
+**Words.** The *rest row* is the last row of the Plan screen ([08 › 3. Plan](08-pc-app-ui.md#3-plan)):
+the last `categories.toml` entry when it has no condition (e.g. *Z Lainnya*), else
+`? Uncategorised`. Unticking **Use** on a row skips that pick for this batch: its orders fall to
+the rows below. The rest row has no row below it.
+
+**Example.** Batch 3 has 256 orders: 130 Sepatu, 20 Spion & Knalpot, 106 for *Z Lainnya*. You
+untick *Z Lainnya*.
+
+| Option | What you see |
+|---|---|
+| **1. The 106 orders go to `? Uncategorised`** (**Built for now**) | A new last row `? Uncategorised` with 106 orders; the batch still saves all 256 orders |
+| 2. The rest row has no tick | *Z Lainnya* is always used; to leave orders out, change the conditions |
+| 3. The 106 orders are left out of this batch | They are not saved; they count as "not saved today" and come back in the next batch with the same labels |
+
+**What the answer changes:** the plan count in `plan.rs` and the Plan screen (task 2.10).

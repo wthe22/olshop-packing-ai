@@ -155,7 +155,7 @@ the owner checks the counts and presses **Save batch**.
 - **File name**: suggested `<n> <code> <name> ×<orders>`; the owner may change the whole name,
   number included (keeping the number in front keeps the files in printing order). The packing
   list shows the number `#` whatever the name. Two saved PDFs of the batch cannot get the same
-  name: the second shows "Same name as PDF 6" and **Save batch** waits until one is changed.
+  name (upper and lower case count as the same, as in Windows): the second shows "Same name as PDF 6" and **Save batch** waits until one is changed.
 - **▸** expands a pick to its runs — what the packing list will show:
 
   ```
