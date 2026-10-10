@@ -15,6 +15,9 @@
 - Log every one-time setup step in `docs/development/01-setup.md`.
 - Commit after each finished task and tick it in `02-plan.md`; push to `origin main`.
   The owner reviews at the end of each phase before the next starts.
+- The owner is often away and may answer a review in a new session. Whenever the next step
+  is the owner's, end with a committed handoff in the Status block of `02-plan.md`: what to
+  review, where to write answers, and what to do with each answer. A new session starts there.
 - Shell is Git Bash on Windows. Python: `.venv/Scripts/python.exe` (created from
   `C:\Python314`).
 - The owner decides open choices: put them in `docs/software-design/02-design-questions.md`
