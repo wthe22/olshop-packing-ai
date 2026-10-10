@@ -55,6 +55,19 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ```
 
+### Build the program folder (portable)
+
+The program folder (one folder with `Packing.exe` + `pdfium.dll`, no installer; 07 › *Program
+folder*) is built by `pc/tools/make-portable.sh`. It needs `pc/vendor/pdfium.dll`
+(`get-pdfium.sh`) and takes a few minutes (a release build; the first one is the slowest):
+
+```bash
+bash pc/tools/make-portable.sh          # → pc/target/portable/Packing/
+```
+
+Copy `pc/target/portable/Packing/` to the PC (e.g. `D:\Packing\`) and start `Packing.exe` from a
+shortcut. To update, close the app and replace `Packing.exe` and `pdfium.dll`; the data stays.
+
 ### Android (phase 3)
 
 1. Install Android Studio; run the setup wizard (standard install, accept SDK licences).
@@ -76,3 +89,4 @@ One line per one-time step actually done on this PC: date · what · exact comma
 | 2026-10-10 | `cd pc/app && npm install` → @tauri-apps/api 2.12.2, @tauri-apps/cli 2.12.1, svelte 5.57.2, @sveltejs/kit 2.70.3, vite 8.3.4, typescript 6.0.3, svelte-check 4.7.6 |
 | 2026-10-10 | PC app versions confirmed: `rustc`/`cargo` 1.98.0, `node` 26.7.0, `npm` 11.19.0, `tauri-cli` 2.12.1 (table above) |
 | 2026-10-10 | Task 2.8 packages: `cd pc/app && npm install @tauri-apps/plugin-dialog` → @tauri-apps/plugin-dialog 2.8.1; `pc/app/src-tauri/Cargo.toml` gained `tauri-plugin-dialog = "2"` (resolved 2.8.1) plus the workspace path deps `packing-engine`, `packing-pdf` and `jiff`; the dialog plugin is registered in `lib.rs` and `dialog:default` added to `capabilities/default.json` |
+| 2026-10-10 | Task 2.13 portable build: `bash pc/tools/make-portable.sh` → `pc/target/portable/Packing/` (`Packing.exe` 7,792,128 B, `pdfium.dll` 7,211,520 B; release build 4m11s cold, 2m58s warm). Tested from a copy outside the repository at `%TEMP%\portable-test\Packing` via a `.lnk` shortcut: the first start asked for the data folder, *Use this folder* wrote the built-in `categories.toml` (482 B), one batch on `testdata/labels-slip.pdf` → 24 pages, 23 orders, 3 saved PDFs (`1 A Sepatu ×7`, `2 B Spion & Knalpot ×8`, `3 Z Lainnya ×8`) + `packing-list.pdf` (1.4 MB) in `labels/2026-10-10/batch 1/` |

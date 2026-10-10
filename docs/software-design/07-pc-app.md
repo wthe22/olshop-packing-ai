@@ -198,7 +198,7 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
          "orders": 172, "runs": 4}
       ],
       "packing_list": {"scope": "whole", "layouts": ["pick"]},
-      "warnings": ["no courier could be deduced for: 580000000000000007"]
+      "warnings": ["Courier unknown for 1 order: JY0000000107. They are sorted normally; only a condition on courier cannot see them."]
     }
   ],
   "saved": [

@@ -46,6 +46,7 @@ docs/
   business-process/        how the work is done; facts about the platform files
   software-design/         what to build
   development/             this folder
+  user-guide/              how to use a finished tool (for the owner)
 pc/                        PC app (Rust + Tauri), created in phase 2 (07-pc-app › Code layout)
   Cargo.toml               workspace
   crates/engine/           rules, labels/slips → orders, plan, runs, day state (no PDF code)
@@ -80,6 +81,7 @@ work/                      script output with real data, git-ignored
 | Developer CLI (batch steps for tests/sample runs) | `cd pc && cargo run -p packing-cli -- prepare --labels <file>... [--rules <categories.toml>] [--data <dir>] [--day YYYY-MM-DD] [--packing-list whole\|per-pdf\|none] [--layout pick,full,summary]` — also `revert` / `amend`; `--quiet-ids` prints counts only. Writes `<data>/labels/<day>/batch <b>/` (07 › *Day folder*) |
 | PC app: run in development | `cd pc/app && npm run tauri dev` |
 | PC app: portable folder | `pc/tools/make-portable.sh` → `pc/target/portable/Packing/` |
+| Use the PC app | [../user-guide/01-pc-app.md](../user-guide/01-pc-app.md) (owner guide: setup, a day's batches, print) |
 | App build (debug APK) | `cd android && ./gradlew assembleDebug` |
 | App unit tests | `cd android && ./gradlew test` |
 | Install on the phone | `cd android && ./gradlew installDebug` (phone on USB, debugging on) |

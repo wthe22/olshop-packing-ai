@@ -195,7 +195,11 @@ fn a_page_without_order_id_cannot_continue_across_a_file() {
 fn first_page_without_order_id_stops_with_file_and_page() {
     let p0 = plain_page("JY0000001234\nJumlah : 1pcs");
     let err = read_batch(vec![(0usize, 0usize, p0)], &["noid.pdf"]).unwrap_err();
-    assert_eq!(err.to_string(), "noid.pdf: page 1 has no Order ID");
+    assert_eq!(
+        err.to_string(),
+        "Page 1 of noid.pdf has no Order ID. This does not look like a TikTok Shop label \
+         download. Check the file."
+    );
 }
 
 #[test]
@@ -258,6 +262,7 @@ fn qty_total_difference_is_warned() {
         reading.warnings,
         vec![Warning::QtyTotalDiffers {
             order_id: "580000000000000001".into(),
+            tracking_id: "JY0000001234".into(),
             qty_total: 5,
             sum: 1,
         }]
@@ -278,7 +283,13 @@ fn unknown_courier_is_warned() {
         reading.warnings,
         vec![Warning::UnknownCourier {
             order_ids: vec!["580000000000000003".into()],
+            tracking_ids: vec!["000000000202".into()],
         }]
+    );
+    assert_eq!(
+        reading.warnings[0].to_string(),
+        "Courier unknown for 1 order: 000000000202. They are sorted normally; only a \
+         condition on courier cannot see them."
     );
 }
 

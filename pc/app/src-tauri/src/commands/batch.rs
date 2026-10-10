@@ -534,7 +534,8 @@ fn load_categories(folder: &Path) -> Result<Vec<Category>, String> {
     let path = folder.join(CATEGORIES_FILE);
     let text = std::fs::read_to_string(&path)
         .map_err(|error| format!("cannot read {}: {error}", path.display()))?;
-    load_rules(&text).map_err(|error| error.to_string())
+    load_rules(&text)
+        .map_err(|error| format!("The categories have an error: {error}. Fix it in Categories."))
 }
 
 // ------------------------------------------------------------------------------- saving

@@ -14,10 +14,12 @@ J&T, SiCepat, IDX):
 | [`business-process/`](business-process/) | How the packing work is done, and the files it uses. True even without the tools | You need to know *why* or what the real data looks like |
 | [`software-design/`](software-design/) | What the tools do and how they are built | You build or change a tool |
 | [`development/`](development/) | Setup, repository layout, build plan with done-criteria, progress | You start or continue development |
+| [`user-guide/`](user-guide/) | How to use a finished tool, step by step, with pictures | You want to use the PC app, not build it |
 
 Rule: a statement that would still be true if the tools were never built belongs in
 `business-process/`. A screen, field, rule or library belongs in `software-design/`. How to set
-up, build and test belongs in `development/`.
+up, build and test belongs in `development/`. How to use a finished tool belongs in
+`user-guide/`.
 
 ## Words used everywhere
 

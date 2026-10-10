@@ -4,7 +4,7 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): tasks 2.1–2.12 done; in progress: 2.13 and 2.14.** The owner
+Status: **Phase 2 (PC app): all tasks 2.1–2.14 done; awaiting the owner review.** The owner
 decided that the PC gets a desktop app written in Rust (a command line is not good for daily
 use), so phase 1 stops with its code done (270 tests) and stays as the reference
 implementation and fallback; its two open tasks move into phase 2. Design:
@@ -12,6 +12,14 @@ implementation and fallback; its two open tasks move into phase 2. Design:
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
 until phase 3). D2 (the PDF library) is answered: PDFium does all three PDF jobs, and the bigger
 packing-list files (about 1.5 MB instead of 60 KB) are accepted.
+
+**Next step (owner).** Put the program folder on the PC and run a normal day through it, without a
+terminal — the review list is at the end of Phase 2. The guide is
+[docs/user-guide/01-pc-app.md](../user-guide/01-pc-app.md). Write the answers as a new session
+here, or open choices in
+[02-design-questions.md](../software-design/02-design-questions.md) (D1 Android, D13 unticking
+the rest row, D14 log file — each "Built for now" until answered); the phase-3 Android work waits
+for this review.
 
 ---
 
@@ -202,17 +210,28 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   condition texts. Test: every parse case of `testdata/conditions.json` goes text → boxes →
   text and gives the printer's text (66/66). Categories and Settings open over the current
   screen and keep an open draft; the boxes editor is also used in *Add a pick for this batch*.
-- [ ] **2.13 Portable build** (07 › *Program folder*): `pc/tools/make-portable.sh`
+- [x] **2.13 Portable build** (07 › *Program folder*): `pc/tools/make-portable.sh`
   (`npm run tauri build -- --no-bundle`, then `Packing.exe` + `pdfium.dll` into
   `pc/target/portable/Packing/`); copy the folder outside the repository, start it from a
   shortcut, the first start asks for the data folder, one batch on `testdata/` labels. Log in
   01-setup.
-- [ ] **2.14 User guide** (replaces 1.16). `docs/user-guide/README.md` (index) and
+  - Result: `pc/tools/make-portable.sh` builds the release program (`--no-bundle`; the binary is
+    `pc/target/release/packing-app.exe`, renamed to `Packing.exe`) and assembles
+    `pc/target/portable/Packing/` (`Packing.exe` 7,792,128 B, `pdfium.dll` 7,211,520 B). Tested
+    from a copy outside the repo (`%TEMP%\portable-test\Packing`) started from a `.lnk`: first
+    start asked for the data folder, *Use this folder* wrote the built-in `categories.toml`, one
+    batch on `testdata/labels-slip.pdf` → 24 pages, 23 orders, 3 saved PDFs (A ×7, B ×8, Z ×8) +
+    `packing-list.pdf` (1.4 MB) in `labels/<day>/batch 1/`. Sizes and steps in 01-setup.
+- [x] **2.14 User guide** (replaces 1.16). `docs/user-guide/README.md` (index) and
   `docs/user-guide/01-pc-app.md` for the owner (not a developer), under ~250 lines: setting up the
   program folder, first start and a new version; a normal batch step by step with screenshots taken on `testdata/` labels
   (made-up data); several batches a day; revert and amend; editing categories with 3–4 example
   conditions (link 04); every message with what to do. Add the folder to `docs/README.md`
   ("how to use a finished tool belongs in `user-guide/`") and to the Docs line in `AGENTS.md`.
+  - Result: `docs/user-guide/01-pc-app.md` (≈210 lines) + index `README.md` + 8 screenshots in
+    `docs/user-guide/images/` (12–55 KB each, taken on `testdata/labels-slip.pdf`, cropped to the
+    window). Linked from `docs/README.md`, `AGENTS.md` and the "Use the PC app" row of
+    `docs/development/README.md`.
 
 **Owner review:** the owner puts the program folder on the PC and runs a normal day's downloads through it,
 without a terminal: two batches, one category edited and the last batch amended, one batch

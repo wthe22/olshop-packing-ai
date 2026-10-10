@@ -104,17 +104,21 @@ pub struct Reading {
     pub warnings: Vec<Warning>,
 }
 
-/// A non-fatal problem found while reading (03 › *Errors and warnings*).
+/// A non-fatal problem found while reading; the texts are 08 › *4. Messages*.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Warning {
     /// The slip's `Qty Total` differs from the sum of the order's `Qty`.
     QtyTotalDiffers {
         order_id: String,
+        tracking_id: String,
         qty_total: i64,
         sum: i64,
     },
     /// These orders' couriers could not be deduced.
-    UnknownCourier { order_ids: Vec<String> },
+    UnknownCourier {
+        order_ids: Vec<String>,
+        tracking_ids: Vec<String>,
+    },
     /// These orders' tracking IDs were not found on the label.
     TrackingIdMissing { order_ids: Vec<String> },
 }
@@ -124,22 +128,41 @@ impl fmt::Display for Warning {
         match self {
             Warning::QtyTotalDiffers {
                 order_id,
+                tracking_id,
                 qty_total,
                 sum,
-            } => write!(
-                f,
-                "{order_id}: Qty Total {qty_total} differs from the sum of Qty {sum}"
-            ),
-            Warning::UnknownCourier { order_ids } => {
+            } => {
+                let label = if tracking_id.is_empty() {
+                    format!("Order {order_id}")
+                } else {
+                    tracking_id.clone()
+                };
                 write!(
                     f,
-                    "no courier could be deduced for: {}",
-                    order_ids.join(", ")
+                    "Slip total differs for {label}: printed {qty_total}, lines add up to {sum}. \
+                     Check that order's slip when packing."
                 )
             }
-            Warning::TrackingIdMissing { order_ids } => {
-                write!(f, "no tracking ID for: {}", order_ids.join(", "))
-            }
+            Warning::UnknownCourier { tracking_ids, .. } => write!(
+                f,
+                "Courier unknown for {} order{}: {}. They are sorted normally; only a \
+                 condition on courier cannot see them.",
+                tracking_ids.len(),
+                if tracking_ids.len() == 1 { "" } else { "s" },
+                tracking_ids.join(", ")
+            ),
+            Warning::TrackingIdMissing { order_ids } if order_ids.len() == 1 => write!(
+                f,
+                "No tracking ID read for Order {}. Its label is saved as usual; only a \
+                 condition on tracking_id cannot see it.",
+                order_ids[0]
+            ),
+            Warning::TrackingIdMissing { order_ids } => write!(
+                f,
+                "No tracking ID read for Orders {}. Their labels are saved as usual; only a \
+                 condition on tracking_id cannot see them.",
+                order_ids.join(", ")
+            ),
         }
     }
 }
@@ -201,7 +224,12 @@ impl fmt::Display for ReadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ReadError::NoOrderId { name, page } => {
-                write!(f, "{name}: page {} has no Order ID", page + 1)
+                write!(
+                    f,
+                    "Page {} of {name} has no Order ID. This does not look like a TikTok Shop \
+                     label download. Check the file.",
+                    page + 1
+                )
             }
             ReadError::NoSlip(err) => err.fmt(f),
         }
@@ -361,6 +389,7 @@ where
         {
             warnings.push(Warning::QtyTotalDiffers {
                 order_id: group.order_id.clone(),
+                tracking_id: group.tracking_id.clone(),
                 qty_total,
                 sum,
             });
@@ -382,13 +411,26 @@ where
         });
     }
 
-    let unknown: Vec<String> = orders
+    let unknown: Vec<&Order> = orders
         .iter()
-        .filter(|order| order.order.courier.is_empty())
-        .map(|order| order.order.order_id.clone())
+        .map(|order| &order.order)
+        .filter(|order| order.courier.is_empty())
         .collect();
     if !unknown.is_empty() {
-        warnings.push(Warning::UnknownCourier { order_ids: unknown });
+        warnings.push(Warning::UnknownCourier {
+            order_ids: unknown.iter().map(|o| o.order_id.clone()).collect(),
+            // 08 names tracking IDs (what is printed big on the label); the Order ID when none.
+            tracking_ids: unknown
+                .iter()
+                .map(|o| {
+                    if o.tracking_id.is_empty() {
+                        o.order_id.clone()
+                    } else {
+                        o.tracking_id.clone()
+                    }
+                })
+                .collect(),
+        });
     }
     let missing: Vec<String> = orders
         .iter()

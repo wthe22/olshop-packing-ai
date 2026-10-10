@@ -57,9 +57,12 @@ impl fmt::Display for PdfError {
             PdfError::Io { path, message } => {
                 write!(f, "cannot read {}: {message}", path.display())
             }
-            PdfError::Open { path, message } => {
-                write!(f, "{} cannot be read as a PDF: {message}", path.display())
-            }
+            PdfError::Open { path, .. } => write!(
+                f,
+                "{} cannot be read as a PDF. It may be damaged or still downloading. \
+                 Download it again.",
+                path.display()
+            ),
             PdfError::Font { path, message } => {
                 write!(f, "font file not found: {} ({message})", path.display())
             }
