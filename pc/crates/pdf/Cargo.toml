@@ -1,0 +1,9 @@
+[package]
+name = "packing-pdf"
+description = "The only crate that touches PDFium: read text with positions, copy pages, write packing lists."
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+pdfium-render.workspace = true

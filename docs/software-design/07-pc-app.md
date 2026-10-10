@@ -280,7 +280,7 @@ packing-cli (Rust, developer tool): same engine from the command line, for tests
 |---|---|---|
 | Language | Rust (stable, edition 2024; installed: 1.98) | One language for engine and window back end |
 | Window | Tauri 2 (`tauri` 2.12) | Uses the Edge WebView2 that comes with Windows 11 |
-| Screens | Svelte 5 + TypeScript + Vite (`create-tauri-app`, template `svelte-ts`) | Plain CSS, no component library. Node 26 installed |
+| Screens | Svelte 5 + SvelteKit (static adapter, one page app) + TypeScript + Vite (`create-tauri-app`, template `svelte-ts`) | Plain CSS, no component library. Node 26 installed. Front-end build output `pc/app/build/` (ignored by `pc/app/.gitignore`) |
 | PDF: read text with x/y, copy pages unchanged, write the packing list | `pdfium-render` 0.9.4 + `pdfium.dll` (Chrome's PDF engine; prebuilt by bblanchon/pdfium-binaries, tag `chromium/7881` = the crate's `pdfium_latest`) | `PdfPageText` gives each character with its box (replaces pypdf's `visitor_text`; runs are rebuilt, see *Text runs from PDFium*); `copy_page_range_from_document` copies pages; `PdfFonts::load_true_type_from_file` + text objects write the packing list (whole fonts embedded, so the file is about 1.5 MB — accepted). Licences MIT/Apache (wrapper), BSD-3/Apache (PDFium) |
 | TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `categories.toml`, `couriers.toml` |
 | JSON | `serde`, `serde_json` | `state.json`, test fixtures |
@@ -311,7 +311,7 @@ pc/
       src/packing_list.rs    the three layouts
     cli/                     package packing-cli (developer tool, not for daily use)
   app/
-    package.json, vite.config.ts, src/          Svelte screens
+    package.json, vite.config.js, src/routes/   Svelte screens
     src/texts.ts                                every screen text (English)
     src-tauri/                                  package packing-app: commands, settings
   tools/get-pdfium.sh        downloads the pinned pdfium.dll into pc/vendor/ (git-ignored)

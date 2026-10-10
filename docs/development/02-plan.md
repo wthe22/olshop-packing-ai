@@ -4,7 +4,7 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): task 2.1 done (PDFium works); next: task 2.2.** The owner
+Status: **Phase 2 (PC app): tasks 2.1–2.2 done; in progress: 2.3 and 2.4, then 2.5 and 2.6.** The owner
 decided that the PC gets a desktop app written in Rust (a command line is not good for daily
 use), so phase 1 stops with its code done (270 tests) and stays as the reference
 implementation and fallback; its two open tasks move into phase 2. Design:
@@ -142,12 +142,12 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     PC). Packing list 1.4 MB (1 page) / 1.6 MB (5 pages), whole fonts embedded; Python 62 KB
     → accepted, so D2 is answered. Run rebuilding from characters → 07 *Text runs
     from PDFium*.
-- [ ] **2.2 Scaffold.** `pc/` Cargo workspace (`crates/engine`, `crates/pdf`, `crates/cli`,
+- [x] **2.2 Scaffold.** `pc/` Cargo workspace (`crates/engine`, `crates/pdf`, `crates/cli`,
   `app/src-tauri`), Tauri app from `create-tauri-app` template `svelte-ts` in `pc/app/`,
   `pc/tools/get-pdfium.sh` (pinned version; output `pc/vendor/`, git-ignored), one passing test
   per crate, the empty window opens with `npm run tauri dev`. Log Rust/Node versions, the
-  Tauri CLI and the PDFium download in 01-setup. Add `pc/vendor/` and `pc/app/dist/` to
-  `.gitignore`.
+  Tauri CLI and the PDFium download in 01-setup. `pc/vendor/` is git-ignored; the
+  front-end output `pc/app/build/` is ignored by the template's `pc/app/.gitignore`.
 - [ ] **2.3 Engine: rules.** `rules.rs`: `categories.toml` loading and validation, condition
   parser, evaluator (item-level "any line"), printer, error texts with line/column (also of the
   TOML file). Only the label/slip fields (07 › *Fields the conditions can use*); CSV fields give

@@ -2,7 +2,7 @@
 # Download a pinned prebuilt Pdfium (bblanchon/pdfium-binaries) for Windows x64 and
 # extract pdfium.dll into pc/vendor/ (git-ignored).
 #
-# The tag is pinned to match the pdfium-render version in pc/spike/Cargo.toml:
+# The tag is pinned to match the pdfium-render version in pc/crates/pdf/Cargo.toml:
 #   pdfium-render 0.9.4  -- feature `pdfium_latest` == `pdfium_7881`
 #   -> bblanchon release tag `chromium/7881`
 #

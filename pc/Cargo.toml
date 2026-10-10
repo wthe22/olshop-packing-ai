@@ -1,0 +1,28 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "app/src-tauri"]
+# pc/spike is a throwaway spike with its own [workspace]; keep it out.
+exclude = ["spike"]
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
+publish = false
+
+[workspace.dependencies]
+jiff = "0.2"
+pdfium-render = "=0.9.4"
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "1"
+packing-engine = { path = "crates/engine" }
+packing-pdf = { path = "crates/pdf" }
+
+# Profiles must live at the workspace root (a member's [profile] is ignored).
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

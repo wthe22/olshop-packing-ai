@@ -1,0 +1,20 @@
+[package]
+name = "packing-app"
+description = "The packing app desktop window."
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[lib]
+# The `_lib` suffix keeps the lib name unique so it does not clash with the bin name
+# (only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519).
+name = "packing_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
