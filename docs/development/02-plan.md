@@ -4,7 +4,7 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): tasks 2.1–2.2 done; in progress: 2.3 and 2.4, then 2.5 and 2.6.** The owner
+Status: **Phase 2 (PC app): tasks 2.1–2.4 done; in progress: 2.5 and 2.6.** The owner
 decided that the PC gets a desktop app written in Rust (a command line is not good for daily
 use), so phase 1 stops with its code done (270 tests) and stays as the reference
 implementation and fallback; its two open tasks move into phase 2. Design:
@@ -153,7 +153,7 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   TOML file). Only the label/slip fields (07 › *Fields the conditions can use*); CSV fields give
   the "needs the orders CSV" error. Test: every case of `testdata/conditions.json` (CSV-field
   cases expect that error).
-- [ ] **2.4 Engine: labels and slips.** `text.rs`, `label.rs`, `slip.rs`, `orders.rs`: Order ID
+- [x] **2.4 Engine: labels and slips.** `text.rs`, `label.rs`, `slip.rs`, `orders.rs`: Order ID
   two-step search, multi-page orders, `ship_by`, courier deduction with the built-in
   `couriers.toml`, slip table by position, `Qty Total` check, no-slip stop, contents key,
   display names. Tests on hand-built text runs.
