@@ -2,7 +2,9 @@
 
 #![allow(dead_code)]
 
+use std::ops::Deref;
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, MutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use pdfium_render::prelude::Pdfium;
@@ -13,9 +15,32 @@ pub fn vendor_dir() -> Option<PathBuf> {
     vendor.join("pdfium.dll").exists().then_some(vendor)
 }
 
+/// PDFium is not thread-safe and the test harness runs tests on several threads.
+static PDFIUM_LOCK: Mutex<()> = Mutex::new(());
+
+/// PDFium for one test; holds the lock so no other test uses PDFium meanwhile.
+pub struct Bound {
+    pdfium: Pdfium,
+    _lock: MutexGuard<'static, ()>,
+}
+
+impl Deref for Bound {
+    type Target = Pdfium;
+    fn deref(&self) -> &Pdfium {
+        &self.pdfium
+    }
+}
+
 /// Bind PDFium, or `None` when the DLL is missing (the tests then skip).
-pub fn bind() -> Option<Pdfium> {
-    vendor_dir().map(|dir| packing_pdf::bind(&dir).expect("bind pdfium"))
+pub fn bind() -> Option<Bound> {
+    let dir = vendor_dir()?;
+    let lock = PDFIUM_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    Some(Bound {
+        pdfium: packing_pdf::bind(&dir).expect("bind pdfium"),
+        _lock: lock,
+    })
 }
 
 /// A file in the shared `testdata/` folder.

@@ -18,9 +18,13 @@ pub mod write;
 
 /// Bind the pinned `pdfium.dll` found in `dll_dir`.
 pub fn bind(dll_dir: &Path) -> Result<Pdfium, PdfError> {
-    let bindings = Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(dll_dir))
-        .map_err(|e| PdfError::Bind(e.to_string()))?;
-    Ok(Pdfium::new(bindings))
+    match Pdfium::bind_to_library(Pdfium::pdfium_platform_library_name_at_path(dll_dir)) {
+        Ok(bindings) => Ok(Pdfium::new(bindings)),
+        // pdfium-render keeps the bindings process-wide and refuses a second bind; `default()`
+        // then reuses them (a new worker after the old one stopped, or several tests).
+        Err(PdfiumError::PdfiumLibraryBindingsAlreadyInitialized) => Ok(Pdfium::default()),
+        Err(e) => Err(PdfError::Bind(e.to_string())),
+    }
 }
 
 /// A PDF job failed. Every variant carries something worth showing to the user.

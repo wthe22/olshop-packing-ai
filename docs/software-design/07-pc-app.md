@@ -197,7 +197,8 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
         {"number": 1, "code": "A", "name": "Sepatu", "file": "1 A Sepatu ×172.pdf",
          "orders": 172, "runs": 4}
       ],
-      "packing_list": {"scope": "whole", "layouts": ["pick"]}
+      "packing_list": {"scope": "whole", "layouts": ["pick"]},
+      "warnings": ["no courier could be deduced for: 580000000000000007"]
     }
   ],
   "saved": [
@@ -212,6 +213,7 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
 | `batches[].files` | Name, size, SHA-256, page count of each label file read, in reading order | Recognise a file used twice ("used in batch 1"); amend reads `download/` in this order |
 | `batches[].pdfs` | Each saved PDF: number, pick code/name, file name, counts | Day screen without re-reading the PDFs; revert knows which files are the batch's |
 | `batches[].packing_list` | Scope and layouts chosen | Amend starts with the same choice |
+| `batches[].warnings` | The read warnings of the batch, as shown on the Plan screen | Day screen *Warnings ▸* without re-reading the files |
 | `saved[]` | Each saved order: IDs, batch, saved PDF, run | Duplicate guard |
 
 The file is written whole each time (write to `state.json.tmp`, then replace), so a crash

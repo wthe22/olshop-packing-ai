@@ -51,3 +51,17 @@ untick *Z Lainnya*.
 | 3. The 106 orders are left out of this batch | They are not saved; they count as "not saved today" and come back in the next batch with the same labels |
 
 **What the answer changes:** the plan count in `plan.rs` and the Plan screen (task 2.10).
+
+## D14 — A log file
+
+**Words.** [08 › 6. Settings](08-pc-app-ui.md#6-settings) has an *About* row with
+**Open log file**. A log file would be a text file in the data folder where the app writes
+what it did and any unexpected error (e.g. `log.txt`: "07:40:12 batch 1 saved, 3 files, 600
+orders"). Nothing else in the design writes one; every batch already has its `summary.txt`.
+
+| Option | What you see |
+|---|---|
+| **1. No log file** (**Built for now**) | *About* shows the version and the PDFium version only; errors are shown on screen |
+| 2. `log.txt` in the data folder | One line per batch saved, reverted or amended, plus unexpected errors; **Open log file** opens it |
+
+**What the answer changes:** the *About* row of Settings and one small writer in the app.

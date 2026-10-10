@@ -1,0 +1,85 @@
+/* Base styles of the PC app (08 › *Window frame*): one window, plain CSS, no component library. */
+
+:root {
+  font-family: "Segoe UI", Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #1b1b1b;
+  background-color: #f6f6f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+button {
+  font: inherit;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid #b8b8b8;
+  border-radius: 4px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #eef4fb;
+  border-color: #7aa7d6;
+}
+
+button:disabled {
+  color: #9a9a9a;
+  cursor: default;
+}
+
+button.primary {
+  background: #1f6feb;
+  border-color: #1f6feb;
+  color: #ffffff;
+}
+
+button.primary:hover:not(:disabled) {
+  background: #1a5fce;
+}
+
+.error {
+  margin: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d98a8a;
+  border-radius: 4px;
+  background: #fdecec;
+  color: #8a1f1f;
+  white-space: pre-wrap;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f0f0f0;
+    background-color: #242424;
+  }
+
+  button {
+    background: #333333;
+    border-color: #555555;
+    color: #f0f0f0;
+  }
+
+  button:hover:not(:disabled) {
+    background: #3d4b5c;
+    border-color: #6f8fb5;
+  }
+
+  .error {
+    background: #3a2020;
+    border-color: #8a4a4a;
+    color: #f0b8b8;
+  }
+}

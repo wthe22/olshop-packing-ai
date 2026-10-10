@@ -4,7 +4,7 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): tasks 2.1–2.7 done; in progress: 2.8.** The owner
+Status: **Phase 2 (PC app): tasks 2.1–2.8 done; in progress: 2.9–2.10.** The owner
 decided that the PC gets a desktop app written in Rust (a command line is not good for daily
 use), so phase 1 stops with its code done (270 tests) and stays as the reference
 implementation and fallback; its two open tasks move into phase 2. Design:
@@ -186,9 +186,10 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     pages are plain shipping labels". Saved PDFs 4.7 MB + 0.95 MB (Python 4.75 MB + 1.0 MB)
     after `write.rs` was changed to one import per saved PDF (page-by-page import gave 51 MB).
     Packing list 1 page (Python 1). By eye: left for the owner review.
-- [ ] **2.8 App: frame, Day screen, Settings, start** (08 › 1, 6, *Start*): finding the data
+- [x] **2.8 App: frame, Day screen, Settings, start** (08 › 1, 6, *Start*): finding the data
   folder (program folder, else ask each start), day switch, batches from `state.json`, Open /
-  Open folder, all screen texts in `src/texts.ts`.
+  Open folder, all screen texts in `src/texts.ts`. Batch warnings on the Day screen and the
+  Settings *About* row are done in 2.10.
 - [ ] **2.9 App: New batch** (08 › 2): Add files…, drag-and-drop, page counts, "used in batch
   n", reading with progress and Cancel, stop messages.
 - [ ] **2.10 App: Plan and Save** (08 › 3, 4): picks with counts and runs, skip/move/add,
