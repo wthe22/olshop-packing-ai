@@ -10,6 +10,7 @@
 #      pc/target/portable/Packing/
 #
 # Run from anywhere:  bash pc/tools/make-portable.sh
+# From Explorer or cmd, without a Git Bash window:  pc\tools\make-portable.bat
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

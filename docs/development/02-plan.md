@@ -221,7 +221,10 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   01-setup.
   - Result: `pc/tools/make-portable.sh` builds the release program (`--no-bundle`; the binary is
     `pc/target/release/packing-app.exe`, renamed to `Packing.exe`) and assembles
-    `pc/target/portable/Packing/` (`Packing.exe` 7,792,128 B, `pdfium.dll` 7,211,520 B). Tested
+    `pc/target/portable/Packing/` (`Packing.exe` 7,792,128 B, `pdfium.dll` 7,211,520 B);
+    `pc/tools/make-portable.bat` does the same from Explorer or `cmd` — it finds Git for Windows'
+    `bash.exe` itself and runs the script, waiting for a key so a double-click's output stays
+    readable (`--no-pause` for scripts). Tested
     from a copy outside the repo (`%TEMP%\portable-test\Packing`) started from a `.lnk`: first
     start asked for the data folder, *Use this folder* wrote the built-in `categories.toml`, one
     batch on `testdata/labels-slip.pdf` → 24 pages, 23 orders, 3 saved PDFs (A ×7, B ×8, Z ×8) +

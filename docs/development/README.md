@@ -55,6 +55,7 @@ pc/                        PC app (Rust + Tauri), created in phase 2 (07-pc-app 
   app/                     Tauri app: Svelte screens (src/), Rust commands (src-tauri/)
   tools/get-pdfium.sh      downloads the pinned pdfium.dll into pc/vendor/ (git-ignored)
   tools/make-portable.sh   builds the portable program folder (Packing.exe + pdfium.dll)
+  tools/make-portable.bat  the same, for Explorer/cmd: runs the .sh through Git's bash
 script/                    PC script (Python): reference implementation and fallback, frozen
   pyproject.toml
   packing/                 the package (python -m packing …)
@@ -80,7 +81,7 @@ work/                      script output with real data, git-ignored
 | PC app: Rust tests | `cd pc && cargo test` |
 | Developer CLI (batch steps for tests/sample runs) | `cd pc && cargo run -p packing-cli -- prepare --labels <file>... [--rules <categories.toml>] [--data <dir>] [--day YYYY-MM-DD] [--packing-list whole\|per-pdf\|none] [--layout pick,full,summary]` — also `revert` / `amend`; `--quiet-ids` prints counts only. Writes `<data>/labels/<day>/batch <b>/` (07 › *Day folder*) |
 | PC app: run in development | `cd pc/app && npm run tauri dev` |
-| PC app: portable folder | `pc/tools/make-portable.sh` → `pc/target/portable/Packing/` |
+| PC app: portable folder | `pc/tools/make-portable.sh` → `pc/target/portable/Packing/`; on Windows, `pc\tools\make-portable.bat` (double-click; no Git Bash window needed) |
 | Use the PC app | [../user-guide/01-pc-app.md](../user-guide/01-pc-app.md) (owner guide: setup, a day's batches, print) |
 | App build (debug APK) | `cd android && ./gradlew assembleDebug` |
 | App unit tests | `cd android && ./gradlew test` |

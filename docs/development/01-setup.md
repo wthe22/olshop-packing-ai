@@ -65,6 +65,11 @@ folder*) is built by `pc/tools/make-portable.sh`. It needs `pc/vendor/pdfium.dll
 bash pc/tools/make-portable.sh          # → pc/target/portable/Packing/
 ```
 
+`pc/tools/make-portable.bat` is the same thing for Windows Explorer and `cmd`: double-click it (or
+`pc\tools\make-portable.bat`) and it finds Git for Windows' `bash.exe` itself, runs the script and
+waits for a key so the output stays readable. `make-portable.bat --no-pause` builds and returns (for
+scripts, e.g. from another `.bat`).
+
 Copy `pc/target/portable/Packing/` to the PC (e.g. `D:\Packing\`) and start `Packing.exe` from a
 shortcut. To update, close the app and replace `Packing.exe` and `pdfium.dll`; the data stays.
 
