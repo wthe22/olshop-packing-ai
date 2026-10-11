@@ -6,20 +6,24 @@ noted as passed.
 
 Status: **Phase 2 (PC app): tasks 2.1–2.15 and 2.17 done — the packing-list display defects and the
 *Open folder* defect of the owner's review round 1 (2026-10-11, his own day's data) are fixed;
-2.16 (the courier) waits for D15/D16.**
+2.16 (the courier) waits for D15/D16, and 2.18 (the check of the saved PDFs, designed at the
+owner's request on 2026-10-11) waits behind it.**
 The owner decided that the PC gets a desktop app written in Rust (a
 command line is not good for daily use), so phase 1 stops with its code done (270 tests) and
 stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
-until phase 3), and **D15** (the SiCepat labels) and **D16** (where the courier data lives) —
-the only answers needed before 2.16. D2 (the PDF library) is answered: PDFium does all three PDF
+until phase 3), **D15** (the SiCepat labels) and **D16** (where the courier data lives) —
+the only answers needed before 2.16 — and D17 (whether 2.18's check runs on every batch). D2 (the
+PDF library) is answered: PDFium does all three PDF
 jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summary`) are accepted.
 
-**Next step.** The owner's D15/D16 answers, then 2.16 (a change to the courier data at most).
-Then the round-2 review at the end of Phase 2 — open the same day's packing list (the header must
-stand clear, `×` must print), press *Open folder* (the batch folder must open, not Documents) and
-check the Day screen for a *Courier unknown* warning. The
+**Next step.** The owner's D15/D16 answers, then 2.16 (a change to the courier data at most), then
+2.18 (the saved-PDF check; its four choices are answered and D17 has a "built for now" default, so
+it waits on 2.16 only). Then the round-2 review at the end of Phase 2 — open the same day's packing
+list (the header must stand clear, `×` must print), press *Open folder* (the batch folder must open,
+not Documents), check the Day screen for a *Courier unknown* warning, and save one batch to watch
+the check run (the progress line; a clean day must report nothing). The
 answers belong in
 [02-design-questions.md](../software-design/02-design-questions.md) — each question has a
 "Built for now" default, nothing waits on them — or as a new session here; the phase-3 Android
@@ -285,6 +289,44 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     opened *batch 1 - File Explorer* on the batch folder. New test
     `explorer_gets_the_path_as_its_only_argument` pins the argument list (one argument, no
     `/select,`); the 23 tests of the app crate pass.
+- [ ] **2.18 Check the saved PDFs before the batch is saved** (the owner's request, 2026-10-11;
+  designed here, not built yet). Wrong code could copy a label page twice, drop one, put an order
+  in two saved PDFs or in none, or write the pages in the wrong order — and today that is only
+  found at the printer. After the saved PDFs and the packing lists are written and before
+  `batch <b>.partial/` is renamed, the app reads its own output back (the same page reader as
+  *What happens in one batch* step 2, so no new parsing) and compares it with the plan: every
+  order exactly once, in one saved PDF, page for page and in order, and the packing list's
+  printed counts equal to the plan's.
+  - **Two severities, never one list.** *Errors*: a page missing, a page twice in one PDF, an
+    order in two saved PDFs, an order in no PDF, a page holding another order's label, a written
+    page count that differs from the plan, packing-list counts that differ. *Warnings*, lower
+    severity: the pages are all there exactly once but the **order** inside a saved PDF differs
+    from the run order. The dialog, the Day screen and `state.json` keep the two lists apart.
+  - **Save anyway, and it stays visible.** The dialog names the findings in plain words and offers
+    *Save anyway* / *Cancel — nothing is saved*. Cancel deletes the temporary folder, leaves
+    `state.json` untouched and keeps the draft (the Plan screen with the read labels) — what the
+    all-or-nothing save already gives on an error. Saving anyway writes both lists into the
+    batch's `state.json` entry (`errors`, `warnings`, defaulted so an older day folder still
+    loads), prints them in `summary.txt`, and the Day screen shows them on the batch card
+    (*Saved with 2 errors ▸*) until the batch is reverted or amended — never a message that
+    scrolls away.
+  - **Shown while it runs.** The check costs 1–2 s on the owner's big day (600 pages, 5 saved
+    PDFs), so *Save batch* becomes a blocking-thread command emitting a progress event
+    (`save-progress {phase, page, pages}`, phases *Writing* / *Checking*) like the read's
+    `read-progress`, with the phase and a bar on the Plan screen — no window that looks frozen.
+    This also removes the freeze during the writing itself, which is the same synchronous command
+    today.
+  - Code: `engine/src/verify.rs` (the arithmetic, no PDF), `pdf/src/verify.rs` (page counts, the
+    read-back comparison, the packing-list counts), called from `pdf/src/batch.rs` between the
+    writes and the rename; `PlanScreen.svelte` + `texts.ts` for the dialog and the two lists.
+    Design into 07 › *What happens in one batch* (a *Check before saving* step) and 08 › *3. Plan*
+    / *4. Messages* in the same commit.
+  - Tests: a doubled page, a dropped page, an order in two picks (and in none) and a swapped page
+    order must each be reported, each in its own list (the swapped one as a warning only); the
+    tests fail when the check is switched off, as the 2.15 display tests do. Behind it: the
+    smaller seams too — a page count changed in a written file, a packing-list count changed.
+  - Open: D17 (every batch or only a large one).
+  - Result: (not started)
 
 **Owner review (round 1, 2026-10-11, on the owner's own day's data).** The owner ran a real day
 through the portable folder (2 batches, 4 label files, 98 orders, no terminal) and reported two
@@ -307,10 +349,11 @@ from a probe in the owner's own session (the fixed form opened *batch 1 - File E
 batch folder, the `/select,` form opened no such window and fell back to Documents/Home). The owner's data folder
 was only read — nothing in it was written to or changed; every probe wrote outside it.
 
-**Owner review (round 2).** After 2.15, 2.16 and 2.17: open the same day's packing list (the header
+**Owner review (round 2).** After 2.15–2.18: open the same day's packing list (the header
 must stand clear of the body; a `summary` or `full` list must print `×`, not `ÿ`), press *Open
 folder* on a batch card (the batch folder must open, not Documents) and on the Settings screen (the
-data folder), and check the Day screen shows no *Courier unknown* warning; print one packing list.
+data folder), check the Day screen shows no *Courier unknown* warning, save one batch (the check
+must show its progress and, on a clean day, report nothing — 2.18), and print one packing list.
 
 ---
 

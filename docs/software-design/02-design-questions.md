@@ -103,3 +103,22 @@ data folder on first start and you edit it in the app.
 
 **What the answer changes:** a data-folder path and loader in `label.rs`, the *Start*/Settings
 handling of the data folder, and one line in 07 › *Inputs*.
+
+## D17 — The check of the saved PDFs: every batch or only a large one
+
+**Words.** Task 2.18 makes the app read its own output back before a batch is finished: every order
+exactly once, in one saved PDF, page for page, plus the packing list's counts. Errors (a page
+missing, a page twice, an order in two PDFs or in none, a page holding another order's label) and
+warnings (the pages are all there, only out of order) are listed separately, *Save anyway* is
+allowed, and what was found stays on the day's batch card. The check costs about 1–2 s on the
+owner's biggest day (600 pages, 5 saved PDFs).
+
+**Example.** A normal morning batch is 2 files, about 100 pages, 100 orders — well under a second.
+
+| Option | What you see |
+|---|---|
+| **1. Every batch** (**Built for now**) | Every *Save batch* runs the check; on the 600-page day the save takes 1–2 s longer, on a normal batch nothing noticeable |
+| 2. Only a batch above a size | Batches under, say, 200 pages save without the check and the day says *not checked*: small batches stay quick, but a bug that only hits small batches is never seen |
+
+**What the answer changes:** one condition around the check in `pdf/src/batch.rs` and one line on
+the Day card. Both options keep the whole check for the big batch.
