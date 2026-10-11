@@ -91,13 +91,13 @@ What is different in the app (these are owner decisions):
 ```toml
 [[courier]]
 name = "J&T Express"
-logo = ["c8cd322984b2e1f7"]
+logo = ["c8cd322984cecd3b"]      # 975x377 px, the same asset in all 9 sample files
 tracking = "JY\\d{10}"
 text = ["jet.co.id"]
 
 [[courier]]
 name = "SiCepat"
-logo = ["e5ba2092ae6c31d4"]
+logo = ["e5ba2092ae9e7728"]      # 184x60 px
 tracking = "00\\d{10}"
 
 [[courier]]
@@ -108,7 +108,7 @@ text = ["FastTrack"]
 
 [[courier]]
 name = "IDX"
-logo = ["a8853551463f8c21"]
+logo = ["9ad342443a1fcca8"]      # 1200x859 px
 tracking = "TKP\\d{10}"
 ```
 
