@@ -13,8 +13,8 @@ command line is not good for daily use), so phase 1 stops with its code done (27
 stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
-until phase 3), D17 (whether 2.18's check runs on every batch) and D18 (the J&T Cargo logo, the
-one the logo clue cannot read). **D15 is answered**
+until phase 3), D17 (whether 2.18's check runs on every batch), D18 (the J&T Cargo logo, the
+one the logo clue cannot read) and D19 (where the logos the owner teaches the app live). **D15 is answered**
 (2026-10-11, the owner: two clues that must agree — the tracking-ID form and the service tag; the
 rule is written into 03 › *Courier deduction*, so D15 is removed) and **D16 is answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
 edit the owner can make, not a new program version — task 2.19. D2 (the
@@ -282,11 +282,12 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   deduction* holds the rule; the logo hashes, the ask-the-owner flow and J&T Cargo's unreadable
   logo are D18. Code: `couriers.toml` gains a logo-hash list per courier and a J&T Cargo entry,
   and `deduce_courier` hashes the page's logo image (`FPDFImageObj_GetImageDataRaw`) and requires
-  the two clues to agree; a hash that is not in the table is asked of the owner once and written
-  into the data file. Tests: every measured sample page keeps the courier it has now, a logo with
-  a foreign form warns, an unseen logo asks, the two slip-continuation pages stay unknown. Then
-  re-check the owner's day (the warning must be gone for the SiCepat orders) and rebuild the
-  portable folder.
+  the two clues to agree; a hash that is not in the table is asked of the owner once
+  (`courier-logos.toml`, [08 › the logo prompt](../software-design/08-pc-app-ui.md#the-logo-prompt),
+  with *I don't know* remembered per hash and *Skip all* for the rest of the day in `state.json`).
+  Tests: every measured sample page keeps the courier it has now, a logo with a foreign form warns,
+  an unseen logo asks, the two slip-continuation pages stay unknown. Then re-check the owner's day
+  (the warning must be gone for the SiCepat orders) and rebuild the portable folder.
   - Measured for D15 (2026-10-11, counts and shapes only; method: the Python reader page by page
     and the exports read by provider): the 601 sample pages → J&T Express 517, no courier 84
     (82 with a `00` + 10-digit tracking ID, 1 slip continuation, 1 `TikTok Shop` label with no

@@ -90,6 +90,23 @@ both Cargo labels in the samples.
 **What the answer changes:** one line of the courier data (J&T Cargo's text clue), or the
 deduction's comparison.
 
+## D19 — Where the logos the owner teaches the app live
+
+**Words.** A logo the app has not seen is shown to the owner, who names its courier
+([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt)); the answer has to be stored somewhere.
+Two homes are possible: inside `couriers.toml` next to the courier, or in a second file the app
+writes.
+
+| Option | What you see |
+|---|---|
+| **1. A second file, `courier-logos.toml`** (**Built for now**) | `couriers.toml` stays exactly as shipped (the owner may still edit it by hand); the answers and the *I don't know* list live beside it, so an app update that replaces the shipped file cannot lose them |
+| 2. All in `couriers.toml` | One file to look at, but the app must rewrite a file the owner also edits (comments and order can be lost), and a new shipped default has to be merged with the answers by hand |
+
+Recommended: **1** — the app writes one file, the owner owns the other, and neither can spoil the
+other. Fields of both files: [07 › Inputs](07-pc-app.md#the-courier-files).
+
+**What the answer changes:** which file the app opens for writing when the owner answers.
+
 ## D17 — The check of the saved PDFs: every batch or only a large one
 
 **Words.** Task 2.18 makes the app read its own output back before a batch is finished: every order

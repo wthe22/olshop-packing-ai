@@ -115,6 +115,33 @@ Cancel stops reading and returns to the file list; nothing is written. When read
 Plan screen opens — or, if the batch cannot be used, a stop message (see *Messages*) with a
 **Back** button.
 
+### The logo prompt
+
+A label whose logo the app has never seen is asked about once per unseen logo, before the Plan
+screen. The picture is the logo as printed, so it can be recognised, and the count says how many
+pages carry it:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  Which courier is this logo?                                                           │
+│                                                                                        │
+│    [ SICEPAT EKSPRES ]                                 4 pages · 4 orders               │
+│                                                                                        │
+│    [J&T Express]  [SiCepat]  [J&T Cargo]  [IDX]        [I don't know]  [Skip all]      │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- The buttons are the names in `couriers.toml`.
+- **A courier name** writes the logo's hash into `courier-logos.toml` and names those orders at
+  once; the next export of the same logo is named without asking.
+- **I don't know** remembers that hash too (so it is not asked again): those orders save with an
+  empty courier and appear in the day's warning.
+- **Skip all** stops the prompts for the rest of the day (a flag in `state.json`): every further
+  unseen logo is treated as *I don't know*. It is asked again the next day, so a courier whose
+  logo changes on every export is answered once a day at most.
+- Closing the prompt answers nothing for the rest of this batch. It never blocks the work: the
+  batch saves either way.
+
 ## 3. Plan
 
 The heart of the app: which orders go into which saved PDF. It opens with the rules file

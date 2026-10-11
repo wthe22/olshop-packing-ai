@@ -136,9 +136,10 @@ in the same way.
 2. **The tracking-ID form** ([business-process 02](../business-process/02-data-sources.md#columns-packing-needs)):
    `JY` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo;
    `TKP` + 10 digits → IDX.
-3. **Named only when the two agree**: a logo whose courier and form disagree, a logo with no form,
-   a form with no logo, or neither → no name. Unknown → `courier` empty, and a warning lists those
-   orders.
+3. **Named only when the two agree**: the tracking form gives the *candidate* couriers, and the
+   courier is named when the logo's courier is among them. A logo whose courier and form disagree,
+   a logo with no form, a form with no logo, or neither → no name. Unknown → `courier` empty, and
+   a warning lists those orders.
 4. **A printed text clue** (`www.jet.co.id`, `FastTrack`) stands in for the logo only where the
    logo cannot be read — J&T Cargo's logo is a masked image with no stable hash (D18). SiCepat and
    IDX print no courier name at all.
@@ -146,8 +147,9 @@ in the same way.
    measured tag lists stay in [business-process 02](../business-process/02-data-sources.md) for
    when a case needs them.
 
-`couriers.toml` holds, per courier: the name, its text clues, its tracking form and its logo
-hashes.
+The courier list is `couriers.toml` (in the data folder in the app) and the answers to the logo
+prompt are `courier-logos.toml`; both files' fields and examples are in
+[07 › Inputs](07-pc-app.md#inputs).
 
 ## Picks
 

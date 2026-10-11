@@ -115,7 +115,10 @@ creator handle, …) are not needed for packing.
   own content, never on the courier: the one order that spilled in the sample had a **single item
   line** and a buyer message, while a J&T Cargo order of 3 lines spilled and one of 1 line did
   not. Many items of the same product (e.g. 12 of one variation) are one line and one page
-  *(owner)*.
+  *(owner)*. A continuation page carries the **Order ID** (every one of the 1,269 sample pages
+  does, so a page is always keyed by its own Order ID) and the `In transit by` deadline, but no
+  tracking ID, no courier logo and no service tag — so it can never name a courier, and the app
+  needs no "carry the previous page's order forward" case for it.
 - In the sample every slip has one item line and `Qty Total` always equals the sum of `Qty`.
 - The label part also prints `In transit by: dd/mm/yyyy hh:mm` (ship-by deadline); the plain
   label export (without slip) does not (0 of 562 sample pages).

@@ -73,8 +73,56 @@ What is different in the app (these are owner decisions):
 |---|---|
 | Label PDFs | The *Shipping label + Packing slip* files of one batch ([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)). One or more files; the seller centre splits a download into files of at most 200 pages |
 | `categories.toml` | In the data folder. Each entry is one pick ([04-rules-file.md](04-rules-file.md)). Edited inside the app ([08 › Categories](08-pc-app-ui.md#5-categories)) or by hand |
-| `couriers.toml` | The courier-deduction data: name, text clues, tracking forms (D16, owner decision 2026-10-11 — task 2.19). **In the data folder**, like `categories.toml`: written from the built-in file (same content as `script/packing/couriers.toml`) on first start, then the owner's; a broken file stops the batch with its line |
+| `couriers.toml` | The courier-deduction data (D16, owner decision 2026-10-11 — task 2.19). **In the data folder**, like `categories.toml`: written from the built-in file (same content as `script/packing/couriers.toml`) on first start, then the owner's; a broken file stops the batch with its line. Fields and an example below |
+| `courier-logos.toml` | What the owner answered to the logo prompt ([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt)): a logo hash → courier, and the hashes answered *I don't know*. **Written by the app**, not shipped; created in the data folder on the first answer |
 | The day's `state.json` | What earlier batches of the same day saved (below) |
+
+### The courier files
+
+`couriers.toml` — the courier list, one `[[courier]]` entry each:
+
+| Field | Meaning |
+|---|---|
+| `name` | The name written into the order and used by a `courier` condition |
+| `logo` | The courier's logo images: the first 16 hex characters of the SHA-256 of each image's **encoded bytes**. A list, because a courier can have more than one (an asset the platform re-made) |
+| `tracking` | The tracking-ID form: a token (or a match in the whitespace-collapsed text) must match it fully. The form gives the *candidate* couriers; the courier is named when the logo's (or text clue's) courier is among them |
+| `text` | A brand line or web address printed on the label (`www.jet.co.id`, `FastTrack`), used only where no logo is known |
+
+```toml
+[[courier]]
+name = "J&T Express"
+logo = ["c8cd322984b2e1f7"]
+tracking = "JY\\d{10}"
+text = ["jet.co.id"]
+
+[[courier]]
+name = "SiCepat"
+logo = ["e5ba2092ae6c31d4"]
+tracking = "00\\d{10}"
+
+[[courier]]
+name = "J&T Cargo"
+logo = []                # its logo is masked and re-rastered, so no hash is stable (D18)
+tracking = "57\\d{10}"
+text = ["FastTrack"]
+
+[[courier]]
+name = "IDX"
+logo = ["a8853551463f8c21"]
+tracking = "TKP\\d{10}"
+```
+
+`courier-logos.toml` — the answers, in the data folder:
+
+```toml
+# A logo the owner named: the image's hash -> a courier from couriers.toml
+[logo]
+"9f1c0d7a4b2e6f83" = "SiCepat"
+
+# A logo the owner answered "I don't know" to: never asked again
+[unknown]
+hashes = ["1a2b3c4d5e6f7081"]
+```
 
 ### Every page must carry a packing slip
 
@@ -141,6 +189,7 @@ The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04.
 <data folder>/
   categories.toml
   couriers.toml
+  courier-logos.toml
   settings.json
   labels/
     2026-10-07/
