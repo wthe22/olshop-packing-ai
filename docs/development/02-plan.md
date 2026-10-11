@@ -4,19 +4,21 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): tasks 2.1–2.14 done, the owner's review round 1 (2026-10-11, his own
-day's data) is back: two defects reported and a third found while checking them — 2.15 and 2.16
-at the end of Phase 2.** The owner decided that the PC gets a desktop app written in Rust (a
+Status: **Phase 2 (PC app): tasks 2.1–2.15 done — the packing-list display defects of the owner's
+review round 1 (2026-10-11, his own day's data) are fixed; 2.16 (the courier) waits for D15/D16.**
+The owner decided that the PC gets a desktop app written in Rust (a
 command line is not good for daily use), so phase 1 stops with its code done (270 tests) and
 stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
-until phase 3), and new **D15** (the SiCepat labels) and **D16** (where the courier data lives) —
+until phase 3), and **D15** (the SiCepat labels) and **D16** (where the courier data lives) —
 the only answers needed before 2.16. D2 (the PDF library) is answered: PDFium does all three PDF
-jobs, and the bigger packing-list files (about 1.5 MB instead of 60 KB) are accepted.
+jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summary`) are accepted.
 
-**Next step.** 2.15 (the packing-list display) needs no answer and starts now. Then the owner's
-D15/D16 answers, then 2.16. The answers belong in
+**Next step.** The owner's D15/D16 answers, then 2.16 (a change to the courier data at most).
+Then the round-2 review at the end of Phase 2 — open the same day's packing list (the header must
+stand clear, `×` must print) and check the Day screen for a *Courier unknown* warning. The
+answers belong in
 [02-design-questions.md](../software-design/02-design-questions.md) — each question has a
 "Built for now" default, nothing waits on them — or as a new session here; the phase-3 Android
 work waits for this phase's review to pass.
@@ -233,22 +235,28 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     window). Linked from `docs/README.md`, `AGENTS.md` and the "Use the PC app" row of
     `docs/development/README.md`.
 
-- [ ] **2.15 Packing list: the two display defects of review round 1.** (a) *The body starts at
-  the top margin, so on every page the first row or bar is printed over the header.* `Builder::new`
-  starts at `MARGIN` (`crates/pdf/src/packing_list.rs:381`) and `need()` restarts at `MARGIN`
-  (`:449`), while the header ops draw the title at `MARGIN` and the counts at `MARGIN + 7`
-  (`:726`, `:745`) without advancing the cursor; the Python header leaves the cursor at 23 mm
-  (`script/packing/packing_list.py:153`). Start the body below the header (23 mm) in all three
-  layouts, on the first page and after every page break, the "(continued)" line included; a list
-  that filled a page can become two (notes of 2.6/2.7 and the tests move with it). (b) *`×`
-  prints as `ÿ`.* PDFium writes U+00D7 wrongly for a **non-CID** TrueType font — probe with
-  `cid = 0` gives `A ÿ1 ·x —d`, with `cid = 1` gives `A ×1 ·x —d` — and the app loads the three
-  fonts with `load_true_type_from_file(path, false)` (`:256`); load them as CID fonts and check
-  the written file's text layer again (in the probe's CID file spaces read back as U+00A0 and
-  `·` as U+A78F, so the text layer needs its own check). Check by eye and by readback: the
-  owner's 2026-10-11 `batch 1`/`batch 2` `packing-list.pdf` and `testdata/` with all three
-  layouts.
-  - Result: (not started)
+- [x] **2.15 Packing list: the two display defects of review round 1.** (a) *The body started at
+  the top margin, so on every page the first row or bar was printed over the header.* `Builder::new`
+  started at `MARGIN` and `need()` restarted at `MARGIN`, while the header draws the title at
+  `MARGIN` and the counts at `MARGIN + 7` and never advanced the cursor; the Python header leaves
+  the cursor at 23 mm (`script/packing/packing_list.py:153`). The body now starts at `BODY_TOP`
+  (23 mm) in all three layouts, on the first page and after every page break, the `(continued)`
+  line included. (b) *`×` printed as `ÿ`.* PDFium's non-CID font path writes `× ÷ é ® ™ ° ± ñ Ä ½ €`
+  as `ÿ` (`cid = false`); its CID path writes them correctly but turns a plain space into U+00A0
+  and `-` into U+00AD in the text layer. Fix: the three fonts stay non-CID, a CID copy of the same
+  font is loaded only when a page needs one, and the affected characters are drawn with it — each
+  run placed at PDFium's own character origin, because a text object's width is its ink bounds and
+  drops the trailing spaces in front of the next run. `full`/`summary` grow to about 2.0 MB (the
+  second copy of Arial); `pick` stays about 1.4 MB.
+  - Result: done. All three layouts on `testdata/` and on the owner's 2026-10-11 batch 1 (54
+    orders · 77 units · 9 runs — the same counts as his file) and batch 2: the header stands clear
+    of the body and the item lines print `×1`. Read back with `pypdf`, the written files have no
+    U+00A0, U+00AD, U+A78F or `ÿ` in the text layer. New tests:
+    `the_body_is_never_printed_over_the_header` and
+    `characters_pdfium_encodes_wrongly_are_drawn_and_still_read_back` (both fail when their fix is
+    reverted) and the module test `only_the_characters_pdfium_encodes_wrongly_use_the_cid_font`;
+    all 124 tests of the workspace pass. Design written into 03 › *Packing list (A4)* and 07 ›
+    *PDF library*.
 - [ ] **2.16 Courier: the SiCepat labels** (review round 1; needs D15, and D16 if the courier
   data moves to the data folder). 23 of the owner's 98 orders get no courier (J&T Express 74,
   SiCepat 23, IDX 1; the day warns 15 + 8): SiCepat labels print their name **only as a logo

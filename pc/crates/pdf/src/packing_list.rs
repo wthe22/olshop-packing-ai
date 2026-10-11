@@ -29,6 +29,11 @@ const PAGE_H: f32 = 297.0;
 const MARGIN: f32 = 10.0;
 const BOTTOM: f32 = PAGE_H - MARGIN; // 287
 const CELL_MARGIN: f32 = 1.0; // fpdf c_margin
+/// The page header's height: title 7 + counts line 5 + the 1 mm gap (packing_list.py `header`).
+const HEADER_H: f32 = 13.0;
+/// Where the body starts on every page — below the header, never at the top margin, or the first
+/// row of the body is printed over the title and the counts line.
+const BODY_TOP: f32 = MARGIN + HEADER_H; // 23
 const LH: f32 = 5.2; // item line height
 const TH: f32 = 4.6; // tracking-ID row height
 const NCOL: usize = 6; // tracking-ID columns
@@ -188,7 +193,7 @@ pub fn write(
     let font_dir = Path::new(FONT_DIR);
     let measure = Measure::new(pdfium, font_dir)?;
     let pages = build_pages(layout, list, &title, &subtitle, &measure);
-    emit(pdfium, path, &pages, font_dir)
+    emit(pdfium, path, &pages, font_dir, &measure)
 }
 
 /// Line 1 of the header: one saved PDF is named, several cover a number range
@@ -245,24 +250,106 @@ fn font_file(font: Font) -> &'static str {
     }
 }
 
-/// Loads the three fonts into a document (PDFium embeds them whole).
-fn load_fonts(
+/// The characters PDFium's non-CID font path writes with the wrong glyph **and** the wrong code:
+/// with `cid = false` every one of `× ÷ é ® ™ ° ± ñ Ä ½ €` came out as `ÿ` (U+00FF), while
+/// `· Ø § — – … ’ “ ”` came out right (probe, review round 1). A wrong `×` is what the owner sees
+/// in the item lines of `full`/`summary`. Such characters are drawn with a CID copy of the same
+/// font, which writes them — and reads them back — correctly.
+fn cid_required(ch: char) -> bool {
+    !(ch.is_ascii() || matches!(ch, '·' | 'Ø' | '§' | '—' | '–' | '…' | '’' | '“' | '”'))
+}
+
+/// `text` split into runs that the non-CID font writes correctly and runs that need the CID font
+/// ([`cid_required`]), in order. Most text is one run.
+fn segments(text: &str) -> Vec<(&str, bool)> {
+    let mut segments: Vec<(&str, bool)> = Vec::new();
+    let mut start = 0usize;
+    let mut current: Option<bool> = None;
+    for (index, ch) in text.char_indices() {
+        let cid = cid_required(ch);
+        match current {
+            Some(flag) if flag == cid => {}
+            Some(flag) => {
+                segments.push((&text[start..index], flag));
+                start = index;
+                current = Some(cid);
+            }
+            None => current = Some(cid),
+        }
+    }
+    if let Some(flag) = current {
+        segments.push((&text[start..], flag));
+    }
+    segments
+}
+
+fn font_index(font: Font) -> usize {
+    match font {
+        Font::Arial => 0,
+        Font::ArialBold => 1,
+        Font::Consola => 2,
+    }
+}
+
+/// Loads one of the packed fonts into a document (PDFium embeds it whole).
+fn load_font(
     doc: &mut PdfDocument<'_>,
     dir: &Path,
-) -> Result<(PdfFontToken, PdfFontToken, PdfFontToken), PdfError> {
-    let mut load = |file: &str| -> Result<PdfFontToken, PdfError> {
-        let path = dir.join(file);
-        doc.fonts_mut()
-            .load_true_type_from_file(&path, false)
-            .map_err(|e| PdfError::Font {
-                path,
-                message: e.to_string(),
-            })
-    };
-    let arial = load(font_file(Font::Arial))?;
-    let arial_bold = load(font_file(Font::ArialBold))?;
-    let consola = load(font_file(Font::Consola))?;
-    Ok((arial, arial_bold, consola))
+    font: Font,
+    cid: bool,
+) -> Result<PdfFontToken, PdfError> {
+    let path = dir.join(font_file(font));
+    doc.fonts_mut()
+        .load_true_type_from_file(&path, cid)
+        .map_err(|e| PdfError::Font {
+            path,
+            message: e.to_string(),
+        })
+}
+
+/// The three packed fonts in both flavours PDFium offers: `plain` (non-CID), which writes ASCII
+/// and a handful of typographic characters correctly, and `cid`, which writes every character
+/// correctly but encodes plain spaces as U+00A0 and `-` as U+00AD in the text layer — so it is
+/// used for the characters [`cid_required`] names, and only those.
+struct FontSet {
+    plain: [PdfFontToken; 3],
+    cid: [Option<PdfFontToken>; 3],
+}
+
+impl FontSet {
+    /// Load the three fonts as non-CID fonts (every page uses them).
+    fn load(doc: &mut PdfDocument<'_>, dir: &Path) -> Result<FontSet, PdfError> {
+        Ok(FontSet {
+            plain: [
+                load_font(doc, dir, Font::Arial, false)?,
+                load_font(doc, dir, Font::ArialBold, false)?,
+                load_font(doc, dir, Font::Consola, false)?,
+            ],
+            cid: [None; 3],
+        })
+    }
+
+    /// Load the CID flavour of `font` on first use, so a page that needs none does not carry the
+    /// second copy of the font in the file (D2).
+    fn load_cid(
+        &mut self,
+        doc: &mut PdfDocument<'_>,
+        dir: &Path,
+        font: Font,
+    ) -> Result<(), PdfError> {
+        if self.cid[font_index(font)].is_none() {
+            self.cid[font_index(font)] = Some(load_font(doc, dir, font, true)?);
+        }
+        Ok(())
+    }
+
+    fn token(&self, font: Font, cid: bool) -> PdfFontToken {
+        if cid {
+            self.cid[font_index(font)].expect("the CID font is loaded before drawing")
+        } else {
+            self.plain[font_index(font)]
+        }
+    }
 }
 
 /// One drawing operation, in millimetres from the page's top-left.
@@ -294,30 +381,24 @@ enum Op {
 /// give the exact Arial/Consola advance widths fpdf2 used, so wrapping matches).
 struct Measure<'a> {
     doc: PdfDocument<'a>,
-    arial: PdfFontToken,
-    arial_bold: PdfFontToken,
-    consola: PdfFontToken,
+    fonts: FontSet,
 }
 
 impl<'a> Measure<'a> {
     fn new(pdfium: &'a Pdfium, dir: &Path) -> Result<Measure<'a>, PdfError> {
         let mut doc = pdfium.create_new_pdf()?;
-        let (arial, arial_bold, consola) = load_fonts(&mut doc, dir)?;
+        let mut fonts = FontSet::load(&mut doc, dir)?;
+        // The measuring document is thrown away, never saved, so it can hold both flavours of all
+        // three fonts.
+        for font in [Font::Arial, Font::ArialBold, Font::Consola] {
+            fonts.load_cid(&mut doc, dir, font)?;
+        }
         doc.pages_mut().create_page_at_end(PdfPagePaperSize::a4())?;
-        Ok(Measure {
-            doc,
-            arial,
-            arial_bold,
-            consola,
-        })
+        Ok(Measure { doc, fonts })
     }
 
-    fn token(&self, font: Font) -> PdfFontToken {
-        match font {
-            Font::Arial => self.arial,
-            Font::ArialBold => self.arial_bold,
-            Font::Consola => self.consola,
-        }
+    fn token(&self, font: Font, cid: bool) -> PdfFontToken {
+        self.fonts.token(font, cid)
     }
 
     /// The advance width of `text` at `size_pt`, in millimetres.
@@ -325,6 +406,13 @@ impl<'a> Measure<'a> {
         if text.is_empty() {
             return 0.0;
         }
+        segments(text)
+            .iter()
+            .map(|(chunk, cid)| self.chunk_width_mm(chunk, font, size_pt, *cid))
+            .sum()
+    }
+
+    fn chunk_width_mm(&self, text: &str, font: Font, size_pt: f32, cid: bool) -> f32 {
         let mut page = match self.doc.pages().get(0) {
             Ok(page) => page,
             Err(_) => return 0.0,
@@ -334,12 +422,89 @@ impl<'a> Measure<'a> {
             PdfPoints::new(0.0),
             PdfPoints::new(0.0),
             text,
-            self.token(font),
+            self.token(font, cid),
             PdfPoints::new(size_pt),
         ) {
             Ok(object) => object.width().map(|w| w.value / PT_PER_MM).unwrap_or(0.0),
             Err(_) => 0.0,
         }
+    }
+
+    /// `text` as the runs to draw, each with its offset from the start of `text` in millimetres:
+    /// `(offset, chunk, needs the CID font)`. Plain text is one run at offset 0.
+    ///
+    /// The offsets come from PDFium's own character origins, measured with the **CID** font (whose
+    /// glyphs are all correct). A text object's width is its ink bounds, which drops the trailing
+    /// spaces a run in front of the next one ends with — origins do not.
+    fn segments_with_offsets<'b>(
+        &self,
+        text: &'b str,
+        font: Font,
+        size_pt: f32,
+    ) -> Vec<(f32, &'b str, bool)> {
+        let parts = segments(text);
+        if parts.len() == 1 {
+            let (chunk, cid) = parts[0];
+            return vec![(0.0, chunk, cid)];
+        }
+        match self.origins(text, font, size_pt) {
+            Some(origins) => {
+                let base = origins.first().copied().unwrap_or(0.0);
+                let mut out = Vec::with_capacity(parts.len());
+                let mut index = 0usize;
+                for (chunk, cid) in parts {
+                    let start = origins.get(index).copied().unwrap_or(base);
+                    out.push((start - base, chunk, cid));
+                    index += chunk.chars().count();
+                }
+                out
+            }
+            // PDFium gave no origins: fall back to ink widths, which sits a fraction of a
+            // millimetre off in front of a run that starts with spaces.
+            None => {
+                let mut x = 0.0;
+                parts
+                    .iter()
+                    .map(|(chunk, cid)| {
+                        let offset = x;
+                        x += self.chunk_width_mm(chunk, font, size_pt, *cid);
+                        (offset, *chunk, *cid)
+                    })
+                    .collect()
+            }
+        }
+    }
+
+    /// The x origin of every character of `text`, in millimetres from its start, drawn with the
+    /// CID font; `None` when PDFium cannot report them.
+    fn origins(&self, text: &str, font: Font, size_pt: f32) -> Option<Vec<f32>> {
+        let mut page = self.doc.pages().get(0).ok()?;
+        let object = {
+            let objects = page.objects_mut();
+            objects
+                .create_text_object(
+                    PdfPoints::new(0.0),
+                    PdfPoints::new(0.0),
+                    text,
+                    self.token(font, true),
+                    PdfPoints::new(size_pt),
+                )
+                .ok()?
+        };
+        let textpage = page.text().ok()?;
+        let chars = object.as_text_object()?.chars(&textpage).ok()?;
+        if chars.len() != text.chars().count() {
+            return None;
+        }
+        Some(
+            chars
+                .iter()
+                .map(|character| match character.origin() {
+                    Ok((x, _)) => x.value as f32 / PT_PER_MM,
+                    Err(_) => 0.0,
+                })
+                .collect(),
+        )
     }
 
     /// Greedy word wrap to `width_mm`, mirroring fpdf2 `multi_cell(..., dry_run=True)`.
@@ -378,7 +543,7 @@ impl<'m, 'a> Builder<'m, 'a> {
     fn new(layout: Layout, measure: &'m Measure<'a>) -> Builder<'m, 'a> {
         Builder {
             pages: vec![Vec::new()],
-            y: MARGIN,
+            y: BODY_TOP,
             layout,
             measure,
         }
@@ -446,7 +611,7 @@ impl<'m, 'a> Builder<'m, 'a> {
     fn need(&mut self, height: f32, continued: Option<&str>) -> bool {
         if self.y + height > BOTTOM {
             self.pages.push(Vec::new());
-            self.y = MARGIN;
+            self.y = BODY_TOP;
             if let Some(continued) = continued {
                 self.cell(MARGIN, self.y, 5.0, 9.5, Font::Arial, continued);
                 self.y += 5.0;
@@ -589,7 +754,7 @@ impl<'m, 'a> Builder<'m, 'a> {
             let mut take = pick_fit(&entries[index..], BOTTOM - top, self.measure);
             if take == 0 {
                 self.pages.push(Vec::new());
-                self.y = MARGIN;
+                self.y = BODY_TOP;
                 top = self.y;
                 take = pick_fit(&entries[index..], BOTTOM - top, self.measure).max(1);
             }
@@ -619,7 +784,7 @@ impl<'m, 'a> Builder<'m, 'a> {
             index += take;
             if index < entries.len() {
                 self.pages.push(Vec::new());
-                self.y = MARGIN;
+                self.y = BODY_TOP;
                 top = self.y;
             } else {
                 self.y = top;
@@ -781,14 +946,23 @@ fn emit(
     path: &Path,
     pages: &[Vec<Op>],
     font_dir: &Path,
+    measure: &Measure<'_>,
 ) -> Result<usize, PdfError> {
     let mut doc = pdfium.create_new_pdf()?;
-    let (arial, arial_bold, consola) = load_fonts(&mut doc, font_dir)?;
-    let token = |font: Font| match font {
-        Font::Arial => arial,
-        Font::ArialBold => arial_bold,
-        Font::Consola => consola,
-    };
+    let mut fonts = FontSet::load(&mut doc, font_dir)?;
+    // The CID flavour is embedded only for the fonts a page really needs, so a list whose text has
+    // no such character keeps the smaller file (D2).
+    for font in [Font::Arial, Font::ArialBold, Font::Consola] {
+        let needed = pages.iter().flatten().any(|op| match op {
+            Op::Text {
+                font: used, text, ..
+            } => *used == font && text.chars().any(cid_required),
+            _ => false,
+        });
+        if needed {
+            fonts.load_cid(&mut doc, font_dir, font)?;
+        }
+    }
     for page_ops in pages {
         let mut page = doc.pages_mut().create_page_at_end(PdfPagePaperSize::a4())?;
         let objects = page.objects_mut();
@@ -801,13 +975,16 @@ fn emit(
                     font,
                     text,
                 } => {
-                    objects.create_text_object(
-                        PdfPoints::new(to_pt(*x)),
-                        PdfPoints::new(to_pt(PAGE_H - *baseline)),
-                        text,
-                        token(*font),
-                        PdfPoints::new(*size_pt),
-                    )?;
+                    for (offset, chunk, cid) in measure.segments_with_offsets(text, *font, *size_pt)
+                    {
+                        objects.create_text_object(
+                            PdfPoints::new(to_pt(*x + offset)),
+                            PdfPoints::new(to_pt(PAGE_H - *baseline)),
+                            chunk,
+                            fonts.token(*font, cid),
+                            PdfPoints::new(*size_pt),
+                        )?;
+                    }
                 }
                 Op::Line { x1, y1, x2, y2 } => {
                     objects.create_path_object_line(
@@ -841,4 +1018,55 @@ fn emit(
         message: e.to_string(),
     })?;
     Ok(pages.len())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Which characters are drawn with the CID font, and — the part the text layer depends on —
+    /// that no CID run ever holds a character the CID font encodes wrongly (a plain space becomes
+    /// U+00A0, `-` U+00AD, `·` U+A78F, so a run with one of those in it would spoil a viewer's
+    /// text layer).
+    #[test]
+    fn only_the_characters_pdfium_encodes_wrongly_use_the_cid_font() {
+        // The header, the counts line and plain names: one run, no CID font.
+        for text in [
+            "Packing list · 2026-10-11 · batch 1 · saved PDFs 1-2",
+            "54 orders · 77 units · 9 runs · printed 13:15",
+            "Sepatu Standar Samping Motor — honda",
+            "Pick summary (units to take from stock)",
+        ] {
+            let parts = segments(text);
+            assert_eq!(parts.len(), 1, "{text:?} is one run: {parts:?}");
+            assert!(!parts[0].1, "{text:?} needs no CID font");
+        }
+
+        // An item line: only the `×` needs the CID font, the name and the count stay plain.
+        assert_eq!(
+            segments("Sepatu Standar Samping Motor — honda  ×1"),
+            vec![
+                ("Sepatu Standar Samping Motor — honda  ", false),
+                ("×", true),
+                ("1", false),
+            ]
+        );
+
+        // Characters PDFium writes as `ÿ` each get their own run — the spaces between them stay
+        // plain, and no run mixes the two.
+        let parts = segments("Kabel Ñ ² ® ñ ½° ±");
+        assert!(
+            parts.len() > 3,
+            "each such character is its own run: {parts:?}"
+        );
+        for (chunk, cid) in &parts {
+            for ch in chunk.chars() {
+                assert_eq!(
+                    *cid,
+                    cid_required(ch),
+                    "{ch:?} in run {chunk:?} needs the CID font: {cid}"
+                );
+            }
+        }
+    }
 }

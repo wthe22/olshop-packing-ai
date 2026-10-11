@@ -255,6 +255,14 @@ Errors stop the run before anything is written; warnings are listed and the run 
 - Header `Packing list · <day> · <n>  <code>  <name>` (scope `per-pdf`) or
   `Packing list · <day> · saved PDFs <first>-<last>` (scope `whole`), then the counts
   (`<orders> orders · <units> units · <runs> runs · printed hh:mm`) and `page x/y`.
+- The header takes the top 23 mm: the title (13 pt bold) and `page x/y` in the first 7 mm, the
+  counts line (9.5 pt) in the next 5 mm, then a 1 mm gap. **The body starts at 23 mm on every
+  page** — the first page and after every page break, the `(continued)` line included. A body row
+  at the top margin is printed over the title and the counts (review round 1).
+- Fonts: Arial 9.5–13 and Consola 10 from `C:\Windows\Fonts`, embedded whole. PDFium's *non-CID*
+  font path writes `× ÷ é ® ™ ° ± ñ Ä ½ €` as `ÿ`, so those characters are drawn with a **CID copy
+  of the same font**; the CID font's own text layer turns a plain space into U+00A0 and `-` into
+  U+00AD, so it carries those characters only and the rest of the text keeps a clean text layer.
 - The pick summary counts units per item = (product name, variation), as slip lines have no
   SKU ID.
 

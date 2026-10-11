@@ -21,10 +21,11 @@ Rule features added later go into the app only. The fixtures the script is teste
 
 The PDF library is **PDFium** for all three PDF jobs: read the text with its positions, copy
 pages unchanged, write the packing list. Its packing lists are larger than the script's —
-about 1.5 MB per batch instead of about 60 KB, because PDFium writes the whole of each font
-into the file — and that is accepted; they print the same. Only the packing-list writer could
-later be replaced by one that embeds only the letters used, if the size ever becomes a
-problem; nothing else in the program would change.
+about 1.4 MB per batch instead of about 60 KB, because PDFium writes the whole of each font
+into the file (about 2.0 MB for the `full`/`summary` layouts, which add a CID copy of Arial for
+the `×` — 03 › *Packing list (A4)*) — and that is accepted; they print the same. Only the
+packing-list writer could later be replaced by one that embeds only the letters used, if the size
+ever becomes a problem; nothing else in the program would change.
 
 ## What carries over from the script, what changes
 
