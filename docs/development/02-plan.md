@@ -283,8 +283,9 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   logo are D18. Code: `couriers.toml` gains a logo-hash list per courier and a J&T Cargo entry,
   and `deduce_courier` hashes the page's logo image (`FPDFImageObj_GetImageDataRaw`) and requires
   the two clues to agree; a hash that is not in the table is asked of the owner once
-  (`courier-logos.toml`, [08 › the logo prompt](../software-design/08-pc-app-ui.md#the-logo-prompt),
-  with *I don't know* remembered per hash and *Skip all* for the rest of the day in `state.json`).
+  (`courier-logos.toml`, [08 › the logo prompt](../software-design/08-pc-app-ui.md#the-logo-prompt):
+  *I don't know* is remembered per hash, *Skip all* only silences the rest of that batch and
+  writes nothing — no day flag, no `state.json` entry).
   Tests: every measured sample page keeps the courier it has now, a logo with a foreign form warns,
   an unseen logo asks, the two slip-continuation pages stay unknown. Then re-check the owner's day
   (the warning must be gone for the SiCepat orders) and rebuild the portable folder.

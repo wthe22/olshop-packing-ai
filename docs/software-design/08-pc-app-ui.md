@@ -136,11 +136,10 @@ pages carry it:
   once; the next export of the same logo is named without asking.
 - **I don't know** remembers that hash too (so it is not asked again): those orders save with an
   empty courier and appear in the day's warning.
-- **Skip all** stops the prompts for the rest of the day (a flag in `state.json`): every further
-  unseen logo is treated as *I don't know*. It is asked again the next day, so a courier whose
-  logo changes on every export is answered once a day at most.
-- Closing the prompt answers nothing for the rest of this batch. It never blocks the work: the
-  batch saves either way.
+- **Skip all** stops the prompts for the rest of **this batch**: every further unseen logo in it
+  is treated as *I don't know* and nothing is written. The next batch asks again from the start.
+- Closing the prompt (Esc) skips only that one logo: the next unseen logo still asks. It never
+  blocks the work — the batch saves either way.
 
 ## 3. Plan
 
