@@ -357,8 +357,14 @@ characters, so `read.rs` rebuilds the runs (measured in the spike 2.1, `pc/spike
 | `revert_last(day)` / `start_amend(day)` | Revert / amend | New overview / a draft |
 | `rules_load()` / `rules_check(text or entries, draft?)` / `rules_save(…)` | Categories editor | Entries, errors with line/col, live counts on the open draft |
 | `condition_to_tree(text)` / `tree_to_condition(tree)` | Boxes editor: condition text → boxes, boxes → text (the engine's parser and printer, so the window has no second parser) | Tree of groups and rows, or an error with line/col / the text |
-| `open_path(path)` / `show_in_folder(path)` | Open a PDF in the default viewer / Explorer | — |
+| `open_path(path)` / `show_in_folder(path)` | Open a PDF in the default viewer / a folder in Explorer — one call, `explorer.exe "<path>"` with the path as the only argument | — |
 | `settings_get()` / `settings_set(…)` | Settings | — |
+
+Both shell commands hand Explorer the path as its **only** argument. `explorer.exe /select,<path>` is
+not usable: Explorer parses `/select,` itself and does not understand the quotes Rust puts around an
+argument that holds a space, so it reads no target and opens *Documents* (or *Home* when the target is
+empty) — and the batch folder path always holds a space (`…\labels\2026-10-11\batch 1`). A bare path
+opens a folder as a folder and a file in its default program, which is all the two buttons need.
 
 PDFium is not thread-safe: all PDF work runs on one worker thread that owns the PDFium
 library; commands send it jobs. The open draft (orders, the opened label documents) is kept

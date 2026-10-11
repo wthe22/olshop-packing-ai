@@ -301,20 +301,23 @@ pub struct About {
 
 // ----------------------------------------------------------------------------- shell
 
-/// Open a file in the PC's default viewer (08 › *1. Day*: *Open*).
-fn open_in_viewer(path: &str) -> Result<(), String> {
-    Command::new("explorer")
-        .arg(path)
-        .spawn()
-        .map(|_| ())
-        .map_err(|error| format!("Cannot open {path}: {error}."))
+/// The Explorer command for `path` (separate so a test can read its arguments back).
+fn explorer_command(path: &str) -> Command {
+    let mut command = Command::new("explorer");
+    command.arg(path);
+    command
 }
 
-/// Show a file (or folder) in Explorer with it selected (08 › *1. Day*: *Open folder*). The
-/// `/select,` and the path are one argument, as Explorer expects.
-fn reveal_in_folder(path: &str) -> Result<(), String> {
-    Command::new("explorer")
-        .arg(format!("/select,{path}"))
+/// Open a file with the PC's default program, or a folder as a folder in Explorer (08 › *1. Day*:
+/// *Open* and *Open folder*; 08 › *6. Settings*).
+///
+/// The path is Explorer's **only** argument. Explorer parses `/select,<path>` itself and does not
+/// understand the quotes Rust puts around an argument that holds a space, so it opened *Documents*
+/// (or *Home*) instead of the folder (review round 1: the batch folder always has a space in its
+/// path, e.g. `…\labels\2026-10-11\batch 1`). A bare path works for both: a folder opens as a
+/// folder, a file opens in its default program.
+fn open_with_explorer(path: &str) -> Result<(), String> {
+    explorer_command(path)
         .spawn()
         .map(|_| ())
         .map_err(|error| format!("Cannot open {path}: {error}."))
@@ -375,16 +378,16 @@ pub fn about() -> About {
     }
 }
 
-/// Open a file in the default viewer.
+/// Open a file in the default viewer (08 › *1. Day*: *Open*).
 #[tauri::command]
 pub fn open_path(path: String) -> Result<(), String> {
-    open_in_viewer(&path)
+    open_with_explorer(&path)
 }
 
-/// Show a file in Explorer with it selected.
+/// Open a folder in Explorer (08 › *1. Day*: *Open folder*; 08 › *6. Settings*).
 #[tauri::command]
 pub fn show_in_folder(path: String) -> Result<(), String> {
-    reveal_in_folder(&path)
+    open_with_explorer(&path)
 }
 
 #[cfg(test)]
@@ -532,5 +535,20 @@ mod tests {
         let about = about();
         assert_eq!(about.version, env!("CARGO_PKG_VERSION"));
         assert_eq!(about.pdfium, PDFIUM_VERSION);
+    }
+
+    /// The shell calls hand Explorer the path and nothing else. `/select,<path>` is not parsed by
+    /// Explorer when the path holds a space — it opened *Documents* (or *Home*) instead of the
+    /// folder — and the batch folder always has a space in its path (review round 1).
+    #[test]
+    fn explorer_gets_the_path_as_its_only_argument() {
+        let path = r"C:\packing data\labels\2026-10-11\batch 1";
+        let command = explorer_command(path);
+        assert_eq!(command.get_program().to_string_lossy(), "explorer");
+        let arguments: Vec<String> = command
+            .get_args()
+            .map(|argument| argument.to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(arguments, vec![path.to_string()]);
     }
 }

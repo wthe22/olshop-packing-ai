@@ -4,8 +4,9 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): tasks 2.1–2.15 done — the packing-list display defects of the owner's
-review round 1 (2026-10-11, his own day's data) are fixed; 2.16 (the courier) waits for D15/D16.**
+Status: **Phase 2 (PC app): tasks 2.1–2.15 and 2.17 done — the packing-list display defects and the
+*Open folder* defect of the owner's review round 1 (2026-10-11, his own day's data) are fixed;
+2.16 (the courier) waits for D15/D16.**
 The owner decided that the PC gets a desktop app written in Rust (a
 command line is not good for daily use), so phase 1 stops with its code done (270 tests) and
 stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
@@ -17,7 +18,8 @@ jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summa
 
 **Next step.** The owner's D15/D16 answers, then 2.16 (a change to the courier data at most).
 Then the round-2 review at the end of Phase 2 — open the same day's packing list (the header must
-stand clear, `×` must print) and check the Day screen for a *Courier unknown* warning. The
+stand clear, `×` must print), press *Open folder* (the batch folder must open, not Documents) and
+check the Day screen for a *Courier unknown* warning. The
 answers belong in
 [02-design-questions.md](../software-design/02-design-questions.md) — each question has a
 "Built for now" default, nothing waits on them — or as a new session here; the phase-3 Android
@@ -266,6 +268,20 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   82 of 601 pages. Apply the owner's D15/D16 answer, then re-check the owner's day (the warning
   must be gone for the SiCepat orders) and rebuild the portable folder.
   - Result: (not started; waiting for D15/D16)
+- [x] **2.17 Open folder: it opened Documents (review round 1).** `show_in_folder` ran
+  `explorer.exe /select,<path>`. Explorer parses `/select,` itself and does not understand the
+  quotes Rust puts around an argument that holds a space, so it never read the target and fell back
+  to *Documents* (an empty target falls back to *Home*). The batch folder always has a space in its
+  path (`…\labels\2026-10-11\batch 1`). *Open* (a file) and *Open folder* now share one call,
+  `open_with_explorer`, which hands Explorer the path as its **only** argument: a folder opens as a
+  folder, a file opens in its default program — what 08 › *1. Day* already said (*Open folder* opens
+  the batch folder in Explorer).
+  - Result: done. Checked on this PC, in the owner's own interactive session:
+    `explorer.exe "/select,<the batch folder>"` opened no window of that folder (Explorer fell back
+    to Documents/Home — the owner saw exactly that), while `explorer.exe "<the batch folder>"`
+    opened *batch 1 - File Explorer* on the batch folder. New test
+    `explorer_gets_the_path_as_its_only_argument` pins the argument list (one argument, no
+    `/select,`); the 23 tests of the app crate pass.
 
 **Owner review (round 1, 2026-10-11, on the owner's own day's data).** The owner ran a real day
 through the portable folder (2 batches, 4 label files, 98 orders, no terminal) and reported two
@@ -276,18 +292,22 @@ things; checking them found a third.
 | 1 | "packing list isn't displayed correctly, some text overlap" | Every page of every layout prints the first body row or bar over the header (title 10–17 mm, counts 17–22 mm): the body starts at the top margin (10 mm) instead of below the header (23 mm) | The Rust header is a set of fixed ops that never advances the cursor; `Builder` starts and restarts at `MARGIN` |
 | 2 | found while checking 1 (the owner has not seen it: the pick layout has no `×`) | `×` prints as `ÿ`, in the drawn glyph **and** in the text layer, in the run lines of `full`/`summary`; `·` and `—` are right | PDFium writes U+00D7 wrongly for a non-CID TrueType font; the app loads the fonts with `cid = false` |
 | 3 | "some couriers are not recognized by the current parser" | 23 of 98 orders save with an empty courier | SiCepat labels carry the name **only as a logo image**, and their `00` + 10-digit tracking form is marked as shared with J&T Cargo, so the deduction refuses |
+| 4 | "open folder doesnt open the correct folder. it opens the user's userprofile documents instead" | *Open folder* on a batch and on the data folder opened *Documents*, later *Home* — never the folder | `explorer.exe /select,<path>`: Explorer parses `/select,` itself and does not understand the quotes Rust puts around an argument with a space in it, so it read no target and fell back to Documents (*Home* when the target is empty) |
 
 Evidence: the owner's `batch 1`/`batch 2` `packing-list.pdf` (both 1 page, layout `pick`)
 rendered and read back, against the Python reference (`pc/spike/out/python-packing-list.pdf`);
 `testdata/labels-slip.pdf` through `packing-cli prepare --layout full,summary,pick` — all three
 layouts show the overlap; the 4 label files of 2026-10-11 and the 3 of `samples/` read for the
 courier clues, counts only; the pages with no courier text rendered (they are `SICEPAT EKSPRES`,
-the name only in the logo); PDFium probed with a non-CID and a CID font. The owner's data folder
+the name only in the logo); PDFium probed with a non-CID and a CID font; the two Explorer forms run
+from a probe in the owner's own session (the fixed form opened *batch 1 - File Explorer* on the
+batch folder, the `/select,` form opened no such window and fell back to Documents/Home). The owner's data folder
 was only read — nothing in it was written to or changed; every probe wrote outside it.
 
-**Owner review (round 2).** After 2.15 and 2.16: open the same day's packing list (the header
-must stand clear of the body; a `summary` or `full` list must print `×`, not `ÿ`) and check the
-Day screen shows no *Courier unknown* warning; print one packing list.
+**Owner review (round 2).** After 2.15, 2.16 and 2.17: open the same day's packing list (the header
+must stand clear of the body; a `summary` or `full` list must print `×`, not `ÿ`), press *Open
+folder* on a batch card (the batch folder must open, not Documents) and on the Settings screen (the
+data folder), and check the Day screen shows no *Courier unknown* warning; print one packing list.
 
 ---
 
