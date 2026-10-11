@@ -147,9 +147,9 @@ in the same way.
    measured tag lists stay in [business-process 02](../business-process/02-data-sources.md) for
    when a case needs them.
 
-The courier list is `couriers.toml` (in the data folder in the app) and the answers to the logo
-prompt are `courier-logos.toml`; both files' fields and examples are in
-[07 › Inputs](07-pc-app.md#inputs).
+The courier list is `couriers.toml` (in the data folder in the app), and it also holds the logos
+the owner names in the prompt; its fields and an example are in
+[07 › `couriers.toml`](07-pc-app.md#courierstoml).
 
 ## Picks
 

@@ -73,13 +73,12 @@ What is different in the app (these are owner decisions):
 |---|---|
 | Label PDFs | The *Shipping label + Packing slip* files of one batch ([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)). One or more files; the seller centre splits a download into files of at most 200 pages |
 | `categories.toml` | In the data folder. Each entry is one pick ([04-rules-file.md](04-rules-file.md)). Edited inside the app ([08 › Categories](08-pc-app-ui.md#5-categories)) or by hand |
-| `couriers.toml` | The courier-deduction data (D16, owner decision 2026-10-11 — task 2.19). **In the data folder**, like `categories.toml`: written from the built-in file (same content as `script/packing/couriers.toml`) on first start, then the owner's; a broken file stops the batch with its line. Fields and an example below |
-| `courier-logos.toml` | What the owner answered to the logo prompt ([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt)): a logo hash → courier, and the hashes answered *I don't know*. **Written by the app**, not shipped; created in the data folder on the first answer |
+| `couriers.toml` | The courier-deduction data (D16, owner decision 2026-10-11 — task 2.19). **In the data folder**, like `categories.toml`: written from the built-in file (same content as `script/packing/couriers.toml`) on first start, then the owner's; a broken file stops the batch with its line. It also holds the logos the owner names in the prompt. Fields and an example below |
 | The day's `state.json` | What earlier batches of the same day saved (below) |
 
-### The courier files
+### `couriers.toml`
 
-`couriers.toml` — the courier list, one `[[courier]]` entry each:
+The courier list, one `[[courier]]` entry each:
 
 | Field | Meaning |
 |---|---|
@@ -112,16 +111,13 @@ logo = ["9ad342443a1fcca8"]      # 1200x859 px
 tracking = "TKP\\d{10}"
 ```
 
-`courier-logos.toml` — the answers, in the data folder:
+The logos the owner names in the prompt ([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt))
+are written into this same file. **How** the app writes them is **D20**; built for now as a
+`[logo]` table appended at the end, so the entries above are never rewritten:
 
 ```toml
-# A logo the owner named: the image's hash -> a courier from couriers.toml
 [logo]
 "9f1c0d7a4b2e6f83" = "SiCepat"
-
-# A logo the owner answered "I don't know" to: never asked again
-[unknown]
-hashes = ["1a2b3c4d5e6f7081"]
 ```
 
 ### Every page must carry a packing slip
@@ -189,7 +185,6 @@ The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04.
 <data folder>/
   categories.toml
   couriers.toml
-  courier-logos.toml
   settings.json
   labels/
     2026-10-07/

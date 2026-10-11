@@ -14,10 +14,12 @@ stays as the reference implementation and fallback; its two open tasks move into
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
 until phase 3), D17 (whether 2.18's check runs on every batch), D18 (the J&T Cargo logo, the
-one the logo clue cannot read) and D19 (where the logos the owner teaches the app live). **D15 is answered**
+one the logo clue cannot read) and D20 (how the app writes a taught logo into `couriers.toml`).
+**D15 is answered**
 (2026-10-11, the owner: two clues that must agree — the tracking-ID form and the service tag; the
-rule is written into 03 › *Courier deduction*, so D15 is removed) and **D16 is answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
-edit the owner can make, not a new program version — task 2.19. D2 (the
+rule is written into 03 › *Courier deduction*, so D15 is removed), **D16 is answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
+edit the owner can make, not a new program version — task 2.19, and **D19 is answered**
+(2026-10-11, the owner: one file — the taught logos go into `couriers.toml`, no second file). D2 (the
 PDF library) is answered: PDFium does all three PDF
 jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summary`) are accepted.
 
@@ -283,19 +285,11 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   logo are D18. Code: `couriers.toml` gains a logo-hash list per courier and a J&T Cargo entry,
   and `deduce_courier` hashes the page's logo image (`FPDFImageObj_GetImageDataRaw`) and requires
   the two clues to agree; a hash that is not in the table is asked of the owner once
-  (`courier-logos.toml`, [08 › the logo prompt](../software-design/08-pc-app-ui.md#the-logo-prompt):
-  *I don't know* is remembered per hash, *Skip all* only silences the rest of that batch and
-  writes nothing — no day flag, no `state.json` entry).
+  (`couriers.toml` — one file, D19 answered; the app appends the hash per D20, and *I don't know*
+  and *Skip all* write nothing).
   Tests: every measured sample page keeps the courier it has now, a logo with a foreign form warns,
   an unseen logo asks, the two slip-continuation pages stay unknown. Then re-check the owner's day
   (the warning must be gone for the SiCepat orders) and rebuild the portable folder.
-  - Open sub-point: the owner reports having seen a J&T Express tracking ID with a **`JT`** prefix
-    (2026-10-11). The samples hold none — all 2,086 J&T Express rows of the 2026-10-06 exports and
-    all 5,570 letter-prefixed tokens on the 1,269 sample pages are `JY` + 10 digits — so the form
-    stays `JY\d{10}` until a label is in hand; then it is a one-line data edit
-    (`JY\d{10}|JT\d{10}`, the pattern is anchored as a full match), and because the logo must
-    agree, a wrong entry there can only turn a name into a warning, never a warning into a wrong
-    name.
   - Measured for D15 (2026-10-11, counts and shapes only; method: the Python reader page by page
     and the exports read by provider): the 601 sample pages → J&T Express 517, no courier 84
     (82 with a `00` + 10-digit tracking ID, 1 slip continuation, 1 `TikTok Shop` label with no

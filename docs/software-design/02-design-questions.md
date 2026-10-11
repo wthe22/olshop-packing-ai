@@ -90,22 +90,23 @@ both Cargo labels in the samples.
 **What the answer changes:** one line of the courier data (J&T Cargo's text clue), or the
 deduction's comparison.
 
-## D19 — Where the logos the owner teaches the app live
+## D20 — How the app writes a taught logo into `couriers.toml`
 
-**Words.** A logo the app has not seen is shown to the owner, who names its courier
-([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt)); the answer has to be stored somewhere.
-Two homes are possible: inside `couriers.toml` next to the courier, or in a second file the app
-writes.
+**Words.** When the owner names an unseen logo in the prompt ([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt)),
+the answer is written into `couriers.toml` — a file the owner also edits by hand (D19, answered
+2026-10-11: one file, no second one). The only question left is *how* the app writes it, so that a
+hand edit is never lost.
 
 | Option | What you see |
 |---|---|
-| **1. A second file, `courier-logos.toml`** (**Built for now**) | `couriers.toml` stays exactly as shipped (the owner may still edit it by hand); the answers and the *I don't know* list live beside it, so an app update that replaces the shipped file cannot lose them |
-| 2. All in `couriers.toml` | One file to look at, but the app must rewrite a file the owner also edits (comments and order can be lost), and a new shipped default has to be merged with the answers by hand |
+| **1. A `[logo]` table appended at the end of the file** (**Built for now**) | The app adds one line (`"hash" = "SiCepat"`) at the end and never touches the entries above it, so your own comments and order survive. The same courier's logos then live in two places — its `logo` list and this table |
+| 2. The hash is added to that courier's own `logo` list | One place per courier, but the app has to edit the line you wrote, and a hand-typed comment on it can be lost |
+| 3. Nothing is written | Simplest: the answer names that batch's orders only, and the same logo is asked about again next batch |
 
-Recommended: **1** — the app writes one file, the owner owns the other, and neither can spoil the
-other. Fields of both files: [07 › Inputs](07-pc-app.md#the-courier-files).
+Recommended: **1** — the app only ever appends, so nothing you typed can be lost.
 
-**What the answer changes:** which file the app opens for writing when the owner answers.
+**What the answer changes:** what the app does after the owner names a logo (append a line, edit a
+list, or nothing).
 
 ## D17 — The check of the saved PDFs: every batch or only a large one
 

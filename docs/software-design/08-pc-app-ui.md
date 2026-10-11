@@ -131,13 +131,14 @@ pages carry it:
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- The buttons are the names in `couriers.toml`.
-- **A courier name** writes the logo's hash into `courier-logos.toml` and names those orders at
-  once; the next export of the same logo is named without asking.
-- **I don't know** remembers that hash too (so it is not asked again): those orders save with an
-  empty courier and appear in the day's warning.
+- The buttons are the names in `couriers.toml`. Each distinct unseen logo is asked about once per
+  batch.
+- **A courier name** names those orders at once, and the hash is written into `couriers.toml`
+  (D20), so the next export of the same logo is named without asking.
+- **I don't know** writes nothing: those orders save with an empty courier and appear in the day's
+  warning, and the logo is asked about again in the next batch.
 - **Skip all** stops the prompts for the rest of **this batch**: every further unseen logo in it
-  is treated as *I don't know* and nothing is written. The next batch asks again from the start.
+  is treated as *I don't know*, and nothing is written. The next batch asks again from the start.
 - Closing the prompt (Esc) skips only that one logo: the next unseen logo still asks. It never
   blocks the work — the batch saves either way.
 
