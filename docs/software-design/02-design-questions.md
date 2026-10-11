@@ -66,47 +66,6 @@ orders"). Nothing else in the design writes one; every batch already has its `su
 
 **What the answer changes:** the *About* row of Settings and one small writer in the app.
 
-## D15 — The SiCepat labels (a courier the parser cannot name)
-
-**Words.** An order's courier comes from the label (03 › *Courier deduction*): a text clue (J&T
-labels print `www.jet.co.id`) or the tracking-ID form — but the form is only used when it belongs
-to one courier. SiCepat labels print the name **only as the logo image**; `couriers.toml` marks
-their `00` + 10-digit form as shared (`tracking_unique = false`), so those orders save with an
-empty courier and the day warns.
-
-**Measured on the owner's own files (2026-10-11, counts and shapes only).**
-
-- **The label pages.** The 2026-10-07 sample (3 *Shipping label + Packing slip* files, 601 pages):
-  J&T Express 517 pages, no courier 84 pages — 82 of those carry a tracking ID of **12 digits
-  starting `00`**, and 2 are continuation pages with no tracking token. `sicepat` appears on
-  **0** of the 601 pages, in the plain text and in the whitespace-stripped text: there is no text
-  clue to find. The owner's 2026-10-11 day is the same shape (98 orders, 23 unknown).
-- **The provider the platform itself recorded.** The 2026-10-06 exports
-  (`samples/orders-06-1/2.csv`, `Shipping Provider Name` per order; the 16:29 export, 1,435
-  orders): J&T Express 1,252 · SiCepat 173 (174 CSV lines) · IDX 9 · **J&T Cargo 1**. All 173
-  SiCepat IDs are 12 digits starting `00`; the single J&T Cargo ID is 12 digits starting `57`. The
-  two 12-digit forms **do not collide** in this data.
-- **Two J&T Cargo labels were found on 2026-10-11** — `0708-orders.pdf` p13 (its slip continues
-  on p14) and `10-07_00-03-17_Shipping label_3.pdf` p114. Both print a `57` + 10-digit tracking
-  ID, and the second one's order is the row the 2026-10-06 export itself names **J&T Cargo**: the
-  `57…` form is confirmed against the platform's own record, not assumed. Their label also prints
-  the service tag `FastTrack` as text (the `00…` labels print nothing), but IDX labels use the
-  same boxed layout, so the tracking form stays the reliable clue. A J&T Cargo order's slip can
-  continue on a second page that carries no courier mark and no tracking ID.
-
-| Option | What you see |
-|---|---|
-| **1. Keep refusing the `00…` form** (**Built for now**) | The SiCepat orders save with an empty courier and are listed in the warning; a `courier` condition cannot separate them |
-| 2. `00` + 10 digits means **SiCepat** | The 173 orders get `SiCepat` and a condition can use it. Risk: a courier whose form also starts `00` would be named SiCepat silently — none among the 699 pages and the 1,435 orders read |
-| 3. Name **both** forms | `SiCepat` = `00` + 10 digits, `J&T Cargo` = `57` + 10 digits, each `tracking_unique = true`; any *other* 12-digit form still warns. Names the one Cargo order too, and nothing is guessed |
-
-Recommended: **3** — the same evidence as option 2, and an unknown stays unknown instead of being
-guessed. With D16 answered this is a data edit the owner can make himself, and the shipped default
-carries it into a new data folder.
-
-**What the answer changes:** the courier entries of `couriers.toml` only; the deduction itself
-(`crates/engine/src/label.rs`) keeps working as it is.
-
 ## D17 — The check of the saved PDFs: every batch or only a large one
 
 **Words.** Task 2.18 makes the app read its own output back before a batch is finished: every order

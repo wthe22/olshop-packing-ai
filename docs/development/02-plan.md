@@ -6,22 +6,21 @@ noted as passed.
 
 Status: **Phase 2 (PC app): tasks 2.1–2.15 and 2.17 done — the packing-list display defects and the
 *Open folder* defect of the owner's review round 1 (2026-10-11, his own day's data) are fixed;
-2.16 (the courier) waits for D15, and 2.18 (the check of the saved PDFs, designed at the
+2.16 (the courier) is next, and 2.18 (the check of the saved PDFs, designed at the
 owner's request on 2026-10-11) waits behind it.**
 The owner decided that the PC gets a desktop app written in Rust (a
 command line is not good for daily use), so phase 1 stops with its code done (270 tests) and
 stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
-until phase 3), **D15** (the SiCepat labels — its evidence is measured and written there: the
-`00` form does not collide with the one J&T Cargo order, so the answer is a data line) — the only
-answer still needed before 2.16 — and D17 (whether 2.18's check runs on every batch). **D16 is
-answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
+until phase 3) and D17 (whether 2.18's check runs on every batch). **D15 is answered**
+(2026-10-11, the owner: two clues that must agree — the tracking-ID form and the service tag; the
+rule is written into 03 › *Courier deduction*, so D15 is removed) and **D16 is answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
 edit the owner can make, not a new program version — task 2.19. D2 (the
 PDF library) is answered: PDFium does all three PDF
 jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summary`) are accepted.
 
-**Next step.** The owner's D15/D16 answers, then 2.16 (a change to the courier data at most), then
+**Next step.** 2.16 (the courier: the form-and-tag rule, no owner answer needed), then
 2.19 (the courier data into the data folder, D16's answer — no owner answer needed, so it can be
 built at any time) and 2.18 (the saved-PDF check; its four choices are answered and D17 has a
 "built for now" default, so it waits on nothing). Then the round-2 review at the end of Phase 2 — open the same day's packing
@@ -270,14 +269,20 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     reverted) and the module test `only_the_characters_pdfium_encodes_wrongly_use_the_cid_font`;
     all 124 tests of the workspace pass. Design written into 03 › *Packing list (A4)* and 07 ›
     *PDF library*.
-- [ ] **2.16 Courier: the SiCepat labels** (review round 1; needs D15 only — D16 was answered on
-  2026-10-11 and moved into 2.19). 23 of the owner's 98 orders get no courier (J&T Express 74,
+- [ ] **2.16 Courier: the SiCepat labels** (review round 1; D15 was answered by the owner on
+  2026-10-11, D16 moved into 2.19). 23 of the owner's 98 orders get no courier (J&T Express 74,
   SiCepat 23, IDX 1; the day warns 15 + 8): SiCepat labels print their name **only as a logo
   image** and their tracking ID is 12 digits starting `00`, a form `couriers.toml` marks as
   shared (`tracking_unique = false`; J&T Cargo is also 12 digits), so `deduce_courier`
   (`crates/engine/src/label.rs:217`) refuses and warns. The 2026-10-07 sample is the same shape:
-  82 of 601 pages. Apply the owner's D15 answer (a courier-data line), then re-check the owner's
-  day (the warning must be gone for the SiCepat orders) and rebuild the portable folder.
+  82 of 601 pages. **The owner's rule (2026-10-11): two clues, and the courier is named only when
+  they agree** — the tracking-ID form (`00` → SiCepat, `57` → J&T Cargo, both now unambiguous) and
+  the service tag read from the header strip (03 › *Courier deduction* holds the rule and the
+  measured tag lists). Code: `couriers.toml` gains a tag list per courier and a J&T Cargo entry,
+  and `deduce_courier` requires the pair to agree. Tests: every measured sample page keeps the
+  courier it has now, a form with a foreign tag warns, the two slip-continuation pages stay
+  unknown. Then re-check the owner's day (the warning must be gone for the SiCepat orders) and
+  rebuild the portable folder.
   - Measured for D15 (2026-10-11, counts and shapes only; method: the Python reader page by page
     and the exports read by provider): the 601 sample pages → J&T Express 517, no courier 84
     (82 with a `00` + 10-digit tracking ID, 1 slip continuation, 1 `TikTok Shop` label with no
@@ -288,8 +293,17 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     `57…` form, the second one's order is the row the export itself names J&T Cargo, and both
     print `FastTrack` as text. Over all 8 sample PDFs (1,229 pages): J&T Express 1,083 · SiCepat
     140 · J&T Cargo 2 · IDX 1 · `TikTok Shop` 1 · slip continuations 2. Every page is one order
-    except that one Cargo order.
-  - Result: (not started; waiting for D15)
+    except that one Cargo order. The two clues (the owner's rule): the service tag read from the
+    header strip gives J&T Express `EZ` 440 · `ECO` 248 · `NDD` 395, SiCepat `NDD` 39 · `REG` 69 ·
+    `HALU` 32, J&T Cargo `FastTrack` 2, IDX `REG` 1, TikTok Shop `GKS` 1 — form and tag agree on
+    all 1,226 label pages that have a tracking form, and the one `TikTok Shop` label has a tag but
+    no form (so it stays unknown); the 2 slip continuations have neither. The courier logo is one
+    embedded image, the same asset in all 6 files (J&T Express 975×377, SiCepat 184×60, J&T Cargo
+    527×73, IDX 712×92, TikTok Shop 326×59 px) — a third, exact clue the rule does not need.
+    The spill: the label takes the top 70% of the page on every style (the slip starts at 126.5 pt
+    on all four), so only the slip's own content spills — the sample's one spilled order had a
+    single item line and a buyer message.
+  - Result: (not started; next, nothing waits for the owner)
 - [x] **2.17 Open folder: it opened Documents (review round 1).** `show_in_folder` ran
   `explorer.exe /select,<path>`. Explorer parses `/select,` itself and does not understand the
   quotes Rust puts around an argument that holds a space, so it never read the target and fell back

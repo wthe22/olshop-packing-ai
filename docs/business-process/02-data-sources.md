@@ -73,6 +73,16 @@ creator handle, …) are not needed for packing.
   labels print `FastTrack` (their service tag), but **SiCepat and IDX labels print no courier name
   and no web address** — the courier is only the logo image, so the tracking-ID form is the only
   machine-readable courier clue there.
+- The **service tag** is printed in the label's header strip. Measured on all 1,229 sample pages:
+  J&T Express `EZ` `ECO` `NDD` · SiCepat `NDD` `REG` `HALU` · J&T Cargo `FastTrack` · IDX `REG` ·
+  TikTok Shop `GKS`. `NDD` is on both J&T Express and SiCepat labels and `REG` on both SiCepat and
+  IDX, so the tag alone never names a courier — only together with the tracking-ID form does it.
+  These words also appear inside street, product and address text (a buyer's address on a J&T
+  Express label reads *dekat Ais cargo*), so the tag must be read from the header strip, not
+  searched over the page.
+- The courier **logo is one embedded image** on every page and the same asset in every export
+  (J&T Express 975×377 px · SiCepat 184×60 · J&T Cargo 527×73 · IDX 712×92 · TikTok Shop 326×59),
+  so the image itself identifies the courier as exactly as the tracking form does.
 - Label pages are printed exactly as downloaded *(owner)*.
 - Each download is at most 200 pages, so one batch needs several PDF files.
 - File names: `MM-DD_HH-MM-SS_Shipping label_<n>.pdf`, or
@@ -94,7 +104,13 @@ creator handle, …) are not needed for packing.
   (`FI 2012-` / `2015`). The full Product Name is printed (not cut).
 - An order whose slip does not fit continues on a second page that repeats the table header
   and the Order ID and shows the `Customer Message` (= buyer message). In the sample: 1 order
-  of 600; every other order is one page.
+  of 600; every other order is one page. The label takes the top 70% of the page on **every**
+  label style — the slip starts at the same height (126.5 pt from the bottom of the 148 mm page)
+  on J&T Express, SiCepat, J&T Cargo and IDX labels — so what spills depends only on the slip's
+  own content, never on the courier: the one order that spilled in the sample had a **single item
+  line** and a buyer message, while a J&T Cargo order of 3 lines spilled and one of 1 line did
+  not. Many items of the same product (e.g. 12 of one variation) are one line and one page
+  *(owner)*.
 - In the sample every slip has one item line and `Qty Total` always equals the sum of `Qty`.
 - The label part also prints `In transit by: dd/mm/yyyy hh:mm` (ship-by deadline); the plain
   label export (without slip) does not (0 of 562 sample pages).

@@ -123,12 +123,27 @@ The slip is read by text position, not by reading order: `pypdf`
 
 ## Courier deduction (without a CSV)
 
-1. The text on the label: the courier name, a courier web address, or the label's sort-code
-   style. (In the sample only J&T labels print the courier name as text: 517 of 601 pages.)
-2. Else the tracking-ID pattern ([business-process 02](../business-process/02-data-sources.md#columns-packing-needs)):
-   `JY` + 10 digits → J&T Express; `TKP` + 10 digits → IDX. 12 digits alone is ambiguous (SiCepat
-   starts `00`, J&T Cargo is also 12 digits), so it is used only together with step 1's clues.
-3. Unknown → `courier` empty, and a warning lists those orders.
+The label is read for two clues and the courier is named **only when the two agree**: one clue
+alone can be wrong, so a wrong name would need two labels to be wrong in the same way.
+
+1. **The tracking-ID form** ([business-process 02](../business-process/02-data-sources.md#columns-packing-needs)):
+   `JY` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo;
+   `TKP` + 10 digits → IDX.
+2. **The service tag**, read from the label's header strip (the top 10% of the page): J&T Express
+   `EZ` `ECO` `NDD`; SiCepat `NDD` `REG` `HALU`; J&T Cargo `FastTrack`; IDX `REG`. It is a word
+   from that small list, found in the header strip — a search over the whole page text is not
+   enough: the same words sit inside street, product and address text (`REG`, `EZ`, `CARGO` were
+   found in them on J&T Express pages). `NDD` is on both J&T Express and SiCepat labels, so the tag
+   alone does not separate those two — the pair does.
+3. **A text clue** names the courier on its own when the label prints one: `www.jet.co.id` →
+   J&T Express, `FastTrack` → J&T Cargo. SiCepat and IDX print none (SiCepat's name is only the
+   logo image).
+4. **Named only when the clues agree**: the courier of the form must also carry the tag found. A
+   tag outside that courier's list, a form with no tag, a tag with no form, or no clue at all →
+   no name. Unknown → `courier` empty, and a warning lists those orders.
+
+`couriers.toml` holds, per courier: the name, its text clues, its tracking form and its service
+tags.
 
 ## Picks
 
