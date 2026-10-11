@@ -288,6 +288,13 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   Tests: every measured sample page keeps the courier it has now, a logo with a foreign form warns,
   an unseen logo asks, the two slip-continuation pages stay unknown. Then re-check the owner's day
   (the warning must be gone for the SiCepat orders) and rebuild the portable folder.
+  - Open sub-point: the owner reports having seen a J&T Express tracking ID with a **`JT`** prefix
+    (2026-10-11). The samples hold none — all 2,086 J&T Express rows of the 2026-10-06 exports and
+    all 5,570 letter-prefixed tokens on the 1,269 sample pages are `JY` + 10 digits — so the form
+    stays `JY\d{10}` until a label is in hand; then it is a one-line data edit
+    (`JY\d{10}|JT\d{10}`, the pattern is anchored as a full match), and because the logo must
+    agree, a wrong entry there can only turn a name into a warning, never a warning into a wrong
+    name.
   - Measured for D15 (2026-10-11, counts and shapes only; method: the Python reader page by page
     and the exports read by provider): the 601 sample pages → J&T Express 517, no courier 84
     (82 with a `00` + 10-digit tracking ID, 1 slip continuation, 1 `TikTok Shop` label with no
