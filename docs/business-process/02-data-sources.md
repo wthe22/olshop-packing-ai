@@ -62,6 +62,9 @@ creator handle, …) are not needed for packing.
   1D barcode and as a QR code; both codes hold the tracking ID only.
 - Item information on the label: J&T labels may show `Jumlah : <n>pcs, Barang : <variation>`
   (variation only); SiCepat and IDX labels show none. The label cannot replace the packing list.
+- The courier is not always readable text: J&T labels print `www.jet.co.id`, but **SiCepat and
+  IDX labels print no courier name and no web address** — the courier is only the logo image, so
+  the tracking-ID form is the only machine-readable courier clue there.
 - Label pages are printed exactly as downloaded *(owner)*.
 - Each download is at most 200 pages, so one batch needs several PDF files.
 - File names: `MM-DD_HH-MM-SS_Shipping label_<n>.pdf`, or

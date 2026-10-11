@@ -4,22 +4,22 @@ Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same 
 finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
 noted as passed.
 
-Status: **Phase 2 (PC app): all tasks 2.1–2.14 done; awaiting the owner review.** The owner
-decided that the PC gets a desktop app written in Rust (a command line is not good for daily
-use), so phase 1 stops with its code done (270 tests) and stays as the reference
-implementation and fallback; its two open tasks move into phase 2. Design:
+Status: **Phase 2 (PC app): tasks 2.1–2.14 done, the owner's review round 1 (2026-10-11, his own
+day's data) is back: two defects reported and a third found while checking them — 2.15 and 2.16
+at the end of Phase 2.** The owner decided that the PC gets a desktop app written in Rust (a
+command line is not good for daily use), so phase 1 stops with its code done (270 tests) and
+stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
-until phase 3). D2 (the PDF library) is answered: PDFium does all three PDF jobs, and the bigger
-packing-list files (about 1.5 MB instead of 60 KB) are accepted.
+until phase 3), and new **D15** (the SiCepat labels) and **D16** (where the courier data lives) —
+the only answers needed before 2.16. D2 (the PDF library) is answered: PDFium does all three PDF
+jobs, and the bigger packing-list files (about 1.5 MB instead of 60 KB) are accepted.
 
-**Next step (owner).** Put the program folder on the PC and run a normal day through it, without a
-terminal — the review list is at the end of Phase 2. The guide is
-[docs/user-guide/01-pc-app.md](../user-guide/01-pc-app.md). Write the answers as a new session
-here, or open choices in
-[02-design-questions.md](../software-design/02-design-questions.md) (D1 Android, D13 unticking
-the rest row, D14 log file — each "Built for now" until answered); the phase-3 Android work waits
-for this review.
+**Next step.** 2.15 (the packing-list display) needs no answer and starts now. Then the owner's
+D15/D16 answers, then 2.16. The answers belong in
+[02-design-questions.md](../software-design/02-design-questions.md) — each question has a
+"Built for now" default, nothing waits on them — or as a new session here; the phase-3 Android
+work waits for this phase's review to pass.
 
 ---
 
@@ -233,10 +233,53 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     window). Linked from `docs/README.md`, `AGENTS.md` and the "Use the PC app" row of
     `docs/development/README.md`.
 
-**Owner review:** the owner puts the program folder on the PC and runs a normal day's downloads through it,
-without a terminal: two batches, one category edited and the last batch amended, one batch
-reverted; prints the saved PDFs and packing lists; confirms the picks, numbering, folder and
-file names, and the screens.
+- [ ] **2.15 Packing list: the two display defects of review round 1.** (a) *The body starts at
+  the top margin, so on every page the first row or bar is printed over the header.* `Builder::new`
+  starts at `MARGIN` (`crates/pdf/src/packing_list.rs:381`) and `need()` restarts at `MARGIN`
+  (`:449`), while the header ops draw the title at `MARGIN` and the counts at `MARGIN + 7`
+  (`:726`, `:745`) without advancing the cursor; the Python header leaves the cursor at 23 mm
+  (`script/packing/packing_list.py:153`). Start the body below the header (23 mm) in all three
+  layouts, on the first page and after every page break, the "(continued)" line included; a list
+  that filled a page can become two (notes of 2.6/2.7 and the tests move with it). (b) *`×`
+  prints as `ÿ`.* PDFium writes U+00D7 wrongly for a **non-CID** TrueType font — probe with
+  `cid = 0` gives `A ÿ1 ·x —d`, with `cid = 1` gives `A ×1 ·x —d` — and the app loads the three
+  fonts with `load_true_type_from_file(path, false)` (`:256`); load them as CID fonts and check
+  the written file's text layer again (in the probe's CID file spaces read back as U+00A0 and
+  `·` as U+A78F, so the text layer needs its own check). Check by eye and by readback: the
+  owner's 2026-10-11 `batch 1`/`batch 2` `packing-list.pdf` and `testdata/` with all three
+  layouts.
+  - Result: (not started)
+- [ ] **2.16 Courier: the SiCepat labels** (review round 1; needs D15, and D16 if the courier
+  data moves to the data folder). 23 of the owner's 98 orders get no courier (J&T Express 74,
+  SiCepat 23, IDX 1; the day warns 15 + 8): SiCepat labels print their name **only as a logo
+  image** and their tracking ID is 12 digits starting `00`, a form `couriers.toml` marks as
+  shared (`tracking_unique = false`; J&T Cargo is also 12 digits), so `deduce_courier`
+  (`crates/engine/src/label.rs:217`) refuses and warns. The 2026-10-07 sample is the same shape:
+  82 of 601 pages. Apply the owner's D15/D16 answer, then re-check the owner's day (the warning
+  must be gone for the SiCepat orders) and rebuild the portable folder.
+  - Result: (not started; waiting for D15/D16)
+
+**Owner review (round 1, 2026-10-11, on the owner's own day's data).** The owner ran a real day
+through the portable folder (2 batches, 4 label files, 98 orders, no terminal) and reported two
+things; checking them found a third.
+
+| # | Reported / found | What it is | Cause |
+|---|---|---|---|
+| 1 | "packing list isn't displayed correctly, some text overlap" | Every page of every layout prints the first body row or bar over the header (title 10–17 mm, counts 17–22 mm): the body starts at the top margin (10 mm) instead of below the header (23 mm) | The Rust header is a set of fixed ops that never advances the cursor; `Builder` starts and restarts at `MARGIN` |
+| 2 | found while checking 1 (the owner has not seen it: the pick layout has no `×`) | `×` prints as `ÿ`, in the drawn glyph **and** in the text layer, in the run lines of `full`/`summary`; `·` and `—` are right | PDFium writes U+00D7 wrongly for a non-CID TrueType font; the app loads the fonts with `cid = false` |
+| 3 | "some couriers are not recognized by the current parser" | 23 of 98 orders save with an empty courier | SiCepat labels carry the name **only as a logo image**, and their `00` + 10-digit tracking form is marked as shared with J&T Cargo, so the deduction refuses |
+
+Evidence: the owner's `batch 1`/`batch 2` `packing-list.pdf` (both 1 page, layout `pick`)
+rendered and read back, against the Python reference (`pc/spike/out/python-packing-list.pdf`);
+`testdata/labels-slip.pdf` through `packing-cli prepare --layout full,summary,pick` — all three
+layouts show the overlap; the 4 label files of 2026-10-11 and the 3 of `samples/` read for the
+courier clues, counts only; the pages with no courier text rendered (they are `SICEPAT EKSPRES`,
+the name only in the logo); PDFium probed with a non-CID and a CID font. The owner's data folder
+was only read — nothing in it was written to or changed; every probe wrote outside it.
+
+**Owner review (round 2).** After 2.15 and 2.16: open the same day's packing list (the header
+must stand clear of the body; a `summary` or `full` list must print `×`, not `ÿ`) and check the
+Day screen shows no *Courier unknown* warning; print one packing list.
 
 ---
 

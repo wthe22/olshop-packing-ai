@@ -65,3 +65,41 @@ orders"). Nothing else in the design writes one; every batch already has its `su
 | 2. `log.txt` in the data folder | One line per batch saved, reverted or amended, plus unexpected errors; **Open log file** opens it |
 
 **What the answer changes:** the *About* row of Settings and one small writer in the app.
+
+## D15 — The SiCepat labels (a courier the parser cannot name)
+
+**Words.** An order's courier comes from the label (03 › *Courier deduction*): a text clue (J&T
+labels print `www.jet.co.id`) or the tracking-ID form — but the form is only used when it belongs
+to one courier. SiCepat labels print the name **only as the logo image** and their tracking ID is
+12 digits starting `00`; `couriers.toml` marks that form as shared with J&T Cargo, so those orders
+save with an empty courier and the day warns.
+
+**Example.** 2026-10-11, 98 orders: J&T Express 74, SiCepat 23, IDX 1. The 23 SiCepat orders
+(15 in batch 1, 8 in batch 2) are warned *Courier unknown*; a category whose condition uses
+`courier` cannot see them. The 2026-10-07 sample is the same shape: 82 of 601 pages.
+
+| Option | What you see |
+|---|---|
+| **1. Keep refusing the `00…` form** (**Built for now**) | The SiCepat orders save with an empty courier and are listed in the warning; a `courier` condition cannot separate them |
+| 2. `00` + 10 digits means **SiCepat** | The 23 orders get `SiCepat` and a condition can use it. Risk: a courier sharing that 12-digit form (J&T Cargo) would be named SiCepat silently — no such label has appeared in the 699 pages read (2026-10-07 and 2026-10-11) |
+
+Recommended: **2** — it needs one line of data and fixes today's 23 orders and the sample's 82
+pages; if a J&T Cargo label ever appears, its form is added the same way.
+
+**What the answer changes:** one line of `couriers.toml` (`tracking_unique`); the deduction
+itself (`crates/engine/src/label.rs`) keeps working as it is.
+
+## D16 — Where the courier data lives
+
+**Words.** The courier list — name, text clues, tracking forms — is built into the program
+(`pc/crates/engine/couriers.toml`, embedded in the binary). A new courier, or a change like D15,
+needs a new program version. `categories.toml` shows the other way: the app writes it into the
+data folder on first start and you edit it in the app.
+
+| Option | What you see |
+|---|---|
+| **1. Built into the program** (**Built for now**) | Courier changes arrive with a new version; the file is not in the data folder (nothing to edit, break or lose) |
+| 2. `couriers.toml` in the data folder | You edit the couriers yourself (e.g. one whose labels print no name); the app writes the built-in file on first start, like `categories.toml`, and refuses a broken file with the line |
+
+**What the answer changes:** a data-folder path and loader in `label.rs`, the *Start*/Settings
+handling of the data folder, and one line in 07 › *Inputs*.
