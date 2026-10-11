@@ -86,9 +86,13 @@ empty courier and the day warns.
   orders): J&T Express 1,252 · SiCepat 173 (174 CSV lines) · IDX 9 · **J&T Cargo 1**. All 173
   SiCepat IDs are 12 digits starting `00`; the single J&T Cargo ID is 12 digits starting `57`. The
   two 12-digit forms **do not collide** in this data.
-- **No J&T Cargo label exists** in `samples/`: that one order is a 2026-10-06 CSV row only, so its
-  label cannot be looked at. The `tracking_unique = false` note is a careful assumption, not
-  something the files show.
+- **Two J&T Cargo labels were found on 2026-10-11** — `0708-orders.pdf` p13 (its slip continues
+  on p14) and `10-07_00-03-17_Shipping label_3.pdf` p114. Both print a `57` + 10-digit tracking
+  ID, and the second one's order is the row the 2026-10-06 export itself names **J&T Cargo**: the
+  `57…` form is confirmed against the platform's own record, not assumed. Their label also prints
+  the service tag `FastTrack` as text (the `00…` labels print nothing), but IDX labels use the
+  same boxed layout, so the tracking form stays the reliable clue. A J&T Cargo order's slip can
+  continue on a second page that carries no courier mark and no tracking ID.
 
 | Option | What you see |
 |---|---|

@@ -35,7 +35,7 @@
 | Column | Use |
 |---|---|
 | `Order ID` | 18 digits. Printed as text on the label |
-| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` + 10 digits; SiCepat 12 digits starting `00`; IDX `TKP` + 10 digits; J&T Cargo 12 digits |
+| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` + 10 digits; SiCepat 12 digits starting `00`; IDX `TKP` + 10 digits; J&T Cargo 12 digits starting `57` |
 | `Package ID` | 19 digits. Exactly one per order in the samples |
 | `SKU ID` | 19 digits, always filled. The only stable item identifier |
 | `Product Name` | Long (up to ~80 characters). The part before the first `\|` is the short product name, e.g. `Spion Beat \| Kaca Spion Motor …` → `Spion Beat` |
@@ -60,11 +60,19 @@ creator handle, …) are not needed for packing.
 - One label per page in the samples. An order with many items can span several pages *(owner)*.
 - Every sample page carries the Order ID as text. The tracking ID is printed as text, as a
   1D barcode and as a QR code; both codes hold the tracking ID only.
-- Item information on the label: J&T labels may show `Jumlah : <n>pcs, Barang : <variation>`
-  (variation only); SiCepat and IDX labels show none. The label cannot replace the packing list.
-- The courier is not always readable text: J&T labels print `www.jet.co.id`, but **SiCepat and
-  IDX labels print no courier name and no web address** — the courier is only the logo image, so
-  the tracking-ID form is the only machine-readable courier clue there.
+- Item information on the label: J&T Express labels may show `Jumlah : <n>pcs, Barang : <variation>`
+  (variation only); SiCepat, IDX and J&T Cargo labels show none. The label cannot replace the
+  packing list.
+- Two label layouts. J&T Express and SiCepat print the same rows (courier logo, service tag,
+  sender, receiver, `Weight`, `Ship`, the sort code above the barcode, the tracking ID under it,
+  then `Order Id :` and `Estimated Date:`). J&T Cargo and IDX print a boxed layout: `tokopedia |
+  TikTok` logos, the service tag, the tracking ID under a wide barcode, routing lines, a
+  sender/receiver box with a QR code, `Weight`, `COD`, `Print Time`, and the order ID inside the
+  box (`TT Order ID :` on J&T Cargo, `Order ID :` on IDX).
+- The courier is not always readable text: J&T Express labels print `www.jet.co.id` and J&T Cargo
+  labels print `FastTrack` (their service tag), but **SiCepat and IDX labels print no courier name
+  and no web address** — the courier is only the logo image, so the tracking-ID form is the only
+  machine-readable courier clue there.
 - Label pages are printed exactly as downloaded *(owner)*.
 - Each download is at most 200 pages, so one batch needs several PDF files.
 - File names: `MM-DD_HH-MM-SS_Shipping label_<n>.pdf`, or

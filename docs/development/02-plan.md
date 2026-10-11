@@ -280,11 +280,15 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   day (the warning must be gone for the SiCepat orders) and rebuild the portable folder.
   - Measured for D15 (2026-10-11, counts and shapes only; method: the Python reader page by page
     and the exports read by provider): the 601 sample pages → J&T Express 517, no courier 84
-    (82 with a `00` + 10-digit tracking ID, 2 continuation pages); `sicepat` on 0 pages, in the
-    plain and in the whitespace-stripped text; the 2026-10-06 exports name SiCepat 173 orders
-    (`00…`) and J&T Cargo 1 (`57…`). The two 12-digit forms do not collide, and no J&T Cargo
-    **label** exists in `samples/` (only that CSV row), so only the tracking form can separate
-    them.
+    (82 with a `00` + 10-digit tracking ID, 1 slip continuation, 1 `TikTok Shop` label with no
+    tracking ID); `sicepat` on 0 pages, in the plain and in the whitespace-stripped text; the
+    2026-10-06 exports name SiCepat 173 orders (`00…`) and J&T Cargo 1 (`57…`). The two 12-digit
+    forms do not collide. **Both J&T Cargo labels were found on 2026-10-11** (`0708-orders.pdf`
+    p13, its slip continuing on p14; `10-07_00-03-17_Shipping label_3.pdf` p114): both print the
+    `57…` form, the second one's order is the row the export itself names J&T Cargo, and both
+    print `FastTrack` as text. Over all 8 sample PDFs (1,229 pages): J&T Express 1,083 · SiCepat
+    140 · J&T Cargo 2 · IDX 1 · `TikTok Shop` 1 · slip continuations 2. Every page is one order
+    except that one Cargo order.
   - Result: (not started; waiting for D15)
 - [x] **2.17 Open folder: it opened Documents (review round 1).** `show_in_folder` ran
   `explorer.exe /select,<path>`. Explorer parses `/select,` itself and does not understand the
