@@ -6,21 +6,25 @@ noted as passed.
 
 Status: **Phase 2 (PC app): tasks 2.1–2.15 and 2.17 done — the packing-list display defects and the
 *Open folder* defect of the owner's review round 1 (2026-10-11, his own day's data) are fixed;
-2.16 (the courier) waits for D15/D16, and 2.18 (the check of the saved PDFs, designed at the
+2.16 (the courier) waits for D15, and 2.18 (the check of the saved PDFs, designed at the
 owner's request on 2026-10-11) waits behind it.**
 The owner decided that the PC gets a desktop app written in Rust (a
 command line is not good for daily use), so phase 1 stops with its code done (270 tests) and
 stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
-until phase 3), **D15** (the SiCepat labels) and **D16** (where the courier data lives) —
-the only answers needed before 2.16 — and D17 (whether 2.18's check runs on every batch). D2 (the
+until phase 3), **D15** (the SiCepat labels — its evidence is measured and written there: the
+`00` form does not collide with the one J&T Cargo order, so the answer is a data line) — the only
+answer still needed before 2.16 — and D17 (whether 2.18's check runs on every batch). **D16 is
+answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
+edit the owner can make, not a new program version — task 2.19. D2 (the
 PDF library) is answered: PDFium does all three PDF
 jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summary`) are accepted.
 
 **Next step.** The owner's D15/D16 answers, then 2.16 (a change to the courier data at most), then
-2.18 (the saved-PDF check; its four choices are answered and D17 has a "built for now" default, so
-it waits on 2.16 only). Then the round-2 review at the end of Phase 2 — open the same day's packing
+2.19 (the courier data into the data folder, D16's answer — no owner answer needed, so it can be
+built at any time) and 2.18 (the saved-PDF check; its four choices are answered and D17 has a
+"built for now" default, so it waits on nothing). Then the round-2 review at the end of Phase 2 — open the same day's packing
 list (the header must stand clear, `×` must print), press *Open folder* (the batch folder must open,
 not Documents), check the Day screen for a *Courier unknown* warning, and save one batch to watch
 the check run (the progress line; a clean day must report nothing). The
@@ -266,15 +270,22 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     reverted) and the module test `only_the_characters_pdfium_encodes_wrongly_use_the_cid_font`;
     all 124 tests of the workspace pass. Design written into 03 › *Packing list (A4)* and 07 ›
     *PDF library*.
-- [ ] **2.16 Courier: the SiCepat labels** (review round 1; needs D15, and D16 if the courier
-  data moves to the data folder). 23 of the owner's 98 orders get no courier (J&T Express 74,
+- [ ] **2.16 Courier: the SiCepat labels** (review round 1; needs D15 only — D16 was answered on
+  2026-10-11 and moved into 2.19). 23 of the owner's 98 orders get no courier (J&T Express 74,
   SiCepat 23, IDX 1; the day warns 15 + 8): SiCepat labels print their name **only as a logo
   image** and their tracking ID is 12 digits starting `00`, a form `couriers.toml` marks as
   shared (`tracking_unique = false`; J&T Cargo is also 12 digits), so `deduce_courier`
   (`crates/engine/src/label.rs:217`) refuses and warns. The 2026-10-07 sample is the same shape:
-  82 of 601 pages. Apply the owner's D15/D16 answer, then re-check the owner's day (the warning
-  must be gone for the SiCepat orders) and rebuild the portable folder.
-  - Result: (not started; waiting for D15/D16)
+  82 of 601 pages. Apply the owner's D15 answer (a courier-data line), then re-check the owner's
+  day (the warning must be gone for the SiCepat orders) and rebuild the portable folder.
+  - Measured for D15 (2026-10-11, counts and shapes only; method: the Python reader page by page
+    and the exports read by provider): the 601 sample pages → J&T Express 517, no courier 84
+    (82 with a `00` + 10-digit tracking ID, 2 continuation pages); `sicepat` on 0 pages, in the
+    plain and in the whitespace-stripped text; the 2026-10-06 exports name SiCepat 173 orders
+    (`00…`) and J&T Cargo 1 (`57…`). The two 12-digit forms do not collide, and no J&T Cargo
+    **label** exists in `samples/` (only that CSV row), so only the tracking form can separate
+    them.
+  - Result: (not started; waiting for D15)
 - [x] **2.17 Open folder: it opened Documents (review round 1).** `show_in_folder` ran
   `explorer.exe /select,<path>`. Explorer parses `/select,` itself and does not understand the
   quotes Rust puts around an argument that holds a space, so it never read the target and fell back
@@ -326,6 +337,19 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     tests fail when the check is switched off, as the 2.15 display tests do. Behind it: the
     smaller seams too — a page count changed in a written file, a packing-list count changed.
   - Open: D17 (every batch or only a large one).
+  - Result: (not started)
+- [ ] **2.19 The courier data in the data folder** (D16, answered by the owner 2026-10-11). The
+  courier list — name, text clues, tracking forms — is built into the program today, so a new
+  courier, a corrected form or D15's answer needs a new program version. It becomes a data file
+  like `categories.toml` (same handling): the app writes the built-in file into the data folder on
+  first start, *Start* and *Settings › Change…* treat it as they treat `categories.toml`, and a
+  broken file stops the read with its line. After this, a courier change is an edit the owner can
+  make, and the shipped default still carries the built-in list into a fresh data folder.
+  - Code: the loader in `crates/engine/src/label.rs` reads the data folder's file (built-in copy
+    as the default), the first-start write and the Settings/Start handling next to
+    `categories.toml`, and the broken-file message. Design is written into 07 › *Inputs*, *Day
+    folder*, *Program folder* and 08 › *Start* / *6. Settings*; D16 is removed from
+    02-design-questions.md because its answer is written here.
   - Result: (not started)
 
 **Owner review (round 1, 2026-10-11, on the owner's own day's data).** The owner ran a real day

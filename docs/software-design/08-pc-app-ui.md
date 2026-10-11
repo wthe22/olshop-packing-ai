@@ -284,8 +284,8 @@ One category switched to **Text view**, with an error:
 
 **Change…** switches the data folder until the app closes; it does not move existing files.
 The app asks "Use `<folder>` until the app closes? Existing days stay in `<old folder>`." The
-categories file of the new folder is used (a copy of the current one is put there if it has
-none). The next start looks in the program folder again.
+categories and couriers files of the new folder are used (a copy of the current ones is put
+there if it has none). The next start looks in the program folder again.
 
 ## Start
 
@@ -295,8 +295,8 @@ At every start the app looks for `categories.toml` in its own folder
 1. **Found** → that folder is the data folder; the Day screen of today opens.
 2. **Not found** (first start, or the program was copied without its data) → "No packing data
    next to the program (`D:\Packing\`)." [Use this folder] [Choose a folder…]
-   - **Use this folder** writes the built-in `categories.toml` (the repository's) there; every
-     later start finds it. If the folder cannot be written (e.g. under `Program Files`), the
+   - **Use this folder** writes the built-in `categories.toml` and `couriers.toml` (the
+     repository's) there; every later start finds them. If the folder cannot be written (e.g. under `Program Files`), the
      message says so and only **Choose a folder…** is left.
    - **Choose a folder…**: a folder with a `categories.toml` is used as it is; an empty one gets
      the built-in file. It is used until the app closes, so the next start asks again.

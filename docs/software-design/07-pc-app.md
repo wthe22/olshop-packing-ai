@@ -64,7 +64,7 @@ What is different in the app (these are owner decisions):
 | **Batch** | One round of the daily steps ([business-process 01](../business-process/01-packing-workflow.md#daily-steps)): arrange shipment, download the labels (one or more files of up to 200 pages), prepare them in the app. Numbered 1, 2, 3, … within the day. In the app, one **Save** = one batch |
 | **Draft** | A batch that has been read but not saved yet. It lives only in the app's memory; closing the app forgets it and nothing is written |
 | **Plan** | The list of picks of a draft, in order, with their counts. Starts as the `categories.toml` entries in file order |
-| **Data folder** | The folder where the app keeps `categories.toml` and the `labels/` folder with every day's output. By default the program's own folder ([Program folder](#program-folder-portable)) |
+| **Data folder** | The folder where the app keeps `categories.toml`, `couriers.toml` and the `labels/` folder with every day's output. By default the program's own folder ([Program folder](#program-folder-portable)) |
 | **Pick**, **saved PDF**, **run**, **contents** | As in [01-requirements.md](01-requirements.md#concepts) |
 
 ## Inputs
@@ -73,7 +73,7 @@ What is different in the app (these are owner decisions):
 |---|---|
 | Label PDFs | The *Shipping label + Packing slip* files of one batch ([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)). One or more files; the seller centre splits a download into files of at most 200 pages |
 | `categories.toml` | In the data folder. Each entry is one pick ([04-rules-file.md](04-rules-file.md)). Edited inside the app ([08 › Categories](08-pc-app-ui.md#5-categories)) or by hand |
-| `couriers.toml` | The courier-deduction data, built into the program (same content as `script/packing/couriers.toml`) |
+| `couriers.toml` | The courier-deduction data: name, text clues, tracking forms (D16, owner decision 2026-10-11 — task 2.19). **In the data folder**, like `categories.toml`: written from the built-in file (same content as `script/packing/couriers.toml`) on first start, then the owner's; a broken file stops the batch with its line |
 | The day's `state.json` | What earlier batches of the same day saved (below) |
 
 ### Every page must carry a packing slip
@@ -140,6 +140,7 @@ The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04.
 ```
 <data folder>/
   categories.toml
+  couriers.toml
   settings.json
   labels/
     2026-10-07/
@@ -391,7 +392,8 @@ Packing\
   Packing.exe
   pdfium.dll
   categories.toml   ┐
-  settings.json     ├ the data folder (default: the program folder itself)
+  couriers.toml     ├ the data folder (default: the program folder itself)
+  settings.json     │
   labels\           ┘
 ```
 
@@ -399,7 +401,8 @@ Packing\
 - **New version**: replace `Packing.exe` and `pdfium.dll`; the data files stay.
 - **Finding the data folder at start**: the app looks for `categories.toml` in its own folder.
   Found → that folder is the data folder. Not found → the app asks, at every start until it is
-  found: **Use this folder** (writes the built-in `categories.toml` next to the program) or
+  found: **Use this folder** (writes the built-in `categories.toml` and `couriers.toml` next to
+  the program) or
   **Choose a folder…** (used until the app closes; the next start asks again). See
   [08 › Start](08-pc-app-ui.md#start).
 - Settings › Data folder › **Change…** switches to another folder until the app closes.

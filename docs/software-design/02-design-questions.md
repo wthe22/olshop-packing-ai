@@ -70,39 +70,38 @@ orders"). Nothing else in the design writes one; every batch already has its `su
 
 **Words.** An order's courier comes from the label (03 › *Courier deduction*): a text clue (J&T
 labels print `www.jet.co.id`) or the tracking-ID form — but the form is only used when it belongs
-to one courier. SiCepat labels print the name **only as the logo image** and their tracking ID is
-12 digits starting `00`; `couriers.toml` marks that form as shared with J&T Cargo, so those orders
-save with an empty courier and the day warns.
+to one courier. SiCepat labels print the name **only as the logo image**; `couriers.toml` marks
+their `00` + 10-digit form as shared (`tracking_unique = false`), so those orders save with an
+empty courier and the day warns.
 
-**Example.** 2026-10-11, 98 orders: J&T Express 74, SiCepat 23, IDX 1. The 23 SiCepat orders
-(15 in batch 1, 8 in batch 2) are warned *Courier unknown*; a category whose condition uses
-`courier` cannot see them. The 2026-10-07 sample is the same shape: 82 of 601 pages.
+**Measured on the owner's own files (2026-10-11, counts and shapes only).**
+
+- **The label pages.** The 2026-10-07 sample (3 *Shipping label + Packing slip* files, 601 pages):
+  J&T Express 517 pages, no courier 84 pages — 82 of those carry a tracking ID of **12 digits
+  starting `00`**, and 2 are continuation pages with no tracking token. `sicepat` appears on
+  **0** of the 601 pages, in the plain text and in the whitespace-stripped text: there is no text
+  clue to find. The owner's 2026-10-11 day is the same shape (98 orders, 23 unknown).
+- **The provider the platform itself recorded.** The 2026-10-06 exports
+  (`samples/orders-06-1/2.csv`, `Shipping Provider Name` per order; the 16:29 export, 1,435
+  orders): J&T Express 1,252 · SiCepat 173 (174 CSV lines) · IDX 9 · **J&T Cargo 1**. All 173
+  SiCepat IDs are 12 digits starting `00`; the single J&T Cargo ID is 12 digits starting `57`. The
+  two 12-digit forms **do not collide** in this data.
+- **No J&T Cargo label exists** in `samples/`: that one order is a 2026-10-06 CSV row only, so its
+  label cannot be looked at. The `tracking_unique = false` note is a careful assumption, not
+  something the files show.
 
 | Option | What you see |
 |---|---|
 | **1. Keep refusing the `00…` form** (**Built for now**) | The SiCepat orders save with an empty courier and are listed in the warning; a `courier` condition cannot separate them |
-| 2. `00` + 10 digits means **SiCepat** | The 23 orders get `SiCepat` and a condition can use it. Risk: a courier sharing that 12-digit form (J&T Cargo) would be named SiCepat silently — no such label has appeared in the 699 pages read (2026-10-07 and 2026-10-11) |
+| 2. `00` + 10 digits means **SiCepat** | The 173 orders get `SiCepat` and a condition can use it. Risk: a courier whose form also starts `00` would be named SiCepat silently — none among the 699 pages and the 1,435 orders read |
+| 3. Name **both** forms | `SiCepat` = `00` + 10 digits, `J&T Cargo` = `57` + 10 digits, each `tracking_unique = true`; any *other* 12-digit form still warns. Names the one Cargo order too, and nothing is guessed |
 
-Recommended: **2** — it needs one line of data and fixes today's 23 orders and the sample's 82
-pages; if a J&T Cargo label ever appears, its form is added the same way.
+Recommended: **3** — the same evidence as option 2, and an unknown stays unknown instead of being
+guessed. With D16 answered this is a data edit the owner can make himself, and the shipped default
+carries it into a new data folder.
 
-**What the answer changes:** one line of `couriers.toml` (`tracking_unique`); the deduction
-itself (`crates/engine/src/label.rs`) keeps working as it is.
-
-## D16 — Where the courier data lives
-
-**Words.** The courier list — name, text clues, tracking forms — is built into the program
-(`pc/crates/engine/couriers.toml`, embedded in the binary). A new courier, or a change like D15,
-needs a new program version. `categories.toml` shows the other way: the app writes it into the
-data folder on first start and you edit it in the app.
-
-| Option | What you see |
-|---|---|
-| **1. Built into the program** (**Built for now**) | Courier changes arrive with a new version; the file is not in the data folder (nothing to edit, break or lose) |
-| 2. `couriers.toml` in the data folder | You edit the couriers yourself (e.g. one whose labels print no name); the app writes the built-in file on first start, like `categories.toml`, and refuses a broken file with the line |
-
-**What the answer changes:** a data-folder path and loader in `label.rs`, the *Start*/Settings
-handling of the data folder, and one line in 07 › *Inputs*.
+**What the answer changes:** the courier entries of `couriers.toml` only; the deduction itself
+(`crates/engine/src/label.rs`) keeps working as it is.
 
 ## D17 — The check of the saved PDFs: every batch or only a large one
 
