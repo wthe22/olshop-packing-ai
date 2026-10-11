@@ -13,7 +13,8 @@ command line is not good for daily use), so phase 1 stops with its code done (27
 stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
-until phase 3) and D17 (whether 2.18's check runs on every batch). **D15 is answered**
+until phase 3), D17 (whether 2.18's check runs on every batch) and D18 (whether the courier is also
+read from the logo image; the measurements are in it). **D15 is answered**
 (2026-10-11, the owner: two clues that must agree — the tracking-ID form and the service tag; the
 rule is written into 03 › *Courier deduction*, so D15 is removed) and **D16 is answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
 edit the owner can make, not a new program version — task 2.19. D2 (the
@@ -291,15 +292,19 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     forms do not collide. **Both J&T Cargo labels were found on 2026-10-11** (`0708-orders.pdf`
     p13, its slip continuing on p14; `10-07_00-03-17_Shipping label_3.pdf` p114): both print the
     `57…` form, the second one's order is the row the export itself names J&T Cargo, and both
-    print `FastTrack` as text. Over all 8 sample PDFs (1,229 pages): J&T Express 1,083 · SiCepat
-    140 · J&T Cargo 2 · IDX 1 · `TikTok Shop` 1 · slip continuations 2. Every page is one order
-    except that one Cargo order. The two clues (the owner's rule): the service tag read from the
-    header strip gives J&T Express `EZ` 440 · `ECO` 248 · `NDD` 395, SiCepat `NDD` 39 · `REG` 69 ·
-    `HALU` 32, J&T Cargo `FastTrack` 2, IDX `REG` 1, TikTok Shop `GKS` 1 — form and tag agree on
-    all 1,226 label pages that have a tracking form, and the one `TikTok Shop` label has a tag but
-    no form (so it stays unknown); the 2 slip continuations have neither. The courier logo is one
-    embedded image, the same asset in all 6 files (J&T Express 975×377, SiCepat 184×60, J&T Cargo
-    527×73, IDX 712×92, TikTok Shop 326×59 px) — a third, exact clue the rule does not need.
+    print `FastTrack` as text. Over the samples as they now stand (9 files, 1,269 pages — the
+    owner renamed `10-orders.pdf` to `order w jt cargo.pdf` and added `order w idx.pdf`, 40 pages
+    of 2026-10-11, while this was measured): J&T Express 1,114 · SiCepat 148 · J&T Cargo 2 ·
+    IDX 2 · `TikTok Shop` 1 · slip continuations 2. Every page is one order except that one Cargo
+    order. The two clues (the owner's rule): the service tag read from the header strip gives
+    J&T Express `EZ` 453 · `ECO` 253 · `NDD` 408, SiCepat `NDD` 41 · `REG` 73 · `HALU` 34,
+    J&T Cargo `FastTrack` 2, IDX `REG` 2, TikTok Shop `GKS` 1 — form and tag agree on all 1,266
+    label pages that have a tracking form, and the one `TikTok Shop` label has a tag but no form
+    (so it stays unknown); the 2 slip continuations have neither. The courier logo is an embedded
+    image (J&T Express 975×377, SiCepat 184×60, IDX 1200×859, TikTok Shop 326×59 px — each a
+    single asset across all 9 files; the J&T Cargo logo is masked, 680×156/683×157) — a third
+    clue the rule does not need (D18 asks whether to use it). The barcode and QR are vector paths
+    and every page also carries a page-wide frame image.
     The spill: the label takes the top 70% of the page on every style (the slip starts at 126.5 pt
     on all four), so only the slip's own content spills — the sample's one spilled order had a
     single item line and a buyer message.

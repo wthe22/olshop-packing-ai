@@ -66,6 +66,37 @@ orders"). Nothing else in the design writes one; every batch already has its `su
 
 **What the answer changes:** the *About* row of Settings and one small writer in the app.
 
+## D18 — Should the courier also be read from the logo image?
+
+**Words.** The courier is named from the tracking-ID form and the service tag (03 › *Courier
+deduction*). A third clue exists: the courier's **logo**, which is an embedded image on the label.
+Read it and the name would survive a label that prints neither a readable tag nor a known form.
+
+**Measured (2026-10-11, Python + pdfium — the same C++ core the app uses; a 1,269-page sample).**
+
+| What to read | Cost | What it finds |
+|---|---|---|
+| the image's pixel size, no decoding | ~0 ms (part of walking the page's objects) | the logo's size; J&T Express 975×377 · SiCepat 184×60 · IDX 1200×859 · TikTok Shop 326×59 · J&T Cargo 680×156/683×157 |
+| the image's encoded bytes, no decoding | 0.005–0.02 ms per image | one fixed hash per courier for the four unmasked logos (stable across all 9 files) |
+| the image's decoded pixels | ~1.1 ms per MB (184×60 → 0.05 ms; 975×377 → 1.5 ms; a 2000×2000 image → 13 ms) | the same, but also survives a re-encode |
+| render the label's header and compare the pixels | ~17 ms per page | everything, including a masked logo — but it is the most code and the slowest |
+
+**Two catches.** The **J&T Cargo logo is a masked image** (`/SMask`): its decoded pixels come out
+black, so its hash is meaningless unless the mask is applied or the label is rendered. And a
+slip-continuation page has no logo at all (2 of 1,269 pages).
+
+| Option | What you see |
+|---|---|
+| **1. Form + tag only** (**Built for now**) | J&T Cargo keeps working from `57` + `FastTrack`; nothing new to build. A label whose tag is unreadable stays unknown |
+| 2. The logo as a **third confirming clue** | The name is used only when form, tag and logo agree; a logo that disagrees turns a name into a warning. About 30–50 lines and a small logo table (size + hash) in the courier data file; under 1 s added to a 600-page day with the decoded-pixel read, ~0 with the encoded-bytes read |
+| 3. The logo as the **main clue**, form + tag as the check | Names the courier when the tag is unreadable — but J&T Cargo needs the mask handled, and a re-rastered logo asset (which J&T Cargo already shows: 680×156 vs 683×157) would have to fall back to the form anyway |
+
+Recommended: **2** when a third clue is wanted — it is cheap, exact where it applies, and it can
+only turn a name into a warning, never a warning into a wrong name.
+
+**What the answer changes:** one function (`crates/engine/src/label.rs`) and one field in the
+courier data file; nothing else.
+
 ## D17 — The check of the saved PDFs: every batch or only a large one
 
 **Words.** Task 2.18 makes the app read its own output back before a batch is finished: every order

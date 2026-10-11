@@ -73,16 +73,21 @@ creator handle, …) are not needed for packing.
   labels print `FastTrack` (their service tag), but **SiCepat and IDX labels print no courier name
   and no web address** — the courier is only the logo image, so the tracking-ID form is the only
   machine-readable courier clue there.
-- The **service tag** is printed in the label's header strip. Measured on all 1,229 sample pages:
-  J&T Express `EZ` `ECO` `NDD` · SiCepat `NDD` `REG` `HALU` · J&T Cargo `FastTrack` · IDX `REG` ·
-  TikTok Shop `GKS`. `NDD` is on both J&T Express and SiCepat labels and `REG` on both SiCepat and
-  IDX, so the tag alone never names a courier — only together with the tracking-ID form does it.
-  These words also appear inside street, product and address text (a buyer's address on a J&T
-  Express label reads *dekat Ais cargo*), so the tag must be read from the header strip, not
-  searched over the page.
-- The courier **logo is one embedded image** on every page and the same asset in every export
-  (J&T Express 975×377 px · SiCepat 184×60 · J&T Cargo 527×73 · IDX 712×92 · TikTok Shop 326×59),
-  so the image itself identifies the courier as exactly as the tracking form does.
+- The **service tag** is printed in the label's header strip. Measured on the samples (9 files,
+  1,269 pages): J&T Express `EZ` 453 · `ECO` 253 · `NDD` 408 · SiCepat `NDD` 41 · `REG` 73 ·
+  `HALU` 34 · J&T Cargo `FastTrack` 2 · IDX `REG` 2 · TikTok Shop `GKS` 1 (2 continuation pages
+  carry none). `NDD` is on both J&T Express and SiCepat labels and `REG` on both SiCepat and IDX,
+  so the tag alone never names a courier — only together with the tracking-ID form does it. These
+  words also appear inside street, product and address text (a buyer's address on a J&T Express
+  label reads *dekat Ais cargo*), so the tag must be read from the header strip, not searched over
+  the page.
+- The courier **logo is an embedded image** on every label page (a slip-continuation page has
+  none): J&T Express 975×377 px · SiCepat 184×60 · IDX 1200×859 · TikTok Shop 326×59, the same
+  asset in every export. The **J&T Cargo logo is a masked image** (680×156 on one label, 683×157
+  on the other): its pixels come out black unless the mask is applied or the label is rendered.
+  Every page also carries a page-wide frame image and draws the barcode and QR as vector paths
+  (about 180 path objects), so the courier logo is the one small *unmasked* image in the header.
+  Measured 2026-10-11 over the 9 sample files (1,269 pages).
 - Label pages are printed exactly as downloaded *(owner)*.
 - Each download is at most 200 pages, so one batch needs several PDF files.
 - File names: `MM-DD_HH-MM-SS_Shipping label_<n>.pdf`, or
