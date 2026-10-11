@@ -123,27 +123,31 @@ The slip is read by text position, not by reading order: `pypdf`
 
 ## Courier deduction (without a CSV)
 
-The label is read for two clues and the courier is named **only when the two agree**: one clue
-alone can be wrong, so a wrong name would need two labels to be wrong in the same way.
+The label is read for two clues and the courier is named **only when the two agree** (the owner's
+rule, 2026-10-11): one clue alone can be wrong, so a wrong name would need two labels to be wrong
+in the same way.
 
-1. **The tracking-ID form** ([business-process 02](../business-process/02-data-sources.md#columns-packing-needs)):
+1. **The logo** — the main clue. Every label prints the courier's logo as an embedded image; the
+   image's **encoded bytes** are hashed (pdfium's `FPDFImageObj_GetImageDataRaw`, *not* the decoded
+   pixels) and looked up in the courier data's logo table. One hash per courier, measured stable
+   across every sample export. The cost is about 0.01 ms a page (the bytes are 1.5–15 KB). A hash
+   not in the table is **asked of the owner once** ("which courier is this logo?") and the answer
+   is written into the data file, so later labels are named without asking.
+2. **The tracking-ID form** ([business-process 02](../business-process/02-data-sources.md#columns-packing-needs)):
    `JY` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo;
    `TKP` + 10 digits → IDX.
-2. **The service tag**, read from the label's header strip (the top 10% of the page): J&T Express
-   `EZ` `ECO` `NDD`; SiCepat `NDD` `REG` `HALU`; J&T Cargo `FastTrack`; IDX `REG`. It is a word
-   from that small list, found in the header strip — a search over the whole page text is not
-   enough: the same words sit inside street, product and address text (`REG`, `EZ`, `CARGO` were
-   found in them on J&T Express pages). `NDD` is on both J&T Express and SiCepat labels, so the tag
-   alone does not separate those two — the pair does.
-3. **A text clue** names the courier on its own when the label prints one: `www.jet.co.id` →
-   J&T Express, `FastTrack` → J&T Cargo. SiCepat and IDX print none (SiCepat's name is only the
-   logo image).
-4. **Named only when the clues agree**: the courier of the form must also carry the tag found. A
-   tag outside that courier's list, a form with no tag, a tag with no form, or no clue at all →
-   no name. Unknown → `courier` empty, and a warning lists those orders.
+3. **Named only when the two agree**: a logo whose courier and form disagree, a logo with no form,
+   a form with no logo, or neither → no name. Unknown → `courier` empty, and a warning lists those
+   orders.
+4. **A printed text clue** (`www.jet.co.id`, `FastTrack`) stands in for the logo only where the
+   logo cannot be read — J&T Cargo's logo is a masked image with no stable hash (D18). SiCepat and
+   IDX print no courier name at all.
+5. **The service tag is not used yet** (the owner, 2026-10-11: it is weak for some couriers). The
+   measured tag lists stay in [business-process 02](../business-process/02-data-sources.md) for
+   when a case needs them.
 
-`couriers.toml` holds, per courier: the name, its text clues, its tracking form and its service
-tags.
+`couriers.toml` holds, per courier: the name, its text clues, its tracking form and its logo
+hashes.
 
 ## Picks
 

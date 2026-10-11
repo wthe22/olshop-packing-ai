@@ -66,36 +66,29 @@ orders"). Nothing else in the design writes one; every batch already has its `su
 
 **What the answer changes:** the *About* row of Settings and one small writer in the app.
 
-## D18 — Should the courier also be read from the logo image?
+## D18 — The J&T Cargo logo (the one the logo clue cannot read)
 
-**Words.** The courier is named from the tracking-ID form and the service tag (03 › *Courier
-deduction*). A third clue exists: the courier's **logo**, which is an embedded image on the label.
-Read it and the name would survive a label that prints neither a readable tag nor a known form.
-
-**Measured (2026-10-11, Python + pdfium — the same C++ core the app uses; a 1,269-page sample).**
-
-| What to read | Cost | What it finds |
-|---|---|---|
-| the image's pixel size, no decoding | ~0 ms (part of walking the page's objects) | the logo's size; J&T Express 975×377 · SiCepat 184×60 · IDX 1200×859 · TikTok Shop 326×59 · J&T Cargo 680×156/683×157 |
-| the image's encoded bytes, no decoding | 0.005–0.02 ms per image | one fixed hash per courier for the four unmasked logos (stable across all 9 files) |
-| the image's decoded pixels | ~1.1 ms per MB (184×60 → 0.05 ms; 975×377 → 1.5 ms; a 2000×2000 image → 13 ms) | the same, but also survives a re-encode |
-| render the label's header and compare the pixels | ~17 ms per page | everything, including a masked logo — but it is the most code and the slowest |
-
-**Two catches.** The **J&T Cargo logo is a masked image** (`/SMask`): its decoded pixels come out
-black, so its hash is meaningless unless the mask is applied or the label is rendered. And a
-slip-continuation page has no logo at all (2 of 1,269 pages).
+**Words.** The owner's rule (2026-10-11) names the courier from the **logo** (its image hash) and
+the **tracking-ID form**, both agreeing, and asks the owner once about a logo never seen before.
+Four couriers' logos are plain images whose encoded bytes hash to one stable value each across all
+9 sample files (J&T Express 975×377, SiCepat 184×60, IDX 1200×859, TikTok Shop 326×59).
+**J&T Cargo's is not one of them**: it is a *masked* image (`/SMask`) whose base is a flat colour
+(331 bytes encoded) and whose raster changes between the two sample labels (680×156 on one,
+683×157 on the other — base and mask hashes both differ), so no hash of it can be stable. Its
+label does print `FastTrack` as real text.
 
 | Option | What you see |
 |---|---|
-| **1. Form + tag only** (**Built for now**) | J&T Cargo keeps working from `57` + `FastTrack`; nothing new to build. A label whose tag is unreadable stays unknown |
-| 2. The logo as a **third confirming clue** | The name is used only when form, tag and logo agree; a logo that disagrees turns a name into a warning. About 30–50 lines and a small logo table (size + hash) in the courier data file; under 1 s added to a 600-page day with the decoded-pixel read, ~0 with the encoded-bytes read |
-| 3. The logo as the **main clue**, form + tag as the check | Names the courier when the tag is unreadable — but J&T Cargo needs the mask handled, and a re-rastered logo asset (which J&T Cargo already shows: 680×156 vs 683×157) would have to fall back to the form anyway |
+| **1. `FastTrack` is J&T Cargo's second clue** (**Built for now**) | The samples' 2 Cargo orders are named; a Cargo label whose text is unreadable stays unknown. The tag stays unused for every other courier |
+| 2. Compare the logo by appearance, not by hash | Render the label's header (~17 ms a page) and compare it with a stored picture, tolerating the re-raster. Names Cargo too, for the most code in the deduction |
+| 3. J&T Cargo stays unknown until its logo is readable | Nothing to build; every Cargo order saves with an empty courier and a warning |
 
-Recommended: **2** when a third clue is wanted — it is cheap, exact where it applies, and it can
-only turn a name into a warning, never a warning into a wrong name.
+Recommended: **1** — this is the case the owner asked for ("unless I found a case where it is
+helpful"): `FastTrack` is the courier's printed brand line, not a service code, and it decided
+both Cargo labels in the samples.
 
-**What the answer changes:** one function (`crates/engine/src/label.rs`) and one field in the
-courier data file; nothing else.
+**What the answer changes:** one line of the courier data (J&T Cargo's text clue), or the
+deduction's comparison.
 
 ## D17 — The check of the saved PDFs: every batch or only a large one
 

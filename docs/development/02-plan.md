@@ -13,8 +13,8 @@ command line is not good for daily use), so phase 1 stops with its code done (27
 stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
 [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
 Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
-until phase 3), D17 (whether 2.18's check runs on every batch) and D18 (whether the courier is also
-read from the logo image; the measurements are in it). **D15 is answered**
+until phase 3), D17 (whether 2.18's check runs on every batch) and D18 (the J&T Cargo logo, the
+one the logo clue cannot read). **D15 is answered**
 (2026-10-11, the owner: two clues that must agree — the tracking-ID form and the service tag; the
 rule is written into 03 › *Courier deduction*, so D15 is removed) and **D16 is answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
 edit the owner can make, not a new program version — task 2.19. D2 (the
@@ -277,13 +277,16 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   shared (`tracking_unique = false`; J&T Cargo is also 12 digits), so `deduce_courier`
   (`crates/engine/src/label.rs:217`) refuses and warns. The 2026-10-07 sample is the same shape:
   82 of 601 pages. **The owner's rule (2026-10-11): two clues, and the courier is named only when
-  they agree** — the tracking-ID form (`00` → SiCepat, `57` → J&T Cargo, both now unambiguous) and
-  the service tag read from the header strip (03 › *Courier deduction* holds the rule and the
-  measured tag lists). Code: `couriers.toml` gains a tag list per courier and a J&T Cargo entry,
-  and `deduce_courier` requires the pair to agree. Tests: every measured sample page keeps the
-  courier it has now, a form with a foreign tag warns, the two slip-continuation pages stay
-  unknown. Then re-check the owner's day (the warning must be gone for the SiCepat orders) and
-  rebuild the portable folder.
+  they agree** — the **logo** (the page's logo image, its encoded bytes hashed) and the
+  **tracking-ID form** (`00` → SiCepat, `57` → J&T Cargo, both now unambiguous). 03 › *Courier
+  deduction* holds the rule; the logo hashes, the ask-the-owner flow and J&T Cargo's unreadable
+  logo are D18. Code: `couriers.toml` gains a logo-hash list per courier and a J&T Cargo entry,
+  and `deduce_courier` hashes the page's logo image (`FPDFImageObj_GetImageDataRaw`) and requires
+  the two clues to agree; a hash that is not in the table is asked of the owner once and written
+  into the data file. Tests: every measured sample page keeps the courier it has now, a logo with
+  a foreign form warns, an unseen logo asks, the two slip-continuation pages stay unknown. Then
+  re-check the owner's day (the warning must be gone for the SiCepat orders) and rebuild the
+  portable folder.
   - Measured for D15 (2026-10-11, counts and shapes only; method: the Python reader page by page
     and the exports read by provider): the 601 sample pages → J&T Express 517, no courier 84
     (82 with a `00` + 10-digit tracking ID, 1 slip continuation, 1 `TikTok Shop` label with no
@@ -301,10 +304,11 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     J&T Cargo `FastTrack` 2, IDX `REG` 2, TikTok Shop `GKS` 1 — form and tag agree on all 1,266
     label pages that have a tracking form, and the one `TikTok Shop` label has a tag but no form
     (so it stays unknown); the 2 slip continuations have neither. The courier logo is an embedded
-    image (J&T Express 975×377, SiCepat 184×60, IDX 1200×859, TikTok Shop 326×59 px — each a
-    single asset across all 9 files; the J&T Cargo logo is masked, 680×156/683×157) — a third
-    clue the rule does not need (D18 asks whether to use it). The barcode and QR are vector paths
-    and every page also carries a page-wide frame image.
+    image whose *encoded bytes* (1.5–15 KB, so hashing costs ~0.01 ms a page) hash to one stable
+    value per courier for J&T Express, SiCepat, IDX and TikTok Shop across all 9 files; J&T
+    Cargo's logo is a *masked* image re-rastered between exports (680×156 / 683×157), so it has no
+    stable hash (D18). The barcode and QR are vector paths and every page also carries a
+    page-wide frame image.
     The spill: the label takes the top 70% of the page on every style (the slip starts at 126.5 pt
     on all four), so only the slip's own content spills — the sample's one spilled order had a
     single item line and a buyer message.
