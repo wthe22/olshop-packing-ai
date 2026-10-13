@@ -16,7 +16,7 @@ its packing slip carry enough for the pick flow.
 |---|---|---|
 | Python | 3.12 or newer | `tomllib` is built in from 3.11 |
 | CSV | standard library `csv` | |
-| Rules file | standard library `tomllib` | Format in [04-rules-file.md](04-rules-file.md) |
+| Rules file | standard library `tomllib` | Format in [04-rules-file.md](../../shared/04-rules-file.md) |
 | Read page text with position, copy pages unchanged | `pypdf` (BSD-3) | `page.extract_text(visitor_text=…)` reports each text run with its x and y; tested on the sample label and slip downloads (an Order ID on every page) |
 | Write the A4 packing list | `fpdf2` (LGPL-3.0) | Layout prototype `script/prototype/packing_list_preview.py` |
 | Fonts | Arial (`arial.ttf`, `arialbd.ttf`) and Consolas (`consola.ttf`) from `C:\Windows\Fonts` | Consolas = fixed width, so tracking-ID columns line up. Missing font → clear error |
@@ -26,8 +26,8 @@ its packing slip carry enough for the pick flow.
 
 | Input | Required | Content |
 |---|---|---|
-| Shipping-label PDFs | yes | One or more files of this download (a download holds at most 200 pages). Either plain **Shipping label** or **Shipping label + Packing slip** ([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)); pages are read as they are, so one download may hold both kinds |
-| Orders CSV | no | The seller-centre export ([business-process 02](../business-process/02-data-sources.md)). Fills values and is checked against the labels; the orders themselves come from the labels |
+| Shipping-label PDFs | yes | One or more files of this download (a download holds at most 200 pages). Either plain **Shipping label** or **Shipping label + Packing slip** ([business-process 02](../../business-process/02-data-sources.md#label--packing-slip-export-option)); pages are read as they are, so one download may hold both kinds |
+| Orders CSV | no | The seller-centre export ([business-process 02](../../business-process/02-data-sources.md)). Fills values and is checked against the labels; the orders themselves come from the labels |
 | `categories.toml` | yes | Each entry is one pick; also the menu of `--interactive` |
 
 Without a slip and without a CSV there is **no item data**: the script warns, only the
@@ -71,7 +71,7 @@ straight through:
    1-2 = save that pick · c = type a condition · r = save the rest
    ```
 2. A number saves that entry's matching orders as one PDF. `c` asks for a condition
-   ([04-rules-file.md](04-rules-file.md)) and saves its matching orders. The menu is shown again
+   ([04-rules-file.md](../../shared/04-rules-file.md)) and saves its matching orders. The menu is shown again
    with the new counts.
 3. `r` saves every remaining order as one PDF and ends the mode.
 
@@ -135,7 +135,7 @@ in the same way.
    compute the same value, so the script and the app share one expected-value fixture. A hash
    not in the table is **asked of the owner once** ("which courier is this logo?") and the answer
    is written into the data file, so later labels are named without asking.
-2. **The tracking-ID form** ([business-process 02](../business-process/02-data-sources.md#columns-packing-needs)):
+2. **The tracking-ID form** ([business-process 02](../../business-process/02-data-sources.md#columns-packing-needs)):
    `JY` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo;
    `TKP` + 10 digits → IDX.
 3. **Named only when the two agree**: the tracking form gives the *candidate* couriers, and the
@@ -146,7 +146,7 @@ in the same way.
    logo cannot be read — J&T Cargo's logo is a masked image with no stable hash (D18). SiCepat and
    IDX print no courier name at all.
 5. **The service tag is not used yet** (the owner, 2026-10-11: it is weak for some couriers). The
-   measured tag lists stay in [business-process 02](../business-process/02-data-sources.md) for
+   measured tag lists stay in [business-process 02](../../business-process/02-data-sources.md) for
    when a case needs them.
 
 The courier list is `couriers.toml` (in the data folder in the app), and it also holds the logos
@@ -217,7 +217,7 @@ needed to continue a day.
 ## Processing steps of `prepare`
 
 1. **Read the rules file**. Any error stops the run with the line and
-   column of `categories.toml` ([04-rules-file.md](04-rules-file.md)).
+   column of `categories.toml` ([04-rules-file.md](../../shared/04-rules-file.md)).
 2. **Read the label PDFs** in the order given. Per page: the Order ID, the label-level fields
    (`ship_by`, courier text) and — when the page carries a slip — the item lines by text
    position. Group the pages into orders.

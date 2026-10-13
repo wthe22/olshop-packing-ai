@@ -41,7 +41,7 @@ The reading and sorting rules of [03-pc-script.md](03-pc-script.md) carry over u
 | Saved-PDF numbers through the day, run numbers `3-05` | 03 › *Numbering and file names* |
 | Duplicate guard (an order saved earlier the same day is left out, warned) | 03 › *Picks* |
 | The three packing-list layouts `full`, `summary`, `pick` and their look | 03 › *Packing list (A4)* |
-| `categories.toml` and the condition language | [04-rules-file.md](04-rules-file.md) |
+| `categories.toml` and the condition language | [04-rules-file.md](../../shared/04-rules-file.md) |
 
 What is different in the app (these are owner decisions):
 
@@ -61,7 +61,7 @@ What is different in the app (these are owner decisions):
 
 | Word | Meaning |
 |---|---|
-| **Batch** | One round of the daily steps ([business-process 01](../business-process/01-packing-workflow.md#daily-steps)): arrange shipment, download the labels (one or more files of up to 200 pages), prepare them in the app. Numbered 1, 2, 3, … within the day. In the app, one **Save** = one batch |
+| **Batch** | One round of the daily steps ([business-process 01](../../business-process/01-packing-workflow.md#daily-steps)): arrange shipment, download the labels (one or more files of up to 200 pages), prepare them in the app. Numbered 1, 2, 3, … within the day. In the app, one **Save** = one batch |
 | **Draft** | A batch that has been read but not saved yet. It lives only in the app's memory; closing the app forgets it and nothing is written |
 | **Plan** | The list of picks of a draft, in order, with their counts. Starts as the `categories.toml` entries in file order |
 | **Data folder** | The folder where the app keeps `categories.toml`, `couriers.toml` and the `labels/` folder with every day's output. By default the program's own folder ([Program folder](#program-folder-portable)) |
@@ -71,8 +71,8 @@ What is different in the app (these are owner decisions):
 
 | Input | Content |
 |---|---|
-| Label PDFs | The *Shipping label + Packing slip* files of one batch ([business-process 02](../business-process/02-data-sources.md#label--packing-slip-export-option)). One or more files; the seller centre splits a download into files of at most 200 pages |
-| `categories.toml` | In the data folder. Each entry is one pick ([04-rules-file.md](04-rules-file.md)). Edited inside the app ([08 › Categories](08-pc-app-ui.md#5-categories)) or by hand |
+| Label PDFs | The *Shipping label + Packing slip* files of one batch ([business-process 02](../../business-process/02-data-sources.md#label--packing-slip-export-option)). One or more files; the seller centre splits a download into files of at most 200 pages |
+| `categories.toml` | In the data folder. Each entry is one pick ([04-rules-file.md](../../shared/04-rules-file.md)). Edited inside the app ([08 › Categories](08-pc-app-ui.md#5-categories)) or by hand |
 | `couriers.toml` | The courier-deduction data (D16, owner decision 2026-10-11 — task 2.19). **In the data folder**, like `categories.toml`: written from the built-in file (same content as `script/packing/couriers.toml`) on first start, then the owner's; a broken file stops the batch with its line. It also holds the logos the owner names in the prompt. Fields and an example below |
 | The day's `state.json` | What earlier batches of the same day saved (below) |
 

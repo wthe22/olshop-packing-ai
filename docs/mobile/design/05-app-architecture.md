@@ -5,7 +5,7 @@ Implements A1–A7 of [01-requirements.md](01-requirements.md). Screens are in
 
 ## Stack: Kotlin + Jetpack Compose
 
-| Need | Library (latest stable at setup; record versions in development/01-setup.md) |
+| Need | Library (latest stable at setup; record versions in [development/01-setup.md](../development/01-setup.md)) |
 |---|---|
 | Language, build | Kotlin, Gradle (Kotlin DSL), Android Gradle Plugin |
 | UI, phone/tablet layouts | Jetpack Compose, Material 3, Material 3 adaptive (window size classes, list-detail) |
@@ -84,7 +84,7 @@ Per session:
 
 ## Import (A1)
 
-1. Parse the CSV in `core` with the shared rules (01-requirements). Parse errors (missing
+1. Parse the CSV in `core` with the shared rules ([01-requirements](01-requirements.md)). Parse errors (missing
    column, unreadable file) → a clear message, nothing changes.
 2. Compute, without writing: new orders (batch N) with category and group numbers; orders now
    removed; removed orders that came back (become active again); changed orders (different

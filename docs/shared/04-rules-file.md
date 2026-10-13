@@ -1,7 +1,7 @@
 # 04 — Rules File and Condition Language
 
 One file, `categories.toml`, holds the entries. The PC script reads it and uses each entry as one
-**pick** (one saved label PDF, [03-pc-script.md](03-pc-script.md)); the app reads it, lets the
+**pick** (one saved label PDF, [03-pc-script.md](../desktop/design/03-pc-script.md)); the app reads it, lets the
 owner edit it, and writes it back. The same **condition language** is used for the app's scan
 filters.
 
@@ -43,7 +43,7 @@ name = "Lainnya"
 - Validation (script and app give the same errors): unknown key, missing `code`/`name`,
   duplicate `code`, `when` missing on an entry that is not last, condition errors (below).
 - In the script, a pick whose condition uses a field with no value stops the run
-  ([03-pc-script.md](03-pc-script.md)).
+  ([03-pc-script.md](../desktop/design/03-pc-script.md)).
 
 ## Condition language
 
@@ -119,7 +119,7 @@ The date is written year-month-day; the time is `HH:MM` without seconds.
 | `line_quantity` | number | item | slip, CSV | Quantity of one line |
 | `total_quantity` | number | order | — | Sum of the order's quantities |
 | `distinct_items` | number | order | — | Number of lines (different products) of the order |
-| `courier` | text | order | label or CSV | `Shipping Provider Name`, or deduced from the label ([03-pc-script.md](03-pc-script.md)) |
+| `courier` | text | order | label or CSV | `Shipping Provider Name`, or deduced from the label ([03-pc-script.md](../desktop/design/03-pc-script.md)) |
 | `channel` | text | order | CSV | `Purchase Channel` (TikTok / Tokopedia). CSV-only |
 | `tracking_id` | text | order | label, CSV | The tracking ID printed on the label (also the barcode and QR value) |
 | `ship_by` | date/time | order | label | `In transit by: dd/mm/yyyy hh:mm` |
@@ -131,9 +131,9 @@ The date is written year-month-day; the time is `HH:MM` without seconds.
 | `group` | number | order | — | **App scan filters only**; meaning revised with the app |
 
 - `sku_id`, `product_category`, `channel`, `paid_time`, `rts_time` and `created_time` need a
-  CSV; a pick using one without a CSV stops the run ([03-pc-script.md](03-pc-script.md)). The
+  CSV; a pick using one without a CSV stops the run ([03-pc-script.md](../desktop/design/03-pc-script.md)). The
   PC app reads no CSV, so in its rules these fields are always an error
-  ([07-pc-app.md](07-pc-app.md#fields-the-conditions-can-use)).
+  ([07-pc-app.md](../desktop/design/07-pc-app.md#fields-the-conditions-can-use)).
 - `product_category` is the platform's category, not the shop's: do not use it in
   `categories.toml`.
 - Item fields need item data (a slip or a CSV); a pick using one with neither stops the run.

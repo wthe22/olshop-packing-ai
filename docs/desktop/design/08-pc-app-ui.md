@@ -220,7 +220,7 @@ written; warnings are listed and the batch can still be saved.
 
 Edit `categories.toml` (the picks, in order) without typing the condition language: each
 condition is built from boxes, as in the Android design
-([06 › Condition editor](06-app-ui.md#condition-editor-scan-filters-and-categories)). A text
+([06 › Condition editor](../../mobile/design/06-app-ui.md#condition-editor-scan-filters-and-categories)). A text
 view is there for typing a condition instead.
 
 ```
@@ -279,7 +279,7 @@ One category switched to **Text view**, with an error:
   - **Operator**: depends on the field. Text: contains, equals, starts with. Number and
     date/time: =, ≠, <, ≤, >, ≥.
   - **Value**: typed, without quotes. Number fields take a whole number; Ship by takes
-    `2026-10-07`, `14:00` or `2026-10-07 14:00` ([04 › Date and time values](04-rules-file.md#date-and-time-values)).
+    `2026-10-07`, `14:00` or `2026-10-07 14:00` ([04 › Date and time values](../../shared/04-rules-file.md#date-and-time-values)).
     A wrong value is shown red with the 04 message.
 - **not** (per row and per group) reverses it: the first row of B above reads "name does not contain
   sepatu".

@@ -1,10 +1,11 @@
-# 01 — Setup
+# 01 — Setup (PC app and PC script)
+
+Git and Git Bash are common to both tools: [`../../development/README.md`](../../development/README.md#common-setup).
 
 ## What is needed
 
 | For | Tool | Notes |
 |---|---|---|
-| Both | Git, Git Bash | Installed |
 | PC script | Python 3.12 or newer | Python 3.14 is installed at `C:\Python314` (on `PATH` as `python`) |
 | PC script | Project virtual environment `.venv` in the repository root | Created in phase 1, task 1.1 |
 | PC script | `pypdf`, `fpdf2`; for development `pytest` | Declared in `script/pyproject.toml` |
@@ -12,11 +13,8 @@
 | PC app | Rust (stable, MSVC toolchain) | Installed: cargo/rustc 1.98.0 |
 | PC app | Node.js + npm | Installed: Node 26.7, npm 11.19 |
 | PC app | Tauri prerequisites: Microsoft C++ Build Tools, WebView2 | Installed: Build Tools at `C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools` (links the Tauri crate); WebView2 runtime present (`C:\Program Files (x86)\Microsoft\EdgeWebView\Application`) |
-| PC app | `tauri-cli` (the Tauri build tool, run as `cargo tauri`) | Installed: tauri-cli 2.12.1 (`cargo install tauri-cli --locked`), matching the `tauri` 2.12 stated in [07-pc-app.md](../software-design/07-pc-app.md) |
+| PC app | `tauri-cli` (the Tauri build tool, run as `cargo tauri`) | Installed: tauri-cli 2.12.1 (`cargo install tauri-cli --locked`), matching the `tauri` 2.12 stated in [07-pc-app.md](../design/07-pc-app.md) |
 | PC app | `pdfium.dll` (bblanchon/pdfium-binaries, pinned) | `bash pc/tools/get-pdfium.sh` → `pc/vendor/pdfium.dll` (git-ignored). Tag `chromium/7881` (matches `pdfium-render` 0.9.4), SHA256 checked; falls back to Python for the download because `curl` fails on GitHub release files on this PC |
-| App | Android Studio (includes a JDK and the Android SDK manager) | Not installed yet. `winget install Google.AndroidStudio`, then first-run wizard with the default SDK |
-| App | Android phone with USB debugging | Settings › About phone › tap *Build number* 7× → Developer options › USB debugging. Phone model and Android version go into the log below |
-| App | `adb` | Comes with the SDK (`%LOCALAPPDATA%\Android\Sdk\platform-tools`); add to `PATH` |
 
 ## Steps
 
@@ -73,20 +71,12 @@ scripts, e.g. from another `.bat`).
 Copy `pc/target/portable/Packing/` to the PC (e.g. `D:\Packing\`) and start `Packing.exe` from a
 shortcut. To update, close the app and replace `Packing.exe` and `pdfium.dll`; the data stays.
 
-### Android (phase 3)
-
-1. Install Android Studio; run the setup wizard (standard install, accept SDK licences).
-2. Open `android/` in Android Studio once so it downloads Gradle and the SDK platforms; after
-   that, command-line builds with `./gradlew` work.
-3. Connect the phone, accept the "Allow USB debugging" prompt, check with `adb devices`.
-
 ## Log
 
 One line per one-time step actually done on this PC: date · what · exact command or click path.
 
 | Date | Step |
 |---|---|
-| 2026-10-06 | Git repository created, remote `origin` = `https://github.com/wthe22/olshop-packing-ai.git`, branch `main` |
 | 2026-10-07 | `.venv` created: `/c/Python314/python.exe -m venv .venv` (Python 3.14.7), `python -m pip install --upgrade pip` (26.2.1), `python -m pip install -e "script[dev]"` → pypdf 6.19.0, fpdf2 2.8.9, pytest 9.1.1 |
 | 2026-10-09 | `bash pc/tools/get-pdfium.sh` → `pc/vendor/pdfium.dll` from bblanchon/pdfium-binaries `chromium/7881` (`pdfium-win-x64.tgz`, 3,733,154 B, SHA256 `73cc0de6…77ac08`); `curl` failed (schannel, error 23), downloaded by the script's Python fallback |
 | 2026-10-10 | `cargo install tauri-cli --locked` → tauri-cli 2.11.4 replaced by 2.12.1 at `C:\Users\wthe22\.cargo\bin\cargo-tauri.exe` (built from source, ~4½ min) |

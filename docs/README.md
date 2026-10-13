@@ -12,14 +12,17 @@ J&T, SiCepat, IDX):
 | Folder | Contains | Read when |
 |---|---|---|
 | [`business-process/`](business-process/) | How the packing work is done, and the files it uses. True even without the tools | You need to know *why* or what the real data looks like |
-| [`software-design/`](software-design/) | What the tools do and how they are built | You build or change a tool |
-| [`development/`](development/) | Setup, repository layout, build plan with done-criteria, progress | You start or continue development |
-| [`user-guide/`](user-guide/) | How to use a finished tool, step by step, with pictures | You want to use the PC app, not build it |
+| [`shared/`](shared/) | What both tools share: the rules file (`categories.toml`, conditions), conventions, how the PC and the phone relate | You touch anything both tools read or write |
+| [`desktop/`](desktop/) | PC app and PC script: `design/`, `development/` (setup, commands), `user-guide/`, `phases/` (task list and owner reviews per phase) | You build, change or use the PC tools |
+| [`mobile/`](mobile/) | Android app: `design/`, `development/`, `phases/` | You build or change the Android app |
+| [`development/`](development/) | Rules for working in the repository, the build plan of all phases, current status and next step | You start or continue development |
 
 Rule: a statement that would still be true if the tools were never built belongs in
-`business-process/`. A screen, field, rule or library belongs in `software-design/`. How to set
-up, build and test belongs in `development/`. How to use a finished tool belongs in
-`user-guide/`.
+`business-process/`. A screen, field, rule or library belongs in the platform's `design/`
+(`desktop/design/`, `mobile/design/`; in `shared/` when both tools use it). How to set up, build
+and test belongs in the platform's `development/`; the tasks and owner reviews of a phase in its
+`phases/pNN-name/` folder; the plan, status and handoff of all phases in `development/plan.md`.
+How to use a finished tool belongs in the platform's `user-guide/`.
 
 ## Words used everywhere
 

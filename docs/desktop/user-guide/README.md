@@ -10,4 +10,4 @@ Pictures are in [`images/`](images/) and were made with the made-up `testdata/` 
 order data appears.
 
 The Python PC script (the reference implementation and the fallback when the app cannot start) is
-a command-line tool; it is not covered here ([03-pc-script.md](../software-design/03-pc-script.md)).
+a command-line tool; it is not covered here ([03-pc-script.md](../design/03-pc-script.md)).

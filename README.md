@@ -9,7 +9,7 @@ Tools for the shop's daily packing work (TikTok Shop / Tokopedia orders):
 - **Android app** (Kotlin, `android/`): checks every packed parcel by scanning its label with
   the phone camera; sessions, batches, marks with undo, export/import.
 
-Status: see [`docs/development/02-plan.md`](docs/development/02-plan.md). Start with [`docs/development/`](docs/development/).
+Status: see [`docs/development/plan.md`](docs/development/plan.md). Start with [`docs/development/`](docs/development/).
 
 Documentation: [`docs/`](docs/README.md).
 

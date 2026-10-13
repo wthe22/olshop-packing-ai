@@ -1,140 +1,4 @@
-# 02 — Build Plan
-
-Phases in order. Each task ends with a commit. Tick the box (`[x]`) in the same commit that
-finishes the task. A phase is done when all its tasks are ticked **and** the owner review is
-noted as passed.
-
-Status: **Phase 2 (PC app): tasks 2.1–2.15 and 2.17 done — the packing-list display defects and the
-*Open folder* defect of the owner's review round 1 (2026-10-11, his own day's data) are fixed;
-2.16 (the courier) is next, and 2.18 (the check of the saved PDFs, designed at the
-owner's request on 2026-10-11) waits behind it.**
-The owner decided that the PC gets a desktop app written in Rust (a
-command line is not good for daily use), so phase 1 stops with its code done (270 tests) and
-stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
-[07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md).
-Open in [02-design-questions.md](../software-design/02-design-questions.md): D1 (Android, open
-until phase 3), D17 (whether 2.18's check runs on every batch), D18 (the J&T Cargo logo, the
-one the logo clue cannot read) and D20 (how the app writes a taught logo into `couriers.toml`).
-**D15 is answered**
-(2026-10-11, the owner: two clues that must agree — the tracking-ID form and the service tag; the
-rule is written into 03 › *Courier deduction*, so D15 is removed), **D16 is answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
-edit the owner can make, not a new program version — task 2.19, and **D19 is answered**
-(2026-10-11, the owner: one file — the taught logos go into `couriers.toml`, no second file). D2 (the
-PDF library) is answered: PDFium does all three PDF
-jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summary`) are accepted.
-
-**Next step.** 2.16 (the courier: the form-and-tag rule, no owner answer needed), then
-2.19 (the courier data into the data folder, D16's answer — no owner answer needed, so it can be
-built at any time) and 2.18 (the saved-PDF check; its four choices are answered and D17 has a
-"built for now" default, so it waits on nothing). Then the round-2 review at the end of Phase 2 — open the same day's packing
-list (the header must stand clear, `×` must print), press *Open folder* (the batch folder must open,
-not Documents), check the Day screen for a *Courier unknown* warning, and save one batch to watch
-the check run (the progress line; a clean day must report nothing). The
-answers belong in
-[02-design-questions.md](../software-design/02-design-questions.md) — each question has a
-"Built for now" default, nothing waits on them — or as a new session here; the phase-3 Android
-work waits for this phase's review to pass.
-
----
-
-## Phase 1 — PC script (stopped: reference implementation)
-
-The Python script, built as the daily tool and then replaced by the Rust PC app (phase 2)
-before it was used daily. Its code is finished and tested; it stays for good, frozen, as the reference the
-Rust program is compared with and as a fallback when the app cannot start
-([07-pc-app](../software-design/07-pc-app.md)).
-Tasks 1.15 and 1.16 are not done here: the sample run is part of task 2.7, the user guide is
-written for the app in task 2.14. There is no separate owner review of phase 1.
-
-Read: [01-requirements](../software-design/01-requirements.md) (Concepts, PC script rules,
-P1–P6), [03-pc-script](../software-design/03-pc-script.md),
-[04-rules-file](../software-design/04-rules-file.md),
-[business-process/02-data-sources](../business-process/02-data-sources.md).
-Reference: `script/prototype/packing_list_preview.py` (working layout code for `full` and
-`summary`; reads `samples/` directly; not production code).
-
-- [x] **1.1 Scaffold.** `script/pyproject.toml` (package `packing`, deps `pypdf`, `fpdf2`,
-  extra `dev` = `pytest`), empty modules as in 03-pc-script "Code layout", `.venv` (01-setup),
-  one passing placeholder test. Log the venv step in 01-setup.
-- [x] **1.2 Test data (CSV).** `testdata/make_testdata.py` writes `orders-1.csv` and
-  `orders-2.csv` with the real 65-column header (business-process 02), trailing tabs on ID/time
-  values, BOM, made-up IDs. Content covers: multi-line order; same packing list in different
-  line order; `Default` variation; name with `|`; row with another status (ignored); order
-  removed in export 2; order new in export 2; Tokopedia channel; quantity > 1. Plus
-  `testdata/categories.toml`, a hand-checked `testdata/expected.json` (05-app-architecture
-  "Logic in two places") and `testdata/conditions.json`.
-- [x] **1.3 Orders (CSV).** `orders.py`: read CSV, strip values, filter status, group by Order
-  ID, display names, signatures. Tests on testdata.
-- [x] **1.4 Orders: paid and created time.** Add `paid_time` and `created_time` to the order
-  record (`rts_time` exists); the conditions need them
-  ([04-rules-file](../software-design/04-rules-file.md)). Tests.
-- [x] **1.5 Rules (base).** `rules.py`: TOML loading + validation, condition parser (grammar in
-  04-rules-file), evaluator with item-level "any line" semantics, error messages with line and
-  column. `testdata/conditions.json` with parse/eval/error cases. Tests.
-- [x] **1.6 Rules: pick-flow fields.** Date/time comparisons (`ship_by`, `paid_time`,
-  `rts_time`, `created_time`) with the value forms in 04-rules-file; the new text fields
-  `tracking_id` and `courier`; the CSV-only check (`sku_id`, `product_category`, `channel` and
-  the CSV times error without a CSV); category errors reported with the line and column of
-  `categories.toml` itself. Extend `conditions.json` and the tests.
-- [x] **1.7 Labels (base).** `labels.py`: Order ID per page (two-step search), multi-page
-  orders, page copying. Tests with label PDFs generated by the test itself (fpdf2, made-up IDs,
-  one 2-page order, one spaced-character page).
-- [x] **1.8 Label fields and slip.** `labels.py`: read the label-level fields (`In transit by`
-  → `ship_by`, the courier text). New `slip.py`: read the slip table by text position (columns
-  from the header words, a row per `Qty`, wrapped cells joined, no space after `-`, multi-page
-  slips, `Qty Total` cross-check, `Customer Message`). Tests with generated label+slip PDFs.
-- [x] **1.9 Courier deduction.** From the tracking-ID pattern, else the label text (courier
-  name, web address, sort-code style); unknown → empty + warning listing the orders. Tests.
-- [x] **1.10 Picks and day state (`picks.py`).** Merge the CSV over the slip with a warning per
-  difference; the contents key; the picks in rules order taking from what is left; the final
-  "rest" pick; re-ordering into runs; saved-PDF and run numbering through the day;
-  `work/<day>/state.json`; the duplicate guard. Tests. (Replaces `batches.py`.)
-- [x] **1.11 Packing list (base).** `packing_list.py`: layouts `full`, `summary`, `pick` as in
-  03-pc-script. Test: PDFs are produced, page count sane, text contains numbers and tracking IDs
-  (via pypdf).
-- [x] **1.12 Packing list for picks.** Headings = saved PDF number + pick code/name; groups =
-  runs (`3-05`); scope `per-pdf` / `whole` / `none`; error or skip with a message when there is
-  no item data. Tests.
-- [x] **1.13 Command line.** `prepare` with optional `--csv`, `--rules`, `--interactive`,
-  `--layout`, `--packing-list`, `--day`, `--work`; screen summary and `summary.txt`; errors and
-  warnings as in 03-pc-script.
-- [x] **1.14 Test data (labels).** `testdata/make_testdata.py` also writes label PDFs (plain
-  and with a slip) with made-up IDs, one 2-page order, wrapped slip cells; plus a hand-checked
-  `testdata/expected-picks.json`.
-- [ ] **1.15 Run on the samples** (local, not committed). **Moved to 2.7**; the notes below are
-  the Python numbers 2.7 compares with. The three `Shipping label + Packing
-  slip` files (601 pages, 600 orders, one order on 2 pages, every page has an Order ID; 517
-  pages J&T) with and without the CSV — the sample CSVs are from another day and hold none of
-  these orders, so with the CSV every order is warned "not in the CSV" and the slip values are
-  used. Then the old plain-label files without slips: expect the "no item data" warning. Record
-  the numbers here.
-  - Done so far (reader level, `LabelSet.orders()`): slip files 600 orders in 34.5 s, all with
-    item lines, `Qty Total` = sum on all 600, `ship_by` on all 600, J&T 517, courier unknown
-    83, tracking ID not found 1. Plain files: 562 orders in 22 s, no slip, no `ship_by`
-    (plain labels do not print it), J&T 511, IDX 1, unknown 50, tracking ID not found 1.
-  - First CLI run (slip files, no CSV, a rules file with a pick on `product_category`) stopped
-    correctly with `error: pick "C" uses field "product_category", which needs the orders CSV`.
-    The CSV-only check runs before the labels are read (instant error).
-  - Still to run: the slip files with the repository `categories.toml`; the slip files with
-    `--csv samples/orders-06-1.csv` (expect the "CSV holds none of the label orders" warning); the plain files; a second
-    invocation (duplicates skipped); `--redo`; `--interactive`; each layout and scope. Check
-    the saved PDFs and packing lists by eye, page counts = label pages. Print counts only,
-    never real IDs or names.
-- [ ] **1.16 User guide.** **Moved to 2.14** (written for the app, not the script). `docs/user-guide/README.md` (index) and `docs/user-guide/01-pc-script.md`
-  for the owner (not a developer), under ~250 lines: what it does; setup (link 01-setup);
-  daily use step by step (which export to download, the copy-paste command, what is written to
-  `work/<day>/`, printing); several downloads a day; fixing a mistake (`--redo`); interactive
-  menu with an example session; the rules file with 3-4 example conditions (link 04); all
-  options; every warning/error with what to do. Examples are real output of runs on `testdata/`
-  (made-up data). Add the folder to the table in `docs/README.md` ("how to use a finished tool
-  belongs in `user-guide/`"), to the Docs line in `AGENTS.md`, and point the "Run the script"
-  row of `docs/development/README.md` to it.
-
-**Owner review:** none (replaced by the phase-2 review).
-
----
-
-## Phase 2 — PC app (Rust + Tauri)
+# Phase 2 — PC app (Rust + Tauri)
 
 A Windows program that replaces the script for daily use: label downloads in, picks adjusted on
 screen, saved PDFs and packing lists out, revert/amend of the last batch. Written in Rust;
@@ -142,10 +6,10 @@ screens in Svelte + TypeScript in a Tauri 2 window. A portable program folder, n
 The PDF library is PDFium for all three PDF jobs — read the text with its positions, copy pages
 unchanged, write the packing list (spike 2.1; the bigger packing-list files are accepted).
 
-Read: [07-pc-app](../software-design/07-pc-app.md), [08-pc-app-ui](../software-design/08-pc-app-ui.md),
-[03-pc-script](../software-design/03-pc-script.md) (the reading and sorting rules that carry
-over), [04-rules-file](../software-design/04-rules-file.md),
-[business-process/02-data-sources](../business-process/02-data-sources.md).
+Read: [07-pc-app](../../design/07-pc-app.md), [08-pc-app-ui](../../design/08-pc-app-ui.md),
+[03-pc-script](../../design/03-pc-script.md) (the reading and sorting rules that carry
+over), [04-rules-file](../../../shared/04-rules-file.md),
+[business-process/02-data-sources](../../../business-process/02-data-sources.md).
 Reference: the Python package `script/packing/` — same rules, tested; port it module by module
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
@@ -168,7 +32,7 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   `app/src-tauri`), Tauri app from `create-tauri-app` template `svelte-ts` in `pc/app/`,
   `pc/tools/get-pdfium.sh` (pinned version; output `pc/vendor/`, git-ignored), one passing test
   per crate, the empty window opens with `npm run tauri dev`. Log Rust/Node versions, the
-  Tauri CLI and the PDFium download in 01-setup. `pc/vendor/` is git-ignored; the
+  Tauri CLI and the PDFium download in [01-setup](../../development/01-setup.md). `pc/vendor/` is git-ignored; the
   front-end output `pc/app/build/` is ignored by the template's `pc/app/.gitignore`.
 - [x] **2.3 Engine: rules.** `rules.rs`: `categories.toml` loading and validation, condition
   parser, evaluator (item-level "any line"), printer, error texts with line/column (also of the
@@ -228,7 +92,7 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   (`npm run tauri build -- --no-bundle`, then `Packing.exe` + `pdfium.dll` into
   `pc/target/portable/Packing/`); copy the folder outside the repository, start it from a
   shortcut, the first start asks for the data folder, one batch on `testdata/` labels. Log in
-  01-setup.
+  [01-setup](../../development/01-setup.md).
   - Result: `pc/tools/make-portable.sh` builds the release program (`--no-bundle`; the binary is
     `pc/target/release/packing-app.exe`, renamed to `Packing.exe`) and assembles
     `pc/target/portable/Packing/` (`Packing.exe` 7,792,128 B, `pdfium.dll` 7,211,520 B);
@@ -238,17 +102,17 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     from a copy outside the repo (`%TEMP%\portable-test\Packing`) started from a `.lnk`: first
     start asked for the data folder, *Use this folder* wrote the built-in `categories.toml`, one
     batch on `testdata/labels-slip.pdf` → 24 pages, 23 orders, 3 saved PDFs (A ×7, B ×8, Z ×8) +
-    `packing-list.pdf` (1.4 MB) in `labels/<day>/batch 1/`. Sizes and steps in 01-setup.
-- [x] **2.14 User guide** (replaces 1.16). `docs/user-guide/README.md` (index) and
-  `docs/user-guide/01-pc-app.md` for the owner (not a developer), under ~250 lines: setting up the
+    `packing-list.pdf` (1.4 MB) in `labels/<day>/batch 1/`. Sizes and steps in [01-setup](../../development/01-setup.md).
+- [x] **2.14 User guide** (replaces 1.16). `docs/desktop/user-guide/README.md` (index) and
+  `docs/desktop/user-guide/01-pc-app.md` for the owner (not a developer), under ~250 lines: setting up the
   program folder, first start and a new version; a normal batch step by step with screenshots taken on `testdata/` labels
   (made-up data); several batches a day; revert and amend; editing categories with 3–4 example
   conditions (link 04); every message with what to do. Add the folder to `docs/README.md`
   ("how to use a finished tool belongs in `user-guide/`") and to the Docs line in `AGENTS.md`.
-  - Result: `docs/user-guide/01-pc-app.md` (≈210 lines) + index `README.md` + 8 screenshots in
-    `docs/user-guide/images/` (12–55 KB each, taken on `testdata/labels-slip.pdf`, cropped to the
+  - Result: `docs/desktop/user-guide/01-pc-app.md` (≈210 lines) + index `README.md` + 8 screenshots in
+    `docs/desktop/user-guide/images/` (12–55 KB each, taken on `testdata/labels-slip.pdf`, cropped to the
     window). Linked from `docs/README.md`, `AGENTS.md` and the "Use the PC app" row of
-    `docs/development/README.md`.
+    `docs/desktop/development/README.md`.
 
 - [x] **2.15 Packing list: the two display defects of review round 1.** (a) *The body started at
   the top margin, so on every page the first row or bar was printed over the header.* `Builder::new`
@@ -386,115 +250,5 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     02-design-questions.md because its answer is written here.
   - Result: (not started)
 
-**Owner review (round 1, 2026-10-11, on the owner's own day's data).** The owner ran a real day
-through the portable folder (2 batches, 4 label files, 98 orders, no terminal) and reported two
-things; checking them found a third.
-
-| # | Reported / found | What it is | Cause |
-|---|---|---|---|
-| 1 | "packing list isn't displayed correctly, some text overlap" | Every page of every layout prints the first body row or bar over the header (title 10–17 mm, counts 17–22 mm): the body starts at the top margin (10 mm) instead of below the header (23 mm) | The Rust header is a set of fixed ops that never advances the cursor; `Builder` starts and restarts at `MARGIN` |
-| 2 | found while checking 1 (the owner has not seen it: the pick layout has no `×`) | `×` prints as `ÿ`, in the drawn glyph **and** in the text layer, in the run lines of `full`/`summary`; `·` and `—` are right | PDFium writes U+00D7 wrongly for a non-CID TrueType font; the app loads the fonts with `cid = false` |
-| 3 | "some couriers are not recognized by the current parser" | 23 of 98 orders save with an empty courier | SiCepat labels carry the name **only as a logo image**, and their `00` + 10-digit tracking form is marked as shared with J&T Cargo, so the deduction refuses |
-| 4 | "open folder doesnt open the correct folder. it opens the user's userprofile documents instead" | *Open folder* on a batch and on the data folder opened *Documents*, later *Home* — never the folder | `explorer.exe /select,<path>`: Explorer parses `/select,` itself and does not understand the quotes Rust puts around an argument with a space in it, so it read no target and fell back to Documents (*Home* when the target is empty) |
-
-Evidence: the owner's `batch 1`/`batch 2` `packing-list.pdf` (both 1 page, layout `pick`)
-rendered and read back, against the Python reference (`pc/spike/out/python-packing-list.pdf`);
-`testdata/labels-slip.pdf` through `packing-cli prepare --layout full,summary,pick` — all three
-layouts show the overlap; the 4 label files of 2026-10-11 and the 3 of `samples/` read for the
-courier clues, counts only; the pages with no courier text rendered (they are `SICEPAT EKSPRES`,
-the name only in the logo); PDFium probed with a non-CID and a CID font; the two Explorer forms run
-from a probe in the owner's own session (the fixed form opened *batch 1 - File Explorer* on the
-batch folder, the `/select,` form opened no such window and fell back to Documents/Home). The owner's data folder
-was only read — nothing in it was written to or changed; every probe wrote outside it.
-
-**Owner review (round 2).** After 2.15–2.18: open the same day's packing list (the header
-must stand clear of the body; a `summary` or `full` list must print `×`, not `ÿ`), press *Open
-folder* on a batch card (the batch folder must open, not Documents) and on the Settings screen (the
-data folder), check the Day screen shows no *Courier unknown* warning, save one batch (the check
-must show its progress and, on a clean day, report nothing — 2.18), and print one packing list.
-
----
-
-## Phase 3 — Android camera spike
-
-Answers one question before the app is built: does phone-camera scanning of the printed labels
-work fast and reliably enough?
-
-Read: [05-app-architecture](../software-design/05-app-architecture.md) (stack, scan pipeline).
-
-- [ ] **3.1** Install Android Studio and SDK; log in 01-setup.
-- [ ] **3.2** Create `android/` (Kotlin, Compose, `minSdk 26`, application id
-  `com.wthe22.packingchecker`), modules `app` + `core` (pure Kotlin).
-- [ ] **3.3** One screen: CameraX preview + ML Kit (bundled), QR + Code 128; shows each decoded
-  value with time; 2 s rule; lens switch button; beep on new code.
-- [ ] **3.4** Install on the owner's phone (model and Android version → 01-setup log).
-
-**Owner review:** scan a stack of real printed labels. Record in this file: scans per minute,
-QR vs barcode which reads first, distance, light, problems. Decide whether anything in the scan
-design changes.
-
----
-
-## Phase 4 — App core (no camera)
-
-Read: 01-requirements A1, A3, A4, A6; 05-app-architecture (database, import);
-06-app-ui (sessions, orders, import summary).
-
-- [ ] **4.1** `core`: CSV import, display names, signatures, condition language, TOML
-  read/write, batch diff, group numbering, status from events. JVM tests on `testdata/` must
-  match `expected.json` and `conditions.json`; local test on `samples/` must match
-  `samples/expected-06.json`.
-- [ ] **4.2** Room database (tables of 05-app-architecture), repositories.
-- [ ] **4.3** Sessions screen: create, rename, open, delete with confirmation.
-- [ ] **4.4** Import CSV with summary and Apply / Cancel.
-- [ ] **4.5** Orders list + detail, filters, search, grouped view.
-- [ ] **4.6** Manual marks and undo; history screen.
-- [ ] **4.7** Strings in English and Indonesian from the start (`values/`, `values-in/`).
-
-**Owner review:** import a real day (two CSVs), compare numbers with the script's packing list,
-mark and undo some orders by hand.
-
----
-
-## Phase 5 — Scanning
-
-Read: 01-requirements A2; 05-app-architecture (scan pipeline); 06-app-ui (scan, messages,
-condition editor).
-
-- [ ] **5.1** Scan screen from the spike: pipeline, verdicts, result card, change buttons,
-  recent marks with undo.
-- [ ] **5.2** All scan messages, sounds, vibration; Process/Cancel dialog.
-- [ ] **5.3** Condition editor (boxes + text view, live match count); saved scan filters.
-- [ ] **5.4** Type-last-digits entry.
-
-**Owner review:** check a real batch with the app, including filter use, a wrong packing, a
-label problem, a pending order, an accidental scan undone.
-
----
-
-## Phase 6 — Files and settings
-
-Read: 01-requirements A6, A7; 05-app-architecture (session file, settings file); 06-app-ui
-(More, settings).
-
-- [ ] **6.1** Session export/import `.zip` (Replace / Keep both).
-- [ ] **6.2** Categories screen; import/export `categories.toml` (file from the script must
-  load unchanged; file written by the app must work in the script).
-- [ ] **6.3** Settings export/import `.zip`; language System/English/Indonesia; delete
-  protection; sound/vibration switches.
-
-**Owner review:** move a session to a second device and back; edit categories in the app,
-use the exported file in the script.
-
----
-
-## Phase 7 — Layouts and polish
-
-Read: 06-app-ui (all layouts, problems page).
-
-- [ ] **7.1** Phone landscape, tablet portrait and landscape (list-detail) for every screen.
-- [ ] **7.2** Problems page.
-- [ ] **7.3** Release build signed with a key kept outside the repository (log where in
-  01-setup).
-
-**Owner review:** a full working day with the app.
+**Owner reviews:** [round 1](review-1.md) (2026-10-11, done; it found 2.15–2.17) and
+[round 2](review-2.md) (at the end of the phase, waiting for the owner).

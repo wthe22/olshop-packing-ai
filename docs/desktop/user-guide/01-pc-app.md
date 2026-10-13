@@ -159,7 +159,7 @@ category has no condition and takes the rest.
   **Edit file as text** shows the whole file. **Help: examples ▸** lists examples.
 - **Save** writes the file; **Cancel** leaves it unchanged. Your comments are kept.
 
-Four example conditions (more in [04-rules-file.md](../software-design/04-rules-file.md)):
+Four example conditions (more in [04-rules-file.md](../../shared/04-rules-file.md)):
 
 | You want | Condition |
 |---|---|
