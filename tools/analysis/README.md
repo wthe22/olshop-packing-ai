@@ -14,6 +14,7 @@ never copy real IDs, names or addresses into the repository.
 |---|---|
 | `helpers/extract_labels.py` | Label PDFs → CSV of `order_id,tracking_id`, one row per order |
 | `helpers/diff_csv.py` | Compare two such CSVs by Order ID (counts and IDs; files only per option) |
+| `helpers/courier_clues.py` | Per page: the courier evidence — each image's **encoded-bytes hash** and its **appearance hash** (mask applied, 64×64, thresholded), the tracking-ID candidates, the header-strip tag and the printed clauses (`FastTrack`, `TT Order ID`, …). The measurement behind 03 › *Courier deduction* and D18 |
 | `packing/` | The readers the PC app was ported from: `labels.py` (Order ID per page, label fields, courier), `slip.py` (packing-slip table by text position), `orders.py` (CSV), `rules.py` (`categories.toml` and conditions), `picks.py`, `packing_list.py`; `python -m packing prepare …` runs the whole pick flow from the command line |
 | `tests/` | `pytest`, on `testdata/` (made up, committed) and `samples/` (local; skipped when absent) |
 | `prototype/` | Throwaway A4 packing-list layout prototype, reference only |
@@ -29,6 +30,7 @@ python -m pip install -e "tools/analysis[dev]"     # once; pypdf, fpdf2, pytest
 python -m pytest tools/analysis/tests
 python tools/analysis/helpers/extract_labels.py "samples/*Shipping label*.pdf" -o work/labels.csv
 python tools/analysis/helpers/diff_csv.py A.csv B.csv
+python tools/analysis/helpers/courier_clues.py "samples/*.pdf" --summary   # needs pillow, xxhash
 python -m packing prepare --labels <label.pdf> [--csv <orders.csv>] --work work    # see --help
 ```
 

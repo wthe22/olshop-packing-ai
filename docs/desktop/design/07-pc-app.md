@@ -76,13 +76,14 @@ The courier list, one `[[courier]]` entry each:
 |---|---|
 | `name` | The name written into the order and used by a `courier` condition |
 | `logo` | The courier's logo images, each as **XXH3-64** of the image's **encoded bytes** (16 hex characters, seed 0). A list, because a courier can have more than one (an asset the platform re-made) |
-| `tracking` | The tracking-ID form: a token (or a match in the whitespace-collapsed text) must match it fully. The form gives the *candidate* couriers; the courier is named when the logo's (or text clue's) courier is among them |
+| `shape` | The courier's logos by **appearance**, each as **XXH3-64** of a 64 × 64 1-bit canvas (XXH3-64 of the bytes of a 64×64 image composited onto white with its mask, fitted to the canvas and thresholded at 200/255, seed 0). The clue for a **masked** logo, whose encoded bytes name nothing and are re-rastered between exports (J&T Cargo); a list like `logo`. Tried only when no `logo` entry matched, and a hit asks the owner nothing extra |
+| `tracking` | The tracking-ID form: a token (or a match in the whitespace-collapsed text) must match it fully, and it need not be repeated. The form gives the *candidate* couriers; the courier is named when the logo's (or text clue's) courier is among them |
 | `text` | A brand line or web address printed on the label (`www.jet.co.id`, `FastTrack`), used only where no logo is known |
 
 ```toml
 [[courier]]
 name = "J&T Express"
-logo = ["39b9b7b9f61d0e7f"]      # 975x377 px, 14,351 bytes, the same asset in all 9 sample files
+logo = ["39b9b7b9f61d0e7f"]      # 975x377 px, 14,351 bytes, the same asset in every sample file
 tracking = "JY\\d{10}"
 text = ["jet.co.id"]
 
@@ -93,9 +94,10 @@ tracking = "00\\d{10}"
 
 [[courier]]
 name = "J&T Cargo"
-logo = []                # its logo is masked and re-rastered, so no hash is stable (D18)
+logo = []                        # its base image is one flat colour: no name in those bytes
+shape = ["2a36acec58f5…"]        # the masked wordmark, one value for both rasters (680x156, 683x157)
 tracking = "57\\d{10}"
-text = ["FastTrack"]
+text = ["FastTrack"]             # its header strip and its order-ID caption `TT Order ID`
 
 [[courier]]
 name = "IDX"

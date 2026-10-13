@@ -7,7 +7,7 @@ name = "packing"
 version = "0.1.0"
 description = "Analysis tools for the packing PDFs and CSVs (not product code; frozen, the PC app is the truth)"
 requires-python = ">=3.12"
-dependencies = ["pypdf>=6.19", "fpdf2>=2.8.9"]
+dependencies = ["pypdf>=6.19", "fpdf2>=2.8.9", "pillow>=12", "xxhash>=4"]
 
 [project.optional-dependencies]
 dev = ["pytest>=9.1"]

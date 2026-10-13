@@ -35,7 +35,7 @@
 | Column | Use |
 |---|---|
 | `Order ID` | 18 digits. Printed as text on the label |
-| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` + 10 digits; SiCepat 12 digits starting `00`; IDX `TKP` + 10 digits; J&T Cargo 12 digits starting `57` |
+| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` + 10 digits; SiCepat 12 digits starting `00`; iD Express (the platform's name: IDX) `TKP` + 10 digits; J&T Cargo 12 digits starting `57`. Both sample CSVs agree row for row: `Shipping Provider Name` J&T Express on all 2,086 `JY` rows, SiCepat on all 291 `00` rows, IDX on all 14 `TK…` rows, J&T Cargo on both `57` rows (their `Delivery Option` is `Kargo`) |
 | `Package ID` | 19 digits. Exactly one per order in the samples |
 | `SKU ID` | 19 digits, always filled. The only stable item identifier |
 | `Product Name` | Long (up to ~80 characters). The part before the first `\|` is the short product name, e.g. `Spion Beat \| Kaca Spion Motor …` → `Spion Beat` |
@@ -70,24 +70,31 @@ creator handle, …) are not needed for packing.
   sender/receiver box with a QR code, `Weight`, `COD`, `Print Time`, and the order ID inside the
   box (`TT Order ID :` on J&T Cargo, `Order ID :` on IDX).
 - The courier is not always readable text: J&T Express labels print `www.jet.co.id` and J&T Cargo
-  labels print `FastTrack` (their service tag), but **SiCepat and IDX labels print no courier name
-  and no web address** — the courier is only the logo image, so the tracking-ID form is the only
-  machine-readable courier clue there.
-- The **service tag** is printed in the label's header strip. Measured on the samples (9 files,
-  1,269 pages): J&T Express `EZ` 453 · `ECO` 253 · `NDD` 408 · SiCepat `NDD` 41 · `REG` 73 ·
-  `HALU` 34 · J&T Cargo `FastTrack` 2 · IDX `REG` 2 · TikTok Shop `GKS` 1 (2 continuation pages
-  carry none). `NDD` is on both J&T Express and SiCepat labels and `REG` on both SiCepat and IDX,
-  so the tag alone never names a courier — only together with the tracking-ID form does it. These
+  labels print `FastTrack` (their service tag) and caption the order ID `TT Order ID :`, but
+  **SiCepat and iD Express labels print no courier name and no web address** — the courier is only
+  the logo image, so the tracking-ID form is the only machine-readable courier clue there.
+- The **service tag** is printed in the label's header strip. Measured on the samples (12 files,
+  1,873 pages): J&T Express `EZ` 628 · `NDD` 625 · `ECO` 361 · SiCepat `REG` 125 · `NDD` 67 ·
+  `HALU` 51 · J&T Cargo `FastTrack` 3 · iD Express (IDX) `REG` 5 · the TikTok Shop label 1
+  (`WX` + `GKS`; 6 slip-continuation pages carry none). `NDD` is on both J&T Express and SiCepat
+  labels and `REG` on both SiCepat and iD Express, so the tag alone never names a courier — only
+  together with the tracking-ID form does it. These
   words also appear inside street, product and address text (a buyer's address on a J&T Express
   label reads *dekat Ais cargo*), so the tag must be read from the header strip, not searched over
   the page.
 - The courier **logo is an embedded image** on every label page (a slip-continuation page has
-  none): J&T Express 975×377 px · SiCepat 184×60 · IDX 1200×859 · TikTok Shop 326×59, the same
-  asset in every export. The **J&T Cargo logo is a masked image** (680×156 on one label, 683×157
-  on the other): its pixels come out black unless the mask is applied or the label is rendered.
+  none): J&T Express 975×377 px · SiCepat 184×60 · iD Express 1200×859 · TikTok Shop 326×59, the
+  same asset in every export — its **encoded bytes** are identical on every page that carries it,
+  in the plain label export and the slip export alike.
+  The **J&T Cargo logo is a masked image** (a `/SMask`): its base is a flat colour (331 bytes for
+  680×156) and the wordmark `J&T CARGO` is the *mask*, so the base's bytes are identical for any
+  masked logo of that size and name nothing. Its two known rasters are 680×156 and 683×157 (base
+  and mask bytes differ, the same wordmark drawn at a slightly different scale) — measured on the
+  three J&T Cargo labels of the samples (2026-10-08, 2026-10-07, 2026-10-13), the 680×156 pair
+  byte-identical on two of them.
   Every page also carries a page-wide frame image and draws the barcode and QR as vector paths
   (about 180 path objects), so the courier logo is the one small *unmasked* image in the header.
-  Measured 2026-10-11 over the 9 sample files (1,269 pages).
+  Measured 2026-10-13 over the 12 sample files (1,873 pages).
 - Label pages are printed exactly as downloaded *(owner)*.
 - Each download is at most 200 pages, so one batch needs several PDF files.
 - File names: `MM-DD_HH-MM-SS_Shipping label_<n>.pdf`, or
@@ -101,8 +108,14 @@ creator handle, …) are not needed for packing.
 ### Label + packing slip (export option)
 
 - The seller centre can export **Shipping label + Packing slip**: same A6 page, the packing
-  slip printed under the label. The sample (downloaded 2026-10-07 07:16, 3 files, 601 pages,
-  600 orders) holds orders of 2026-10-07, none of them in the sample CSVs.
+  slip printed under the label. Two sample downloads of this kind: 2026-10-07 07:16 (3 files,
+  601 pages, 600 orders) and 2026-10-13 08:41–08:46 (3 files, 604 pages, 600 orders, the third
+  file of its own download 4 minutes after the first two). Neither holds orders of the 2026-10-06
+  sample CSVs.
+- The 2026-10-13 download is the first of this kind to carry **J&T Cargo** (1 order) and
+  **iD Express / IDX** (3 orders): before it, both couriers appeared only on plain label exports.
+  Its courier counts, by the logo image and the tracking form of each page: J&T Express 500 ·
+  SiCepat 96 · iD Express 3 · J&T Cargo 1 · 4 slip-continuation pages (600 orders in all).
 - Slip table columns: `Product Name` · `SKU` (holds the **variation**, e.g. `Default`,
   `Carbon, yamaha`) · `Seller SKU` · `Qty`; then `Qty Total:` and `Order ID: …`. **No SKU ID.**
 - Long cells wrap onto several lines inside their column; a wrap after `-` has no space
@@ -115,13 +128,16 @@ creator handle, …) are not needed for packing.
   own content, never on the courier: the one order that spilled in the sample had a **single item
   line** and a buyer message, while a J&T Cargo order of 3 lines spilled and one of 1 line did
   not. Many items of the same product (e.g. 12 of one variation) are one line and one page
-  *(owner)*. A continuation page carries the **Order ID** (every one of the 1,269 sample pages
+  *(owner)*. A continuation page carries the **Order ID** (every one of the 1,873 sample pages
   does, so a page is always keyed by its own Order ID) and the `In transit by` deadline, but no
   tracking ID, no courier logo and no service tag — so it can never name a courier, and the app
   needs no "carry the previous page's order forward" case for it.
 - In the sample every slip has one item line and `Qty Total` always equals the sum of `Qty`.
 - The label part also prints `In transit by: dd/mm/yyyy hh:mm` (ship-by deadline); the plain
   label export (without slip) does not (0 of 562 sample pages).
-- Tracking IDs are printed as text several times per label. On the spaced-character labels
-  (IDX / Tokopedia style) the tracking ID could not be found as text on 2 of 1,163 sample
-  pages.
+- A tracking ID is printed as text **several times** on a J&T Express or SiCepat label (five times
+  on a J&T Express page, measured 2026-10-13) but **once** on a J&T Cargo or iD Express label, and
+  there in wide character spacing — one character per text run, so the token is only whole once
+  the whitespace is dropped, and it is then glued to the text beside it. A candidate form that
+  appears once is therefore normal on the boxed layouts and must not be dropped for that reason;
+  the courier data decides which form names a courier.

@@ -148,7 +148,8 @@ Reference: the Python package `tools/analysis/packing/` (frozen) — the first i
   **tracking-ID form** (`00` → SiCepat, `57` → J&T Cargo, both now unambiguous). 03 › *Courier
   deduction* holds the rule; the logo hashes, the ask-the-owner flow and J&T Cargo's unreadable
   logo are D18. Code: `couriers.toml` gains a logo-hash list (XXH3-64, `xxhash-rust`) per courier
-  and a J&T Cargo entry,
+  and a J&T Cargo entry — whose clue is the logo's **appearance** (`shape`, D18: its bytes name
+  nothing) —
   and `deduce_courier` hashes the page's logo image (`FPDFImageObj_GetImageDataRaw`) and requires
   the two clues to agree; a hash that is not in the table is asked of the owner once
   (`couriers.toml` — one file, D19 answered; the app appends the hash per D20, and *I don't know*
@@ -177,12 +178,24 @@ Reference: the Python package `tools/analysis/packing/` (frozen) — the first i
     0.44 µs for a 14 KB logo) hash to one stable value per courier across all 9 files: J&T Express
     `39b9b7b9f61d0e7f`, SiCepat `cf33ed60daa291b1`, IDX `9131c1f94ad363d4`, TikTok Shop
     `f2cf7019646c955b`. J&T
-    Cargo's logo is a *masked* image re-rastered between exports (680×156 / 683×157), so it has no
-    stable hash (D18). The barcode and QR are vector paths and every page also carries a
-    page-wide frame image.
+    Cargo's logo is a *masked* image re-rastered between exports (680×156 / 683×157): its encoded
+    bytes name nothing, but its **appearance** — composited with its `/SMask`, fitted into a 64 × 64
+    canvas on white, thresholded at 200/255 — gives **one value for both rasters**
+    (`2a36acec58f5…`; measured 2026-10-13, D18), so it can be a logo clue like the others. The
+    barcode and QR are vector paths and every page also carries a page-wide frame image.
     The spill: the label takes the top 70% of the page on every style (the slip starts at 126.5 pt
     on all four), so only the slip's own content spills — the sample's one spilled order had a
     single item line and a buyer message.
+  - Measured 2026-10-13 on the new slip download (3 files, 604 pages, 600 orders, `tools/analysis/
+    helpers/courier_clues.py`): J&T Express 500 · SiCepat 96 · iD Express (IDX) 3 · J&T Cargo 1 ·
+    4 slip continuations. **It is the first slip export with a J&T Cargo order** (p72, its slip
+    continuing on p73) **and with iD Express orders**; both couriers had only ever appeared on plain
+    label exports before. The Cargo page's clues: the `57` + 10-digit form (printed **once**, in the
+    whitespace-collapsed text), `FastTrack` in the header strip, `TT Order ID` as its order-ID
+    caption, `COD` and `Print Time`; its logo is the 680×156 raster whose base and mask bytes are
+    identical to `0708-orders.pdf` p13's. No new courier, tracking form or service tag appears in
+    the whole samples folder (12 files, 1,873 pages): J&T Express 1,614 · SiCepat 244 · iD Express
+    5 · J&T Cargo 3 · the one `TikTok Shop` label · 6 continuations.
   - Result: (not started; next, nothing waits for the owner)
 - [x] **2.17 Open folder: it opened Documents (review round 1).** `show_in_folder` ran
   `explorer.exe /select,<path>`. Explorer parses `/select,` itself and does not understand the

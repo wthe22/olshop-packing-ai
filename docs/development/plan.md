@@ -26,8 +26,8 @@ command line is not good for daily use), so phase 1 stops with its code done (27
 frozen, as the analysis tools in `tools/analysis/` (not part of the product); its two open tasks
 move into phase 2. Design:
 [07-pc-app](../desktop/design/07-pc-app.md), [08-pc-app-ui](../desktop/design/08-pc-app-ui.md).
-Open in [desktop/design/02-design-questions.md](../desktop/design/02-design-questions.md): D17 (whether 2.18's check runs on every batch), D18 (the J&T Cargo logo, the
-one the logo clue cannot read) and D20 (how the app writes a taught logo into `couriers.toml`); in
+Open in [desktop/design/02-design-questions.md](../desktop/design/02-design-questions.md): D17 (whether 2.18's check runs on every batch), D18 (how much of a *masked* courier logo to read — measured 2026-10-13: its appearance names J&T Cargo
+where its encoded bytes cannot, so the question is how much of that clue to use) and D20 (how the app writes a taught logo into `couriers.toml`); in
 [mobile/design/02-design-questions.md](../mobile/design/02-design-questions.md): D1 (Android, open
 until phase 3).
 **D15 is answered**
@@ -42,7 +42,14 @@ jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summa
 2.19 (the courier data into the data folder, D16's answer — no owner answer needed, so it can be
 built at any time) and 2.18 (the saved-PDF check; its four choices are answered and D17 has a
 "built for now" default, so it waits on nothing); 2.20 (one hash for everything — the owner's decision of 2026-10-13,
-no answer needed) can be built at any time. Then the round-2 review at the end of Phase 2 — open the same day's packing
+no answer needed) can be built at any time. The 2026-10-13 sample download (3 files, 604 pages) was
+measured against the courier rule: J&T Express 500 · SiCepat 96 · iD Express (IDX) 3 · **J&T Cargo 1**
+(the first J&T Cargo and iD Express labels in a *slip* export) · 4 slip continuations; no new
+courier, form or tag appears anywhere in `samples/`, and J&T Cargo's masked logo is readable by
+appearance (one value for both its rasters) — so 2.16 gives it a logo clue like the others, and
+**D18 is the only thing waiting on the owner** (how much of that appearance clue to use; its
+"Built for now" default works and nothing waits on the answer).
+Then the round-2 review at the end of Phase 2 — open the same day's packing
 list (the header must stand clear, `×` must print), press *Open folder* (the batch folder must open,
 not Documents), check the Day screen for a *Courier unknown* warning, and save one batch to watch
 the check run (the progress line; a clean day must report nothing). The

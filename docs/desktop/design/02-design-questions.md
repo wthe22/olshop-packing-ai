@@ -37,29 +37,34 @@ orders"). Nothing else in the design writes one; every batch already has its `su
 
 **What the answer changes:** the *About* row of Settings and one small writer in the app.
 
-## D18 — The J&T Cargo logo (the one the logo clue cannot read)
+## D18 — Reading a courier logo the encoded bytes cannot name (J&T Cargo)
 
 **Words.** The owner's rule (2026-10-11) names the courier from the **logo** (its image hash) and
 the **tracking-ID form**, both agreeing, and asks the owner once about a logo never seen before.
-Four couriers' logos are plain images whose encoded bytes hash (XXH3-64) to one stable value each across all
-9 sample files (J&T Express 975×377, SiCepat 184×60, IDX 1200×859, TikTok Shop 326×59).
-**J&T Cargo's is not one of them**: it is a *masked* image (`/SMask`) whose base is a flat colour
-(331 bytes encoded) and whose raster changes between the two sample labels (680×156 on one,
-683×157 on the other — base and mask hashes both differ), so no hash of it can be stable. Its
-label does print `FastTrack` as real text.
+Four couriers' logos are plain images whose encoded bytes hash (XXH3-64) to one stable value each
+across every sample file (J&T Express 975×377, SiCepat 184×60, iD Express/IDX 1200×859, TikTok
+Shop 326×59). **J&T Cargo's is not one of them**: it is a *masked* image (`/SMask`) whose base is a
+flat colour (331 bytes) and whose shape is the mask, and the platform drew the same wordmark at two
+scales (680×156 on two sample labels, 683×157 on the third), so the encoded bytes differ between
+exports. Measured 2026-10-13: hashing the **appearance** instead — composite the image with its
+mask, fit into a 64 × 64 canvas on white, threshold at 200/255, XXH3-64 — gives J&T Cargo one value
+for **both** rasters (`2a36acec58f5…`), and one distinct value per other courier and per platform
+strip. So the logo clue *can* name J&T Cargo; the only question is how much of it to use.
 
 | Option | What you see |
 |---|---|
-| **1. `FastTrack` is J&T Cargo's second clue** (**Built for now**) | The samples' 2 Cargo orders are named; a Cargo label whose text is unreadable stays unknown. The tag stays unused for every other courier |
-| 2. Compare the logo by appearance, not by hash | Render the label's header (~17 ms a page) and compare it with a stored picture, tolerating the re-raster. Names Cargo too, for the most code in the deduction |
-| 3. J&T Cargo stays unknown until its logo is readable | Nothing to build; every Cargo order saves with an empty courier and a warning |
+| **1. The appearance, for an image the byte hashes did not name** (**Built for now**) | J&T Cargo is named by its logo + its `57` form, like every other courier, and a re-rastered logo of a known courier is never asked about again. Costs the image decode only on the pages whose bytes matched nothing (about 1 page in 600 today) |
+| 2. The appearance for every logo | The same table for every courier and one clue order only; a re-made asset of *any* courier is never asked about again, but every page pays the decode |
+| 3. J&T Cargo's logo stays unread; `FastTrack` + the `57` form name it | Nothing to build for the image; the cheapest. A Cargo label whose printed `FastTrack` is missing or unreadable stays unknown, and an unseen *masked* logo of another courier is asked about again on every batch |
+| 4. Render the label's header and compare pictures (~17 ms a page) | The same result as 1, for the most code and the highest cost |
 
-Recommended: **1** — this is the case the owner asked for ("unless I found a case where it is
-helpful"): `FastTrack` is the courier's printed brand line, not a service code, and it decided
-both Cargo labels in the samples.
+Recommended: **1** — measured stable on both rasters, it gives J&T Cargo the same two agreeing
+clues as the other couriers (the owner's rule), and the cost is paid only where it is needed. The
+printed `FastTrack` and the `TT Order ID` caption stay as the fallback clue (03 › *Courier
+deduction*).
 
-**What the answer changes:** one line of the courier data (J&T Cargo's text clue), or the
-deduction's comparison.
+**What the answer changes:** the second clue's form (an appearance hash in `couriers.toml`), or
+nothing at all.
 
 ## D20 — How the app writes a taught logo into `couriers.toml`
 
@@ -70,7 +75,7 @@ hand edit is never lost.
 
 | Option | What you see |
 |---|---|
-| **1. A `[logo]` table appended at the end of the file** (**Built for now**) | The app adds one line (`"hash" = "SiCepat"`) at the end and never touches the entries above it, so your own comments and order survive. The same courier's logos then live in two places — its `logo` list and this table |
+| **1. A `[logo]` table appended at the end of the file** (**Built for now**) | The app adds one line (`"hash" = "SiCepat"`) at the end and never touches the entries above it, so your own comments and order survive. A logo it could only read by **appearance** (D18) goes into a `[shape]` table the same way. The same courier's logos then live in two places — its `logo` list and this table |
 | 2. The hash is added to that courier's own `logo` list | One place per courier, but the app rewrites the entry you wrote — `toml_edit` keeps your comments and order, so only that line changes |
 | 3. Nothing is written | Simplest: the answer names that batch's orders only, and the same logo is asked about again next batch |
 

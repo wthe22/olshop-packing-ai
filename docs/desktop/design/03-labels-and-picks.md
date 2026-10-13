@@ -59,22 +59,36 @@ in the same way.
 1. **The logo** — the main clue. Every label prints the courier's logo as an embedded image; the
    image's **encoded bytes** are hashed (pdfium's `FPDFImageObj_GetImageDataRaw`, *not* the decoded
    pixels) with **XXH3-64** and looked up in the courier data's logo table. One hash per courier,
-   measured stable across every sample export. The cost is about 0.5 µs a page (the bytes are
-   1.5–15 KB; measured 0.44 µs for a 14 KB logo). Python's `xxhash` (in `tools/analysis`) and Rust's
-   `xxhash-rust` compute the same value, so a hash taken there can be checked against the app's. A hash
-   not in the table is **asked of the owner once** ("which courier is this logo?") and the answer
-   is written into the data file, so later labels are named without asking.
+   measured stable across every sample export — J&T Express `39b9b7b9f61d0e7f`, SiCepat
+   `cf33ed60daa291b1`, iD Express (IDX) `9131c1f94ad363d4`. The cost is about 0.5 µs a page (the
+   bytes are 1.5–15 KB; measured 0.44 µs for a 14 KB logo). Python's `xxhash` (in `tools/analysis`)
+   and Rust's `xxhash-rust` compute the same value, so a hash taken there can be checked against
+   the app's. A hash not in the table is **asked of the owner once** ("which courier is this
+   logo?") and the answer is written into the data file, so later labels are named without asking.
 2. **The tracking-ID form** ([business-process 02](../../business-process/02-data-sources.md#columns-packing-needs)):
    `JY` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo;
-   `TKP` + 10 digits → IDX.
-3. **Named only when the two agree**: the tracking form gives the *candidate* couriers, and the
-   courier is named when the logo's courier is among them. A logo whose courier and form disagree,
-   a logo with no form, a form with no logo, or neither → no name. Unknown → `courier` empty, and
-   a warning lists those orders.
-4. **A printed text clue** (`www.jet.co.id`, `FastTrack`) stands in for the logo only where the
-   logo cannot be read — J&T Cargo's logo is a masked image with no stable hash (D18). SiCepat and
-   IDX print no courier name at all.
-5. **The service tag is not used yet** (the owner, 2026-10-11: it is weak for some couriers). The
+   `TKP` + 10 digits → iD Express (IDX). The form must match a token (or a match in the
+   whitespace-collapsed text) **fully**; it does not have to be repeated — on the boxed layouts the
+   tracking ID is printed once (business-process 02).
+3. **A masked logo is hashed by appearance.** A courier can print its logo as an image whose shape
+   is a `/SMask` and whose base is one flat colour (J&T Cargo: 331 bytes for 680×156): the base's
+   bytes name no courier, and the platform re-rastered the same wordmark at two sizes (680×156,
+   683×157), so the encoded bytes differ between exports. For an image with no hash in the table,
+   the app hashes its **appearance** instead: composite the image with its `/SMask` (if any), fit it
+   into a fixed **64 × 64** canvas on white, threshold at **200/255**, and hash that 1-bit canvas
+   with XXH3-64. Measured 2026-10-13 over the samples: one value per courier asset, and J&T Cargo's
+   two rasters both give `2a36acec58f5…` — so the appearance table needs one entry per courier, and
+   a re-raster does not need the owner asked again. The appearance of the three plain-image logos
+   is stable too (`31643d0eb0f1…` J&T Express, `3cf94ea34e54…` SiCepat, `dc99f0056376…` iD
+   Express), but the encoded bytes are cheaper and are tried first.
+4. **Named only when the two clues agree**: the tracking form gives the *candidate* couriers, and
+   the courier is named when the logo's courier (by its bytes, else by its appearance) is among
+   them. A logo whose courier and form disagree, a logo with no form, a form with no logo, or
+   neither → no name. Unknown → `courier` empty, and a warning lists those orders.
+5. **A printed text clue** (`www.jet.co.id`, `FastTrack`) stands in for the logo only where the
+   logo cannot be read at all. J&T Cargo's label prints `FastTrack` in its header strip and
+   `TT Order ID` as the caption of its order ID, and SiCepat and iD Express print no courier name.
+6. **The service tag is not used yet** (the owner, 2026-10-11: it is weak for some couriers). The
    measured tag lists stay in [business-process 02](../../business-process/02-data-sources.md) for
    when a case needs them.
 

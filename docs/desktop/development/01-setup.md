@@ -8,7 +8,7 @@ Git and Git Bash are common to both tools: [`../../development/README.md`](../..
 |---|---|---|
 | Analysis tools | Python 3.12 or newer | Python 3.14 is installed at `C:\Python314` (on `PATH` as `python`) |
 | Analysis tools | Project virtual environment `.venv` in the repository root | Created in phase 1, task 1.1 |
-| Analysis tools | `pypdf`, `fpdf2`; for development `pytest` | Declared in `tools/analysis/pyproject.toml` |
+| Analysis tools | `pypdf`, `fpdf2`, `pillow`, `xxhash`; for development `pytest` | Declared in `tools/analysis/pyproject.toml` |
 | PC app, analysis tools | Fonts Arial and Consolas | Come with Windows (`C:\Windows\Fonts`) |
 | PC app | Rust (stable, MSVC toolchain) | Installed: cargo/rustc 1.98.0 |
 | PC app | Node.js + npm | Installed: Node 26.7, npm 11.19 |
