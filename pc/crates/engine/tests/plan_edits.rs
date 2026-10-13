@@ -1,5 +1,5 @@
 //! `plan.rs`: the plan edits (skip, move, add, rename), picks from what is left, runs and
-//! numbering (07 › *Plan*; mirrors the relevant cases of script/tests/test_picks.py).
+//! numbering (07 › *Plan*; mirrors the relevant cases of tools/analysis/tests/test_picks.py).
 
 use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
 use packing_engine::plan::{Plan, PlanError, REST_CODE, REST_NAME};

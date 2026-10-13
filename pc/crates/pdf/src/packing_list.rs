@@ -1,4 +1,4 @@
-//! The three packing-list layouts (port of `script/packing/packing_list.py`, layouts `full`,
+//! The three packing-list layouts (port of `tools/analysis/packing/packing_list.py`, layouts `full`,
 //! `summary`, `pick`; 03 › *Packing list (A4)*, 07 › *Packing list*).
 //!
 //! The input is the plain data model below, owned by this crate and derived from what

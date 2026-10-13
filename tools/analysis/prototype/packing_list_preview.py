@@ -1,4 +1,4 @@
-"""THROWAWAY PROTOTYPE of the A4 packing list. Reference for script/packing/packing_list.py only.
+"""THROWAWAY PROTOTYPE of the A4 packing list. Reference for tools/analysis/packing/packing_list.py only.
 
 Not production code: reads samples/ directly, categories are hard-coded lambdas instead of
 categories.toml, group tie-break differs from the spec (01-requirements, rule 6), no `pick`

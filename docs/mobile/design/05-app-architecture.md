@@ -29,8 +29,8 @@ Tauri 2: three toolchains, least proven for continuous mobile scanning.)
 
 ## Logic in two places
 
-The CSV rules, batch/group numbering and the condition language exist in Python (script) and
-Kotlin (app). Both test suites run the same committed fixtures in `testdata/` (made-up data):
+The CSV rules, batch/group numbering and the condition language exist in Python (`tools/analysis`, frozen; the
+condition language also in the PC app's Rust) and Kotlin (app). The test suites run the same committed fixtures in `testdata/` (made-up data):
 
 - `testdata/orders-1.csv`, `orders-2.csv` — two exports of one day, same columns as the real
   export;
@@ -143,13 +143,12 @@ the user picks **Replace** or **Keep both** (the import gets a new id and "(copy
 
 | Part | Size | Why |
 |---|---|---|
-| PC script | S–M | CSV, page copying, table PDF (prototype exists), condition parser |
-| App `core` (import, diff, conditions, TOML) | M | Second implementation of the script's rules, tested on the same fixtures |
+| App `core` (import, diff, conditions, TOML) | M | Second implementation of the rules in `tools/analysis`, tested on the same fixtures |
 | Condition editor UI | M | AND/OR boxes on a phone screen |
 | Database, sessions, zip export/import | S–M | |
 | Scan screen | M–L | Speed, 2 s rule, messages, sounds; decides whether the app is useful |
 | Order list, problems page, history, undo | M | |
 | Four layouts, two languages | M | |
 
-Overall: script ≈ a few days; app ≈ 2–4 weeks of focused work for one developer, most of it in
+Overall: app ≈ 2–4 weeks of focused work for one developer, most of it in
 the scan screen, the condition editor and the layouts. Order of magnitude only.

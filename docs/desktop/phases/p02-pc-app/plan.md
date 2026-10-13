@@ -1,16 +1,16 @@
 # Phase 2 — PC app (Rust + Tauri)
 
-A Windows program that replaces the script for daily use: label downloads in, picks adjusted on
+A Windows program for the daily work: label downloads in, picks adjusted on
 screen, saved PDFs and packing lists out, revert/amend of the last batch. Written in Rust;
 screens in Svelte + TypeScript in a Tauri 2 window. A portable program folder, no installer.
 The PDF library is PDFium for all three PDF jobs — read the text with its positions, copy pages
 unchanged, write the packing list (spike 2.1; the bigger packing-list files are accepted).
 
 Read: [07-pc-app](../../design/07-pc-app.md), [08-pc-app-ui](../../design/08-pc-app-ui.md),
-[03-pc-script](../../design/03-pc-script.md) (the reading and sorting rules that carry
+[03-labels-and-picks](../../design/03-labels-and-picks.md) (the reading and sorting rules that carry
 over), [04-rules-file](../../../shared/04-rules-file.md),
 [business-process/02-data-sources](../../../business-process/02-data-sources.md).
-Reference: the Python package `script/packing/` — same rules, tested; port it module by module
+Reference: the Python package `tools/analysis/packing/` (frozen) — the first implementation of the same rules, tested; port it module by module
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
 - [x] **2.1 PDFium spike** (D2; throwaway code in `pc/spike/`, git-ignored output). Download
@@ -118,7 +118,7 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   the top margin, so on every page the first row or bar was printed over the header.* `Builder::new`
   started at `MARGIN` and `need()` restarted at `MARGIN`, while the header draws the title at
   `MARGIN` and the counts at `MARGIN + 7` and never advanced the cursor; the Python header leaves
-  the cursor at 23 mm (`script/packing/packing_list.py:153`). The body now starts at `BODY_TOP`
+  the cursor at 23 mm (`tools/analysis/packing/packing_list.py:153`). The body now starts at `BODY_TOP`
   (23 mm) in all three layouts, on the first page and after every page break, the `(continued)`
   line included. (b) *`×` printed as `ÿ`.* PDFium's non-CID font path writes `× ÷ é ® ™ ° ± ñ Ä ½ €`
   as `ÿ` (`cid = false`); its CID path writes them correctly but turns a plain space into U+00A0
@@ -248,6 +248,20 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     `categories.toml`, and the broken-file message. Design is written into 07 › *Inputs*, *Day
     folder*, *Program folder* and 08 › *Start* / *6. Settings*; D16 is removed from
     02-design-questions.md because its answer is written here.
+  - Result: (not started)
+- [ ] **2.20 One hash for everything: XXH3-64 for the label-file fingerprint** (the owner's
+  decision, 2026-10-13: xxhash replaces all hashes). The label-file fingerprint ("used in batch n",
+  amend) is size + SHA-256 today (`sha2`); it becomes size + **XXH3-64 of the whole file** (16 hex
+  characters, streamed), so `xxhash-rust` — already in for the logo hash (2.16) — is the only hash
+  crate and `sha2` leaves the workspace. `state.json` entries carry `xxh3` instead of `sha256`
+  (07 › *`state.json`*); a day folder written before this still loads — `sha256` is read and never
+  matched, since the "used twice" hint only matters inside one day. Code: `engine/src/day.rs`,
+  `pdf/src/batch.rs`, `app/src-tauri/src/commands/day.rs`, the `sha2` lines of the `Cargo.toml`
+  files, and `engine/tests/day_state.rs`. Not changed: the SHA-256 that `pc/tools/get-pdfium.sh`
+  checks against the PDFium release — the vendor publishes it, it is a download check and not a
+  hash the program makes. Design is in 07 › *Inputs*, *`state.json`* and *Stack* (already
+  written). Tests: the same file is recognised twice; a file with one changed byte is not; a day
+  file with `sha256` entries loads.
   - Result: (not started)
 
 **Owner reviews:** [round 1](review-1.md) (2026-10-11, done; it found 2.15–2.17) and

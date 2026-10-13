@@ -7,7 +7,7 @@ ticked **and** its owner review is noted as passed in the phase's review file.
 
 | Phase | Tool | Tasks | Owner review |
 |---|---|---|---|
-| 1 — PC script (stopped, reference implementation) | desktop | [p01-pc-script](../desktop/phases/p01-pc-script/plan.md) | none |
+| 1 — PC script (done; now the analysis tools in `tools/analysis`) | desktop | [p01-pc-script](../desktop/phases/p01-pc-script/plan.md) | none |
 | 2 — PC app (Rust + Tauri) | desktop | [p02-pc-app](../desktop/phases/p02-pc-app/plan.md) | [round 1](../desktop/phases/p02-pc-app/review-1.md), [round 2](../desktop/phases/p02-pc-app/review-2.md) |
 | 3 — Android camera spike | mobile | [p03-camera-spike](../mobile/phases/p03-camera-spike/plan.md) | [review-1](../mobile/phases/p03-camera-spike/review-1.md) |
 | 4 — App core (no camera) | mobile | [p04-app-core](../mobile/phases/p04-app-core/plan.md) | [review-1](../mobile/phases/p04-app-core/review-1.md) |
@@ -22,8 +22,9 @@ Status: **Phase 2 (PC app): tasks 2.1–2.15 and 2.17 done — the packing-list 
 2.16 (the courier) is next, and 2.18 (the check of the saved PDFs, designed at the
 owner's request on 2026-10-11) waits behind it.**
 The owner decided that the PC gets a desktop app written in Rust (a
-command line is not good for daily use), so phase 1 stops with its code done (270 tests) and
-stays as the reference implementation and fallback; its two open tasks move into phase 2. Design:
+command line is not good for daily use), so phase 1 stops with its code done (270 tests); the script is kept,
+frozen, as the analysis tools in `tools/analysis/` (not part of the product); its two open tasks
+move into phase 2. Design:
 [07-pc-app](../desktop/design/07-pc-app.md), [08-pc-app-ui](../desktop/design/08-pc-app-ui.md).
 Open in [desktop/design/02-design-questions.md](../desktop/design/02-design-questions.md): D17 (whether 2.18's check runs on every batch), D18 (the J&T Cargo logo, the
 one the logo clue cannot read) and D20 (how the app writes a taught logo into `couriers.toml`); in
@@ -40,7 +41,8 @@ jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summa
 **Next step.** 2.16 (the courier: the form-and-tag rule, no owner answer needed), then
 2.19 (the courier data into the data folder, D16's answer — no owner answer needed, so it can be
 built at any time) and 2.18 (the saved-PDF check; its four choices are answered and D17 has a
-"built for now" default, so it waits on nothing). Then the round-2 review at the end of Phase 2 — open the same day's packing
+"built for now" default, so it waits on nothing); 2.20 (one hash for everything — the owner's decision of 2026-10-13,
+no answer needed) can be built at any time. Then the round-2 review at the end of Phase 2 — open the same day's packing
 list (the header must stand clear, `×` must print), press *Open folder* (the batch folder must open,
 not Documents), check the Day screen for a *Courier unknown* warning, and save one batch to watch
 the check run (the progress line; a clean day must report nothing). The

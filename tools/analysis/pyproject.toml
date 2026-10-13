@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "packing"
 version = "0.1.0"
-description = "Daily packing: orders CSV + label PDFs -> pack groups, label PDFs per group, A4 packing list"
+description = "Analysis tools for the packing PDFs and CSVs (not product code; frozen, the PC app is the truth)"
 requires-python = ">=3.12"
 dependencies = ["pypdf>=6.19", "fpdf2>=2.8.9"]
 

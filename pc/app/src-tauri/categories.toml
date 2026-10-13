@@ -1,4 +1,4 @@
-# Packing categories (format: docs/software-design/04-rules-file.md).
+# Packing categories (format: docs/shared/04-rules-file.md).
 # Order matters: an order goes to the FIRST category whose condition matches.
 # The last category has no condition and catches every remaining order.
 

@@ -1,4 +1,4 @@
-# 01 — Setup (PC app and PC script)
+# 01 — Setup (PC app and analysis tools)
 
 Git and Git Bash are common to both tools: [`../../development/README.md`](../../development/README.md#common-setup).
 
@@ -6,10 +6,10 @@ Git and Git Bash are common to both tools: [`../../development/README.md`](../..
 
 | For | Tool | Notes |
 |---|---|---|
-| PC script | Python 3.12 or newer | Python 3.14 is installed at `C:\Python314` (on `PATH` as `python`) |
-| PC script | Project virtual environment `.venv` in the repository root | Created in phase 1, task 1.1 |
-| PC script | `pypdf`, `fpdf2`; for development `pytest` | Declared in `script/pyproject.toml` |
-| PC script | Fonts Arial and Consolas | Come with Windows (`C:\Windows\Fonts`) |
+| Analysis tools | Python 3.12 or newer | Python 3.14 is installed at `C:\Python314` (on `PATH` as `python`) |
+| Analysis tools | Project virtual environment `.venv` in the repository root | Created in phase 1, task 1.1 |
+| Analysis tools | `pypdf`, `fpdf2`; for development `pytest` | Declared in `tools/analysis/pyproject.toml` |
+| PC app, analysis tools | Fonts Arial and Consolas | Come with Windows (`C:\Windows\Fonts`) |
 | PC app | Rust (stable, MSVC toolchain) | Installed: cargo/rustc 1.98.0 |
 | PC app | Node.js + npm | Installed: Node 26.7, npm 11.19 |
 | PC app | Tauri prerequisites: Microsoft C++ Build Tools, WebView2 | Installed: Build Tools at `C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools` (links the Tauri crate); WebView2 runtime present (`C:\Program Files (x86)\Microsoft\EdgeWebView\Application`) |
@@ -18,15 +18,15 @@ Git and Git Bash are common to both tools: [`../../development/README.md`](../..
 
 ## Steps
 
-### Python (phase 1)
+### Python analysis tools (`tools/analysis`)
 
 ```bash
 cd /d/workspace/software/olshop-packing-ai
 /c/Python314/python.exe -m venv .venv      # the system Python, not another one on PATH
 source .venv/Scripts/activate
 python -m pip install --upgrade pip
-python -m pip install -e "script[dev]"     # pypdf, fpdf2, pytest
-python -m pytest script/tests
+python -m pip install -e "tools/analysis[dev]"     # pypdf, fpdf2, pytest
+python -m pytest tools/analysis/tests
 ```
 
 `-e` installs the package in editable mode, so `python -m packing` works from any folder while
@@ -87,3 +87,4 @@ One line per one-time step actually done on this PC: date · what · exact comma
 | 2026-10-10 | Task 2.13 portable build: `bash pc/tools/make-portable.sh` → `pc/target/portable/Packing/` (`Packing.exe` 7,792,128 B, `pdfium.dll` 7,211,520 B; release build 4m11s cold, 2m58s warm). Tested from a copy outside the repository at `%TEMP%\portable-test\Packing` via a `.lnk` shortcut: the first start asked for the data folder, *Use this folder* wrote the built-in `categories.toml` (482 B), one batch on `testdata/labels-slip.pdf` → 24 pages, 23 orders, 3 saved PDFs (`1 A Sepatu ×7`, `2 B Spion & Knalpot ×8`, `3 Z Lainnya ×8`) + `packing-list.pdf` (1.4 MB) in `labels/2026-10-10/batch 1/` |
 | 2026-10-11 | Analysis helper (not needed to build or run the project): `.venv/Scripts/python.exe -m pip install pypdfium2` → pypdfium2 5.14.0, used to render sample label pages to PNG under `tmp/probe/img/` while comparing the SiCepat, J&T Express, J&T Cargo and IDX label layouts |
 | 2026-10-11 | Analysis helper: `.venv/Scripts/python.exe -m pip install xxhash` → xxhash 4.0.1, used to compute the logo fingerprints (XXH3-64) in `tmp/probe/logos/` and to check them against Rust's `xxhash-rust` (both match the known XXH3-64 vector `2d06800538d394c2`, so the script and the app share one expected-value fixture) |
+| 2026-10-13 | `script/` moved to `tools/analysis/` (analysis tools, not product code): `python -m pip install -e "tools/analysis[dev]"` re-pointed the editable install; `python -m pytest tools/analysis/tests` → 270 passed |

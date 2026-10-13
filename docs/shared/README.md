@@ -5,7 +5,7 @@ What the PC tools ([`../desktop/`](../desktop/README.md)) and the Android app
 
 | File | Content |
 |---|---|
-| [04-rules-file.md](04-rules-file.md) | `categories.toml` and the condition language: used by the PC script, the PC app and the Android app. A file written by one must load unchanged in the others |
+| [04-rules-file.md](04-rules-file.md) | `categories.toml` and the condition language: used by the PC app and the Android app. A file written by one must load unchanged in the other |
 
 ## How the tools relate
 

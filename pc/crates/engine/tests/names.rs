@@ -1,6 +1,6 @@
 //! `names.rs`: saved-PDF file names, the user's whole name, the Windows-forbidden characters,
 //! duplicate names and the folder / file names (07 › *Day folder*; 03 › *Numbering and file
-//! names*; mirrors the file-name cases of script/tests/test_picks.py).
+//! names*; mirrors the file-name cases of tools/analysis/tests/test_picks.py).
 
 use packing_engine::names::{
     NAME_LIMIT, NameError, batch_folder, check_unique_names, day_folder, normalize_saved_pdf_name,

@@ -1,5 +1,5 @@
 //! The slip table read by position (03 › *Reading the packing slip*; port of
-//! `script/packing/slip.py`, validated against Python in the spike on 600 sample and 23 testdata
+//! `tools/analysis/packing/slip.py`, validated against Python in the spike on 600 sample and 23 testdata
 //! orders).
 
 use std::cmp::Ordering;

@@ -1,5 +1,5 @@
 //! slip.rs: the packing-slip table read by position, on hand-built runs (cases ported from
-//! `script/tests/test_slip.py`).
+//! `tools/analysis/tests/test_slip.py`).
 
 use packing_engine::slip::{Slip, SlipLine, read_slip};
 use packing_engine::text::{PageText, Run};

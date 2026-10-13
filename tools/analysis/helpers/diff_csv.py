@@ -18,8 +18,8 @@ The key is always the Order ID: the column named `Order ID` or `order_id`
 order with several products is several rows in an orders export.
 
 Usage (from the repository root, Git Bash):
-    .venv/Scripts/python.exe script/tools/diff_csv.py work/labels-old.csv work/labels-new.csv
-    .venv/Scripts/python.exe script/tools/diff_csv.py work/labels-old.csv work/labels-new.csv \
+    .venv/Scripts/python.exe tools/analysis/helpers/diff_csv.py work/labels-old.csv work/labels-new.csv
+    .venv/Scripts/python.exe tools/analysis/helpers/diff_csv.py work/labels-old.csv work/labels-new.csv \
         --missing work/missing.csv --new work/new.csv --common work/common.csv
 """
 from __future__ import annotations

@@ -1,21 +1,22 @@
-# Phase 1 — PC script (stopped: reference implementation)
+# Phase 1 — PC script (done; now the analysis tools)
 
 The Python script, built as the daily tool and then replaced by the Rust PC app (phase 2)
-before it was used daily. Its code is finished and tested; it stays for good, frozen, as the reference the
-Rust program is compared with and as a fallback when the app cannot start
-([07-pc-app](../../design/07-pc-app.md)).
+before it was used daily. Its code is finished and tested (270 tests); it is kept, frozen, as
+[`tools/analysis/`](../../../../tools/analysis/README.md) — an aid for looking inside PDFs and for
+checking the app's numbers, not part of the product and not a fallback
+([07-pc-app](../../design/07-pc-app.md)). The paths below are the ones under `tools/analysis/`.
 Tasks 1.15 and 1.16 are not done here: the sample run is part of task 2.7, the user guide is
 written for the app in task 2.14. There is no separate owner review of phase 1.
 
 Read: [01-requirements](../../design/01-requirements.md) (Concepts, PC script rules,
-P1–P6), [03-pc-script](../../design/03-pc-script.md),
+P1–P6), [03-labels-and-picks](../../design/03-labels-and-picks.md),
 [04-rules-file](../../../shared/04-rules-file.md),
 [business-process/02-data-sources](../../../business-process/02-data-sources.md).
-Reference: `script/prototype/packing_list_preview.py` (working layout code for `full` and
+Reference: `tools/analysis/prototype/packing_list_preview.py` (working layout code for `full` and
 `summary`; reads `samples/` directly; not production code).
 
-- [x] **1.1 Scaffold.** `script/pyproject.toml` (package `packing`, deps `pypdf`, `fpdf2`,
-  extra `dev` = `pytest`), empty modules as in 03-pc-script "Code layout", `.venv` ([01-setup](../../development/01-setup.md)),
+- [x] **1.1 Scaffold.** `tools/analysis/pyproject.toml` (package `packing`, deps `pypdf`, `fpdf2`,
+  extra `dev` = `pytest`), empty modules as in 03-labels-and-picks "Code layout", `.venv` ([01-setup](../../development/01-setup.md)),
   one passing placeholder test. Log the venv step in [01-setup](../../development/01-setup.md).
 - [x] **1.2 Test data (CSV).** `testdata/make_testdata.py` writes `orders-1.csv` and
   `orders-2.csv` with the real 65-column header (business-process 02), trailing tabs on ID/time
@@ -51,14 +52,14 @@ Reference: `script/prototype/packing_list_preview.py` (working layout code for `
   "rest" pick; re-ordering into runs; saved-PDF and run numbering through the day;
   `work/<day>/state.json`; the duplicate guard. Tests. (Replaces `batches.py`.)
 - [x] **1.11 Packing list (base).** `packing_list.py`: layouts `full`, `summary`, `pick` as in
-  03-pc-script. Test: PDFs are produced, page count sane, text contains numbers and tracking IDs
+  03-labels-and-picks. Test: PDFs are produced, page count sane, text contains numbers and tracking IDs
   (via pypdf).
 - [x] **1.12 Packing list for picks.** Headings = saved PDF number + pick code/name; groups =
   runs (`3-05`); scope `per-pdf` / `whole` / `none`; error or skip with a message when there is
   no item data. Tests.
 - [x] **1.13 Command line.** `prepare` with optional `--csv`, `--rules`, `--interactive`,
   `--layout`, `--packing-list`, `--day`, `--work`; screen summary and `summary.txt`; errors and
-  warnings as in 03-pc-script.
+  warnings as in 03-labels-and-picks.
 - [x] **1.14 Test data (labels).** `testdata/make_testdata.py` also writes label PDFs (plain
   and with a slip) with made-up IDs, one 2-page order, wrapped slip cells; plus a hand-checked
   `testdata/expected-picks.json`.

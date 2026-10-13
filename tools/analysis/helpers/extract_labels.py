@@ -6,7 +6,7 @@ in the PDFs. A page with no Order ID is the continuation of the previous page's
 order (a long label spanning several pages).
 
 Usage (from the repository root, Git Bash):
-    .venv/Scripts/python.exe script/tools/extract_labels.py "samples/*Shipping label*.pdf" -o work/labels.csv
+    .venv/Scripts/python.exe tools/analysis/helpers/extract_labels.py "samples/*Shipping label*.pdf" -o work/labels.csv
 
 Needs only `pypdf` (already in the project venv). Reads the PDFs as they are;
 nothing is uploaded anywhere.
@@ -22,7 +22,7 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-# Same order as script/packing/labels.py: the raw search first, because on J&T
+# Same order as tools/analysis/packing/labels.py: the raw search first, because on J&T
 # labels the Order ID sits on its own line right under the Tracking ID.
 _ORDER_ID = re.compile(r"(?<!\d)(5\d{17})(?!\d)")
 _LABELLED_ORDER_ID = re.compile(r"OrderI[dD][:：](\d{18})")  # second colon is fullwidth

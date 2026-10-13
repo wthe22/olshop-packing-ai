@@ -38,7 +38,7 @@ from .rules import (
     parse_condition,
 )
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_RULES = REPO_ROOT / "categories.toml"
 SCOPES = ("per-pdf", "whole", "none")
 SUMMARY_FILE = "summary.txt"

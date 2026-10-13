@@ -1,6 +1,6 @@
 //! `day.rs`: `state.json` round trip and format, numbering, the duplicate guard, file
 //! fingerprints, revert, amend and the atomic save (07 › *Day folder*, *`state.json`*,
-//! *Revert and amend*; mirrors script/tests/test_picks.py).
+//! *Revert and amend*; mirrors tools/analysis/tests/test_picks.py).
 
 use std::fs;
 use std::path::{Path, PathBuf};

@@ -1,35 +1,27 @@
 # 07 — PC App: Behaviour and Architecture
 
-The **PC app** is a Windows desktop program with windows and buttons. It replaces the Python
-command-line script for daily use: the owner adds the day's label downloads, sees the picks
-with their counts, adjusts them if needed, and saves the label PDFs and packing lists — without
-a terminal. The screens are in [08-pc-app-ui.md](08-pc-app-ui.md).
+The **PC app** is a Windows desktop program with windows and buttons: the owner adds the day's
+label downloads, sees the picks with their counts, adjusts them if needed, and saves the label PDFs
+and packing lists — without a terminal. The screens are in [08-pc-app-ui.md](08-pc-app-ui.md); the
+reading and sorting rules it uses are in [03-labels-and-picks.md](03-labels-and-picks.md).
 
 The whole program is written in **Rust** (engine and window), with the screens in
-**Svelte + TypeScript** inside a **Tauri 2** window. The Python script of phase 1
-([03-pc-script.md](03-pc-script.md)) is not used by the app. It stays in the repository for
-good, **frozen** (no new features):
-
-- as the **reference implementation**: the Rust engine must give the same picks, runs and pages
-  on the same input;
-- as a **fallback** when the app cannot start (run from Git Bash as in 03). The script and the
-  app do not share day state (`work/<day>/` vs the data folder): orders saved by the script are
-  unknown to the app's duplicate guard, and the other way round.
-
-Rule features added later go into the app only. The fixtures the script is tested against
-(`testdata/`) are not changed for them; app-only cases go into separate fixture files.
+**Svelte + TypeScript** inside a **Tauri 2** window. The Python programs in
+[`tools/analysis/`](../../../tools/analysis/README.md) (the first implementation of these rules)
+are frozen and not part of the app: they are an analysis aid for agents — reading a PDF, comparing
+the app's numbers with an independent reading of the same files. They share no state with the app.
+The fixtures in `testdata/` serve both; app-only cases go into separate fixture files.
 
 The PDF library is **PDFium** for all three PDF jobs: read the text with its positions, copy
-pages unchanged, write the packing list. Its packing lists are larger than the script's —
-about 1.4 MB per batch instead of about 60 KB, because PDFium writes the whole of each font
-into the file (about 2.0 MB for the `full`/`summary` layouts, which add a CID copy of Arial for
+pages unchanged, write the packing list. Its packing lists are about 1.4 MB per batch,
+because PDFium writes the whole of each font into the file (about 2.0 MB for the `full`/`summary` layouts, which add a CID copy of Arial for
 the `×` — 03 › *Packing list (A4)*) — and that is accepted; they print the same. Only the
 packing-list writer could later be replaced by one that embeds only the letters used, if the size
 ever becomes a problem; nothing else in the program would change.
 
-## What carries over from the script, what changes
+## What the app decides
 
-The reading and sorting rules of [03-pc-script.md](03-pc-script.md) carry over unchanged:
+The reading and sorting rules are in [03-labels-and-picks.md](03-labels-and-picks.md):
 
 | Rule | Where it is described |
 |---|---|
@@ -43,19 +35,19 @@ The reading and sorting rules of [03-pc-script.md](03-pc-script.md) carry over u
 | The three packing-list layouts `full`, `summary`, `pick` and their look | 03 › *Packing list (A4)* |
 | `categories.toml` and the condition language | [04-rules-file.md](../../shared/04-rules-file.md) |
 
-What is different in the app (these are owner decisions):
+Owner decisions about how the app works:
 
-| Topic | Script (phase 1) | App |
-|---|---|---|
-| How it is used | Command typed in Git Bash | Windows program, buttons ([08](08-pc-app-ui.md)) |
-| Orders CSV | Optional input | **Not read at all.** All order data comes from the label and its packing slip |
-| Plain labels (no packing slip) | Allowed with a warning | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
-| Rules file vs interactive menu | Two modes (`--interactive`) | One screen: the rules are applied in order as a proposal; the owner can skip, move or add a pick for this batch before saving ([08 › Plan](08-pc-app-ui.md#3-plan)) |
-| Undo a run | `--redo` (forget the last run) | **Revert** (undo the last batch) and **Amend** (redo the last batch in place), like git |
-| Output folder | `work/<day>/` flat | `labels/<day>/batch <b>/` inside the data folder, one subfolder per batch, with a copy of the batch's label downloads |
-| Saved-PDF name | Fixed `<n> <code> <name> ×<orders>.pdf` | Suggested the same way; the owner can change the whole name before saving |
-| Packing-list default | `per-pdf`, layout `full` | One per batch (`whole`), layout `pick` (changeable per batch) |
-| Fields in conditions | Includes the CSV-only fields | Only fields the label/slip carry (below) |
+| Topic | Decision |
+|---|---|
+| How it is used | Windows program, buttons ([08](08-pc-app-ui.md)) |
+| Orders CSV | **Not read at all.** All order data comes from the label and its packing slip |
+| Plain labels (no packing slip) | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
+| Rules file vs interactive menu | One screen: the rules are applied in order as a proposal; the owner can skip, move or add a pick for this batch before saving ([08 › Plan](08-pc-app-ui.md#3-plan)) |
+| Undo | **Revert** (undo the last batch) and **Amend** (redo the last batch in place), like git |
+| Output folder | `labels/<day>/batch <b>/` inside the data folder, one subfolder per batch, with a copy of the batch's label downloads |
+| Saved-PDF name | Suggested as `<n> <code> <name> ×<orders>.pdf` ([03 › Numbering and file names](03-labels-and-picks.md#numbering-and-file-names)); the owner can change the whole name before saving |
+| Packing-list default | One per batch (`whole`), layout `pick` (changeable per batch) |
+| Fields in conditions | Only fields the label/slip carry (below) |
 
 ## Words used in this document
 
@@ -73,7 +65,7 @@ What is different in the app (these are owner decisions):
 |---|---|
 | Label PDFs | The *Shipping label + Packing slip* files of one batch ([business-process 02](../../business-process/02-data-sources.md#label--packing-slip-export-option)). One or more files; the seller centre splits a download into files of at most 200 pages |
 | `categories.toml` | In the data folder. Each entry is one pick ([04-rules-file.md](../../shared/04-rules-file.md)). Edited inside the app ([08 › Categories](08-pc-app-ui.md#5-categories)) or by hand |
-| `couriers.toml` | The courier-deduction data (D16, owner decision 2026-10-11 — task 2.19). **In the data folder**, like `categories.toml`: written from the built-in file (same content as `script/packing/couriers.toml`) on first start, then the owner's; a broken file stops the batch with its line. It also holds the logos the owner names in the prompt. Fields and an example below |
+| `couriers.toml` | The courier-deduction data (D16, owner decision 2026-10-11 — task 2.19). **In the data folder**, like `categories.toml`: written from the built-in file (same content as `tools/analysis/packing/couriers.toml`) on first start, then the owner's; a broken file stops the batch with its line. It also holds the logos the owner names in the prompt. Fields and an example below |
 | The day's `state.json` | What earlier batches of the same day saved (below) |
 
 ### `couriers.toml`
@@ -151,7 +143,7 @@ The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04.
 ## What happens in one batch
 
 1. **Choose the files** with **Add files…** or by dropping them on the window
-   ([08 › New batch](08-pc-app-ui.md#2-new-batch)). Each file's fingerprint (size + SHA-256)
+   ([08 › New batch](08-pc-app-ui.md#2-new-batch)). Each file's fingerprint (size + XXH3-64)
    is checked against `state.json`: a file already used in an earlier batch today is marked
    *used in batch 1* (it can still be read; its orders are then left out as already saved).
 2. **Read** the files in the order shown (default: by file name, which is download order),
@@ -237,7 +229,7 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
       "save_time": "2026-10-07T07:40:12+07:00",
       "files": [
         {"name": "10-07_07-00-00_Shipping label+Packing slip_1.pdf",
-         "size": 1310720, "sha256": "9f2c…", "pages": 200}
+         "size": 1310720, "xxh3": "9f2c4a1d7be08356", "pages": 200}
       ],
       "pdfs": [
         {"number": 1, "code": "A", "name": "Sepatu", "file": "1 A Sepatu ×172.pdf",
@@ -256,15 +248,14 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
 
 | Field | Holds | Why |
 |---|---|---|
-| `batches[].files` | Name, size, SHA-256, page count of each label file read, in reading order | Recognise a file used twice ("used in batch 1"); amend reads `download/` in this order |
+| `batches[].files` | Name, size, XXH3-64 (16 hex characters of the whole file), page count of each label file read, in reading order | Recognise a file used twice ("used in batch 1"); amend reads `download/` in this order |
 | `batches[].pdfs` | Each saved PDF: number, pick code/name, file name, counts | Day screen without re-reading the PDFs; revert knows which files are the batch's |
 | `batches[].packing_list` | Scope and layouts chosen | Amend starts with the same choice |
 | `batches[].warnings` | The read warnings of the batch, as shown on the Plan screen | Day screen *Warnings ▸* without re-reading the files |
 | `saved[]` | Each saved order: IDs, batch, saved PDF, run | Duplicate guard |
 
 The file is written whole each time (write to `state.json.tmp`, then replace), so a crash
-never leaves half a file. The Python script's `state.json` (with `invocation`) is a different
-format; the app does not read `work/`.
+never leaves half a file. The app does not read the Python tools' `work/<day>/state.json`.
 
 ## Revert and amend (only the last batch)
 
@@ -295,13 +286,13 @@ amending.").
 
 ## Packing list
 
-- Same layouts as the script ([03 › Packing list](03-pc-script.md#packing-list-a4)), A4, fonts
+- The three layouts ([03 › Packing list](03-labels-and-picks.md#packing-list-a4)), A4, fonts
   Arial and Consolas from `C:\Windows\Fonts`.
 - Chosen per batch on the Plan screen: scope `per PDF` / `whole batch` / `none`, layouts any of
   `full`, `summary`, `pick`. Default: `whole batch`, `pick`. The default can be changed in Settings.
 - Header as in 03 with the batch added: `Packing list · 2026-10-07 · batch 1 · 2  B  Spion &
   Knalpot`.
-- **File size.** About 1.4 MB for one page, 1.6 MB for five (the script's: 62 KB), because
+- **File size.** About 1.4 MB for one page, 1.6 MB for five because
   PDFium writes each whole font into the file. Accepted; the printed result is the same.
 
 ## Architecture
@@ -334,9 +325,8 @@ packing-cli (Rust, developer tool): the same engine and the shared batch steps
 | TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `categories.toml`, `couriers.toml` |
 | JSON | `serde`, `serde_json` | `state.json`, test fixtures |
 | Dates | `jiff` | `ship_by`, `save_time`, day folder |
-| Fingerprints | `sha2` | Label files used twice (a whole-file fingerprint; the *logo* hash is xxh3, below) |
-| The courier logo hash | `xxhash-rust` 0.8, feature `xxh3` | The logo fingerprints in `couriers.toml`: XXH3-64 of the logo image's encoded bytes, 0.44 µs for a 14 KB logo (measured, release build). One crate, no dependencies of its own. Not cryptographic, which does not matter here — the bytes are the platform's own asset, not an attacker's |
-| Tests | `cargo test`; `svelte-check` for the screens | Fixtures shared with the Python script in `testdata/` |
+| Hashes | `xxhash-rust` 0.8, feature `xxh3` | XXH3-64 for every hash the program makes: the fingerprint of a label file (the whole file; "used twice") and the logo fingerprints in `couriers.toml` (the logo image's encoded bytes; 0.44 µs for a 14 KB logo, measured, release build). One crate, no dependencies of its own. Not cryptographic, which does not matter here — the files are the platform's and the owner's own, not an attacker's; a file counts as the same when size and hash both match |
+| Tests | `cargo test`; `svelte-check` for the screens | Fixtures in `testdata/`, also used by the tests of the Python tools |
 | Build | `pc/tools/make-portable.sh`: `npm run tauri build -- --no-bundle`, then the program folder | No installer; `Packing.exe` + `pdfium.dll` in `pc/target/portable/Packing/` ([Program folder](#program-folder-portable)) |
 
 ### Code layout
@@ -459,7 +449,7 @@ Packing\
 | Level | What | Expected |
 |---|---|---|
 | Engine unit tests | Every rule above on hand-built text runs | — |
-| Shared fixtures | `testdata/conditions.json` (parse, print, evaluate, error texts), `testdata/expected-labels.json`, `testdata/expected-picks.json` | The same results as the Python script. Cases that use CSV fields expect the "needs the orders CSV" error in Rust |
+| Shared fixtures | `testdata/conditions.json` (parse, print, evaluate, error texts), `testdata/expected-labels.json`, `testdata/expected-picks.json` | The expected results written there (the Python tools give the same). Cases that use CSV fields expect the "needs the orders CSV" error in Rust |
 | PDF tests | `testdata/labels-slip.pdf` (made up, from `make_testdata.py`): read, copy, packing list | Page counts, text found in the output |
-| Local sample test (skipped without `samples/`) | The three *Shipping label + Packing slip* sample files | 601 pages, 600 orders, one order on 2 pages, J&T 517 pages; the picks, runs and page counts equal the Python script's on the same files and rules |
-| By eye | Saved PDFs and packing lists from the sample run | Pages identical to the download (rendered side by side), layout as the script's |
+| Local sample test (skipped without `samples/`) | The three *Shipping label + Packing slip* sample files | 601 pages, 600 orders, one order on 2 pages, J&T 517 pages; the picks, runs and page counts equal what the Python tools (`tools/analysis`) give on the same files and rules |
+| By eye | Saved PDFs and packing lists from the sample run | Pages identical to the download (rendered side by side), layout as in 03 › *Packing list (A4)* |

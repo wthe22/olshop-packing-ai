@@ -1,5 +1,5 @@
 //! label.rs: Order ID search, ship_by and courier deduction, on plain text (cases ported from
-//! `script/tests/test_labels.py`).
+//! `tools/analysis/tests/test_labels.py`).
 
 use packing_engine::label::{deduce_courier, find_order_id, find_ship_by, find_tracking_id};
 

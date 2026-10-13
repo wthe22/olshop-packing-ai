@@ -14,9 +14,9 @@ few Python comparison scripts. Nothing here is production code. All real data st
 `Pdfium::bind_to_library`:
 
 1. **Order ID** — two-pass search over the label text of every page (18-digit `5…` ID with a
-   digit boundary check, then the `Order ID:`-prefixed form), mirroring `script/packing/labels.py`.
+   digit boundary check, then the `Order ID:`-prefixed form), mirroring `tools/analysis/packing/labels.py`.
 2. **Packing slip** — rebuilds pypdf-style `(x, y, text)` runs from Pdfium (two strategies, see
-   below) and feeds them to a faithful port of `script/packing/slip.py` (`src/slip.rs`: header by
+   below) and feeds them to a faithful port of `tools/analysis/packing/slip.py` (`src/slip.rs`: header by
    position, Qty rows, per-column cell join with wrap, `Qty Total`, `Customer Message`). Dumps
    `out/rust-orders.json`.
 3. **Copy** — copies 10 sample pages (including the one order that spans 2 pages) with

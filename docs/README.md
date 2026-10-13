@@ -4,8 +4,7 @@ Two tools for the daily packing work of the shop (TikTok Shop + Tokopedia orders
 J&T, SiCepat, IDX):
 
 - a **PC app** (Windows, Rust) that turns the shipping-label PDFs with packing slip into
-  picks — one saved label PDF per pick — and A4 packing lists (a Python **PC script** with the
-  same rules is the reference implementation);
+  picks — one saved label PDF per pick — and A4 packing lists;
 - an **Android app** (Kotlin) that checks every packed parcel by scanning its label with the
   phone camera.
 
@@ -13,7 +12,7 @@ J&T, SiCepat, IDX):
 |---|---|---|
 | [`business-process/`](business-process/) | How the packing work is done, and the files it uses. True even without the tools | You need to know *why* or what the real data looks like |
 | [`shared/`](shared/) | What both tools share: the rules file (`categories.toml`, conditions), conventions, how the PC and the phone relate | You touch anything both tools read or write |
-| [`desktop/`](desktop/) | PC app and PC script: `design/`, `development/` (setup, commands), `user-guide/`, `phases/` (task list and owner reviews per phase) | You build, change or use the PC tools |
+| [`desktop/`](desktop/) | PC app: `design/`, `development/` (setup, commands), `user-guide/`, `phases/` (task list and owner reviews per phase) | You build, change or use the PC tools |
 | [`mobile/`](mobile/) | Android app: `design/`, `development/`, `phases/` | You build or change the Android app |
 | [`development/`](development/) | Rules for working in the repository, the build plan of all phases, current status and next step | You start or continue development |
 
@@ -32,11 +31,11 @@ How to use a finished tool belongs in the platform's `user-guide/`.
 | **Tracking ID** | The courier's parcel number, e.g. `JY0000001234`. Printed on the label as text, 1D barcode and QR code |
 | **Item line** | One `SKU ID` with a quantity inside an order |
 | **Packing list** | The set of (SKU ID, quantity) of one order. Two orders with the same set are packed the same way |
-| **Pick** | One rule in `categories.toml`; the PC app (and script) writes the orders it matches as one saved label PDF |
+| **Pick** | One rule in `categories.toml`; the PC app writes the orders it matches as one saved label PDF |
 | **Saved PDF** | The label PDF of one pick, numbered through the day (1, 2, 3, …) |
 | **Run** | Inside a saved PDF, consecutive orders with identical contents; numbered 01, 02, … and written `3-05` |
 | **Pack group** | *App.* All orders of one batch with the same packing list; revised with the app |
-| **Category** | An owner-defined rule ("name contains sepatu"): a pick in the PC script, a section heading in the app |
+| **Category** | An owner-defined rule ("name contains sepatu"): a pick, shown as a section heading in the app |
 | **Batch** | One round of arrange shipment → download → prepare, numbered 1, 2, 3, … within the day. *PC app:* one label download prepared and saved together (`labels/<day>/batch 2/`). *Android app (to be revised):* the new orders of one orders-CSV export |
 | **Session** | One day of checking in the app: its batches, orders and marks |
 | **Mark** | A check result on an order in the app: checked, wrong packing, label lost/damaged, pending |

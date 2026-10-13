@@ -145,7 +145,7 @@ pages carry it:
 ## 3. Plan
 
 The heart of the app: which orders go into which saved PDF. It opens with the rules file
-applied in order (the same result as the script without `--interactive`). For a normal day
+applied in order (a proposal). For a normal day
 the owner checks the counts and presses **Save batch**.
 
 ```

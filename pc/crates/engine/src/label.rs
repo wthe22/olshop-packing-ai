@@ -1,5 +1,5 @@
 //! The Order ID search, the label fields and the courier deduction (03 › *Order ID from the
-//! label*, *Courier deduction*; port of `script/packing/labels.py`).
+//! label*, *Courier deduction*; port of `tools/analysis/packing/labels.py`).
 
 use std::sync::OnceLock;
 

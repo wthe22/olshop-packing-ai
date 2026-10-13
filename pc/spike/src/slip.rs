@@ -1,5 +1,5 @@
-//! Pure port of script/packing/slip.py (slip table read by text position) and of
-//! script/packing/labels.py's Order-ID two-pass search, over "runs" of (x, y, text).
+//! Pure port of tools/analysis/packing/slip.py (slip table read by text position) and of
+//! tools/analysis/packing/labels.py's Order-ID two-pass search, over "runs" of (x, y, text).
 //!
 //! No PDF code here: it takes the runs rebuilt from Pdfium characters (see main.rs) and
 //! returns the same slip lines and Order ID the Python reference returns.
