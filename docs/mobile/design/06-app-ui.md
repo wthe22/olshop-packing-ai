@@ -144,7 +144,7 @@ after fixing, or undo).
   **Import orders CSV** → file picker → summary:
 
   ```
-  Import orders-06-2.csv as batch 2?
+  Import 2026-10-06_16-29-15_orders-export_2of2.csv as batch 2?
     New orders        481   in 20 groups
     Removed             2   (not in this CSV any more)
     Back again          0

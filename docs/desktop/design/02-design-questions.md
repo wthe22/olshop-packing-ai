@@ -112,7 +112,11 @@ pickup code and the tag `GKS`. It is the only label with **no courier logo and n
 the two clues that name every other courier are both missing — and it belongs to one of **Gojek,
 Grab or Blitz**; the page never says which. The owner reported it as **Gojek** (2026-10-13). It is
 not in the 2026-10-13 download (no page of that style among its 604; Tokopedia's rule: a Same Day
-label can be printed only after the delivery is arranged).
+label can be printed only after the delivery is arranged). **Everything known about this label comes
+from that one page** — the tag, the pickup-code form, the missing logo and tracking ID, the
+clock-time deadline — so each mark must be re-checked on the next instant label before it is relied
+on; the download was swept for the caption `Kode Pengambilan` only, so a differently drawn instant
+label would have been missed.
 
 | Option | What you see |
 |---|---|

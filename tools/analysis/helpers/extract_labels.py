@@ -6,7 +6,7 @@ in the PDFs. A page with no Order ID is the continuation of the previous page's
 order (a long label spanning several pages).
 
 Usage (from the repository root, Git Bash):
-    .venv/Scripts/python.exe tools/analysis/helpers/extract_labels.py "samples/*Shipping label*.pdf" -o work/labels.csv
+    .venv/Scripts/python.exe tools/analysis/helpers/extract_labels.py "samples/*labels*.pdf" -o work/labels.csv
 
 Needs only `pypdf` (already in the project venv). Reads the PDFs as they are;
 nothing is uploaded anywhere.

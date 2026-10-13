@@ -55,7 +55,7 @@ def sig(o):
 
 
 which, layout, out = sys.argv[1], sys.argv[2], sys.argv[3]
-b1, b2 = load('orders-06-1.csv'), load('orders-06-2.csv')
+b1, b2 = load('2026-10-06_14-26-17_orders-export_1of2.csv'), load('2026-10-06_16-29-15_orders-export_2of2.csv')
 names = {r['SKU ID']: disp(r) for o in b2.values() for r in o}
 if which == '1':
     batch, batch_no, printed = dict(b1), '1', '14:30'

@@ -162,12 +162,15 @@ Reference: the Python package `tools/analysis/packing/` (frozen) — the first i
     (82 with a `00` + 10-digit tracking ID, 1 slip continuation, 1 `TikTok Shop` label with no
     tracking ID); `sicepat` on 0 pages, in the plain and in the whitespace-stripped text; the
     2026-10-06 exports name SiCepat 173 orders (`00…`) and J&T Cargo 1 (`57…`). The two 12-digit
-    forms do not collide. **Both J&T Cargo labels were found on 2026-10-11** (`0708-orders.pdf`
-    p13, its slip continuing on p14; `10-07_00-03-17_Shipping label_3.pdf` p114): both print the
+    forms do not collide. **Both J&T Cargo labels were found on 2026-10-11**
+    (`2026-10-08_16-01-50_labels_has-jt-cargo.pdf` p13, its slip continuing on p14;
+    `2026-10-07_00-03-17_labels_3of3_has-jt-cargo.pdf` p114): both print the
     `57…` form, the second one's order is the row the export itself names J&T Cargo, and both
-    print `FastTrack` as text. Over the samples as they now stand (9 files, 1,269 pages — the
-    owner renamed `10-orders.pdf` to `order w jt cargo.pdf` and added `order w idx.pdf`, 40 pages
-    of 2026-10-11, while this was measured): J&T Express 1,114 · SiCepat 148 · J&T Cargo 2 ·
+    print `FastTrack` as text. Over the samples as they now stand (9 files, 1,269 pages — the owner
+    added two 2026-10-11 exports while this was measured, now
+    `2026-10-11_15-29-42_labels_50-orders.pdf` (50 pages; he had named it *order w jt cargo*,
+    although no J&T Cargo label is in it) and `2026-10-11_16-36-52_labels_has-idx.pdf` (40 pages)):
+    J&T Express 1,114 · SiCepat 148 · J&T Cargo 2 ·
     IDX 2 · `TikTok Shop` 1 · slip continuations 2. Every page is one order except that one Cargo
     order. The two clues (the owner's rule): the service tag read from the header strip gives
     J&T Express `EZ` 453 · `ECO` 253 · `NDD` 408, SiCepat `NDD` 41 · `REG` 73 · `HALU` 34,
@@ -193,7 +196,7 @@ Reference: the Python package `tools/analysis/packing/` (frozen) — the first i
     label exports before. The Cargo page's clues: the `57` + 10-digit form (printed **once**, in the
     whitespace-collapsed text), `FastTrack` in the header strip, `TT Order ID` as its order-ID
     caption, `COD` and `Print Time`; its logo is the 680×156 raster whose base and mask bytes are
-    identical to `0708-orders.pdf` p13's. No new courier, tracking form or service tag appears in
+    identical to `2026-10-08_16-01-50_labels_has-jt-cargo.pdf` p13's. No new courier, tracking form or service tag appears in
     the whole samples folder (12 files, 1,873 pages): J&T Express 1,614 · SiCepat 244 · iD Express
     5 · J&T Cargo 3 · the one instant-service label · 6 continuations.
   - **The new courier the owner reported (2026-10-13) is Gojek.** It is the page counted above as the
@@ -214,7 +217,9 @@ Reference: the Python package `tools/analysis/packing/` (frozen) — the first i
     captions are one of the four courier styles, every page prints `In transit by: 14/10/2026 23:59`,
     and the 600 distinct 18-digit Order IDs cover the 604 pages exactly (596 orders one page, 4
     orders two) — so the day's Gojek order either has no printable label yet (the platform's rule
-    above) or is the one page the owner can point at.
+    above) or is the one page the owner can point at. **A single page is not a pattern**: every mark
+    of the instant label comes from that one page, and the sweep looked for the one caption
+    `Kode Pengambilan`, so a differently drawn instant label would not have been caught.
   - Result: (not started; D21 and D22 have "Built for now" defaults, so nothing waits for the owner)
 - [x] **2.17 Open folder: it opened Documents (review round 1).** `show_in_folder` ran
   `explorer.exe /select,<path>`. Explorer parses `/select,` itself and does not understand the

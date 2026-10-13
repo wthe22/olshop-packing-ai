@@ -49,7 +49,7 @@ no new courier, form or tag, and J&T Cargo's masked logo is readable by
 appearance (one value for both its rasters): 2.16 gives it a logo clue like the others. **The new
 courier the owner reported (2026-10-13) is Gojek**, and it is *not* in that download: Gojek serves
 the platform's *Instant / Same Day* service, whose label is the `TikTok Shop`-branded page measured
-earlier (`10-07_07-16-53…_2.pdf` p162) — the one style with **no courier logo and no tracking ID**,
+earlier (`2026-10-07_07-16-53_labels+slips_2of3_TIKTOK-INSTANT.pdf` p162, the only such page in the samples) — the one style with **no courier logo and no tracking ID**,
 printing `Kode Pengambilan` + a `WX` pickup code + the tag `GKS`, with a pickup *time* instead of
 `23:59`. That download was checked page by page (images, captions, the pickup-code line, the
 `In transit by` value, the 600 Order IDs): no 2026-10-13 page is that style, and per Tokopedia's

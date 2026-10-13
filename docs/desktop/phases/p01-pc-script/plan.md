@@ -78,7 +78,7 @@ Reference: `tools/analysis/prototype/packing_list_preview.py` (working layout co
     correctly with `error: pick "C" uses field "product_category", which needs the orders CSV`.
     The CSV-only check runs before the labels are read (instant error).
   - Still to run: the slip files with the repository `categories.toml`; the slip files with
-    `--csv samples/orders-06-1.csv` (expect the "CSV holds none of the label orders" warning); the plain files; a second
+    `--csv samples/2026-10-06_14-26-17_orders-export_1of2.csv` (expect the "CSV holds none of the label orders" warning); the plain files; a second
     invocation (duplicates skipped); `--redo`; `--interactive`; each layout and scope. Check
     the saved PDFs and packing lists by eye, page counts = label pages. Print counts only,
     never real IDs or names.

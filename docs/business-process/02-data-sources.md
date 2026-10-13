@@ -70,10 +70,11 @@ creator handle, …) are not needed for packing.
   strip in the header (`tokopedia | TikTok`, 527×73, on J&T Cargo; `tokopedia | Shop`, 905×118, on
   IDX), the service tag, the tracking ID under a wide barcode, routing lines, a sender/receiver box
   with a QR code, `Weight`, `COD`, `Print Time`, and the order ID inside the box (`TT Order ID :` on
-  J&T Cargo, `Order ID :` on IDX). The third style is the instant-service label.
+  J&T Cargo, `Order ID :` on IDX). The third style is the instant-service label — **seen on one page
+  only, so treat it as a lead and not yet as a pattern** (below).
 - The **instant-service label** is the platform's *Instant / Same Day* style and the only label that
-  names no courier. One sample page: `10-07_07-16-53_Shipping label+Packing slip_2.pdf` p162
-  (2026-10-07). It prints the `TikTok Shop` logo top left with the service tag `GKS` top right, then
+  names no courier. One sample page, and only one:
+  `2026-10-07_07-16-53_labels+slips_2of3_TIKTOK-INSTANT.pdf` p162 (download stamp 2026-10-07 07:16). It prints the `TikTok Shop` logo top left with the service tag `GKS` top right, then
   `Kode Pengambilan` with a **pickup code** (`WX` + 4 digits), the receiver block (`Penerima`,
   `Nomor Telepon`, `Alamat`), `Pengirim`, `Nomor Order :` with the 18-digit Order ID (a barcode
   beside it), and the slip. There is **no courier logo, no tracking ID and no `Weight`**; the page's
@@ -90,6 +91,12 @@ creator handle, …) are not needed for packing.
   image on none of its 604, every page's images and captions are one of the four courier styles, and
   every one of its pages prints `In transit by: 14/10/2026 23:59`. Its 600 distinct 18-digit Order
   IDs cover the 604 pages exactly (596 orders on one page, 4 orders on two).
+- **One page is not a pattern.** Everything written above about the instant-service label comes from
+  that one page (`…_TIKTOK-INSTANT.pdf` p162): its tag, its pickup-code form, its missing logo and
+  tracking ID and its clock-time deadline are unconfirmed until the next instant label is seen — and
+  the check of the 2026-10-13 pages looked only for the caption `Kode Pengambilan`, so an instant
+  label drawn differently would not have been caught. Re-measure on the next such page before the
+  app leans on any of it (D21).
 - The courier is not always readable text: J&T Express labels print `www.jet.co.id` and J&T Cargo
   labels print `FastTrack` (their service tag) and caption the order ID `TT Order ID :`, but
   **SiCepat and iD Express labels print no courier name and no web address** — the courier is only
@@ -165,3 +172,34 @@ creator handle, …) are not needed for packing.
   the whitespace is dropped, and it is then glued to the text beside it. A candidate form that
   appears once is therefore normal on the boxed layouts and must not be dropped for that reason;
   the courier data decides which form names a courier.
+
+## The sample files in `samples/` (renamed 2026-10-13)
+
+`samples/` holds the owner's real exports and is never committed (AGENTS.md). Each name now carries
+the **download stamp** `YYYY-MM-DD_HH-MM-SS` — the moment the seller centre generated the file,
+taken from the platform's own file name, or from the file's own timestamp where the owner's name had
+none — then what the file is, and, where it matters, what special page is inside. Sorting by name is
+date order.
+
+| File | Pages | Labels' own date | Pages by courier |
+|---|---|---|---|
+| `2026-10-07_00-03-00_labels_1of3.pdf` | 200 | not printed (plain labels) | J&T Express 192 · SiCepat 8 |
+| `2026-10-07_00-03-08_labels_2of3_has-idx.pdf` | 200 | — | J&T Express 172 · SiCepat 27 · iD Express 1 |
+| `2026-10-07_00-03-17_labels_3of3_has-jt-cargo.pdf` | 162 | — | J&T Express 147 · SiCepat 14 · J&T Cargo 1 |
+| `2026-10-07_07-16-41_labels+slips_1of3.pdf` | 200 | `Estimated Date` 08/10/2026 | J&T Express 158 · SiCepat 42 |
+| `2026-10-07_07-16-53_labels+slips_2of3_TIKTOK-INSTANT.pdf` | 200 | 08/10/2026 | J&T Express 178 · SiCepat 21 · **instant-service 1** (p162) |
+| `2026-10-07_07-17-04_labels+slips_3of3.pdf` | 201 | 08/10/2026 | J&T Express 181 · SiCepat 19 · 1 slip continuation |
+| `2026-10-08_16-01-50_labels_has-jt-cargo.pdf` | 16 | 09/10/2026, and 12/10/2026 on 2 pages | J&T Express 14 · J&T Cargo 1 · 1 slip continuation |
+| `2026-10-11_15-29-42_labels_50-orders.pdf` | 50 | 13/10/2026 | J&T Express 41 · SiCepat 9 — the owner had named it *order w jt cargo*, but **no J&T Cargo label is in it** |
+| `2026-10-11_16-36-52_labels_has-idx.pdf` | 40 | 13/10/2026 | J&T Express 31 · SiCepat 8 · iD Express 1 |
+| `2026-10-13_08-41-51_labels+slips_1of2_has-idx.pdf` | 202 | 14/10/2026 | J&T Express 147 · SiCepat 52 · iD Express 1 · 2 slip continuations |
+| `2026-10-13_08-42-04_labels+slips_2of2_has-idx.pdf` | 201 | 14/10/2026 | J&T Express 171 · SiCepat 27 · iD Express 2 · 1 slip continuation |
+| `2026-10-13_08-46-21_labels+slips_1of1_has-jt-cargo.pdf` | 201 | 14/10/2026 | J&T Express 182 · SiCepat 17 · J&T Cargo 1 · 1 slip continuation |
+| `2026-10-06_14-26-17_orders-export_1of2.csv` | 957 rows | orders created 02–06/10/2026 | — |
+| `2026-10-06_16-29-15_orders-export_2of2.csv` | 1,436 rows | orders created 02–06/10/2026 | — |
+
+`labels` = the plain label export (no slip, so no `In transit by` and no `Estimated Date`);
+`labels+slips` = the *Shipping label + Packing slip* export. "Labels' own date" is what the pages
+print — the day the parcels were to go out — which is why a file's download stamp and its labels'
+date are usually a day apart (a download in the small hours or at 08:41 is the day before that
+shipment). The 12 PDFs are 1,873 pages in all, the figure the sections above are measured on.

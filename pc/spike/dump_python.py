@@ -14,7 +14,7 @@ from packing.labels import LabelSet
 
 # SPIKE_LABELS=<dir> SPIKE_MATCH=<name part>: same override as the Rust spike.
 SAMPLES = Path(os.environ.get("SPIKE_LABELS", Path(__file__).resolve().parents[2] / "samples"))
-MATCH = os.environ.get("SPIKE_MATCH", "Shipping label+Packing slip")
+MATCH = os.environ.get("SPIKE_MATCH", "labels+slips")
 OUT = Path(__file__).with_name("out")
 OUT.mkdir(exist_ok=True)
 

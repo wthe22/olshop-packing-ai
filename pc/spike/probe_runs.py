@@ -30,7 +30,7 @@ def collector(collected):
 
 
 def main() -> None:
-    files = sorted(SAMPLES.glob("*Shipping label+Packing slip_*.pdf"))
+    files = sorted(SAMPLES.glob("*labels+slips*.pdf"))
     reader = PdfReader(files[0])
     lines_out = []
     stats = {

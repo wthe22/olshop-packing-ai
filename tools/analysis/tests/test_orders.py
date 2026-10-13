@@ -190,7 +190,7 @@ def test_ignored_rows_are_not_orders(tmp_path):
 
 @needs_samples
 def test_reads_a_real_sample_without_printing_it(capsys):
-    result = read_orders(SAMPLES / "orders-06-1.csv")
+    result = read_orders(SAMPLES / "2026-10-06_14-26-17_orders-export_1of2.csv")
     assert len(result.orders) > 0
     captured = capsys.readouterr()
     assert captured.out == ""
