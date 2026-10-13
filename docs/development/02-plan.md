@@ -279,10 +279,12 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
   shared (`tracking_unique = false`; J&T Cargo is also 12 digits), so `deduce_courier`
   (`crates/engine/src/label.rs:217`) refuses and warns. The 2026-10-07 sample is the same shape:
   82 of 601 pages. **The owner's rule (2026-10-11): two clues, and the courier is named only when
-  they agree** — the **logo** (the page's logo image, its encoded bytes hashed) and the
+  they agree** — the **logo** (the page's logo image, its encoded bytes hashed with **XXH3-64**)
+  and the
   **tracking-ID form** (`00` → SiCepat, `57` → J&T Cargo, both now unambiguous). 03 › *Courier
   deduction* holds the rule; the logo hashes, the ask-the-owner flow and J&T Cargo's unreadable
-  logo are D18. Code: `couriers.toml` gains a logo-hash list per courier and a J&T Cargo entry,
+  logo are D18. Code: `couriers.toml` gains a logo-hash list (XXH3-64, `xxhash-rust`) per courier
+  and a J&T Cargo entry,
   and `deduce_courier` hashes the page's logo image (`FPDFImageObj_GetImageDataRaw`) and requires
   the two clues to agree; a hash that is not in the table is asked of the owner once
   (`couriers.toml` — one file, D19 answered; the app appends the hash per D20, and *I don't know*
@@ -307,8 +309,10 @@ Reference: the Python package `script/packing/` — same rules, tested; port it 
     J&T Cargo `FastTrack` 2, IDX `REG` 2, TikTok Shop `GKS` 1 — form and tag agree on all 1,266
     label pages that have a tracking form, and the one `TikTok Shop` label has a tag but no form
     (so it stays unknown); the 2 slip continuations have neither. The courier logo is an embedded
-    image whose *encoded bytes* (1.5–15 KB, so hashing costs ~0.01 ms a page) hash to one stable
-    value per courier for J&T Express, SiCepat, IDX and TikTok Shop across all 9 files; J&T
+    image whose *encoded bytes* (1.5–15 KB, so an XXH3-64 hash costs about 0.5 µs a page; measured
+    0.44 µs for a 14 KB logo) hash to one stable value per courier across all 9 files: J&T Express
+    `39b9b7b9f61d0e7f`, SiCepat `cf33ed60daa291b1`, IDX `9131c1f94ad363d4`, TikTok Shop
+    `f2cf7019646c955b`. J&T
     Cargo's logo is a *masked* image re-rastered between exports (680×156 / 683×157), so it has no
     stable hash (D18). The barcode and QR are vector paths and every page also carries a
     page-wide frame image.

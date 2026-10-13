@@ -129,8 +129,10 @@ in the same way.
 
 1. **The logo** — the main clue. Every label prints the courier's logo as an embedded image; the
    image's **encoded bytes** are hashed (pdfium's `FPDFImageObj_GetImageDataRaw`, *not* the decoded
-   pixels) and looked up in the courier data's logo table. One hash per courier, measured stable
-   across every sample export. The cost is about 0.01 ms a page (the bytes are 1.5–15 KB). A hash
+   pixels) with **XXH3-64** and looked up in the courier data's logo table. One hash per courier,
+   measured stable across every sample export. The cost is about 0.5 µs a page (the bytes are
+   1.5–15 KB; measured 0.44 µs for a 14 KB logo). Python's `xxhash` and Rust's `xxhash-rust`
+   compute the same value, so the script and the app share one expected-value fixture. A hash
    not in the table is **asked of the owner once** ("which courier is this logo?") and the answer
    is written into the data file, so later labels are named without asking.
 2. **The tracking-ID form** ([business-process 02](../business-process/02-data-sources.md#columns-packing-needs)):

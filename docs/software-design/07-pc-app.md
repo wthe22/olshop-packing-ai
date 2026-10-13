@@ -83,20 +83,20 @@ The courier list, one `[[courier]]` entry each:
 | Field | Meaning |
 |---|---|
 | `name` | The name written into the order and used by a `courier` condition |
-| `logo` | The courier's logo images: the first 16 hex characters of the SHA-256 of each image's **encoded bytes**. A list, because a courier can have more than one (an asset the platform re-made) |
+| `logo` | The courier's logo images, each as **XXH3-64** of the image's **encoded bytes** (16 hex characters, seed 0). A list, because a courier can have more than one (an asset the platform re-made) |
 | `tracking` | The tracking-ID form: a token (or a match in the whitespace-collapsed text) must match it fully. The form gives the *candidate* couriers; the courier is named when the logo's (or text clue's) courier is among them |
 | `text` | A brand line or web address printed on the label (`www.jet.co.id`, `FastTrack`), used only where no logo is known |
 
 ```toml
 [[courier]]
 name = "J&T Express"
-logo = ["c8cd322984cecd3b"]      # 975x377 px, the same asset in all 9 sample files
+logo = ["39b9b7b9f61d0e7f"]      # 975x377 px, 14,351 bytes, the same asset in all 9 sample files
 tracking = "JY\\d{10}"
 text = ["jet.co.id"]
 
 [[courier]]
 name = "SiCepat"
-logo = ["e5ba2092ae9e7728"]      # 184x60 px
+logo = ["cf33ed60daa291b1"]      # 184x60 px, 10,636 bytes
 tracking = "00\\d{10}"
 
 [[courier]]
@@ -107,7 +107,7 @@ text = ["FastTrack"]
 
 [[courier]]
 name = "IDX"
-logo = ["9ad342443a1fcca8"]      # 1200x859 px
+logo = ["9131c1f94ad363d4"]      # 1200x859 px, 9,810 bytes
 tracking = "TKP\\d{10}"
 ```
 
@@ -334,7 +334,8 @@ packing-cli (Rust, developer tool): the same engine and the shared batch steps
 | TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `categories.toml`, `couriers.toml` |
 | JSON | `serde`, `serde_json` | `state.json`, test fixtures |
 | Dates | `jiff` | `ship_by`, `save_time`, day folder |
-| Fingerprints | `sha2` | Label files used twice |
+| Fingerprints | `sha2` | Label files used twice (a whole-file fingerprint; the *logo* hash is xxh3, below) |
+| The courier logo hash | `xxhash-rust` 0.8, feature `xxh3` | The logo fingerprints in `couriers.toml`: XXH3-64 of the logo image's encoded bytes, 0.44 µs for a 14 KB logo (measured, release build). One crate, no dependencies of its own. Not cryptographic, which does not matter here — the bytes are the platform's own asset, not an attacker's |
 | Tests | `cargo test`; `svelte-check` for the screens | Fixtures shared with the Python script in `testdata/` |
 | Build | `pc/tools/make-portable.sh`: `npm run tauri build -- --no-bundle`, then the program folder | No installer; `Packing.exe` + `pdfium.dll` in `pc/target/portable/Packing/` ([Program folder](#program-folder-portable)) |
 

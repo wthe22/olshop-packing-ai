@@ -70,7 +70,7 @@ orders"). Nothing else in the design writes one; every batch already has its `su
 
 **Words.** The owner's rule (2026-10-11) names the courier from the **logo** (its image hash) and
 the **tracking-ID form**, both agreeing, and asks the owner once about a logo never seen before.
-Four couriers' logos are plain images whose encoded bytes hash to one stable value each across all
+Four couriers' logos are plain images whose encoded bytes hash (XXH3-64) to one stable value each across all
 9 sample files (J&T Express 975×377, SiCepat 184×60, IDX 1200×859, TikTok Shop 326×59).
 **J&T Cargo's is not one of them**: it is a *masked* image (`/SMask`) whose base is a flat colour
 (331 bytes encoded) and whose raster changes between the two sample labels (680×156 on one,
@@ -100,7 +100,7 @@ hand edit is never lost.
 | Option | What you see |
 |---|---|
 | **1. A `[logo]` table appended at the end of the file** (**Built for now**) | The app adds one line (`"hash" = "SiCepat"`) at the end and never touches the entries above it, so your own comments and order survive. The same courier's logos then live in two places — its `logo` list and this table |
-| 2. The hash is added to that courier's own `logo` list | One place per courier, but the app has to edit the line you wrote, and a hand-typed comment on it can be lost |
+| 2. The hash is added to that courier's own `logo` list | One place per courier, but the app rewrites the entry you wrote — `toml_edit` keeps your comments and order, so only that line changes |
 | 3. Nothing is written | Simplest: the answer names that batch's orders only, and the same logo is asked about again next batch |
 
 Recommended: **1** — the app only ever appends, so nothing you typed can be lost.
