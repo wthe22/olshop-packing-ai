@@ -59,33 +59,57 @@ creator handle, …) are not needed for packing.
   The label fills the top ~101 mm. About 6.5 KB per page.
 - One label per page in the samples. An order with many items can span several pages *(owner)*.
 - Every sample page carries the Order ID as text. The tracking ID is printed as text, as a
-  1D barcode and as a QR code; both codes hold the tracking ID only.
+  1D barcode and as a QR code; both codes hold the tracking ID only. **The one style with no
+  tracking ID is the instant-service label** (below): its barcode sits beside the `Nomor Order` line.
 - Item information on the label: J&T Express labels may show `Jumlah : <n>pcs, Barang : <variation>`
   (variation only); SiCepat, IDX and J&T Cargo labels show none. The label cannot replace the
   packing list.
-- Two label layouts. J&T Express and SiCepat print the same rows (courier logo, service tag,
+- Three label styles. J&T Express and SiCepat print the same rows (courier logo, service tag,
   sender, receiver, `Weight`, `Ship`, the sort code above the barcode, the tracking ID under it,
-  then `Order Id :` and `Estimated Date:`). J&T Cargo and IDX print a boxed layout: `tokopedia |
-  TikTok` logos, the service tag, the tracking ID under a wide barcode, routing lines, a
-  sender/receiver box with a QR code, `Weight`, `COD`, `Print Time`, and the order ID inside the
-  box (`TT Order ID :` on J&T Cargo, `Order ID :` on IDX).
+  then `Order Id :` and `Estimated Date:`). J&T Cargo and IDX print a boxed layout: the platform
+  strip in the header (`tokopedia | TikTok`, 527×73, on J&T Cargo; `tokopedia | Shop`, 905×118, on
+  IDX), the service tag, the tracking ID under a wide barcode, routing lines, a sender/receiver box
+  with a QR code, `Weight`, `COD`, `Print Time`, and the order ID inside the box (`TT Order ID :` on
+  J&T Cargo, `Order ID :` on IDX). The third style is the instant-service label.
+- The **instant-service label** is the platform's *Instant / Same Day* style and the only label that
+  names no courier. One sample page: `10-07_07-16-53_Shipping label+Packing slip_2.pdf` p162
+  (2026-10-07). It prints the `TikTok Shop` logo top left with the service tag `GKS` top right, then
+  `Kode Pengambilan` with a **pickup code** (`WX` + 4 digits), the receiver block (`Penerima`,
+  `Nomor Telepon`, `Alamat`), `Pengirim`, `Nomor Order :` with the 18-digit Order ID (a barcode
+  beside it), and the slip. There is **no courier logo, no tracking ID and no `Weight`**; the page's
+  only images are the two platform strips (`tokopedia | Shop` 905×118 and `TikTok Shop` 326×59), and
+  its `In transit by` is a clock time instead of `23:59` — the sample page says `08/10/2026 10:00`
+  while the 199 other pages of that download say `08/10/2026 23:59`. Per Tokopedia's seller guide
+  (*Layanan Instan dan Same Day*, 2026-08-03) the service is served by **Gojek, Grab or Blitz**, the
+  pickup code is printed in the top right and as a watermark on the label, and a Same Day label
+  **cannot be printed before the delivery is arranged** (since 2026-03-17) — so a same-day order can
+  be missing from a download printed earlier that day. The page never says which of the three serves
+  it; the owner's word (2026-10-13): **Gojek**.
+- The 2026-10-13 download (604 pages) holds **no** instant-service label: `Kode Pengambilan` appears
+  on exactly one of the 1,873 sample pages (the 2026-10-07 page above), the `TikTok Shop` 326×59
+  image on none of its 604, every page's images and captions are one of the four courier styles, and
+  every one of its pages prints `In transit by: 14/10/2026 23:59`. Its 600 distinct 18-digit Order
+  IDs cover the 604 pages exactly (596 orders on one page, 4 orders on two).
 - The courier is not always readable text: J&T Express labels print `www.jet.co.id` and J&T Cargo
   labels print `FastTrack` (their service tag) and caption the order ID `TT Order ID :`, but
   **SiCepat and iD Express labels print no courier name and no web address** — the courier is only
   the logo image, so the tracking-ID form is the only machine-readable courier clue there.
 - The **service tag** is printed in the label's header strip. Measured on the samples (12 files,
   1,873 pages): J&T Express `EZ` 628 · `NDD` 625 · `ECO` 361 · SiCepat `REG` 125 · `NDD` 67 ·
-  `HALU` 51 · J&T Cargo `FastTrack` 3 · iD Express (IDX) `REG` 5 · the TikTok Shop label 1
-  (`WX` + `GKS`; 6 slip-continuation pages carry none). `NDD` is on both J&T Express and SiCepat
+  `HALU` 51 · J&T Cargo `FastTrack` 3 · iD Express (IDX) `REG` 5 · the instant-service label `GKS` 1
+  (the 6 slip-continuation pages carry none; the instant label's `WX` + 4-digit pickup code is not a
+  tracking ID). `NDD` is on both J&T Express and SiCepat
   labels and `REG` on both SiCepat and iD Express, so the tag alone never names a courier — only
   together with the tracking-ID form does it. These
   words also appear inside street, product and address text (a buyer's address on a J&T Express
   label reads *dekat Ais cargo*), so the tag must be read from the header strip, not searched over
   the page.
-- The courier **logo is an embedded image** on every label page (a slip-continuation page has
-  none): J&T Express 975×377 px · SiCepat 184×60 · iD Express 1200×859 · TikTok Shop 326×59, the
+- The courier **logo is an embedded image** on every label page that has a courier (a
+  slip-continuation page and the instant-service label have none): J&T Express 975×377 px · SiCepat
+  184×60 · iD Express 1200×859, the
   same asset in every export — its **encoded bytes** are identical on every page that carries it,
-  in the plain label export and the slip export alike.
+  in the plain label export and the slip export alike. (The `TikTok Shop` 326×59 image is the
+  instant-service label's own logo, not a courier's.)
   The **J&T Cargo logo is a masked image** (a `/SMask`): its base is a flat colour (331 bytes for
   680×156) and the wordmark `J&T CARGO` is the *mask*, so the base's bytes are identical for any
   masked logo of that size and name nothing. Its two known rasters are 680×156 and 683×157 (base

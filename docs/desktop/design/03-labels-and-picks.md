@@ -16,7 +16,7 @@ packing slip.
 |---|---|
 | `Order ID` | The label text (two-step search below) |
 | `tracking_id` | The label text |
-| `courier` | Deduced from the label (below) |
+| `courier` | Deduced from the label (below). An instant-service label names none — its courier comes from the order export |
 | `ship_by` | The label `In transit by: dd/mm/yyyy hh:mm` |
 | item lines | The slip table (product name, variation, quantity) |
 | buyer message | The slip's `Customer Message` (continuation page) |
@@ -91,6 +91,19 @@ in the same way.
 6. **The service tag is not used yet** (the owner, 2026-10-11: it is weak for some couriers). The
    measured tag lists stay in [business-process 02](../../business-process/02-data-sources.md) for
    when a case needs them.
+7. **An instant-service label names no courier.** The platform's *Instant / Same Day* label
+   ([business-process 02 › the instant-service label](../../business-process/02-data-sources.md)) is
+   the only style with **no courier logo at all** (its images are the two platform strips) **and no
+   tracking ID**, so both clues that name every other courier are absent and nothing on the page can
+   name one. It is recognised by the `TikTok Shop` logo with the tag `GKS`, the caption
+   `Kode Pengambilan` with a `WX` + 4-digit pickup code, and an `In transit by` that is a clock time
+   rather than `23:59`. The service is served by **Gojek, Grab or Blitz** and the page never says
+   which, so the name comes from the order export's `Shipping Provider Name`; the built-for-now
+   default (D21) shows `Gojek (instant)` from the tag `GKS` when the export has no row, and lists the
+   order in the unknown-courier warning when neither is at hand.
+8. **An instant label is still keyed by its Order ID**, printed on its `Nomor Order` line and in its
+   barcode, so it is read like any other page; it prints no tracking ID, so that order's
+   `tracking_id` stays empty and its slip is read normally.
 
 The courier list is `couriers.toml` (in the data folder in the app), and it also holds the logos
 the owner names in the prompt; its fields and an example are in

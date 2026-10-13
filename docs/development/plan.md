@@ -27,7 +27,7 @@ frozen, as the analysis tools in `tools/analysis/` (not part of the product); it
 move into phase 2. Design:
 [07-pc-app](../desktop/design/07-pc-app.md), [08-pc-app-ui](../desktop/design/08-pc-app-ui.md).
 Open in [desktop/design/02-design-questions.md](../desktop/design/02-design-questions.md): D17 (whether 2.18's check runs on every batch), D18 (how much of a *masked* courier logo to read — measured 2026-10-13: its appearance names J&T Cargo
-where its encoded bytes cannot, so the question is how much of that clue to use) and D20 (how the app writes a taught logo into `couriers.toml`); in
+where its encoded bytes cannot, so the question is how much of that clue to use), D20 (how the app writes a taught logo into `couriers.toml`), **D21** (an instant-service label names no courier — the name comes from the order export; the owner reported **Gojek** on 2026-10-13) and **D22** (where the pickup code shows during packing); in
 [mobile/design/02-design-questions.md](../mobile/design/02-design-questions.md): D1 (Android, open
 until phase 3).
 **D15 is answered**
@@ -44,11 +44,21 @@ built at any time) and 2.18 (the saved-PDF check; its four choices are answered 
 "built for now" default, so it waits on nothing); 2.20 (one hash for everything — the owner's decision of 2026-10-13,
 no answer needed) can be built at any time. The 2026-10-13 sample download (3 files, 604 pages) was
 measured against the courier rule: J&T Express 500 · SiCepat 96 · iD Express (IDX) 3 · **J&T Cargo 1**
-(the first J&T Cargo and iD Express labels in a *slip* export) · 4 slip continuations; no new
-courier, form or tag appears anywhere in `samples/`, and J&T Cargo's masked logo is readable by
-appearance (one value for both its rasters) — so 2.16 gives it a logo clue like the others, and
-**D18 is the only thing waiting on the owner** (how much of that appearance clue to use; its
-"Built for now" default works and nothing waits on the answer).
+(the first J&T Cargo and iD Express labels in a *slip* export) · 4 slip continuations — so it holds
+no new courier, form or tag, and J&T Cargo's masked logo is readable by
+appearance (one value for both its rasters): 2.16 gives it a logo clue like the others. **The new
+courier the owner reported (2026-10-13) is Gojek**, and it is *not* in that download: Gojek serves
+the platform's *Instant / Same Day* service, whose label is the `TikTok Shop`-branded page measured
+earlier (`10-07_07-16-53…_2.pdf` p162) — the one style with **no courier logo and no tracking ID**,
+printing `Kode Pengambilan` + a `WX` pickup code + the tag `GKS`, with a pickup *time* instead of
+`23:59`. That download was checked page by page (images, captions, the pickup-code line, the
+`In transit by` value, the 600 Order IDs): no 2026-10-13 page is that style, and per Tokopedia's
+guide a Same Day label cannot be printed before the delivery is arranged — so the day's Gojek order
+has no printable label yet. The page never names Gojek (the service is Gojek, Grab or Blitz), so
+**D21 is new** (where an instant label's courier name comes from; its "Built for now" default is the
+export's `Shipping Provider Name`), with **D22** (where the pickup code shows during packing).
+**D18 is the other thing waiting on the owner** (how much of that appearance clue to use); both have
+a "Built for now" default, so nothing waits.
 Then the round-2 review at the end of Phase 2 — open the same day's packing
 list (the header must stand clear, `×` must print), press *Open folder* (the batch folder must open,
 not Documents), check the Day screen for a *Courier unknown* warning, and save one batch to watch

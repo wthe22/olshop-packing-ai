@@ -41,9 +41,9 @@ orders"). Nothing else in the design writes one; every batch already has its `su
 
 **Words.** The owner's rule (2026-10-11) names the courier from the **logo** (its image hash) and
 the **tracking-ID form**, both agreeing, and asks the owner once about a logo never seen before.
-Four couriers' logos are plain images whose encoded bytes hash (XXH3-64) to one stable value each
-across every sample file (J&T Express 975×377, SiCepat 184×60, iD Express/IDX 1200×859, TikTok
-Shop 326×59). **J&T Cargo's is not one of them**: it is a *masked* image (`/SMask`) whose base is a
+Four courier images are plain images whose encoded bytes hash (XXH3-64) to one stable value each
+across every sample file (J&T Express 975×377, SiCepat 184×60, iD Express/IDX 1200×859; the fourth,
+`TikTok Shop` 326×59, is the instant-service label's own logo and names no courier — D21). **J&T Cargo's is not one of them**: it is a *masked* image (`/SMask`) whose base is a
 flat colour (331 bytes) and whose shape is the mask, and the platform drew the same wordmark at two
 scales (680×156 on two sample labels, 683×157 on the third), so the encoded bytes differ between
 exports. Measured 2026-10-13: hashing the **appearance** instead — composite the image with its
@@ -102,3 +102,41 @@ owner's biggest day (600 pages, 5 saved PDFs).
 
 **What the answer changes:** one condition around the check in `pdf/src/batch.rs` and one line on
 the Day card. Both options keep the whole check for the big batch.
+
+## D21 — An instant-service label names no courier (Gojek)
+
+**Words.** The platform has an *Instant / Same Day* service ([business-process 02 › the
+instant-service label](../../business-process/02-data-sources.md); Tokopedia's seller guide,
+2026-08-03): its label is the `TikTok Shop`-branded page with `Kode Pengambilan` + a `WX` + 4-digit
+pickup code and the tag `GKS`. It is the only label with **no courier logo and no tracking ID**, so
+the two clues that name every other courier are both missing — and it belongs to one of **Gojek,
+Grab or Blitz**; the page never says which. The owner reported it as **Gojek** (2026-10-13). It is
+not in the 2026-10-13 download (no page of that style among its 604; Tokopedia's rule: a Same Day
+label can be printed only after the delivery is arranged).
+
+| Option | What you see |
+|---|---|
+| **1. The name comes from the order export** (**Built for now**) | An instant order is named from its CSV row's `Shipping Provider Name` (Gojek) and marked *instant*, so its packing-list line reads `Gojek (instant) ×1`. With no CSV row the order shows `Gojek (instant)` from the tag `GKS` and also appears in the unknown-courier warning |
+| 2. A tag → courier table in `couriers.toml` | `GKS` = Gojek; a later `GRB`/`BLZ` is a file edit, not a program change; the label alone always names the courier, and an unseen tag is asked about once like an unseen logo |
+| 3. Ask the owner once per unseen tag, like the logo prompt | Nothing to maintain; the same question returns whenever the platform changes a code |
+
+Recommended: **1**, with 2's table as the fallback for the export-less case (the tag is the only
+label-side key, so it may as well be recorded).
+
+**What the answer changes:** `couriers.toml` (a `tag` table or nothing), the courier part of a
+packing-list line, and whether an instant order can be named at all.
+
+## D22 — Where the pickup code shows during packing
+
+**Words.** On an instant-service label the driver asks for the **pickup code** (`Kode Pengambilan`,
+`WX` + 4 digits) when collecting the parcel: the owner confirms it with the courier before handing
+the parcel over (Tokopedia's guide). The app reads the label page, so it holds the code; the
+question is whether it prints it.
+
+| Option | What you see |
+|---|---|
+| **1. On the packing list, beside the order** (**Built for now**) | The instant order's line carries its pickup code, so the code the driver asks for is on the sheet the owner carries; nothing else changes |
+| 2. On screen only (the pick and the Day screen) | The packing list stays as it is; the code is read from the screen when the driver arrives |
+| 3. Nowhere | The code is read from the label page itself, as today |
+
+**What the answer changes:** one field of the packing-list line and the day's data file.

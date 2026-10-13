@@ -195,8 +195,27 @@ Reference: the Python package `tools/analysis/packing/` (frozen) — the first i
     caption, `COD` and `Print Time`; its logo is the 680×156 raster whose base and mask bytes are
     identical to `0708-orders.pdf` p13's. No new courier, tracking form or service tag appears in
     the whole samples folder (12 files, 1,873 pages): J&T Express 1,614 · SiCepat 244 · iD Express
-    5 · J&T Cargo 3 · the one `TikTok Shop` label · 6 continuations.
-  - Result: (not started; next, nothing waits for the owner)
+    5 · J&T Cargo 3 · the one instant-service label · 6 continuations.
+  - **The new courier the owner reported (2026-10-13) is Gojek.** It is the page counted above as the
+    `TikTok Shop` label (`10-07_07-16-53_Shipping label+Packing slip_2.pdf` p162): the platform's
+    *Instant / Same Day* style, the only label with **no courier logo, no tracking ID and no
+    `Weight`** — it prints `TikTok Shop` + the tag `GKS` + `Kode Pengambilan` with a `WX` + 4-digit
+    pickup code, then `Nomor Order` + the 18-digit Order ID + a barcode, and its `In transit by` is a
+    pickup **time** (`08/10/2026 10:00`) where the 199 other pages of that download say `23:59`.
+    Tokopedia's seller guide (2026-08-03): the service is served by **Gojek, Grab or Blitz**, the
+    pickup code is printed as a watermark too, and a Same Day label cannot be printed before the
+    delivery is arranged. The page never names which of the three, so an instant label cannot give a
+    courier the way `couriers.toml` does today — its name has to come from the export's
+    `Shipping Provider Name`: **D21** (the owner's choice, with a built-for-now default), with
+    **D22** for where the pickup code shows during packing.
+  - Checked 2026-10-13, page by page, for that style in the new download (3 files, 604 pages, 600
+    orders): **none** — `Kode Pengambilan` appears on exactly one of the 1,873 sample pages (the
+    2026-10-07 one), the 326×59 `TikTok Shop` image on none of the 604, every page's images and
+    captions are one of the four courier styles, every page prints `In transit by: 14/10/2026 23:59`,
+    and the 600 distinct 18-digit Order IDs cover the 604 pages exactly (596 orders one page, 4
+    orders two) — so the day's Gojek order either has no printable label yet (the platform's rule
+    above) or is the one page the owner can point at.
+  - Result: (not started; D21 and D22 have "Built for now" defaults, so nothing waits for the owner)
 - [x] **2.17 Open folder: it opened Documents (review round 1).** `show_in_folder` ran
   `explorer.exe /select,<path>`. Explorer parses `/select,` itself and does not understand the
   quotes Rust puts around an argument that holds a space, so it never read the target and fell back
