@@ -28,6 +28,10 @@ whitespace and search `OrderI[dD][:：](\d{18})` (the second colon is fullwidth 
 search must come first: on J&T labels the Order ID sits on its own line under the tracking ID,
 and dropping whitespace first would glue the two into one number.
 
+The **Shopee-style label** (below) prints no 18-digit Order ID at all — its order number is 14
+characters (`No.Pesanan`) — so this search finds nothing on its pages and the batch would stop at
+the first one. What the app should do with that style is D23.
+
 ### Multi-page orders
 
 A page with no Order ID belongs to the previous page's order; a first page with no Order ID is
@@ -60,15 +64,30 @@ in the same way.
    image's **encoded bytes** are hashed (pdfium's `FPDFImageObj_GetImageDataRaw`, *not* the decoded
    pixels) with **XXH3-64** and looked up in the courier data's logo table. One hash per courier,
    measured stable across every sample export — J&T Express `39b9b7b9f61d0e7f`, SiCepat
-   `cf33ed60daa291b1`, iD Express (IDX) `9131c1f94ad363d4`. The cost is about 0.5 µs a page (the
+   `cf33ed60daa291b1`, iD Express (IDX) `9131c1f94ad363d4`, SPX Express `4583097ef370a670` (the
+   Shopee-style label; identical on all 3 of its pages, one file so far). The cost is about 0.5 µs a
+   page (the
    bytes are 1.5–15 KB; measured 0.44 µs for a 14 KB logo). Python's `xxhash` (in `tools/analysis`)
    and Rust's `xxhash-rust` compute the same value, so a hash taken there can be checked against
    the app's. A hash not in the table is **asked of the owner once** ("which courier is this
    logo?") and the answer is written into the data file, so later labels are named without asking.
+   **Which** of a page's images is the logo needs a rule of its own (D24): a page can carry, besides
+   the courier's logo, its buying channel's brand strip, a page-wide frame, the slip's footer strip
+   and — on the Shopee-style label — its barcode and QR as images too, and none of those is the
+   courier's. The logo is not always the smallest image (on the Shopee-style label the channel strip
+   is larger, on the boxed layouts the `tokopedia | Shop` strip is smaller) and not always the
+   unmasked one (J&T Cargo's and SPX's logos both carry a mask). Built for now (D24): the candidates
+   are the images drawn in the page's **top 40 pt** — on all six sample styles those are exactly the
+   courier's logo and the channel strip, and the frame (134–418 pt), the slip's footer strip (39–62,
+   or 104–124 on an instant label) and the barcode and QR (173–224, 330–373) all fall outside — and
+   a candidate whose hash the table does not know is **asked of the owner once**, the prompt gaining
+   a **Not a courier** answer for a channel strip (08 › the logo prompt).
 2. **The tracking-ID form** ([business-process 02](../../business-process/02-data-sources.md#columns-packing-needs)):
    `JY` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo;
-   `TKP` + 10 digits → iD Express (IDX). The form must match a token (or a match in the
-   whitespace-collapsed text) **fully**; it does not have to be repeated — on the boxed layouts the
+   `TKP` + 10 digits → iD Express (IDX); `SPXID` + 11 digits → SPX Express (the Shopee-style label,
+   which prints a check letter around the number: `Resi:` without it, `SPXID…A` eight times on the
+   page with it). The form must match a token (or a match in the whitespace-collapsed text)
+   **fully**; it does not have to be repeated — on the boxed layouts the
    tracking ID is printed once (business-process 02).
 3. **A masked logo is hashed by appearance.** A courier can print its logo as an image whose shape
    is a `/SMask` and whose base is one flat colour (J&T Cargo: 331 bytes for 680×156): the base's
@@ -93,17 +112,31 @@ in the same way.
    when a case needs them.
 7. **An instant-service label names no courier.** The platform's *Instant / Same Day* label
    ([business-process 02 › the instant-service label](../../business-process/02-data-sources.md)) is
-   the only style with **no courier logo at all** (its images are the two platform strips) **and no
+   the only style with **no courier logo at all** (its images are platform strips) **and no
    tracking ID**, so both clues that name every other courier are absent and nothing on the page can
-   name one. It is recognised by the `TikTok Shop` logo with the tag `GKS`, the caption
-   `Kode Pengambilan` with a `WX` + 4-digit pickup code, and an `In transit by` that is a clock time
-   rather than `23:59`. The service is served by **Gojek, Grab or Blitz** and the page never says
-   which, so the name comes from the order export's `Shipping Provider Name`; the built-for-now
+   name one. It is recognised by the tag `GKS` with the caption `Kode Pengambilan`, no tracking ID
+   and no courier logo, and an `In transit by` that is a clock time rather than `23:59`. Two marks
+   that look like marks and are not: the **pickup code** beside that caption is two letters + 4
+   digits (`WX` on one page, `CJ` on the other) and the **header strip** is the buying channel's
+   brand (`TikTok Shop` on a TikTok Shop order, `tokopedia PLUS` on a Tokopedia one). The
+   service is served by **Gojek, Grab or Blitz** and the page never says which, so the name comes
+   from the order export's `Shipping Provider Name`; the built-for-now
    default (D21) shows `Gojek (instant)` from the tag `GKS` when the export has no row, and lists the
    order in the unknown-courier warning when neither is at hand.
 8. **An instant label is still keyed by its Order ID**, printed on its `Nomor Order` line and in its
    barcode, so it is read like any other page; it prints no tracking ID, so that order's
    `tracking_id` stays empty and its slip is read normally.
+9. **The Shopee-style label carries both clues, both new.** It is the fourth label style
+   (business-process 02 › the Shopee-style label): its logo is the small red `SPX` wordmark (68×27,
+   masked, its encoded bytes `4583097ef370a670`, identical on all 3 of its pages), and its tracking
+   ID has the form `SPXID` + 11 digits, which no other courier uses — so the two clues agree on every
+   page of it, as the owner's rule requires. On the first batch the app asks the owner once about the
+   logo (the prompt) and writes the name into `couriers.toml` (D20); the name it writes is the
+   owner's — the wordmark reads `SPX`. The page's four other images (the `Shopee` channel strip, two
+   barcodes and a QR, all different per order) belong to D24's rule for picking the logo, not to
+   this one. **The rest of that page cannot be packed as it stands** — no 18-digit Order ID, no
+   `Qty Total`, no `Customer Message`, and its slip's columns are named in Indonesian
+   (`Nama Produk` · `SKU` · `Variasi` · `Qty`) — which is D23.
 
 The courier list is `couriers.toml` (in the data folder in the app), and it also holds the logos
 the owner names in the prompt; its fields and an example are in

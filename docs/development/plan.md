@@ -27,7 +27,7 @@ frozen, as the analysis tools in `tools/analysis/` (not part of the product); it
 move into phase 2. Design:
 [07-pc-app](../desktop/design/07-pc-app.md), [08-pc-app-ui](../desktop/design/08-pc-app-ui.md).
 Open in [desktop/design/02-design-questions.md](../desktop/design/02-design-questions.md): D17 (whether 2.18's check runs on every batch), D18 (how much of a *masked* courier logo to read — measured 2026-10-13: its appearance names J&T Cargo
-where its encoded bytes cannot, so the question is how much of that clue to use), D20 (how the app writes a taught logo into `couriers.toml`), **D21** (an instant-service label names no courier — the name comes from the order export; the owner reported **Gojek** on 2026-10-13) and **D22** (where the pickup code shows during packing); in
+where its encoded bytes cannot, so the question is how much of that clue to use), D20 (how the app writes a taught logo into `couriers.toml`), **D21** (an instant-service label names no courier — the name comes from the order export; the owner reported **Gojek** on 2026-10-13) and **D22** (where the pickup code shows during packing), **D23** (the Shopee-style label of 2026-10-15: pack it keyed by its own `No.Pesanan`, or leave it and say so) and **D24** (which image on a page *is* the courier's logo — the 2026-10-15 samples broke the "one small unmasked image in the header" phrase); in
 [mobile/design/02-design-questions.md](../mobile/design/02-design-questions.md): D1 (Android, open
 until phase 3).
 **D15 is answered**
@@ -49,8 +49,8 @@ no new courier, form or tag, and J&T Cargo's masked logo is readable by
 appearance (one value for both its rasters): 2.16 gives it a logo clue like the others. **The new
 courier the owner reported (2026-10-13) is Gojek**, and it is *not* in that download: Gojek serves
 the platform's *Instant / Same Day* service, whose label is the `TikTok Shop`-branded page measured
-earlier (`2026-10-07_07-16-53_labels+slips_2of3_TIKTOK-INSTANT.pdf` p162, the only such page in the samples) — the one style with **no courier logo and no tracking ID**,
-printing `Kode Pengambilan` + a `WX` pickup code + the tag `GKS`, with a pickup *time* instead of
+earlier (`2026-10-07 tt-instant 162.pdf` p162 — its header carries `TikTok Shop`, its pickup code `WX`) — the one style with **no courier logo and no tracking ID**,
+printing `Kode Pengambilan` + a pickup code + the tag `GKS`, with a pickup *time* instead of
 `23:59`. That download was checked page by page (images, captions, the pickup-code line, the
 `In transit by` value, the 600 Order IDs): no 2026-10-13 page is that style, and per Tokopedia's
 guide a Same Day label cannot be printed before the delivery is arranged — so the day's Gojek order
@@ -59,6 +59,26 @@ has no printable label yet. The page never names Gojek (the service is Gojek, Gr
 export's `Shipping Provider Name`), with **D22** (where the pickup code shows during packing).
 **D18 is the other thing waiting on the owner** (how much of that appearance clue to use); both have
 a "Built for now" default, so nothing waits.
+**The 2026-10-15 sample pair (2 files, 4 pages, measured the day it arrived) added two label
+styles.** `samples/2026-10-15 spx.pdf` (3 pages) is a **Shopee-style label** whose courier is **SPX
+Express** — the fourth label style and the first that is not a TikTok or Tokopedia page. Its courier
+is deduced by the same two agreeing clues as every other: the `SPX` wordmark's encoded bytes
+`4583097ef370a670` (identical on all 3 pages) and the new form `SPXID` + 11 digits. So task 2.16's
+rule covers it — `couriers.toml` gains one entry (07 › `couriers.toml`) — but **the page cannot be
+packed at all today**: it prints no 18-digit Order ID (its own `No.Pesanan`, 14 characters), its
+slip's columns are Indonesian (`Nama Produk` · `SKU` · `Variasi` · `Qty`), it has no `Qty Total:` and
+no `Customer Message`, and its deadline is `Batas Kirim: dd-mm-yyyy` instead of `In transit by` —
+**D23** (pack it keyed by its own number, or leave it and say so). `samples/2026-10-15
+tp-instant.pdf` (1 page) is the **second instant-service label** ever seen, and it corrects two marks
+of the first: the header strip is the *buying channel's* brand (`tokopedia PLUS`, not always `TikTok
+Shop`) and the pickup code's two letters are not fixed (`CJ…` here, `WX…` there). What stays is the
+tag `GKS` with the caption `Kode Pengambilan`, no tracking ID and no courier logo — 03 › *Courier
+deduction* now says that, and D21 (where the name comes from) is unchanged. Both pages also need the
+rule for **which image on a page is the logo** (**D24**): measured over the six styles, the courier's
+logo and the channel strip are the only images drawn in the page's top 40 pt, so the frame, the
+slip's footer strip, the barcodes and the QR are out — the "one small unmasked image in the header"
+phrase is gone. The sample-file table in business-process 02 now names the ten files `samples/` holds
+(1,226 pages) and the four files the earlier "12 files, 1,873 pages" counts were measured over.
 Then the round-2 review at the end of Phase 2 — open the same day's packing
 list (the header must stand clear, `×` must print), press *Open folder* (the batch folder must open,
 not Documents), check the Day screen for a *Courier unknown* warning, and save one batch to watch

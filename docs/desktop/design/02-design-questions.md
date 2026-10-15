@@ -144,3 +144,61 @@ question is whether it prints it.
 | 3. Nowhere | The code is read from the label page itself, as today |
 
 **What the answer changes:** one field of the packing-list line and the day's data file.
+
+## D23 — The Shopee-style label: pack it, or leave it alone
+
+**Words.** `samples/2026-10-15 spx.pdf` (3 pages, one order a page, downloaded 2026-10-15) is a label
+style the app cannot pack. It is neither a TikTok nor a Tokopedia page: its header carries the
+`Shopee` wordmark, its order number is **not** the 18-digit Order ID but its own `No.Pesanan` (14
+characters: six digits then eight letters and digits), its slip's columns are named in Indonesian
+(`# Nama Produk SKU Variasi Qty`, where `SKU` holds the seller SKU and `Variasi` the variation — the
+two tokens are swapped against the Tokopedia slip), it prints no `Qty Total:` and no
+`Customer Message`, and its deadline is `Batas Kirim: dd-mm-yyyy` (a date, with no time). Its courier
+is deducible like any other ([03 › *Courier deduction*](03-labels-and-picks.md#courier-deduction),
+item 9: the `SPX` wordmark as the logo plus an `SPXID` + 11-digit tracking ID). Today the batch stops
+on its first page (*page 1 has no Order ID*), because the pack flow keys every order by the 18-digit
+Order ID and reads item lines from the slip's `Product Name` · `SKU` · `Seller SKU` · `Qty` header.
+
+| Option | What you see |
+|---|---|
+| **1. Pack it, keyed by its own `No.Pesanan`** (**Built for now**: the batch stops with *page 1 has no Order ID*) | An SPX batch packs like any other: the label reader accepts the 14-character number as that style's key, the slip reader accepts the Indonesian header and reads `Variasi` as the variation, and everything that shows an Order ID shows the 14-character number instead. Cost: a second key and a second slip header in the readers; a download mixing the styles still packs as one batch |
+| 2. Leave the style alone, but say so | The batch still stops, with a message that names the style (*These are a Shopee download; this app packs TikTok and Tokopedia labels*), so a mixed download is understood at once and its pages can be printed from the seller centre as today. Cost: one message |
+
+Recommended: **1** if these orders are packed here too — the label carries everything a pick and a
+packing list need (slip lines, tracking ID, courier), and the only new thing is where the order
+number comes from.
+
+**What the answer changes:** the label reader's key rule, the slip reader's header rule and the day's
+data file; or one error message.
+
+## D24 — Which image on a page is the courier's logo
+
+**Words.** The courier is named from the page's **logo image**
+([03 › *Courier deduction*](03-labels-and-picks.md#courier-deduction), item 1: the image's encoded
+bytes, else its appearance, hashed and looked up in `couriers.toml`) — but nothing yet says **which**
+of a page's images that is, and pages carry several: the courier's logo, the buying channel's strip
+(`tokopedia | TikTok` 527×73, `tokopedia | Shop` 905×118, `TikTok Shop` 326×59, `tokopedia PLUS`
+618×78, `Shopee` 800×253), a page-wide frame (2000×2000 or 1000×1000), the slip's footer strip, and —
+on the Shopee-style label — its barcode and QR as images of their own. The phrases used so far ("the
+one small *unmasked* image in the header") do not hold: J&T Cargo's and SPX's logos are both masked,
+and on the `2026-10-15 spx.pdf` pages the smallest *unmasked* images are a barcode and the QR.
+
+Measured 2026-10-15 over the six styles (the page is 419 pt tall; y counted from the bottom): the
+courier's logo and the channel strip are the only images whose **whole box lies in the page's top
+40 pt** — J&T Express 388–415 · SiCepat 390–414 · IDX 390–417 beside its strip 397–408 · J&T Cargo
+394–413 beside its strip 397–409 · SPX 394–411 beside the `Shopee` strip 394–412 · the instant
+label's strip 394–411 — while the frame (134–418), the slip's footer strip (39–62, or 104–124 on the
+instant label) and the barcodes and the QR (173–224, 330–373) all fall outside it.
+
+| Option | What you see |
+|---|---|
+| **1. The images in the page's top 40 pt, with *Not a courier* as an answer** (**Built for now**) | The logo is read from the header band only; a hash there that the table does not know asks once, and the prompt gains a **Not a courier** answer (a channel strip) which is written beside the logo table so it is never asked again. The barcodes and the QR are never asked about — they are outside the band |
+| 2. A list of known page images in `couriers.toml` | Every frame size and every channel strip measured above is skipped and everything else asks once. Cost: the list grows with each new channel brand, and on a Shopee-style page the barcode and the QR are not in it — three more questions on every order |
+| 3. Ask about every image the table does not know | The least code and the noisiest to use: the first `2026-10-15 spx.pdf` page asks 4 times (its channel strip, two barcodes, the QR) and asks again on the next page, because those codes differ with every order |
+| 4. Keep the "small unmasked image in the header" phrase | Nothing to build, and the Shopee-style pages name the wrong clue: the smallest unmasked image on them is a barcode, while J&T Cargo's and SPX's own logos would be skipped for being masked |
+
+Recommended: **1** — measured on all six styles, it asks about a channel strip once ever rather than
+once per batch, never asks about a per-order code, and leaves the owner's two-clue rule as it is.
+
+**What the answer changes:** how the app picks the image to hash, the logo prompt's answers
+([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt)) and `couriers.toml`'s fields.

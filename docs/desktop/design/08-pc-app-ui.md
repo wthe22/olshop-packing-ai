@@ -118,8 +118,9 @@ Plan screen opens — or, if the batch cannot be used, a stop message (see *Mess
 ### The logo prompt
 
 A label whose logo the app has never seen is asked about once per unseen logo, before the Plan
-screen. The picture is the logo as printed, so it can be recognised, and the count says how many
-pages carry it:
+screen — of a page's images, the ones drawn in its **top 40 pt** are looked at (D24), so the frame,
+the barcode and the QR never ask. The picture is the logo as printed, so it can be recognised, and
+the count says how many pages carry it:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -135,6 +136,10 @@ pages carry it:
   batch.
 - **A courier name** names those orders at once, and the hash is written into `couriers.toml`
   (D20), so the next export of the same logo is named without asking.
+- **Not a courier** (D24) answers for an image that is not a courier's logo — a buying channel's
+  strip (`tokopedia | TikTok`, `tokopedia | Shop`, `TikTok Shop`, `tokopedia PLUS`, `Shopee`): its
+  hash is written beside the logo table and that image is never asked about again, so a new channel
+  costs one answer, not one per batch.
 - **I don't know** writes nothing: those orders save with an empty courier and appear in the day's
   warning, and the logo is asked about again in the next batch.
 - **Skip all** stops the prompts for the rest of **this batch**: every further unseen logo in it

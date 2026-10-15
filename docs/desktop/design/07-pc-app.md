@@ -103,7 +103,15 @@ text = ["FastTrack"]             # its header strip and its order-ID caption `TT
 name = "IDX"
 logo = ["9131c1f94ad363d4"]      # 1200x859 px, 9,810 bytes
 tracking = "TKP\\d{10}"
+
+[[courier]]
+name = "SPX"
+logo = ["4583097ef370a670"]      # 68x27 px, 1,495 bytes, masked: the small red SPX wordmark
+tracking = "SPXID\\d{11}"        # the Shopee-style label; the ID carries a check letter
 ```
+
+The `SPX` entry is the one the 2026-10-15 samples measured (03 › *Courier deduction*, item 9); the
+name stored is the owner's answer in the prompt — the wordmark reads `SPX`.
 
 The logos the owner names in the prompt ([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt))
 are written into this same file. **How** the app writes them is **D20**; built for now as a
@@ -113,6 +121,9 @@ are written into this same file. **How** the app writes them is **D20**; built f
 [logo]
 "9f1c0d7a4b2e6f83" = "SiCepat"
 ```
+
+An image the owner answers **Not a courier** for (D24 — a buying channel's strip) goes into a table
+of its own the same way, and is never asked about again.
 
 ### Every page must carry a packing slip
 
