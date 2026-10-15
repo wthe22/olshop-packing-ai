@@ -131,15 +131,15 @@ in the same way.
    masked, its encoded bytes `4583097ef370a670`, identical on all 3 of its pages), and its tracking
    ID has the form `SPXID` + 11 digits, which no other courier uses — so the two clues agree on every
    page of it, as the owner's rule requires. On the first batch the app asks the owner once about the
-   logo (the prompt) and writes the name into `couriers.toml` (D20); the name it writes is the
+   logo (the prompt) and keeps the name in the program's built-in logo list (D20: hardcoded, no file); the name is the
    owner's — the wordmark reads `SPX`. The page's four other images (the `Shopee` channel strip, two
    barcodes and a QR, all different per order) belong to D24's rule for picking the logo, not to
    this one. **The rest of that page cannot be packed as it stands** — no 18-digit Order ID, no
    `Qty Total`, no `Customer Message`, and its slip's columns are named in Indonesian
    (`Nama Produk` · `SKU` · `Variasi` · `Qty`) — which is D23.
 
-The courier list is `couriers.toml` (in the data folder in the app), and it also holds the logos
-the owner names in the prompt; its fields and an example are in
+The courier list is `couriers.toml` (in the data folder in the app), and the logos the owner names in the prompt
+are built into the program (D20), not written to it; its fields and an example are in
 [07 › `couriers.toml`](07-pc-app.md#courierstoml).
 
 ## Picks

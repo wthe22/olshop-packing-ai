@@ -17,74 +17,43 @@ ticked **and** its owner review is noted as passed in the phase's review file.
 
 ## Status
 
-Status: **Phase 2 (PC app): tasks 2.1–2.15 and 2.17 done — the packing-list display defects and the
-*Open folder* defect of the owner's review round 1 (2026-10-11, his own day's data) are fixed;
-2.16 (the courier) is next, and 2.18 (the check of the saved PDFs, designed at the
-owner's request on 2026-10-11) waits behind it.**
-The owner decided that the PC gets a desktop app written in Rust (a
-command line is not good for daily use), so phase 1 stops with its code done (270 tests); the script is kept,
-frozen, as the analysis tools in `tools/analysis/` (not part of the product); its two open tasks
-move into phase 2. Design:
-[07-pc-app](../desktop/design/07-pc-app.md), [08-pc-app-ui](../desktop/design/08-pc-app-ui.md).
-Open in [desktop/design/02-design-questions.md](../desktop/design/02-design-questions.md): D17 (whether 2.18's check runs on every batch), D18 (how much of a *masked* courier logo to read — measured 2026-10-13: its appearance names J&T Cargo
-where its encoded bytes cannot, so the question is how much of that clue to use), D20 (how the app writes a taught logo into `couriers.toml`), **D21** (an instant-service label names no courier — the name comes from the order export; the owner reported **Gojek** on 2026-10-13) and **D22** (where the pickup code shows during packing), **D23** (the Shopee-style label of 2026-10-15: pack it keyed by its own `No.Pesanan`, or leave it and say so) and **D24** (which image on a page *is* the courier's logo — the 2026-10-15 samples broke the "one small unmasked image in the header" phrase); in
-[mobile/design/02-design-questions.md](../mobile/design/02-design-questions.md): D1 (Android, open
-until phase 3).
-**D15 is answered**
-(2026-10-11, the owner: two clues that must agree — the tracking-ID form and the service tag; the
-rule is written into 03 › *Courier deduction*, so D15 is removed), **D16 is answered** (2026-10-11): the courier data lives in the data folder, so a courier change is a file
-edit the owner can make, not a new program version — task 2.19, and **D19 is answered**
-(2026-10-11, the owner: one file — the taught logos go into `couriers.toml`, no second file). D2 (the
-PDF library) is answered: PDFium does all three PDF
-jobs, and the bigger packing-list files (about 1.4 MB, 2.0 MB with `full`/`summary`) are accepted.
+Status: **Phase 2 (PC app): tasks 2.1–2.15 and 2.17 done. Open: 2.16, 2.18, 2.19, 2.20 and 2.21
+(search, added 2026-10-15).** The owner's round-2 review at the end of the phase
+([review-2](../desktop/phases/p02-pc-app/review-2.md)) waits for all of them; the phase-3 Android work
+waits for that review.
 
-**Next step.** 2.16 (the courier: the form-and-tag rule, no owner answer needed), then
-2.19 (the courier data into the data folder, D16's answer — no owner answer needed, so it can be
-built at any time) and 2.18 (the saved-PDF check; its four choices are answered and D17 has a
-"built for now" default, so it waits on nothing); 2.20 (one hash for everything — the owner's decision of 2026-10-13,
-no answer needed) can be built at any time. The 2026-10-13 sample download (3 files, 604 pages) was
-measured against the courier rule: J&T Express 500 · SiCepat 96 · iD Express (IDX) 3 · **J&T Cargo 1**
-(the first J&T Cargo and iD Express labels in a *slip* export) · 4 slip continuations — so it holds
-no new courier, form or tag, and J&T Cargo's masked logo is readable by
-appearance (one value for both its rasters): 2.16 gives it a logo clue like the others. **The new
-courier the owner reported (2026-10-13) is Gojek**, and it is *not* in that download: Gojek serves
-the platform's *Instant / Same Day* service, whose label is the `TikTok Shop`-branded page measured
-earlier (`2026-10-07 tt-instant 162.pdf` p162 — its header carries `TikTok Shop`, its pickup code `WX`) — the one style with **no courier logo and no tracking ID**,
-printing `Kode Pengambilan` + a pickup code + the tag `GKS`, with a pickup *time* instead of
-`23:59`. That download was checked page by page (images, captions, the pickup-code line, the
-`In transit by` value, the 600 Order IDs): no 2026-10-13 page is that style, and per Tokopedia's
-guide a Same Day label cannot be printed before the delivery is arranged — so the day's Gojek order
-has no printable label yet. The page never names Gojek (the service is Gojek, Grab or Blitz), so
-**D21 is new** (where an instant label's courier name comes from; its "Built for now" default is the
-export's `Shipping Provider Name`), with **D22** (where the pickup code shows during packing).
-**D18 is the other thing waiting on the owner** (how much of that appearance clue to use); both have
-a "Built for now" default, so nothing waits.
-**The 2026-10-15 sample pair (2 files, 4 pages, measured the day it arrived) added two label
-styles.** `samples/2026-10-15 spx.pdf` (3 pages) is a **Shopee-style label** whose courier is **SPX
-Express** — the fourth label style and the first that is not a TikTok or Tokopedia page. Its courier
-is deduced by the same two agreeing clues as every other: the `SPX` wordmark's encoded bytes
-`4583097ef370a670` (identical on all 3 pages) and the new form `SPXID` + 11 digits. So task 2.16's
-rule covers it — `couriers.toml` gains one entry (07 › `couriers.toml`) — but **the page cannot be
-packed at all today**: it prints no 18-digit Order ID (its own `No.Pesanan`, 14 characters), its
-slip's columns are Indonesian (`Nama Produk` · `SKU` · `Variasi` · `Qty`), it has no `Qty Total:` and
-no `Customer Message`, and its deadline is `Batas Kirim: dd-mm-yyyy` instead of `In transit by` —
-**D23** (pack it keyed by its own number, or leave it and say so). `samples/2026-10-15
-tp-instant.pdf` (1 page) is the **second instant-service label** ever seen, and it corrects two marks
-of the first: the header strip is the *buying channel's* brand (`tokopedia PLUS`, not always `TikTok
-Shop`) and the pickup code's two letters are not fixed (`CJ…` here, `WX…` there). What stays is the
-tag `GKS` with the caption `Kode Pengambilan`, no tracking ID and no courier logo — 03 › *Courier
-deduction* now says that, and D21 (where the name comes from) is unchanged. Both pages also need the
-rule for **which image on a page is the logo** (**D24**): measured over the six styles, the courier's
-logo and the channel strip are the only images drawn in the page's top 40 pt, so the frame, the
-slip's footer strip, the barcodes and the QR are out — the "one small unmasked image in the header"
-phrase is gone. The sample-file table in business-process 02 now names the ten files `samples/` holds
-(1,226 pages) and the four files the earlier "12 files, 1,873 pages" counts were measured over.
-Then the round-2 review at the end of Phase 2 — open the same day's packing
-list (the header must stand clear, `×` must print), press *Open folder* (the batch folder must open,
-not Documents), check the Day screen for a *Courier unknown* warning, and save one batch to watch
-the check run (the progress line; a clean day must report nothing). The
-answers belong in
-[02-design-questions.md](../desktop/design/02-design-questions.md) — each question has a
-"Built for now" default, nothing waits on them — or under *Answers* in
-[review-2.md](../desktop/phases/p02-pc-app/review-2.md), or as a new session here; the phase-3 Android
-work waits for this phase's review to pass.
+**Owner answers of 2026-10-15** (written into the design; the questions are removed from 02):
+
+- **D17: the check of the saved PDFs runs on every batch** (task 2.18, no size condition).
+- **D20: taught logos are hardcoded in the app.** The app writes no file for them, and no settings file
+  is needed for now. `couriers.toml` stays the courier list (D16, D19). **To confirm with the owner:** a
+  logo named in the prompt is recognised in later batches only once a program version carrying its hash
+  is built ([07 › `couriers.toml`](../desktop/design/07-pc-app.md#courierstoml)).
+- **New task 2.21, search:** a Search button finds saved orders by tracking ID, item, quantity and the
+  other rule fields ([08 › 7. Search](../desktop/design/08-pc-app-ui.md#7-search)). Saved orders now keep
+  the searched fields in `state.json` ([07 › `state.json`](../desktop/design/07-pc-app.md#statejson)).
+  Its scope is open question **D25**.
+
+Open choices, each with a *Built for now* default in
+[02-design-questions.md](../desktop/design/02-design-questions.md): D18, D21, D22, D23, D24, D25.
+
+**Next step.** 2.16 (the courier: the form-and-tag rule; no owner answer needed), then 2.19 (courier data
+in the data folder), 2.18 (the saved-PDF check), 2.20 (one hash, XXH3-64), 2.21 (search). Each task ends
+with a commit and its tick in [p02 plan.md](../desktop/phases/p02-pc-app/plan.md); push to `origin main`.
+
+**Reading for the next session** (in this order; each phase task also names its own design sections):
+
+1. [AGENTS.md](../../AGENTS.md) and [README.md](README.md): rules, commit and push, repository layout.
+2. [p02 plan.md](../desktop/phases/p02-pc-app/plan.md): tasks 2.16 and 2.18–2.21; [review-2.md](../desktop/phases/p02-pc-app/review-2.md) (what the owner will check).
+3. [07-pc-app.md](../desktop/design/07-pc-app.md): Inputs and `couriers.toml`; *What happens in one batch*; *Day folder* and `state.json`; *Architecture* (stack, code layout, commands, settings, program folder); *Testing*.
+4. [08-pc-app-ui.md](../desktop/design/08-pc-app-ui.md): window frame; screens 1–6; *7. Search*; *Start*; the logo prompt.
+5. [03-labels-and-picks.md](../desktop/design/03-labels-and-picks.md): per-order data, Order ID, multi-page orders, packing slip, *Courier deduction*, picks, packing list.
+6. [02-design-questions.md](../desktop/design/02-design-questions.md): the open questions D18 and D21–D25.
+7. [01-requirements.md](../desktop/design/01-requirements.md): concepts and words; [desktop/design/README.md](../desktop/design/README.md) for the folder.
+8. [shared/04-rules-file.md](../shared/04-rules-file.md): the condition language that search reuses (fields, operators, the item-field "some line" rule).
+9. [business-process/02-data-sources.md](../business-process/02-data-sources.md): read before touching any CSV or PDF code; [01-packing-workflow.md](../business-process/01-packing-workflow.md) for the daily steps.
+10. [desktop/development/01-setup.md](../desktop/development/01-setup.md): PDFium, Tauri, the build, the portable folder, test commands; and [desktop/development/README.md](../desktop/development/README.md).
+11. [desktop/user-guide/01-pc-app.md](../desktop/user-guide/01-pc-app.md): the owner's guide; update it in the commit that changes what the owner sees (2.18, 2.21).
+12. Code, after the docs: `pc/` (Cargo workspace: `crates/engine`, `crates/pdf`, `crates/cli`; `app/` with Svelte in `src/` and Rust in `src-tauri/`); `testdata/` (made-up fixtures, `make_testdata.py`); `tools/analysis/packing/couriers.toml` (the built-in courier list, 07 › *Inputs*); then `git status` and `git log --oneline -5`.
+
+`samples/` and `work/` are confidential: never commit them or copy real data from them.

@@ -152,7 +152,7 @@ Reference: the Python package `tools/analysis/packing/` (frozen) — the first i
   nothing) —
   and `deduce_courier` hashes the page's logo image (`FPDFImageObj_GetImageDataRaw`) and requires
   the two clues to agree; a hash that is not in the table is asked of the owner once
-  (`couriers.toml` — one file, D19 answered; the app appends the hash per D20, and *I don't know*
+  (`couriers.toml` — one file, D19 answered; the taught hash goes into the program's built-in list, D20 (hardcoded, no file), and *I don't know*
   and *Skip all* write nothing).
   Tests: every measured sample page keeps the courier it has now, a logo with a foreign form warns,
   an unseen logo asks, the two slip-continuation pages stay unknown. Then re-check the owner's day
@@ -271,7 +271,7 @@ Reference: the Python package `tools/analysis/packing/` (frozen) — the first i
     order must each be reported, each in its own list (the swapped one as a warning only); the
     tests fail when the check is switched off, as the 2.15 display tests do. Behind it: the
     smaller seams too — a page count changed in a written file, a packing-list count changed.
-  - Open: D17 (every batch or only a large one).
+  - D17 answered by the owner (2026-10-15): every batch, so the check runs on every save; no size condition.
   - Result: (not started)
 - [ ] **2.19 The courier data in the data folder** (D16, answered by the owner 2026-10-11). The
   courier list — name, text clues, tracking forms — is built into the program today, so a new
@@ -299,6 +299,12 @@ Reference: the Python package `tools/analysis/packing/` (frozen) — the first i
   hash the program makes. Design is in 07 › *Inputs*, *`state.json`* and *Stack* (already
   written). Tests: the same file is recognised twice; a file with one changed byte is not; a day
   file with `sha256` entries loads.
+  - Result: (not started)
+
+- [ ] **2.21 Search: find a saved order by tracking ID, item, quantity and more** (the owner's request, 2026-10-15; designed in 08 › *7. Search*, not built). A **Search** button in the window frame opens a panel over the current screen. It finds saved orders by the fields the rules use, with the same condition boxes as *Categories* (08 › 5): a tracking ID, an item name or a quantity is one condition (*Tracking ID is …*, *Name contains …*, *Total quantity at least 2*). Scope *This day* or *All days* (D25; built for now: *This day*). A result row shows Order ID, tracking ID, courier, items × quantity, batch and saved PDF; **Open** opens that saved PDF. It only reads.
+  - Data: each saved order keeps the searched fields in `state.json`'s `saved[]` (07 › *`state.json`*), written at save. A day saved before this stays searchable by its IDs only (*items not stored*).
+  - Code: the matching reuses the condition code of `categories.toml` (engine, no PDF); the search command and the panel sit where the Categories editor's do (07 › *Code layout*, *Commands between window and Rust*). Built after 2.20, since both change what `state.json` holds.
+  - Tests: a tracking ID finds its one order; an item field matches when one line matches; `not` and *at least* behave as in a category; *This day* does not see another day's order; an order of an open draft is not found; an order saved before the change shows *items not stored*.
   - Result: (not started)
 
 **Owner reviews:** [round 1](review-1.md) (2026-10-11, done; it found 2.15–2.17) and

@@ -11,7 +11,7 @@ made-up IDs and counts.
      ▲                         choose files                               adjust picks       │
      └────────────────────────────── back to the Day screen, new batch shown ◄────────────────┘
  From the Day screen: [Open] a saved PDF to print it · [Amend] / [Revert] the last batch ·
- [Categories] · [Settings]
+ [Search] · [Categories] · [Settings]
 ```
 
 A normal batch: **New batch** → **Add files…** (choose the new downloads) → **Read labels** →
@@ -22,7 +22,7 @@ packing list to print.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ Packing  ·  ◀  Wed 7 Oct 2026  ▶  [Today]           [Categories]  [Settings]           │
+│ Packing  ·  ◀  Wed 7 Oct 2026  ▶  [Today]           [Search]  [Categories]  [Settings] │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                        │
 │                               (the current screen)                                     │
@@ -33,7 +33,7 @@ packing list to print.
 - **Day** in the title bar: the day folder everything is saved to. ◀ ▶ step a day; **Today**
   goes back. Changing the day while a draft is open asks first ("Discard the batch being
   prepared?").
-- **Categories** and **Settings** open over the current screen; closing them returns to it
+- **Search**, **Categories** and **Settings** open over the current screen; closing them returns to it
   (an open draft is kept and recounted).
 
 ## 1. Day
@@ -42,7 +42,7 @@ The start screen: what has been saved today, and the way to the next batch.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ Packing  ·  ◀  Wed 7 Oct 2026  ▶  [Today]           [Categories]  [Settings]           │
+│ Packing  ·  ◀  Wed 7 Oct 2026  ▶  [Today]           [Search]  [Categories]  [Settings] │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  Today: 2 batches · 729 orders · 5 saved PDFs                       [ + New batch ]    │
 │                                                                                        │
@@ -134,11 +134,12 @@ the count says how many pages carry it:
 
 - The buttons are the names in `couriers.toml`. Each distinct unseen logo is asked about once per
   batch.
-- **A courier name** names those orders at once, and the hash is written into `couriers.toml`
-  (D20), so the next export of the same logo is named without asking.
+- **A courier name** names those orders at once, and the hash goes into the program's built-in
+  logo list (D20: hardcoded, no file), so the next export of the same logo is named without asking
+  once the program is built with it.
 - **Not a courier** (D24) answers for an image that is not a courier's logo — a buying channel's
   strip (`tokopedia | TikTok`, `tokopedia | Shop`, `TikTok Shop`, `tokopedia PLUS`, `Shopee`): its
-  hash is written beside the logo table and that image is never asked about again, so a new channel
+  hash goes into the built-in list beside the logo hashes (D20) and that image is never asked about again, so a new channel
   costs one answer, not one per batch.
 - **I don't know** writes nothing: those orders save with an empty courier and appear in the day's
   warning, and the logo is asked about again in the next batch.
@@ -318,6 +319,17 @@ One category switched to **Text view**, with an error:
 The app asks "Use `<folder>` until the app closes? Existing days stay in `<old folder>`." The
 categories and couriers files of the new folder are used (a copy of the current ones is put
 there if it has none). The next start looks in the program folder again.
+
+## 7. Search
+
+Finds saved orders of the day by the fields the rules can use ([07 › Fields the conditions can use](07-pc-app.md#fields-the-conditions-can-use)): Order ID, tracking ID, courier, item name, variation, Seller SKU, line quantity, order quantity and number of items. **Search** in the window frame opens it over the current screen, as Categories does; **Close** returns to it. It only reads: nothing is changed or saved.
+
+- **The conditions** are built with the same boxes as [5. Categories](#5-categories): a group *All of these* / *Any of these*, rows of [field ▾] [operator ▾] [value] [not] [×], and [+ condition] [+ group]. Text fields offer *contains* (the default), *is* and *starts with*; number fields *is*, *at least* and *at most*. Matching ignores case. An item field matches an order when one of its lines matches, as in the rules file ([shared 04](../../shared/04-rules-file.md)).
+- **Scope**: *This day* (the day in the title bar; the default) or *All days* (02-design-questions.md, D25).
+- **Results** show the number of orders and batches, then one row per order: Order ID · tracking ID · courier · items (name × quantity) · batch · saved PDF. **Open** opens that saved PDF in the PC's PDF viewer, as on the Day screen.
+- **Saved orders only.** Orders of an open draft are not searched: they have no saved PDF yet.
+- **Orders saved before search existed** keep only their IDs (D25). Their row says *items not stored*, and they are found by Order ID or tracking ID only.
+- **No match**: "No saved order matches."
 
 ## Start
 

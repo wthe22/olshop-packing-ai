@@ -66,43 +66,6 @@ deduction*).
 **What the answer changes:** the second clue's form (an appearance hash in `couriers.toml`), or
 nothing at all.
 
-## D20 — How the app writes a taught logo into `couriers.toml`
-
-**Words.** When the owner names an unseen logo in the prompt ([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt)),
-the answer is written into `couriers.toml` — a file the owner also edits by hand (D19, answered
-2026-10-11: one file, no second one). The only question left is *how* the app writes it, so that a
-hand edit is never lost.
-
-| Option | What you see |
-|---|---|
-| **1. A `[logo]` table appended at the end of the file** (**Built for now**) | The app adds one line (`"hash" = "SiCepat"`) at the end and never touches the entries above it, so your own comments and order survive. A logo it could only read by **appearance** (D18) goes into a `[shape]` table the same way. The same courier's logos then live in two places — its `logo` list and this table |
-| 2. The hash is added to that courier's own `logo` list | One place per courier, but the app rewrites the entry you wrote — `toml_edit` keeps your comments and order, so only that line changes |
-| 3. Nothing is written | Simplest: the answer names that batch's orders only, and the same logo is asked about again next batch |
-
-Recommended: **1** — the app only ever appends, so nothing you typed can be lost.
-
-**What the answer changes:** what the app does after the owner names a logo (append a line, edit a
-list, or nothing).
-
-## D17 — The check of the saved PDFs: every batch or only a large one
-
-**Words.** Task 2.18 makes the app read its own output back before a batch is finished: every order
-exactly once, in one saved PDF, page for page, plus the packing list's counts. Errors (a page
-missing, a page twice, an order in two PDFs or in none, a page holding another order's label) and
-warnings (the pages are all there, only out of order) are listed separately, *Save anyway* is
-allowed, and what was found stays on the day's batch card. The check costs about 1–2 s on the
-owner's biggest day (600 pages, 5 saved PDFs).
-
-**Example.** A normal morning batch is 2 files, about 100 pages, 100 orders — well under a second.
-
-| Option | What you see |
-|---|---|
-| **1. Every batch** (**Built for now**) | Every *Save batch* runs the check; on the 600-page day the save takes 1–2 s longer, on a normal batch nothing noticeable |
-| 2. Only a batch above a size | Batches under, say, 200 pages save without the check and the day says *not checked*: small batches stay quick, but a bug that only hits small batches is never seen |
-
-**What the answer changes:** one condition around the check in `pdf/src/batch.rs` and one line on
-the Day card. Both options keep the whole check for the big batch.
-
 ## D21 — An instant-service label names no courier (Gojek)
 
 **Words.** The platform has an *Instant / Same Day* service ([business-process 02 › the
@@ -192,7 +155,7 @@ instant label) and the barcodes and the QR (173–224, 330–373) all fall outsi
 
 | Option | What you see |
 |---|---|
-| **1. The images in the page's top 40 pt, with *Not a courier* as an answer** (**Built for now**) | The logo is read from the header band only; a hash there that the table does not know asks once, and the prompt gains a **Not a courier** answer (a channel strip) which is written beside the logo table so it is never asked again. The barcodes and the QR are never asked about — they are outside the band |
+| **1. The images in the page's top 40 pt, with *Not a courier* as an answer** (**Built for now**) | The logo is read from the header band only; a hash there that the table does not know asks once, and the prompt gains a **Not a courier** answer (a channel strip) which is built into the program beside the logo hashes (D20) so it is never asked again. The barcodes and the QR are never asked about — they are outside the band |
 | 2. A list of known page images in `couriers.toml` | Every frame size and every channel strip measured above is skipped and everything else asks once. Cost: the list grows with each new channel brand, and on a Shopee-style page the barcode and the QR are not in it — three more questions on every order |
 | 3. Ask about every image the table does not know | The least code and the noisiest to use: the first `2026-10-15 spx.pdf` page asks 4 times (its channel strip, two barcodes, the QR) and asks again on the next page, because those codes differ with every order |
 | 4. Keep the "small unmasked image in the header" phrase | Nothing to build, and the Shopee-style pages name the wrong clue: the smallest unmasked image on them is a barcode, while J&T Cargo's and SPX's own logos would be skipped for being masked |
@@ -202,3 +165,23 @@ once per batch, never asks about a per-order code, and leaves the owner's two-cl
 
 **What the answer changes:** how the app picks the image to hash, the logo prompt's answers
 ([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt)) and `couriers.toml`'s fields.
+
+## D25 — Search: which days, and what an order saved before search can show
+
+**Words.** The Search panel ([08 › 7. Search](08-pc-app-ui.md#7-search)) finds saved orders by the
+fields the rules can use (tracking ID, item name, quantity, courier, …). From the version that adds
+it, each saved order keeps those fields in `state.json` ([07 › `state.json`](07-pc-app.md#statejson)).
+An order saved **before** that version has only its IDs there; its items can be read again only
+from its `download/` copy.
+
+| Option | What you see |
+|---|---|
+| **1. *This day* by default, *All days* as the other choice; an older order shows its IDs only** (**Built for now**) | Scope *This day* (the day in the title bar) or *All days* (every day folder's `state.json`). An order saved before the change is found by Order ID or tracking ID only, and its row says *items not stored* |
+| 2. *This day* only | No scope control. Cheapest; an order from an earlier day cannot be found in the app |
+| 3. *All days*, older orders read again from their `download/` copy | Every order is searchable, old ones included. Each search over old days re-reads label files (about 4 MB per 600-order day), so a long history is slow |
+
+Recommended: **1** — the day on screen covers daily use, and the all-days search reads only small
+JSON files; the IDs of an older order are still found.
+
+**What the answer changes:** the scope control and the *items not stored* row of the Search panel,
+and whether search reads `download/` at all.

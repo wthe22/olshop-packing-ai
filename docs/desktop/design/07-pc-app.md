@@ -113,17 +113,9 @@ tracking = "SPXID\\d{11}"        # the Shopee-style label; the ID carries a chec
 The `SPX` entry is the one the 2026-10-15 samples measured (03 › *Courier deduction*, item 9); the
 name stored is the owner's answer in the prompt — the wordmark reads `SPX`.
 
-The logos the owner names in the prompt ([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt))
-are written into this same file. **How** the app writes them is **D20**; built for now as a
-`[logo]` table appended at the end, so the entries above are never rewritten:
+The logos the owner names in the prompt ([08 › the logo prompt](08-pc-app-ui.md#the-logo-prompt)) are **not** written into this file. **D20, answered by the owner 2026-10-15: they are hardcoded in the app.** They live in the program's own source, as a built-in list of logo hashes next to the courier list, and the app writes no file for them, so no settings file is needed for now. An image answered **Not a courier** (D24, a buying channel's strip) is kept the same way.
 
-```toml
-[logo]
-"9f1c0d7a4b2e6f83" = "SiCepat"
-```
-
-An image the owner answers **Not a courier** for (D24 — a buying channel's strip) goes into a table
-of its own the same way, and is never asked about again.
+**Consequence to confirm with the owner:** a logo named in the prompt is recognised in later batches only once a program version carrying its hash is built. Until then the prompt asks about it again on each batch.
 
 ### Every page must carry a packing slip
 
@@ -183,6 +175,10 @@ The app scan-filter fields (`category`, `batch`, `group`) stay errors as in 04.
 
    If anything fails before step 4, the temporary folder is deleted and the day is as before
    — there is never a half-written batch.
+
+   **Check (D17, answered 2026-10-15: on every save).** Before step 4 the saved PDFs and packing
+   lists are read back and compared with the plan; what is compared and how it is reported is task
+   2.18 (p02 plan).
 
 ## Day folder
 
@@ -254,7 +250,9 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
   ],
   "saved": [
     {"order_id": "580000000000000001", "tracking_id": "JY0000001234",
-     "batch": 1, "pdf": 1, "run": 5}
+     "batch": 1, "pdf": 1, "run": 5, "courier": "J&T Express",
+     "total_quantity": 2, "items": [{"name": "Sepatu", "variation": "42",
+     "seller_sku": "SP-0001", "quantity": 2}]}
   ]
 }
 ```
@@ -265,7 +263,7 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
 | `batches[].pdfs` | Each saved PDF: number, pick code/name, file name, counts | Day screen without re-reading the PDFs; revert knows which files are the batch's |
 | `batches[].packing_list` | Scope and layouts chosen | Amend starts with the same choice |
 | `batches[].warnings` | The read warnings of the batch, as shown on the Plan screen | Day screen *Warnings ▸* without re-reading the files |
-| `saved[]` | Each saved order: IDs, batch, saved PDF, run | Duplicate guard |
+| `saved[]` | Each saved order: IDs, batch, saved PDF, run, and the fields the Search panel finds it by (`courier`, `total_quantity`, `distinct_items`, `ship_by`, `items` with each line's `name`, `variation`, `seller_sku`, `quantity`) | Duplicate guard; Search ([08 › 7](08-pc-app-ui.md#7-search)). An order saved before search existed keeps only its IDs (D25) |
 
 The file is written whole each time (write to `state.json.tmp`, then replace), so a crash
 never leaves half a file. The app does not read the Python tools' `work/<day>/state.json`.
