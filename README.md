@@ -1,16 +1,14 @@
-# Packing Checker
+# Packing Checker — PC app
 
-Tools for the shop's daily packing work (TikTok Shop / Tokopedia orders):
+A Windows program (Rust + Tauri) for the shop's daily packing work (TikTok Shop / Tokopedia orders):
+shipping-label PDFs with packing slip → one label PDF per pick (pages unchanged) and A4 packing lists.
 
-- **PC app** (Rust + Tauri, `pc/`): shipping-label PDFs with packing slip → one label PDF per
-  pick (pages unchanged) and A4 packing lists, in a Windows program. Designed (phase 2).
-- **Analysis tools** (Python, `tools/analysis/`): helpers for looking inside the label PDFs and
-  CSVs; frozen, not part of the product.
-- **Android app** (Kotlin, `android/`): checks every packed parcel by scanning its label with
-  the phone camera; sessions, batches, marks with undo, export/import.
+- **PC app** (repository root): `crates/` (engine, PDF, developer CLI), `app/` (Tauri window with Svelte
+  screens), `tools/` (PDFium download, portable build).
+- **Analysis tools** (Python, `tools/analysis/`): helpers for looking inside the label PDFs and CSVs;
+  frozen, not part of the product.
 
-Status: see [`docs/development/plan.md`](docs/development/plan.md). Start with [`docs/development/`](docs/development/).
+Documentation: [`docs/`](docs/README.md). Status and next step: [`docs/development/plan/`](docs/development/plan/README.md).
+Start with [`docs/development/`](docs/development/README.md).
 
-Documentation: [`docs/`](docs/README.md).
-
-`samples/` and `work/` contain real order data: confidential, git-ignored, never committed.
+`samples/`, `work/` and `tmp/` contain real order data: confidential, git-ignored, never committed.
