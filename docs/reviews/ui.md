@@ -34,7 +34,7 @@ and, on yes, throws the whole draft away: to change which PDFs the batch uses, t
 *Add files…*. Amend opens the same Plan screen, so its **Cancel** also discards the redo.
 
 **Wanted.** **Cancel** on the Plan screen does not discard. It goes back to the PDF selection page with the
-files still listed, without a confirmation. The owner can then remove or add files, press **Read labels**
+files still listed, without a confirmation. The button is named **Back** ([R-UI-3](ui.md#r-ui-3-plan-screen-buttons-back-at-the-top-cancel-amend-beside-save)). The owner can then remove or add files, press **Read labels**
 again, or leave with the selection page's **Cancel**. Only **Cancel** on the PDF selection page discards the
 draft, as today. Amend follows the same rule: its Plan screen's **Cancel** returns to the amend selection
 page ([R-APP-1](app.md)); the batch is untouched until **Save**.
