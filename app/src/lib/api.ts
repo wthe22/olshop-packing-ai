@@ -169,6 +169,14 @@ export interface ReadResult {
   plan: PlanView;
 }
 
+/// What *Amend* opens with (08 › *2. New batch* → *The amend's selection page*): the batch being
+/// redone and its `download/` files, listed already selected in the `state.json` order. Nothing
+/// is read and nothing is written — **Read labels** reads the selection.
+export interface AmendStart {
+  batch: number;
+  files: FileCheck[];
+}
+
 /// The owner's answer about one unseen logo (08 › *The logo prompt*), as Rust's `LogoAnswerInput`
 /// reads it (`kind` is the tag). *Skip all* is the screen's alone: it sends nothing.
 export type LogoAnswer =
@@ -216,8 +224,15 @@ export type PlanEdit =
 export const checkFiles = (paths: string[]): Promise<FileCheck[]> =>
   invoke("check_files", { paths });
 
-export const readLabels = (paths: string[]): Promise<ReadResult> =>
-  invoke("read_labels", { paths });
+/// *Read labels* (08 › *Reading*): read the chosen files and open the Plan screen. `amend` is the
+/// batch being redone when the read comes from the amend's selection page
+/// (08 › *2. New batch* → *The amend's selection page*); `null` for a new batch's file list. The
+/// selection is read exactly as it stands: the batch's own `download/` copy in its stored order,
+/// an added file where the owner put it, a file taken off the list not read at all.
+export const readLabels = (
+  paths: string[],
+  amend: number | null = null,
+): Promise<ReadResult> => invoke("read_labels", { paths, amend });
 
 export const cancelRead = (): Promise<void> => invoke("cancel_read");
 
@@ -248,8 +263,10 @@ export const discardDraft = (): Promise<void> => invoke("discard_draft");
 export const revertLast = (day: string): Promise<void> =>
   invoke("revert_last", { day });
 
-/// *Amend* the last batch (08 › *1. Day*): read its `download/` copy into a draft.
-export const startAmend = (day: string): Promise<ReadResult> =>
+/// *Amend* the last batch (08 › *1. Day*): open the amend's PDF selection page with the batch's
+/// `download/` files already listed. Nothing is read or written until **Read labels**
+/// (`readLabels`) and **Save batch `<b>` again** (`saveBatch`).
+export const startAmend = (day: string): Promise<AmendStart> =>
   invoke("start_amend", { day });
 
 // ------------------------------------------------------------------ Categories (2.12)

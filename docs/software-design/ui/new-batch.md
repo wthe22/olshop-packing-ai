@@ -50,7 +50,8 @@ be changed before its Plan screen opens ([Amend last batch](../app/batch.md)):
 - The batch's own PDFs are listed already selected, from its `download/` copy
   ([day folder](../app/data-folder.md)), in the order stored in `state.json`.
 - **Add files…** and a drop add PDFs ([Q-APP-2](../questions/app.md), default: any PDF on the PC, as
-  in a new batch). **×** takes a PDF off the list; its orders are then not in the batch
+  in a new batch); an added file joins the list after the batch's own files. **×** takes a PDF off the
+  list; its orders are then not in the batch
   ([Q-APP-3](../questions/app.md), default: they stay unsaved and the next batch reads them again).
 - **Read labels** reads the selected files and opens the Plan screen; **Back** from that Plan screen
   returns here with the files still listed.

@@ -74,6 +74,9 @@ export const texts = {
   // 08 › *2. New batch*.
   newBatch: {
     title: (n: number) => `New batch ${n}`,
+    // 08 › *2. New batch* → *The amend's selection page*: the amendment's PDF selection page is
+    // the same screen, titled *Redo batch `<b>`*.
+    amendTitle: (n: number) => `Redo batch ${n}`,
     cancel: "Cancel",
     dropHint: "Drop label PDFs here, or",
     addFiles: "Add files…",
@@ -165,9 +168,10 @@ export const texts = {
     editCategories: "Edit categories",
     // 08 › *3. Plan*: the second of two PDFs with the same name.
     duplicate: (n: number) => `Same name as PDF ${n}`,
-    // 08 › *3. Plan*: the top button, on a new batch and on an amend alike. It is not a discard:
-    // a new batch returns to its file list with the files still listed, an amend to the Day
-    // screen. Only *Cancel* on the file list and an amend's *Cancel amend* discard.
+    // 08 › *3. Plan*: the top button, on a new batch and on an amend alike (the same string, so
+    // one home for it). It is not a discard: it returns to the PDF selection page the batch came
+    // from — the new batch's file list, or the amend's selection page — with the files still
+    // listed. Only *Cancel* on that page and an amend's *Cancel amend* discard.
     back: "Back",
     // 08 › *3. Plan*: bottom, beside *Save batch `<b>` again* on an amend only. It leaves the
     // batch as it was and returns to the Day screen, and never asks (it writes nothing).
@@ -341,26 +345,35 @@ export function saveStageText(
 }
 
 // 08 › *3. Plan*: the Plan screen's two ways out, from the kind of batch. The top button is
-// *Back* on both (it is not a discard); the bottom discard button beside *Save batch* exists on
-// an amend only. Pure, so the choice is tested without a window.
-//
-//   new batch  → top *Back* (returns to the file list, the draft kept); no bottom discard button
-//   amend      → top *Back* (returns to the Day screen, for now: R-APP-1's file-selection page
-//                does not exist yet); bottom *Cancel amend* beside *Save batch `<b>` again*
+// *Back* on both — it returns to the PDF selection page the batch came from, with the files still
+// listed, and is not a discard; the bottom discard button beside *Save batch* exists on an amend
+// only and goes to the Day screen (08 › *2. New batch* → *The amend's selection page*). Which
+// screen each button leads to is part of the helper, so a test reads it without a window.
 
-/// The Plan screen's top button and bottom discard button, as text; `discard` is `null` when
-/// there is no discard button.
+/// The screen a Plan-screen button leads to (08 › *3. Plan*): the PDF selection page (a new
+/// batch's file list, or the amend's selection page) or the Day screen.
+export type PlanTarget = "selection" | "day";
+
+/// The Plan screen's buttons: their texts and the screen each one leads to. `discard` is `null`
+/// when there is no bottom discard button (a new batch).
 export interface PlanButtons {
   top: string;
+  topTarget: PlanTarget;
   discard: string | null;
+  discardTarget: PlanTarget | null;
 }
 
-/// The Plan screen's top button and bottom discard button. `amend` is the batch being redone, or
-/// `null` for a new batch (08 › *3. Plan*).
+/// The Plan screen's top button and bottom discard button, with their targets. `amend` is the
+/// batch being redone, or `null` for a new batch (08 › *3. Plan*): an amend's top *Back* returns
+/// to its selection page and its *Cancel amend* to the Day screen; a new batch has neither a
+/// *Cancel amend* nor a button that leaves for the Day screen (only its file list's *Cancel*
+/// does, and it is not on this screen).
 export function planButtons(amend: number | null): PlanButtons {
   return {
     top: texts.plan.back,
+    topTarget: "selection",
     discard: amend === null ? null : texts.plan.cancelAmend,
+    discardTarget: amend === null ? null : "day",
   };
 }
 

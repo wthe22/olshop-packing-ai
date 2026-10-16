@@ -6,11 +6,11 @@
 |---|---|---|
 | `day_overview(day)` | Read `state.json` of the day | Batches, saved PDFs, totals |
 | `check_files(paths)` | Page count and fingerprint of each chosen file | Name, size, time, page count, "used in batch n" |
-| `read_labels(paths)` | Start reading on a worker thread; emits `read-progress {page, pages}` | A draft id, then orders count, duplicates, warnings, or the stop error |
+| `read_labels(paths, redo)` | Start reading on a worker thread; `redo` is the batch being redone when the read is the amendment's ([New batch](../ui/new-batch.md#the-amends-selection-page)), nothing for a new batch; emits `read-progress {page, pages}` | Orders count, duplicates, warnings, the plan, or the stop error |
 | `cancel_read()` | Stop reading | — |
 | `plan(draft, edits)` | Apply the plan edits (skip, move, add condition, rename) and recount | Picks with counts, runs (contents × orders), suggested names |
 | `save_batch(draft, plan, packing, save_anyway)` | Steps of [Save](batch.md) and the [check before saving](saved-pdf-check.md); emits `save-progress {stage, page, pages}` | Written files and summary, or the check's findings (nothing written until *Save anyway*) |
-| `revert_last(day)` / `start_amend(day)` | Revert / amend | New overview / a draft |
+| `revert_last(day)` / `start_amend(day)` | Revert / open the amendment's PDF selection page | New overview / the batch being redone and its files, already listed ([New batch](../ui/new-batch.md#the-amends-selection-page)); nothing is read yet |
 | `rules_load()` / `rules_check(text or entries, draft?)` / `rules_save(…)` | Categories editor | Entries, errors with line/col, live counts on the open draft |
 | `condition_to_tree(text)` / `tree_to_condition(tree)` | Boxes editor: condition text → boxes, boxes → text (the engine's parser and printer, so the window has no second parser) | Tree of groups and rows, or an error with line/col / the text |
 | `search_orders(conditions, scope)` | Search the saved orders matching the condition boxes; `scope` is `day` (*This day*, the day in the title bar) or `all` (*All days*) | One row per order (Order ID, tracking ID, courier, items, batch, saved PDF name and path) and the order and batch counts |

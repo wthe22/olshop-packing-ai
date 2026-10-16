@@ -15,7 +15,8 @@ What to build is in [../software-design/](../software-design/README.md); what th
 ## Start of every session
 
 1. Read this file, then [plan/README.md](plan/README.md): the first unfinished task is the work. Open its
-   file in `plan/`.
+   file in `plan/`. With no task file left, the plan's Status block says what comes next (usually the
+   owner's review).
 2. Read the design files the task names (in [../software-design/](../software-design/README.md)). Read
    [../business-process/02-data-sources.md](../business-process/02-data-sources.md) before touching CSV or
    PDF code.

@@ -23,6 +23,9 @@
 - Writing: the owner is "the owner", never he/she/they/it/you. The dropship supplier's real name never
   appears: write "the supplier". About 150 lines per file at most; each fact has one home.
 - Setup is one procedure in `docs/development/setup.md`; keep it current when a one-time step changes.
+- After any development work on the app, always run `bash tools/make-portable.sh` so the owner can test
+  the program folder `target/portable/Packing/` immediately. Report it in the handoff; if the build
+  fails, say so and do not call the work ready.
 - Commit after each finished task and delete the task from `docs/development/plan/`; push to
   `origin main`. The owner reviews at the end of each phase; findings go into `docs/reviews/<scope>.md`.
 - The owner is often away and may answer a review in a new session. Whenever the next step is the

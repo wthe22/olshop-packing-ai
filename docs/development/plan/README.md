@@ -14,12 +14,9 @@ Reference for the reading and sorting rules: the Python package `tools/analysis/
 first implementation of the same rules, tested). Port it module by module when a rule is missing
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-Tasks 2.1–2.23 are finished: what they built is in [software-design/](../../software-design/README.md),
-and how to run, build and test it in [../README.md](../README.md). The open work of the phase:
-
-| Task | File | What |
-|---|---|---|
-| 2.24 | [2-24-amend-selection-page.md](2-24-amend-selection-page.md) | An amend opens the PDF selection page first; **Back** from the amend's Plan screen returns there |
+Every task of the phase (2.1–2.24) is finished, so this folder holds no task file. What the tasks built
+is in [software-design/](../../software-design/README.md); how to run, build and test it is in
+[../README.md](../README.md).
 
 Open choices of the owner, each with a default the app follows until the owner decides:
 [Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md),
@@ -28,17 +25,19 @@ Open choices of the owner, each with a default the app follows until the owner d
 
 ## Status
 
-Phase 2 is built (tasks 2.1–2.23) and the owner's review of it is folded in: no review item is open
-([reviews/](../../reviews/README.md)). **Next step — 2.24:**
-[2-24-amend-selection-page.md](2-24-amend-selection-page.md): an amend opens the batch's PDF selection page
-first. The owner has no answer pending: [Q-APP-2 and Q-APP-3](../../software-design/questions/app.md) follow
-their **Defaults** until the owner decides, and 2.24 is built on those defaults.
+Phase 2 is finished: tasks 2.1–2.24 are done, and no review item is open
+([reviews/](../../reviews/README.md)). **Next step — the owner's:** review the running app — a portable
+build, or `app/` under `npm run tauri dev` — against the checklist below, and write the findings. The owner
+has no answer pending: [Q-APP-2 and Q-APP-3](../../software-design/questions/app.md) follow their
+**Defaults** until the owner decides, and the app is built on those defaults.
 
 **Handoff.**
 
-- **What to review when the owner comes back:** the running app — **Amend** on the newest batch shows the
-  batch's label PDFs already listed, and **Back** on the amend's Plan screen returns to that list; the
-  list's **Cancel** and **Cancel amend** both leave the batch as it was and ask nothing.
+- **What to review when the owner comes back:** the running app against the checklist below, and above all
+  the amendment (2.24): **Amend** on the newest batch shows the batch's label PDFs already listed; removing
+  one PDF and pressing **Read labels** gives a plan without its orders; **Back** on that Plan screen returns
+  to the list with the files still there; the list's **Cancel** and **Cancel amend** both leave the batch as
+  it was and ask nothing.
 - **Where the answers go:** `docs/reviews/<scope>.md` (`label.md`, `rules.md`, `app.md`, `ui.md`), one item
   per finding as `R-<SCOPE>-n` ([reviews/README.md](../../reviews/README.md)): what the owner sees and what
   the owner wants.
@@ -51,7 +50,7 @@ their **Defaults** until the owner decides, and 2.24 is built on those defaults.
 
 ## Owner review at the end of the phase
 
-What the owner checks, after 2.15–2.23:
+What the owner checks, after 2.15–2.24:
 
 - Open the same day's packing list: the header must stand clear of the body; a `summary` or `full` list must
   print `×`, not `ÿ`.
@@ -69,6 +68,10 @@ What the owner checks, after 2.15–2.23:
   into one PDF set.
 - After 2.23: the Plan screen's top button is **Back** (it returns to the file list without discarding), and
   an amend's **Cancel amend** leaves the batch as it was.
+- After 2.24: **Amend** on the newest batch opens the selection page, titled *Redo batch 2*, with the
+  batch's PDFs already listed. Remove one PDF and press **Read labels**: its orders are not in the plan.
+  **Back** returns to the list with the files still there, and **Cancel amend** (or the list's **Cancel**)
+  leaves the batch unchanged and asks nothing.
 
 The owner writes findings in [`../../reviews/`](../../reviews/README.md), one file per scope.
 
@@ -77,9 +80,9 @@ The owner writes findings in [`../../reviews/`](../../reviews/README.md), one fi
 In this order.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
-2. [2-24-amend-selection-page.md](2-24-amend-selection-page.md): the open task, and the design files it
-   names; a finding from the running app is written in [../../reviews/](../../reviews/README.md), one
-   file per scope.
+2. [../../reviews/README.md](../../reviews/README.md) and the items open there: the owner's findings, to
+   turn into tasks or questions. No item is open at the moment and no task file is left; the next step is
+   the owner's review (the Status block above), so a new session starts by reading the answers there.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),

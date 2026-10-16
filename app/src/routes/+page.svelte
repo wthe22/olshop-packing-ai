@@ -2,8 +2,9 @@
   // The app shell (08 › *Window frame*, *Start*, *1. Day*, *2. New batch*, *3. Plan*,
   // *5. Categories*, *6. Settings*, *Search*): it finds the data folder, keeps the current day and
   // screen, routes the Tauri commands, and opens Search/Categories/Settings over the current
-  // screen (an open draft is kept). The batch flow is Day → New batch → Plan → Day; the Plan
-  // screen's *Back* returns to New batch with the files still listed.
+  // screen (an open draft is kept). The batch flow is Day → New batch → Plan → Day; an amend is
+  // Day → the amend's selection page → Plan → Day. The Plan screen's *Back* returns to the PDF
+  // selection page with the files still listed, for a new batch and an amend alike.
   import { onMount } from "svelte";
   // Use the plugin's own `confirm`, not `window.confirm`: the dialog plugin patches the global to
   // call `plugin:dialog|confirm`, a command that no longer exists (it is now `message`), so the
@@ -46,8 +47,11 @@
 
   // The batch being prepared: the chosen label files (kept here, so *Back* on the Plan screen
   // shows the file list again with the files still there), the read result and whether the
-  // backend has an open draft (08 › *2. New batch*, *3. Plan*).
+  // backend has an open draft (08 › *2. New batch*, *3. Plan*). `amendBatch` is the batch being
+  // redone while its selection page is open (08 › *The amend's selection page*); `null` for a new
+  // batch.
   let files = $state<api.FileCheck[]>([]);
+  let amendBatch = $state<number | null>(null);
   let readResult = $state<api.ReadResult | null>(null);
   let draftOpen = $state(false);
   // The green *Batch n saved* line on the Day screen, shown for a few seconds (08 › *1. Day*).
@@ -170,6 +174,7 @@
       readResult = null;
     }
     files = [];
+    amendBatch = null;
     return true;
   }
 
@@ -177,12 +182,14 @@
     savedMessage = null;
     overlay = null;
     files = [];
+    amendBatch = null;
     screen = "new-batch";
   }
 
-  /// *Back* on a new batch's Plan screen (08 › *3. Plan*): show the file list again, the files
-  /// still listed and the draft kept; a new *Read labels* replaces it, so the plan changes are
-  /// lost. Nothing is written and nothing is asked.
+  /// *Back* on a Plan screen (08 › *3. Plan*): show the PDF selection page again — the batch's own
+  /// file list, or the amend's selection page — with the files still listed and the draft kept; a
+  /// new *Read labels* replaces it, so the plan changes are lost. Nothing is written and nothing
+  /// is asked.
   function backToFiles() {
     screen = "new-batch";
   }
@@ -198,6 +205,7 @@
     draftOpen = false;
     readResult = null;
     files = [];
+    amendBatch = null;
     overlay = null;
     savedMessage = texts.day.saved(result.batch, result.pdfs, result.packing_lists);
     screen = "day";
@@ -206,13 +214,15 @@
     savedTimer = setTimeout(() => (savedMessage = null), 6000);
   }
 
-  /// Leave the batch for the Day screen: *Cancel* on the PDF selection page, *Cancel amend* and
-  /// an amend's *Back*. Only here is the open draft discarded (nothing is written).
+  /// Leave the batch for the Day screen: *Cancel* on the PDF selection page (a new batch's file
+  /// list and the amend's selection page) and *Cancel amend*. Only here is the open draft
+  /// discarded (nothing is written, and an amend asks nothing).
   async function cancelBatch() {
     if (draftOpen) await api.discardDraft();
     draftOpen = false;
     readResult = null;
     files = [];
+    amendBatch = null;
     screen = "day";
   }
 
@@ -270,8 +280,10 @@
     }
   }
 
-  /// *Amend* the newest batch (08 › *1. Day*): confirm, then read its download copy into a draft
-  /// and open the *Redo batch `<b>`* Plan screen.
+  /// *Amend* the newest batch (08 › *1. Day*): confirm, then open the *Redo batch `<b>`* PDF
+  /// selection page with the batch's own label PDFs already listed
+  /// (08 › *2. New batch* → *The amend's selection page*). Nothing is read and nothing is written
+  /// here; *Read labels* on that page does the read.
   async function amend(batch: api.BatchView) {
     const asked = await confirm(texts.day.confirmAmend(batch.batch, batch.time), {
       title: texts.title,
@@ -280,8 +292,14 @@
     if (!asked) return;
     busy = true;
     try {
-      const result = await api.startAmend(day);
-      onPlan(result);
+      const start = await api.startAmend(day);
+      files = start.files;
+      amendBatch = start.batch;
+      draftOpen = false;
+      readResult = null;
+      savedMessage = null;
+      overlay = null;
+      screen = "new-batch";
     } catch (e) {
       error = String(e);
     }
@@ -336,6 +354,7 @@
   {:else if screen === "new-batch"}
     <NewBatchScreen
       batchNumber={nextBatch}
+      amend={amendBatch}
       {files}
       onFiles={(next) => (files = next)}
       onPlan={onPlan}

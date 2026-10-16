@@ -3,6 +3,10 @@
   // keeps the list, so the Plan screen's *Back* shows it again with the files still there — read
   // them with a progress bar and Cancel, and open the Plan screen; the top *Cancel* discards the
   // draft. Or show a stop message.
+  //
+  // The same screen is the amend's selection page (08 › *The amend's selection page*): titled
+  // *Redo batch `<b>`*, with the batch's own `download/` files already listed in their
+  // `state.json` order, and *Read labels* reading that selection as an amend (`amend`).
   import { onMount } from "svelte";
   import { open } from "@tauri-apps/plugin-dialog";
   import { listen } from "@tauri-apps/api/event";
@@ -14,12 +18,17 @@
 
   let {
     batchNumber,
+    amend,
     files,
     onFiles,
     onPlan,
     onCancel,
   }: {
     batchNumber: number;
+    /// The batch being redone on an amend's selection page (08 › *The amend's selection page*),
+    /// or `null` for a new batch's file list. Decides the title, the order the files are listed
+    /// and read in, and that *Read labels* reads an amend.
+    amend: number | null;
     /// The chosen files. The shell keeps them, so *Back* on the Plan screen shows this list again
     /// with the files still there (08 › *3. Plan*).
     files: api.FileCheck[];
@@ -44,18 +53,23 @@
   let answering = $state(false);
 
   const totalPages = $derived(files.reduce((sum, file) => sum + file.pages, 0));
-  const sorted = $derived([...files].sort((a, b) => a.name.localeCompare(b.name)));
+  // A new batch lists (and reads) its files by name = download time and part number; an amend
+  // keeps the list's order, which is the batch's `download/` copy in the `state.json` order
+  // (08 › *2. New batch*).
+  const listed = $derived(
+    amend === null ? [...files].sort((a, b) => a.name.localeCompare(b.name)) : [...files],
+  );
 
-  // The file a page falls into, from the per-file page counts (the read order is file-name
-  // order). `page` counts from 1.
+  // The file a page falls into, from the per-file page counts (the read order is the list's).
+  // `page` counts from 1.
   const readingFile = $derived.by(() => {
-    if (!progress) return { file: 1, files: sorted.length };
+    if (!progress) return { file: 1, files: listed.length };
     let done = 0;
-    for (let i = 0; i < sorted.length; i += 1) {
-      done += sorted[i].pages;
-      if (progress.page <= done) return { file: i + 1, files: sorted.length };
+    for (let i = 0; i < listed.length; i += 1) {
+      done += listed[i].pages;
+      if (progress.page <= done) return { file: i + 1, files: listed.length };
     }
-    return { file: sorted.length, files: sorted.length };
+    return { file: listed.length, files: listed.length };
   });
 
   const isPdf = (path: string) => path.toLowerCase().endsWith(".pdf");
@@ -96,7 +110,7 @@
   }
 
   async function read() {
-    if (sorted.length === 0) return;
+    if (listed.length === 0) return;
     reading = true;
     cancelling = false;
     progress = null;
@@ -107,7 +121,7 @@
     });
     let result: api.ReadResult | null = null;
     try {
-      result = await api.readLabels(sorted.map((file) => file.path));
+      result = await api.readLabels(listed.map((file) => file.path), amend);
     } catch (e) {
       // *Cancel* returns to the file list; any other stop shows its message with Back.
       if (!cancelling) stop = String(e);
@@ -196,7 +210,7 @@
 
 <main>
   <div class="bar">
-    <h2>{texts.newBatch.title(batchNumber)}</h2>
+    <h2>{amend === null ? texts.newBatch.title(batchNumber) : texts.newBatch.amendTitle(amend)}</h2>
     <span class="grow"></span>
     <button onclick={cancel}>{texts.newBatch.cancel}</button>
   </div>
@@ -230,7 +244,7 @@
     {/if}
 
     <ul class="files">
-      {#each sorted as file (file.path)}
+      {#each listed as file (file.path)}
         <li>
           <span class="name">{file.name}</span>
           <span class="pages">{texts.newBatch.pages(file.pages)}</span>
@@ -249,11 +263,11 @@
 
     <div class="foot">
       <span class="selected">
-        {#if sorted.length > 0}
-          {texts.newBatch.selected(sorted.length, totalPages)}
+        {#if listed.length > 0}
+          {texts.newBatch.selected(listed.length, totalPages)}
         {/if}
       </span>
-      <button class="primary" disabled={sorted.length === 0} onclick={read}>
+      <button class="primary" disabled={listed.length === 0} onclick={read}>
         {texts.newBatch.read}
       </button>
     </div>
