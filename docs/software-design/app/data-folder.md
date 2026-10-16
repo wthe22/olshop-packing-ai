@@ -86,4 +86,6 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
 | `saved[]` | Each saved order: IDs, batch, saved PDF, run, and the fields the Search panel finds it by (`courier`, `total_quantity`, `distinct_items`, `ship_by`, `items` with each line's `name`, `variation`, `seller_sku`, `quantity`) | Duplicate guard; Search ([Search screen](../ui/search.md)). Older orders keep only their IDs ([Q-UI-3](../questions/ui.md)) |
 
 The file is written whole each time (write to `state.json.tmp`, then replace), so a crash
-never leaves half a file. The app does not read the analysis helpers' `work/<day>/state.json`.
+never leaves half a file. A file entry may instead carry `sha256` (64 hex characters): it
+loads and is never matched — the *used in batch n* hint only matters inside one day — and a save
+writes `xxh3` only. The app does not read the analysis helpers' `work/<day>/state.json`.

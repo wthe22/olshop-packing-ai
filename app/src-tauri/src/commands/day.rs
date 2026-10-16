@@ -426,8 +426,9 @@ mod tests {
         FileEntry {
             name: name.to_string(),
             size: 1,
-            sha256: "00".to_string(),
+            xxh3: "00".to_string(),
             pages: 1,
+            legacy_sha256: None,
         }
     }
 

@@ -16,7 +16,6 @@ first implementation of the same rules, tested). Port it module by module when a
 
 | Task | Content | File |
 |---|---|---|
-| 2.20 | One hash for everything: XXH3-64 for the label-file fingerprint | [2-20-one-hash.md](2-20-one-hash.md) |
 | 2.21 | Search for a saved order | [2-21-search.md](2-21-search.md) |
 
 Open choices of the owner, each with a default the app follows until the owner decides:
@@ -26,11 +25,11 @@ Open choices of the owner, each with a default the app follows until the owner d
 
 ## Status
 
-Tasks 2.20 and 2.21 are open; every other task of the phase is finished. The owner's
-review at the end of the phase waits for all of them.
+Task 2.21 is open (it follows 2.20); every other task of the phase is finished. The owner's
+review at the end of the phase waits for it.
 
-**Next step.** 2.20 (one hash, XXH3-64), 2.21 (search). Each task ends with a
-commit that deletes its file from this folder, and a push to `origin main`.
+**Next step.** 2.21 (search). The task ends with a commit that deletes its file from this
+folder, and a push to `origin main`.
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
 
@@ -58,7 +57,7 @@ The owner writes findings in [`../../reviews/`](../../reviews/README.md), one fi
 In this order; each task file also names its design sections.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
-2. The task files in this folder: 2.20, 2.21.
+2. The task files in this folder: 2.21.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),

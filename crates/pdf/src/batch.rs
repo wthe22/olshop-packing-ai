@@ -343,8 +343,9 @@ pub fn save(
         .map(|file| FileEntry {
             name: file.name.clone(),
             size: file.size,
-            sha256: file.fingerprint.sha256.clone(),
+            xxh3: file.fingerprint.xxh3.clone(),
             pages: file.pages,
+            legacy_sha256: None,
         })
         .collect();
 

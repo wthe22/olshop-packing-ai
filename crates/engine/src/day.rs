@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 use jiff::Zoned;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+use xxhash_rust::xxh3::Xxh3;
 
 use crate::names;
 use crate::orders::ReadOrder;
@@ -68,13 +68,20 @@ fn io_error(path: &Path, error: std::io::Error) -> DayError {
 
 // ---------------------------------------------------------------------- state.json
 
-/// A label file read in a batch: name, size, SHA-256 and page count (07 › *`state.json`*).
+/// A label file read in a batch: name, size, XXH3-64 and page count (07 › *`state.json`*).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FileEntry {
     pub name: String,
     pub size: u64,
-    pub sha256: String,
+    /// XXH3-64 of the whole file, 16 lowercase hex characters (07 › *`state.json`*).
+    #[serde(default)]
+    pub xxh3: String,
     pub pages: usize,
+    /// The SHA-256 a day written before 2.20 stored here. Such a day still opens; the value is
+    /// never matched, since the "used twice" hint only matters inside one day, and it is never
+    /// written back: a saved `state.json` carries `xxh3` only.
+    #[serde(rename = "sha256", default, skip_serializing)]
+    pub legacy_sha256: Option<String>,
 }
 
 /// One saved PDF of a batch (07 › *`state.json`*).
@@ -226,13 +233,13 @@ impl DayState {
         from_batches.max(from_saved).unwrap_or(0) + 1
     }
 
-    /// The batch that read this file (`used in batch n`, 07 › *New batch*), by SHA-256 and size.
+    /// The batch that read this file (`used in batch n`, 07 › *New batch*), by XXH3-64 and size.
     pub fn used_in_batch(&self, fingerprint: &Fingerprint) -> Option<i64> {
         self.batches
             .iter()
             .find(|batch| {
                 batch.files.iter().any(|file| {
-                    file.sha256.eq_ignore_ascii_case(&fingerprint.sha256)
+                    file.xxh3.eq_ignore_ascii_case(&fingerprint.xxh3)
                         && file.size == fingerprint.size
                 })
             })
@@ -370,28 +377,20 @@ fn replace(from: &Path, to: &Path) -> std::io::Result<()> {
 
 // ------------------------------------------------------------------- fingerprints
 
-/// A label file's identity: size and SHA-256 of its bytes (07 › *New batch*).
+/// A label file's identity: size and XXH3-64 of its bytes (07 › *New batch*).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Fingerprint {
     pub size: u64,
-    pub sha256: String,
+    pub xxh3: String,
 }
 
-fn to_hex(bytes: &[u8]) -> String {
-    let mut text = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        text.push_str(&format!("{byte:02x}"));
-    }
-    text
-}
-
-/// The size and SHA-256 of a file, read in one pass so a big file is not held in memory.
+/// The size and XXH3-64 of a file, streamed in chunks so a big file is not held in memory.
 pub fn fingerprint(path: &Path) -> Result<Fingerprint, DayError> {
     let mut file = File::open(path).map_err(|error| DayError::Read {
         path: path.to_path_buf(),
         message: error.to_string(),
     })?;
-    let mut hasher = Sha256::new();
+    let mut hasher = Xxh3::new();
     let mut size = 0u64;
     let mut buffer = [0u8; 64 * 1024];
     loop {
@@ -407,7 +406,7 @@ pub fn fingerprint(path: &Path) -> Result<Fingerprint, DayError> {
     }
     Ok(Fingerprint {
         size,
-        sha256: to_hex(&hasher.finalize()),
+        xxh3: format!("{:016x}", hasher.digest()),
     })
 }
 

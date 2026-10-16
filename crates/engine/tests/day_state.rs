@@ -60,12 +60,13 @@ fn read_order(id: &str) -> ReadOrder {
     }
 }
 
-fn file_entry(name: &str, sha: &str) -> FileEntry {
+fn file_entry(name: &str, xxh3: &str) -> FileEntry {
     FileEntry {
         name: name.to_string(),
         size: 10,
-        sha256: sha.to_string(),
+        xxh3: xxh3.to_string(),
         pages: 5,
+        legacy_sha256: None,
     }
 }
 
@@ -171,8 +172,10 @@ fn state_json_matches_the_07_format() {
     assert_eq!(batch["save_time"], "2026-10-07T07:40:12+07:00");
     assert_eq!(batch["files"][0]["name"], "labels_1.pdf");
     assert_eq!(batch["files"][0]["size"], 10);
-    assert_eq!(batch["files"][0]["sha256"], "9f2c");
+    assert_eq!(batch["files"][0]["xxh3"], "9f2c");
     assert_eq!(batch["files"][0]["pages"], 5);
+    // A saved `state.json` carries `xxh3` only; the legacy field is never written back.
+    assert!(batch["files"][0].get("sha256").is_none());
     assert_eq!(batch["pdfs"][0]["number"], 1);
     assert_eq!(batch["pdfs"][0]["code"], "A");
     assert_eq!(batch["pdfs"][0]["name"], "Sepatu");
@@ -311,17 +314,19 @@ fn next_numbers_continue_through_the_day() {
 }
 
 #[test]
-fn fingerprint_is_the_size_and_sha256_of_the_bytes() {
+fn fingerprint_is_the_size_and_xxh3_of_the_bytes() {
     let dir = TempDir::new("fingerprint");
     let path = dir.path().join("labels.pdf");
     fs::write(&path, b"abc").expect("write");
 
     let print = fingerprint(&path).expect("fingerprint");
     assert_eq!(print.size, 3);
-    // sha256("abc") — the streaming read must give the standard digest.
+    // The known XXH3-64 (seed 0) of "abc"; the streaming read must give it ...
+    assert_eq!(print.xxh3, "78af5f94892f3950");
+    // ... and the one-shot XXH3-64 of the same bytes, as 16 lowercase hex characters.
     assert_eq!(
-        print.sha256,
-        "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+        print.xxh3,
+        format!("{:016x}", xxhash_rust::xxh3::xxh3_64(b"abc"))
     );
 
     assert!(matches!(
@@ -346,20 +351,129 @@ fn used_in_batch_finds_the_file_by_fingerprint() {
         |_| Ok(Findings::default()),
     )
     .expect("save");
-    // The batch stores only the short sha in the fixture; make the fingerprint match by hand.
+    // The batch stores only the short hash in the fixture; make the fingerprint match by hand.
     let stored = packing_engine::day::Fingerprint {
         size: 10,
-        sha256: "9f2c".to_string(),
+        xxh3: "9f2c".to_string(),
     };
     assert_eq!(state.used_in_batch(&stored), Some(1));
     assert_eq!(state.used_in_batch(&print), None);
     assert_eq!(
         state.used_in_batch(&packing_engine::day::Fingerprint {
             size: 11,
-            sha256: "9f2c".to_string(),
+            xxh3: "9f2c".to_string(),
         }),
         None
     );
+}
+
+#[test]
+fn the_same_file_is_recognised_twice_and_a_changed_byte_is_not() {
+    let dir = TempDir::new("twice");
+    let day = dir.path().join("2026-10-07");
+
+    // A made-up label file: 500 bytes, so it is not one of the fixtures.
+    let path = day.join("download").join("labels_1.pdf");
+    fs::create_dir_all(path.parent().expect("download")).expect("download");
+    let bytes: Vec<u8> = (0..500u32).map(|i| (i % 251) as u8).collect();
+    fs::write(&path, &bytes).expect("write");
+    let print = fingerprint(&path).expect("fingerprint");
+
+    let mut state = DayState::new("2026-10-07");
+    state.batches.push(packing_engine::day::BatchEntry {
+        batch: 1,
+        save_time: "2026-10-07T07:40:12+07:00".to_string(),
+        files: vec![FileEntry {
+            name: "labels_1.pdf".to_string(),
+            size: print.size,
+            xxh3: print.xxh3.clone(),
+            pages: 5,
+            legacy_sha256: None,
+        }],
+        pdfs: vec![pdf_entry(1)],
+        packing_list: PackingListChoice::default(),
+        warnings: Vec::new(),
+        errors: Vec::new(),
+    });
+    // The same file, again: recognised as used in batch 1.
+    assert_eq!(state.used_in_batch(&print), Some(1));
+
+    // One changed byte gives a different hash, so the file is not recognised (same size).
+    let mut changed = bytes.clone();
+    changed[0] ^= 0x01;
+    fs::write(&path, &changed).expect("write changed");
+    let changed_print = fingerprint(&path).expect("fingerprint");
+    assert_eq!(changed_print.size, print.size);
+    assert_ne!(changed_print.xxh3, print.xxh3);
+    assert_eq!(state.used_in_batch(&changed_print), None);
+}
+
+#[test]
+fn the_streamed_hash_equals_xxh3_64_of_the_whole_made_up_file() {
+    let dir = TempDir::new("stream");
+    let path = dir.path().join("big.pdf");
+    // Larger than the 64 KB read buffer, made up, so the file is hashed in several chunks.
+    let bytes: Vec<u8> = (0..200_000u32)
+        .map(|i| i.wrapping_mul(31).wrapping_add(7) as u8)
+        .collect();
+    fs::write(&path, &bytes).expect("write");
+
+    let print = fingerprint(&path).expect("fingerprint");
+    assert_eq!(print.size, bytes.len() as u64);
+    // The one-shot XXH3-64 of the same bytes: the streaming read must give the same digest.
+    assert_eq!(
+        print.xxh3,
+        format!("{:016x}", xxhash_rust::xxh3::xxh3_64(&bytes))
+    );
+    assert_eq!(print.xxh3.len(), 16);
+    assert_eq!(print.xxh3, print.xxh3.to_lowercase());
+}
+
+#[test]
+fn a_day_with_sha256_entries_loads_and_the_legacy_hash_is_never_matched() {
+    let dir = TempDir::new("legacy");
+    let day = dir.path().join("2026-10-07");
+    fs::create_dir_all(&day).expect("create day");
+    // A day written by the older code: the file entry carries `sha256`, no `xxh3`.
+    let legacy = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    let json = format!(
+        r#"{{
+  "day": "2026-10-07",
+  "batches": [
+    {{
+      "batch": 1,
+      "save_time": "2026-10-07T07:40:12+07:00",
+      "files": [{{"name": "labels_1.pdf", "size": 3, "sha256": "{legacy}", "pages": 5}}],
+      "pdfs": [],
+      "packing_list": {{"scope": "whole", "layouts": ["pick"]}}
+    }}
+  ],
+  "saved": []
+}}"#
+    );
+    fs::write(day.join("state.json"), json).expect("write legacy state");
+
+    let state = DayState::load(&day).expect("load legacy day");
+    assert_eq!(state.batches.len(), 1);
+    // The value is read into the legacy field, not the new one.
+    assert_eq!(
+        state.batches[0].files[0].legacy_sha256.as_deref(),
+        Some(legacy)
+    );
+    assert!(state.batches[0].files[0].xxh3.is_empty());
+
+    // The legacy hash is never matched, even by a fingerprint carrying the same value.
+    let same_value = packing_engine::day::Fingerprint {
+        size: 3,
+        xxh3: legacy.to_string(),
+    };
+    assert_eq!(state.used_in_batch(&same_value), None);
+
+    // Saving writes `xxh3` only: the legacy key does not come back.
+    state.save(&day).expect("save");
+    let text = fs::read_to_string(day.join("state.json")).expect("read");
+    assert!(!text.contains("sha256"), "{text}");
+    assert!(text.contains("\"xxh3\""), "{text}");
 }
 
 #[test]
