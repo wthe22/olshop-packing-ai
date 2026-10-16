@@ -21,12 +21,12 @@ wording in `saved-pdf-check.md`, `ui/messages.md` and `ui/day.md`.
 
 ## Q-APP-2 — Where an added PDF comes from on an amend
 
-**Words.** An amend opens a page where the owner selects the batch's label PDFs
-([New batch](../ui/new-batch.md#the-amends-selection-page)): the batch's current PDFs are listed,
-already selected. **Add files…** adds more. A new batch adds files from anywhere with **Add files…**
-(the Windows file dialog) or by dropping them on the window, and every batch keeps a `download/` copy of
-each file it read ([day folder](../app/data-folder.md)), so a file read earlier the same day can be
-listed again without the original.
+**Words.** An amend's Plan screen's **Back** shows a page where the owner selects the batch's label
+PDFs ([New batch](../ui/new-batch.md#the-amends-selection-page)): the current selection is listed
+(the batch's own PDFs at first), already selected. **Add files…** adds more. A new batch adds files
+from anywhere with **Add files…** (the Windows file dialog) or by dropping them on the window, and
+every batch keeps a `download/` copy of each file it read ([day folder](../app/data-folder.md)), so a
+file read earlier the same day can be listed again without the original.
 
 **Example.** Batch 2 was saved from two of the download's three files. The owner presses **Amend** and
 wants the third file in: it is still in Downloads, and it was never read today.

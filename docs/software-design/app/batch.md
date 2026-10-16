@@ -47,14 +47,17 @@ nothing.
 
 **Amend last batch** — for "I fixed a category, do the last batch again":
 
-1. The **selection page** opens ([New batch](../ui/new-batch.md#the-amends-selection-page)): the
-   batch's label PDFs are listed, already selected, read from its `download/` copy in the order
-   stored in `state.json`. The owner adds PDFs ([Q-APP-2](../questions/app.md)) and takes PDFs off
-   the list ([Q-APP-3](../questions/app.md)).
-2. **Read labels** reads the selected files: the batch's own pages again in the same order, an
-   added file as in a new batch. The Plan screen opens with their orders and the current
-   `categories.toml`; the duplicate guard ignores the batch's own orders. **Back** on the Plan
-   screen returns to the selection page with the files still listed.
+1. The **Plan screen** opens ([Plan](../ui/plan.md)): the batch's own label PDFs are read again
+   from its `download/` copy in the order stored in `state.json`, with the current
+   `categories.toml`. The screen is titled *Redo batch `<b>`*; the duplicate guard ignores the
+   batch's own orders and the numbers are reused.
+2. **Back** on that Plan screen shows the **selection page**
+   ([New batch](../ui/new-batch.md#the-amends-selection-page)): the current selection is listed —
+   the batch's PDFs at first, then what the owner chose. The owner adds PDFs
+   ([Q-APP-2](../questions/app.md)) and takes PDFs off the list ([Q-APP-3](../questions/app.md)).
+   **Read labels** reads the selection (the batch's own pages again in the same order, an added
+   file as in a new batch) and opens the Plan screen again; the plan changes made before **Back**
+   are lost, as for a new batch.
 3. **Save batch `<b>` again** writes a new `batch <b>.partial/` with the same first number, a
    `download/` copy of the files read and the same packing-list choice, takes the place of the old
    folder, and writes the batch into `state.json`. **Cancel amend** (bottom, beside the save

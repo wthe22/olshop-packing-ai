@@ -3,16 +3,18 @@
   // *5. Categories*, *6. Settings*, *Search*): it finds the data folder, keeps the current day and
   // screen, routes the Tauri commands, and opens Search/Categories/Settings over the current
   // screen (an open draft is kept). The batch flow is Day → New batch → Plan → Day; an amend is
-  // Day → the amend's selection page → Plan → Day. The Plan screen's *Back* returns to the PDF
-  // selection page with the files still listed, for a new batch and an amend alike.
+  // Day → Plan (the batch's own files read again) → *Back* → the amend's selection page → Plan →
+  // Day. The Plan screen's *Back* returns to the PDF selection page with the files still listed,
+  // for a new batch and an amend alike.
   import { onMount } from "svelte";
   // Use the plugin's own `confirm`, not `window.confirm`: the dialog plugin patches the global to
   // call `plugin:dialog|confirm`, a command that no longer exists (it is now `message`), so the
   // global rejects and the promise it returns is always truthy. The plugin's `confirm` goes through
   // `message` and must be awaited.
   import { confirm, open } from "@tauri-apps/plugin-dialog";
+  import { listen } from "@tauri-apps/api/event";
   import * as api from "../lib/api";
-  import { texts } from "../texts";
+  import { texts, amendOpens } from "../texts";
   import Frame from "../lib/Frame.svelte";
   import StartPrompt from "../lib/StartPrompt.svelte";
   import DayScreen from "../lib/DayScreen.svelte";
@@ -48,12 +50,16 @@
   // The batch being prepared: the chosen label files (kept here, so *Back* on the Plan screen
   // shows the file list again with the files still there), the read result and whether the
   // backend has an open draft (08 › *2. New batch*, *3. Plan*). `amendBatch` is the batch being
-  // redone while its selection page is open (08 › *The amend's selection page*); `null` for a new
-  // batch.
+  // redone, from **Amend** until the flow ends (08 › *The amend's selection page*); `null` for a
+  // new batch.
   let files = $state<api.FileCheck[]>([]);
   let amendBatch = $state<number | null>(null);
   let readResult = $state<api.ReadResult | null>(null);
   let draftOpen = $state(false);
+  // The progress of *Amend*'s read of the batch's own files (the `read-progress` event), shown on
+  // the Day screen until the Plan screen opens (08 › *1. Day* → *3. Plan*); `null` when nothing
+  // reads.
+  let amendReading = $state<api.ReadProgress | null>(null);
   // The green *Batch n saved* line on the Day screen, shown for a few seconds (08 › *1. Day*).
   let savedMessage = $state<string | null>(null);
   let savedTimer: ReturnType<typeof setTimeout> | undefined;
@@ -280,10 +286,11 @@
     }
   }
 
-  /// *Amend* the newest batch (08 › *1. Day*): confirm, then open the *Redo batch `<b>`* PDF
-  /// selection page with the batch's own label PDFs already listed
-  /// (08 › *2. New batch* → *The amend's selection page*). Nothing is read and nothing is written
-  /// here; *Read labels* on that page does the read.
+  /// *Amend* the newest batch (08 › *1. Day* → *3. Plan*): confirm, then read the batch's own
+  /// `download/` files again and open the *Redo batch `<b>`* Plan screen at once, the draft open.
+  /// The batch's file list is kept, so the Plan screen's *Back* shows the selection page with the
+  /// current selection listed (08 › *2. New batch* → *The amend's selection page*). The read's
+  /// `read-progress` events show on the Day screen until the Plan screen opens.
   async function amend(batch: api.BatchView) {
     const asked = await confirm(texts.day.confirmAmend(batch.batch, batch.time), {
       title: texts.title,
@@ -291,18 +298,24 @@
     });
     if (!asked) return;
     busy = true;
+    amendReading = null;
+    const unlisten = await listen<api.ReadProgress>("read-progress", (event) => {
+      amendReading = event.payload;
+    });
     try {
       const start = await api.startAmend(day);
+      readResult = start.read;
       files = start.files;
       amendBatch = start.batch;
-      draftOpen = false;
-      readResult = null;
+      draftOpen = true;
       savedMessage = null;
       overlay = null;
-      screen = "new-batch";
+      screen = amendOpens();
     } catch (e) {
       error = String(e);
     }
+    unlisten();
+    amendReading = null;
     busy = false;
   }
 
@@ -345,6 +358,7 @@
     <DayScreen
       {overview}
       saved={savedMessage}
+      reading={amendReading}
       onOpen={openFile}
       onOpenFolder={openFolder}
       onNewBatch={startBatch}

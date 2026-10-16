@@ -34,10 +34,10 @@ has no answer pending: [Q-APP-2 and Q-APP-3](../../software-design/questions/app
 **Handoff.**
 
 - **What to review when the owner comes back:** the running app against the checklist below, and above all
-  the amendment (2.24): **Amend** on the newest batch shows the batch's label PDFs already listed; removing
-  one PDF and pressing **Read labels** gives a plan without its orders; **Back** on that Plan screen returns
-  to the list with the files still there; the list's **Cancel** and **Cancel amend** both leave the batch as
-  it was and ask nothing.
+  the amendment (2.24): **Amend** on the newest batch reads the batch's own labels again and opens the Plan
+  screen (the picks), titled *Redo batch 2*; **Back** there shows the selection page with the batch's PDFs
+  listed, and removing one PDF and pressing **Read labels** gives a plan without its orders; the list's
+  **Cancel** and **Cancel amend** both leave the batch as it was and ask nothing.
 - **Where the answers go:** `docs/reviews/<scope>.md` (`label.md`, `rules.md`, `app.md`, `ui.md`), one item
   per finding as `R-<SCOPE>-n` ([reviews/README.md](../../reviews/README.md)): what the owner sees and what
   the owner wants.
@@ -68,10 +68,11 @@ What the owner checks, after 2.15–2.24:
   into one PDF set.
 - After 2.23: the Plan screen's top button is **Back** (it returns to the file list without discarding), and
   an amend's **Cancel amend** leaves the batch as it was.
-- After 2.24: **Amend** on the newest batch opens the selection page, titled *Redo batch 2*, with the
-  batch's PDFs already listed. Remove one PDF and press **Read labels**: its orders are not in the plan.
-  **Back** returns to the list with the files still there, and **Cancel amend** (or the list's **Cancel**)
-  leaves the batch unchanged and asks nothing.
+- After 2.24: **Amend** on the newest batch reads the batch's own label PDFs again and opens the Plan
+  screen, titled *Redo batch 2*. **Back** shows the selection page with the batch's PDFs already listed.
+  Remove one PDF and press **Read labels**: its orders are not in the plan. **Back** returns to the list with
+  the files still there, and **Cancel amend** (or the list's **Cancel**) leaves the batch unchanged and asks
+  nothing.
 
 The owner writes findings in [`../../reviews/`](../../reviews/README.md), one file per scope.
 

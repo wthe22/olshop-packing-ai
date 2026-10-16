@@ -3,14 +3,15 @@
 // selection page — the new batch's file list, or the amend's selection page — with the files still
 // listed. The bottom row's discard button depends on which it is: none on a new batch (only
 // *Save batch*), *Cancel amend* beside *Save batch `<b>` again* on an amend — and *Cancel amend*
-// goes to the Day screen. Pure logic; no window opens and nothing is read.
+// goes to the Day screen. **Amend** itself opens the Plan screen first (the picks), not the
+// selection page. Pure logic; no window opens and nothing is read.
 //
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { texts, planButtons } from "../src/texts.ts";
+import { texts, planButtons, amendOpens } from "../src/texts.ts";
 
 test("the Plan screen's way-out texts are the designed words", () => {
   assert.equal(texts.plan.back, "Back");
@@ -45,6 +46,17 @@ test("the top button is *Back* on both kinds of batch, and neither leaves for th
   // Only *Cancel amend* leaves for the Day screen.
   assert.notEqual(planButtons(5).topTarget, "day");
   assert.notEqual(planButtons(null).topTarget, "day");
+});
+
+test("Amend opens the Plan screen (the picks), not the PDF selection page", () => {
+  // 08 › *1. Day* → *3. Plan*: the batch's own files are read again and the Plan screen opens at
+  // once; the selection page comes only from that Plan screen's *Back*.
+  assert.equal(amendOpens(), "plan");
+  assert.notEqual(amendOpens(), "new-batch");
+});
+
+test("the amend's read shows the designed words while the batch's labels are read again", () => {
+  assert.equal(texts.day.amendReading(143, 257), "Reading the batch's labels …  page 143 of 257");
 });
 
 test("a new batch's Plan screen has neither: no *Cancel amend* and no Day target", () => {

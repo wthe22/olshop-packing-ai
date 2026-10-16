@@ -31,9 +31,12 @@ The start screen: what has been saved for the day, and the way to the next batch
     orders can be saved again. If you already printed them, throw the printed labels away."
     [Cancel] [Undo batch 2]
   - Amend asks: "Redo batch 2 with the current categories? Batch 2 was saved at 09:12. If you
-    already printed it, print it again after saving." [Cancel] [Redo batch 2] opens the amend's
-    selection page with the batch's PDFs ([New batch › The amend's selection page](new-batch.md#the-amends-selection-page));
-    **Read labels** there opens the Plan screen.
+    already printed it, print it again after saving." [Cancel] [Redo batch 2] reads the batch's own
+    label PDFs again — the window shows "Reading the batch's labels …  page 143 of 257" with a
+    progress bar — and opens the Plan screen, titled *Redo batch 2* ([Plan](plan.md)). That screen's
+    **Back** shows the amend's selection page with the current selection listed
+    ([New batch › The amend's selection page](new-batch.md#the-amends-selection-page)); **Read
+    labels** there opens the Plan screen again.
 - **Warnings ▸** expands the batch's warnings (same texts as on the Plan screen).
 - **Saved with `<n>` errors ▸** appears on a batch saved anyway with the check's errors
   ([saved-pdf-check.md](../app/saved-pdf-check.md)) and expands them; **Warnings ▸** beside it

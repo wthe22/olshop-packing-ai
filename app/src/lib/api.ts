@@ -169,12 +169,14 @@ export interface ReadResult {
   plan: PlanView;
 }
 
-/// What *Amend* opens with (08 › *2. New batch* → *The amend's selection page*): the batch being
-/// redone and its `download/` files, listed already selected in the `state.json` order. Nothing
-/// is read and nothing is written — **Read labels** reads the selection.
+/// What *Amend* opens with (08 › *1. Day* → *3. Plan*): the batch being redone, its `download/`
+/// files (the selection page's starting list, in the `state.json` order) and the read of those
+/// files as an amendment — the Plan screen shows `read` at once, the draft open.
 export interface AmendStart {
   batch: number;
   files: FileCheck[];
+  /// The read of the batch's own files, shaped as `readLabels` returns for an amend.
+  read: ReadResult;
 }
 
 /// The owner's answer about one unseen logo (08 › *The logo prompt*), as Rust's `LogoAnswerInput`
@@ -263,9 +265,10 @@ export const discardDraft = (): Promise<void> => invoke("discard_draft");
 export const revertLast = (day: string): Promise<void> =>
   invoke("revert_last", { day });
 
-/// *Amend* the last batch (08 › *1. Day*): open the amend's PDF selection page with the batch's
-/// `download/` files already listed. Nothing is read or written until **Read labels**
-/// (`readLabels`) and **Save batch `<b>` again** (`saveBatch`).
+/// *Amend* the last batch (08 › *1. Day*): read the batch's own `download/` files again and return
+/// its file list with the read, so the Plan screen opens at once with the draft open. Nothing is
+/// written until **Save batch `<b>` again** (`saveBatch`); the list is what the Plan screen's
+/// *Back* shows on the selection page.
 export const startAmend = (day: string): Promise<AmendStart> =>
   invoke("start_amend", { day });
 

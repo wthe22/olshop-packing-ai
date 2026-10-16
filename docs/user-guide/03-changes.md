@@ -12,13 +12,14 @@ Only the newest batch can be changed — later batches depend on it.
   nothing.
 - **Amend** — "I fixed a category, do the last batch again". It asks:
   "Redo batch 2 with the current categories? Batch 2 was saved at 09:12. If you already printed
-  it, print it again after saving." [Cancel] [Redo batch 2]. The batch's own label files are listed
-  again; add PDFs with **Add files…** or drop them, and remove one with **×**. Then press **Read
-  labels** to open the Plan screen (titled *Redo batch 2*, button *Save batch 2 again*). Removing a
-  file leaves its orders unsaved, so the next batch picks them up again. **Save batch 2 again**
-  writes it again over the old one; **Back** (top) returns to the file list with the files still
-  there; **Cancel amend** (at the bottom) or **Cancel** on the file list leaves the batch unchanged,
-  and neither asks.
+  it, print it again after saving." [Cancel] [Redo batch 2]. The batch's own label files are read
+  again and the **Plan** screen opens (titled *Redo batch 2*, button *Save batch 2 again*). To
+  change which PDFs go in, press **Back** (top): the file list shows the batch's PDFs already
+  selected; add PDFs with **Add files…** or drop them, remove one with **×**, then press **Read
+  labels** to open the Plan screen again. Removing a file leaves its orders unsaved, so the next
+  batch picks them up again. **Save batch 2 again** writes it again over the old one; **Cancel
+  amend** (at the bottom) or **Cancel** on the file list leaves the batch unchanged, and neither
+  asks.
 
 ## Editing your categories
 

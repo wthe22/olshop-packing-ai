@@ -33,8 +33,8 @@ Choose the label files of this batch, then read them.
 
 ## The amend's selection page
 
-**Amend** on the newest batch opens this page, titled *Redo batch 2*, so the batch's label PDFs can
-be changed before its Plan screen opens ([Amend last batch](../app/batch.md)):
+**Back** on the amend's Plan screen ([Plan](plan.md)) opens this page, titled *Redo batch 2*, so the
+batch's label PDFs can be changed ([Amend last batch](../app/batch.md)):
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │  Redo batch 2                                                           [Cancel]       │
@@ -47,14 +47,16 @@ be changed before its Plan screen opens ([Amend last batch](../app/batch.md)):
 │  Selected: 2 files · 257 pages                                         [ Read labels ] │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
-- The batch's own PDFs are listed already selected, from its `download/` copy
-  ([day folder](../app/data-folder.md)), in the order stored in `state.json`.
+- The current selection is listed: the batch's own PDFs first, from its `download/` copy
+  ([day folder](../app/data-folder.md)), in the order stored in `state.json`, then what the owner
+  chose here before.
 - **Add files…** and a drop add PDFs ([Q-APP-2](../questions/app.md), default: any PDF on the PC, as
   in a new batch); an added file joins the list after the batch's own files. **×** takes a PDF off the
   list; its orders are then not in the batch
   ([Q-APP-3](../questions/app.md), default: they stay unsaved and the next batch reads them again).
-- **Read labels** reads the selected files and opens the Plan screen; **Back** from that Plan screen
-  returns here with the files still listed.
+- **Read labels** reads the selection as an amend and opens the Plan screen again (the plan changes
+  made before **Back** are lost); **Back** from that Plan screen returns here with the files still
+  listed.
 - **Cancel** returns to the Day screen and writes nothing, and never asks: an amend writes nothing
   before **Save batch 2 again**.
 

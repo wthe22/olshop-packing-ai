@@ -7,6 +7,7 @@
   let {
     overview,
     saved,
+    reading,
     onOpen,
     onOpenFolder,
     onNewBatch,
@@ -15,6 +16,9 @@
   }: {
     overview: DayOverview | null;
     saved: string | null;
+    /// *Amend*'s read of the batch's own files (`read-progress`): its page progress is shown until
+    /// the Plan screen opens (08 › *1. Day* → *3. Plan*); `null` when nothing reads.
+    reading: { page: number; pages: number } | null;
     onOpen: (path: string) => void;
     onOpenFolder: (path: string) => void;
     onNewBatch: () => void;
@@ -58,6 +62,13 @@
 
   {#if saved}
     <p class="saved">{saved}</p>
+  {/if}
+
+  {#if reading}
+    <div class="reading">
+      <p class="muted">{texts.day.amendReading(reading.page, reading.pages)}</p>
+      <progress max={reading.pages} value={reading.page}></progress>
+    </div>
   {/if}
 
   {#if !overview}
@@ -160,6 +171,24 @@
     border-radius: 4px;
     background: #eaf7ea;
     color: #1f6f2f;
+  }
+
+  /* 08 › *1. Day* → *3. Plan*: *Amend*'s read of the batch's own files, shown with a progress bar
+     until the Plan screen opens. */
+  .reading {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+  }
+
+  .reading progress {
+    width: 100%;
+    height: 1.1rem;
+  }
+
+  .reading .muted {
+    margin: 0;
   }
 
   .link {

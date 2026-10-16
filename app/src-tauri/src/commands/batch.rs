@@ -99,13 +99,21 @@ pub struct ReadResult {
     plan: PlanView,
 }
 
-/// What *Amend* opens with (08 › *2. New batch* → *The amend's selection page*): the batch being
-/// redone and its `download/` files, listed already selected in the order stored in
-/// `state.json`. Nothing is read and nothing is written — **Read labels** reads the selection.
+/// What *Amend* opens with (08 › *1. Day* → *3. Plan*): the batch being redone, its `download/`
+/// files listed already selected in the order stored in `state.json`, and the read of those files
+/// as an amendment — the Plan screen opens with it at once, the draft open. **Back** on that Plan
+/// screen shows the selection page from `files`; only **Save batch `<b>` again** writes, so nothing
+/// here touches `state.json` (07 › *Amend*).
 #[derive(Serialize)]
 pub struct AmendStart {
+    /// The batch being redone: titles the Plan screen and the selection page *Redo batch `<b>`*.
     batch: i64,
+    /// The batch's `download/` files, already selected — the selection page's starting list
+    /// (08 › *2. New batch* → *The amend's selection page*, Q-APP-2).
     files: Vec<FileCheckView>,
+    /// The read of the batch's own files, shaped as `read_labels` returns for an amend: the Plan
+    /// screen shows it at once ([`ReadResult`]).
+    read: ReadResult,
 }
 
 /// One unseen logo as the logo prompt shows it (08 › *2. New batch* → *The logo prompt*): the
@@ -699,27 +707,34 @@ fn locked_file(folder: &Path) -> Option<PathBuf> {
     None
 }
 
-/// Amend the last batch (07 › *Amend*): open its selection page with the batch's `download/`
-/// files listed already selected, in the order stored in `state.json`
-/// (08 › *2. New batch* → *The amend's selection page*). Nothing is read here and nothing is
-/// written: **Read labels** reads the selection ([`read_amend_draft`]). Returns the batch being
-/// redone and its files.
-fn start_amend_impl(state: &AppState, day: &str) -> Result<AmendStart, String> {
+/// Amend the last batch (08 › *1. Day* → *3. Plan*): read the batch's own `download/` files again
+/// — the order stored in `state.json`, the batch's orders ignored by the duplicate guard and its
+/// numbers reused ([`read_amend_draft`]) — and open the *Redo batch `<b>`* Plan screen with them,
+/// the draft open. The batch's file list comes back too, so the Plan screen's *Back* shows the
+/// selection page listing the current selection
+/// (08 › *2. New batch* → *The amend's selection page*). Nothing is written.
+fn start_amend_impl(
+    state: &AppState,
+    day: &str,
+    on_progress: impl Fn(Progress) + Send + 'static,
+) -> Result<AmendStart, String> {
     state.set_day(day);
     let day_dir = state.day_dir()?;
     let day_state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
     let amend = day_state
         .amend(&day_dir)
         .ok_or_else(|| "No batch to redo on this day.".to_string())?;
-    // The list is checked against the day state without the batch, so the batch's own files are
-    // not marked *used in batch `<b>`*.
-    let paths = amend.files;
-    let inner = state.with_worker(|worker| batch::check_files(worker, &paths, &amend.state))?;
-    let checks = inner.map_err(|error| error.to_string())?;
-    Ok(AmendStart {
-        batch: amend.batch,
-        files: checks.into_iter().map(file_check_view).collect(),
-    })
+    // The selection page's starting list: the batch's own `download/` files, checked against the
+    // day state without the batch, so none is marked *used in batch `<b>`* (Q-APP-2).
+    let checks = state
+        .with_worker(|worker| batch::check_files(worker, &amend.files, &amend.state))?
+        .map_err(|error| error.to_string())?;
+    let files = checks.into_iter().map(file_check_view).collect();
+    let batch = amend.batch;
+    // The read is the amendment's (the selection page's **Read labels** path): the batch's orders
+    // are not seen as already saved and its numbers are reused.
+    let read = read_amend_draft(state, amend.files, batch, on_progress)?;
+    Ok(AmendStart { batch, files, read })
 }
 
 /// The amend's **Read labels** (07 › *Amend*): read the selection with the batch removed from
@@ -1086,14 +1101,24 @@ pub fn revert_last(state: State<'_, AppState>, day: String) -> Result<(), String
     revert_last_impl(&state, &day)
 }
 
-/// *Amend* the last batch (08 › *1. Day*): open the *Redo batch `<b>`* selection page with the
-/// batch's `download/` files already listed (08 › *2. New batch* → *The amend's selection page*).
-/// Runs on a blocking thread; no progress is shown, and nothing is read or written here.
+/// *Amend* the last batch (08 › *1. Day* → *3. Plan*): read the batch's own `download/` files and
+/// open the *Redo batch `<b>`* Plan screen with them, the draft open; the batch's file list comes
+/// back for the *Back* selection page (08 › *2. New batch* → *The amend's selection page*). Runs
+/// on a blocking thread, emitting `read-progress {page, pages}` as a new batch's read does.
 #[tauri::command]
 pub async fn start_amend(app: AppHandle, day: String) -> Result<AmendStart, String> {
     tauri::async_runtime::spawn_blocking(move || {
+        let progress_app = app.clone();
         let state = app.state::<AppState>();
-        start_amend_impl(&state, &day)
+        start_amend_impl(&state, &day, move |progress: Progress| {
+            let _ = progress_app.emit(
+                "read-progress",
+                ReadProgress {
+                    page: progress.page,
+                    pages: progress.pages,
+                },
+            );
+        })
     })
     .await
     .map_err(|error| format!("the amend task stopped: {error}"))?
@@ -1918,18 +1943,17 @@ mod tests {
         let folder = day_dir.join("batch 1");
         assert!(folder.join("download").is_dir());
 
-        // *Amend* opens the selection page with the batch's own download copy listed.
-        let start = start_amend_impl(&state, "2026-10-07").expect("amend");
+        // *Amend* reads the batch's own download copy at once and opens the Plan screen: its file
+        // list comes back for the selection page, the read holds the batch's own orders (none seen
+        // as already saved) and the draft is open.
+        let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
         assert_eq!(start.batch, 1);
         assert_eq!(start.files.len(), 1);
         assert_eq!(start.files[0].name, "labels-slip.pdf");
-
-        // *Read labels* reads that copy; its orders are not seen as already saved.
-        let copy = folder.join("download").join("labels-slip.pdf");
-        let read = read_amend_draft(&state, vec![copy], 1, |_| {}).expect("amend read");
-        assert_eq!(read.amend, Some(1));
-        assert_eq!(read.orders, 23);
-        assert_eq!(read.already_saved, 0);
+        assert_eq!(start.read.amend, Some(1));
+        assert_eq!(start.read.orders, 23);
+        assert_eq!(start.read.already_saved, 0);
+        state.with_draft(|_| ()).expect("the amend draft is open");
 
         // Saving again replaces batch 1 (same number, one batch in the state).
         assert_eq!(
@@ -1944,7 +1968,7 @@ mod tests {
         assert!(folder.is_dir());
 
         // Cancel leaves the old batch untouched.
-        start_amend_impl(&state, "2026-10-07").expect("amend again");
+        start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend again");
         state.clear_draft();
         assert!(folder.is_dir());
         assert_eq!(DayState::load(&day_dir).expect("state").batches.len(), 1);
@@ -1952,17 +1976,19 @@ mod tests {
         std::fs::remove_dir_all(&dir).ok();
     }
 
-    /// 2.24: **Amend** opens the amendment's selection page
-    /// (08 › *2. New batch* → *The amend's selection page*) with the batch's own `download/` files
-    /// listed already selected in the `state.json` order, and writes nothing — not even a draft.
-    /// **Read labels** then reads the selection and **Save batch 1 again** replaces the batch.
+    /// 2.24 (corrected): **Amend** on the newest batch reads the batch's own `download/` files in
+    /// the `state.json` order and opens the Plan screen at once — the picks first, not the PDF
+    /// selection page — with the draft open, leaving `state.json` byte-identical until **Save
+    /// batch 1 again**. The batch's file list comes back for the *Back* selection page, listed
+    /// already selected in that order (08 › *1. Day* → *3. Plan*,
+    /// 08 › *2. New batch* → *The amend's selection page*).
     #[test]
-    fn amend_opens_the_selection_page_lists_the_batchs_files_and_writes_nothing() {
+    fn amend_starts_on_the_plan_reads_the_batchs_files_and_writes_nothing() {
         let Some(_vendor) = vendor_dir() else {
             eprintln!("skipped: run tools/get-pdfium.sh");
             return;
         };
-        let dir = temp_dir("amend-selection");
+        let dir = temp_dir("amend-start");
         std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
         let state = app_state(&dir);
         let parts = state
@@ -1980,10 +2006,24 @@ mod tests {
         let download = day_dir.join("batch 1").join("download");
         let before = std::fs::read(day_dir.join("state.json")).expect("state.json");
 
-        // The selection page: the batch's files, listed already selected in `state.json` order,
-        // with their page counts and no *used in batch 1* mark of their own.
-        let start = start_amend_impl(&state, "2026-10-07").expect("amend");
+        // *Amend* opens the Plan screen: the batch's own orders read again, none seen as already
+        // saved, and the draft open.
+        let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
         assert_eq!(start.batch, 1);
+        assert_eq!(start.read.amend, Some(1));
+        assert_eq!(start.read.files, 2);
+        assert_eq!(start.read.orders, 2);
+        assert_eq!(
+            start.read.already_saved, 0,
+            "the batch's own orders are re-read"
+        );
+        assert_eq!(plan_orders(&start.read.plan), 2);
+        state
+            .with_draft(|open| assert_eq!(open.amend.as_ref().map(|amend| amend.batch), Some(1)))
+            .expect("the amend draft is open");
+
+        // The *Back* selection page's list: the batch's `download/` copies, already selected in
+        // `state.json` order, with their page counts and no *used in batch 1* mark of their own.
         let listed: Vec<&str> = start.files.iter().map(|file| file.name.as_str()).collect();
         assert_eq!(listed, vec!["part1.pdf", "part2.pdf"]);
         assert!(start.files.iter().all(|file| file.pages > 0));
@@ -1998,28 +2038,11 @@ mod tests {
             start.files.iter().all(|file| file.used_in_batch.is_none()),
             "the batch's own files are not marked *used in batch*"
         );
-        assert!(
-            state.with_draft(|_| ()).is_err(),
-            "the selection page reads nothing: no draft is open"
-        );
         assert_eq!(
             std::fs::read(day_dir.join("state.json")).expect("state.json"),
             before,
-            "state.json is byte-identical"
+            "state.json is byte-identical until Save"
         );
-
-        // *Read labels* reads exactly the selection.
-        let read = read_amend_draft(
-            &state,
-            vec![download.join("part1.pdf"), download.join("part2.pdf")],
-            1,
-            |_| {},
-        )
-        .expect("amend read");
-        assert_eq!(read.amend, Some(1));
-        assert_eq!(read.files, 2);
-        assert_eq!(read.orders, 2);
-        assert_eq!(read.already_saved, 0, "the batch's own orders are re-read");
 
         // *Save batch 1 again* replaces the batch: one batch, the same number.
         assert_eq!(
@@ -2132,20 +2155,22 @@ mod tests {
         let folder = day_dir.join("batch 1");
         let before = std::fs::read(day_dir.join("state.json")).expect("state.json");
 
-        // The selection page's *Cancel*: the page opened no draft and wrote nothing (the
-        // `discard_draft` command's body changes nothing there).
-        let start = start_amend_impl(&state, "2026-10-07").expect("amend");
+        // The Plan screen's *Cancel amend*: *Amend* opened the amend draft at once, and the
+        // `discard_draft` command's body drops it without writing anything.
+        let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
         assert_eq!(start.batch, 1);
-        assert!(state.with_draft(|_| ()).is_err(), "no draft is open yet");
+        state.with_draft(|_| ()).expect("the amend draft is open");
         state.clear_draft();
+        assert!(state.with_draft(|_| ()).is_err(), "the draft is gone");
+        assert!(folder.is_dir(), "the batch folder is untouched");
         assert_eq!(
             std::fs::read(day_dir.join("state.json")).expect("state.json"),
             before,
             "state.json is untouched"
         );
 
-        // *Read labels*, then *Cancel amend*: the amendment's draft is discarded and the old
-        // batch stays as it was.
+        // After *Back* and the selection page's *Read labels*, *Cancel* there too discards the
+        // amendment's draft and leaves the old batch as it was.
         let amend = read_amend_draft(
             &state,
             vec![folder.join("download").join("labels-slip.pdf")],
@@ -2194,33 +2219,24 @@ mod tests {
             vec!["J&T Express", "SiCepat", "J&T Cargo", "IDX", "SPX"]
         );
 
-        // An amend read goes through the same path: it too ends with no prompt and the couriers.
+        // An amend read goes through the same path: *Amend* reads the batch's own files and ends
+        // with no prompt and the same couriers.
         assert_eq!(
             save_batch_impl(&state, None, false, |_| {})
                 .expect("save")
                 .batch,
             1
         );
-        let start = start_amend_impl(&state, "2026-10-07").expect("amend");
+        let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
         assert_eq!(start.batch, 1);
-        let amend = read_amend_draft(
-            &state,
-            vec![
-                dir.join("labels/2026-10-07/batch 1/download")
-                    .join("labels-slip.pdf"),
-            ],
-            1,
-            |_| {},
-        )
-        .expect("amend read");
-        assert_eq!(amend.amend, Some(1));
-        assert!(amend.logos.is_empty());
-        assert_eq!(amend.couriers, read.couriers);
+        assert_eq!(start.read.amend, Some(1));
+        assert!(start.read.logos.is_empty());
+        assert_eq!(start.read.couriers, read.couriers);
 
         // Answering a hash no logo carries changes nothing and still returns a full result.
         let again =
             answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswerInput::Skip).expect("answer");
-        assert_eq!(again.orders, amend.orders);
+        assert_eq!(again.orders, start.read.orders);
         assert!(again.logos.is_empty());
 
         std::fs::remove_dir_all(&dir).ok();

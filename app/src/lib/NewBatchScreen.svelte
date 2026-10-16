@@ -4,9 +4,10 @@
   // them with a progress bar and Cancel, and open the Plan screen; the top *Cancel* discards the
   // draft. Or show a stop message.
   //
-  // The same screen is the amend's selection page (08 › *The amend's selection page*): titled
-  // *Redo batch `<b>`*, with the batch's own `download/` files already listed in their
-  // `state.json` order, and *Read labels* reading that selection as an amend (`amend`).
+  // The same screen is the amend's selection page (08 › *The amend's selection page*), reached
+  // from the amend's Plan screen's *Back*: titled *Redo batch `<b>`*, with the current selection
+  // listed — the batch's own `download/` files in their `state.json` order at first, then what the
+  // owner chose — and *Read labels* reading that selection as an amend (`amend`).
   import { onMount } from "svelte";
   import { open } from "@tauri-apps/plugin-dialog";
   import { listen } from "@tauri-apps/api/event";

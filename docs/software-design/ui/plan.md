@@ -59,7 +59,8 @@ the owner checks the counts and presses **Save batch**.
   or added picks, file names) are lost when **Read labels** is pressed again: reading starts
   again from the files ([New batch › Reading](new-batch.md#reading)). Only **Cancel** on the
   selection page discards the draft.
-- Amend uses the same screen, titled "Redo batch 2", with **Save batch 2 again** and a bottom
+- Amend uses the same screen, titled "Redo batch 2": **Amend** reads the batch's own label PDFs
+  again and this screen opens at once, with **Save batch 2 again** and a bottom
   **Cancel amend**. **Back** (top right) returns to the amend's selection page with the files still
   listed ([New batch › The amend's selection page](new-batch.md#the-amends-selection-page));
   **Cancel amend** leaves the batch as it was and returns to the Day screen. Neither asks, because

@@ -66,6 +66,10 @@ export const texts = {
     // 08 › *1. Day*: the Amend confirmation, verbatim.
     confirmAmend: (n: number, time: string) =>
       `Redo batch ${n} with the current categories? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
+    // 08 › *1. Day* → *3. Plan*: while *Amend* reads the batch's own label files again (the
+    // `read-progress` event), shown with a progress bar before the Plan screen opens.
+    amendReading: (page: number, pages: number) =>
+      `Reading the batch's labels …  page ${page} of ${pages}`,
     // 08 › *Window frame*: changing the day while a draft is open asks first; the batch being
     // prepared is thrown away. (The Plan screen's top *Back* never asks.)
     confirmDiscardDraft: "Discard the batch being prepared?",
@@ -375,6 +379,22 @@ export function planButtons(amend: number | null): PlanButtons {
     discard: amend === null ? null : texts.plan.cancelAmend,
     discardTarget: amend === null ? null : "day",
   };
+}
+
+// 08 › *1. Day* → *3. Plan*: **Amend** on the newest batch reads the batch's own `download/` files
+// again and opens the Plan screen (the picks) at once, titled *Redo batch `<b>`*; the PDF
+// selection page comes only from that Plan screen's *Back*
+// (08 › *2. New batch* → *The amend's selection page*). Pure, so the flow is tested without a
+// window.
+
+/// The batch-flow screens, named as the shell's own `Screen` is (08 › *Window frame*): *Day*, the
+/// PDF selection page (a new batch's file list, or the amend's selection page) or the Plan screen.
+export type FlowScreen = "day" | "new-batch" | "plan";
+
+/// The screen **Amend** opens (08 › *1. Day*): the Plan screen — the picks first, read from the
+/// batch's own `download/` files — never the PDF selection page.
+export function amendOpens(): FlowScreen {
+  return "plan";
 }
 
 // 08 › *Search*: the window side of the result, pure so it is tested without a window. One row
