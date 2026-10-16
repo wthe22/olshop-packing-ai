@@ -60,10 +60,10 @@ the owner checks the counts and presses **Save batch**.
   again from the files ([New batch › Reading](new-batch.md#reading)). Only **Cancel** on the
   selection page discards the draft.
 - Amend uses the same screen, titled "Redo batch 2", with **Save batch 2 again** and a bottom
-  **Cancel amend**. **Cancel amend** leaves the batch as it was and returns to the Day screen;
-  it never asks, because it writes nothing. **Back** on an amend returns to the page where the
-  amend's files are chosen ([R-APP-1](../../reviews/app.md)); the batch is untouched until
-  **Save batch 2 again**.
+  **Cancel amend**. **Back** (top right) returns to the amend's selection page with the files still
+  listed ([New batch › The amend's selection page](new-batch.md#the-amends-selection-page));
+  **Cancel amend** leaves the batch as it was and returns to the Day screen. Neither asks, because
+  an amend writes nothing before **Save batch 2 again**.
 - When the plan is the one catch-all entry (no picks configured), a line above the rows reads
   **No picks yet: all orders go into one PDF set** ([Q-UI-4](../questions/ui.md)).
 

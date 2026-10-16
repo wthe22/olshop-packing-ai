@@ -14,38 +14,38 @@ Reference for the reading and sorting rules: the Python package `tools/analysis/
 first implementation of the same rules, tested). Port it module by module when a rule is missing
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-Every task of the phase (2.1–2.23) is finished, so this folder holds no task file. What the tasks built is
-in [software-design/](../../software-design/README.md); how to run, build and test it is in
-[../README.md](../README.md).
+Tasks 2.1–2.23 are finished: what they built is in [software-design/](../../software-design/README.md),
+and how to run, build and test it in [../README.md](../README.md). The open work of the phase:
+
+| Task | File | What |
+|---|---|---|
+| 2.24 | [2-24-amend-selection-page.md](2-24-amend-selection-page.md) | An amend opens the PDF selection page first; **Back** from the amend's Plan screen returns there |
 
 Open choices of the owner, each with a default the app follows until the owner decides:
 [Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md),
 [Q-UI-1 to Q-UI-4](../../software-design/questions/ui.md) and
-[Q-APP-1](../../software-design/questions/app.md).
+[Q-APP-1 to Q-APP-3](../../software-design/questions/app.md).
 
 ## Status
 
-Phase 2 is finished: tasks 2.1–2.23 are done and 2.23's file is deleted. **Next step — the owner's:**
-review the running app (the checklist below), write the findings, and answer
-[R-APP-1](../../reviews/app.md).
+Phase 2 is built (tasks 2.1–2.23) and the owner's review of it is folded in: no review item is open
+([reviews/](../../reviews/README.md)). **Next step — 2.24:**
+[2-24-amend-selection-page.md](2-24-amend-selection-page.md): an amend opens the batch's PDF selection page
+first. The owner has no answer pending: [Q-APP-2 and Q-APP-3](../../software-design/questions/app.md) follow
+their **Defaults** until the owner decides, and 2.24 is built on those defaults.
 
-**Handoff for the review session.**
+**Handoff.**
 
-- **What to review:** the running app — a portable build, or `app/` under `npm run tauri dev` —
-  against the checklist below; the first start writes no `categories.toml` (every order of a batch
-  goes into one PDF set until the owner adds picks), and the Plan screen's **Back** (top) / an
-  amend's **Cancel amend** (bottom) behave as [plan.md](../../software-design/ui/plan.md) says.
-- **Where the answers go:** `docs/reviews/<scope>.md` (`label.md`, `rules.md`, `app.md`), one item
+- **What to review when the owner comes back:** the running app — **Amend** on the newest batch shows the
+  batch's label PDFs already listed, and **Back** on the amend's Plan screen returns to that list; the
+  list's **Cancel** and **Cancel amend** both leave the batch as it was and ask nothing.
+- **Where the answers go:** `docs/reviews/<scope>.md` (`label.md`, `rules.md`, `app.md`, `ui.md`), one item
   per finding as `R-<SCOPE>-n` ([reviews/README.md](../../reviews/README.md)): what the owner sees and what
   the owner wants.
 - **What the next session does with each answer:** a fix or a feature becomes a task file in this folder; an
   open choice becomes a question in [software-design/questions/](../../software-design/questions/README.md)
   with options and a default; a settled design change is written into `software-design/`. The review item is
   deleted once its answer is in the design.
-- **The one thing the owner must answer:** [R-APP-1](../../reviews/app.md) (amend lets the owner add
-  and remove the batch's label PDFs): where an added PDF comes from (any PDF on the PC, or only files
-  already read on this day), and what happens to the orders of a removed PDF (left unsaved, or moved to
-  another PDF). The owner writes the answer in [app.md](../../reviews/app.md).
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
 
@@ -77,7 +77,9 @@ The owner writes findings in [`../../reviews/`](../../reviews/README.md), one fi
 In this order.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
-2. [../../reviews/README.md](../../reviews/README.md) and the item open there ([R-APP-1](../../reviews/app.md), amend): the owner's finding, to turn into a task or a question.
+2. [2-24-amend-selection-page.md](2-24-amend-selection-page.md): the open task, and the design files it
+   names; a finding from the running app is written in [../../reviews/](../../reviews/README.md), one
+   file per scope.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),

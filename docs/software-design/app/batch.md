@@ -47,14 +47,19 @@ nothing.
 
 **Amend last batch** — for "I fixed a category, do the last batch again":
 
-1. The app reads the batch's label files again from its `download/` copy, in the order stored
-   in `state.json`: the same pages in the same order as the first time.
-2. The Plan screen opens with these orders and the current `categories.toml`; the duplicate
-   guard ignores the batch's own orders.
-3. **Save batch `<b>` again** writes a new `batch <b>.partial/` with the same first number, the
-   same `download/` copy and the same packing-list choice, takes the place of the old folder, and
-   writes the batch into `state.json`. **Cancel amend** (bottom, beside the save button) leaves
-   the old batch untouched and returns to the Day screen; it never asks.
+1. The **selection page** opens ([New batch](../ui/new-batch.md#the-amends-selection-page)): the
+   batch's label PDFs are listed, already selected, read from its `download/` copy in the order
+   stored in `state.json`. The owner adds PDFs ([Q-APP-2](../questions/app.md)) and takes PDFs off
+   the list ([Q-APP-3](../questions/app.md)).
+2. **Read labels** reads the selected files: the batch's own pages again in the same order, an
+   added file as in a new batch. The Plan screen opens with their orders and the current
+   `categories.toml`; the duplicate guard ignores the batch's own orders. **Back** on the Plan
+   screen returns to the selection page with the files still listed.
+3. **Save batch `<b>` again** writes a new `batch <b>.partial/` with the same first number, a
+   `download/` copy of the files read and the same packing-list choice, takes the place of the old
+   folder, and writes the batch into `state.json`. **Cancel amend** (bottom, beside the save
+   button) and the selection page's **Cancel** leave the old batch untouched and return to the Day
+   screen; neither asks, because an amend writes nothing before **Save batch `<b>` again**.
 
 Amend after printing: the printed labels may not match the new files. The confirmation says so
 ("Batch 2 was saved at 09:12. If you already printed it, print it again after amending.").
