@@ -2,7 +2,8 @@
   // The app shell (08 › *Window frame*, *Start*, *1. Day*, *2. New batch*, *3. Plan*,
   // *5. Categories*, *6. Settings*, *Search*): it finds the data folder, keeps the current day and
   // screen, routes the Tauri commands, and opens Search/Categories/Settings over the current
-  // screen (an open draft is kept). The batch flow is Day → New batch → Plan → Day.
+  // screen (an open draft is kept). The batch flow is Day → New batch → Plan → Day; the Plan
+  // screen's *Back* returns to New batch with the files still listed.
   import { onMount } from "svelte";
   // Use the plugin's own `confirm`, not `window.confirm`: the dialog plugin patches the global to
   // call `plugin:dialog|confirm`, a command that no longer exists (it is now `message`), so the
@@ -43,7 +44,10 @@
   // frame*).
   let overlay = $state<OverlayId | null>(null);
 
-  // The batch being prepared: the read result and whether the backend has an open draft.
+  // The batch being prepared: the chosen label files (kept here, so *Back* on the Plan screen
+  // shows the file list again with the files still there), the read result and whether the
+  // backend has an open draft (08 › *2. New batch*, *3. Plan*).
+  let files = $state<api.FileCheck[]>([]);
   let readResult = $state<api.ReadResult | null>(null);
   let draftOpen = $state(false);
   // The green *Batch n saved* line on the Day screen, shown for a few seconds (08 › *1. Day*).
@@ -159,17 +163,27 @@
   /// Ask to discard the open batch before leaving it (08 › *Window frame*: changing the day while
   /// a draft is open asks first; Categories and Settings keep it).
   async function leaveBatch(): Promise<boolean> {
-    if (!draftOpen) return true;
-    if (!(await confirm(texts.plan.confirmDiscard(draftBatch ?? nextBatch)))) return false;
-    await api.discardDraft();
-    draftOpen = false;
-    readResult = null;
+    if (draftOpen) {
+      if (!(await confirm(texts.day.confirmDiscardDraft))) return false;
+      await api.discardDraft();
+      draftOpen = false;
+      readResult = null;
+    }
+    files = [];
     return true;
   }
 
   function startBatch() {
     savedMessage = null;
     overlay = null;
+    files = [];
+    screen = "new-batch";
+  }
+
+  /// *Back* on a new batch's Plan screen (08 › *3. Plan*): show the file list again, the files
+  /// still listed and the draft kept; a new *Read labels* replaces it, so the plan changes are
+  /// lost. Nothing is written and nothing is asked.
+  function backToFiles() {
     screen = "new-batch";
   }
 
@@ -183,6 +197,7 @@
   async function onSaved(result: api.SaveResult) {
     draftOpen = false;
     readResult = null;
+    files = [];
     overlay = null;
     savedMessage = texts.day.saved(result.batch, result.pdfs, result.packing_lists);
     screen = "day";
@@ -191,10 +206,13 @@
     savedTimer = setTimeout(() => (savedMessage = null), 6000);
   }
 
-  function cancelBatch() {
-    // From New batch nothing was read; from Plan the screen already discarded the draft.
+  /// Leave the batch for the Day screen: *Cancel* on the PDF selection page, *Cancel amend* and
+  /// an amend's *Back*. Only here is the open draft discarded (nothing is written).
+  async function cancelBatch() {
+    if (draftOpen) await api.discardDraft();
     draftOpen = false;
     readResult = null;
+    files = [];
     screen = "day";
   }
 
@@ -316,7 +334,13 @@
       onRevert={revert}
     />
   {:else if screen === "new-batch"}
-    <NewBatchScreen batchNumber={nextBatch} onPlan={onPlan} onCancel={cancelBatch} />
+    <NewBatchScreen
+      batchNumber={nextBatch}
+      {files}
+      onFiles={(next) => (files = next)}
+      onPlan={onPlan}
+      onCancel={cancelBatch}
+    />
   {:else if screen === "plan" && readResult}
     <PlanScreen
       batchNumber={nextBatch}
@@ -324,6 +348,7 @@
       {settings}
       refresh={planRefresh}
       onSaved={onSaved}
+      onBack={backToFiles}
       onCancel={cancelBatch}
       onEditCategories={() => (overlay = "categories")}
     />

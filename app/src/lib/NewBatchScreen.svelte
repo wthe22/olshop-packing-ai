@@ -1,6 +1,8 @@
 <script lang="ts">
-  // New batch (08 › *2. New batch*, *Reading*, *4. Messages*): choose the label PDFs, read them
-  // with a progress bar and Cancel, and open the Plan screen — or show a stop message.
+  // New batch (08 › *2. New batch*, *Reading*, *4. Messages*): choose the label PDFs — the shell
+  // keeps the list, so the Plan screen's *Back* shows it again with the files still there — read
+  // them with a progress bar and Cancel, and open the Plan screen; the top *Cancel* discards the
+  // draft. Or show a stop message.
   import { onMount } from "svelte";
   import { open } from "@tauri-apps/plugin-dialog";
   import { listen } from "@tauri-apps/api/event";
@@ -12,15 +14,20 @@
 
   let {
     batchNumber,
+    files,
+    onFiles,
     onPlan,
     onCancel,
   }: {
     batchNumber: number;
+    /// The chosen files. The shell keeps them, so *Back* on the Plan screen shows this list again
+    /// with the files still there (08 › *3. Plan*).
+    files: api.FileCheck[];
+    onFiles: (files: api.FileCheck[]) => void;
     onPlan: (result: api.ReadResult) => void;
     onCancel: () => void;
   } = $props();
 
-  let files = $state<api.FileCheck[]>([]);
   let busy = $state(false);
   let reading = $state(false);
   let progress = $state<{ page: number; pages: number } | null>(null);
@@ -63,12 +70,12 @@
     try {
       const checks = await api.checkFiles(fresh);
       const seen = new Set(files.map((file) => file.path.toLowerCase()));
-      for (const check of checks) {
-        if (!seen.has(check.path.toLowerCase())) {
-          files = [...files, check];
-          seen.add(check.path.toLowerCase());
-        }
-      }
+      const added = checks.filter((check) => {
+        if (seen.has(check.path.toLowerCase())) return false;
+        seen.add(check.path.toLowerCase());
+        return true;
+      });
+      if (added.length > 0) onFiles([...files, ...added]);
     } catch (e) {
       error = String(e);
     }
@@ -85,7 +92,7 @@
   }
 
   function remove(path: string) {
-    files = files.filter((file) => file.path !== path);
+    onFiles(files.filter((file) => file.path !== path));
   }
 
   async function read() {

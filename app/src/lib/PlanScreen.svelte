@@ -1,13 +1,13 @@
 <script lang="ts">
   // Plan (08 › *3. Plan*): the picks in order with their counts and runs, the per-batch changes
   // (*Use*, move, add, rename) and the packing-list options; *Save batch* writes the batch. An
-  // amend uses the same screen, titled *Redo batch `<b>`* with *Save batch `<b>` again*.
+  // amend uses the same screen, titled *Redo batch `<b>`*, with *Save batch `<b>` again* and a
+  // bottom *Cancel amend*. The top button is *Back* — to the file list for a new batch, the Day
+  // screen for an amend — and it never asks or discards (only the file list's *Cancel* and
+  // *Cancel amend* do).
   import * as api from "../lib/api";
-  // The plugin's `confirm` (not `window.confirm`, which the dialog plugin patches to a command that
-  // no longer exists) and it must be awaited.
-  import { confirm } from "@tauri-apps/plugin-dialog";
   import { listen } from "@tauri-apps/api/event";
-  import { texts, saveStageText } from "../texts";
+  import { texts, saveStageText, planButtons } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
   import SaveCheckDialog from "./SaveCheckDialog.svelte";
   import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
@@ -19,6 +19,7 @@
     settings,
     refresh,
     onSaved,
+    onBack,
     onCancel,
     onEditCategories,
   }: {
@@ -28,14 +29,23 @@
     /// Bumped when the Categories screen saves, so the plan is recounted (08 › *Window frame*).
     refresh: number;
     onSaved: (result: api.SaveResult) => void;
+    /// *Back* (top) on a new batch: return to the file list with the files still listed, the draft
+    /// kept (a new *Read labels* replaces it). Never asks and writes nothing.
+    onBack: () => void;
+    /// Leave the batch for the Day screen and discard its draft: *Cancel amend*, and an amend's
+    /// *Back*, which returns there for now (R-APP-1's file-selection page does not exist yet).
+    /// Never asks.
     onCancel: () => void;
     onEditCategories: () => void;
   } = $props();
 
-  // The batch number for the header and the discard confirmation: the amended batch for an amend
+  // The batch number for the header and the amend's title: the amended batch for an amend
   // (08 › *3. Plan*: *Redo batch 2*), else the next batch number.
   const batchNo = $derived(read.amend ?? batchNumber);
   const amending = $derived(read.amend !== null);
+  // The top button (*Back* on both) and the amend's bottom *Cancel amend*, from the pure helper
+  // (08 › *3. Plan*).
+  const buttons = $derived(planButtons(read.amend));
 
   // The read result is fixed for the life of the screen; the view is then updated by `plan()`.
   // svelte-ignore state_referenced_locally
@@ -239,10 +249,13 @@
       : texts.plan.saving,
   );
 
-  async function cancel() {
-    if (!(await confirm(texts.plan.confirmDiscard(batchNo)))) return;
-    await api.discardDraft();
-    onCancel();
+  /// *Back* (top, 08 › *3. Plan*): a new batch returns to its file list with the files still
+  /// listed — the draft is kept and a new *Read labels* replaces it, so the per-batch changes are
+  /// lost; an amend returns to the Day screen where it started, the batch untouched. Neither asks
+  /// and neither writes.
+  function back() {
+    if (amending) onCancel();
+    else onBack();
   }
 
   const rowKey = (row: api.PlanRow) => row.index ?? -1;
@@ -275,7 +288,7 @@
       </span>
     {/if}
     <span class="grow"></span>
-    <button onclick={cancel}>{texts.plan.cancel}</button>
+    <button onclick={back}>{buttons.top}</button>
   </div>
 
   <div class="warnings">
@@ -465,6 +478,9 @@
       {/each}
     </div>
     <span class="grow"></span>
+    {#if buttons.discard}
+      <button onclick={onCancel}>{buttons.discard}</button>
+    {/if}
     <button
       class="primary"
       disabled={view.has_duplicate_names || saving}

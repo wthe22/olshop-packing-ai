@@ -937,7 +937,9 @@ pub fn check_files(
 }
 
 /// *Read labels* (08 › *Reading*): read on a blocking thread, emitting `read-progress {page,
-/// pages}`; returns the draft summary and the plan, or the stop error text.
+/// pages}`; returns the draft summary and the plan, or the stop error text. A read replaces any
+/// open draft, so the Plan screen's *Back* and a new *Read labels* start again from the files and
+/// no plan edit survives (08 › *3. Plan*).
 #[tauri::command]
 pub async fn read_labels(app: AppHandle, paths: Vec<String>) -> Result<ReadResult, String> {
     let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
@@ -1018,8 +1020,10 @@ pub async fn save_batch(
     .map_err(|error| format!("the save task stopped: {error}"))?
 }
 
-/// *Cancel* on the Plan screen (08 › *3. Plan*): discard the open batch; nothing was saved. For an
-/// amend this leaves the original batch untouched (07 › *Amend*).
+/// *Cancel* on the PDF selection page, *Cancel amend* and an amend's *Back* (08 › *2. New batch*,
+/// *3. Plan*): discard the open batch; nothing was saved and nothing is written. The Plan screen's
+/// top *Back* does not come here — it keeps the draft. For an amend this leaves the original batch
+/// untouched (07 › *Amend*).
 #[tauri::command]
 pub fn discard_draft(state: State<'_, AppState>) {
     state.clear_draft();
@@ -1704,6 +1708,64 @@ mod tests {
         std::fs::remove_dir_all(&dir).ok();
     }
 
+    // -------------------------------------------------- *Back* and a new read (2.23, 08 › *3. Plan*)
+
+    /// The Plan screen's *Back* is a window move: the back end keeps the draft and its files, and
+    /// a new *Read labels* replaces the draft from the files, so no plan edit survives (2.23).
+    #[test]
+    fn back_keeps_the_draft_and_a_new_read_replaces_its_plan_edits() {
+        let Some(_vendor) = vendor_dir() else {
+            eprintln!("skipped: run tools/get-pdfium.sh");
+            return;
+        };
+        let dir = temp_dir("plan-back");
+        std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
+        let state = app_state(&dir);
+
+        let read = read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        let numbers: Vec<Option<i64>> = read.plan.rows.iter().map(|row| row.number).collect();
+        assert_eq!(numbers, vec![Some(1), Some(2), Some(3), Some(4), Some(5)]);
+        assert_eq!(read.plan.rows[0].file_name, "1 A Sepatu ×7.pdf");
+
+        // *Back* changes nothing here: the draft is still open with its one file and its orders.
+        state
+            .with_draft(|open| {
+                assert_eq!(open.draft.files.len(), 1);
+                assert_eq!(open.draft.orders.len(), read.orders);
+                assert!(open.amend.is_none());
+            })
+            .expect("the draft is kept when *Back* is pressed");
+
+        // A plan edit on the kept draft: the first saved PDF is renamed for this batch only.
+        let edited = state
+            .with_draft(|open| {
+                apply_edits(
+                    &mut open.plan,
+                    &[PlanEdit::Rename {
+                        index: 0,
+                        name: "renamed.pdf".to_string(),
+                    }],
+                )?;
+                let first_number = open.first_number;
+                Ok::<_, String>(plan_view(&open.plan, &open.draft.orders, first_number))
+            })
+            .expect("draft")
+            .expect("rename");
+        assert_eq!(edited.rows[0].file_name, "renamed.pdf");
+
+        // A new read replaces the draft whole: the plan is the files' plan again.
+        let again =
+            read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read again");
+        let numbers: Vec<Option<i64>> = again.plan.rows.iter().map(|row| row.number).collect();
+        assert_eq!(numbers, vec![Some(1), Some(2), Some(3), Some(4), Some(5)]);
+        assert_eq!(
+            again.plan.rows[0].file_name, "1 A Sepatu ×7.pdf",
+            "no plan edit survives a new read"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
     // ------------------------------------------------------------------ revert / amend (2.11)
 
     #[test]
@@ -1787,6 +1849,52 @@ mod tests {
                 .batches
                 .len(),
             1
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// *Cancel amend* (2.23) discards the amend's draft and nothing else: the batch folder and
+    /// `state.json` are left exactly as they were, byte for byte (08 › *3. Plan*, 07 › *Amend*).
+    #[test]
+    fn cancel_amend_leaves_the_batch_and_the_state_untouched() {
+        let Some(_vendor) = vendor_dir() else {
+            eprintln!("skipped: run tools/get-pdfium.sh");
+            return;
+        };
+        let dir = temp_dir("cancel-amend");
+        std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
+        let state = app_state(&dir);
+
+        read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        assert_eq!(
+            save_batch_impl(&state, None, false, |_| {})
+                .expect("save")
+                .batch,
+            1
+        );
+        let day_dir = dir.join("labels/2026-10-07");
+        let folder = day_dir.join("batch 1");
+        let before = std::fs::read(day_dir.join("state.json")).expect("state.json");
+
+        // The amend's draft, then *Cancel amend*: the draft is discarded (the `discard_draft`
+        // command's body) and the old batch stays as it was.
+        let amend = start_amend_impl(&state, "2026-10-07").expect("amend");
+        assert_eq!(amend.amend, Some(1));
+        state.with_draft(|_| ()).expect("the amend draft is open");
+        state.clear_draft();
+
+        assert!(state.with_draft(|_| ()).is_err(), "the draft is gone");
+        assert!(folder.is_dir(), "the batch folder is untouched");
+        assert_eq!(
+            std::fs::read(day_dir.join("state.json")).expect("state.json"),
+            before,
+            "state.json is untouched"
+        );
+        assert_eq!(
+            DayState::load(&day_dir).expect("state").batches.len(),
+            1,
+            "the batch is still saved"
         );
 
         std::fs::remove_dir_all(&dir).ok();

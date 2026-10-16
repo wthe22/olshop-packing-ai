@@ -66,6 +66,9 @@ export const texts = {
     // 08 › *1. Day*: the Amend confirmation, verbatim.
     confirmAmend: (n: number, time: string) =>
       `Redo batch ${n} with the current categories? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
+    // 08 › *Window frame*: changing the day while a draft is open asks first; the batch being
+    // prepared is thrown away. (The Plan screen's top *Back* never asks.)
+    confirmDiscardDraft: "Discard the batch being prepared?",
   },
 
   // 08 › *2. New batch*.
@@ -162,9 +165,13 @@ export const texts = {
     editCategories: "Edit categories",
     // 08 › *3. Plan*: the second of two PDFs with the same name.
     duplicate: (n: number) => `Same name as PDF ${n}`,
-    cancel: "Cancel",
-    confirmDiscard: (n: number) =>
-      `Discard batch ${n}? Nothing has been saved.`,
+    // 08 › *3. Plan*: the top button, on a new batch and on an amend alike. It is not a discard:
+    // a new batch returns to its file list with the files still listed, an amend to the Day
+    // screen. Only *Cancel* on the file list and an amend's *Cancel amend* discard.
+    back: "Back",
+    // 08 › *3. Plan*: bottom, beside *Save batch `<b>` again* on an amend only. It leaves the
+    // batch as it was and returns to the Day screen, and never asks (it writes nothing).
+    cancelAmend: "Cancel amend",
   },
 
   settings: {
@@ -331,6 +338,30 @@ export function saveStageText(
   return stage === "Checking"
     ? texts.plan.saveChecking(page, pages)
     : texts.plan.saveWriting(page, pages);
+}
+
+// 08 › *3. Plan*: the Plan screen's two ways out, from the kind of batch. The top button is
+// *Back* on both (it is not a discard); the bottom discard button beside *Save batch* exists on
+// an amend only. Pure, so the choice is tested without a window.
+//
+//   new batch  → top *Back* (returns to the file list, the draft kept); no bottom discard button
+//   amend      → top *Back* (returns to the Day screen, for now: R-APP-1's file-selection page
+//                does not exist yet); bottom *Cancel amend* beside *Save batch `<b>` again*
+
+/// The Plan screen's top button and bottom discard button, as text; `discard` is `null` when
+/// there is no discard button.
+export interface PlanButtons {
+  top: string;
+  discard: string | null;
+}
+
+/// The Plan screen's top button and bottom discard button. `amend` is the batch being redone, or
+/// `null` for a new batch (08 › *3. Plan*).
+export function planButtons(amend: number | null): PlanButtons {
+  return {
+    top: texts.plan.back,
+    discard: amend === null ? null : texts.plan.cancelAmend,
+  };
 }
 
 // 08 › *Search*: the window side of the result, pure so it is tested without a window. One row

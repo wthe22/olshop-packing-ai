@@ -14,31 +14,27 @@ Reference for the reading and sorting rules: the Python package `tools/analysis/
 first implementation of the same rules, tested). Port it module by module when a rule is missing
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-| Task | Content | File |
-|---|---|---|
-| 2.23 | Plan screen: Back at the top, no discard button, Cancel amend at the bottom | [2-23-plan-back.md](2-23-plan-back.md) |
+Every task of the phase (2.1–2.23) is finished, so this folder holds no task file. What the tasks built is
+in [software-design/](../../software-design/README.md); how to run, build and test it is in
+[../README.md](../README.md).
 
 Open choices of the owner, each with a default the app follows until the owner decides:
-[Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md) and
-[Q-UI-1 to Q-UI-4](../../software-design/questions/ui.md),
+[Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md),
+[Q-UI-1 to Q-UI-4](../../software-design/questions/ui.md) and
 [Q-APP-1](../../software-design/questions/app.md).
 
 ## Status
 
-Task 2.23 is open (it follows 2.21 and the finished 2.22); every other task of the phase is
-finished. The owner's review at the end of the phase waits for it and for the owner's answer to
-R-APP-1.
-
-**Next step.** 2.23 (the Plan screen's **Back** at the top, no discard button, an amend's **Cancel
-amend** at the bottom). It ends with a commit that deletes its file from this folder, and a push to
-`origin main`.
+Phase 2 is finished: tasks 2.1–2.23 are done and 2.23's file is deleted. **Next step — the owner's:**
+review the running app (the checklist below), write the findings, and answer
+[R-APP-1](../../reviews/app.md).
 
 **Handoff for the review session.**
 
 - **What to review:** the running app — a portable build, or `app/` under `npm run tauri dev` —
   against the checklist below; the first start writes no `categories.toml` (every order of a batch
-  goes into one PDF set until the owner adds picks), and the Plan screen's **Back** / an amend's
-  **Cancel amend** behave as [plan.md](../../software-design/ui/plan.md) says.
+  goes into one PDF set until the owner adds picks), and the Plan screen's **Back** (top) / an
+  amend's **Cancel amend** (bottom) behave as [plan.md](../../software-design/ui/plan.md) says.
 - **Where the answers go:** `docs/reviews/<scope>.md` (`label.md`, `rules.md`, `app.md`), one item
   per finding as `R-<SCOPE>-n` ([reviews/README.md](../../reviews/README.md)): what the owner sees and what
   the owner wants.
@@ -81,7 +77,7 @@ The owner writes findings in [`../../reviews/`](../../reviews/README.md), one fi
 In this order.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
-2. The task files in this folder (2.23) and [../../reviews/README.md](../../reviews/README.md) with the item open there ([R-APP-1](../../reviews/app.md), amend).
+2. [../../reviews/README.md](../../reviews/README.md) and the item open there ([R-APP-1](../../reviews/app.md), amend): the owner's finding, to turn into a task or a question.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),
