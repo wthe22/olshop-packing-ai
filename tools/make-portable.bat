@@ -1,7 +1,7 @@
 @echo off
 rem Build the portable program folder (07 > Program folder, task 2.13) without opening Git Bash
 rem first: this wrapper finds Git for Windows' bash.exe and runs make-portable.sh, which holds the
-rem steps (build, then Packing.exe + pdfium.dll into pc\target\portable\Packing\).
+rem steps (build, then Packing.exe + pdfium.dll into target\portable\Packing\).
 rem
 rem   make-portable.bat             build; wait for a key at the end (keeps a double-click's output)
 rem   make-portable.bat --no-pause  build and return (for scripts)

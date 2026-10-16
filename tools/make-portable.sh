@@ -10,13 +10,14 @@
 #      target/portable/Packing/
 #
 # Run from anywhere:  bash tools/make-portable.sh
-# From Explorer or cmd, without a Git Bash window:  pc\tools\make-portable.bat
+# From Explorer or cmd, without a Git Bash window:  tools\make-portable.bat
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$here/.." && pwd)"
-app="$app"
-vendor="$vendor"
+app="$root/app"
+vendor="$root/vendor"
+target="$root/target"
 release="$target/release"
 portable="$target/portable"
 out="$portable/Packing"
