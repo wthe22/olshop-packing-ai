@@ -1,16 +1,46 @@
-//! The Order ID search, the label fields and the courier deduction (03 › *Order ID from the
-//! label*, *Courier deduction*; port of `tools/analysis/packing/labels.py`).
+//! The Order ID search, the label fields, the courier deduction and the courier data
+//! (03 › *Order ID from the label*, *Courier deduction*; port of `tools/analysis/packing/labels.py`).
+//!
+//! The courier data lives in the data folder's `couriers.toml` and is the owner's, like
+//! `categories.toml`; the bundled file is the default of a fresh data folder and of a folder
+//! without the file (07 › *Inputs*, D-LABEL-1).
 
+use std::fmt;
+use std::path::Path;
 use std::sync::OnceLock;
 
 use jiff::civil::DateTime;
 use regex::Regex;
-use serde::Deserialize;
 
 use crate::text::LogoImage;
 
-/// The courier data built into the program (07 › *Inputs*).
-const COURIERS_TOML: &str = include_str!("../couriers.toml");
+/// The courier data built into the program, written into a new data folder (07 › *Inputs*).
+pub const COURIERS_TOML: &str = include_str!("../couriers.toml");
+
+/// The courier file in the data folder (07 › *Inputs*).
+pub const COURIERS_FILE_NAME: &str = "couriers.toml";
+
+/// Invalid courier file; the message names the place (`couriers.toml`, its line).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CouriersError {
+    pub message: String,
+}
+
+impl CouriersError {
+    fn new(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+        }
+    }
+}
+
+impl fmt::Display for CouriersError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.message)
+    }
+}
+
+impl std::error::Error for CouriersError {}
 
 /// The characters `str.strip` removes around a tracking token (Python `_TOKEN_TRIM`).
 const TOKEN_TRIM: &str = " \t.,;:";
@@ -52,6 +82,7 @@ fn ship_by_collapsed_re() -> &'static Regex {
 }
 
 /// One `[[courier]]` entry, its regexes compiled once.
+#[derive(Clone, Debug)]
 pub struct Courier {
     pub name: String,
     /// The courier's logo images: XXH3-64 (16 hex) of each one's **encoded bytes**.
@@ -118,56 +149,40 @@ impl Courier {
 }
 
 /// The courier data of `couriers.toml`: the couriers and the hashes answered *Not a courier*.
+#[derive(Clone, Debug)]
 pub struct CourierTable {
     pub couriers: Vec<Courier>,
     /// Hashes answered **Not a courier** — a buying channel's strip, Q-LABEL-5 — and so ignored
-    /// wherever a logo is looked up. Written back by the logo prompt (D-LABEL-4, task 2.19).
+    /// wherever a logo is looked up. Written back by the logo prompt (D-LABEL-4).
     pub not_courier: Vec<String>,
 }
 
-#[derive(Deserialize)]
-struct CouriersFile {
-    #[serde(default)]
-    not_courier: Vec<String>,
-    #[serde(default)]
-    courier: Vec<CourierEntry>,
+impl CourierTable {
+    /// Whether `hash` is a **byte** hash the data already knows: in a courier's `logo` list or in
+    /// `not_courier`. `packing-pdf` computes the appearance hash only for a band image whose byte
+    /// hash this does not know (courier.md item 3; Q-LABEL-1 option 1).
+    pub fn knows_byte_hash(&self, hash: &str) -> bool {
+        self.not_courier.iter().any(|known| known == hash)
+            || self
+                .couriers
+                .iter()
+                .any(|courier| courier.logo.iter().any(|known| known == hash))
+    }
+
+    /// The courier names in file order: the logo prompt's buttons (D-LABEL-1).
+    pub fn names(&self) -> Vec<String> {
+        self.couriers
+            .iter()
+            .map(|courier| courier.name.clone())
+            .collect()
+    }
 }
 
-#[derive(Deserialize)]
-struct CourierEntry {
-    name: String,
-    #[serde(default)]
-    logo: Vec<String>,
-    #[serde(default)]
-    shape: Vec<String>,
-    #[serde(default)]
-    text: Vec<String>,
-    tracking: Option<String>,
-}
-
-/// The courier data, parsed from the built-in `couriers.toml` once.
+/// The courier data built into the program, parsed once (07 › *Inputs*): the default of a data
+/// folder without a `couriers.toml`.
 pub fn courier_data() -> &'static CourierTable {
     static DATA: OnceLock<CourierTable> = OnceLock::new();
-    DATA.get_or_init(|| {
-        let file: CouriersFile =
-            toml::from_str(COURIERS_TOML).expect("built-in couriers.toml is valid");
-        CourierTable {
-            couriers: file
-                .courier
-                .into_iter()
-                .map(|entry| {
-                    Courier::from_entry(
-                        entry.name,
-                        entry.logo,
-                        entry.shape,
-                        entry.text,
-                        entry.tracking,
-                    )
-                })
-                .collect(),
-            not_courier: file.not_courier,
-        }
-    })
+    DATA.get_or_init(|| load_couriers(COURIERS_TOML).expect("the built-in couriers.toml is valid"))
 }
 
 /// The couriers of the built-in data.
@@ -175,16 +190,188 @@ pub fn couriers() -> &'static [Courier] {
     &courier_data().couriers
 }
 
-/// Whether `hash` is a byte hash the courier data already knows: in a courier's `logo` list or
-/// in `not_courier`. `packing-pdf` computes the appearance hash only for a band image whose byte
-/// hash this does not know (courier.md item 3; Q-LABEL-1 option 1).
-pub fn is_known_logo_hash(hash: &str) -> bool {
-    let data = courier_data();
-    data.not_courier.iter().any(|known| known == hash)
-        || data
-            .couriers
-            .iter()
-            .any(|courier| courier.logo.iter().any(|known| known == hash))
+/// The courier data of the data folder's file: its text, or the bundled file when `path` does not
+/// exist (07 › *Inputs*, D-LABEL-1). A broken file is an error naming its line.
+pub fn load_couriers_file(path: &Path) -> Result<CourierTable, CouriersError> {
+    match std::fs::read_to_string(path) {
+        Ok(text) => load_couriers(&text),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(courier_data().clone()),
+        Err(error) => Err(CouriersError::new(format!(
+            "cannot read {}: {error}",
+            path.display()
+        ))),
+    }
+}
+
+// --------------------------------------------------------------- couriers file
+
+const COURIERS_KEYS: &[&str] = &["not_courier", "courier"];
+const COURIER_KEYS: &[&str] = &["name", "logo", "shape", "text", "tracking"];
+
+fn is_hash(value: &str) -> bool {
+    value.len() == 16
+        && value
+            .chars()
+            .all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c))
+}
+
+/// A `[[courier]]` entry's string list (`logo`, `shape`, `text`), empty when the key is absent.
+/// `place` names what the list belongs to (`courier "SiCepat": `, empty for a top-level list).
+fn string_list(
+    value: Option<&toml::Value>,
+    place: &str,
+    key: &str,
+) -> Result<Vec<String>, CouriersError> {
+    let Some(value) = value else {
+        return Ok(Vec::new());
+    };
+    let toml::Value::Array(entries) = value else {
+        return Err(CouriersError::new(format!(
+            "{COURIERS_FILE_NAME}: {place}\"{key}\" must be an array of strings"
+        )));
+    };
+    let mut list = Vec::with_capacity(entries.len());
+    for entry in entries {
+        let toml::Value::String(text) = entry else {
+            return Err(CouriersError::new(format!(
+                "{COURIERS_FILE_NAME}: {place}\"{key}\" must be an array of strings"
+            )));
+        };
+        list.push(text.clone());
+    }
+    Ok(list)
+}
+
+/// A list of XXH3-64 hashes (16 lowercase hex characters), empty when the key is absent.
+fn hash_list(
+    value: Option<&toml::Value>,
+    place: &str,
+    key: &str,
+) -> Result<Vec<String>, CouriersError> {
+    let list = string_list(value, place, key)?;
+    for hash in &list {
+        if !is_hash(hash) {
+            return Err(CouriersError::new(format!(
+                "{COURIERS_FILE_NAME}: {place}\"{key}\" entry \"{hash}\" is not 16 hex characters \
+                 (an XXH3-64 hash)"
+            )));
+        }
+    }
+    Ok(list)
+}
+
+/// One `[[courier]]` entry; errors name the courier by its `name`, else by its position.
+fn courier_of(entry: &toml::Value, index: usize) -> Result<Courier, CouriersError> {
+    let toml::Value::Table(entry) = entry else {
+        return Err(CouriersError::new(format!(
+            "{COURIERS_FILE_NAME}: courier #{}: must be a table",
+            index + 1
+        )));
+    };
+    let cid = match entry.get("name") {
+        Some(toml::Value::String(name)) if !name.is_empty() => format!("\"{name}\""),
+        _ => format!("#{}", index + 1),
+    };
+    for key in entry.keys() {
+        if !COURIER_KEYS.contains(&key.as_str()) {
+            return Err(CouriersError::new(format!(
+                "{COURIERS_FILE_NAME}: courier {cid}: unknown key \"{key}\""
+            )));
+        }
+    }
+
+    let Some(name_value) = entry.get("name") else {
+        return Err(CouriersError::new(format!(
+            "{COURIERS_FILE_NAME}: courier {cid}: missing \"name\""
+        )));
+    };
+    let toml::Value::String(name) = name_value else {
+        return Err(CouriersError::new(format!(
+            "{COURIERS_FILE_NAME}: courier {cid}: \"name\" must be a string"
+        )));
+    };
+    if name.is_empty() {
+        return Err(CouriersError::new(format!(
+            "{COURIERS_FILE_NAME}: courier {cid}: \"name\" must not be empty"
+        )));
+    }
+
+    let place = format!("courier {cid}: ");
+    let logo = hash_list(entry.get("logo"), &place, "logo")?;
+    let shape = hash_list(entry.get("shape"), &place, "shape")?;
+    let text = string_list(entry.get("text"), &place, "text")?;
+    let tracking = match entry.get("tracking") {
+        None => None,
+        Some(toml::Value::String(pattern)) => Some(pattern.clone()),
+        Some(_) => {
+            return Err(CouriersError::new(format!(
+                "{COURIERS_FILE_NAME}: courier {cid}: \"tracking\" must be a string"
+            )));
+        }
+    };
+    if let Some(pattern) = &tracking
+        && let Err(error) = Regex::new(pattern)
+    {
+        return Err(CouriersError::new(format!(
+            "{COURIERS_FILE_NAME}: courier {cid}: \"tracking\" is not a valid pattern: {error}"
+        )));
+    }
+
+    Ok(Courier::from_entry(
+        name.clone(),
+        logo,
+        shape,
+        text,
+        tracking,
+    ))
+}
+
+/// Load the couriers from the text of `couriers.toml` (the app reads the file). A TOML error and
+/// every field error name the file and, where the TOML parser gives it, the line (07 › *Inputs*).
+pub fn load_couriers(text: &str) -> Result<CourierTable, CouriersError> {
+    let table: toml::Table = toml::from_str(text)
+        .map_err(|error| CouriersError::new(format!("{COURIERS_FILE_NAME}: {error}")))?;
+
+    for key in table.keys() {
+        if !COURIERS_KEYS.contains(&key.as_str()) {
+            return Err(CouriersError::new(format!(
+                "{COURIERS_FILE_NAME}: unknown key \"{key}\""
+            )));
+        }
+    }
+
+    let not_courier = match table.get("not_courier") {
+        None => Vec::new(),
+        Some(value) => hash_list(Some(value), "", "not_courier")?,
+    };
+
+    let raw = match table.get("courier") {
+        None => {
+            return Err(CouriersError::new(format!(
+                "{COURIERS_FILE_NAME}: no couriers"
+            )));
+        }
+        Some(toml::Value::Array(entries)) => entries,
+        Some(_) => {
+            return Err(CouriersError::new(format!(
+                "{COURIERS_FILE_NAME}: \"courier\" must be an array of tables"
+            )));
+        }
+    };
+    if raw.is_empty() {
+        return Err(CouriersError::new(format!(
+            "{COURIERS_FILE_NAME}: no couriers"
+        )));
+    }
+
+    let mut couriers = Vec::with_capacity(raw.len());
+    for (index, entry) in raw.iter().enumerate() {
+        couriers.push(courier_of(entry, index)?);
+    }
+    Ok(CourierTable {
+        couriers,
+        not_courier,
+    })
 }
 
 /// The candidate couriers of a tracking-ID form (courier.md item 2): every courier whose
@@ -197,9 +384,10 @@ pub fn candidates<'a>(table: &'a CourierTable, tracking_id: &str) -> Vec<&'a Cou
         .collect()
 }
 
-/// Whether the tracking-ID form names `name` among its candidates.
-pub fn form_names_courier(tracking_id: &str, name: &str) -> bool {
-    candidates(courier_data(), tracking_id)
+/// Whether the tracking-ID form names `name` among its candidates (the two-clue rule's second
+/// half; the order's `courier` is filled only where this holds — D-LABEL-2).
+pub fn form_names_courier_in(table: &CourierTable, tracking_id: &str, name: &str) -> bool {
+    candidates(table, tracking_id)
         .iter()
         .any(|courier| courier.name == name)
 }

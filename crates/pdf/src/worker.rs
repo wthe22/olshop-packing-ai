@@ -13,6 +13,7 @@ use std::thread::{self, JoinHandle};
 
 use pdfium_render::prelude::Pdfium;
 
+use packing_engine::label::CourierTable;
 use packing_engine::orders::PageItem;
 use packing_engine::text::PageText;
 
@@ -39,6 +40,8 @@ pub enum Job {
     Read {
         cancel: Arc<AtomicBool>,
         progress: Sender<Progress>,
+        /// The data folder's courier data (the band images' appearance decision; 07 › *Inputs*).
+        couriers: CourierTable,
         reply: Sender<Result<Vec<PageItem>, PdfError>>,
     },
     /// Copy pages from the current draft into a new saved PDF.
@@ -107,15 +110,18 @@ impl PdfWorker {
     }
 
     /// Read every page of the current draft. Progress is sent on `progress`; `cancel` stops it.
+    /// `couriers` is the data folder's courier data.
     pub fn read(
         &self,
         cancel: Arc<AtomicBool>,
         progress: Sender<Progress>,
+        couriers: CourierTable,
     ) -> Result<Vec<PageItem>, PdfError> {
         let (reply, rx) = mpsc::channel();
         self.send(Job::Read {
             cancel,
             progress,
+            couriers,
             reply,
         })?;
         recv(&rx)
@@ -203,6 +209,7 @@ fn serve(pdfium: &Pdfium, rx: &Receiver<Job>) {
             Job::Read {
                 cancel,
                 progress,
+                couriers,
                 reply,
             } => {
                 let result = match &draft {
@@ -222,6 +229,7 @@ fn serve(pdfium: &Pdfium, rx: &Receiver<Job>) {
                                     pages: total,
                                 });
                             },
+                            &couriers,
                             &mut on_page,
                         )
                         .map(|()| pages)

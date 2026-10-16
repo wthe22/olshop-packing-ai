@@ -29,8 +29,9 @@ whole folder to another PC moves the program and all its data along.
 When the program starts and finds no data next to it, it says
 **"No packing data next to the program (`D:\Packing\`)."** and offers two buttons:
 
-- **Use this folder** — the app writes its `categories.toml` (your list of picks) next to the
-  program and keeps using this folder for every later start. Choose this for a normal setup.
+- **Use this folder** — the app writes its `categories.toml` (your list of picks) and
+  `couriers.toml` (the courier data) next to the program and keeps using this folder for every
+  later start. Choose this for a normal setup.
 - **Choose a folder…** — pick another folder for the data. It is used only until you close the
   app; the next start asks again. Use this when the program folder cannot be written.
 
@@ -39,5 +40,5 @@ After that the **Day** screen opens.
 ## A new version of the program
 
 When you get a new version, close the app, then copy the new `Packing.exe` and `pdfium.dll` over
-the old ones in the program folder. Your data (`categories.toml`, `settings.json`, the `labels`
-folder) stays as it is.
+the old ones in the program folder. Your data (`categories.toml`, `couriers.toml`, `settings.json`,
+the `labels` folder) stays as it is.

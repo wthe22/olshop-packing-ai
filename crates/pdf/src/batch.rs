@@ -18,6 +18,7 @@ use packing_engine::day::{
     self, BatchWrite, DayError, DayState, Duplicate, FileEntry, Fingerprint,
     Layout as EngineLayout, PackingListChoice, PdfEntry, SavedOrder, Scope, duplicates_warning,
 };
+use packing_engine::label::CourierTable;
 use packing_engine::names;
 use packing_engine::orders::{self, Line, LogoAnswer, ReadError, ReadOrder, UnseenLogo, Warning};
 use packing_engine::plan::{PickResult, PlanResult, REST_CODE};
@@ -148,10 +149,10 @@ pub struct Draft {
 impl Draft {
     /// Apply the owner's answer about one unseen logo (08 › *New batch* → *The logo prompt*,
     /// D-LABEL-4): the orders carrying the logo are named where the two clues agree
-    /// ([`UnseenLogo::apply`]), the logo leaves `unseen_logos`, and the warnings that depend on
-    /// the courier are recomputed (the unknown-courier line shrinks or goes). Returns how many
-    /// orders the answer named; an unknown `hash` changes nothing.
-    pub fn answer_logo(&mut self, hash: &str, answer: &LogoAnswer) -> usize {
+    /// ([`UnseenLogo::apply`] on `table`), the logo leaves `unseen_logos`, and the warnings that
+    /// depend on the courier are recomputed (the unknown-courier line shrinks or goes). Returns
+    /// how many orders the answer named; an unknown `hash` changes nothing.
+    pub fn answer_logo(&mut self, hash: &str, answer: &LogoAnswer, table: &CourierTable) -> usize {
         let Some(index) = self
             .unseen_logos
             .iter()
@@ -160,7 +161,7 @@ impl Draft {
             return 0;
         };
         let entry = self.unseen_logos.remove(index);
-        let named = entry.apply(&mut self.orders, answer);
+        let named = entry.apply(&mut self.orders, answer, table);
         self.refresh_courier_warning();
         named
     }
@@ -198,22 +199,24 @@ impl Draft {
 
 /// Open the files on the worker, read every page with progress and a cancel flag, group the
 /// pages into orders, then apply the duplicate guard (07 › *What happens in one batch* steps
-/// 2-4). `state` supplies the duplicate guard (amend passes its state without the batch).
+/// 2-4). `state` supplies the duplicate guard (amend passes its state without the batch);
+/// `couriers` is the data folder's courier data.
 pub fn read(
     worker: &PdfWorker,
     files: &[FileCheck],
     state: &DayState,
     cancel: Arc<AtomicBool>,
     progress: Sender<Progress>,
+    couriers: &CourierTable,
 ) -> Result<Draft, BatchError> {
     let paths: Vec<PathBuf> = files.iter().map(|file| file.path.clone()).collect();
     worker.open(&paths)?;
-    let items = worker.read(cancel, progress)?;
+    let items = worker.read(cancel, progress, couriers.clone())?;
     let pages = items.len();
 
     let names: Vec<String> = files.iter().map(|file| file.name.clone()).collect();
     let name_refs: Vec<&str> = names.iter().map(String::as_str).collect();
-    let reading = orders::read_batch(items, &name_refs)?;
+    let reading = orders::read_batch(items, &name_refs, couriers)?;
 
     let slip_pages = reading
         .orders
@@ -661,6 +664,7 @@ pub fn parse_layout(name: &str) -> Option<EngineLayout> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use packing_engine::label::courier_data;
     use packing_engine::orders::Order;
     use packing_engine::plan::{PickResult, RunResult};
 
@@ -922,7 +926,11 @@ mod tests {
         );
 
         // The JY form names J&T Express; the shared 00 form does not.
-        let named = draft.answer_logo("ffff", &LogoAnswer::Courier("J&T Express".to_string()));
+        let named = draft.answer_logo(
+            "ffff",
+            &LogoAnswer::Courier("J&T Express".to_string()),
+            courier_data(),
+        );
         assert_eq!(named, 1);
         assert_eq!(draft.orders[0].order.courier, "J&T Express");
         assert_eq!(draft.orders[1].order.courier, "");
@@ -937,7 +945,11 @@ mod tests {
         );
         // A second answer about the same hash changes nothing.
         assert_eq!(
-            draft.answer_logo("ffff", &LogoAnswer::Courier("SiCepat".to_string())),
+            draft.answer_logo(
+                "ffff",
+                &LogoAnswer::Courier("SiCepat".to_string()),
+                courier_data(),
+            ),
             0
         );
     }
@@ -945,7 +957,11 @@ mod tests {
     #[test]
     fn an_answer_naming_every_order_removes_the_warning() {
         let mut draft = draft_with_unseen_logo(vec!["580000000000000002"]);
-        let named = draft.answer_logo("ffff", &LogoAnswer::Courier("SiCepat".to_string()));
+        let named = draft.answer_logo(
+            "ffff",
+            &LogoAnswer::Courier("SiCepat".to_string()),
+            courier_data(),
+        );
         assert_eq!(named, 1);
         assert_eq!(draft.orders[1].order.courier, "SiCepat");
         // The JY order was not carrying the logo: it stays unknown and keeps its warning.
@@ -958,7 +974,7 @@ mod tests {
     fn not_a_courier_and_skip_name_nothing_but_leave_the_list() {
         for answer in [LogoAnswer::NotCourier, LogoAnswer::Skip] {
             let mut draft = draft_with_unseen_logo(vec!["580000000000000001"]);
-            assert_eq!(draft.answer_logo("ffff", &answer), 0);
+            assert_eq!(draft.answer_logo("ffff", &answer, courier_data()), 0);
             assert_eq!(draft.orders[0].order.courier, "");
             assert!(draft.unseen_logos.is_empty());
             // Both orders are still unknown: the warning is unchanged.
@@ -978,7 +994,11 @@ mod tests {
         }];
         draft.warnings.push(duplicates_warning(&draft.duplicates));
 
-        draft.answer_logo("ffff", &LogoAnswer::Courier("J&T Express".to_string()));
+        draft.answer_logo(
+            "ffff",
+            &LogoAnswer::Courier("J&T Express".to_string()),
+            courier_data(),
+        );
         assert_eq!(draft.warnings.len(), 2);
         assert!(draft.warnings[0].contains("Courier unknown for 1 order"));
         assert!(draft.warnings[1].starts_with("1 orders were already saved today"));

@@ -47,19 +47,22 @@ the **Plan** screen opens — after the logo prompt, if the batch has a logo the
 
 A courier is named from two clues, and only when they agree: the **logo** printed on the label and
 the **tracking-ID form**. The app knows the logos of J&T Express, SiCepat, J&T Cargo, IDX and SPX,
-the names of the buttons. A logo it has not seen before is asked about once per batch, before the
-Plan screen (of a page's images, the ones drawn in its top 40 pt are looked at, so the frame, the
-barcode and the QR never ask):
+the names of the buttons. A logo the app has not seen before is asked about once, before the
+Plan screen, and the answer is kept in `couriers.toml` (of a page's images, the ones drawn in its
+top 40 pt are looked at, so the frame, the barcode and the QR never ask):
 
 **Which courier is this logo?** — the logo as printed, with "4 pages · 4 orders" beside it, then a
 button per courier name, **Not a courier**, **I don't know** and **Skip all**.
 
 - **A courier name** names those orders at once. An order is named only if its tracking ID fits
-  that courier too, so one answer cannot name a wrong courier.
+  that courier too, so one answer cannot name a wrong courier. The logo is written into
+  `couriers.toml`, so later batches know it too.
 - **Not a courier** is for an image that is not a courier's logo — a buying channel's strip
-  (`tokopedia | TikTok`, `TikTok Shop`, `Shopee`, …).
+  (`tokopedia | TikTok`, `TikTok Shop`, `Shopee`, …). It is written into `couriers.toml` too, so
+  the same strip is never asked about again.
 - **I don't know** writes nothing: those orders are saved with an empty courier and are listed in
-  the day's warning. **Esc** does the same for the one logo shown; the next logo still asks.
+  the day's warning, and the logo is asked about again in the next batch. **Esc** does the same for
+  the one logo shown; the next logo still asks.
 - **Skip all** stops the prompts for the rest of this batch; nothing is written. The next batch
   asks again from the start.
 - The prompt never blocks the work: the batch saves either way.

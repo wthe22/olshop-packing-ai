@@ -11,7 +11,8 @@ use serde::{Deserialize, Serialize};
 use tauri::State;
 
 use crate::{
-    AppState, BUILTIN_CATEGORIES, CATEGORIES_FILE, LABELS_DIR, SETTINGS_FILE, program_folder, today,
+    AppState, BUILTIN_CATEGORIES, BUILTIN_COURIERS, CATEGORIES_FILE, COURIERS_FILE, LABELS_DIR,
+    SETTINGS_FILE, program_folder, today,
 };
 
 // ------------------------------------------------------------------------------- start
@@ -60,22 +61,36 @@ fn write_builtin_categories(folder: &Path) -> Result<(), String> {
         .map_err(|error| format!("Cannot write to {}: {error}.", folder.display()))
 }
 
+/// Put the built-in `couriers.toml` into `folder` when it has none (08 › *Start*, *6. Settings*).
+/// An existing file — the owner's, or one the logo prompt wrote to — is never overwritten.
+fn ensure_builtin_couriers(folder: &Path) -> Result<(), String> {
+    let path = folder.join(COURIERS_FILE);
+    if path.is_file() {
+        return Ok(());
+    }
+    std::fs::write(&path, BUILTIN_COURIERS)
+        .map_err(|error| format!("Cannot write to {}: {error}.", folder.display()))
+}
+
 /// *Use this folder*: write the built-in `categories.toml` next to the program and make that
 /// folder the data folder (08 › *Start*). Returns the folder.
 fn activate_program_folder(state: &AppState) -> Result<String, String> {
     let folder = program_folder();
     write_builtin_categories(&folder)?;
+    ensure_builtin_couriers(&folder)?;
     state.set_data_folder(folder.clone());
     Ok(folder.display().to_string())
 }
 
 /// *Choose a folder…* / Settings *Change…*: use `path` until the app closes; an empty folder
-/// gets the built-in `categories.toml` (08 › *Start*, 08 › *6. Settings*). Returns the folder.
+/// gets the built-in `categories.toml` and `couriers.toml` (08 › *Start*, 08 › *6. Settings*).
+/// Returns the folder.
 fn use_chosen_folder(state: &AppState, path: &str) -> Result<String, String> {
     let folder = PathBuf::from(path);
     if !folder.join(CATEGORIES_FILE).is_file() {
         write_builtin_categories(&folder)?;
     }
+    ensure_builtin_couriers(&folder)?;
     state.set_data_folder(folder.clone());
     Ok(folder.display().to_string())
 }
@@ -528,6 +543,50 @@ mod tests {
         write_builtin_categories(&dir).expect("write");
         assert!(dir.join(CATEGORIES_FILE).is_file());
         std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// A first start writes both bundled files; the owner's own `couriers.toml` (or one the logo
+    /// prompt wrote to) is never overwritten (08 › *Start*, *6. Settings*; R-UI-1 is separate:
+    /// `categories.toml` keeps its present behaviour).
+    #[test]
+    fn a_first_start_writes_both_files_and_keeps_an_existing_courier_file() {
+        let dir = temp_dir("first-start");
+        write_builtin_categories(&dir).expect("categories");
+        ensure_builtin_couriers(&dir).expect("couriers");
+        assert_eq!(
+            std::fs::read_to_string(dir.join(COURIERS_FILE)).expect("read"),
+            BUILTIN_COURIERS
+        );
+
+        let mine = "# mine\n[[courier]]\nname = \"X\"\nlogo = [\"0123456789abcdef\"]\n";
+        std::fs::write(dir.join(COURIERS_FILE), mine).expect("write");
+        ensure_builtin_couriers(&dir).expect("keep");
+        assert_eq!(
+            std::fs::read_to_string(dir.join(COURIERS_FILE)).expect("read"),
+            mine
+        );
+
+        // *Choose a folder…* / Settings *Change…*: an empty folder gets both files.
+        let empty = temp_dir("chosen-empty");
+        let state = AppState::new();
+        use_chosen_folder(&state, empty.to_str().expect("utf8")).expect("choose");
+        assert!(empty.join(CATEGORIES_FILE).is_file());
+        assert!(empty.join(COURIERS_FILE).is_file());
+
+        // A folder with its own files is used as it is.
+        let own = temp_dir("chosen-own");
+        let rules = "[[category]]\ncode = \"Z\"\nname = \"Rest\"\n";
+        std::fs::write(own.join(CATEGORIES_FILE), rules).expect("write");
+        std::fs::write(own.join(COURIERS_FILE), mine).expect("write");
+        use_chosen_folder(&state, own.to_str().expect("utf8")).expect("choose");
+        assert_eq!(
+            std::fs::read_to_string(own.join(COURIERS_FILE)).expect("read"),
+            mine
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+        std::fs::remove_dir_all(&empty).ok();
+        std::fs::remove_dir_all(&own).ok();
     }
 
     #[test]

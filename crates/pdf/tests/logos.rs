@@ -322,9 +322,18 @@ fn reading_a_page_twice_gives_the_same_logos_and_keeps_the_document() {
     document.save_to_file(&path).expect("save");
 
     let file = read::open(&pdfium, &path).expect("open");
-    let first = file.page_text(0).expect("first read").logos;
-    let second = file.page_text(0).expect("second read").logos;
-    let third = file.page_text(0).expect("third read").logos;
+    let first = file
+        .page_text(0, packing_engine::label::courier_data())
+        .expect("first read")
+        .logos;
+    let second = file
+        .page_text(0, packing_engine::label::courier_data())
+        .expect("second read")
+        .logos;
+    let third = file
+        .page_text(0, packing_engine::label::courier_data())
+        .expect("third read")
+        .logos;
     let _ = std::fs::remove_file(&path);
 
     assert_eq!(first.len(), 2, "both band images are candidates");

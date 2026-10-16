@@ -9,12 +9,14 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, mpsc};
 use std::thread;
 
+use packing_engine::couriers_edit::CouriersDocument;
 use packing_engine::day::{DayState, PackingListChoice, delete_batch_folder};
-use packing_engine::label;
+use packing_engine::label::{self, CourierTable};
 use packing_engine::names;
 use packing_engine::orders::{LogoAnswer, Order, ReadOrder, UnseenLogo, display_name};
 use packing_engine::plan::{PickResult, Plan};
@@ -24,7 +26,10 @@ use packing_pdf::worker::{PdfWorker, Progress};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 
-use crate::{AmendState, AppState, CATEGORIES_FILE, OpenDraft, commands::day::settings_load};
+use crate::{
+    AmendState, AppState, BUILTIN_COURIERS, CATEGORIES_FILE, COURIERS_FILE, OpenDraft,
+    commands::day::settings_load,
+};
 
 // ------------------------------------------------------------------------- new batch
 
@@ -423,19 +428,12 @@ fn read_result(open: &OpenDraft) -> ReadResult {
         already_saved: open.draft.duplicates.len(),
         warnings: open.draft.warnings.clone(),
         amend: open.amend.as_ref().map(|amend| amend.batch),
-        couriers: courier_names(),
+        // The prompt's buttons: the names of the data folder's `couriers.toml`, in file order
+        // (D-LABEL-1, D-LABEL-4).
+        couriers: open.couriers.names(),
         logos: logo_views(&open.draft, &open.logo_pictures),
         plan: plan_view(&open.plan, &open.draft.orders, open.first_number),
     }
-}
-
-/// The courier names of `couriers.toml`, in file order: the prompt's buttons (D-LABEL-1, D-LABEL-4).
-fn courier_names() -> Vec<String> {
-    label::courier_data()
-        .couriers
-        .iter()
-        .map(|courier| courier.name.clone())
-        .collect()
 }
 
 /// The unseen logos as the prompt shows them, in first-seen order (D-LABEL-4).
@@ -545,6 +543,7 @@ fn read_into_draft(
     }
     let folder = state.data_folder()?;
     let categories = load_categories(&folder)?;
+    let couriers = load_couriers(&folder)?;
 
     let mut files = paths;
     if sort_by_name {
@@ -563,7 +562,14 @@ fn read_into_draft(
 
     let inner = state.with_worker(|worker| {
         batch::check_files(worker, &files, &base_state).and_then(|checks| {
-            batch::read(worker, &checks, &base_state, cancel.clone(), progress_tx)
+            batch::read(
+                worker,
+                &checks,
+                &base_state,
+                cancel.clone(),
+                progress_tx,
+                &couriers,
+            )
         })
     });
 
@@ -584,6 +590,7 @@ fn read_into_draft(
         draft,
         plan,
         first_number,
+        couriers,
         amend,
         logo_pictures,
     };
@@ -674,19 +681,58 @@ fn start_amend_impl(state: &AppState, day: &str) -> Result<ReadResult, String> {
 /// Answer the logo prompt about one unseen logo (08 › *2. New batch* → *The logo prompt*;
 /// D-LABEL-4): the order's courier is filled where the logo's courier and the tracking-ID form
 /// agree, the draft's warnings and the plan view are recounted, and the refreshed result goes
-/// back to the screen. An unknown hash changes nothing. *Skip all* never comes here: it only
-/// stops the screen asking.
+/// back to the screen. The taught hash is then written into the data folder's `couriers.toml`
+/// (Q-LABEL-7 default) so the logo is never asked about again. An unknown hash changes nothing.
+/// *Skip all* never comes here: it only stops the screen asking.
 fn answer_logo_impl(
     state: &AppState,
     hash: &str,
     answer: &LogoAnswerInput,
 ) -> Result<ReadResult, String> {
-    state.with_draft(|open| {
-        open.draft.answer_logo(hash, &answer.to_engine());
+    let folder = state.data_folder()?;
+    // Only a logo the draft really asked about is remembered; an unknown hash is written nowhere.
+    let mut asked = false;
+    let result = state.with_draft(|open| {
+        asked = open
+            .draft
+            .unseen_logos
+            .iter()
+            .any(|entry| entry.hash == hash);
+        open.draft
+            .answer_logo(hash, &answer.to_engine(), &open.couriers);
         // The answered logo is spent; its picture is no longer needed.
         open.logo_pictures.remove(hash);
         read_result(open)
-    })
+    })?;
+    if asked {
+        remember_logo(&folder, hash, answer)?;
+    }
+    Ok(result)
+}
+
+/// Write the hash the owner taught into the data folder's `couriers.toml`, comments and order
+/// kept (D-LABEL-4, Q-LABEL-7 default): a courier name appends it to that courier's `logo` list,
+/// *Not a courier* appends it to `not_courier`, *I don't know* (`Skip`) writes nothing. A file
+/// the data folder does not have yet starts as the built-in list.
+fn remember_logo(folder: &Path, hash: &str, answer: &LogoAnswerInput) -> Result<(), String> {
+    if matches!(answer, LogoAnswerInput::Skip) {
+        return Ok(());
+    }
+    let path = folder.join(COURIERS_FILE);
+    let text = match std::fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => BUILTIN_COURIERS.to_string(),
+        Err(error) => return Err(format!("cannot read {}: {error}", path.display())),
+    };
+    let mut document = CouriersDocument::from_str(&text).map_err(|error| error.to_string())?;
+    match answer {
+        LogoAnswerInput::Courier { name } => document.add_courier_logo(name, hash),
+        LogoAnswerInput::NotCourier => document.add_not_courier(hash),
+        LogoAnswerInput::Skip => Ok(()),
+    }
+    .map_err(|error| error.to_string())?;
+    std::fs::write(&path, document.to_string())
+        .map_err(|error| format!("Cannot write to {}: {error}.", path.display()))
 }
 
 /// Load `<data>/categories.toml` (08 › *Messages*: a rules error stops the batch with its
@@ -697,6 +743,14 @@ fn load_categories(folder: &Path) -> Result<Vec<Category>, String> {
         .map_err(|error| format!("cannot read {}: {error}", path.display()))?;
     load_rules(&text)
         .map_err(|error| format!("The categories have an error: {error}. Fix it in Categories."))
+}
+
+/// Load `<data>/couriers.toml`, or the built-in list when the data folder has none
+/// (07 › *Inputs*, D-LABEL-1). A broken file stops the read with its line (08 › *Messages*).
+fn load_couriers(folder: &Path) -> Result<CourierTable, String> {
+    label::load_couriers_file(&folder.join(COURIERS_FILE)).map_err(|error| {
+        format!("The couriers have an error: {error}. Fix {COURIERS_FILE} in the data folder.")
+    })
 }
 
 // ------------------------------------------------------------------------------- saving
@@ -1129,7 +1183,7 @@ mod tests {
             total_orders: 2,
             slip_pages: 2,
             unseen_logos: vec![UnseenLogo {
-                hash: "ffff".to_string(),
+                hash: "ffffffffffffffff".to_string(),
                 appearance: None,
                 pages: 2,
                 order_ids: vec![
@@ -1157,9 +1211,10 @@ mod tests {
                 Some("courier starts_with \"J&T\""),
             )]),
             first_number: 1,
+            couriers: packing_engine::label::courier_data().clone(),
             amend: None,
             logo_pictures: HashMap::from([(
-                "ffff".to_string(),
+                "ffffffffffffffff".to_string(),
                 Some("data:image/png;base64,Zm9v".to_string()),
             )]),
         });
@@ -1186,7 +1241,7 @@ mod tests {
         // Before the answer: the prompt's logo, the courier buttons, a pick with no orders.
         let before = state.with_draft(|open| read_result(open)).expect("draft");
         assert_eq!(before.logos.len(), 1);
-        assert_eq!(before.logos[0].hash, "ffff");
+        assert_eq!(before.logos[0].hash, "ffffffffffffffff");
         assert_eq!(before.logos[0].pages, 2);
         assert_eq!(before.logos[0].orders, 2);
         assert_eq!(
@@ -1205,7 +1260,7 @@ mod tests {
         // The JY form names J&T Express; the shared 00 form does not.
         let after = answer_logo_impl(
             &state,
-            "ffff",
+            "ffffffffffffffff",
             &LogoAnswerInput::Courier {
                 name: "J&T Express".to_string(),
             },
@@ -1227,7 +1282,7 @@ mod tests {
         for answer in [LogoAnswerInput::Skip, LogoAnswerInput::NotCourier] {
             let dir = temp_dir("logo-skip");
             let state = state_with_logo_draft(&dir);
-            let result = answer_logo_impl(&state, "ffff", &answer).expect("answer");
+            let result = answer_logo_impl(&state, "ffffffffffffffff", &answer).expect("answer");
 
             assert!(result.logos.is_empty(), "the answered logo is spent");
             assert_eq!(result.plan.rows[0].orders, 0);
@@ -1258,6 +1313,113 @@ mod tests {
         .expect("answer");
         assert_eq!(result.logos.len(), 1, "the logo is still asked about");
         assert_eq!(result.plan.rows[0].orders, 0);
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // ---------------------------------------- the taught hash in couriers.toml (D-LABEL-4)
+
+    #[test]
+    fn a_courier_answer_remembers_the_logo_in_the_data_folders_file() {
+        let dir = temp_dir("logo-remember");
+        let state = state_with_logo_draft(&dir);
+        answer_logo_impl(
+            &state,
+            "ffffffffffffffff",
+            &LogoAnswerInput::Courier {
+                name: "J&T Express".to_string(),
+            },
+        )
+        .expect("answer");
+
+        let text = std::fs::read_to_string(dir.join(COURIERS_FILE)).expect("couriers.toml written");
+        // The bundled file's comments and its other entries are untouched.
+        assert!(text.contains("975x377 px"), "comments kept:\n{text}");
+        assert!(
+            text.contains("# its base image is one flat colour"),
+            "{text}"
+        );
+        assert!(
+            text.contains("logo = [\"39b9b7b9f61d0e7f\", \"ffffffffffffffff\"]"),
+            "{text}"
+        );
+
+        // The next read uses the file: the logo is known.
+        assert!(
+            load_couriers(&dir)
+                .expect("reload")
+                .knows_byte_hash("ffffffffffffffff")
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_not_a_courier_answer_goes_to_the_top_level_list() {
+        let dir = temp_dir("logo-not-courier");
+        let state = state_with_logo_draft(&dir);
+        answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswerInput::NotCourier).expect("answer");
+        let text = std::fs::read_to_string(dir.join(COURIERS_FILE)).expect("written");
+        assert!(
+            text.contains("not_courier = [\"ffffffffffffffff\"]"),
+            "{text}"
+        );
+        assert!(
+            load_couriers(&dir)
+                .expect("reload")
+                .knows_byte_hash("ffffffffffffffff")
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn skip_and_an_unknown_hash_write_no_courier_file() {
+        let dir = temp_dir("logo-no-write");
+        let state = state_with_logo_draft(&dir);
+        answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswerInput::Skip).expect("answer");
+        assert!(
+            !dir.join(COURIERS_FILE).exists(),
+            "*I don't know* writes nothing"
+        );
+        answer_logo_impl(
+            &state,
+            "0123456789abcdef",
+            &LogoAnswerInput::Courier {
+                name: "SiCepat".to_string(),
+            },
+        )
+        .expect("answer");
+        assert!(
+            !dir.join(COURIERS_FILE).exists(),
+            "an unknown hash writes nothing"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn a_broken_couriers_file_stops_the_read_with_its_line() {
+        let dir = temp_dir("couriers-broken");
+        std::fs::write(
+            dir.join(CATEGORIES_FILE),
+            "[[category]]\ncode = \"Z\"\nname = \"Rest\"\n",
+        )
+        .expect("write categories");
+        // An unterminated array: the TOML parser names the line it stopped at.
+        std::fs::write(
+            dir.join(COURIERS_FILE),
+            "not_courier = [\"aa11\"\n[[courier]]\nname = \"X\"\n",
+        )
+        .expect("write couriers");
+
+        let state = AppState::new();
+        state.set_data_folder(dir.clone());
+        state.set_day("2026-10-07");
+        let error = read_draft(&state, vec![dir.join("a.pdf")], |_| {})
+            .err()
+            .expect("the read must stop");
+        assert!(
+            error.starts_with("The couriers have an error: couriers.toml: "),
+            "{error}"
+        );
+        assert!(error.contains("line"), "{error}");
         std::fs::remove_dir_all(&dir).ok();
     }
 

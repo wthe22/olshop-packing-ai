@@ -11,6 +11,7 @@ the batch can still be saved.
 | **`<file>`: page `<p>` has no Order ID** | The file does not look like a TikTok Shop label download (or is damaged). Remove it and use the right file. |
 | **`<file>` cannot be read as a PDF.** It may be damaged or still downloading. Download it again. | Download the file again, then add it. |
 | **`<line, col: message>`** — a category error, e.g. `line 18, col 8: field "product_category" needs the orders CSV, which the PC app does not read` | Fix the condition in Categories (the app opens it for you). |
+| **The couriers have an error:** `<line, col: message>` | Fix `couriers.toml` in the data folder. |
 | **All `<n>` orders were already saved today** (batch `<b>`). These labels were prepared before; nothing to do. | These labels were done in an earlier batch today. Nothing to do. |
 | **`<n>` orders were already saved today** and are left out: `<tracking ID>` (batch `<b>`, PDF `<k>`, `<time>`), … | A warning: those orders are skipped. Remove the file if you did not mean to read it again. |
 | **no courier could be deduced for:** `<order IDs>` | A warning: those orders are sorted normally; only a category that uses `courier` cannot see them. Check those labels by eye if you use one. |
@@ -23,7 +24,7 @@ the batch can still be saved.
 
 Open **Settings** in the top bar.
 
-- **Data folder** — where `categories.toml` and the `labels` folder live. **Change…** switches to
+- **Data folder** — where `categories.toml`, `couriers.toml` and the `labels` folder live. **Change…** switches to
   another folder until the app closes ("Use `<folder>` until the app closes? Existing days stay in
   `<old>`."); **Open** opens it. It does not move existing files.
 - **Packing list default** — the scope and layouts the Plan screen starts with (default: one for

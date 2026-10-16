@@ -24,7 +24,11 @@ fn worker_reads_with_progress_and_stops_on_cancel() {
     // A full read reports progress on the way.
     let (progress_tx, progress_rx) = mpsc::channel();
     let pages = worker
-        .read(Arc::new(AtomicBool::new(false)), progress_tx)
+        .read(
+            Arc::new(AtomicBool::new(false)),
+            progress_tx,
+            packing_engine::label::courier_data().clone(),
+        )
         .expect("read all pages");
     assert_eq!(pages.len(), 24);
     let progress: Vec<Progress> = progress_rx.try_iter().collect();
@@ -34,7 +38,11 @@ fn worker_reads_with_progress_and_stops_on_cancel() {
     // Cancelling before the first page stops the read.
     let (progress_tx, _progress_rx) = mpsc::channel();
     let error = worker
-        .read(Arc::new(AtomicBool::new(true)), progress_tx)
+        .read(
+            Arc::new(AtomicBool::new(true)),
+            progress_tx,
+            packing_engine::label::courier_data().clone(),
+        )
         .expect_err("a cancelled read must stop");
     assert!(
         matches!(error, packing_pdf::PdfError::Cancelled),

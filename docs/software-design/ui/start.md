@@ -9,6 +9,7 @@ At every start the app looks for `categories.toml` in its own folder
    - **Use this folder** writes the bundled `categories.toml` and `couriers.toml` (the
      repository's) there; every later start finds them. If the folder cannot be written (e.g. under `Program Files`), the
      message says so and only **Choose a folder…** is left.
-   - **Choose a folder…**: a folder with a `categories.toml` is used as it is; an empty one gets
-     the bundled file. It is used until the app closes, so the next start asks again.
+   - **Choose a folder…**: a folder with a `categories.toml` is used as it is (a `couriers.toml`
+     it does not have is written from the bundled file); an empty one gets both bundled files. It
+     is used until the app closes, so the next start asks again.
 3. If `categories.toml` has errors, Categories opens before the Day screen.

@@ -6,6 +6,7 @@ mod common;
 use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 
+use packing_engine::label::courier_data;
 use packing_engine::orders::{ReadError, ReadOrder, read_batch};
 use packing_pdf::read;
 
@@ -92,6 +93,7 @@ fn reads_labels_slip_and_matches_the_fixture() {
         &pdfium,
         std::slice::from_ref(&path),
         &cancel,
+        courier_data(),
         &mut |done, total| progress.push((done, total)),
     )
     .expect("read labels-slip.pdf");
@@ -109,7 +111,7 @@ fn reads_labels_slip_and_matches_the_fixture() {
 
     let names = file_names(std::slice::from_ref(&path));
     let name_refs: Vec<&str> = names.iter().map(String::as_str).collect();
-    let reading = read_batch(pages, &name_refs).expect("read the batch");
+    let reading = read_batch(pages, &name_refs, courier_data()).expect("read the batch");
 
     let expected: Value = serde_json::from_str(
         &std::fs::read_to_string(common::testdata("expected-labels.json")).expect("fixture"),
@@ -144,12 +146,13 @@ fn plain_labels_stop_with_the_no_slip_error() {
         &pdfium,
         std::slice::from_ref(&path),
         &cancel,
+        courier_data(),
         &mut |_, _| {},
     )
     .expect("read labels-plain.pdf");
     let names = file_names(std::slice::from_ref(&path));
     let name_refs: Vec<&str> = names.iter().map(String::as_str).collect();
-    let error = read_batch(pages, &name_refs).expect_err("plain labels must stop");
+    let error = read_batch(pages, &name_refs, courier_data()).expect_err("plain labels must stop");
     match error {
         ReadError::NoSlip(no_slip) => {
             assert_eq!(no_slip.plain_pages, 3);

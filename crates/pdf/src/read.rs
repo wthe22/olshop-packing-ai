@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
 
 use pdfium_render::prelude::*;
 
-use packing_engine::label::is_known_logo_hash;
+use packing_engine::label::CourierTable;
 use packing_engine::text::{LogoImage, PageText, Run};
 
 use crate::PdfError;
@@ -43,8 +43,8 @@ impl<'a> OpenedFile<'a> {
     }
 
     /// The text (whole-page string and rebuilt runs) of one 0-based page, with the logos of the
-    /// page's header band.
-    pub fn page_text(&self, index: usize) -> Result<PageText, PdfError> {
+    /// page's header band. `table` is the courier data the appearance decision uses.
+    pub fn page_text(&self, index: usize, table: &CourierTable) -> Result<PageText, PdfError> {
         let page = self
             .doc
             .pages()
@@ -56,7 +56,7 @@ impl<'a> OpenedFile<'a> {
         let text = page.text()?;
         let all = text.all();
         let runs = build_runs(&page, &text)?;
-        let logos = self.logos_of(&page, index)?;
+        let logos = self.logos_of(&page, index, table)?;
         Ok(PageText {
             text: all,
             runs,
@@ -95,9 +95,14 @@ impl<'a> OpenedFile<'a> {
     /// The page's header-band logos. The byte hashes come from the real page (read-only); only a
     /// band image the courier data does not know needs its appearance, and that is rendered on
     /// the scratch copy.
-    fn logos_of(&self, page: &PdfPage<'_>, index: usize) -> Result<Vec<LogoImage>, PdfError> {
+    fn logos_of(
+        &self,
+        page: &PdfPage<'_>,
+        index: usize,
+        table: &CourierTable,
+    ) -> Result<Vec<LogoImage>, PdfError> {
         let logos = page_logos(page, &self.doc, &|_| true)?;
-        if logos.iter().all(|logo| is_known_logo_hash(&logo.hash)) {
+        if logos.iter().all(|logo| table.knows_byte_hash(&logo.hash)) {
             return Ok(logos);
         }
         let scratch = self.scratch()?;
@@ -109,7 +114,7 @@ impl<'a> OpenedFile<'a> {
                     path: self.path.clone(),
                     message: format!("page {}: {e}", index + 1),
                 })?;
-        page_logos(&scratch_page, &scratch, &|hash| is_known_logo_hash(hash))
+        page_logos(&scratch_page, &scratch, &|hash| table.knows_byte_hash(hash))
     }
 }
 
@@ -244,11 +249,13 @@ pub fn open_all<'a>(
 
 /// Walk the pages of already-opened files in order, calling `on_page(file, page, text)` and
 /// `progress(pages_done, pages_total)` after each page. Between pages the cancel flag is read;
-/// when it is set the walk stops with [`PdfError::Cancelled`].
+/// when it is set the walk stops with [`PdfError::Cancelled`]. `table` is the data folder's
+/// courier data, used for the band images' appearance decision.
 pub fn for_each_page<F>(
     files: &[OpenedFile<'_>],
     cancel: &AtomicBool,
     progress: &mut dyn FnMut(usize, usize),
+    table: &CourierTable,
     on_page: &mut F,
 ) -> Result<(), PdfError>
 where
@@ -261,7 +268,7 @@ where
             if cancel.load(AtomicOrdering::Relaxed) {
                 return Err(PdfError::Cancelled);
             }
-            let page = file.page_text(page_index)?;
+            let page = file.page_text(page_index, table)?;
             on_page(file_index, page_index, &page)?;
             done += 1;
             progress(done, total);
@@ -275,11 +282,12 @@ pub fn read_all(
     pdfium: &Pdfium,
     paths: &[PathBuf],
     cancel: &AtomicBool,
+    table: &CourierTable,
     progress: &mut dyn FnMut(usize, usize),
 ) -> Result<Vec<packing_engine::orders::PageItem>, PdfError> {
     let files = open_all(pdfium, paths)?;
     let mut pages = Vec::new();
-    for_each_page(&files, cancel, progress, &mut |file, page, text| {
+    for_each_page(&files, cancel, progress, table, &mut |file, page, text| {
         pages.push((file, page, text.clone()));
         Ok(())
     })?;

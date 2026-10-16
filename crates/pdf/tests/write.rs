@@ -22,8 +22,12 @@ fn copies_pages_unchanged() {
     let copied = read::open(&pdfium, &out).expect("open the copy");
     assert_eq!(copied.pages, pages.len());
     for (index, &(file, page)) in pages.iter().enumerate() {
-        let original = files[file].page_text(page).expect("original text");
-        let copy = copied.page_text(index).expect("copy text");
+        let original = files[file]
+            .page_text(page, packing_engine::label::courier_data())
+            .expect("original text");
+        let copy = copied
+            .page_text(index, packing_engine::label::courier_data())
+            .expect("copy text");
         assert_eq!(original.text, copy.text, "page {index} text differs");
         assert_eq!(original.runs, copy.runs, "page {index} runs differ");
     }
@@ -49,8 +53,12 @@ fn keeps_any_page_order_and_shares_resources() {
     let copied = read::open(&pdfium, &out).expect("open the copy");
     assert_eq!(copied.pages, pages.len());
     for (index, &(file, page)) in pages.iter().enumerate() {
-        let original = files[file].page_text(page).expect("original text");
-        let copy = copied.page_text(index).expect("copy text");
+        let original = files[file]
+            .page_text(page, packing_engine::label::courier_data())
+            .expect("original text");
+        let copy = copied
+            .page_text(index, packing_engine::label::courier_data())
+            .expect("copy text");
         assert_eq!(original.text, copy.text, "page {index} text differs");
     }
     // Page-by-page import made every page carry its own font copy; one import keeps the

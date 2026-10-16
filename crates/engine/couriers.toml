@@ -4,7 +4,7 @@
 #
 # not_courier   hashes of images answered **Not a courier** in the logo prompt - a buying
 #               channel's strip (Q-LABEL-5). Such an image names nothing and is never asked
-#               about again. Written back by the prompt (D-LABEL-4, task 2.19).
+#               about again. Written back by the prompt (D-LABEL-4).
 #
 # Each [[courier]] entry has:
 #   name       the courier name the rule names an order with

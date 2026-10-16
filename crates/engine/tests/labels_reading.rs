@@ -4,6 +4,11 @@
 use packing_engine::orders::{LogoAnswer, PageRef, ReadError, Warning, display_name, read_batch};
 use packing_engine::text::{LogoImage, PageText, Run};
 
+/// The built-in courier list: the default of a data folder without a `couriers.toml`.
+fn table() -> &'static packing_engine::label::CourierTable {
+    packing_engine::label::courier_data()
+}
+
 const WIDTH: f64 = 298.0;
 
 fn run(x: f64, y: f64, text: &str) -> Run {
@@ -115,7 +120,7 @@ fn second_page_without_order_id_continues_the_first() {
         None,
     );
     let p1 = plain_page("Jumlah : 3pcs");
-    let reading = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"]).unwrap();
+    let reading = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap();
 
     assert_eq!(reading.orders.len(), 1);
     let order = &reading.orders[0];
@@ -152,7 +157,7 @@ fn a_slip_continuation_page_merges_the_message_and_keeps_the_lines() {
         None,
         Some("Tolong bubble wrap, jangan dilipat"),
     );
-    let reading = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"]).unwrap();
+    let reading = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap();
 
     let order = &reading.orders[0];
     assert_eq!(order.order.lines.len(), 1);
@@ -179,7 +184,12 @@ fn two_files_keep_the_download_order() {
         Some(1),
         None,
     );
-    let reading = read_batch(vec![(0usize, 0usize, p0), (1, 0, p1)], &["a.pdf", "b.pdf"]).unwrap();
+    let reading = read_batch(
+        vec![(0usize, 0usize, p0), (1, 0, p1)],
+        &["a.pdf", "b.pdf"],
+        table(),
+    )
+    .unwrap();
 
     let ids: Vec<&str> = reading
         .orders
@@ -200,7 +210,12 @@ fn a_page_without_order_id_cannot_continue_across_a_file() {
         None,
     );
     let p1 = plain_page("Jumlah : 1pcs");
-    let err = read_batch(vec![(0usize, 0usize, p0), (1, 0, p1)], &["a.pdf", "b.pdf"]).unwrap_err();
+    let err = read_batch(
+        vec![(0usize, 0usize, p0), (1, 0, p1)],
+        &["a.pdf", "b.pdf"],
+        table(),
+    )
+    .unwrap_err();
     assert_eq!(
         err,
         ReadError::NoOrderId {
@@ -215,7 +230,7 @@ fn a_page_without_order_id_cannot_continue_across_a_file() {
 #[test]
 fn first_page_without_order_id_stops_with_file_and_page() {
     let p0 = plain_page("JY0000001234\nJumlah : 1pcs");
-    let err = read_batch(vec![(0usize, 0usize, p0)], &["noid.pdf"]).unwrap_err();
+    let err = read_batch(vec![(0usize, 0usize, p0)], &["noid.pdf"], table()).unwrap_err();
     assert_eq!(
         err.to_string(),
         "Page 1 of noid.pdf has no Order ID. This does not look like a TikTok Shop label \
@@ -227,7 +242,7 @@ fn first_page_without_order_id_stops_with_file_and_page() {
 fn all_plain_pages_stop_with_the_all_pages_message() {
     let p0 = plain_page("JY0000001234\n580000000000000001");
     let p1 = plain_page("JY0000009999\n580000000000000002");
-    let err = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"]).unwrap_err();
+    let err = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap_err();
     match err {
         ReadError::NoSlip(no_slip) => {
             assert_eq!(no_slip.plain_pages, 2);
@@ -252,7 +267,7 @@ fn some_plain_pages_stop_naming_the_file_and_pages() {
         None,
     );
     let p1 = plain_page("JY0000009999\n580000000000000002");
-    let err = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"]).unwrap_err();
+    let err = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap_err();
     match err {
         ReadError::NoSlip(no_slip) => {
             assert_eq!(no_slip.plain_pages, 1);
@@ -278,7 +293,7 @@ fn qty_total_difference_is_warned() {
         Some(5),
         None,
     );
-    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"]).unwrap();
+    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
     assert_eq!(
         reading.warnings,
         vec![Warning::QtyTotalDiffers {
@@ -298,7 +313,7 @@ fn unknown_courier_is_warned() {
         Some(1),
         None,
     );
-    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"]).unwrap();
+    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
     assert_eq!(reading.orders[0].order.courier, "");
     assert_eq!(
         reading.warnings,
@@ -317,7 +332,7 @@ fn unknown_courier_is_warned() {
 #[test]
 fn a_missing_tracking_id_is_warned() {
     let p0 = slip_page("580000000000000004", &one_row(), Some(1), None);
-    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"]).unwrap();
+    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
     assert!(reading.orders[0].order.tracking_id.is_empty());
     assert!(
         reading
@@ -339,7 +354,7 @@ fn a_known_logo_names_the_order_and_reports_no_unseen_logo() {
         None,
         vec![logo("39b9b7b9f61d0e7f")],
     );
-    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"]).unwrap();
+    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
     assert_eq!(reading.orders[0].order.courier, "J&T Express");
     assert!(reading.unseen_logos.is_empty());
 }
@@ -365,6 +380,7 @@ fn an_unseen_logo_is_reported_with_its_pages_and_orders() {
     let reading = read_batch(
         vec![(0usize, 0usize, p0), (0, 1, p1), (0, 2, p2)],
         &["a.pdf"],
+        table(),
     )
     .unwrap();
 
@@ -398,7 +414,7 @@ fn an_appearance_hash_is_carried_on_the_unseen_logo() {
             appearance: Some("2a36acec58f5ab12".to_string()),
         }],
     );
-    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"]).unwrap();
+    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
     assert_eq!(
         reading.unseen_logos[0].appearance.as_deref(),
         Some("2a36acec58f5ab12")
@@ -423,18 +439,23 @@ fn an_answered_logo_names_the_orders_only_where_the_form_agrees() {
         None,
         vec![logo("ffff")],
     );
-    let mut reading = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"]).unwrap();
+    let mut reading =
+        read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap();
     assert_eq!(reading.orders[0].order.courier, "");
     assert_eq!(reading.orders[1].order.courier, "");
 
-    let named = reading.apply_logo_answer("ffff", &LogoAnswer::Courier("J&T Express".to_string()));
+    let named = reading.apply_logo_answer(
+        "ffff",
+        &LogoAnswer::Courier("J&T Express".to_string()),
+        table(),
+    );
     assert_eq!(named, 1);
     assert_eq!(reading.orders[0].order.courier, "J&T Express");
     assert_eq!(reading.orders[1].order.courier, "");
     assert!(reading.unseen_logos.is_empty());
     // The answer is spent: a second one changes nothing.
     assert_eq!(
-        reading.apply_logo_answer("ffff", &LogoAnswer::Courier("SiCepat".to_string())),
+        reading.apply_logo_answer("ffff", &LogoAnswer::Courier("SiCepat".to_string()), table()),
         0
     );
 }
@@ -448,12 +469,15 @@ fn a_not_courier_answer_names_nothing() {
         None,
         vec![logo("ffff")],
     );
-    let mut reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"]).unwrap();
+    let mut reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
     assert_eq!(
-        reading.apply_logo_answer("ffff", &LogoAnswer::NotCourier),
+        reading.apply_logo_answer("ffff", &LogoAnswer::NotCourier, table()),
         0
     );
-    assert_eq!(reading.apply_logo_answer("ffff", &LogoAnswer::Skip), 0);
+    assert_eq!(
+        reading.apply_logo_answer("ffff", &LogoAnswer::Skip, table()),
+        0
+    );
     assert_eq!(reading.orders[0].order.courier, "");
     assert!(reading.unseen_logos.is_empty());
 }

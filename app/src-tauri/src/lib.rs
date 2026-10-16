@@ -24,8 +24,15 @@ pub mod commands;
 /// *Start*). A copy of the repository's rules file; it holds no customer data.
 pub(crate) const BUILTIN_CATEGORIES: &str = include_str!("../categories.toml");
 
+/// The built-in `couriers.toml` written into a data folder that has none (08 › *Start*,
+/// 08 › *6. Settings*; 07 › *Inputs*). The engine's bundled courier list, so there is one home
+/// for it.
+pub(crate) const BUILTIN_COURIERS: &str = packing_engine::label::COURIERS_TOML;
+
 /// The categories file that marks a folder as a data folder (07 › *Program folder*).
 pub(crate) const CATEGORIES_FILE: &str = "categories.toml";
+/// The courier file in the data folder (07 › *Inputs*).
+pub(crate) const COURIERS_FILE: &str = packing_engine::label::COURIERS_FILE_NAME;
 /// The settings file in the data folder (07 › *Settings*).
 pub(crate) const SETTINGS_FILE: &str = "settings.json";
 /// The day folders inside the data folder (07 › *Day folder*).
@@ -40,6 +47,10 @@ pub(crate) struct OpenDraft {
     pub plan: Plan,
     /// The day's next saved-PDF number at the time of reading (08 › *3. Plan*: the numbers `#`).
     pub first_number: i64,
+    /// The courier data the batch was read with: the data folder's `couriers.toml`, or the
+    /// bundled list when it has none (07 › *Inputs*). The logo prompt's buttons and the answers
+    /// use this table.
+    pub couriers: packing_engine::label::CourierTable,
     /// Set when this draft amends the last batch (07 › *Amend*): Save replaces that batch and the
     /// plan screen is titled *Redo batch `<b>`*. `None` for a normal new batch.
     pub amend: Option<AmendState>,
@@ -252,10 +263,16 @@ pub fn run() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use packing_engine::label::load_couriers;
     use packing_engine::rules::load_rules;
 
     #[test]
     fn builtin_categories_are_a_valid_rules_file() {
         assert!(load_rules(BUILTIN_CATEGORIES).is_ok());
+    }
+
+    #[test]
+    fn builtin_couriers_are_a_valid_couriers_file() {
+        assert!(load_couriers(BUILTIN_COURIERS).is_ok());
     }
 }

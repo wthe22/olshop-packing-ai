@@ -2,11 +2,13 @@
 //! runs (07 › *Architecture*: `packing-cli` is the same engine, not for daily use).
 //!
 //! ```text
-//! packing-cli prepare --labels <file>... [--rules <categories.toml>] [--day YYYY-MM-DD]
+//! packing-cli prepare --labels <file>... [--rules <categories.toml>] [--couriers <couriers.toml>]
+//!                     [--day YYYY-MM-DD]
 //!                     [--data <dir>] [--packing-list whole|per-pdf|none]
 //!                     [--layout pick,full,summary] [--pdfium <dir>] [--quiet-ids]
 //! packing-cli revert  [--day <day>] [--data <dir>]
 //! packing-cli amend   [--day <day>] [--data <dir>] [--rules <categories.toml>]
+//!                     [--couriers <couriers.toml>]
 //! ```
 
 use std::fmt;
@@ -17,6 +19,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 
 use packing_engine::day::{DayState, Layout, PackingListChoice, Scope, delete_batch_folder};
+use packing_engine::label::{CourierTable, load_couriers_file};
 use packing_engine::plan::{Plan, PlanResult};
 use packing_engine::rules::{Category, load_rules};
 use packing_pdf::batch::{self, BatchError, Draft};
@@ -33,15 +36,17 @@ USAGE:
 OPTIONS (prepare):
   --labels <file>...           One or more label PDFs of this batch (required)
   --rules <categories.toml>    The picks, in order (default: <data>/categories.toml)
+  --couriers <couriers.toml>   The courier data (default: <data>/couriers.toml, else the built-in file)
   --day YYYY-MM-DD             The day folder (default: today)
-  --data <dir>                 The data folder holding categories.toml and labels/ (default: .)
+  --data <dir>                 The data folder holding categories.toml, couriers.toml and labels/ (default: .)
   --packing-list <scope>       one per batch | one per PDF | none (default: whole)
   --layout <list>              Comma-separated: pick, full, summary (default: pick)
   --pdfium <dir>               The folder with pdfium.dll (default: next to the exe, else vendor)
   --quiet-ids                  Print counts only; no order IDs, tracking IDs or names
 
 OPTIONS (revert, amend):
-  --day YYYY-MM-DD --data <dir> [--rules <categories.toml>] [--pdfium <dir>] [--quiet-ids]
+  --day YYYY-MM-DD --data <dir> [--rules <categories.toml>] [--couriers <couriers.toml>]
+  [--pdfium <dir>] [--quiet-ids]
 
 The batch is written to <data>/labels/<day>/batch <b>/ (07 › *What happens in one batch*).
 ";
@@ -75,6 +80,7 @@ fn finish(result: Result<(), CliError>) {
 enum CliError {
     Usage(String),
     Rules(String),
+    Couriers(String),
     Io(String),
     Batch(BatchError),
 }
@@ -84,6 +90,7 @@ impl fmt::Display for CliError {
         match self {
             CliError::Usage(message) => f.write_str(message),
             CliError::Rules(message) => write!(f, "the categories have an error: {message}"),
+            CliError::Couriers(message) => write!(f, "the couriers have an error: {message}"),
             CliError::Io(message) => f.write_str(message),
             CliError::Batch(error) => error.fmt(f),
         }
@@ -102,6 +109,7 @@ impl From<BatchError> for CliError {
 struct Args {
     labels: Vec<PathBuf>,
     rules: Option<PathBuf>,
+    couriers: Option<PathBuf>,
     day: Option<String>,
     data: PathBuf,
     scope: Scope,
@@ -115,6 +123,7 @@ impl Args {
         let mut parsed = Args {
             labels: Vec::new(),
             rules: None,
+            couriers: None,
             day: None,
             data: std::env::current_dir().map_err(|e| CliError::Io(e.to_string()))?,
             scope: Scope::Whole,
@@ -134,6 +143,9 @@ impl Args {
                     }
                 }
                 "--rules" => parsed.rules = Some(PathBuf::from(value(args, &mut index, flag)?)),
+                "--couriers" => {
+                    parsed.couriers = Some(PathBuf::from(value(args, &mut index, flag)?));
+                }
                 "--day" => parsed.day = Some(value(args, &mut index, flag)?),
                 "--data" => parsed.data = PathBuf::from(value(args, &mut index, flag)?),
                 "--pdfium" => parsed.pdfium = Some(PathBuf::from(value(args, &mut index, flag)?)),
@@ -190,6 +202,14 @@ impl Args {
             .clone()
             .unwrap_or_else(|| self.data.join("categories.toml"))
     }
+
+    /// The courier file: `--couriers`, else `<data>/couriers.toml`, else (no file) the built-in
+    /// list (07 › *Inputs*).
+    fn couriers_path(&self) -> PathBuf {
+        self.couriers
+            .clone()
+            .unwrap_or_else(|| self.data.join("couriers.toml"))
+    }
 }
 
 fn value(args: &[String], index: &mut usize, flag: &str) -> Result<String, CliError> {
@@ -213,13 +233,14 @@ fn run_prepare(args: &[String]) -> Result<(), CliError> {
     let day = args.day();
     let day_dir = args.day_dir(&day);
     let categories = load_categories(&args)?;
+    let couriers = load_couriers(&args)?;
     let mut state = DayState::load(&day_dir).map_err(|e| CliError::Batch(e.into()))?;
 
     let worker = spawn_worker(&args)?;
     // Files are read in file-name order (= download order, 07 › *Read*).
     let mut labels = args.labels.clone();
     labels.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
-    let (draft, plan) = read_and_plan(&worker, &categories, &state, &labels)?;
+    let (draft, plan) = read_and_plan(&worker, &categories, &couriers, &state, &labels)?;
 
     let packing = args.packing();
     let result = batch::save(&worker, &draft, &plan, &packing, &day, &day_dir, &mut state)?;
@@ -250,6 +271,7 @@ fn run_amend(args: &[String]) -> Result<(), CliError> {
     let day = args.day();
     let day_dir = args.day_dir(&day);
     let categories = load_categories(&args)?;
+    let couriers = load_couriers(&args)?;
     let state = DayState::load(&day_dir).map_err(|e| CliError::Batch(e.into()))?;
     let Some(amend) = state.amend(&day_dir) else {
         println!("no batch to amend on {day}");
@@ -258,7 +280,7 @@ fn run_amend(args: &[String]) -> Result<(), CliError> {
 
     let worker = spawn_worker(&args)?;
     // The duplicate guard ignores the amended batch's own orders (07 › *Amend*).
-    let (draft, plan) = read_and_plan(&worker, &categories, &amend.state, &amend.files)?;
+    let (draft, plan) = read_and_plan(&worker, &categories, &couriers, &amend.state, &amend.files)?;
     let packing = args.packing();
     let mut amend_state = amend.state;
     let result = batch::save(
@@ -283,6 +305,13 @@ fn load_categories(args: &Args) -> Result<Vec<Category>, CliError> {
     load_rules(&text).map_err(|e| CliError::Rules(e.to_string()))
 }
 
+/// The couriers of `<data>/couriers.toml`, or the built-in list when that file does not exist
+/// (07 › *Inputs*).
+fn load_couriers(args: &Args) -> Result<CourierTable, CliError> {
+    let path = args.couriers_path();
+    load_couriers_file(&path).map_err(|e| CliError::Couriers(e.to_string()))
+}
+
 fn spawn_worker(args: &Args) -> Result<PdfWorker, CliError> {
     PdfWorker::spawn(pdfium_dir(args.pdfium.as_deref())).map_err(|e| CliError::Batch(e.into()))
 }
@@ -292,6 +321,7 @@ fn spawn_worker(args: &Args) -> Result<PdfWorker, CliError> {
 fn read_and_plan(
     worker: &PdfWorker,
     categories: &[Category],
+    couriers: &CourierTable,
     state: &DayState,
     files: &[PathBuf],
 ) -> Result<(Draft, PlanResult), CliError> {
@@ -303,6 +333,7 @@ fn read_and_plan(
         state,
         Arc::new(AtomicBool::new(false)),
         progress,
+        couriers,
     )?;
     let plan = Plan::from_categories(categories).count(&draft.orders, state.next_pdf_number());
     Ok((draft, plan))

@@ -10,16 +10,17 @@ From the repository root, Git Bash:
 
 | Command | Does |
 |---|---|
-| `cargo run -p packing-cli -- prepare --labels <file>... [--rules <categories.toml>] [--data <dir>] [--day YYYY-MM-DD] [--packing-list whole\|per-pdf\|none] [--layout pick,full,summary] [--pdfium <dir>] [--quiet-ids]` | Read the label files, apply the picks and save one batch, like the app's Save |
+| `cargo run -p packing-cli -- prepare --labels <file>... [--rules <categories.toml>] [--couriers <couriers.toml>] [--data <dir>] [--day YYYY-MM-DD] [--packing-list whole\|per-pdf\|none] [--layout pick,full,summary] [--pdfium <dir>] [--quiet-ids]` | Read the label files, apply the picks and save one batch, like the app's Save |
 | `cargo run -p packing-cli -- revert [--day <day>] [--data <dir>] [--pdfium <dir>] [--quiet-ids]` | Undo the last batch of the day |
-| `cargo run -p packing-cli -- amend [--day <day>] [--data <dir>] [--rules <categories.toml>] [--pdfium <dir>] [--quiet-ids]` | Redo the last batch of the day in place |
+| `cargo run -p packing-cli -- amend [--day <day>] [--data <dir>] [--rules <categories.toml>] [--couriers <couriers.toml>] [--pdfium <dir>] [--quiet-ids]` | Redo the last batch of the day in place |
 
 | Flag | Meaning |
 |---|---|
 | `--labels <file>...` | One or more label PDFs of this batch (required for `prepare`) |
 | `--rules <categories.toml>` | The picks, in order (default: `<data>/categories.toml`) |
+| `--couriers <couriers.toml>` | The courier data (default: `<data>/couriers.toml`, else the bundled list) |
 | `--day YYYY-MM-DD` | The day folder (default: today) |
-| `--data <dir>` | The data folder holding `categories.toml` and `labels/` (default: `.`) |
+| `--data <dir>` | The data folder holding `categories.toml`, `couriers.toml` and `labels/` (default: `.`) |
 | `--packing-list <scope>` | `whole` \| `per-pdf` \| `none` (default: `whole`) |
 | `--layout <list>` | Comma-separated `pick`, `full`, `summary` (default: `pick`) |
 | `--pdfium <dir>` | The folder with `pdfium.dll` (default: next to the exe, else `vendor/`) |

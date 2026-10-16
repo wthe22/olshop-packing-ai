@@ -158,9 +158,15 @@ fn prepare_revert_amend_round_trip() {
     };
     let cancel = std::sync::atomic::AtomicBool::new(false);
     let count = |file: &Path| {
-        packing_pdf::read::read_all(&pdfium, &[file.to_path_buf()], &cancel, &mut |_, _| {})
-            .expect("read saved PDF")
-            .len()
+        packing_pdf::read::read_all(
+            &pdfium,
+            &[file.to_path_buf()],
+            &cancel,
+            packing_engine::label::courier_data(),
+            &mut |_, _| {},
+        )
+        .expect("read saved PDF")
+        .len()
     };
 
     let data = TempDir::new("roundtrip");

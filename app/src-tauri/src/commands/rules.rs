@@ -415,6 +415,7 @@ name = \"Rest\"
             draft,
             plan,
             first_number: 1,
+            couriers: packing_engine::label::courier_data().clone(),
             amend: None,
             logo_pictures: Default::default(),
         });

@@ -5,7 +5,7 @@ use std::fmt;
 
 use jiff::civil::DateTime;
 
-use crate::label;
+use crate::label::{self, CourierTable};
 use crate::slip::{self, SlipLine};
 use crate::text::{LogoImage, PageText};
 
@@ -107,7 +107,7 @@ pub struct Reading {
 }
 
 /// A header-band image the courier data does not know (Q-LABEL-1, D-LABEL-4). The logo prompt
-/// asks the owner about each one once; the answer is remembered in `couriers.toml` (task 2.19).
+/// asks the owner about each one once; the answer is remembered in `couriers.toml` (D-LABEL-4).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct UnseenLogo {
     /// XXH3-64 (16 hex) of the image's encoded bytes.
@@ -129,9 +129,14 @@ impl UnseenLogo {
     /// Apply the owner's answer about this logo to a set of orders (the logo prompt, D-LABEL-4).
     /// A courier name fills the `courier` of the orders carrying the logo **only when the two
     /// clues agree**: the order's tracking-ID form must have that courier among its candidates
-    /// (D-LABEL-2), else the order stays unknown. *Not a courier* and *Skip* name nothing.
-    /// Returns how many orders the answer named.
-    pub fn apply(&self, orders: &mut [ReadOrder], answer: &LogoAnswer) -> usize {
+    /// (`table`; D-LABEL-2), else the order stays unknown. *Not a courier* and *Skip* name
+    /// nothing. Returns how many orders the answer named.
+    pub fn apply(
+        &self,
+        orders: &mut [ReadOrder],
+        answer: &LogoAnswer,
+        table: &CourierTable,
+    ) -> usize {
         let LogoAnswer::Courier(name) = answer else {
             return 0;
         };
@@ -141,7 +146,7 @@ impl UnseenLogo {
                 continue;
             }
             if order.order.courier.is_empty()
-                && label::form_names_courier(&order.order.tracking_id, name)
+                && label::form_names_courier_in(table, &order.order.tracking_id, name)
             {
                 order.order.courier = name.clone();
                 named += 1;
@@ -167,7 +172,12 @@ impl Reading {
     /// fills the `courier` of the orders carrying the logo **only when the two clues agree**
     /// ([`UnseenLogo::apply`]); *Not a courier* and *Skip* name nothing. The answered logo leaves
     /// `unseen_logos`. Returns how many orders the answer named.
-    pub fn apply_logo_answer(&mut self, hash: &str, answer: &LogoAnswer) -> usize {
+    pub fn apply_logo_answer(
+        &mut self,
+        hash: &str,
+        answer: &LogoAnswer,
+        table: &CourierTable,
+    ) -> usize {
         let Some(index) = self
             .unseen_logos
             .iter()
@@ -176,7 +186,7 @@ impl Reading {
             return 0;
         };
         let entry = self.unseen_logos.remove(index);
-        entry.apply(&mut self.orders, answer)
+        entry.apply(&mut self.orders, answer, table)
     }
 }
 
@@ -404,9 +414,13 @@ fn build_no_slip(no_slip: &[(usize, usize)], total_pages: usize, file_names: &[&
 
 /// Read a batch into orders (03 › *Order ID from the label*, *Multi-page orders*; 07 ›
 /// *What happens in one batch* steps 2-3). `pages` are the pages in download order; `file_names`
-/// names the files for the messages. Pages are consumed one at a time, so a 200-page file can be
-/// read with progress.
-pub fn read_batch<P>(pages: P, file_names: &[&str]) -> Result<Reading, ReadError>
+/// names the files for the messages; `table` is the data folder's courier data. Pages are
+/// consumed one at a time, so a 200-page file can be read with progress.
+pub fn read_batch<P>(
+    pages: P,
+    file_names: &[&str],
+    table: &CourierTable,
+) -> Result<Reading, ReadError>
 where
     P: IntoIterator<Item = PageItem>,
 {
@@ -474,7 +488,6 @@ where
 
         // The page's header-band images (Q-LABEL-5): the order's logo clue, and the logos the
         // prompt must ask the owner about (D-LABEL-4).
-        let data = label::courier_data();
         let mut seen_on_page: Vec<&str> = Vec::new();
         for image in &page_text.logos {
             if !groups[index]
@@ -488,7 +501,7 @@ where
                 continue;
             }
             seen_on_page.push(&image.hash);
-            if label::is_unseen_logo(data, image) {
+            if label::is_unseen_logo(table, image) {
                 record_unseen(&mut unseen, image, &order_id);
             }
         }
@@ -543,7 +556,8 @@ where
                 sum,
             });
         }
-        let courier = label::deduce_courier(&group.text, &group.tracking_id, &group.logos);
+        let courier =
+            label::deduce_courier_in(table, &group.text, &group.tracking_id, &group.logos);
         let order = Order {
             order_id: group.order_id,
             tracking_id: group.tracking_id,

@@ -86,8 +86,14 @@ fn write_and_read(
     let out = common::temp_path(tag);
     let written = write(pdfium, &out, layout, list).expect("write packing list");
     let cancel = std::sync::atomic::AtomicBool::new(false);
-    let pages = read::read_all(pdfium, std::slice::from_ref(&out), &cancel, &mut |_, _| {})
-        .expect("read back");
+    let pages = read::read_all(
+        pdfium,
+        std::slice::from_ref(&out),
+        &cancel,
+        packing_engine::label::courier_data(),
+        &mut |_, _| {},
+    )
+    .expect("read back");
     let text: String = pages
         .iter()
         .map(|(_, _, page)| page.text.clone())
