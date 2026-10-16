@@ -32,6 +32,7 @@ pub struct OpenedFile<'a> {
     pub path: PathBuf,
     pub pages: usize,
     doc: PdfDocument<'a>,
+    pdfium: &'a Pdfium,
 }
 
 impl<'a> OpenedFile<'a> {
@@ -55,7 +56,7 @@ impl<'a> OpenedFile<'a> {
         let text = page.text()?;
         let all = text.all();
         let runs = build_runs(&page, &text)?;
-        let logos = page_logos(&page, &self.doc, &|hash| is_known_logo_hash(hash))?;
+        let logos = self.logos_of(&page, index)?;
         Ok(PageText {
             text: all,
             runs,
@@ -63,6 +64,95 @@ impl<'a> OpenedFile<'a> {
             logos,
         })
     }
+
+    /// The header-band image with byte hash `hash` on one 0-based page, as PNG bytes (the logo
+    /// prompt shows the logo as printed). `None` when the page carries no such image.
+    pub fn band_picture(&self, index: usize, hash: &str) -> Result<Option<Vec<u8>>, PdfError> {
+        let scratch = self.scratch()?;
+        let page = scratch
+            .pages()
+            .get(index as PdfPageIndex)
+            .map_err(|e| PdfError::Open {
+                path: self.path.clone(),
+                message: format!("page {}: {e}", index + 1),
+            })?;
+        page_picture(&page, &scratch, hash)
+    }
+
+    /// A second, throw-away copy of the file for rendering an image. `get_processed_image`
+    /// rewrites the image object's matrix inside the page it is called on and the change survives
+    /// a page reload (the QR and barcode images grew five times over), so it must never run on
+    /// the document whose pages are later copied into the saved PDFs.
+    fn scratch(&self) -> Result<PdfDocument<'a>, PdfError> {
+        self.pdfium
+            .load_pdf_from_file(&self.path, None)
+            .map_err(|e| PdfError::Open {
+                path: self.path.clone(),
+                message: e.to_string(),
+            })
+    }
+
+    /// The page's header-band logos. The byte hashes come from the real page (read-only); only a
+    /// band image the courier data does not know needs its appearance, and that is rendered on
+    /// the scratch copy.
+    fn logos_of(&self, page: &PdfPage<'_>, index: usize) -> Result<Vec<LogoImage>, PdfError> {
+        let logos = page_logos(page, &self.doc, &|_| true)?;
+        if logos.iter().all(|logo| is_known_logo_hash(&logo.hash)) {
+            return Ok(logos);
+        }
+        let scratch = self.scratch()?;
+        let scratch_page =
+            scratch
+                .pages()
+                .get(index as PdfPageIndex)
+                .map_err(|e| PdfError::Open {
+                    path: self.path.clone(),
+                    message: format!("page {}: {e}", index + 1),
+                })?;
+        page_logos(&scratch_page, &scratch, &|hash| is_known_logo_hash(hash))
+    }
+}
+
+/// Whether an object's box lies wholly in the page's top band (Q-LABEL-5 Default). `height` is
+/// the page height in points; the coordinates count from the page bottom.
+fn in_band(bounds: &PdfQuadPoints, height: f64) -> bool {
+    let band = height - BAND_POINTS;
+    let bottom = bounds.bottom().value as f64;
+    let top = bounds.top().value as f64;
+    bottom >= band - BAND_TOLERANCE && top <= height + BAND_TOLERANCE
+}
+
+/// The header-band image whose encoded bytes hash to `hash`, as PNG bytes, for the logo prompt.
+/// `None` when the page carries no such image. The image is composited onto white, so a masked
+/// logo shows its wordmark (courier.md item 3).
+pub fn page_picture(
+    page: &PdfPage<'_>,
+    document: &PdfDocument<'_>,
+    hash: &str,
+) -> Result<Option<Vec<u8>>, PdfError> {
+    let page_height = page.height().value as f64;
+    for object in page.objects().iter() {
+        let Some(image) = object.as_image_object() else {
+            continue;
+        };
+        let Ok(bounds) = object.bounds() else {
+            continue;
+        };
+        if !in_band(&bounds, page_height) {
+            continue;
+        }
+        let bytes = image.get_raw_image_data()?;
+        if bytes.is_empty() || logo::hash_bytes(&bytes) != hash {
+            continue;
+        }
+        let Some(rendered) = image.get_processed_image(document).ok() else {
+            return Ok(None);
+        };
+        let rgba = rendered.to_rgba8();
+        let (width, height) = rgba.dimensions();
+        return Ok(logo::picture_png(rgba.as_raw(), width, height));
+    }
+    Ok(None)
 }
 
 /// The images whose **whole box** lies in the page's top band (Q-LABEL-5 Default: the top
@@ -78,7 +168,6 @@ pub fn page_logos(
     known: &dyn Fn(&str) -> bool,
 ) -> Result<Vec<LogoImage>, PdfError> {
     let height = page.height().value as f64;
-    let band = height - BAND_POINTS;
     let mut logos = Vec::new();
     for object in page.objects().iter() {
         let Some(image) = object.as_image_object() else {
@@ -87,9 +176,7 @@ pub fn page_logos(
         let Ok(bounds) = object.bounds() else {
             continue;
         };
-        let bottom = bounds.bottom().value as f64;
-        let top = bounds.top().value as f64;
-        if bottom < band - BAND_TOLERANCE || top > height + BAND_TOLERANCE {
+        if !in_band(&bounds, height) {
             continue;
         }
         let bytes = image.get_raw_image_data()?;
@@ -143,6 +230,7 @@ pub fn open<'a>(pdfium: &'a Pdfium, path: &Path) -> Result<OpenedFile<'a>, PdfEr
         path: path.to_path_buf(),
         pages,
         doc,
+        pdfium,
     })
 }
 

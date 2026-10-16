@@ -21,6 +21,7 @@ From the repository root, Git Bash:
 | Rust lints | `cargo clippy --workspace --all-targets -- -D warnings` |
 | Rust tests | `cargo test --workspace` |
 | Front-end types | `cd app && npm run check` |
+| Front-end tests | `cd app && npm test` |
 
 `cargo test --workspace` runs the engine, PDF and app tests; the test levels and their expected
 sample numbers are in [testing.md](testing.md).

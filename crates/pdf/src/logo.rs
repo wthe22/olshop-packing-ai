@@ -49,6 +49,39 @@ pub fn hash_bytes(bytes: &[u8]) -> String {
     format!("{:016x}", xxh3_64(bytes))
 }
 
+/// The longest side of a prompt picture, in pixels (the logo prompt shows the logo as printed,
+/// small enough for the dialog).
+pub const MAX_PICTURE: u32 = 240;
+
+/// The image composited onto white and written as **PNG bytes**, its longest side capped at
+/// [`MAX_PICTURE`] px. The logo prompt reads a logo back from the PDF this way; a masked logo
+/// becomes its wordmark on white (the `/SMask` is the alpha, step 1 of the module comment).
+/// `None` when the pixels cannot be built or encoded.
+pub fn picture_png(rgba: &[u8], width: u32, height: u32) -> Option<Vec<u8>> {
+    assert_eq!(
+        rgba.len(),
+        (width as usize) * (height as usize) * 4,
+        "the picture needs width * height RGBA pixels"
+    );
+    let rgb = composite_on_white(rgba, width as usize, height as usize);
+    let mut image = image::DynamicImage::ImageRgb8(image::RgbImage::from_raw(width, height, rgb)?);
+    if image.width().max(image.height()) > MAX_PICTURE {
+        image = image.resize(
+            MAX_PICTURE,
+            MAX_PICTURE,
+            image::imageops::FilterType::Lanczos3,
+        );
+    }
+    let mut bytes = Vec::new();
+    image
+        .write_to(
+            &mut std::io::Cursor::new(&mut bytes),
+            image::ImageFormat::Png,
+        )
+        .ok()?;
+    Some(bytes)
+}
+
 /// XXH3-64 of an image's appearance: `rgba` is the image composited onto white, `width` x
 /// `height` pixels of straight RGBA. See the module comment for the exact steps.
 pub fn appearance_hash(rgba: &[u8], width: usize, height: usize) -> String {
@@ -220,5 +253,30 @@ mod tests {
         assert_eq!(white_hash, hash_bytes(&[0u8; 512]));
         // A fully opaque black image is ink everywhere: 512 bytes of 0xFF.
         assert_eq!(appearance_hash(&dark, 4, 4), hash_bytes(&[0xFFu8; 512]));
+    }
+
+    #[test]
+    fn a_picture_is_the_image_on_white_smaller_than_the_cap() {
+        // Two opaque pixels: dark red, black. Transparent pixels become white.
+        let mut rgba = vec![0u8; 3 * 2 * 4];
+        rgba[0..4].copy_from_slice(&[200, 16, 46, 255]);
+        rgba[4..8].copy_from_slice(&[0, 0, 0, 0]);
+        let png = picture_png(&rgba, 3, 2).expect("png");
+        let decoded = image::load_from_memory(&png).expect("decode").to_rgb8();
+        assert_eq!((decoded.width(), decoded.height()), (3, 2));
+        assert_eq!(decoded.get_pixel(0, 0).0, [200, 16, 46]);
+        // Where the alpha is 0 the pixel is white, not black.
+        assert_eq!(decoded.get_pixel(1, 0).0, [255, 255, 255]);
+        assert_eq!(decoded.get_pixel(2, 1).0, [255, 255, 255]);
+    }
+
+    #[test]
+    fn a_picture_is_capped_to_the_longest_side() {
+        // 480 x 120 of one colour: the cap keeps the ratio, longest side 240.
+        let rgba = [0u8, 0, 0, 255].repeat(480 * 120);
+        let png = picture_png(&rgba, 480, 120).expect("png");
+        let decoded = image::load_from_memory(&png).expect("decode").to_rgb8();
+        assert_eq!(decoded.width().max(decoded.height()), MAX_PICTURE);
+        assert_eq!((decoded.width(), decoded.height()), (240, 60));
     }
 }

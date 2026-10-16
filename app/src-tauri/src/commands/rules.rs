@@ -407,6 +407,8 @@ name = \"Rest\"
             pages: 0,
             total_orders: 0,
             slip_pages: 0,
+            unseen_logos: Vec::new(),
+            read_warnings: Vec::new(),
         };
         let plan = Plan::from_categories(&[]);
         state.set_draft(OpenDraft {
@@ -414,6 +416,7 @@ name = \"Rest\"
             plan,
             first_number: 1,
             amend: None,
+            logo_pictures: Default::default(),
         });
         state
     }

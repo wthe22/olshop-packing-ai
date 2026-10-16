@@ -2,7 +2,7 @@
 
 The label-file fingerprint ("used in batch n", amend) is size + SHA-256 (`sha2`); it becomes size +
 **XXH3-64 of the whole file** (16 hex characters, streamed), so `xxhash-rust` — already in for the
-logo hash ([2.16](2-16-courier.md)) — is the only hash crate and `sha2` leaves the workspace.
+logo hash — is the only hash crate and `sha2` leaves the workspace.
 `state.json` entries carry `xxh3` instead of `sha256`
 ([data-folder.md](../../software-design/app/data-folder.md)); a day folder whose entries carry
 `sha256` still loads — `sha256` is read and never matched, since the "used twice" hint only matters

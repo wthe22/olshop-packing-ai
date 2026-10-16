@@ -16,7 +16,6 @@ first implementation of the same rules, tested). Port it module by module when a
 
 | Task | Content | File |
 |---|---|---|
-| 2.16 | Courier: the logo prompt (the two-clue rule is built) | [2-16-courier.md](2-16-courier.md) |
 | 2.19 | The courier data (`couriers.toml`) in the data folder | [2-19-courier-data-folder.md](2-19-courier-data-folder.md) |
 | 2.18 | The check of the saved PDFs before a batch is saved | [2-18-saved-pdf-check.md](2-18-saved-pdf-check.md) |
 | 2.20 | One hash for everything: XXH3-64 for the label-file fingerprint | [2-20-one-hash.md](2-20-one-hash.md) |
@@ -28,11 +27,11 @@ Open choices of the owner, each with a default the app follows until the owner d
 
 ## Status
 
-Tasks 2.16, 2.18, 2.19, 2.20 and 2.21 are open; every other task of the phase is finished. The owner's
+Tasks 2.18, 2.19, 2.20 and 2.21 are open; every other task of the phase is finished. The owner's
 review at the end of the phase waits for all of them.
 
-**Next step.** 2.16 (the courier: the form-and-tag rule; no owner answer needed), then 2.19 (courier data in
-the data folder), 2.18 (the saved-PDF check), 2.20 (one hash, XXH3-64), 2.21 (search). Each task ends with a
+**Next step.** 2.19 (courier data in
+the data folder; it also writes a logo the owner names in the prompt back into `couriers.toml`), 2.18 (the saved-PDF check), 2.20 (one hash, XXH3-64), 2.21 (search). Each task ends with a
 commit that deletes its file from this folder, and a push to `origin main`.
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
@@ -45,7 +44,9 @@ What the owner checks, after 2.15–2.21:
   print `×`, not `ÿ`.
 - Press *Open folder* on a batch card (the batch folder must open, not Documents) and on the Settings screen
   (the data folder).
-- The Day screen shows no *Courier unknown* warning.
+- The Day screen shows no *Courier unknown* warning (SiCepat and J&T Cargo orders are named by logo and
+  tracking form). A label with a logo the app has not seen asks *Which courier is this logo?* before the Plan
+  screen (2.16); the answer is not remembered until 2.19.
 - Save one batch: the check shows its progress and, on a clean day, reports nothing (2.18).
 - Print one packing list.
 - After 2.21: find one order by its tracking ID, one by an item name and one by a quantity, and check that
@@ -58,7 +59,7 @@ The owner writes findings in [`../../reviews/`](../../reviews/README.md), one fi
 In this order; each task file also names its design sections.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
-2. The task files in this folder: 2.16, 2.19, 2.18, 2.20, 2.21.
+2. The task files in this folder: 2.19, 2.18, 2.20, 2.21.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),

@@ -135,6 +135,16 @@ export interface PlanView {
   add_at: number;
 }
 
+/// One unseen logo as the logo prompt shows it (08 › *2. New batch* → *The logo prompt*): the
+/// image's hash, how many pages and orders carry it, and the logo as printed — a PNG data URL,
+/// `null` when no page could be read (the screen shows the hash then).
+export interface LogoView {
+  hash: string;
+  pages: number;
+  orders: number;
+  picture: string | null;
+}
+
 /// What reading ends with (08 › *Reading*).
 export interface ReadResult {
   files: number;
@@ -145,8 +155,20 @@ export interface ReadResult {
   warnings: string[];
   /// The batch being redone when this read is an amend (07 › *Amend*); `null` for a new batch.
   amend: number | null;
+  /// The courier names the prompt's buttons show, in `couriers.toml` order (D-LABEL-1).
+  couriers: string[];
+  /// The header-band images the courier data does not know (D-LABEL-4); empty when every logo is
+  /// known and no prompt is needed.
+  logos: LogoView[];
   plan: PlanView;
 }
+
+/// The owner's answer about one unseen logo (08 › *The logo prompt*), as Rust's `LogoAnswerInput`
+/// reads it (`kind` is the tag). *Skip all* is the screen's alone: it sends nothing.
+export type LogoAnswer =
+  | { kind: "courier"; name: string }
+  | { kind: "not_courier" }
+  | { kind: "skip" };
 
 /// What *Save batch* wrote, for the green line (08 › *1. Day*).
 export interface SaveResult {
@@ -176,6 +198,11 @@ export const readLabels = (paths: string[]): Promise<ReadResult> =>
   invoke("read_labels", { paths });
 
 export const cancelRead = (): Promise<void> => invoke("cancel_read");
+
+/// Answer the logo prompt about one unseen logo (08 › *The logo prompt*; D-LABEL-4): the back end
+/// applies it to the open draft and returns the refreshed read result.
+export const answerLogo = (hash: string, answer: LogoAnswer): Promise<ReadResult> =>
+  invoke("answer_logo", { hash, answer });
 
 export const checkCondition = (condition: string): Promise<void> =>
   invoke("check_condition", { condition });

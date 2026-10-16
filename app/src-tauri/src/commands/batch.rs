@@ -14,12 +14,13 @@ use std::sync::{Arc, mpsc};
 use std::thread;
 
 use packing_engine::day::{DayState, PackingListChoice, delete_batch_folder};
+use packing_engine::label;
 use packing_engine::names;
-use packing_engine::orders::{Order, ReadOrder, display_name};
+use packing_engine::orders::{LogoAnswer, Order, ReadOrder, UnseenLogo, display_name};
 use packing_engine::plan::{PickResult, Plan};
 use packing_engine::rules::{Category, Condition, evaluate, load_rules, parse_condition};
-use packing_pdf::batch::{self, FileCheck};
-use packing_pdf::worker::Progress;
+use packing_pdf::batch::{self, Draft, FileCheck};
+use packing_pdf::worker::{PdfWorker, Progress};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -48,7 +49,7 @@ pub struct ReadProgress {
 }
 
 /// What the New batch screen needs when reading ends (08 › *Reading*): the counts and warnings,
-/// and the initial plan view for the Plan screen.
+/// the logo prompt's data and the initial plan view for the Plan screen.
 #[derive(Serialize)]
 pub struct ReadResult {
     files: usize,
@@ -61,7 +62,47 @@ pub struct ReadResult {
     /// The batch being redone when this read is an amend (07 › *Amend*): the Plan screen is then
     /// titled *Redo batch `<b>`*; `None` for a normal new batch.
     amend: Option<i64>,
+    /// The courier names the prompt's buttons show, in `couriers.toml` order (D-LABEL-1).
+    couriers: Vec<String>,
+    /// The header-band images the courier data does not know (D-LABEL-4): the prompt asks about
+    /// each one once, before the Plan screen. Empty when every logo is known.
+    logos: Vec<LogoView>,
     plan: PlanView,
+}
+
+/// One unseen logo as the logo prompt shows it (08 › *2. New batch* → *The logo prompt*): the
+/// image's hash, carried by how many pages and how many orders, and the logo **as printed** —
+/// a PNG data URL read back from the PDF, `None` when no page could be read (the screen then
+/// shows `hash`).
+#[derive(Serialize)]
+pub struct LogoView {
+    hash: String,
+    pages: usize,
+    orders: usize,
+    picture: Option<String>,
+}
+
+/// The owner's answer about one unseen logo (08 › *The logo prompt*); `kind` is the tag, as for
+/// [`PlanEdit`]. *Skip all* never reaches Rust: it only stops the screen asking (D-LABEL-4).
+#[derive(Deserialize, Debug)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum LogoAnswerInput {
+    /// The logo is this courier's: name the orders whose tracking form agrees.
+    Courier { name: String },
+    /// The image is no courier's logo (a buying channel's strip).
+    NotCourier,
+    /// Say nothing about it (*I don't know*, and Esc): the orders stay unknown.
+    Skip,
+}
+
+impl LogoAnswerInput {
+    fn to_engine(&self) -> LogoAnswer {
+        match self {
+            LogoAnswerInput::Courier { name } => LogoAnswer::Courier(name.clone()),
+            LogoAnswerInput::NotCourier => LogoAnswer::NotCourier,
+            LogoAnswerInput::Skip => LogoAnswer::Skip,
+        }
+    }
 }
 
 /// The Plan screen's data (08 › *3. Plan*).
@@ -367,6 +408,110 @@ fn apply_edits(plan: &mut Plan, edits: &[PlanEdit]) -> Result<(), String> {
     Ok(())
 }
 
+// ------------------------------------------------------------------------- the logo prompt
+
+/// The screen's read result (08 › *2. New batch*, *The logo prompt*, *3. Plan*): the draft's
+/// counts and warnings, the couriers the prompt's buttons show, the unseen logos still to ask
+/// about, and the plan view. Used both when a read finishes and after every logo answer, so the
+/// screen always shows the current counts and warnings.
+fn read_result(open: &OpenDraft) -> ReadResult {
+    ReadResult {
+        files: open.draft.files.len(),
+        pages: open.draft.pages,
+        orders: open.draft.orders.len(),
+        total_orders: open.draft.total_orders,
+        already_saved: open.draft.duplicates.len(),
+        warnings: open.draft.warnings.clone(),
+        amend: open.amend.as_ref().map(|amend| amend.batch),
+        couriers: courier_names(),
+        logos: logo_views(&open.draft, &open.logo_pictures),
+        plan: plan_view(&open.plan, &open.draft.orders, open.first_number),
+    }
+}
+
+/// The courier names of `couriers.toml`, in file order: the prompt's buttons (D-LABEL-1, D-LABEL-4).
+fn courier_names() -> Vec<String> {
+    label::courier_data()
+        .couriers
+        .iter()
+        .map(|courier| courier.name.clone())
+        .collect()
+}
+
+/// The unseen logos as the prompt shows them, in first-seen order (D-LABEL-4).
+fn logo_views(draft: &Draft, pictures: &HashMap<String, Option<String>>) -> Vec<LogoView> {
+    draft
+        .unseen_logos
+        .iter()
+        .map(|entry| LogoView {
+            hash: entry.hash.clone(),
+            pages: entry.pages,
+            orders: entry.orders(),
+            picture: pictures.get(&entry.hash).cloned().flatten(),
+        })
+        .collect()
+}
+
+/// Read each unseen logo back from the first page carrying it, as a PNG data URL for the prompt
+/// (08 › *The logo prompt*). Runs on the PDFium worker, so the label documents stay on their
+/// thread. A logo whose page cannot be found or rendered gets `None`: the screen shows its hash.
+fn read_pictures(worker: &PdfWorker, draft: &Draft) -> HashMap<String, Option<String>> {
+    let mut pictures = HashMap::with_capacity(draft.unseen_logos.len());
+    for entry in &draft.unseen_logos {
+        pictures.insert(entry.hash.clone(), first_picture(worker, draft, entry));
+    }
+    pictures
+}
+
+/// The logo as printed on the first page of the first order carrying it (the batch's kept orders,
+/// so an already-saved order's page is not read).
+fn first_picture(worker: &PdfWorker, draft: &Draft, entry: &UnseenLogo) -> Option<String> {
+    for order in &draft.orders {
+        if !entry.order_ids.iter().any(|id| id == &order.order.order_id) {
+            continue;
+        }
+        for page in &order.pages {
+            if let Ok(Some(png)) = worker.logo_picture(page.file, page.page, &entry.hash) {
+                return Some(data_url(&png));
+            }
+        }
+    }
+    None
+}
+
+/// A PNG as a data URL (`data:image/png;base64,…`), for the prompt's `<img>`.
+fn data_url(png: &[u8]) -> String {
+    format!("data:image/png;base64,{}", base64(png))
+}
+
+/// Standard base64 (RFC 4648, with padding). The app has no base64 dependency and the value is
+/// one capped PNG of a logo.
+fn base64(bytes: &[u8]) -> String {
+    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let b = [
+            chunk[0],
+            chunk.get(1).copied().unwrap_or(0),
+            chunk.get(2).copied().unwrap_or(0),
+        ];
+        let n = (u32::from(b[0]) << 16) | (u32::from(b[1]) << 8) | u32::from(b[2]);
+        out.push(ALPHABET[(n >> 18) as usize & 63] as char);
+        out.push(ALPHABET[(n >> 12) as usize & 63] as char);
+        out.push(if chunk.len() > 1 {
+            ALPHABET[(n >> 6) as usize & 63] as char
+        } else {
+            '='
+        });
+        out.push(if chunk.len() > 2 {
+            ALPHABET[n as usize & 63] as char
+        } else {
+            '='
+        });
+    }
+    out
+}
+
 // ------------------------------------------------------------------------------ reading
 
 /// Read the chosen files into a draft and store it (08 › *2. New batch* → *3. Plan*). Runs on a
@@ -428,24 +573,22 @@ fn read_into_draft(
     let draft = inner
         .map_err(|error| error.to_string())?
         .map_err(|error| error.to_string())?;
+    // The prompt's pictures are read back while the label documents are still open on the
+    // worker (08 › *The logo prompt*); an empty list costs nothing.
+    let logo_pictures = state
+        .with_worker(|worker| read_pictures(worker, &draft))
+        .unwrap_or_default();
     let plan = Plan::from_categories(&categories);
     let first_number = base_state.next_pdf_number();
-    let read = ReadResult {
-        files: draft.files.len(),
-        pages: draft.pages,
-        orders: draft.orders.len(),
-        total_orders: draft.total_orders,
-        already_saved: draft.duplicates.len(),
-        warnings: draft.warnings.clone(),
-        amend: amend.as_ref().map(|amend| amend.batch),
-        plan: plan_view(&plan, &draft.orders, first_number),
-    };
-    state.set_draft(OpenDraft {
+    let open = OpenDraft {
         draft,
         plan,
         first_number,
         amend,
-    });
+        logo_pictures,
+    };
+    let read = read_result(&open);
+    state.set_draft(open);
     Ok(read)
 }
 
@@ -526,6 +669,24 @@ fn start_amend_impl(state: &AppState, day: &str) -> Result<ReadResult, String> {
         false,
         |_| {},
     )
+}
+
+/// Answer the logo prompt about one unseen logo (08 › *2. New batch* → *The logo prompt*;
+/// D-LABEL-4): the order's courier is filled where the logo's courier and the tracking-ID form
+/// agree, the draft's warnings and the plan view are recounted, and the refreshed result goes
+/// back to the screen. An unknown hash changes nothing. *Skip all* never comes here: it only
+/// stops the screen asking.
+fn answer_logo_impl(
+    state: &AppState,
+    hash: &str,
+    answer: &LogoAnswerInput,
+) -> Result<ReadResult, String> {
+    state.with_draft(|open| {
+        open.draft.answer_logo(hash, &answer.to_engine());
+        // The answered logo is spent; its picture is no longer needed.
+        open.logo_pictures.remove(hash);
+        read_result(open)
+    })
 }
 
 /// Load `<data>/categories.toml` (08 › *Messages*: a rules error stops the batch with its
@@ -668,6 +829,18 @@ pub fn cancel_read(state: State<'_, AppState>) {
     state.request_cancel();
 }
 
+/// Answer the logo prompt about one unseen logo (08 › *The logo prompt*; D-LABEL-4): applies the
+/// answer to the open draft and returns the refreshed read result, so the screen shows the new
+/// counts, warnings and remaining logos. *Skip all* is the screen's alone and calls nothing.
+#[tauri::command]
+pub fn answer_logo(
+    state: State<'_, AppState>,
+    hash: String,
+    answer: LogoAnswerInput,
+) -> Result<ReadResult, String> {
+    answer_logo_impl(&state, &hash, &answer)
+}
+
 /// The live check of the *Add a pick* condition text (08 › *3. Plan*; the boxes editor is 2.12):
 /// the engine's parser message with line/col, or nothing when it is valid.
 #[tauri::command]
@@ -725,7 +898,7 @@ pub async fn start_amend(app: AppHandle, day: String) -> Result<ReadResult, Stri
 #[cfg(test)]
 mod tests {
     use super::*;
-    use packing_engine::orders::Line;
+    use packing_engine::orders::{Line, Warning};
     use packing_engine::plan::REST_CODE;
 
     fn line(name: &str, variation: &str, quantity: i64) -> Line {
@@ -933,6 +1106,161 @@ mod tests {
         assert!(error.starts_with("line 1, col "), "{error}");
     }
 
+    // ------------------------------------------------------ the logo prompt (2.16, D-LABEL-4)
+
+    /// A state holding a draft of two orders the courier data could not name — one `JY…` (J&T
+    /// Express alone), one `00…` (shared with SiCepat) — both carrying one unseen logo, with a
+    /// plan whose first pick takes the courier `J&T Express`.
+    fn state_with_logo_draft(folder: &Path) -> AppState {
+        let unknown = |id: &str, tracking: &str, name: &str| {
+            let mut order = read_order(id, tracking, vec![line(name, "", 1)]);
+            order.order.courier = String::new();
+            order
+        };
+        let mut draft = Draft {
+            files: Vec::new(),
+            orders: vec![
+                unknown("580000000000000001", "JY0000001234", "Sepatu A"),
+                unknown("580000000000000002", "000000000202", "Spion X"),
+            ],
+            duplicates: Vec::new(),
+            warnings: Vec::new(),
+            pages: 2,
+            total_orders: 2,
+            slip_pages: 2,
+            unseen_logos: vec![UnseenLogo {
+                hash: "ffff".to_string(),
+                appearance: None,
+                pages: 2,
+                order_ids: vec![
+                    "580000000000000001".to_string(),
+                    "580000000000000002".to_string(),
+                ],
+            }],
+            read_warnings: Vec::new(),
+        };
+        draft.read_warnings = vec![Warning::unknown_courier(&draft.orders).expect("both unknown")];
+        draft.warnings = draft
+            .read_warnings
+            .iter()
+            .map(|warning| warning.to_string())
+            .collect();
+
+        let state = AppState::new();
+        state.set_data_folder(folder.to_path_buf());
+        state.set_day("2026-10-07");
+        state.set_draft(OpenDraft {
+            draft,
+            plan: Plan::from_categories(&[category(
+                "A",
+                "J&T",
+                Some("courier starts_with \"J&T\""),
+            )]),
+            first_number: 1,
+            amend: None,
+            logo_pictures: HashMap::from([(
+                "ffff".to_string(),
+                Some("data:image/png;base64,Zm9v".to_string()),
+            )]),
+        });
+        state
+    }
+
+    #[test]
+    fn base64_encodes_with_padding() {
+        assert_eq!(base64(b""), "");
+        assert_eq!(base64(b"f"), "Zg==");
+        assert_eq!(base64(b"fo"), "Zm8=");
+        assert_eq!(base64(b"foo"), "Zm9v");
+        assert_eq!(base64(b"foob"), "Zm9vYg==");
+        assert_eq!(base64(b"fooba"), "Zm9vYmE=");
+        assert_eq!(base64(b"foobar"), "Zm9vYmFy");
+        assert_eq!(data_url(b"foo"), "data:image/png;base64,Zm9v");
+    }
+
+    #[test]
+    fn answer_logo_names_the_form_agreeing_orders_and_recounts_the_plan() {
+        let dir = temp_dir("logo-answer");
+        let state = state_with_logo_draft(&dir);
+
+        // Before the answer: the prompt's logo, the courier buttons, a pick with no orders.
+        let before = state.with_draft(|open| read_result(open)).expect("draft");
+        assert_eq!(before.logos.len(), 1);
+        assert_eq!(before.logos[0].hash, "ffff");
+        assert_eq!(before.logos[0].pages, 2);
+        assert_eq!(before.logos[0].orders, 2);
+        assert_eq!(
+            before.logos[0].picture.as_deref(),
+            Some("data:image/png;base64,Zm9v")
+        );
+        assert_eq!(
+            before.couriers,
+            vec!["J&T Express", "SiCepat", "J&T Cargo", "IDX", "SPX"]
+        );
+        assert_eq!(before.plan.rows[0].orders, 0);
+        assert_eq!(before.plan.rows[0].number, None);
+        assert_eq!(before.plan.rows[1].orders, 2); // the rest row takes both
+        assert!(before.warnings[0].contains("Courier unknown for 2 orders"));
+
+        // The JY form names J&T Express; the shared 00 form does not.
+        let after = answer_logo_impl(
+            &state,
+            "ffff",
+            &LogoAnswerInput::Courier {
+                name: "J&T Express".to_string(),
+            },
+        )
+        .expect("answer");
+        assert!(after.logos.is_empty(), "the answered logo is spent");
+        assert_eq!(after.plan.rows[0].orders, 1); // the courier pick takes the JY order
+        assert_eq!(after.plan.rows[0].number, Some(1));
+        assert_eq!(after.plan.rows[1].orders, 1);
+        assert_eq!(after.plan.rows[1].number, Some(2));
+        assert_eq!(after.orders, before.orders); // no order left or joined the batch
+        assert!(after.warnings[0].contains("Courier unknown for 1 order: 000000000202"));
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn skip_and_not_a_courier_leave_the_orders_unknown() {
+        for answer in [LogoAnswerInput::Skip, LogoAnswerInput::NotCourier] {
+            let dir = temp_dir("logo-skip");
+            let state = state_with_logo_draft(&dir);
+            let result = answer_logo_impl(&state, "ffff", &answer).expect("answer");
+
+            assert!(result.logos.is_empty(), "the answered logo is spent");
+            assert_eq!(result.plan.rows[0].orders, 0);
+            assert!(result.warnings[0].contains("Courier unknown for 2 orders"));
+            // Nothing was applied: the orders still have no courier.
+            state
+                .with_draft(|open| {
+                    assert_eq!(open.draft.orders[0].order.courier, "");
+                    assert_eq!(open.draft.orders[1].order.courier, "");
+                })
+                .expect("draft");
+
+            std::fs::remove_dir_all(&dir).ok();
+        }
+    }
+
+    #[test]
+    fn an_unknown_hash_changes_nothing() {
+        let dir = temp_dir("logo-unknown");
+        let state = state_with_logo_draft(&dir);
+        let result = answer_logo_impl(
+            &state,
+            "0123456789abcdef",
+            &LogoAnswerInput::Courier {
+                name: "SiCepat".to_string(),
+            },
+        )
+        .expect("answer");
+        assert_eq!(result.logos.len(), 1, "the logo is still asked about");
+        assert_eq!(result.plan.rows[0].orders, 0);
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
     // ------------------------------------------------------------------ PDF-backed (testdata)
 
     /// The pinned `pdfium.dll` directory, or `None` when it has not been downloaded.
@@ -1094,6 +1422,43 @@ mod tests {
                 .len(),
             1
         );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    // ------------------------------------------------- the logo prompt on real (testdata) pages
+
+    #[test]
+    fn the_testdata_labels_show_no_logo_prompt_and_list_the_couriers() {
+        let Some(_vendor) = vendor_dir() else {
+            eprintln!("skipped: run tools/get-pdfium.sh");
+            return;
+        };
+        let dir = temp_dir("logo-prompt");
+        std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
+        let state = app_state(&dir);
+
+        // The testdata labels carry no images, so every logo is unknown-and-absent: the prompt
+        // never opens, and the buttons still carry `couriers.toml`'s names in file order.
+        let read = read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        assert!(read.logos.is_empty(), "the fpdf2 fixtures have no images");
+        assert_eq!(
+            read.couriers,
+            vec!["J&T Express", "SiCepat", "J&T Cargo", "IDX", "SPX"]
+        );
+
+        // An amend read goes through the same path: it too ends with no prompt and the couriers.
+        assert_eq!(save_batch_impl(&state, None).expect("save").batch, 1);
+        let amend = start_amend_impl(&state, "2026-10-07").expect("amend");
+        assert_eq!(amend.amend, Some(1));
+        assert!(amend.logos.is_empty());
+        assert_eq!(amend.couriers, read.couriers);
+
+        // Answering a hash no logo carries changes nothing and still returns a full result.
+        let again =
+            answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswerInput::Skip).expect("answer");
+        assert_eq!(again.orders, amend.orders);
+        assert!(again.logos.is_empty());
 
         std::fs::remove_dir_all(&dir).ok();
     }

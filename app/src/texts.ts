@@ -78,6 +78,19 @@ export const texts = {
     back: "Back",
   },
 
+  // 08 › *2. New batch* → *The logo prompt*: one unseen logo of the batch, asked about before the
+  // Plan screen. The buttons are the courier names, then *Not a courier*, *I don't know* and
+  // *Skip all*; Esc skips only the one logo shown.
+  logo: {
+    title: "Which courier is this logo?",
+    // The doc's counts line: "4 pages · 4 orders".
+    counts: (pages: number, orders: number) =>
+      `${count(pages, "page", "pages")} · ${count(orders, "order", "orders")}`,
+    notCourier: "Not a courier",
+    dontKnow: "I don't know",
+    skipAll: "Skip all",
+  },
+
   // 08 › *3. Plan*.
   plan: {
     // 08 › *3. Plan* header: "Batch 3 · 2 files · 257 pages · 256 orders · 0 already saved".

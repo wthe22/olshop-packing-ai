@@ -54,6 +54,14 @@ pub enum Job {
         list: Box<PackingList>,
         reply: Sender<Result<usize, PdfError>>,
     },
+    /// The header-band image with byte hash `hash` on one page of one open file, as PNG bytes
+    /// (the logo prompt shows the logo as printed).
+    LogoPicture {
+        file: usize,
+        page: usize,
+        hash: String,
+        reply: Sender<Result<Option<Vec<u8>>, PdfError>>,
+    },
     /// Stop the worker loop.
     Shutdown,
 }
@@ -141,6 +149,23 @@ impl PdfWorker {
         recv(&rx)
     }
 
+    /// One page's header-band image with byte hash `hash`, as PNG bytes (the logo prompt).
+    pub fn logo_picture(
+        &self,
+        file: usize,
+        page: usize,
+        hash: &str,
+    ) -> Result<Option<Vec<u8>>, PdfError> {
+        let (reply, rx) = mpsc::channel();
+        self.send(Job::LogoPicture {
+            file,
+            page,
+            hash: hash.to_string(),
+            reply,
+        })?;
+        recv(&rx)
+    }
+
     fn send(&self, job: Job) -> Result<(), PdfError> {
         self.tx
             .send(job)
@@ -219,6 +244,21 @@ fn serve(pdfium: &Pdfium, rx: &Receiver<Job>) {
                 reply,
             } => {
                 let result = packing_list::write(pdfium, &out, layout, &list);
+                let _ = reply.send(result);
+            }
+            Job::LogoPicture {
+                file,
+                page,
+                hash,
+                reply,
+            } => {
+                let result = match draft.as_ref().and_then(|files| files.get(file)) {
+                    Some(source) => source.band_picture(page, &hash),
+                    None => Err(PdfError::Message(format!(
+                        "the logo prompt asks for file {file}, but only {} are open",
+                        draft.as_ref().map_or(0, Vec::len)
+                    ))),
+                };
                 let _ = reply.send(result);
             }
             Job::Shutdown => break,

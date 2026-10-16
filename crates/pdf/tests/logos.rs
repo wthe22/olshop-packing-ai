@@ -205,3 +205,130 @@ fn a_masked_logo_keeps_one_appearance_hash_across_a_re_raster() {
     // PIL's luminance, threshold 200, 512 packed bytes) gives the same value.
     assert_eq!(appearance_hashes[0], "6e160954c3421e15");
 }
+
+// --- the prompt picture: the logo as printed (the logo prompt) ---------------------------------
+
+#[test]
+fn the_prompt_picture_is_the_band_image_of_the_page() {
+    let Some(pdfium) = common::bind() else {
+        eprintln!("skipped: run tools/get-pdfium.sh");
+        return;
+    };
+    let path = common::temp_path("picture");
+    std::fs::write(&path, band_pdf()).expect("write the probe pdf");
+    let document = pdfium.load_pdf_from_file(&path, None).expect("load");
+    let page = document.pages().get(0).expect("page");
+
+    // The in-band image the prompt asks about (3 x 2, the stream bytes 0..=17).
+    let hash = logo::hash_bytes(&in_band_bytes());
+    let png = read::page_picture(&page, &document, &hash)
+        .expect("the picture")
+        .expect("a page carries the image");
+    let decoded = image::load_from_memory(&png).expect("decode").to_rgb8();
+    // The image is under the cap: the picture keeps its own size.
+    assert_eq!((decoded.width(), decoded.height()), (3, 2));
+
+    // A hash the page does not carry gives no picture (the screen then shows the hash text)...
+    assert!(
+        read::page_picture(&page, &document, "ffffffffffffffff")
+            .expect("the picture")
+            .is_none()
+    );
+    // ...and the out-of-band image is never a candidate, its hash or not.
+    assert!(
+        read::page_picture(&page, &document, &logo::hash_bytes(&out_of_band_bytes()))
+            .expect("the picture")
+            .is_none()
+    );
+
+    let _ = std::fs::remove_file(&path);
+}
+
+#[test]
+fn a_masked_picture_is_the_wordmark_on_white_and_capped() {
+    let Some(pdfium) = common::bind() else {
+        eprintln!("skipped: run tools/get-pdfium.sh");
+        return;
+    };
+    let path = common::temp_path("masked-picture");
+    let mut document = pdfium.create_new_pdf().expect("new pdf");
+    let image = masked_image(680, 156);
+    let mut page = document
+        .pages_mut()
+        .create_page_at_end(PdfPagePaperSize::a4())
+        .expect("page");
+    page.objects_mut()
+        .create_image_object(
+            PdfPoints::new(10.0),
+            PdfPoints::new(810.0),
+            &image,
+            Some(PdfPoints::new(100.0)),
+            Some(PdfPoints::new(23.0)),
+        )
+        .expect("masked image object");
+    document.save_to_file(&path).expect("save");
+    let reloaded = pdfium.load_pdf_from_file(&path, None).expect("reload");
+    let page = reloaded.pages().get(0).expect("page");
+    let logos = read::page_logos(&page, &reloaded, &|_| false).expect("read the logos");
+    assert_eq!(logos.len(), 1);
+
+    let png = read::page_picture(&page, &reloaded, &logos[0].hash)
+        .expect("the picture")
+        .expect("the page carries the logo");
+    let _ = std::fs::remove_file(&path);
+    let decoded = image::load_from_memory(&png).expect("decode").to_rgb8();
+    // The cap: 680 x 156 becomes 240 x 55.
+    assert_eq!(decoded.width(), logo::MAX_PICTURE);
+    assert_eq!(decoded.width().max(decoded.height()), logo::MAX_PICTURE);
+    // Where the mask is 0 the pixel is white; the wordmark stays its dark red.
+    let middle = decoded.height() / 2;
+    assert_eq!(decoded.get_pixel(2, middle).0, [255, 255, 255]);
+    let ink = decoded.get_pixel(decoded.width() / 2, middle).0;
+    assert!(
+        ink[0] > 150 && ink[1] < 80 && ink[2] < 80,
+        "the wordmark is dark red, got {ink:?}"
+    );
+}
+
+// --- reading a page must leave the document as it was ----------------------------------------
+
+/// `get_processed_image` rewrites the image object's matrix in the page it is called on, and the
+/// change survives a reload of the page: a second read of the same page lost a band image, and
+/// the saved PDFs copy these pages. The appearance is therefore rendered on a scratch copy.
+#[test]
+fn reading_a_page_twice_gives_the_same_logos_and_keeps_the_document() {
+    let Some(pdfium) = common::bind() else {
+        eprintln!("skipped: run tools/get-pdfium.sh");
+        return;
+    };
+    let path = common::temp_path("reread-logos");
+    let mut document = pdfium.create_new_pdf().expect("new pdf");
+    let mut page = document
+        .pages_mut()
+        .create_page_at_end(PdfPagePaperSize::a4())
+        .expect("page");
+    for (x, (width, height)) in [(10.0, (680u32, 156u32)), (150.0, (683, 157))] {
+        page.objects_mut()
+            .create_image_object(
+                PdfPoints::new(x),
+                PdfPoints::new(810.0),
+                &masked_image(width, height),
+                Some(PdfPoints::new(100.0)),
+                Some(PdfPoints::new(23.0)),
+            )
+            .expect("masked image object");
+    }
+    drop(page);
+    document.save_to_file(&path).expect("save");
+
+    let file = read::open(&pdfium, &path).expect("open");
+    let first = file.page_text(0).expect("first read").logos;
+    let second = file.page_text(0).expect("second read").logos;
+    let third = file.page_text(0).expect("third read").logos;
+    let _ = std::fs::remove_file(&path);
+
+    assert_eq!(first.len(), 2, "both band images are candidates");
+    assert!(first.iter().all(|logo| logo.appearance.is_some()));
+    assert_eq!(first, second);
+    assert_eq!(first, third);
+}

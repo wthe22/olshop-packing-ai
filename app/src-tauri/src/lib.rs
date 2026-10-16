@@ -7,6 +7,7 @@
 //! the owner when it is missing (08 › *Start*). The open draft (07 › *Words*) is app state too;
 //! its orders stay on the PDFium worker thread that opened the label documents.
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -42,6 +43,10 @@ pub(crate) struct OpenDraft {
     /// Set when this draft amends the last batch (07 › *Amend*): Save replaces that batch and the
     /// plan screen is titled *Redo batch `<b>`*. `None` for a normal new batch.
     pub amend: Option<AmendState>,
+    /// The logo prompt's pictures (08 › *2. New batch* → *The logo prompt*): each unseen logo's
+    /// hash and the logo as printed, a PNG data URL read back on the PDFium worker when the batch
+    /// was read. `None` when no page could be read, and the screen shows the hash text then.
+    pub logo_pictures: HashMap<String, Option<String>>,
 }
 
 /// An amend in progress: the batch being redone and the day state without it, so Save reuses the
@@ -225,6 +230,7 @@ pub fn run() {
             commands::batch::check_files,
             commands::batch::read_labels,
             commands::batch::cancel_read,
+            commands::batch::answer_logo,
             commands::batch::check_condition,
             commands::batch::plan,
             commands::batch::save_batch,

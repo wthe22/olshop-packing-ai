@@ -41,7 +41,28 @@ today (handy for a download just after midnight).
 
 The app reads the files page by page: "Reading labels …  page 143 of 257 (file 1 of 2)" with a
 progress bar. **Cancel** stops and returns to the file list; nothing is written. When it is done
-the **Plan** screen opens.
+the **Plan** screen opens — after the logo prompt, if the batch has a logo the app has not seen.
+
+### The logo prompt
+
+A courier is named from two clues, and only when they agree: the **logo** printed on the label and
+the **tracking-ID form**. The app knows the logos of J&T Express, SiCepat, J&T Cargo, IDX and SPX,
+the names of the buttons. A logo it has not seen before is asked about once per batch, before the
+Plan screen (of a page's images, the ones drawn in its top 40 pt are looked at, so the frame, the
+barcode and the QR never ask):
+
+**Which courier is this logo?** — the logo as printed, with "4 pages · 4 orders" beside it, then a
+button per courier name, **Not a courier**, **I don't know** and **Skip all**.
+
+- **A courier name** names those orders at once. An order is named only if its tracking ID fits
+  that courier too, so one answer cannot name a wrong courier.
+- **Not a courier** is for an image that is not a courier's logo — a buying channel's strip
+  (`tokopedia | TikTok`, `TikTok Shop`, `Shopee`, …).
+- **I don't know** writes nothing: those orders are saved with an empty courier and are listed in
+  the day's warning. **Esc** does the same for the one logo shown; the next logo still asks.
+- **Skip all** stops the prompts for the rest of this batch; nothing is written. The next batch
+  asks again from the start.
+- The prompt never blocks the work: the batch saves either way.
 
 ### Plan
 

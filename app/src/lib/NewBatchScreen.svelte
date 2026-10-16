@@ -6,6 +6,8 @@
   import { listen } from "@tauri-apps/api/event";
   import { getCurrentWebview } from "@tauri-apps/api/webview";
   import * as api from "../lib/api";
+  import { LogoPrompt, needsLogoPrompt } from "../lib/logoPrompt";
+  import LogoPromptDialog from "./LogoPrompt.svelte";
   import { texts } from "../texts";
 
   let {
@@ -26,6 +28,13 @@
   let error = $state("");
   // Set while *Cancel* is pressed: the read then returns to the file list, not to a stop message.
   let cancelling = false;
+
+  // The logo prompt (08 › *The logo prompt*): after a read, before the Plan screen, each unseen
+  // logo is asked about once. `asking` is the logo shown now; the flow itself is in logoPrompt.ts.
+  let prompt = $state<LogoPrompt | null>(null);
+  let asking = $state<api.LogoView | null>(null);
+  let couriers = $state<string[]>([]);
+  let answering = $state(false);
 
   const totalPages = $derived(files.reduce((sum, file) => sum + file.pages, 0));
   const sorted = $derived([...files].sort((a, b) => a.name.localeCompare(b.name)));
@@ -89,9 +98,9 @@
     const unlisten = await listen<api.ReadProgress>("read-progress", (event) => {
       progress = event.payload;
     });
+    let result: api.ReadResult | null = null;
     try {
-      const result = await api.readLabels(sorted.map((file) => file.path));
-      onPlan(result);
+      result = await api.readLabels(sorted.map((file) => file.path));
     } catch (e) {
       // *Cancel* returns to the file list; any other stop shows its message with Back.
       if (!cancelling) stop = String(e);
@@ -99,6 +108,50 @@
     unlisten();
     reading = false;
     progress = null;
+    if (result) begin(result);
+  }
+
+  // A read ended: ask about the unseen logos first, or open the Plan screen at once.
+  function begin(result: api.ReadResult) {
+    if (!needsLogoPrompt(result)) {
+      onPlan(result);
+      return;
+    }
+    prompt = new LogoPrompt(result, api.answerLogo);
+    couriers = result.couriers;
+    asking = prompt.current;
+  }
+
+  // One answer (a courier name, *Not a courier*, or *I don't know*/Esc, which both send `skip`).
+  async function answer(reply: api.LogoAnswer) {
+    if (!prompt || answering) return;
+    answering = true;
+    error = "";
+    try {
+      await prompt.answer(reply);
+    } catch (e) {
+      error = String(e);
+    }
+    const next = prompt.current;
+    asking = next;
+    if (next === null) {
+      // The list is done: the Plan screen opens with the latest result.
+      const done = prompt.latest;
+      prompt = null;
+      onPlan(done);
+    }
+    answering = false;
+  }
+
+  // *Skip all*: stop the prompts for the rest of this batch; nothing is sent, the last result
+  // opens the Plan screen (08 › *The logo prompt*).
+  function skipAll() {
+    if (!prompt) return;
+    prompt.skipAll();
+    const done = prompt.latest;
+    prompt = null;
+    asking = null;
+    onPlan(done);
   }
 
   async function cancel() {
@@ -120,7 +173,17 @@
         }
       })
       .then((fn) => (unlisten = fn));
-    return () => unlisten?.();
+    // Esc skips only the logo shown: the next unseen logo still asks (08 › *The logo prompt*).
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || !asking) return;
+      event.preventDefault();
+      answer({ kind: "skip" });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      unlisten?.();
+      window.removeEventListener("keydown", onKey);
+    };
   });
 </script>
 
@@ -187,6 +250,20 @@
         {texts.newBatch.read}
       </button>
     </div>
+  {/if}
+
+  {#if asking}
+    <LogoPromptDialog
+      logo={asking}
+      {couriers}
+      busy={answering}
+      onAnswer={answer}
+      onSkipAll={skipAll}
+    />
+  {/if}
+
+  {#if error && asking}
+    <p class="answer-error">{error}</p>
   {/if}
 </main>
 
@@ -305,6 +382,21 @@
     color: #4a4a4a;
   }
 
+  /* An answer to the logo prompt that failed: shown over the prompt's backdrop. */
+  .answer-error {
+    position: fixed;
+    left: 50%;
+    bottom: 2rem;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 0.5rem 1rem;
+    background: #fdecec;
+    border: 1px solid #d98a8a;
+    border-radius: 6px;
+    color: #8a1f1f;
+    z-index: 12;
+  }
+
   @media (prefers-color-scheme: dark) {
     .drop,
     .muted {
@@ -321,6 +413,12 @@
     }
 
     .stop {
+      background: #3a2020;
+      border-color: #8a4a4a;
+      color: #f0b8b8;
+    }
+
+    .answer-error {
       background: #3a2020;
       border-color: #8a4a4a;
       color: #f0b8b8;

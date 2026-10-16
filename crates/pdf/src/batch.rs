@@ -19,7 +19,7 @@ use packing_engine::day::{
     Layout as EngineLayout, PackingListChoice, PdfEntry, SavedOrder, Scope, duplicates_warning,
 };
 use packing_engine::names;
-use packing_engine::orders::{self, Line, ReadError, ReadOrder};
+use packing_engine::orders::{self, Line, LogoAnswer, ReadError, ReadOrder, UnseenLogo, Warning};
 use packing_engine::plan::{PickResult, PlanResult, REST_CODE};
 
 use crate::PdfError;
@@ -136,6 +136,64 @@ pub struct Draft {
     pub total_orders: usize,
     /// Pages that carry a packing slip.
     pub slip_pages: usize,
+    /// The header-band images the courier data does not know, for the logo prompt (D-LABEL-4).
+    /// Each is asked about once per batch and then leaves the list.
+    pub unseen_logos: Vec<UnseenLogo>,
+    /// The read warnings, kept structured so the logo prompt can recompute the ones that depend
+    /// on the courier (D-LABEL-4); [`Draft::warnings`] is their display text plus the duplicate
+    /// warning.
+    pub read_warnings: Vec<Warning>,
+}
+
+impl Draft {
+    /// Apply the owner's answer about one unseen logo (08 › *New batch* → *The logo prompt*,
+    /// D-LABEL-4): the orders carrying the logo are named where the two clues agree
+    /// ([`UnseenLogo::apply`]), the logo leaves `unseen_logos`, and the warnings that depend on
+    /// the courier are recomputed (the unknown-courier line shrinks or goes). Returns how many
+    /// orders the answer named; an unknown `hash` changes nothing.
+    pub fn answer_logo(&mut self, hash: &str, answer: &LogoAnswer) -> usize {
+        let Some(index) = self
+            .unseen_logos
+            .iter()
+            .position(|entry| entry.hash == hash)
+        else {
+            return 0;
+        };
+        let entry = self.unseen_logos.remove(index);
+        let named = entry.apply(&mut self.orders, answer);
+        self.refresh_courier_warning();
+        named
+    }
+
+    /// Rebuild the warnings after the couriers changed: the unknown-courier line is recomputed
+    /// from the orders (08 › *Messages* names them by tracking ID) and keeps its place among the
+    /// read warnings; the `Qty Total` and tracking-ID lines do not depend on the courier.
+    fn refresh_courier_warning(&mut self) {
+        let mut warnings: Vec<Warning> = self
+            .read_warnings
+            .iter()
+            .filter(|warning| !matches!(warning, Warning::UnknownCourier { .. }))
+            .cloned()
+            .collect();
+        if let Some(unknown) = Warning::unknown_courier(&self.orders) {
+            // Read puts the unknown-courier line after the `Qty Total` ones and before the
+            // tracking-ID ones (`orders::read_batch`); keep that place.
+            let at = warnings
+                .iter()
+                .position(|warning| matches!(warning, Warning::TrackingIdMissing { .. }))
+                .unwrap_or(warnings.len());
+            warnings.insert(at, unknown);
+        }
+        self.read_warnings = warnings;
+        self.warnings = self
+            .read_warnings
+            .iter()
+            .map(|warning| warning.to_string())
+            .collect();
+        if !self.duplicates.is_empty() {
+            self.warnings.push(duplicates_warning(&self.duplicates));
+        }
+    }
 }
 
 /// Open the files on the worker, read every page with progress and a cancel flag, group the
@@ -184,14 +242,17 @@ pub fn read(
         warnings.push(duplicates_warning(&duplicates));
     }
 
+    let total_orders = reading.orders.len();
     Ok(Draft {
         files: files.to_vec(),
         orders: kept,
         duplicates,
         warnings,
         pages,
-        total_orders: reading.orders.len(),
+        total_orders,
         slip_pages,
+        unseen_logos: reading.unseen_logos,
+        read_warnings: reading.warnings,
     })
 }
 
@@ -675,6 +736,8 @@ mod tests {
             pages: 2,
             total_orders: 2,
             slip_pages: 2,
+            unseen_logos: Vec::new(),
+            read_warnings: Vec::new(),
         };
         let index = order_index(&draft);
         let section = pick_section(&pick, &index).expect("section");
@@ -704,6 +767,8 @@ mod tests {
             pages: 2,
             total_orders: 2,
             slip_pages: 2,
+            unseen_logos: Vec::new(),
+            read_warnings: Vec::new(),
         };
         let index = order_index(&draft);
 
@@ -800,5 +865,122 @@ mod tests {
     #[test]
     fn printed_time_slices_the_clock() {
         assert_eq!(printed_time("2026-10-07T07:40:12+07:00"), "07:40");
+    }
+
+    // --------------------------------------------------- the logo prompt's answer (D-LABEL-4)
+
+    /// Two orders of the batch with no courier: one `JY…` (J&T Express alone) and one `00…`
+    /// (shared with SiCepat), both carrying one unseen logo.
+    fn draft_with_unseen_logo(order_ids: Vec<&str>) -> Draft {
+        let mut first = read_order(
+            "580000000000000001",
+            "JY0000001234",
+            vec![line("Sepatu", "", 1, "Sepatu")],
+        );
+        first.order.courier = String::new();
+        let mut second = read_order(
+            "580000000000000002",
+            "000000000202",
+            vec![line("Sepatu", "", 1, "Sepatu")],
+        );
+        second.order.courier = String::new();
+        let mut draft = Draft {
+            files: Vec::new(),
+            orders: vec![first, second],
+            duplicates: Vec::new(),
+            warnings: Vec::new(),
+            pages: 2,
+            total_orders: 2,
+            slip_pages: 2,
+            unseen_logos: vec![UnseenLogo {
+                hash: "ffff".to_string(),
+                appearance: None,
+                pages: 2,
+                order_ids: order_ids.into_iter().map(str::to_string).collect(),
+            }],
+            read_warnings: Vec::new(),
+        };
+        draft.read_warnings = vec![Warning::unknown_courier(&draft.orders).expect("both unknown")];
+        draft.warnings = draft
+            .read_warnings
+            .iter()
+            .map(|warning| warning.to_string())
+            .collect();
+        draft
+    }
+
+    #[test]
+    fn an_answer_names_only_the_form_agreeing_orders_and_refreshes_the_warning() {
+        let mut draft = draft_with_unseen_logo(vec!["580000000000000001", "580000000000000002"]);
+        assert_eq!(
+            draft.warnings,
+            vec![
+                "Courier unknown for 2 orders: JY0000001234, 000000000202. They are sorted \
+                 normally; only a condition on courier cannot see them."
+                    .to_string()
+            ]
+        );
+
+        // The JY form names J&T Express; the shared 00 form does not.
+        let named = draft.answer_logo("ffff", &LogoAnswer::Courier("J&T Express".to_string()));
+        assert_eq!(named, 1);
+        assert_eq!(draft.orders[0].order.courier, "J&T Express");
+        assert_eq!(draft.orders[1].order.courier, "");
+        assert!(draft.unseen_logos.is_empty(), "the answered logo is spent");
+        assert_eq!(
+            draft.warnings,
+            vec![
+                "Courier unknown for 1 order: 000000000202. They are sorted normally; only a \
+                 condition on courier cannot see them."
+                    .to_string()
+            ]
+        );
+        // A second answer about the same hash changes nothing.
+        assert_eq!(
+            draft.answer_logo("ffff", &LogoAnswer::Courier("SiCepat".to_string())),
+            0
+        );
+    }
+
+    #[test]
+    fn an_answer_naming_every_order_removes_the_warning() {
+        let mut draft = draft_with_unseen_logo(vec!["580000000000000002"]);
+        let named = draft.answer_logo("ffff", &LogoAnswer::Courier("SiCepat".to_string()));
+        assert_eq!(named, 1);
+        assert_eq!(draft.orders[1].order.courier, "SiCepat");
+        // The JY order was not carrying the logo: it stays unknown and keeps its warning.
+        assert_eq!(draft.orders[0].order.courier, "");
+        assert_eq!(draft.warnings.len(), 1);
+        assert!(draft.warnings[0].contains("Courier unknown for 1 order: JY0000001234"));
+    }
+
+    #[test]
+    fn not_a_courier_and_skip_name_nothing_but_leave_the_list() {
+        for answer in [LogoAnswer::NotCourier, LogoAnswer::Skip] {
+            let mut draft = draft_with_unseen_logo(vec!["580000000000000001"]);
+            assert_eq!(draft.answer_logo("ffff", &answer), 0);
+            assert_eq!(draft.orders[0].order.courier, "");
+            assert!(draft.unseen_logos.is_empty());
+            // Both orders are still unknown: the warning is unchanged.
+            assert!(draft.warnings[0].contains("Courier unknown for 2 orders"));
+        }
+    }
+
+    #[test]
+    fn the_duplicate_warning_stays_after_a_logo_answer() {
+        let mut draft = draft_with_unseen_logo(vec!["580000000000000001"]);
+        draft.duplicates = vec![Duplicate {
+            order_id: "580000000000000009".to_string(),
+            tracking_id: "JY0000009999".to_string(),
+            batch: 1,
+            pdf: 2,
+            time: "07:40".to_string(),
+        }];
+        draft.warnings.push(duplicates_warning(&draft.duplicates));
+
+        draft.answer_logo("ffff", &LogoAnswer::Courier("J&T Express".to_string()));
+        assert_eq!(draft.warnings.len(), 2);
+        assert!(draft.warnings[0].contains("Courier unknown for 1 order"));
+        assert!(draft.warnings[1].starts_with("1 orders were already saved today"));
     }
 }

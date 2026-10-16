@@ -125,6 +125,30 @@ impl UnseenLogo {
     pub fn orders(&self) -> usize {
         self.order_ids.len()
     }
+
+    /// Apply the owner's answer about this logo to a set of orders (the logo prompt, D-LABEL-4).
+    /// A courier name fills the `courier` of the orders carrying the logo **only when the two
+    /// clues agree**: the order's tracking-ID form must have that courier among its candidates
+    /// (D-LABEL-2), else the order stays unknown. *Not a courier* and *Skip* name nothing.
+    /// Returns how many orders the answer named.
+    pub fn apply(&self, orders: &mut [ReadOrder], answer: &LogoAnswer) -> usize {
+        let LogoAnswer::Courier(name) = answer else {
+            return 0;
+        };
+        let mut named = 0;
+        for order in orders {
+            if !self.order_ids.iter().any(|id| id == &order.order.order_id) {
+                continue;
+            }
+            if order.order.courier.is_empty()
+                && label::form_names_courier(&order.order.tracking_id, name)
+            {
+                order.order.courier = name.clone();
+                named += 1;
+            }
+        }
+        named
+    }
 }
 
 /// The owner's answer about one unseen logo (the logo prompt, D-LABEL-4).
@@ -140,9 +164,8 @@ pub enum LogoAnswer {
 
 impl Reading {
     /// Apply one answer to the unseen logo `hash` (the logo prompt, D-LABEL-4). A courier name
-    /// fills the `courier` of the orders carrying the logo **only when the two clues agree**: the
-    /// order's tracking-ID form must have that courier among its candidates (D-LABEL-2), else the
-    /// order stays unknown. *Not a courier* and *Skip* name nothing. The answered logo leaves
+    /// fills the `courier` of the orders carrying the logo **only when the two clues agree**
+    /// ([`UnseenLogo::apply`]); *Not a courier* and *Skip* name nothing. The answered logo leaves
     /// `unseen_logos`. Returns how many orders the answer named.
     pub fn apply_logo_answer(&mut self, hash: &str, answer: &LogoAnswer) -> usize {
         let Some(index) = self
@@ -153,22 +176,7 @@ impl Reading {
             return 0;
         };
         let entry = self.unseen_logos.remove(index);
-        let LogoAnswer::Courier(name) = answer else {
-            return 0;
-        };
-        let mut named = 0;
-        for order in &mut self.orders {
-            if !entry.order_ids.iter().any(|id| id == &order.order.order_id) {
-                continue;
-            }
-            if order.order.courier.is_empty()
-                && label::form_names_courier(&order.order.tracking_id, name)
-            {
-                order.order.courier = name.clone();
-                named += 1;
-            }
-        }
-        named
+        entry.apply(&mut self.orders, answer)
     }
 }
 
@@ -189,6 +197,36 @@ pub enum Warning {
     },
     /// These orders' tracking IDs were not found on the label.
     TrackingIdMissing { order_ids: Vec<String> },
+}
+
+impl Warning {
+    /// The unknown-courier warning for a set of orders (08 › *Messages*), `None` when every
+    /// order's courier is named. Read builds it after the deduction; the logo prompt uses it
+    /// again to refresh the warning after an answer named some of those orders (D-LABEL-4).
+    pub fn unknown_courier(orders: &[ReadOrder]) -> Option<Warning> {
+        let unknown: Vec<&Order> = orders
+            .iter()
+            .map(|order| &order.order)
+            .filter(|order| order.courier.is_empty())
+            .collect();
+        if unknown.is_empty() {
+            return None;
+        }
+        Some(Warning::UnknownCourier {
+            order_ids: unknown.iter().map(|o| o.order_id.clone()).collect(),
+            // 08 names tracking IDs (what is printed big on the label); the Order ID when none.
+            tracking_ids: unknown
+                .iter()
+                .map(|o| {
+                    if o.tracking_id.is_empty() {
+                        o.order_id.clone()
+                    } else {
+                        o.tracking_id.clone()
+                    }
+                })
+                .collect(),
+        })
+    }
 }
 
 impl fmt::Display for Warning {
@@ -523,26 +561,8 @@ where
         });
     }
 
-    let unknown: Vec<&Order> = orders
-        .iter()
-        .map(|order| &order.order)
-        .filter(|order| order.courier.is_empty())
-        .collect();
-    if !unknown.is_empty() {
-        warnings.push(Warning::UnknownCourier {
-            order_ids: unknown.iter().map(|o| o.order_id.clone()).collect(),
-            // 08 names tracking IDs (what is printed big on the label); the Order ID when none.
-            tracking_ids: unknown
-                .iter()
-                .map(|o| {
-                    if o.tracking_id.is_empty() {
-                        o.order_id.clone()
-                    } else {
-                        o.tracking_id.clone()
-                    }
-                })
-                .collect(),
-        });
+    if let Some(unknown) = Warning::unknown_courier(&orders) {
+        warnings.push(unknown);
     }
     let missing: Vec<String> = orders
         .iter()
