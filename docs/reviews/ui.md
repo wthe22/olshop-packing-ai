@@ -47,3 +47,26 @@ The draft lives only in memory until **Save**, so going back writes nothing.
 **Answer from the owner.** The Plan edits (ticked or moved picks, added picks, file names) are lost when the
 owner goes back and presses **Read labels** again: reading starts again from the files, as a first read does.
 The next session writes this into the design files above and deletes this item.
+
+## R-UI-3 Plan screen buttons: Back at the top, Cancel amend beside Save
+
+**Now.** The Plan screen has one **Cancel** at the top. On an amend (titled "Redo batch 2"), the only way
+out without saving is to press **Save batch 2 again**, or to press **Cancel** and then discard the draft.
+Nothing sits next to the save button for amend.
+
+**Wanted.**
+- The top button is named **Back**, not **Cancel**: it returns to the PDF selection page
+  ([R-UI-2](#r-ui-2-cancel-on-the-plan-screen-goes-back-to-the-pdf-selection-page)). It does not discard.
+- On an amend, a **Cancel amend** button sits at the bottom, beside **Save batch 2 again**. It leaves the
+  batch as it was, and the owner is back on the Day screen. The batch is untouched, as the design already
+  says for amend.
+
+**Reading to check against the design.** [plan.md](../software-design/ui/plan.md) (the top button, the
+bottom row, and the amend title and buttons) and [new-batch.md](../software-design/ui/new-batch.md)
+(the top button of the new-batch Plan screen).
+
+**Open detail for the owner.**
+- Whether **Cancel amend** asks first, as "Discard the redo of batch 2? Batch 2 stays as it was." Default:
+  no, because nothing is written until **Save**.
+- Whether a new batch's Plan screen also needs a bottom discard button, beside **Save batch**. Default: no;
+  the top **Back** goes to the PDF selection page, whose **Cancel** discards the batch.
