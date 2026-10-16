@@ -122,6 +122,9 @@ pub struct BatchView {
     packing_lists: Vec<String>,
     /// The read warnings of the batch, for *Warnings ▸* (08 › *1. Day*).
     warnings: Vec<String>,
+    /// The check before saving's errors, for *Saved with `<n>` errors ▸* (08 › *1. Day*); empty
+    /// unless the batch was saved anyway (07 › *Check before saving*).
+    errors: Vec<String>,
     /// The batch folder, for *Open folder*.
     folder: String,
 }
@@ -174,6 +177,7 @@ fn overview_of(state: &DayState, day_dir: &Path) -> DayOverview {
                 .collect(),
             packing_lists: packing_list_files(&batch.packing_list, &batch.pdfs),
             warnings: batch.warnings.clone(),
+            errors: batch.errors.clone(),
             folder: day_dir
                 .join(names::batch_folder(batch.batch))
                 .display()
@@ -427,7 +431,13 @@ mod tests {
         }
     }
 
-    fn batch_entry(batch: i64, time: &str, pdf: PdfEntry, warnings: Vec<String>) -> BatchEntry {
+    fn batch_entry(
+        batch: i64,
+        time: &str,
+        pdf: PdfEntry,
+        warnings: Vec<String>,
+        errors: Vec<String>,
+    ) -> BatchEntry {
         BatchEntry {
             batch,
             save_time: time.to_string(),
@@ -435,6 +445,7 @@ mod tests {
             pdfs: vec![pdf],
             packing_list: PackingListChoice::default(),
             warnings,
+            errors,
         }
     }
 
@@ -477,6 +488,7 @@ mod tests {
                 runs: 4,
             },
             vec!["no tracking ID for: 580000000000000004".to_string()],
+            Vec::new(),
         ));
         state.batches.push(batch_entry(
             2,
@@ -490,6 +502,7 @@ mod tests {
                 runs: 2,
             },
             Vec::new(),
+            vec!["PDF 2 is missing a page".to_string()],
         ));
         state.save(&day_dir).expect("save state");
 
@@ -500,12 +513,18 @@ mod tests {
         assert_eq!(overview.batches[0].time, "09:12");
         assert_eq!(overview.batches[0].orders, 10);
         assert!(overview.batches[0].warnings.is_empty());
+        // The check before saving's errors reach the Day screen's view.
+        assert_eq!(
+            overview.batches[0].errors,
+            vec!["PDF 2 is missing a page".to_string()]
+        );
         assert_eq!(overview.batches[0].packing_lists, vec!["packing-list.pdf"]);
         assert!(overview.batches[0].folder.ends_with("batch 2"));
         assert_eq!(
             overview.batches[1].warnings,
             vec!["no tracking ID for: 580000000000000004".to_string()]
         );
+        assert!(overview.batches[1].errors.is_empty(), "this batch had none");
         assert_eq!(overview.totals.batches, 2);
         assert_eq!(overview.totals.orders, 182);
         assert_eq!(overview.totals.pdfs, 2);

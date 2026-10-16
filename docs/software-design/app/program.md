@@ -9,7 +9,7 @@
 | `read_labels(paths)` | Start reading on a worker thread; emits `read-progress {page, pages}` | A draft id, then orders count, duplicates, warnings, or the stop error |
 | `cancel_read()` | Stop reading | — |
 | `plan(draft, edits)` | Apply the plan edits (skip, move, add condition, rename) and recount | Picks with counts, runs (contents × orders), suggested names |
-| `save_batch(draft, plan, packing)` | Steps of [Save](batch.md) and the [check before saving](saved-pdf-check.md); emits `save-progress {stage, page, pages}` | Written files, summary, or the check's findings |
+| `save_batch(draft, plan, packing, save_anyway)` | Steps of [Save](batch.md) and the [check before saving](saved-pdf-check.md); emits `save-progress {stage, page, pages}` | Written files and summary, or the check's findings (nothing written until *Save anyway*) |
 | `revert_last(day)` / `start_amend(day)` | Revert / amend | New overview / a draft |
 | `rules_load()` / `rules_check(text or entries, draft?)` / `rules_save(…)` | Categories editor | Entries, errors with line/col, live counts on the open draft |
 | `condition_to_tree(text)` / `tree_to_condition(tree)` | Boxes editor: condition text → boxes, boxes → text (the engine's parser and printer, so the window has no second parser) | Tree of groups and rows, or an error with line/col / the text |

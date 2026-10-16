@@ -29,6 +29,23 @@ pub struct Progress {
     pub pages: usize,
 }
 
+/// Which part of a save is running (07 › *Check before saving*).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SaveStage {
+    /// The saved PDFs and packing lists are being written.
+    Writing,
+    /// The written files are being read back and compared with the plan.
+    Checking,
+}
+
+/// How far a running save has got: the stage and pages done of all pages.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SaveProgress {
+    pub stage: SaveStage,
+    pub page: usize,
+    pub pages: usize,
+}
+
 /// A unit of work for the worker thread.
 pub enum Job {
     /// Open label files (replacing the current draft) and report each file's page count.
@@ -42,6 +59,14 @@ pub enum Job {
         progress: Sender<Progress>,
         /// The data folder's courier data (the band images' appearance decision; 07 › *Inputs*).
         couriers: CourierTable,
+        reply: Sender<Result<Vec<PageItem>, PdfError>>,
+    },
+    /// Read the given files' pages back **without** replacing the current draft (the check
+    /// before saving reads the written files; the label documents stay open, so a retry after
+    /// *Save anyway* still has them).
+    ReadBack {
+        paths: Vec<PathBuf>,
+        progress: Sender<SaveProgress>,
         reply: Sender<Result<Vec<PageItem>, PdfError>>,
     },
     /// Copy pages from the current draft into a new saved PDF.
@@ -122,6 +147,22 @@ impl PdfWorker {
             cancel,
             progress,
             couriers,
+            reply,
+        })?;
+        recv(&rx)
+    }
+
+    /// Read the given files' pages back without replacing the current draft (the check before
+    /// saving reads the written files, so the label documents stay open).
+    pub fn read_back(
+        &self,
+        paths: &[PathBuf],
+        progress: Sender<SaveProgress>,
+    ) -> Result<Vec<PageItem>, PdfError> {
+        let (reply, rx) = mpsc::channel();
+        self.send(Job::ReadBack {
+            paths: paths.to_vec(),
+            progress,
             reply,
         })?;
         recv(&rx)
@@ -236,6 +277,30 @@ fn serve(pdfium: &Pdfium, rx: &Receiver<Job>) {
                     }
                     None => Err(PdfError::Message("no labels are open".into())),
                 };
+                let _ = reply.send(result);
+            }
+            Job::ReadBack {
+                paths,
+                progress,
+                reply,
+            } => {
+                let result = read::open_all(pdfium, &paths).and_then(|files| {
+                    let total: usize = files.iter().map(|file| file.pages).sum();
+                    let mut pages: Vec<PageItem> = Vec::with_capacity(total);
+                    let mut done = 0usize;
+                    for (file_index, file) in files.iter().enumerate() {
+                        for page_index in 0..file.pages {
+                            pages.push((file_index, page_index, file.page_text_plain(page_index)?));
+                            done += 1;
+                            let _ = progress.send(SaveProgress {
+                                stage: SaveStage::Checking,
+                                page: done,
+                                pages: total,
+                            });
+                        }
+                    }
+                    Ok(pages)
+                });
                 let _ = reply.send(result);
             }
             Job::WritePages { pages, out, reply } => {

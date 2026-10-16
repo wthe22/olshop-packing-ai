@@ -6,26 +6,29 @@
 //! mapping (a [`PlanResult`] into a [`PackingList`]) and the summary text are plain functions
 //! so they are tested without a PDF library.
 
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{self, Sender};
 
 use packing_engine::day::{
-    self, BatchWrite, DayError, DayState, Duplicate, FileEntry, Fingerprint,
+    self, BatchWrite, DayError, DayState, Duplicate, FileEntry, Findings, Fingerprint,
     Layout as EngineLayout, PackingListChoice, PdfEntry, SavedOrder, Scope, duplicates_warning,
 };
 use packing_engine::label::CourierTable;
 use packing_engine::names;
 use packing_engine::orders::{self, Line, LogoAnswer, ReadError, ReadOrder, UnseenLogo, Warning};
 use packing_engine::plan::{PickResult, PlanResult, REST_CODE};
+use packing_engine::verify::{self as engine_verify, Check, Expected, ExpectedList};
 
 use crate::PdfError;
 use crate::packing_list::{self, PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection};
-use crate::worker::{PdfWorker, Progress};
+use crate::worker::{PdfWorker, Progress, SaveProgress, SaveStage};
 
 /// A batch step failed. The stop texts are those of 08 › *Messages*.
 #[derive(Debug)]
@@ -261,10 +264,12 @@ pub fn read(
 
 // ---------------------------------------------------------------------------- save
 
-/// What a finished save wrote (07 › *Save*).
+/// What a save produced (07 › *Save*, *Check before saving*).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SaveResult {
     pub batch: i64,
+    /// The batch folder once the save was renamed (07 › *Day folder*); the path the batch would
+    /// have taken when the check stopped the save.
     pub folder: PathBuf,
     /// The written saved-PDF file names, in printing order.
     pub pdf_files: Vec<String>,
@@ -272,12 +277,26 @@ pub struct SaveResult {
     pub packing_lists: Vec<String>,
     /// The batch summary text, also written to `summary.txt`.
     pub summary: String,
+    /// Whether the batch was renamed into place and written into `state.json`; false when the
+    /// check found something and *Save anyway* was not chosen (07 › *Check before saving*).
+    pub saved: bool,
+    /// The check's errors, as text; empty on a clean save.
+    pub errors: Vec<String>,
+    /// The check's warnings, as text.
+    pub warnings: Vec<String>,
 }
 
-/// Write a batch into `batch <b>.partial/`, then rename it and add it to the state
-/// (07 › *Save* step 6). The saved PDFs are the picks' pages in run order (03 › *A saved PDF*),
-/// the packing lists follow the scope and layouts, `summary.txt` is written and the label files
-/// are copied into `download/`. Nothing is written when any step fails.
+/// Write a batch into `batch <b>.partial/`, check it, then rename it and add it to the state
+/// (07 › *Save* step 6, *Check before saving*). The saved PDFs are the picks' pages in run order
+/// (03 › *A saved PDF*), the packing lists follow the scope and layouts, `summary.txt` is
+/// written and the label files are copied into `download/`.
+///
+/// The check before saving runs on every save (D-APP-2): the written files are read back and
+/// compared with the plan. A finding stops the save — nothing is renamed, the temporary folder
+/// is deleted, `state.json` is untouched and the findings are returned — unless `save_anyway` is
+/// set, which renames the batch and stores the two lists with it. `progress` reports the writing
+/// and the checking (the app turns it into a `save-progress` event).
+#[allow(clippy::too_many_arguments)] // the batch's whole step-6 context, as `read` already takes
 pub fn save(
     worker: &PdfWorker,
     draft: &Draft,
@@ -286,6 +305,8 @@ pub fn save(
     day: &str,
     day_dir: &Path,
     state: &mut DayState,
+    save_anyway: bool,
+    progress: Sender<SaveProgress>,
 ) -> Result<SaveResult, BatchError> {
     plan.check_file_names()
         .map_err(|error| BatchError::Message(error.to_string()))?;
@@ -299,8 +320,11 @@ pub fn save(
     let mut sections: Vec<SavedPdfSection> = Vec::with_capacity(plan.picks.len());
     let mut saved: Vec<SavedOrder> = Vec::new();
     let mut pdfs: Vec<PdfEntry> = Vec::with_capacity(plan.picks.len());
+    let mut page_total = 0usize;
     for pick in &plan.picks {
-        pdf_pages.push(pick_pages(pick, &index)?);
+        let pages = pick_pages(pick, &index)?;
+        page_total += pages.len();
+        pdf_pages.push(pages);
         sections.push(pick_section(pick, &index)?);
         saved.extend(pick_saved(pick, &index, batch)?);
         pdfs.push(PdfEntry {
@@ -326,20 +350,10 @@ pub fn save(
 
     let jobs = packing_jobs(plan, &sections, packing, day, batch, &printed);
     let packing_lists: Vec<String> = jobs.iter().map(|job| job.name.clone()).collect();
-
-    let summary = summary_text(&SummaryInput {
-        day,
-        files: draft.files.len(),
-        pages: draft.pages,
-        orders: draft.total_orders,
-        slip_pages: draft.slip_pages,
-        picks: &plan.picks,
-        duplicates: draft.duplicates.len(),
-        warnings: &draft.warnings,
-        day_dir,
-        packing_lists: &packing_lists,
-        quiet_ids: false,
-    });
+    let expected = Expected {
+        pdfs: engine_verify::expected_pdfs(plan, &draft.orders),
+        lists: expected_lists(&jobs),
+    };
 
     let write = BatchWrite {
         batch,
@@ -351,10 +365,20 @@ pub fn save(
         saved,
     };
 
-    let summary_for_file = summary.clone();
+    let findings: Rc<RefCell<Option<Check>>> = Rc::new(RefCell::new(None));
+    let stopped = Rc::new(Cell::new(false));
+    let summary_slot = Rc::new(RefCell::new(String::new()));
+    let packing_lists_fill = packing_lists.clone();
+    let (findings_fill, stopped_fill, summary_fill) = (
+        Rc::clone(&findings),
+        Rc::clone(&stopped),
+        Rc::clone(&summary_slot),
+    );
+
     let folder = day::save_batch(day_dir, state, &write, move |temp| {
         let download = temp.join(names::DOWNLOAD_DIR);
         fs::create_dir_all(&download).map_err(|error| write_error(&download, error))?;
+        let mut written = 0usize;
         for (pick, pages) in plan.picks.iter().zip(&pdf_pages) {
             let out = temp.join(&pick.file_name);
             worker
@@ -363,6 +387,12 @@ pub fn save(
                     folder: out,
                     message: error.to_string(),
                 })?;
+            written += pages.len();
+            let _ = progress.send(SaveProgress {
+                stage: SaveStage::Writing,
+                page: written,
+                pages: page_total,
+            });
         }
         for file in &draft.files {
             let out = download.join(&file.name);
@@ -377,18 +407,115 @@ pub fn save(
                     message: error.to_string(),
                 })?;
         }
+
+        // Check before saving: read the written files back and compare them with the plan.
+        let written = crate::verify::read_back(worker, temp, &expected, progress.clone()).map_err(
+            |error| DayError::Write {
+                folder: temp.to_path_buf(),
+                message: error.to_string(),
+            },
+        )?;
+        let check = engine_verify::compare(&expected, &written);
+        let stop = !save_anyway && !check.is_empty();
+        *findings_fill.borrow_mut() = Some(check.clone());
+        if stop {
+            // Nothing is renamed: the temporary folder goes, `state.json` is untouched.
+            stopped_fill.set(true);
+            return Err(DayError::Write {
+                folder: temp.to_path_buf(),
+                message: "the check before saving stopped the batch".to_string(),
+            });
+        }
+
+        let summary = summary_text(&SummaryInput {
+            day,
+            files: draft.files.len(),
+            pages: draft.pages,
+            orders: draft.total_orders,
+            slip_pages: draft.slip_pages,
+            picks: &plan.picks,
+            duplicates: draft.duplicates.len(),
+            warnings: &draft.warnings,
+            check_errors: &check.error_texts(),
+            check_warnings: &check.warning_texts(),
+            day_dir,
+            packing_lists: &packing_lists_fill,
+            quiet_ids: false,
+        });
         let out = temp.join(names::SUMMARY_FILE);
-        fs::write(&out, &summary_for_file).map_err(|error| write_error(&out, error))?;
-        Ok(())
-    })?;
+        fs::write(&out, &summary).map_err(|error| write_error(&out, error))?;
+        *summary_fill.borrow_mut() = summary;
+        Ok(Findings {
+            errors: check.error_texts(),
+            warnings: check.warning_texts(),
+        })
+    });
+
+    let check = findings.borrow().clone().unwrap_or_default();
+    let mut result_folder = day_dir.join(names::batch_folder(batch));
+    let saved = match folder {
+        Ok(folder) => {
+            result_folder = folder;
+            true
+        }
+        Err(error) => {
+            if !stopped.get() {
+                return Err(BatchError::Day(error));
+            }
+            false
+        }
+    };
 
     Ok(SaveResult {
         batch,
-        folder,
+        folder: result_folder,
         pdf_files: plan.picks.iter().map(|p| p.file_name.clone()).collect(),
         packing_lists,
-        summary,
+        summary: summary_slot.borrow().clone(),
+        saved,
+        errors: check.error_texts(),
+        warnings: check.warning_texts(),
     })
+}
+
+/// The check's plan side (07 › *Check before saving*): every saved PDF's page sequence and every
+/// packing list's counts.
+fn expected_lists(jobs: &[PackingJob]) -> Vec<ExpectedList> {
+    jobs.iter()
+        .map(|job| {
+            let (orders, units, runs) = job.list.counts();
+            ExpectedList {
+                file: job.name.clone(),
+                orders,
+                units,
+                runs,
+            }
+        })
+        .collect()
+}
+
+/// Read the files written in `folder` back and compare them with the plan (07 › *Check before
+/// saving*), saving nothing. Public so the check can be run on its own.
+pub fn check_saved(
+    worker: &PdfWorker,
+    folder: &Path,
+    draft: &Draft,
+    plan: &PlanResult,
+    packing: &PackingListChoice,
+) -> Result<Check, BatchError> {
+    let index = order_index(draft);
+    let mut sections = Vec::with_capacity(plan.picks.len());
+    for pick in &plan.picks {
+        sections.push(pick_section(pick, &index)?);
+    }
+    let jobs = packing_jobs(plan, &sections, packing, "", 0, "");
+    let expected = Expected {
+        pdfs: engine_verify::expected_pdfs(plan, &draft.orders),
+        lists: expected_lists(&jobs),
+    };
+    let (progress, _rx) = mpsc::channel();
+    let written = crate::verify::read_back(worker, folder, &expected, progress)?;
+    Ok(engine_verify::compare(&expected, &written))
 }
 
 fn write_error(path: &Path, error: std::io::Error) -> DayError {
@@ -559,6 +686,11 @@ pub struct SummaryInput<'a> {
     pub picks: &'a [PickResult],
     pub duplicates: usize,
     pub warnings: &'a [String],
+    /// The check before saving's errors (07 › *Check before saving*), printed when the batch was
+    /// saved anyway.
+    pub check_errors: &'a [String],
+    /// The check before saving's warnings.
+    pub check_warnings: &'a [String],
     pub day_dir: &'a Path,
     pub packing_lists: &'a [String],
     /// The developer's `--quiet-ids`: keep the warning count, drop the detail lines that name
@@ -609,6 +741,23 @@ pub fn summary_text(input: &SummaryInput<'_>) -> String {
         lines.push(format!("  Warnings: {}", input.warnings.len()));
         if !input.quiet_ids {
             for warning in input.warnings {
+                lines.push(format!("    - {warning}"));
+            }
+        }
+    }
+    // The check before saving's two lists, kept apart (07 › *Check before saving*).
+    if !input.check_errors.is_empty() {
+        lines.push(format!("  Check errors: {}", input.check_errors.len()));
+        if !input.quiet_ids {
+            for error in input.check_errors {
+                lines.push(format!("    - {error}"));
+            }
+        }
+    }
+    if !input.check_warnings.is_empty() {
+        lines.push(format!("  Check warnings: {}", input.check_warnings.len()));
+        if !input.quiet_ids {
+            for warning in input.check_warnings {
                 lines.push(format!("    - {warning}"));
             }
         }
@@ -813,6 +962,8 @@ mod tests {
             picks: &picks,
             duplicates: 1,
             warnings: &warnings,
+            check_errors: &[],
+            check_warnings: &[],
             day_dir,
             packing_lists: &packing_lists,
             quiet_ids: false,
@@ -847,6 +998,8 @@ mod tests {
             picks: &[],
             duplicates: 0,
             warnings: &warnings,
+            check_errors: &[],
+            check_warnings: &[],
             day_dir: Path::new("d"),
             packing_lists: &[],
             quiet_ids: true,

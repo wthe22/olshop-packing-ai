@@ -157,6 +157,11 @@ impl PackingList {
     fn run_count(&self) -> usize {
         self.sections.iter().map(|section| section.runs.len()).sum()
     }
+
+    /// The counts a packing list prints in its header and section bars: `(orders, units, runs)`.
+    pub fn counts(&self) -> (usize, i64, usize) {
+        (self.orders(), self.units(), self.run_count())
+    }
 }
 
 /// Write the packing list for `layout` and return the number of pages written. `pdfium` is the

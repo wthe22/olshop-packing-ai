@@ -6,9 +6,12 @@
   // The plugin's `confirm` (not `window.confirm`, which the dialog plugin patches to a command that
   // no longer exists) and it must be awaited.
   import { confirm } from "@tauri-apps/plugin-dialog";
-  import { texts } from "../texts";
+  import { listen } from "@tauri-apps/api/event";
+  import { texts, saveStageText } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
+  import SaveCheckDialog from "./SaveCheckDialog.svelte";
   import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
+  import { findingsOf, type Findings } from "./saveCheck";
 
   let {
     batchNumber,
@@ -49,6 +52,10 @@
 
   let saving = $state(false);
   let saveError = $state("");
+  // The check before saving's progress (the `save-progress` event: the stage and a progress bar)
+  // and the findings dialog it shows when the save stopped (07 › *Check before saving*).
+  let saveProgress = $state<api.SaveProgress | null>(null);
+  let findings = $state<Findings | null>(null);
 
   // *+ Add a pick for this batch* (08 › *3. Plan*): the condition is built in the boxes editor
   // (the same as Categories) with a text view toggle.
@@ -200,17 +207,37 @@
     }
   }
 
-  async function save() {
+  /// *Save batch* (08 › *3. Plan*): write the batch and go to the Day screen. While it runs the
+  /// stage and a progress bar are shown (the `save-progress` event). When the check before saving
+  /// finds something and this is not the dialog's *Save anyway*, the findings dialog opens and the
+  /// draft is kept (07 › *Check before saving*).
+  async function save(saveAnyway = false) {
     saving = true;
     saveError = "";
+    saveProgress = null;
+    findings = null;
+    const unlisten = await listen<api.SaveProgress>("save-progress", (event) => {
+      saveProgress = event.payload;
+    });
     try {
-      const result = await api.saveBatch({ scope, layouts });
-      onSaved(result);
+      const result = await api.saveBatch({ scope, layouts }, saveAnyway);
+      findings = findingsOf(result);
+      if (result.saved) onSaved(result);
     } catch (e) {
       saveError = String(e);
     }
+    unlisten();
     saving = false;
+    saveProgress = null;
   }
+
+  // The save's stage and progress line: the event's stage in plain words, or *Saving …* before
+  // the first `save-progress` arrives (07 › *Check before saving*: *Shown while it runs*).
+  const savingText = $derived(
+    saveProgress
+      ? saveStageText(saveProgress.stage, saveProgress.page, saveProgress.pages)
+      : texts.plan.saving,
+  );
 
   async function cancel() {
     if (!(await confirm(texts.plan.confirmDiscard(batchNo)))) return;
@@ -400,6 +427,13 @@
     </div>
   {/if}
 
+  {#if saving}
+    <div class="saving">
+      <p class="muted">{savingText}</p>
+      <progress max={saveProgress?.pages ?? 0} value={saveProgress?.page ?? 0}></progress>
+    </div>
+  {/if}
+
   <div class="foot">
     <div class="packing">
       <span class="label">{texts.plan.packingList}</span>
@@ -430,12 +464,21 @@
     <button
       class="primary"
       disabled={view.has_duplicate_names || saving}
-      onclick={save}>{amending ? texts.plan.saveAgain(batchNo) : texts.plan.save}</button
+      onclick={() => save()}>{amending ? texts.plan.saveAgain(batchNo) : texts.plan.save}</button
     >
   </div>
 
   {#if saveError}
     <p class="error">{saveError}</p>
+  {/if}
+
+  {#if findings}
+    <SaveCheckDialog
+      {findings}
+      busy={saving}
+      onSaveAnyway={() => save(true)}
+      onCancel={() => (findings = null)}
+    />
   {/if}
 </main>
 
@@ -661,6 +704,24 @@
     border-top: 1px solid #d5d5d5;
   }
 
+  /* 08 › *3. Plan*: the check before saving's stage and progress bar. */
+  .saving {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 0 0.25rem;
+  }
+
+  .saving progress {
+    width: 100%;
+    height: 1.1rem;
+  }
+
+  .saving .muted {
+    margin: 0;
+    color: #4a4a4a;
+  }
+
   .packing {
     display: flex;
     align-items: center;
@@ -701,6 +762,10 @@
     .tag,
     .muted,
     tr.run td {
+      color: #b0b0b0;
+    }
+
+    .saving .muted {
       color: #b0b0b0;
     }
 

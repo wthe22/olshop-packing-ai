@@ -29,6 +29,9 @@ export interface BatchView {
   pdfs: PdfView[];
   packing_lists: string[];
   warnings: string[];
+  /// The check before saving's errors, for *Saved with `<n>` errors ▸* (08 › *1. Day*);
+  /// empty unless the batch was saved anyway (07 › *Check before saving*).
+  errors: string[];
   folder: string;
 }
 
@@ -170,15 +173,31 @@ export type LogoAnswer =
   | { kind: "not_courier" }
   | { kind: "skip" };
 
-/// What *Save batch* wrote, for the green line (08 › *1. Day*).
+/// What *Save batch* wrote (08 › *1. Day*), and the check before saving's findings when it
+/// stopped or the owner chose *Save anyway* (07 › *Check before saving*).
 export interface SaveResult {
   batch: number;
   pdfs: number;
   packing_lists: number;
+  /// Whether the batch was written; `false` when the check found something and *Save anyway* was
+  /// not chosen. The Plan screen then keeps the draft and shows the findings dialog.
+  saved: boolean;
+  /// The check's errors (the dialog's first list, kept apart from the warnings).
+  errors: string[];
+  /// The check's warnings (the dialog's second list).
+  warnings: string[];
 }
 
 /// The `read-progress` event payload (07 › *Commands between window and Rust*).
 export interface ReadProgress {
+  page: number;
+  pages: number;
+}
+
+/// The `save-progress` event payload (07 › *Check before saving*): the stage in plain words is
+/// *Writing* or *Checking*, with the pages done of all pages.
+export interface SaveProgress {
+  stage: "Writing" | "Checking";
   page: number;
   pages: number;
 }
@@ -210,8 +229,12 @@ export const checkCondition = (condition: string): Promise<void> =>
 export const plan = (edits: PlanEdit[]): Promise<PlanView> =>
   invoke("plan", { edits });
 
-export const saveBatch = (packing: PackingChoice | null): Promise<SaveResult> =>
-  invoke("save_batch", { packing });
+/// *Save batch* (08 › *3. Plan*): `saveAnyway` is the findings dialog's *Save anyway*, `false`
+/// (the default) for a normal save (07 › *Check before saving*).
+export const saveBatch = (
+  packing: PackingChoice | null,
+  saveAnyway = false,
+): Promise<SaveResult> => invoke("save_batch", { packing, saveAnyway });
 
 export const discardDraft = (): Promise<void> => invoke("discard_draft");
 

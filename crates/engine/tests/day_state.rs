@@ -7,8 +7,9 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use packing_engine::day::{
-    BatchWrite, DayError, DayState, FileEntry, Layout, PackingListChoice, PdfEntry, SavedOrder,
-    Scope, delete_batch_folder, duplicates_warning, fingerprint, now_save_time, save_batch,
+    BatchWrite, DayError, DayState, FileEntry, Findings, Layout, PackingListChoice, PdfEntry,
+    SavedOrder, Scope, delete_batch_folder, duplicates_warning, fingerprint, now_save_time,
+    save_batch,
 };
 use packing_engine::names::DOWNLOAD_DIR;
 use packing_engine::orders::{Order, ReadOrder};
@@ -129,6 +130,7 @@ fn save_and_load_state_round_trip() {
             layouts: vec![Layout::Pick],
         },
         warnings: Vec::new(),
+        errors: Vec::new(),
     });
     state.saved.push(saved("580000000000000001", 1, 1, 5));
     state.save(&day).expect("save");
@@ -155,6 +157,7 @@ fn state_json_matches_the_07_format() {
             layouts: vec![Layout::Pick],
         },
         warnings: Vec::new(),
+        errors: Vec::new(),
     });
     state.saved.push(saved("580000000000000001", 1, 1, 5));
     state.save(&day).expect("save");
@@ -180,6 +183,8 @@ fn state_json_matches_the_07_format() {
     assert_eq!(batch["packing_list"]["layouts"][0], "pick");
     // The read warnings are stored per batch (07 › *`state.json`*), defaulted when absent.
     assert_eq!(batch["warnings"].as_array().map(Vec::len), Some(0));
+    // The check before saving's errors are stored apart from the warnings, defaulted when absent.
+    assert_eq!(batch["errors"].as_array().map(Vec::len), Some(0));
 
     let entry = &value["saved"][0];
     assert_eq!(entry["order_id"], "580000000000000001");
@@ -199,7 +204,7 @@ fn batch_warnings_round_trip_and_default_when_absent() {
     let mut state = DayState::new("2026-10-07");
     let mut write = batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]);
     write.warnings = vec!["2 orders were already saved today".to_string()];
-    save_batch(&day, &mut state, &write, |_| Ok(())).expect("save batch");
+    save_batch(&day, &mut state, &write, |_| Ok(Findings::default())).expect("save batch");
     assert_eq!(
         state.batches[0].warnings,
         vec!["2 orders were already saved today".to_string()]
@@ -224,6 +229,56 @@ fn batch_warnings_round_trip_and_default_when_absent() {
 }
 
 #[test]
+fn the_check_findings_are_stored_with_the_batch() {
+    let dir = TempDir::new("findings");
+    let day = dir.path().join("2026-10-07");
+    let mut state = DayState::new("2026-10-07");
+    let mut write = batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]);
+    write.warnings = vec!["read warning".to_string()];
+    save_batch(&day, &mut state, &write, |_| {
+        Ok(Findings {
+            errors: vec!["a page is missing".to_string()],
+            warnings: vec!["the page order differs".to_string()],
+        })
+    })
+    .expect("save batch");
+
+    // The check's errors are kept apart; its warnings join the read warnings (07 › *Check
+    // before saving*).
+    assert_eq!(
+        state.batches[0].errors,
+        vec!["a page is missing".to_string()]
+    );
+    assert_eq!(
+        state.batches[0].warnings,
+        vec![
+            "read warning".to_string(),
+            "the page order differs".to_string()
+        ]
+    );
+
+    // An older file without `errors` loads with none.
+    let text = fs::read_to_string(day.join("state.json")).expect("read");
+    let mut value: Value = serde_json::from_str(&text).expect("parse");
+    value["batches"][0]
+        .as_object_mut()
+        .expect("batch object")
+        .remove("errors");
+    fs::write(
+        day.join("state.json"),
+        serde_json::to_string_pretty(&value).expect("serialize"),
+    )
+    .expect("write");
+    assert!(
+        DayState::load(&day).expect("load").batches[0]
+            .errors
+            .is_empty()
+    );
+
+    std::fs::remove_dir_all(dir.path()).ok();
+}
+
+#[test]
 fn next_numbers_continue_through_the_day() {
     let dir = TempDir::new("numbers");
     let day = dir.path().join("2026-10-07");
@@ -237,7 +292,7 @@ fn next_numbers_continue_through_the_day() {
             vec![pdf_entry(1), pdf_entry(2)],
             vec![saved("a", 1, 1, 1)],
         ),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save batch 1");
 
@@ -248,7 +303,7 @@ fn next_numbers_continue_through_the_day() {
         &day,
         &mut state,
         &batch_write(2, vec![pdf_entry(3)], vec![saved("b", 2, 4, 2)]),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save batch 2");
     assert_eq!(state.next_batch_number(), 3);
@@ -288,7 +343,7 @@ fn used_in_batch_finds_the_file_by_fingerprint() {
         &day,
         &mut state,
         &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save");
     // The batch stores only the short sha in the fixture; make the fingerprint match by hand.
@@ -320,7 +375,7 @@ fn duplicate_guard_drops_saved_orders_with_batch_pdf_and_time() {
             vec![pdf_entry(1)],
             vec![saved("580000000000000001", 1, 1, 5)],
         ),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save");
 
@@ -353,14 +408,14 @@ fn revert_forgets_the_last_batch_and_reuses_its_numbers() {
         &day,
         &mut state,
         &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save 1");
     save_batch(
         &day,
         &mut state,
         &batch_write(2, vec![pdf_entry(2)], vec![saved("b", 2, 2, 1)]),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save 2");
 
@@ -385,7 +440,7 @@ fn delete_batch_folder_removes_the_folder_and_ignores_a_missing_one() {
         &day,
         &mut state,
         &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save");
 
@@ -408,7 +463,7 @@ fn a_file_open_in_another_program_reports_file_in_use() {
         &day,
         &mut state,
         &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save");
     let file = day.join("batch 1").join("1 A Sepatu ×1.pdf");
@@ -433,14 +488,14 @@ fn amend_gives_the_download_files_and_the_state_without_the_batch() {
         &day,
         &mut state,
         &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save 1");
     save_batch(
         &day,
         &mut state,
         &batch_write(2, vec![pdf_entry(2)], vec![saved("b", 2, 2, 1)]),
-        |_| Ok(()),
+        |_| Ok(Findings::default()),
     )
     .expect("save 2");
 
@@ -470,7 +525,7 @@ fn save_writes_the_folder_and_state_and_leaves_no_partial() {
         |temp| {
             fs::create_dir_all(temp.join(DOWNLOAD_DIR)).expect("download");
             fs::write(temp.join("1 A Sepatu ×1.pdf"), b"%PDF").expect("pdf");
-            Ok(())
+            Ok(Findings::default())
         },
     )
     .expect("save");
@@ -494,7 +549,7 @@ fn save_replaces_an_amended_batch_folder() {
         &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
         |temp| {
             fs::write(temp.join("old.txt"), b"old").expect("old");
-            Ok(())
+            Ok(Findings::default())
         },
     )
     .expect("save");
@@ -505,7 +560,7 @@ fn save_replaces_an_amended_batch_folder() {
         &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
         |temp| {
             fs::write(temp.join("new.txt"), b"new").expect("new");
-            Ok(())
+            Ok(Findings::default())
         },
     )
     .expect("save again");

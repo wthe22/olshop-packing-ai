@@ -22,13 +22,21 @@
     onRevert: (batch: BatchView) => void;
   } = $props();
 
-  // The batch numbers whose *Warnings ▸* is expanded.
+  // The batch numbers whose *Warnings ▸* is expanded, and those whose *Saved with `<n>` errors ▸*
+  // is (07 › *Check before saving*; 08 › *1. Day*).
   let openWarnings = $state<number[]>([]);
+  let openErrors = $state<number[]>([]);
 
   function toggleWarnings(batch: number) {
     openWarnings = openWarnings.includes(batch)
       ? openWarnings.filter((item) => item !== batch)
       : [...openWarnings, batch];
+  }
+
+  function toggleErrors(batch: number) {
+    openErrors = openErrors.includes(batch)
+      ? openErrors.filter((item) => item !== batch)
+      : [...openErrors, batch];
   }
 
   const join = (folder: string, file: string) => `${folder}\\${file}`;
@@ -89,6 +97,11 @@
               >
             </span>
           {/each}
+          {#if batch.errors.length > 0}
+            <button class="link errors" onclick={() => toggleErrors(batch.batch)}>
+              {texts.day.savedWithErrors(batch.errors.length)}
+            </button>
+          {/if}
           {#if batch.warnings.length === 0}
             <span class="muted">{texts.day.warningsNone}</span>
           {:else}
@@ -101,6 +114,13 @@
             >{texts.day.openFolder}</button
           >
         </div>
+        {#if openErrors.includes(batch.batch)}
+          <ul class="warnings errors">
+            {#each batch.errors as error}
+              <li>{error}</li>
+            {/each}
+          </ul>
+        {/if}
         {#if openWarnings.includes(batch.batch)}
           <ul class="warnings">
             {#each batch.warnings as warning}
@@ -155,6 +175,12 @@
     padding: 0.4rem 0.75rem 0.6rem 2rem;
     color: #4a4a4a;
     font-size: 0.9rem;
+  }
+
+  /* The check before saving's errors, kept apart from the warnings (07 › *Check before saving*). */
+  .link.errors,
+  .warnings.errors {
+    color: #8a1f1f;
   }
 
   .batch {
@@ -237,6 +263,11 @@
     .muted,
     .warnings {
       color: #b0b0b0;
+    }
+
+    .link.errors,
+    .warnings.errors {
+      color: #f0b8b8;
     }
 
     .saved {

@@ -20,6 +20,20 @@ the batch can still be saved.
 | **`<file>` is open in another program.** Close it (e.g. the PDF viewer) and press Save again. | Close the PDF viewer, then press **Save batch** again. |
 | **Cannot write to `<folder>`:** `<reason>`. Nothing was saved. | Check the disk is not full and the folder is writable, then save again. |
 
+Before the batch is saved, the app reads its own saved PDFs and packing lists back and compares
+them with the plan. When it finds something, a dialog names it in plain words — the errors and the
+warnings in two lists — with **Save anyway** and **Cancel — nothing is saved**:
+
+| Text | What to do |
+|---|---|
+| **The saved files do not match the plan.** | the check found something: read the two lists |
+| **Errors:** `<n>` / **Warnings:** `<n>` | the findings, in plain words |
+| **Save anyway** | save the batch anyway; the two lists stay on its card and in its `state.json` |
+| **Cancel — nothing is saved** | look the batch over again; the Plan screen is still there |
+
+A warning stops the batch too: one whose pages are all there but in another order is saved only
+after **Save anyway**.
+
 ## Settings
 
 Open **Settings** in the top bar.

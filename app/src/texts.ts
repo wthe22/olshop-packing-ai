@@ -42,6 +42,9 @@ export const texts = {
     // 08 › *1. Day* card: the batch's stored warnings, expanding to the texts.
     warnings: (n: number) => `Warnings: ${n} ▸`,
     warningsNone: "Warnings: none",
+    // 08 › *1. Day* card: the check before saving's errors of a batch saved anyway, expanding to
+    // the texts (07 › *Check before saving*). Shown until the batch is reverted or amended.
+    savedWithErrors: (n: number) => `Saved with ${count(n, "error", "errors")} ▸`,
     // 08 › *1. Day*: the green line after *Save batch*, shown for a few seconds.
     saved: (n: number, pdfs: number, lists: number) =>
       `Batch ${n} saved: ${count(pdfs, "PDF", "PDFs")}, ${count(lists, "packing list", "packing lists")}.`,
@@ -135,6 +138,20 @@ export const texts = {
     save: "Save batch",
     // 08 › *3. Plan*: an amend uses the same screen, titled *Redo batch 2*, with this button.
     saveAgain: (n: number) => `Save batch ${n} again`,
+    // 08 › *3. Plan*: while *Save batch* runs — the stage and a progress bar (07 › *Check
+    // before saving*: *Shown while it runs*). `saving` shows before the first `save-progress`.
+    saving: "Saving …",
+    saveWriting: (page: number, pages: number) =>
+      `Writing the saved PDFs …  page ${page} of ${pages}`,
+    saveChecking: (page: number, pages: number) =>
+      `Checking the saved PDFs …  page ${page} of ${pages}`,
+    // 08 › *3. Plan*: the check before saving found something — the two lists, kept apart, with
+    // *Save anyway* and *Cancel — nothing is saved* (07 › *Check before saving*).
+    checkTitle: "The saved files do not match the plan.",
+    checkErrors: (n: number) => `Errors: ${n}`,
+    checkWarnings: (n: number) => `Warnings: ${n}`,
+    saveAnyway: "Save anyway",
+    saveCancel: "Cancel — nothing is saved",
     amendTitle: (n: number) => `Redo batch ${n}`,
     editCategories: "Edit categories",
     // 08 › *3. Plan*: the second of two PDFs with the same name.
@@ -255,4 +272,17 @@ const dayFormat = new Intl.DateTimeFormat("en-GB", {
 
 export function formatDay(day: string): string {
   return dayFormat.format(new Date(`${day}T00:00:00`));
+}
+
+// 08 › *3. Plan*: the stage of a running save, from the `save-progress` event (07 › *Check before
+// saving*: *Shown while it runs*) — the stage in plain words with the pages done. The Plan screen
+// shows this with a progress bar; before the first event it shows `plan.saving`.
+export function saveStageText(
+  stage: "Writing" | "Checking",
+  page: number,
+  pages: number,
+): string {
+  return stage === "Checking"
+    ? texts.plan.saveChecking(page, pages)
+    : texts.plan.saveWriting(page, pages);
 }

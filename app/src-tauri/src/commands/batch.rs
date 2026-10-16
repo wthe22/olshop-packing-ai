@@ -22,7 +22,7 @@ use packing_engine::orders::{LogoAnswer, Order, ReadOrder, UnseenLogo, display_n
 use packing_engine::plan::{PickResult, Plan};
 use packing_engine::rules::{Category, Condition, evaluate, load_rules, parse_condition};
 use packing_pdf::batch::{self, Draft, FileCheck};
-use packing_pdf::worker::{PdfWorker, Progress};
+use packing_pdf::worker::{PdfWorker, Progress, SaveProgress, SaveStage};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -51,6 +51,28 @@ pub struct FileCheckView {
 pub struct ReadProgress {
     page: usize,
     pages: usize,
+}
+
+/// The `save-progress` event payload (07 › *Check before saving*: *Shown while it runs*). `stage`
+/// is *Writing* or *Checking*; the window shows it with a progress bar on the Plan screen.
+#[derive(Clone, Serialize)]
+pub struct SaveProgressEvent {
+    stage: String,
+    page: usize,
+    pages: usize,
+}
+
+impl SaveProgressEvent {
+    fn of(progress: SaveProgress) -> Self {
+        Self {
+            stage: match progress.stage {
+                SaveStage::Writing => "Writing".to_string(),
+                SaveStage::Checking => "Checking".to_string(),
+            },
+            page: progress.page,
+            pages: progress.pages,
+        }
+    }
 }
 
 /// What the New batch screen needs when reading ends (08 › *Reading*): the counts and warnings,
@@ -188,12 +210,21 @@ pub enum PlanEdit {
     },
 }
 
-/// What *Save batch* wrote, for the green line on the Day screen (08 › *1. Day*).
+/// What *Save batch* wrote, for the green line on the Day screen (08 › *1. Day*), and the check
+/// before saving's findings when it stopped or the owner chose *Save anyway* (07 › *Check
+/// before saving*).
 #[derive(Serialize)]
 pub struct SaveResultView {
     batch: i64,
     pdfs: usize,
     packing_lists: usize,
+    /// Whether the batch was written; `false` when the check found something and the dialog's
+    /// *Save anyway* was not chosen. The Plan screen then keeps the draft and shows the findings.
+    saved: bool,
+    /// The check's errors, as plain text (the dialog's first list, kept apart from the warnings).
+    errors: Vec<String>,
+    /// The check's warnings (the dialog's second list).
+    warnings: Vec<String>,
 }
 
 // ------------------------------------------------------------------------- the plan view
@@ -755,11 +786,20 @@ fn load_couriers(folder: &Path) -> Result<CourierTable, String> {
 
 // ------------------------------------------------------------------------------- saving
 
-/// Apply the plan and save the batch (07 › *What happens in one batch* step 6), then forget the
-/// draft. A failed save keeps the draft so *Save batch* can be pressed again.
+/// Apply the plan and save the batch (07 › *What happens in one batch* step 6, *Check before
+/// saving*), then forget the draft. A failed save keeps the draft so *Save batch* can be pressed
+/// again. The check before saving runs on every save; when it finds something and `save_anyway`
+/// is not set, nothing is renamed, `state.json` is untouched, the draft stays and the findings
+/// come back in the view (`saved: false`) — the Plan screen then shows the dialog with *Save
+/// anyway* and *Cancel*.
+///
+/// `on_progress` is called for every step of the write and of the check; the window turns it into
+/// a `save-progress` event (07 › *Check before saving*: *Shown while it runs*).
 fn save_batch_impl(
     state: &AppState,
     packing: Option<PackingListChoice>,
+    save_anyway: bool,
+    on_progress: impl Fn(SaveProgress) + Send + 'static,
 ) -> Result<SaveResultView, String> {
     let folder = state.data_folder()?;
     let day = state.day();
@@ -779,6 +819,15 @@ fn save_batch_impl(
     };
     let plan = open.plan.count(&open.draft.orders, open.first_number);
 
+    // The check before saving reports `Writing`/`Checking` progress; a forwarder thread carries
+    // it out of the worker call and to the window, as the reading step does with `read-progress`.
+    let (progress_tx, progress_rx) = mpsc::channel::<SaveProgress>();
+    let forwarder = thread::spawn(move || {
+        while let Ok(progress) = progress_rx.recv() {
+            on_progress(progress);
+        }
+    });
+
     let result = state.with_worker(|worker| {
         batch::save(
             worker,
@@ -788,15 +837,35 @@ fn save_batch_impl(
             &day,
             &day_dir,
             &mut day_state,
+            save_anyway,
+            progress_tx,
         )
     });
 
+    let _ = forwarder.join(); // the sender is dropped when `with_worker` returns
+
     match result {
-        Ok(Ok(save)) => Ok(SaveResultView {
+        Ok(Ok(save)) if save.saved => Ok(SaveResultView {
             batch: save.batch,
             pdfs: save.pdf_files.len(),
             packing_lists: save.packing_lists.len(),
+            saved: true,
+            errors: save.errors,
+            warnings: save.warnings,
         }),
+        // The check stopped the save (the temporary folder is gone, `state.json` is untouched):
+        // the draft stays so *Save anyway* can be pressed again.
+        Ok(Ok(save)) => {
+            state.restore_draft(open);
+            Ok(SaveResultView {
+                batch: save.batch,
+                pdfs: 0,
+                packing_lists: 0,
+                saved: false,
+                errors: save.errors,
+                warnings: save.warnings,
+            })
+        }
         Ok(Err(error)) => {
             state.restore_draft(open);
             Err(error.to_string())
@@ -914,13 +983,27 @@ pub fn plan(state: State<'_, AppState>, edits: Vec<PlanEdit>) -> Result<PlanView
     })?
 }
 
-/// *Save batch* (08 › *3. Plan* → *1. Day*): write the batch and forget the draft.
+/// *Save batch* (08 › *3. Plan* → *1. Day*): write the batch and forget the draft. Runs on its own
+/// thread, emitting `save-progress {stage, page, pages}` (the check before saving reports
+/// *Writing* and *Checking*); the window shows the stage and a progress bar while it runs. The
+/// check before saving runs on every save; `save_anyway` (the dialog's *Save anyway*) lets a batch
+/// with findings be written and stores the two lists with it (07 › *Check before saving*).
 #[tauri::command]
-pub fn save_batch(
-    state: State<'_, AppState>,
+pub async fn save_batch(
+    app: AppHandle,
     packing: Option<PackingListChoice>,
+    save_anyway: Option<bool>,
 ) -> Result<SaveResultView, String> {
-    save_batch_impl(&state, packing)
+    let save_anyway = save_anyway.unwrap_or(false);
+    tauri::async_runtime::spawn_blocking(move || {
+        let progress_app = app.clone();
+        let state = app.state::<AppState>();
+        save_batch_impl(&state, packing, save_anyway, move |progress| {
+            let _ = progress_app.emit("save-progress", SaveProgressEvent::of(progress));
+        })
+    })
+    .await
+    .map_err(|error| format!("the save task stopped: {error}"))?
 }
 
 /// *Cancel* on the Plan screen (08 › *3. Plan*): discard the open batch; nothing was saved. For an
@@ -1158,6 +1241,27 @@ mod tests {
         assert!(check_condition("name contains \"x\"".to_string()).is_ok());
         let error = check_condition("name contains".to_string()).expect_err("bad");
         assert!(error.starts_with("line 1, col "), "{error}");
+    }
+
+    #[test]
+    fn save_progress_names_the_two_stages() {
+        let writing = SaveProgressEvent::of(SaveProgress {
+            stage: SaveStage::Writing,
+            page: 3,
+            pages: 10,
+        });
+        assert_eq!(writing.stage, "Writing");
+        assert_eq!(writing.page, 3);
+        assert_eq!(writing.pages, 10);
+
+        let checking = SaveProgressEvent::of(SaveProgress {
+            stage: SaveStage::Checking,
+            page: 1,
+            pages: 4,
+        });
+        assert_eq!(checking.stage, "Checking");
+        assert_eq!(checking.page, 1);
+        assert_eq!(checking.pages, 4);
     }
 
     // ------------------------------------------------------ the logo prompt (2.16, D-LABEL-4)
@@ -1477,12 +1581,31 @@ mod tests {
             .collect();
         assert_eq!(numbered, vec![(1, 7), (2, 8), (3, 4), (4, 2), (5, 2)]);
 
-        let save = save_batch_impl(&state, None).expect("save");
+        // The save reports its two stages through the progress channel (the window's
+        // `save-progress` event): *Writing* then *Checking*.
+        let seen = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let collect = Arc::clone(&seen);
+        let save = save_batch_impl(&state, None, false, move |progress| {
+            collect.lock().unwrap().push(progress);
+        })
+        .expect("save");
         assert_eq!(save.batch, 1);
         assert_eq!(save.pdfs, 5);
         assert_eq!(save.packing_lists, 1);
         assert!(dir.join("labels/2026-10-07/state.json").is_file());
-
+        {
+            let seen = seen.lock().unwrap();
+            assert!(
+                seen.iter()
+                    .any(|progress| progress.stage == SaveStage::Writing),
+                "{seen:?}"
+            );
+            assert!(
+                seen.iter()
+                    .any(|progress| progress.stage == SaveStage::Checking),
+                "{seen:?}"
+            );
+        }
         // A second read of the same file: every order was already saved today.
         let again = read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {})
             .err()
@@ -1523,7 +1646,7 @@ mod tests {
         let state = app_state(&dir);
 
         read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
-        let save = save_batch_impl(&state, None).expect("save");
+        let save = save_batch_impl(&state, None, false, |_| {}).expect("save");
         assert_eq!(save.batch, 1);
         let folder = dir.join("labels/2026-10-07/batch 1");
         assert!(folder.is_dir());
@@ -1536,7 +1659,7 @@ mod tests {
 
         // The numbers are reused: the next batch is batch 1 again.
         read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read again");
-        let save = save_batch_impl(&state, None).expect("save again");
+        let save = save_batch_impl(&state, None, false, |_| {}).expect("save again");
         assert_eq!(save.batch, 1);
 
         // No batch to undo on an untouched day.
@@ -1556,7 +1679,12 @@ mod tests {
         let state = app_state(&dir);
 
         read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
-        assert_eq!(save_batch_impl(&state, None).expect("save").batch, 1);
+        assert_eq!(
+            save_batch_impl(&state, None, false, |_| {})
+                .expect("save")
+                .batch,
+            1
+        );
         let folder = dir.join("labels/2026-10-07/batch 1");
         assert!(folder.join("download").is_dir());
 
@@ -1567,7 +1695,12 @@ mod tests {
         assert_eq!(read.already_saved, 0);
 
         // Saving again replaces batch 1 (same number, one batch in the state).
-        assert_eq!(save_batch_impl(&state, None).expect("save again").batch, 1);
+        assert_eq!(
+            save_batch_impl(&state, None, false, |_| {})
+                .expect("save again")
+                .batch,
+            1
+        );
         let day_state = DayState::load(&dir.join("labels/2026-10-07")).expect("state");
         assert_eq!(day_state.batches.len(), 1);
         assert_eq!(day_state.batches[0].batch, 1);
@@ -1610,7 +1743,12 @@ mod tests {
         );
 
         // An amend read goes through the same path: it too ends with no prompt and the couriers.
-        assert_eq!(save_batch_impl(&state, None).expect("save").batch, 1);
+        assert_eq!(
+            save_batch_impl(&state, None, false, |_| {})
+                .expect("save")
+                .batch,
+            1
+        );
         let amend = start_amend_impl(&state, "2026-10-07").expect("amend");
         assert_eq!(amend.amend, Some(1));
         assert!(amend.logos.is_empty());

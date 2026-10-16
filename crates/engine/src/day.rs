@@ -140,11 +140,15 @@ pub struct BatchEntry {
     pub files: Vec<FileEntry>,
     pub pdfs: Vec<PdfEntry>,
     pub packing_list: PackingListChoice,
-    /// The read warnings of the batch, as shown on the Plan screen (07 › *`state.json`*); the Day
-    /// screen *Warnings ▸* reads them without re-reading the files. Defaulted so an older file
-    /// still loads.
+    /// The read warnings of the batch, as shown on the Plan screen (07 › *`state.json`*), plus
+    /// the check before saving's warnings; the Day screen *Warnings ▸* reads them without
+    /// re-reading the files. Defaulted so an older file still loads.
     #[serde(default)]
     pub warnings: Vec<String>,
+    /// The check before saving's errors, kept apart from the warnings (07 › *Check before
+    /// saving*); present only when the batch was saved anyway. Defaulted so an older file loads.
+    #[serde(default)]
+    pub errors: Vec<String>,
 }
 
 /// The day's `state.json`: everything needed to continue, revert or amend a batch.
@@ -428,10 +432,19 @@ pub fn now_save_time() -> String {
     Zoned::now().strftime("%Y-%m-%dT%H:%M:%S%:z").to_string()
 }
 
+/// The check before saving's findings, stored with the batch (07 › *Check before saving*):
+/// errors and warnings, kept apart. Empty when the check found nothing.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Findings {
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+}
+
 /// Write a batch completely or not at all (07 › *Save*): create `batch <b>.partial/`, let
-/// `fill` write the saved PDFs, the packing list, `summary.txt` and `download/` into it, rename
-/// it to `batch <b>` (replacing an amended batch), then add the batch to `state.json`. On any
-/// error before the rename the temporary folder is deleted and the state is unchanged.
+/// `fill` write the saved PDFs, the packing list, `summary.txt` and `download/` into it and
+/// return the check's [`Findings`], rename it to `batch <b>` (replacing an amended batch), then
+/// add the batch to `state.json`. On any error before the rename the temporary folder is deleted
+/// and the state is unchanged.
 pub fn save_batch<F>(
     day_dir: &Path,
     state: &mut DayState,
@@ -439,7 +452,7 @@ pub fn save_batch<F>(
     fill: F,
 ) -> Result<PathBuf, DayError>
 where
-    F: FnOnce(&Path) -> Result<(), DayError>,
+    F: FnOnce(&Path) -> Result<Findings, DayError>,
 {
     let temp = day_dir.join(names::temp_batch_folder(write.batch));
     if temp.exists() {
@@ -447,10 +460,13 @@ where
     }
     fs::create_dir_all(&temp).map_err(|error| io_error(&temp, error))?;
 
-    if let Err(error) = fill(&temp) {
-        let _ = fs::remove_dir_all(&temp);
-        return Err(error);
-    }
+    let findings = match fill(&temp) {
+        Ok(findings) => findings,
+        Err(error) => {
+            let _ = fs::remove_dir_all(&temp);
+            return Err(error);
+        }
+    };
 
     let final_dir = day_dir.join(names::batch_folder(write.batch));
     if final_dir.exists() {
@@ -461,13 +477,16 @@ where
         return Err(io_error(&final_dir, error));
     }
 
+    let mut warnings = write.warnings.clone();
+    warnings.extend(findings.warnings);
     state.batches.push(BatchEntry {
         batch: write.batch,
         save_time: write.save_time.clone(),
         files: write.files.clone(),
         pdfs: write.pdfs.clone(),
         packing_list: write.packing_list.clone(),
-        warnings: write.warnings.clone(),
+        warnings,
+        errors: findings.errors,
     });
     state.saved.extend(write.saved.iter().cloned());
     state.save(day_dir)?;

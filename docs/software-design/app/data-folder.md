@@ -63,7 +63,8 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
          "orders": 172, "runs": 4}
       ],
       "packing_list": {"scope": "whole", "layouts": ["pick"]},
-      "warnings": ["Courier unknown for 1 order: JY0000000107. They are sorted normally; only a condition on courier cannot see them."]
+      "warnings": ["Courier unknown for 1 order: JY0000000107. They are sorted normally; only a condition on courier cannot see them."],
+      "errors": ["PDF 2 (2 B Spion & Knalpot ×35.pdf): the page of order 580000000000000001 is missing (0 of 1 written)."]
     }
   ],
   "saved": [
@@ -80,7 +81,8 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
 | `batches[].files` | Name, size, XXH3-64 (16 hex characters of the whole file), page count of each label file read, in reading order | Recognise a file used twice ("used in batch 1"); amend reads `download/` in this order |
 | `batches[].pdfs` | Each saved PDF: number, pick code/name, file name, counts | Day screen without re-reading the PDFs; revert knows which files are the batch's |
 | `batches[].packing_list` | Scope and layouts chosen | Amend starts with the same choice |
-| `batches[].warnings` | The read warnings of the batch, as shown on the Plan screen | Day screen *Warnings ▸* without re-reading the files |
+| `batches[].warnings` | The read warnings of the batch, as shown on the Plan screen, plus the check before saving's warnings ([saved-pdf-check.md](saved-pdf-check.md)); absent loads as empty | Day screen *Warnings ▸* without re-reading the files |
+| `batches[].errors` | The check before saving's errors, kept apart from the warnings; written only when the batch was saved anyway (*Save anyway*), absent loads as empty | Day screen *Saved with `<n>` errors ▸* without re-reading the files |
 | `saved[]` | Each saved order: IDs, batch, saved PDF, run, and the fields the Search panel finds it by (`courier`, `total_quantity`, `distinct_items`, `ship_by`, `items` with each line's `name`, `variation`, `seller_sku`, `quantity`) | Duplicate guard; Search ([Search screen](../ui/search.md)). Older orders keep only their IDs ([Q-UI-3](../questions/ui.md)) |
 
 The file is written whole each time (write to `state.json.tmp`, then replace), so a crash

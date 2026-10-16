@@ -16,20 +16,20 @@ first implementation of the same rules, tested). Port it module by module when a
 
 | Task | Content | File |
 |---|---|---|
-| 2.18 | The check of the saved PDFs before a batch is saved | [2-18-saved-pdf-check.md](2-18-saved-pdf-check.md) |
 | 2.20 | One hash for everything: XXH3-64 for the label-file fingerprint | [2-20-one-hash.md](2-20-one-hash.md) |
 | 2.21 | Search for a saved order | [2-21-search.md](2-21-search.md) |
 
 Open choices of the owner, each with a default the app follows until the owner decides:
 [Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md) and
-[Q-UI-1 to Q-UI-3](../../software-design/questions/ui.md).
+[Q-UI-1 to Q-UI-3](../../software-design/questions/ui.md),
+[Q-APP-1](../../software-design/questions/app.md).
 
 ## Status
 
-Tasks 2.18, 2.20 and 2.21 are open; every other task of the phase is finished. The owner's
+Tasks 2.20 and 2.21 are open; every other task of the phase is finished. The owner's
 review at the end of the phase waits for all of them.
 
-**Next step.** 2.18 (the saved-PDF check), 2.20 (one hash, XXH3-64), 2.21 (search). Each task ends with a
+**Next step.** 2.20 (one hash, XXH3-64), 2.21 (search). Each task ends with a
 commit that deletes its file from this folder, and a push to `origin main`.
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
@@ -58,7 +58,7 @@ The owner writes findings in [`../../reviews/`](../../reviews/README.md), one fi
 In this order; each task file also names its design sections.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
-2. The task files in this folder: 2.18, 2.20, 2.21.
+2. The task files in this folder: 2.20, 2.21.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),
@@ -77,7 +77,7 @@ In this order; each task file also names its design sections.
    or PDF code; [01-packing-workflow.md](../../business-process/01-packing-workflow.md) for the daily steps.
 10. [../setup.md](../setup.md), [../app.md](../app.md), [../cli.md](../cli.md), [../testing.md](../testing.md).
 11. [../../user-guide/README.md](../../user-guide/README.md): update it in the commit that changes what the owner sees
-    (2.18, 2.21).
+    (2.21).
 12. Code, after the documents: `crates/` (`engine`, `pdf`, `cli`), `app/` (Svelte in `src/`, Rust in `src-tauri/`),
     `testdata/` (made-up fixtures, `make_testdata.py`), `crates/engine/couriers.toml` (the bundled courier list);
     then `git status` and `git log --oneline -5`.

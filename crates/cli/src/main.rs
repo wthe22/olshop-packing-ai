@@ -243,8 +243,16 @@ fn run_prepare(args: &[String]) -> Result<(), CliError> {
     let (draft, plan) = read_and_plan(&worker, &categories, &couriers, &state, &labels)?;
 
     let packing = args.packing();
-    let result = batch::save(&worker, &draft, &plan, &packing, &day, &day_dir, &mut state)?;
-    report(&result, &draft, &plan, &day, &day_dir, args.quiet_ids);
+    save_and_report(
+        &worker,
+        &draft,
+        &plan,
+        &packing,
+        &day,
+        &day_dir,
+        &mut state,
+        args.quiet_ids,
+    )?;
     Ok(())
 }
 
@@ -283,7 +291,7 @@ fn run_amend(args: &[String]) -> Result<(), CliError> {
     let (draft, plan) = read_and_plan(&worker, &categories, &couriers, &amend.state, &amend.files)?;
     let packing = args.packing();
     let mut amend_state = amend.state;
-    let result = batch::save(
+    save_and_report(
         &worker,
         &draft,
         &plan,
@@ -291,8 +299,8 @@ fn run_amend(args: &[String]) -> Result<(), CliError> {
         &day,
         &day_dir,
         &mut amend_state,
+        args.quiet_ids,
     )?;
-    report(&result, &draft, &plan, &day, &day_dir, args.quiet_ids);
     Ok(())
 }
 
@@ -339,6 +347,36 @@ fn read_and_plan(
     Ok((draft, plan))
 }
 
+/// Save the batch and print its summary (07 › *Save*, *Check before saving*). The check runs on
+/// every save; a finding stops the batch and the command ends with the findings, because the
+/// command line has no *Save anyway*.
+#[allow(clippy::too_many_arguments)] // mirrors `batch::save`'s context
+fn save_and_report(
+    worker: &PdfWorker,
+    draft: &Draft,
+    plan: &PlanResult,
+    packing: &PackingListChoice,
+    day: &str,
+    day_dir: &Path,
+    state: &mut DayState,
+    quiet_ids: bool,
+) -> Result<(), CliError> {
+    let (progress, _rx) = mpsc::channel();
+    let result = batch::save(
+        worker, draft, plan, packing, day, day_dir, state, false, progress,
+    )?;
+    if !result.saved {
+        let mut message =
+            String::from("the saved PDFs do not match the plan; the batch was not saved");
+        for finding in result.errors.iter().chain(&result.warnings) {
+            message.push_str(&format!("\n  {finding}"));
+        }
+        return Err(CliError::Io(message));
+    }
+    report(&result, draft, plan, day, day_dir, quiet_ids);
+    Ok(())
+}
+
 /// Print the summary; `--quiet-ids` prints counts only, never the warning details that name
 /// orders and tracking IDs.
 fn report(
@@ -359,6 +397,8 @@ fn report(
             picks: &plan.picks,
             duplicates: draft.duplicates.len(),
             warnings: &draft.warnings,
+            check_errors: &result.errors,
+            check_warnings: &result.warnings,
             day_dir,
             packing_lists: &result.packing_lists,
             quiet_ids: true,

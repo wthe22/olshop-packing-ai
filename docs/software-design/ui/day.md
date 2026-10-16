@@ -11,7 +11,7 @@ The start screen: what has been saved for the day, and the way to the next batch
 │  ┌ Batch 2 · saved 09:12 · 2 files · 129 orders ─────────── [Amend] [Revert] ───────┐  │
 │  │  4  A  Sepatu              88 orders   3 runs     [Open]                         │  │
 │  │  5  Z  Lainnya             41 orders  12 runs     [Open]                         │  │
-│  │  Packing list [Open]   Warnings: 1 ▸                        [Open folder]        │  │
+│  │  Packing list [Open]   Saved with 2 errors ▸   Warnings: 1 ▸  [Open folder]      │  │
 │  └──────────────────────────────────────────────────────────────────────────────────┘  │
 │  ┌ Batch 1 · saved 07:40 · 3 files · 600 orders ────────────────────────────────────┐  │
 │  │  1  A  Sepatu             172 orders   4 runs     [Open]                         │  │
@@ -33,6 +33,10 @@ The start screen: what has been saved for the day, and the way to the next batch
   - Amend asks: "Redo batch 2 with the current categories? Batch 2 was saved at 09:12. If you
     already printed it, print it again after saving." [Cancel] [Redo batch 2] → Plan screen.
 - **Warnings ▸** expands the batch's warnings (same texts as on the Plan screen).
+- **Saved with `<n>` errors ▸** appears on a batch saved anyway with the check's errors
+  ([saved-pdf-check.md](../app/saved-pdf-check.md)) and expands them; **Warnings ▸** beside it
+  expands the warnings. The two lists stay apart and stay on the card until the batch is reverted
+  or amended.
 - A day with no batches shows only "Nothing saved on this day yet." and **New batch**.
 - After **Save batch**, the Day screen shows the new batch on top with a green line
   "Batch 3 saved: 3 PDFs, 1 packing list." for a few seconds.

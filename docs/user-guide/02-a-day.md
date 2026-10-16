@@ -93,12 +93,36 @@ categories applied in order.
 - **Save batch** writes everything and returns to the Day screen. **Cancel** asks
   "Discard batch 3? Nothing has been saved."
 
+### The check before saving
+
+Before the batch is written, the app reads its own saved PDFs and packing lists back and compares
+them with the plan, so a doubled page, a dropped page, an order in two saved PDFs or in none, a
+wrong label on a page or a wrong page order is caught before you print. It runs on every save and
+takes a second or two; the stage and a progress bar are shown while it writes and then checks
+("Writing the saved PDFs …  page 143 of 257", then "Checking the saved PDFs …"), so the window
+never looks frozen.
+
+When it finds something, a dialog names it in plain words, the errors and the warnings in two
+lists:
+
+- **Save anyway** — the batch is saved anyway. The two lists are kept on the batch card and in the
+  batch's `state.json`, so they never scroll away.
+- **Cancel — nothing is saved** — the dialog closes and the batch stays on the Plan screen, so you
+  can look again, change a pick or save anyway.
+
+A batch with every page in place but in another order is a warning only; it is still saved only
+after **Save anyway**.
+
 ### After saving
 
 ![The Day screen after saving](images/08-day-saved.png)
 
 The Day screen shows the new batch on top with a green line "Batch 3 saved: 3 PDFs, 1 packing
 list." Click **Open** on each saved PDF and on the packing list, and print them.
+
+A batch saved with **Save anyway** shows "Saved with 2 errors ▸" on its card, beside "Warnings ▸":
+click it to read the errors. The two lines stay on the card until the batch is amended or
+reverted.
 
 Everything is written into the program folder under `labels\<day>\batch <n>\`: the saved PDFs, the
 packing list, a `summary.txt`, and a `download\` copy of the files you read (so Amend works even if

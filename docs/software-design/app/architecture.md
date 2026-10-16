@@ -12,7 +12,7 @@ letters used if the size becomes a problem; nothing else would change.
 ```
 ┌──────────────────────── PC app (one .exe + pdfium.dll) ────────────────────────┐
 │  Window: Svelte + TypeScript (screens of ui)                                   │
-│        │  invoke("read_labels", …) / events ("read-progress")                  │
+│        │  invoke("read_labels", …) / events ("read-progress", "save-progress") │
 │        ▼                                                                       │
 │  packing-app (Tauri 2, Rust): commands, the open draft, settings               │
 │        │                                                                       │

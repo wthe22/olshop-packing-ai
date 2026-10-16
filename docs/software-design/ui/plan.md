@@ -50,6 +50,42 @@ the owner checks the counts and presses **Save batch**.
 - **Warnings ▸** lists the read warnings in plain words (see *Messages*), e.g. couriers not
   recognised and orders already saved for the day with their batch and time.
 - Every change (tick, move, add, edit categories) recounts all rows immediately.
-- **Save batch** writes the batch ([one batch](../app/batch.md))
-  and returns to the Day screen. **Cancel** asks "Discard batch 3? Nothing has been saved."
+- **Save batch** writes the batch ([one batch](../app/batch.md)) and returns to the Day screen;
+  the write and the check before saving run on their own thread
+  ([saved-pdf-check.md](../app/saved-pdf-check.md)) — see *Saving*. **Cancel** asks "Discard
+  batch 3? Nothing has been saved."
 - Amend uses the same screen, titled "Redo batch 2", with the button **Save batch 2 again**.
+
+## Saving
+
+While *Save batch* runs, the stage and a progress bar stand above the packing-list options
+([saved-pdf-check.md](../app/saved-pdf-check.md): *Shown while it runs*):
+
+```
+│  Writing the saved PDFs …  page 143 of 257                                             │
+│  ██████████████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░            │
+```
+
+The check before saving names what it caught in plain words — the errors and the warnings in two
+lists, never one — and offers **Save anyway** and **Cancel — nothing is saved**:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  The saved files do not match the plan.                                                │
+│                                                                                        │
+│  Errors: 2                                                                             │
+│  · PDF 2 (2 B Spion & Knalpot ×35.pdf): the page of order 580000000000000001 is        │
+│    missing (0 of 1 written).                                                           │
+│  · order 580000000000000042 is in two saved PDFs (2, 3); it must be in one.            │
+│                                                                                        │
+│  Warnings: 1                                                                           │
+│  · PDF 1 (1 A Sepatu ×130.pdf): every page is there, but not in the run order.         │
+│                                                                                        │
+│  [ Save anyway ]   [ Cancel — nothing is saved ]                                       │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Save anyway** saves the batch and keeps the two lists on its card and in `state.json`
+  ([saved-pdf-check.md](../app/saved-pdf-check.md)); **Cancel — nothing is saved** closes the
+  dialog and keeps the draft, so the Plan screen with the read labels is still there.
+- The check runs on every save, whatever the size of the batch ([D-APP-2](../decisions/app.md)).

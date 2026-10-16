@@ -17,3 +17,22 @@ written; warnings are listed and the batch can still be saved.
 | Warning | Tracking ID not found on a page | **No tracking ID read** for Order `<order ID>`. Its label is saved as usual; only a condition on `tracking_id` cannot see it. |
 | Error at save | A file is open in another program | **`<file>` is open in another program.** Close it (e.g. the PDF viewer) and press Save again. |
 | Error at save | Disk full or folder not writable | **Cannot write to `<folder>`:** `<reason>`. Nothing was saved. |
+
+## The check before saving
+
+Before the batch is saved, the app reads the saved PDFs and the packing lists back and compares
+them with the plan ([saved-pdf-check.md](../app/saved-pdf-check.md)). What it finds stops the
+batch until the owner chooses **Save anyway**; it is not a message that scrolls away. The Plan
+screen asks with these texts, the errors and the warnings kept apart:
+
+| Text | Shows |
+|---|---|
+| **The saved files do not match the plan.** | the ask |
+| **Errors:** `<n>` | the first list, in plain words |
+| **Warnings:** `<n>` | the second list, never mixed with the errors |
+| **Save anyway** | writes the batch and keeps the two lists on its Day card and in `state.json` |
+| **Cancel — nothing is saved** | closes the ask and keeps the draft (the Plan screen) |
+
+A warning stops the batch as an error does: a swapped page order (a warning only) is saved only
+after **Save anyway**. This is not the *Warnings ▸* of the messages above — those are read
+warnings, listed and saved past; the check's two lists are not.

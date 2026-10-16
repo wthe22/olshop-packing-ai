@@ -24,14 +24,19 @@ The dialog, the Day screen and `state.json` keep the two lists apart.
 
 ## Save anyway, and the findings stay visible
 
+Any finding stops the batch — an error and a warning alike: a swapped page order (a warning only)
+is written only after **Save anyway**, as an error is
+([Q-APP-1](../questions/app.md)).
+
 - The dialog names the findings in plain words and offers **Save anyway** and **Cancel — nothing is
   saved**.
 - **Cancel** deletes the temporary folder, leaves `state.json` untouched and keeps the draft (the
   Plan screen with the read labels). This is what the all-or-nothing save does on any error.
 - **Save anyway** writes both lists into the batch's `state.json` entry (`errors` and `warnings`;
   absent in a day folder written without them, which loads as empty lists), prints them in
-  `summary.txt`, and the Day screen shows them on the batch card (*Saved with 2 errors ▸*) until the
-  batch is reverted or amended. It is never a message that scrolls away.
+  `summary.txt`, and the Day screen shows them on the batch card (the errors under *Saved with 2
+  errors ▸*, with *Warnings ▸* beside it) until the batch is reverted or amended. It is never a
+  message that scrolls away.
 
 ## Shown while it runs
 
