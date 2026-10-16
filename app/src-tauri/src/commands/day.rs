@@ -11,8 +11,7 @@ use serde::{Deserialize, Serialize};
 use tauri::State;
 
 use crate::{
-    AppState, BUILTIN_CATEGORIES, BUILTIN_COURIERS, CATEGORIES_FILE, COURIERS_FILE, LABELS_DIR,
-    SETTINGS_FILE, program_folder, today,
+    AppState, BUILTIN_COURIERS, COURIERS_FILE, LABELS_DIR, SETTINGS_FILE, program_folder, today,
 };
 
 // ------------------------------------------------------------------------------- start
@@ -22,8 +21,8 @@ use crate::{
 pub struct StartInfo {
     /// Where the program's exe is.
     exe_dir: String,
-    /// Whether `categories.toml` was found next to the program.
-    program_categories: bool,
+    /// Whether `couriers.toml` was found next to the program.
+    program_couriers: bool,
     /// The data folder in use, if one is set.
     data_folder: Option<String>,
     /// Whether the PDFium worker started (its dll was found).
@@ -32,10 +31,17 @@ pub struct StartInfo {
     today: String,
 }
 
+/// Whether `folder` is a data folder: it holds `couriers.toml` (07 › *Program folder*, 08 ›
+/// *Start* step 1). `categories.toml` is not a marker: the app writes it only when the owner
+/// saves picks (08 › *5. Categories*).
+fn is_data_folder(folder: &Path) -> bool {
+    folder.join(COURIERS_FILE).is_file()
+}
+
 fn start_information(state: &AppState) -> StartInfo {
     let exe_dir = program_folder();
-    let program_categories = exe_dir.join(CATEGORIES_FILE).is_file();
-    if program_categories && state.data_folder().is_err() {
+    let program_couriers = is_data_folder(&exe_dir);
+    if program_couriers && state.data_folder().is_err() {
         // Found → that folder is the data folder (08 › *Start* step 1).
         state.set_data_folder(exe_dir.clone());
     }
@@ -43,7 +49,7 @@ fn start_information(state: &AppState) -> StartInfo {
     state.set_day(&day);
     StartInfo {
         exe_dir: exe_dir.display().to_string(),
-        program_categories,
+        program_couriers,
         data_folder: state
             .data_folder()
             .ok()
@@ -51,14 +57,6 @@ fn start_information(state: &AppState) -> StartInfo {
         pdfium_ready: state.ensure_worker(),
         today: day,
     }
-}
-
-/// Write the built-in `categories.toml` into `folder` (08 › *Start*). Fails, e.g. under
-/// `Program Files`, with the 08 *cannot write* wording.
-fn write_builtin_categories(folder: &Path) -> Result<(), String> {
-    let path = folder.join(CATEGORIES_FILE);
-    std::fs::write(&path, BUILTIN_CATEGORIES)
-        .map_err(|error| format!("Cannot write to {}: {error}.", folder.display()))
 }
 
 /// Put the built-in `couriers.toml` into `folder` when it has none (08 › *Start*, *6. Settings*).
@@ -72,24 +70,21 @@ fn ensure_builtin_couriers(folder: &Path) -> Result<(), String> {
         .map_err(|error| format!("Cannot write to {}: {error}.", folder.display()))
 }
 
-/// *Use this folder*: write the built-in `categories.toml` next to the program and make that
-/// folder the data folder (08 › *Start*). Returns the folder.
+/// *Use this folder*: write the built-in `couriers.toml` next to the program and make that
+/// folder the data folder (08 › *Start*). No picks are written: a folder without
+/// `categories.toml` uses the one catch-all entry. Returns the folder.
 fn activate_program_folder(state: &AppState) -> Result<String, String> {
     let folder = program_folder();
-    write_builtin_categories(&folder)?;
     ensure_builtin_couriers(&folder)?;
     state.set_data_folder(folder.clone());
     Ok(folder.display().to_string())
 }
 
-/// *Choose a folder…* / Settings *Change…*: use `path` until the app closes; an empty folder
-/// gets the built-in `categories.toml` and `couriers.toml` (08 › *Start*, 08 › *6. Settings*).
-/// Returns the folder.
+/// *Choose a folder…* / Settings *Change…*: use `path` until the app closes; a folder without a
+/// `couriers.toml` gets the built-in one, and its own `categories.toml`, if any, is kept as it
+/// is (08 › *Start*, 08 › *6. Settings*). Returns the folder.
 fn use_chosen_folder(state: &AppState, path: &str) -> Result<String, String> {
     let folder = PathBuf::from(path);
-    if !folder.join(CATEGORIES_FILE).is_file() {
-        write_builtin_categories(&folder)?;
-    }
     ensure_builtin_couriers(&folder)?;
     state.set_data_folder(folder.clone());
     Ok(folder.display().to_string())
@@ -557,26 +552,39 @@ mod tests {
         std::fs::remove_dir_all(&dir).ok();
     }
 
+    /// A first start writes `couriers.toml` and no `categories.toml`; the folder is a data folder
+    /// from then on, and the owner's own `couriers.toml` (or one the logo prompt wrote to) is
+    /// never overwritten (08 › *Start*, 08 › *6. Settings*).
     #[test]
-    fn program_folder_is_a_data_folder_once_the_builtin_file_is_written() {
-        let dir = temp_dir("program");
-        assert!(!dir.join(CATEGORIES_FILE).is_file());
-        write_builtin_categories(&dir).expect("write");
-        assert!(dir.join(CATEGORIES_FILE).is_file());
-        std::fs::remove_dir_all(&dir).ok();
-    }
-
-    /// A first start writes both bundled files; the owner's own `couriers.toml` (or one the logo
-    /// prompt wrote to) is never overwritten (08 › *Start*, *6. Settings*; R-UI-1 is separate:
-    /// `categories.toml` keeps its present behaviour).
-    #[test]
-    fn a_first_start_writes_both_files_and_keeps_an_existing_courier_file() {
+    fn a_first_start_writes_couriers_only_and_marks_the_folder_with_it() {
         let dir = temp_dir("first-start");
-        write_builtin_categories(&dir).expect("categories");
+        assert!(
+            !is_data_folder(&dir),
+            "an empty folder is not a data folder"
+        );
+
+        // The picks file is not a marker: a folder with only `categories.toml` still asks
+        // (08 › *Start* step 1).
+        std::fs::write(
+            dir.join(crate::CATEGORIES_FILE),
+            "[[category]]\ncode = \"Z\"\nname = \"Rest\"\n",
+        )
+        .expect("write");
+        assert!(
+            !is_data_folder(&dir),
+            "categories.toml is not the marker of a data folder"
+        );
+        std::fs::remove_file(dir.join(crate::CATEGORIES_FILE)).expect("remove");
+
         ensure_builtin_couriers(&dir).expect("couriers");
+        assert!(is_data_folder(&dir), "couriers.toml marks the folder");
         assert_eq!(
             std::fs::read_to_string(dir.join(COURIERS_FILE)).expect("read"),
             BUILTIN_COURIERS
+        );
+        assert!(
+            !dir.join(crate::CATEGORIES_FILE).exists(),
+            "a first start writes no categories.toml"
         );
 
         let mine = "# mine\n[[courier]]\nname = \"X\"\nlogo = [\"0123456789abcdef\"]\n";
@@ -587,25 +595,40 @@ mod tests {
             mine
         );
 
-        // *Choose a folder…* / Settings *Change…*: an empty folder gets both files.
-        let empty = temp_dir("chosen-empty");
-        let state = AppState::new();
-        use_chosen_folder(&state, empty.to_str().expect("utf8")).expect("choose");
-        assert!(empty.join(CATEGORIES_FILE).is_file());
-        assert!(empty.join(COURIERS_FILE).is_file());
+        std::fs::remove_dir_all(&dir).ok();
+    }
 
-        // A folder with its own files is used as it is.
+    /// *Choose a folder…* / Settings *Change…*: a folder without a `couriers.toml` gets the
+    /// built-in one and no picks; a folder with its own files is used as it is (08 › *Start*,
+    /// 08 › *6. Settings*).
+    #[test]
+    fn choosing_a_folder_writes_only_a_missing_couriers() {
+        let state = AppState::new();
+        let mine = "# mine\n[[courier]]\nname = \"X\"\nlogo = [\"0123456789abcdef\"]\n";
+
+        let empty = temp_dir("chosen-empty");
+        use_chosen_folder(&state, empty.to_str().expect("utf8")).expect("choose");
+        assert!(empty.join(COURIERS_FILE).is_file());
+        assert!(
+            !empty.join(crate::CATEGORIES_FILE).exists(),
+            "no picks are written"
+        );
+
         let own = temp_dir("chosen-own");
         let rules = "[[category]]\ncode = \"Z\"\nname = \"Rest\"\n";
-        std::fs::write(own.join(CATEGORIES_FILE), rules).expect("write");
+        std::fs::write(own.join(crate::CATEGORIES_FILE), rules).expect("write");
         std::fs::write(own.join(COURIERS_FILE), mine).expect("write");
         use_chosen_folder(&state, own.to_str().expect("utf8")).expect("choose");
+        assert_eq!(
+            std::fs::read_to_string(own.join(crate::CATEGORIES_FILE)).expect("read"),
+            rules,
+            "the folder's own picks are kept"
+        );
         assert_eq!(
             std::fs::read_to_string(own.join(COURIERS_FILE)).expect("read"),
             mine
         );
 
-        std::fs::remove_dir_all(&dir).ok();
         std::fs::remove_dir_all(&empty).ok();
         std::fs::remove_dir_all(&own).ok();
     }

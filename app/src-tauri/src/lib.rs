@@ -3,7 +3,7 @@
 //! save); the logic is in plain functions that are unit-tested.
 //!
 //! The command functions stay thin. The data folder is app state, never a stored setting
-//! (07 › *Settings*): at start the app looks for `categories.toml` in its own folder and asks
+//! (07 › *Settings*): at start the app looks for `couriers.toml` in its own folder and asks
 //! the owner when it is missing (08 › *Start*). The open draft (07 › *Words*) is app state too;
 //! its orders stay on the PDFium worker thread that opened the label documents.
 
@@ -20,16 +20,14 @@ use packing_pdf::worker::PdfWorker;
 
 pub mod commands;
 
-/// The built-in `categories.toml` written next to the program on *Use this folder* (08 ›
-/// *Start*). A copy of the repository's rules file; it holds no customer data.
-pub(crate) const BUILTIN_CATEGORIES: &str = include_str!("../categories.toml");
-
 /// The built-in `couriers.toml` written into a data folder that has none (08 › *Start*,
 /// 08 › *6. Settings*; 07 › *Inputs*). The engine's bundled courier list, so there is one home
 /// for it.
 pub(crate) const BUILTIN_COURIERS: &str = packing_engine::label::COURIERS_TOML;
 
-/// The categories file that marks a folder as a data folder (07 › *Program folder*).
+/// The picks file in the data folder (07 › *Rules file*). The app writes it only when the owner
+/// saves picks (08 › *5. Categories*), so it is not what marks a folder as a data folder
+/// ([`COURIERS_FILE`], 07 › *Program folder*).
 pub(crate) const CATEGORIES_FILE: &str = "categories.toml";
 /// The courier file in the data folder (07 › *Inputs*).
 pub(crate) const COURIERS_FILE: &str = packing_engine::label::COURIERS_FILE_NAME;
@@ -265,12 +263,6 @@ pub fn run() {
 mod tests {
     use super::*;
     use packing_engine::label::load_couriers;
-    use packing_engine::rules::load_rules;
-
-    #[test]
-    fn builtin_categories_are_a_valid_rules_file() {
-        assert!(load_rules(BUILTIN_CATEGORIES).is_ok());
-    }
 
     #[test]
     fn builtin_couriers_are_a_valid_couriers_file() {

@@ -57,7 +57,7 @@ tools/make-portable.bat    the same, for Explorer or cmd (runs the .sh through G
 tools/analysis/            Python helpers to look inside PDFs and CSVs (agents, owner); not product code
 testdata/                  made-up fixtures for the app tests and the helpers' tests; make_testdata.py
 spike/                     the PDFium feasibility spike, kept as a reference (own workspace)
-categories.toml            the owner's categories (bundled into the app for a new data folder)
+categories.toml            an example picks file (a data folder without one uses the one catch-all pick)
 docs/                      see ../README.md
 samples/  work/  tmp/      confidential real files and output, git-ignored
 ```

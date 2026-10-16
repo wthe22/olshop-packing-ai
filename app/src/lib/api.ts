@@ -5,7 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 export interface StartInfo {
   exe_dir: string;
-  program_categories: boolean;
+  program_couriers: boolean;
   data_folder: string | null;
   pdfium_ready: boolean;
   today: string;
@@ -136,6 +136,9 @@ export interface PlanView {
   rows: PlanRow[];
   has_duplicate_names: boolean;
   add_at: number;
+  /// The plan is the one catch-all entry, so the picks are unconfigured: the screen shows the
+  /// *No picks yet* line (Q-UI-4).
+  no_picks: boolean;
 }
 
 /// One unseen logo as the logo prompt shows it (08 › *2. New batch* → *The logo prompt*): the
@@ -251,11 +254,14 @@ export const startAmend = (day: string): Promise<ReadResult> =>
 
 // ------------------------------------------------------------------ Categories (2.12)
 
-/// One category entry as the file holds it (08 › *5. Categories*).
+/// One category entry as the file holds it (08 › *5. Categories*): its values and the index it has
+/// in the loaded file (`origin`). The one catch-all entry of a folder without `categories.toml`
+/// has `origin: null`, so saving it adds the entry and writes the file.
 export interface EntryView {
   code: string;
   name: string;
   when: string | null;
+  origin: number | null;
 }
 
 /// The Categories screen's first load (08 › *5. Categories*): the whole file text, the entries and

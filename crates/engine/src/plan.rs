@@ -10,7 +10,7 @@ use std::fmt;
 
 use crate::names::{self, NameError};
 use crate::orders::ReadOrder;
-use crate::rules::{Category, Condition, evaluate};
+use crate::rules::{self, Category, Condition, evaluate};
 
 /// The rest pick's code and name when the last entry still has a condition (07 › *Plan*).
 pub const REST_CODE: &str = "?";
@@ -103,6 +103,12 @@ impl Plan {
 
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
+    }
+
+    /// Whether the plan is the unconfigured one catch-all entry (Q-UI-4, 08 › *3. Plan*): the
+    /// Plan screen then says every order goes into one PDF set.
+    pub fn unconfigured(&self) -> bool {
+        rules::unconfigured(self.entries.iter().map(|entry| &entry.category))
     }
 
     fn check_index(&self, index: usize) -> Result<(), PlanError> {

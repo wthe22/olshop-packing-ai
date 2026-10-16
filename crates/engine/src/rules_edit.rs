@@ -383,6 +383,14 @@ impl fmt::Display for RulesDocument {
 }
 
 impl RulesDocument {
+    /// An empty document, for a data folder without `categories.toml` (07 › *Inputs*): *Save* on
+    /// the one catch-all entry then writes the file.
+    pub fn empty() -> Self {
+        Self {
+            doc: DocumentMut::new(),
+        }
+    }
+
     fn array(&self) -> Result<&ArrayOfTables, RulesError> {
         match self.doc.get("category") {
             Some(item) => item
@@ -393,6 +401,11 @@ impl RulesDocument {
     }
 
     fn array_mut(&mut self) -> Result<&mut ArrayOfTables, RulesError> {
+        // A document without the array yet (an empty one) starts it here, so the first *Save* of
+        // a folder without `categories.toml` writes the file.
+        if self.doc.get("category").is_none() {
+            self.doc["category"] = Item::ArrayOfTables(ArrayOfTables::new());
+        }
         match self.doc.get_mut("category") {
             Some(item) => item
                 .as_array_of_tables_mut()

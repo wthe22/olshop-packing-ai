@@ -21,7 +21,7 @@ use std::sync::mpsc;
 use packing_engine::day::{DayState, Layout, PackingListChoice, Scope, delete_batch_folder};
 use packing_engine::label::{CourierTable, load_couriers_file};
 use packing_engine::plan::{Plan, PlanResult};
-use packing_engine::rules::{Category, load_rules};
+use packing_engine::rules::{Category, catch_all_category, load_rules};
 use packing_pdf::batch::{self, BatchError, Draft};
 use packing_pdf::worker::PdfWorker;
 
@@ -306,10 +306,22 @@ fn run_amend(args: &[String]) -> Result<(), CliError> {
 
 // ---------------------------------------------------------------------------- shared
 
+/// The picks: `--rules`, else `<data>/categories.toml`, else (no file) the one catch-all entry,
+/// so every order goes into one PDF set (07 › *Inputs*).
 fn load_categories(args: &Args) -> Result<Vec<Category>, CliError> {
     let path = args.rules_path();
-    let text = fs::read_to_string(&path)
-        .map_err(|e| CliError::Io(format!("cannot read {}: {e}", path.display())))?;
+    let text = match fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(vec![catch_all_category()]);
+        }
+        Err(error) => {
+            return Err(CliError::Io(format!(
+                "cannot read {}: {error}",
+                path.display()
+            )));
+        }
+    };
     load_rules(&text).map_err(|e| CliError::Rules(e.to_string()))
 }
 

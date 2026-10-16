@@ -5,7 +5,9 @@ use std::fs;
 use std::path::PathBuf;
 
 use packing_engine::orders::{Line, Order};
-use packing_engine::rules::{categorize, format_condition, load_rules};
+use packing_engine::rules::{
+    Category, catch_all_category, categorize, format_condition, load_rules, unconfigured,
+};
 
 fn testdata_categories() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../testdata/categories.toml")
@@ -247,4 +249,30 @@ fn categorize_first_match_and_none() {
 
     // The returned reference is the category itself.
     assert_eq!(categorize(&spion, &categories), Some(&categories[1]));
+}
+
+/// A data folder without `categories.toml` starts from the one catch-all entry (07 › *Inputs*):
+/// no condition, so every order goes into one PDF set (08 › *5. Categories*, Q-UI-4).
+#[test]
+fn the_catch_all_entry_is_one_entry_with_no_condition() {
+    let category = catch_all_category();
+    assert_eq!(category.code, "Z");
+    assert_eq!(category.name, "Lainnya");
+    assert!(category.condition.is_none());
+    assert!(category.when.is_none());
+    assert!(
+        unconfigured([&category]),
+        "the one catch-all entry is the unconfigured state"
+    );
+
+    // Written, it is a valid file: one last entry with no condition.
+    let written = "[[category]]\ncode = \"Z\"\nname = \"Lainnya\"\n";
+    assert_eq!(load_rules(written).expect("load"), vec![category]);
+
+    // One entry with a condition is configured; so is an empty list.
+    let sepatu =
+        "[[category]]\ncode = \"A\"\nname = \"Sepatu\"\nwhen = 'name contains \"sepatu\"'\n";
+    assert!(!unconfigured(&load_rules(sepatu).expect("load")));
+    let none: Vec<Category> = Vec::new();
+    assert!(!unconfigured(&none));
 }

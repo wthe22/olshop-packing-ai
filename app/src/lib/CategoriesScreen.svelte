@@ -11,6 +11,7 @@
   import { texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
   import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
+  import { unconfigured } from "./unconfigured";
 
   let {
     draftBatch,
@@ -45,6 +46,10 @@
   let busy = $state(false);
   let showHelp = $state(false);
 
+  // Q-UI-4: the one catch-all entry a folder without `categories.toml` starts with, and nothing
+  // else, is the unconfigured state; the line says what that means for a batch.
+  const noPicks = $derived(unconfigured(entries));
+
   // *Edit file as text* (08 › *5. Categories*).
   let fileMode = $state(false);
   let fileText = $state("");
@@ -69,7 +74,9 @@
           code: view.code,
           name: view.name,
           when: view.when,
-          origin: index,
+          // `null` for the one catch-all entry of a folder without `categories.toml`: *Save* adds
+          // it, so the file is written (08 › *5. Categories*).
+          origin: view.origin,
           mode: "boxes",
           tree: newTree(),
           text: view.when ?? "",
@@ -286,6 +293,10 @@
       </div>
     </div>
   {:else}
+    {#if noPicks}
+      <p class="no-picks">{texts.noPicks}</p>
+    {/if}
+
     {#if generalError}
       <p class="error">{generalError}</p>
     {/if}
@@ -399,6 +410,13 @@
   .hint {
     margin: 0 0 0.75rem;
     color: #4a4a4a;
+  }
+
+  /* Q-UI-4: the picks are unconfigured (the one catch-all entry, which takes every order). */
+  .no-picks {
+    margin: 0 0 0.75rem;
+    color: #4a4a4a;
+    font-weight: 600;
   }
 
   .category {

@@ -906,6 +906,29 @@ fn condition_pos_re() -> Regex {
     Regex::new(r"(?s)^line (\d+), col (\d+): (.*)$").expect("constant regex compiles")
 }
 
+/// The one entry a data folder without `categories.toml` uses (07 › *Inputs*): no condition, so
+/// it takes every order and a batch saves every order in one PDF set (03 › *Picks*; 08 ›
+/// *5. Categories*, which shows it as the one catch-all category).
+pub fn catch_all_category() -> Category {
+    Category {
+        code: "Z".to_string(),
+        name: "Lainnya".to_string(),
+        condition: None,
+        when: None,
+    }
+}
+
+/// Whether `categories` are the unconfigured picks: exactly one entry and it has no condition —
+/// the [`catch_all_category`] a folder without `categories.toml` starts with (07 › *Inputs*).
+/// The Categories and the Plan screen show the **No picks yet** line then (Q-UI-4).
+pub fn unconfigured<'a>(categories: impl IntoIterator<Item = &'a Category>) -> bool {
+    let mut entries = categories.into_iter();
+    match (entries.next(), entries.next()) {
+        (Some(only), None) => only.condition.is_none(),
+        _ => false,
+    }
+}
+
 /// Load the categories from the text of `categories.toml` (the app reads the file). Errors
 /// carry the line/col inside the file, like the reference implementation.
 pub fn load_rules(text: &str) -> Result<Vec<Category>, RulesError> {

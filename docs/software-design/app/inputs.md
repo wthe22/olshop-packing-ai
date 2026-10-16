@@ -3,7 +3,7 @@
 | Input | Content |
 |---|---|
 | Label PDFs | The *Shipping label + Packing slip* files of one batch ([business-process 02](../../business-process/02-data-sources.md)). One or more files; the seller centre splits a download into files of at most 200 pages |
-| `categories.toml` | In the data folder. Each entry is one pick ([rules file](../rules-file/README.md)). With no file the picks are one catch-all entry that takes every order, so a batch saves every order in one PDF set ([picks](../labels/picks.md)). Edited inside the app ([Categories screen](../ui/categories.md)) or by hand |
+| `categories.toml` | In the data folder. Each entry is one pick ([rules file](../rules-file/README.md)). With no file the picks are one catch-all entry (code `Z`, name `Lainnya`, no condition) that takes every order, so a batch saves every order in one PDF set ([picks](../labels/picks.md)). Edited inside the app ([Categories screen](../ui/categories.md)) or by hand |
 | `couriers.toml` | The courier-deduction data ([D-LABEL-1](../decisions/label.md)). **In the data folder**, like `categories.toml`: written from the bundled file (`crates/engine/couriers.toml`) on first start, then the owner's; a broken file stops the batch with its line. Fields and an example below |
 | The day's `state.json` | What earlier batches of the same day saved (below) |
 

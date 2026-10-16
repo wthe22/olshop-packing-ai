@@ -12,24 +12,28 @@ use std::str::FromStr;
 
 use packing_engine::orders::Order;
 use packing_engine::plan::Plan;
-use packing_engine::rules::{Category, load_rules, parse_condition};
+use packing_engine::rules::{Category, catch_all_category, load_rules, parse_condition};
 use packing_engine::rules_edit::{self, RulesDocument, Tree};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
 use crate::{AppState, CATEGORIES_FILE};
 
-/// One category entry as the file holds it (08 › *5. Categories*).
+/// One category entry as the file holds it (08 › *5. Categories*): its values and, for an entry
+/// the file holds, the index it has there (`origin`). The one catch-all entry of a folder
+/// without `categories.toml` has `origin: None`, so a *Save* adds it as a new entry.
 #[derive(Serialize)]
 pub struct EntryView {
     code: String,
     name: String,
     when: Option<String>,
+    origin: Option<usize>,
 }
 
 /// The Categories screen's first load: the whole file text (for *Edit file as text*), the entries
 /// as written, and the file-level error when the file does not load (08 › *Start*: a broken
-/// `categories.toml` opens Categories first with the errors).
+/// `categories.toml` opens Categories first with the errors). A folder without the file is not an
+/// error: the entries are the one catch-all entry then (08 › *Start* step 3).
 #[derive(Serialize)]
 pub struct RulesLoad {
     text: String,
@@ -70,17 +74,36 @@ fn valid_code(code: &str) -> bool {
 
 fn rules_load_impl(folder: &Path) -> Result<RulesLoad, String> {
     let path = folder.join(CATEGORIES_FILE);
-    let text = std::fs::read_to_string(&path)
-        .map_err(|error| format!("cannot read {}: {error}", path.display()))?;
+    let text = match std::fs::read_to_string(&path) {
+        Ok(text) => text,
+        // A folder without the file is not an error: the picks are the one catch-all entry
+        // (08 › *Start* step 3, 07 › *Inputs*).
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            let category = catch_all_category();
+            return Ok(RulesLoad {
+                text: String::new(),
+                entries: vec![EntryView {
+                    code: category.code,
+                    name: category.name,
+                    when: None,
+                    origin: None,
+                }],
+                error: None,
+            });
+        }
+        Err(error) => return Err(format!("cannot read {}: {error}", path.display())),
+    };
     let error = load_rules(&text).err().map(|error| error.to_string());
     let entries = match RulesDocument::from_str(&text) {
         Ok(document) => document
             .entries()
             .into_iter()
-            .map(|entry| EntryView {
+            .enumerate()
+            .map(|(origin, entry)| EntryView {
                 code: entry.code,
                 name: entry.name,
                 when: entry.when,
+                origin: Some(origin),
             })
             .collect(),
         Err(_) => Vec::new(),
@@ -187,14 +210,17 @@ fn rules_check_text_impl(text: &str) -> Result<(), String> {
 // -------------------------------------------------------------------------------- save
 
 /// Save the edited entries through `RulesDocument`: an entry that came from the file keeps its
-/// comment and unchanged condition text (its `origin`), a new one is appended, a missing one is
+/// comment and unchanged condition text (its `origin`), a new one is appended (the one catch-all
+/// entry of a folder without `categories.toml` included, which writes the file), a missing one is
 /// dropped, and the order is applied in one `reorder` (08 › *5. Categories*: "comments kept").
 fn rules_save_impl(state: &AppState, entries: &[EntryInput]) -> Result<(), String> {
     let folder = state.data_folder()?;
     let path = folder.join(CATEGORIES_FILE);
-    let text = std::fs::read_to_string(&path)
-        .map_err(|error| format!("cannot read {}: {error}", path.display()))?;
-    let mut document = RulesDocument::from_str(&text).map_err(|error| error.to_string())?;
+    let mut document = match std::fs::read_to_string(&path) {
+        Ok(text) => RulesDocument::from_str(&text).map_err(|error| error.to_string())?,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => RulesDocument::empty(),
+        Err(error) => return Err(format!("cannot read {}: {error}", path.display())),
+    };
     let original = document.entries().len();
     for entry in entries {
         if let Some(origin) = entry.origin
@@ -449,6 +475,59 @@ name = \"Rest\"
         assert!(invalid.error.is_some());
         assert_eq!(invalid.entries.len(), 1);
         assert_eq!(invalid.entries[0].code, "A");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// A folder without `categories.toml` is not an error: the Categories screen loads the one
+    /// catch-all entry, which takes every order of the open batch and writes the file on *Save*
+    /// (08 › *Start* step 3, 08 › *5. Categories*).
+    #[test]
+    fn load_without_a_file_gives_the_one_catch_all_entry() {
+        let dir = temp_dir("load-no-file");
+        let loaded = rules_load_impl(&dir).expect("load");
+        assert!(loaded.error.is_none());
+        assert_eq!(loaded.text, "");
+        assert_eq!(loaded.entries.len(), 1);
+        assert_eq!(loaded.entries[0].code, "Z");
+        assert_eq!(loaded.entries[0].name, "Lainnya");
+        assert!(loaded.entries[0].when.is_none());
+        assert_eq!(loaded.entries[0].origin, None, "not an entry of a file");
+
+        // It takes every order of the open batch.
+        let state = state_with_draft(&dir, vec![read_order("Sepatu A", 1), read_order("Lain", 1)]);
+        let entries = vec![entry("Z", "Lainnya", None, None)];
+        let check = rules_check_impl(&state, &entries).expect("check");
+        assert!(check.general.is_none());
+        assert_eq!(check.counts, Some(vec![2]));
+
+        // *Save* writes the file the folder did not have; it is the file's entry from then on.
+        rules_save_impl(&state, &entries).expect("save");
+        let written = std::fs::read_to_string(dir.join(CATEGORIES_FILE)).expect("written");
+        let categories = load_rules(&written).expect("the written file loads");
+        assert_eq!(categories.len(), 1);
+        assert_eq!(categories[0].code, "Z");
+        assert!(categories[0].condition.is_none());
+        assert_eq!(
+            rules_load_impl(&dir).expect("load again").entries[0].origin,
+            Some(0)
+        );
+
+        // Adding a category above it and pressing *Save* writes both entries.
+        let added = vec![
+            entry("A", "Sepatu", Some("name contains \"sepatu\""), None),
+            entry("Z", "Lainnya", None, None),
+        ];
+        rules_save_impl(&state, &added).expect("save added");
+        let text = std::fs::read_to_string(dir.join(CATEGORIES_FILE)).expect("read");
+        assert_eq!(
+            load_rules(&text)
+                .expect("load")
+                .iter()
+                .map(|category| category.code.as_str())
+                .collect::<Vec<_>>(),
+            ["A", "Z"]
+        );
 
         std::fs::remove_dir_all(&dir).ok();
     }

@@ -17,7 +17,7 @@ From the repository root, Git Bash:
 | Flag | Meaning |
 |---|---|
 | `--labels <file>...` | One or more label PDFs of this batch (required for `prepare`) |
-| `--rules <categories.toml>` | The picks, in order (default: `<data>/categories.toml`) |
+| `--rules <categories.toml>` | The picks, in order (default: `<data>/categories.toml`; without the file, the one catch-all pick) |
 | `--couriers <couriers.toml>` | The courier data (default: `<data>/couriers.toml`, else the bundled list) |
 | `--day YYYY-MM-DD` | The day folder (default: today) |
 | `--data <dir>` | The data folder holding `categories.toml`, `couriers.toml` and `labels/` (default: `.`) |

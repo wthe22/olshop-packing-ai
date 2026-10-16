@@ -6,7 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use packing_engine::rules::format_condition;
+use packing_engine::rules::{catch_all_category, format_condition};
 use packing_engine::rules_edit::RulesDocument;
 
 fn testdata_categories() -> PathBuf {
@@ -221,6 +221,36 @@ fn reorder_keeps_the_chosen_entries_in_order() {
     assert!(edited.reorder(&[0, 0]).is_err());
     assert!(edited.reorder(&[0, 9]).is_err());
     assert_eq!(codes(&edited), ["A", "B", "Z"].map(String::from));
+}
+
+#[test]
+fn a_document_without_a_file_starts_from_the_catch_all_entry() {
+    // A data folder without `categories.toml`: *Save* on the one catch-all entry writes the file
+    // (07 › *Inputs*, 08 › *5. Categories*).
+    let mut edited = RulesDocument::empty();
+    assert!(edited.entries().is_empty());
+    let entry = catch_all_category();
+    edited
+        .add(0, &entry.code, &entry.name, None)
+        .expect("add the catch-all entry");
+
+    let out = edited.to_string();
+    assert!(
+        out.contains("[[category]]") && out.contains("code = \"Z\""),
+        "written:\n{out}"
+    );
+    let categories = edited.validate().expect("load_rules");
+    assert_eq!(categories.len(), 1);
+    assert_eq!(categories[0].code, "Z");
+    assert!(categories[0].condition.is_none());
+
+    // *+ Add category* adds one above it; the rest entry stays last.
+    let mut edited = RulesDocument::empty();
+    edited.add(0, "Z", "Lainnya", None).expect("add");
+    edited
+        .add(0, "A", "Sepatu", Some("name contains \"sepatu\""))
+        .expect("add above");
+    assert_eq!(loaded_codes(&edited), ["A", "Z"].map(String::from));
 }
 
 #[test]

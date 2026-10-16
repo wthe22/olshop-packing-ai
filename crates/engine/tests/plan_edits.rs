@@ -3,7 +3,7 @@
 
 use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
 use packing_engine::plan::{Plan, PlanError, REST_CODE, REST_NAME};
-use packing_engine::rules::{Category, parse_condition};
+use packing_engine::rules::{Category, catch_all_category, parse_condition};
 
 fn line(name: &str, quantity: i64, variation: &str) -> Line {
     Line {
@@ -132,6 +132,30 @@ fn the_last_entry_without_a_condition_takes_the_rest() {
     assert_eq!(result.picks.len(), 2);
     assert_eq!(result.picks[1].code, "Z");
     assert_eq!(result.picks[1].orders.len(), 2);
+}
+
+/// A folder without `categories.toml` uses the one catch-all entry: every order goes into one
+/// PDF set, and the plan is the unconfigured state (07 › *Inputs*, Q-UI-4).
+#[test]
+fn the_catch_all_entry_takes_every_order_and_is_the_unconfigured_plan() {
+    let orders = sample_orders();
+    let plan = Plan::from_categories(&[catch_all_category()]);
+    assert!(plan.unconfigured());
+
+    let result = plan.count(&orders, 1);
+    assert_eq!(result.picks.len(), 1);
+    assert_eq!(result.picks[0].code, "Z");
+    assert_eq!(result.picks[0].orders.len(), orders.len());
+    assert_eq!(result.picks[0].file_name, "1 Z Lainnya ×4.pdf");
+
+    // One entry with a condition, and two entries, are configured picks; the one entry without
+    // a condition is the unconfigured state, the catch-all entry or one written by hand.
+    assert!(
+        !Plan::from_categories(&[category("A", "Sepatu", Some("name contains \"sepatu\""))])
+            .unconfigured()
+    );
+    assert!(!Plan::from_categories(&base_categories()).unconfigured());
+    assert!(Plan::from_categories(&[category("Z", "Lainnya", None)]).unconfigured());
 }
 
 #[test]

@@ -8,6 +8,11 @@ function count(n: number, one: string, many: string): string {
 export const texts = {
   title: "Packing",
 
+  // Q-UI-4: the line the Categories screen and the Plan screen show while the picks are
+  // unconfigured (the one catch-all entry a folder without `categories.toml` starts with, so
+  // every order goes into one PDF set). The Day screen has no line.
+  noPicks: "No picks yet: all orders go into one PDF set",
+
   nav: {
     day: "Day",
     search: "Search",

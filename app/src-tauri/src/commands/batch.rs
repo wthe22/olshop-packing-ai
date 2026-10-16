@@ -20,7 +20,9 @@ use packing_engine::label::{self, CourierTable};
 use packing_engine::names;
 use packing_engine::orders::{LogoAnswer, Order, ReadOrder, UnseenLogo, display_name};
 use packing_engine::plan::{PickResult, Plan};
-use packing_engine::rules::{Category, Condition, evaluate, load_rules, parse_condition};
+use packing_engine::rules::{
+    Category, Condition, catch_all_category, evaluate, load_rules, parse_condition,
+};
 use packing_pdf::batch::{self, Draft, FileCheck};
 use packing_pdf::worker::{PdfWorker, Progress, SaveProgress, SaveStage};
 use serde::{Deserialize, Serialize};
@@ -140,6 +142,9 @@ pub struct PlanView {
     has_duplicate_names: bool,
     /// Where *+ Add a pick for this batch* inserts, above the rest row (08 › *3. Plan*).
     add_at: usize,
+    /// The plan is the one catch-all entry, so the picks are unconfigured: the screen says every
+    /// order goes into one PDF set (Q-UI-4, 08 › *3. Plan*).
+    no_picks: bool,
 }
 
 /// One row of the Plan screen (08 › *3. Plan*).
@@ -339,6 +344,7 @@ fn plan_view(plan: &Plan, orders: &[ReadOrder], first_number: i64) -> PlanView {
         rows,
         has_duplicate_names,
         add_at,
+        no_picks: plan.unconfigured(),
     }
 }
 
@@ -766,12 +772,18 @@ fn remember_logo(folder: &Path, hash: &str, answer: &LogoAnswerInput) -> Result<
         .map_err(|error| format!("Cannot write to {}: {error}.", path.display()))
 }
 
-/// Load `<data>/categories.toml` (08 › *Messages*: a rules error stops the batch with its
-/// line/col).
+/// Load `<data>/categories.toml`, or the one catch-all entry when the data folder has none
+/// (07 › *Inputs*, 08 › *5. Categories*): every order then goes into one PDF set. A file that
+/// does not load stops the batch with its line/col (08 › *Messages*).
 fn load_categories(folder: &Path) -> Result<Vec<Category>, String> {
     let path = folder.join(CATEGORIES_FILE);
-    let text = std::fs::read_to_string(&path)
-        .map_err(|error| format!("cannot read {}: {error}", path.display()))?;
+    let text = match std::fs::read_to_string(&path) {
+        Ok(text) => text,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(vec![catch_all_category()]);
+        }
+        Err(error) => return Err(format!("cannot read {}: {error}", path.display())),
+    };
     load_rules(&text)
         .map_err(|error| format!("The categories have an error: {error}. Fix it in Categories."))
 }
@@ -1186,6 +1198,30 @@ mod tests {
         assert!(view.has_duplicate_names);
         assert_eq!(view.rows[0].duplicate_of, None);
         assert_eq!(view.rows[1].duplicate_of, Some(1)); // *Same name as PDF 1*
+    }
+
+    #[test]
+    fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
+        // No `categories.toml`: one catch-all entry, every order in one PDF set (Q-UI-4).
+        let plan = Plan::from_categories(&[catch_all_category()]);
+        let view = plan_view(&plan, &orders(), 1);
+        assert!(view.no_picks);
+        assert_eq!(view.rows.len(), 1);
+        assert_eq!(view.rows[0].code, "Z");
+        assert_eq!(view.rows[0].orders, 6);
+        assert!(view.rows[0].is_rest);
+        assert_eq!(view.add_at, 0);
+
+        // A pick with a condition: configured.
+        assert!(!plan_view(&sepatu_plan(), &orders(), 1).no_picks);
+        // The picks file's own rest entry as the only entry: still unconfigured.
+        let view = plan_view(
+            &Plan::from_categories(&[category("Z", "Lainnya", None)]),
+            &orders(),
+            1,
+        );
+        assert!(view.no_picks);
+        assert_eq!(view.rows[0].orders, 6);
     }
 
     #[test]
@@ -1629,6 +1665,41 @@ mod tests {
             .err()
             .expect("no slip");
         assert!(error.contains("no packing slip"), "{error}");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// A data folder without `categories.toml`: the picks are the one catch-all entry, so the
+    /// batch saves every order in one PDF set (07 › *Inputs*, Q-UI-4).
+    #[test]
+    fn a_read_without_a_categories_file_saves_every_order_in_one_pdf() {
+        let Some(_vendor) = vendor_dir() else {
+            eprintln!("skipped: run tools/get-pdfium.sh");
+            return;
+        };
+        let dir = temp_dir("no-categories");
+        let state = app_state(&dir);
+
+        let read = read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        assert_eq!(read.orders, 23);
+        assert_eq!(read.plan.rows.len(), 1);
+        assert!(read.plan.no_picks);
+        assert_eq!(read.plan.rows[0].code, "Z");
+        assert_eq!(read.plan.rows[0].name, "Lainnya");
+        assert_eq!(read.plan.rows[0].orders, 23);
+        assert_eq!(read.plan.rows[0].number, Some(1));
+
+        let save = save_batch_impl(&state, None, false, |_| {}).expect("save");
+        assert_eq!(save.batch, 1);
+        assert_eq!(save.pdfs, 1, "one PDF set for every order");
+        let day_state = DayState::load(&dir.join("labels/2026-10-07")).expect("state");
+        assert_eq!(day_state.batches[0].pdfs.len(), 1);
+        assert_eq!(day_state.batches[0].pdfs[0].orders, 23);
+        assert_eq!(day_state.batches[0].pdfs[0].file, "1 Z Lainnya ×23.pdf");
+        assert!(
+            dir.join("labels/2026-10-07/batch 1/1 Z Lainnya ×23.pdf")
+                .is_file()
+        );
 
         std::fs::remove_dir_all(&dir).ok();
     }

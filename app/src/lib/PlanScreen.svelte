@@ -299,6 +299,10 @@
     <p class="error">{error}</p>
   {/if}
 
+  {#if view.no_picks}
+    <p class="no-picks">{texts.noPicks}</p>
+  {/if}
+
   <table>
     <thead>
       <tr>
@@ -510,6 +514,13 @@
   .warnings ul {
     margin: 0.35rem 0 0;
     padding-left: 1.2rem;
+  }
+
+  /* Q-UI-4: the plan is the one catch-all entry, so every order goes into one PDF set. */
+  .no-picks {
+    margin: 0 0 0.75rem;
+    color: #4a4a4a;
+    font-weight: 600;
   }
 
   .link {
