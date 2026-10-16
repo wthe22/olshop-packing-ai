@@ -1,28 +1,23 @@
-# 2.16 Courier: the SiCepat labels
+# 2.16 Courier: the logo prompt
 
-23 of the owner's 98 orders get no courier (J&T Express 74, SiCepat 23, IDX 1; the day warns 15 + 8):
-SiCepat labels print their name **only as a logo image** and their tracking ID is 12 digits starting
-`00`, a form `couriers.toml` marks as shared (`tracking_unique = false`; J&T Cargo is also 12
-digits), so `deduce_courier` (`crates/engine/src/label.rs:217`) refuses and warns. The 601-page
-sample download is the same shape: 82 of its pages.
+The backend is built: the courier is named only when the page's **logo** (a header-band image, hashed
+by its encoded bytes, else by its appearance) and the **tracking-ID form** agree, with the data in
+`crates/engine/couriers.toml` (`logo`, `shape`, `not_courier`). Read over the 10 sample label
+files (the program's own reader), SiCepat (125 orders) and J&T Cargo (2) are named; the owner's day is
+re-checked with the prompt. What is left is **the prompt**:
+`Reading::unseen_logos` lists the header-band images the table does not know (hash, pages, order IDs)
+and `Reading::apply_logo_answer(hash, &LogoAnswer)` applies an answer.
 
-**The owner's rule: two clues, and the courier is named only when they agree** — the **logo** (the
-page's logo image, its encoded bytes hashed with **XXH3-64**) and the **tracking-ID form** (`00` →
-SiCepat, `57` → J&T Cargo, both unambiguous). [courier.md](../../software-design/labels/courier.md)
-holds the rule; the logo hashes, the ask-the-owner flow and J&T Cargo's unreadable logo are
-[Q-LABEL-1](../../software-design/questions/label.md).
+**Code:** the logo prompt before the Plan screen ([new-batch.md](../../software-design/ui/new-batch.md),
+*The logo prompt*): the picture of each unseen logo (the page's image, re-read from the PDF), its page
+and order counts, a button per courier name, *Not a courier*, *I don't know*, *Skip all*, Esc skips one.
+An answer applies to the batch at once. **Writing the answer into `couriers.toml` is 2.19**
+([D-LABEL-4](../../software-design/decisions/label.md), [Q-LABEL-7](../../software-design/questions/label.md)),
+so until then the same logo asks again in the next batch.
 
-**Code:** `couriers.toml` gains a logo-hash list (XXH3-64, `xxhash-rust`) per courier and a J&T Cargo
-entry — whose clue is the logo's **appearance** (`shape`; its encoded bytes name nothing) — and
-`deduce_courier` hashes the page's logo image (`FPDFImageObj_GetImageDataRaw`) and requires the two
-clues to agree; a hash not in the table is asked of the owner once (`couriers.toml` — one file,
-[D-LABEL-1](../../software-design/decisions/label.md); the taught hash is appended to `couriers.toml`,
-[D-LABEL-4](../../software-design/decisions/label.md) and
-[Q-LABEL-7](../../software-design/questions/label.md); *I don't know* and *Skip all* write nothing).
-
-**Tests:** every measured sample page keeps its courier, a logo with a foreign form warns, an unseen
-logo asks, the two slip-continuation pages stay unknown. Then re-check the owner's day (the warning
-is gone for the SiCepat orders) and rebuild the portable folder.
+**Tests:** the prompt's flow (answer, Not a courier, I don't know, Skip all, Esc) and the counts shown.
+Then re-check the owner's day (the warning is gone for the SiCepat orders) and rebuild the portable
+folder.
 
 **Measured counts and shapes** (the Python reader page by page and the exports read by provider):
 
@@ -80,6 +75,6 @@ is gone for the SiCepat orders) and rebuild the portable folder.
   a pattern**: every mark of the instant label comes from that one page, and the sweep looked for the
   one caption `Kode Pengambilan`, so a differently drawn instant label would not have been caught.
 
-**Result:** (not started; [Q-LABEL-2](../../software-design/questions/label.md) and
+**Result:** (the prompt is not started; the backend is committed; [Q-LABEL-2](../../software-design/questions/label.md) and
 [Q-LABEL-3](../../software-design/questions/label.md) have Default answers, so nothing waits for the
 owner)

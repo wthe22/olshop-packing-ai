@@ -7,6 +7,8 @@ use jiff::civil::DateTime;
 use regex::Regex;
 use serde::Deserialize;
 
+use crate::text::LogoImage;
+
 /// The courier data built into the program (07 › *Inputs*).
 const COURIERS_TOML: &str = include_str!("../couriers.toml");
 
@@ -52,7 +54,13 @@ fn ship_by_collapsed_re() -> &'static Regex {
 /// One `[[courier]]` entry, its regexes compiled once.
 pub struct Courier {
     pub name: String,
-    /// Case-insensitive text clues searched in the page text.
+    /// The courier's logo images: XXH3-64 (16 hex) of each one's **encoded bytes**.
+    pub logo: Vec<String>,
+    /// The courier's logos by **appearance**: XXH3-64 (16 hex) of a 64 × 64 1-bit canvas. The
+    /// clue for a **masked** logo, whose encoded bytes name nothing (J&T Cargo, courier.md item 3).
+    pub shape: Vec<String>,
+    /// Case-insensitive text clues searched in the page text: the logo's stand-in where the logo
+    /// cannot be read at all (courier.md item 5).
     pub text: Vec<String>,
     /// The tracking-ID pattern source (as written in `couriers.toml`).
     pub tracking: Option<String>,
@@ -60,12 +68,67 @@ pub struct Courier {
     pub tracking_re: Option<Regex>,
     /// `tracking` anchored, i.e. a full match (Python `fullmatch`).
     pub tracking_full: Option<Regex>,
-    /// Whether the tracking form alone identifies this courier.
-    pub tracking_unique: bool,
+}
+
+impl Courier {
+    /// One courier for a table of the rule's tests; `tracking` is a regex source.
+    pub fn new(
+        name: &str,
+        logo: &[&str],
+        shape: &[&str],
+        tracking: Option<&str>,
+        text: &[&str],
+    ) -> Courier {
+        Courier::from_entry(
+            name.to_string(),
+            logo.iter().map(|value| (*value).to_string()).collect(),
+            shape.iter().map(|value| (*value).to_string()).collect(),
+            text.iter().map(|value| (*value).to_string()).collect(),
+            tracking.map(str::to_string),
+        )
+    }
+
+    fn from_entry(
+        name: String,
+        logo: Vec<String>,
+        shape: Vec<String>,
+        text: Vec<String>,
+        tracking: Option<String>,
+    ) -> Courier {
+        let (tracking_re, tracking_full) = match tracking.as_deref() {
+            Some(pattern) => (
+                Some(Regex::new(pattern).expect("courier tracking pattern is valid")),
+                Some(
+                    Regex::new(&format!("^(?:{pattern})$"))
+                        .expect("courier tracking pattern is valid"),
+                ),
+            ),
+            None => (None, None),
+        };
+        Courier {
+            name,
+            logo,
+            shape,
+            text,
+            tracking,
+            tracking_re,
+            tracking_full,
+        }
+    }
+}
+
+/// The courier data of `couriers.toml`: the couriers and the hashes answered *Not a courier*.
+pub struct CourierTable {
+    pub couriers: Vec<Courier>,
+    /// Hashes answered **Not a courier** — a buying channel's strip, Q-LABEL-5 — and so ignored
+    /// wherever a logo is looked up. Written back by the logo prompt (D-LABEL-4, task 2.19).
+    pub not_courier: Vec<String>,
 }
 
 #[derive(Deserialize)]
 struct CouriersFile {
+    #[serde(default)]
+    not_courier: Vec<String>,
     #[serde(default)]
     courier: Vec<CourierEntry>,
 }
@@ -74,38 +137,135 @@ struct CouriersFile {
 struct CourierEntry {
     name: String,
     #[serde(default)]
+    logo: Vec<String>,
+    #[serde(default)]
+    shape: Vec<String>,
+    #[serde(default)]
     text: Vec<String>,
     tracking: Option<String>,
-    #[serde(default)]
-    tracking_unique: bool,
 }
 
 /// The courier data, parsed from the built-in `couriers.toml` once.
-pub fn couriers() -> &'static [Courier] {
-    static COURIERS: OnceLock<Vec<Courier>> = OnceLock::new();
-    COURIERS.get_or_init(|| {
+pub fn courier_data() -> &'static CourierTable {
+    static DATA: OnceLock<CourierTable> = OnceLock::new();
+    DATA.get_or_init(|| {
         let file: CouriersFile =
             toml::from_str(COURIERS_TOML).expect("built-in couriers.toml is valid");
-        file.courier
-            .into_iter()
-            .map(|entry| {
-                let tracking_re = entry
-                    .tracking
-                    .as_deref()
-                    .map(|p| Regex::new(p).expect("courier tracking pattern is valid"));
-                let tracking_full = entry.tracking.as_deref().map(|p| {
-                    Regex::new(&format!("^(?:{p})$")).expect("courier tracking pattern is valid")
-                });
-                Courier {
-                    name: entry.name,
-                    text: entry.text,
-                    tracking: entry.tracking,
-                    tracking_re,
-                    tracking_full,
-                    tracking_unique: entry.tracking_unique,
-                }
-            })
-            .collect()
+        CourierTable {
+            couriers: file
+                .courier
+                .into_iter()
+                .map(|entry| {
+                    Courier::from_entry(
+                        entry.name,
+                        entry.logo,
+                        entry.shape,
+                        entry.text,
+                        entry.tracking,
+                    )
+                })
+                .collect(),
+            not_courier: file.not_courier,
+        }
+    })
+}
+
+/// The couriers of the built-in data.
+pub fn couriers() -> &'static [Courier] {
+    &courier_data().couriers
+}
+
+/// Whether `hash` is a byte hash the courier data already knows: in a courier's `logo` list or
+/// in `not_courier`. `packing-pdf` computes the appearance hash only for a band image whose byte
+/// hash this does not know (courier.md item 3; Q-LABEL-1 option 1).
+pub fn is_known_logo_hash(hash: &str) -> bool {
+    let data = courier_data();
+    data.not_courier.iter().any(|known| known == hash)
+        || data
+            .couriers
+            .iter()
+            .any(|courier| courier.logo.iter().any(|known| known == hash))
+}
+
+/// The candidate couriers of a tracking-ID form (courier.md item 2): every courier whose
+/// `tracking` matches the whole of `tracking_id`.
+pub fn candidates<'a>(table: &'a CourierTable, tracking_id: &str) -> Vec<&'a Courier> {
+    table
+        .couriers
+        .iter()
+        .filter(|courier| form_matches(courier, tracking_id))
+        .collect()
+}
+
+/// Whether the tracking-ID form names `name` among its candidates.
+pub fn form_names_courier(tracking_id: &str, name: &str) -> bool {
+    candidates(courier_data(), tracking_id)
+        .iter()
+        .any(|courier| courier.name == name)
+}
+
+fn form_matches(courier: &Courier, tracking_id: &str) -> bool {
+    !tracking_id.is_empty()
+        && courier
+            .tracking_full
+            .as_ref()
+            .is_some_and(|re| re.is_match(tracking_id))
+}
+
+/// The courier one header-band image names: its byte hash in a courier's `logo`, else its
+/// appearance hash in a courier's `shape`. `None` for a hash answered *Not a courier* (a buying
+/// channel's strip) and for an image the data does not know.
+pub fn logo_courier<'a>(table: &'a CourierTable, image: &LogoImage) -> Option<&'a Courier> {
+    if is_not_courier(
+        table,
+        Some(image.hash.as_str()),
+        image.appearance.as_deref(),
+    ) {
+        return None;
+    }
+    if let Some(courier) = table
+        .couriers
+        .iter()
+        .find(|courier| courier.logo.iter().any(|known| known == &image.hash))
+    {
+        return Some(courier);
+    }
+    let appearance = image.appearance.as_deref()?;
+    table
+        .couriers
+        .iter()
+        .find(|courier| courier.shape.iter().any(|known| known == appearance))
+}
+
+/// Whether the image is a band image the prompt must ask the owner about (D-LABEL-4): a byte
+/// hash not in `logo`/`not_courier` whose appearance is not in `shape` either.
+pub fn is_unseen_logo(table: &CourierTable, image: &LogoImage) -> bool {
+    if is_not_courier(
+        table,
+        Some(image.hash.as_str()),
+        image.appearance.as_deref(),
+    ) {
+        return false;
+    }
+    if table
+        .couriers
+        .iter()
+        .any(|courier| courier.logo.iter().any(|known| known == &image.hash))
+    {
+        return false;
+    }
+    !table.couriers.iter().any(|courier| {
+        image
+            .appearance
+            .as_deref()
+            .is_some_and(|appearance| courier.shape.iter().any(|known| known == appearance))
+    })
+}
+
+fn is_not_courier(table: &CourierTable, hash: Option<&str>, appearance: Option<&str>) -> bool {
+    table.not_courier.iter().any(|known| {
+        hash.is_some_and(|hash| known == hash)
+            || appearance.is_some_and(|appearance| known == appearance)
     })
 }
 
@@ -202,30 +362,84 @@ pub fn find_tracking_id(text: &str, order_id: &str) -> String {
     most_frequent(&counts).unwrap_or_default().to_string()
 }
 
-/// `labels.deduce_courier`: the courier from the label text clues, else an unambiguous tracking
-/// form, else `""`.
-pub fn deduce_courier(text: &str, tracking_id: &str) -> String {
+/// The two-clue courier rule (D-LABEL-2; courier.md items 1, 2, 4, 5): the tracking-ID form gives
+/// the **candidate** couriers, and the courier is named only when the page's **logo** names one
+/// of them (its byte hash, else its appearance hash). A logo whose courier and form disagree, a
+/// logo with no form, a form with no logo, or neither → no name.
+///
+/// The printed text clue stands in for the logo only where the logo cannot be read at all — a
+/// page with no header-band image (Q-LABEL-5) — and must be a candidate too. On such a page a
+/// form that carries the vendor's **own marker** (a lettered prefix: `JY…`, `TKP…`, `SPXID…`)
+/// also names the courier on its own, when it names only one: that is the old `tracking_unique`
+/// behaviour derived from the table instead of a flag, and it keeps a label whose image is
+/// missing altogether (the fpdf2 fixtures hold no images; a downloaded label always carries a
+/// logo) readable. A **bare number** form (`00…`, `57…`) never names alone — the page is full of
+/// numbers, so a number on its own is no clue, which is exactly what marking the `00` form
+/// shared meant.
+pub fn deduce_courier_in(
+    table: &CourierTable,
+    text: &str,
+    tracking_id: &str,
+    logos: &[LogoImage],
+) -> String {
+    let candidates = candidates(table, tracking_id);
+    if candidates.is_empty() {
+        return String::new();
+    }
+
+    if !logos.is_empty() {
+        // Which courier the known band images name; two images naming different couriers cannot
+        // be told apart, so nothing is named.
+        let mut named: Option<&Courier> = None;
+        for image in logos {
+            let Some(courier) = logo_courier(table, image) else {
+                continue;
+            };
+            match named {
+                Some(other) if other.name != courier.name => return String::new(),
+                _ => named = Some(courier),
+            }
+        }
+        return match named {
+            Some(courier) if candidates.iter().any(|c| c.name == courier.name) => {
+                courier.name.clone()
+            }
+            _ => String::new(),
+        };
+    }
+
+    // No band image at all: the printed text clue stands in for the logo.
     let lowered = text.to_lowercase();
     let collapsed = whitespace_re().replace_all(text, "").to_lowercase();
-    for courier in couriers() {
+    for courier in &candidates {
         if courier.text.iter().any(|clue| {
-            lowered.contains(&clue.to_lowercase()) || collapsed.contains(&clue.to_lowercase())
+            let clue = clue.to_lowercase();
+            lowered.contains(&clue) || collapsed.contains(&clue)
         }) {
             return courier.name.clone();
         }
     }
-    for courier in couriers() {
-        if courier.tracking_unique
-            && !tracking_id.is_empty()
-            && courier
-                .tracking_full
-                .as_ref()
-                .is_some_and(|re| re.is_match(tracking_id))
-        {
-            return courier.name.clone();
-        }
+    // A label whose image is missing altogether, and the form carries the vendor's own marker.
+    if let [courier] = candidates.as_slice()
+        && has_marker_prefix(courier)
+    {
+        return courier.name.clone();
     }
     String::new()
+}
+
+/// Whether the tracking form carries the vendor's own marker: its pattern begins with a letter
+/// (`JY…`, `TKP…`, `SPXID…`) rather than a bare number (`00…`, `57…`).
+fn has_marker_prefix(courier: &Courier) -> bool {
+    courier
+        .tracking
+        .as_deref()
+        .is_some_and(|pattern| pattern.starts_with(|c: char| c.is_ascii_alphabetic()))
+}
+
+/// The two-clue rule on the built-in `couriers.toml`.
+pub fn deduce_courier(text: &str, tracking_id: &str, logos: &[LogoImage]) -> String {
+    deduce_courier_in(courier_data(), text, tracking_id, logos)
 }
 
 fn build_datetime(caps: &regex::Captures<'_>) -> Option<DateTime> {

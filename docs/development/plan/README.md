@@ -16,14 +16,14 @@ first implementation of the same rules, tested). Port it module by module when a
 
 | Task | Content | File |
 |---|---|---|
-| 2.16 | Courier: the label's logo and tracking-ID form name the courier (SiCepat, J&T Cargo, SPX), the logo prompt | [2-16-courier.md](2-16-courier.md) |
+| 2.16 | Courier: the logo prompt (the two-clue rule is built) | [2-16-courier.md](2-16-courier.md) |
 | 2.19 | The courier data (`couriers.toml`) in the data folder | [2-19-courier-data-folder.md](2-19-courier-data-folder.md) |
 | 2.18 | The check of the saved PDFs before a batch is saved | [2-18-saved-pdf-check.md](2-18-saved-pdf-check.md) |
 | 2.20 | One hash for everything: XXH3-64 for the label-file fingerprint | [2-20-one-hash.md](2-20-one-hash.md) |
 | 2.21 | Search for a saved order | [2-21-search.md](2-21-search.md) |
 
 Open choices of the owner, each with a default the app follows until the owner decides:
-[Q-LABEL-1 to Q-LABEL-5 and Q-LABEL-7](../../software-design/questions/label.md) and
+[Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md) and
 [Q-UI-1 to Q-UI-3](../../software-design/questions/ui.md).
 
 ## Status

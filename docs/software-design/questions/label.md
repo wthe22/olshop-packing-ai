@@ -1,6 +1,6 @@
 # Open questions: labels
 
-Questions: Q-LABEL-1, Q-LABEL-2, Q-LABEL-3, Q-LABEL-4, Q-LABEL-5, Q-LABEL-7.
+Questions: Q-LABEL-1, Q-LABEL-2, Q-LABEL-3, Q-LABEL-4, Q-LABEL-5, Q-LABEL-7, Q-LABEL-8.
 
 ## Q-LABEL-1 — Reading a courier logo the encoded bytes cannot name (J&T Cargo)
 
@@ -14,7 +14,7 @@ every sample file (J&T Express 975×377, SiCepat 184×60, iD Express/IDX 1200×8
 (680×156 on two sample labels, 683×157 on the third), so the encoded bytes differ between exports.
 Measured on the sample labels: hashing the **appearance** instead — composite the image with its
 mask, fit into a 64 × 64 canvas on white, threshold at 200/255, XXH3-64 — gives J&T Cargo one value
-for **both** rasters (`2a36acec58f5…`), and one distinct value per other courier and per platform
+for **both** rasters (`753ccbd14749befa`), and one distinct value per other courier and per platform
 strip. So the logo clue *can* name J&T Cargo; the only question is how much of it to use.
 
 | Option | What the owner sees |
@@ -146,3 +146,19 @@ question. The hash is a line in a file the owner may open.
 | 2. In a file of its own in the data folder | `couriers.toml` stays exactly as the owner wrote it; the app writes a second file with the hashes only |
 
 **What the answer changes:** which file the prompt writes to, and what Settings › Change… and Start check.
+
+## Q-LABEL-8 — A page with no header image and a vendor-marked tracking ID
+
+**Words.** The rule names a courier only when the logo and the tracking-ID form agree
+([courier deduction](../labels/courier.md)). A real label always has header-band images, so a page
+with **none** exists only in the made-up test labels (`testdata/`), which carry no pictures. On such a
+page there is no logo to agree with.
+
+**Example.** A page with no header image and the tracking ID `JY0000001234`.
+
+| Option | What the owner sees |
+|---|---|
+| **1. The form names the courier when it carries the vendor's own marker** (**Default**) | A lettered form (`JY`, `TKP`, `SPXID`) that fits exactly one courier names it; a bare-number form (`00`, `57`) never does. Real labels are never affected, because they always have a header image; the test labels keep their couriers |
+| 2. Strict: no logo and no printed text clue, no name | The test labels need pictures added (`testdata/make_testdata.py`, `expected-labels.json`, the Python reference's test), then every page is named by two clues |
+
+**What the answer changes:** `deduce_courier_in` in `crates/engine/src/label.rs` and the test labels.

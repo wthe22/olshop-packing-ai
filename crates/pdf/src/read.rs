@@ -12,9 +12,18 @@ use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
 
 use pdfium_render::prelude::*;
 
-use packing_engine::text::{PageText, Run};
+use packing_engine::label::is_known_logo_hash;
+use packing_engine::text::{LogoImage, PageText, Run};
 
 use crate::PdfError;
+use crate::logo;
+
+/// How far down from the top of the page a logo may reach, in points (Q-LABEL-5 Default).
+pub const BAND_POINTS: f64 = 40.0;
+
+/// A rounding tolerance for the band test: coordinates that meet the band to under half a point
+/// still count as inside.
+const BAND_TOLERANCE: f64 = 0.5;
 
 /// An opened label PDF. The document borrows the `Pdfium` it was opened with; it never leaves
 /// the worker thread that owns that library.
@@ -32,7 +41,8 @@ impl<'a> OpenedFile<'a> {
         &self.doc
     }
 
-    /// The text (whole-page string and rebuilt runs) of one 0-based page.
+    /// The text (whole-page string and rebuilt runs) of one 0-based page, with the logos of the
+    /// page's header band.
     pub fn page_text(&self, index: usize) -> Result<PageText, PdfError> {
         let page = self
             .doc
@@ -45,12 +55,72 @@ impl<'a> OpenedFile<'a> {
         let text = page.text()?;
         let all = text.all();
         let runs = build_runs(&page, &text)?;
+        let logos = page_logos(&page, &self.doc, &|hash| is_known_logo_hash(hash))?;
         Ok(PageText {
             text: all,
             runs,
             width: page.width().value as f64,
+            logos,
         })
     }
+}
+
+/// The images whose **whole box** lies in the page's top band (Q-LABEL-5 Default: the top
+/// [`BAND_POINTS`] points, `y` counted from the page bottom) — on every sample style exactly the
+/// courier's logo and the buying channel's strip.
+///
+/// Each image is hashed by its **encoded bytes**. Its **appearance** is computed only where
+/// `known` does not already know that byte hash (the courier data's `logo` and `not_courier`
+/// lists), so a page whose logo the table knows pays no image decode (Q-LABEL-1 option 1).
+pub fn page_logos(
+    page: &PdfPage<'_>,
+    document: &PdfDocument<'_>,
+    known: &dyn Fn(&str) -> bool,
+) -> Result<Vec<LogoImage>, PdfError> {
+    let height = page.height().value as f64;
+    let band = height - BAND_POINTS;
+    let mut logos = Vec::new();
+    for object in page.objects().iter() {
+        let Some(image) = object.as_image_object() else {
+            continue;
+        };
+        let Ok(bounds) = object.bounds() else {
+            continue;
+        };
+        let bottom = bounds.bottom().value as f64;
+        let top = bounds.top().value as f64;
+        if bottom < band - BAND_TOLERANCE || top > height + BAND_TOLERANCE {
+            continue;
+        }
+        let bytes = image.get_raw_image_data()?;
+        if bytes.is_empty() {
+            continue;
+        }
+        let hash = logo::hash_bytes(&bytes);
+        let appearance = if known(&hash) {
+            None
+        } else {
+            appearance_of(image, document)
+        };
+        logos.push(LogoImage { hash, appearance });
+    }
+    Ok(logos)
+}
+
+/// The image's appearance hash, from PDFium's rendered bitmap (the `/SMask` is its alpha
+/// channel). `None` when the image cannot be rendered.
+fn appearance_of(image: &PdfPageImageObject<'_>, document: &PdfDocument<'_>) -> Option<String> {
+    let rendered = image.get_processed_image(document).ok()?;
+    let rgba = rendered.to_rgba8();
+    let (width, height) = rgba.dimensions();
+    if width == 0 || height == 0 {
+        return None;
+    }
+    Some(logo::appearance_hash(
+        rgba.as_raw(),
+        width as usize,
+        height as usize,
+    ))
 }
 
 fn file_name(path: &Path) -> String {

@@ -34,7 +34,7 @@ tracking = "00\\d{10}"
 [[courier]]
 name = "J&T Cargo"
 logo = []                        # its base image is one flat colour: no name in those bytes
-shape = ["2a36acec58f5…"]        # the masked wordmark, one value for both rasters (680x156, 683x157)
+shape = ["753ccbd14749befa"]     # the masked wordmark, one value for both rasters (680x156, 683x157)
 tracking = "57\\d{10}"
 text = ["FastTrack"]             # its header strip and its order-ID caption `TT Order ID`
 

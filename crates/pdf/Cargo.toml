@@ -8,6 +8,8 @@ publish.workspace = true
 [dependencies]
 packing-engine.workspace = true
 pdfium-render.workspace = true
+xxhash-rust.workspace = true
 
 [dev-dependencies]
+image.workspace = true
 serde_json.workspace = true

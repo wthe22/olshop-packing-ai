@@ -500,7 +500,7 @@ impl<'a> Measure<'a> {
             chars
                 .iter()
                 .map(|character| match character.origin() {
-                    Ok((x, _)) => x.value as f32 / PT_PER_MM,
+                    Ok((x, _)) => x.value / PT_PER_MM,
                     Err(_) => 0.0,
                 })
                 .collect(),

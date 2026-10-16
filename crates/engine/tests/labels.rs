@@ -62,34 +62,238 @@ fn tracking_id_of_a_spaced_page_uses_the_collapsed_text() {
     );
 }
 
-// --- deduce_courier ------------------------------------------------------------------------
+// --- deduce_courier: the two-clue rule (courier.md items 1, 2, 4, 5) -----------------------
+
+use packing_engine::label::{Courier, CourierTable, deduce_courier_in};
+use packing_engine::text::LogoImage;
+
+/// A table of four couriers and one image answered *Not a courier*: two of them share the
+/// `00` + 10-digit form, like SiCepat and J&T Cargo used to; Delta's form is a bare number too,
+/// but names only itself.
+fn table() -> CourierTable {
+    CourierTable {
+        couriers: vec![
+            Courier::new(
+                "Alpha",
+                &["aa11"],
+                &["shape-a"],
+                Some("JY\\d{10}"),
+                &["jet.co.id"],
+            ),
+            Courier::new("Beta", &["bb22"], &["shape-b"], Some("00\\d{10}"), &[]),
+            Courier::new("Gamma", &[], &[], Some("00\\d{10}"), &["fasttrack"]),
+            Courier::new(
+                "Delta",
+                &["dd77"],
+                &["shape-d"],
+                Some("57\\d{10}"),
+                &["deltatrack"],
+            ),
+        ],
+        not_courier: vec!["cc33".to_string()],
+    }
+}
+
+/// A band image whose encoded bytes were hashed.
+fn logo(hash: &str) -> LogoImage {
+    LogoImage {
+        hash: hash.to_string(),
+        appearance: None,
+    }
+}
+
+/// A band image whose appearance was hashed (a masked logo).
+fn masked(hash: &str, shape: &str) -> LogoImage {
+    LogoImage {
+        hash: hash.to_string(),
+        appearance: Some(shape.to_string()),
+    }
+}
 
 #[test]
-fn courier_from_the_label_text() {
+fn the_logo_and_the_tracking_form_together_name_the_courier() {
+    let table = table();
+    // The byte hash names Alpha, whose form is JY.
     assert_eq!(
-        deduce_courier("Shipped with www.jet.co.id today", "JY0000001234"),
+        deduce_courier_in(&table, "no clue", "JY0000001234", &[logo("aa11")]),
+        "Alpha"
+    );
+    // A masked logo is named by its appearance hash (courier.md item 3).
+    assert_eq!(
+        deduce_courier_in(
+            &table,
+            "no clue",
+            "000000000202",
+            &[masked("dd44", "shape-b")]
+        ),
+        "Beta"
+    );
+}
+
+#[test]
+fn a_logo_with_a_foreign_form_names_nothing() {
+    let table = table();
+    // Alpha's logo on a page whose tracking form is the shared 00 one.
+    assert_eq!(
+        deduce_courier_in(&table, "no clue", "000000000202", &[logo("aa11")]),
+        ""
+    );
+}
+
+#[test]
+fn a_logo_without_a_form_names_nothing() {
+    let table = table();
+    assert_eq!(
+        deduce_courier_in(&table, "no clue", "", &[logo("aa11")]),
+        ""
+    );
+    // No form and no logo at all, either.
+    assert_eq!(deduce_courier_in(&table, "no clue", "", &[]), "");
+}
+
+#[test]
+fn a_form_without_a_logo_names_the_courier_only_when_it_carries_a_marker() {
+    let table = table();
+    // Two couriers share the 00 form, so the form alone names neither.
+    assert_eq!(
+        deduce_courier_in(&table, "no clue", "000000000202", &[]),
+        ""
+    );
+    // Delta's 57 form names only Delta, but a bare number is no clue by itself: nothing.
+    assert_eq!(
+        deduce_courier_in(&table, "no clue", "570000000202", &[]),
+        ""
+    );
+    // The JY form carries the vendor's marker (a lettered prefix), so a page whose image is
+    // missing altogether still gets its courier.
+    assert_eq!(
+        deduce_courier_in(&table, "no clue", "JY0000001234", &[]),
+        "Alpha"
+    );
+}
+
+#[test]
+fn the_text_clue_stands_in_only_where_the_page_has_no_band_image() {
+    let table = table();
+    // No band image: the printed clue may name a candidate.
+    assert_eq!(
+        deduce_courier_in(&table, "FastTrack parcel", "000000000202", &[]),
+        "Gamma"
+    );
+    // A band image the table does not know means the logo was there but unreadable: the text
+    // clue does NOT stand in for it.
+    assert_eq!(
+        deduce_courier_in(&table, "FastTrack parcel", "000000000202", &[logo("dd44")]),
+        ""
+    );
+    // The text clue must be a candidate too.
+    assert_eq!(
+        deduce_courier_in(&table, "FastTrack parcel", "JY0000001234", &[]),
+        "Alpha"
+    );
+}
+
+#[test]
+fn a_not_courier_image_is_ignored() {
+    let table = table();
+    // cc33 was answered Not a courier (a channel strip): it names nothing...
+    assert_eq!(
+        deduce_courier_in(&table, "no clue", "JY0000001234", &[logo("cc33")]),
+        ""
+    );
+    // ...and it does not get in the way of the courier's own logo beside it.
+    assert_eq!(
+        deduce_courier_in(
+            &table,
+            "no clue",
+            "JY0000001234",
+            &[logo("cc33"), logo("aa11")]
+        ),
+        "Alpha"
+    );
+}
+
+#[test]
+fn two_band_images_naming_different_couriers_name_nothing() {
+    let table = table();
+    assert_eq!(
+        deduce_courier_in(
+            &table,
+            "no clue",
+            "JY0000001234",
+            &[logo("aa11"), masked("ee55", "shape-b")]
+        ),
+        ""
+    );
+}
+
+#[test]
+fn the_built_in_table_names_the_measured_logos() {
+    // The measured logo hashes of courier.md item 1, each with the form of its own courier.
+    assert_eq!(
+        deduce_courier("no clue", "JY0000001234", &[logo("39b9b7b9f61d0e7f")]),
+        "J&T Express"
+    );
+    assert_eq!(
+        deduce_courier("no clue", "000000000202", &[logo("cf33ed60daa291b1")]),
+        "SiCepat"
+    );
+    assert_eq!(
+        deduce_courier("no clue", "TKP0000000106", &[logo("9131c1f94ad363d4")]),
+        "IDX"
+    );
+    assert_eq!(
+        deduce_courier("no clue", "SPXID00000000002", &[logo("4583097ef370a670")]),
+        "SPX"
+    );
+    // A recognised logo with someone else's form names nothing.
+    assert_eq!(
+        deduce_courier("no clue", "JY0000001234", &[logo("cf33ed60daa291b1")]),
+        ""
+    );
+}
+
+#[test]
+fn an_unseen_logo_is_not_a_name() {
+    // An unseen logo on a page blocks the fallbacks: the table must be asked (D-LABEL-4).
+    assert_eq!(
+        deduce_courier(
+            "Shipping label",
+            "JY0000001234",
+            &[logo("0123456789abcdef")]
+        ),
+        ""
+    );
+    // J&T Cargo: its form is one candidate, so the text clue can name it where no logo is read;
+    // its masked logo needs the appearance table (empty until the measured value is written).
+    assert_eq!(
+        deduce_courier("FastTrack parcel", "570000000202", &[]),
+        "J&T Cargo"
+    );
+    assert_eq!(
+        deduce_courier("no clue", "570000000202", &[masked("331b", "unknown")]),
+        ""
+    );
+}
+
+#[test]
+fn the_built_in_text_clue_still_names_jt_where_no_logo_image_is_read() {
+    assert_eq!(
+        deduce_courier("Shipped with www.jet.co.id today", "JY0000001234", &[]),
         "J&T Express"
     );
 }
 
 #[test]
-fn courier_from_an_unambiguous_tracking_form() {
-    assert_eq!(
-        deduce_courier("no text clue", "JY0000001234"),
-        "J&T Express"
-    );
-    assert_eq!(deduce_courier("no text clue", "TKP0000000106"), "IDX");
-}
-
-#[test]
-fn ambiguous_tracking_form_alone_gives_an_empty_courier() {
-    // 12 digits starting 00 is shared by SiCepat and J&T Cargo.
-    assert_eq!(deduce_courier("no text clue", "000000000202"), "");
+fn the_shared_twelve_digit_form_alone_gives_an_empty_courier() {
+    // 12 digits starting 00 is SiCepat's own form now, but a bare number carries no vendor
+    // marker: without a logo (or a text clue) the order stays unknown.
+    assert_eq!(deduce_courier("no text clue", "000000000202", &[]), "");
 }
 
 #[test]
 fn courier_is_empty_when_nothing_matches() {
-    assert_eq!(deduce_courier("no text clue", ""), "");
+    assert_eq!(deduce_courier("no text clue", "", &[]), "");
 }
 
 // --- find_ship_by --------------------------------------------------------------------------

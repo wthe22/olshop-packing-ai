@@ -74,6 +74,7 @@ fn make_slip_with(
         text: String::new(),
         runs,
         width: WIDTH,
+        logos: Vec::new(),
     }
 }
 
@@ -87,6 +88,7 @@ fn page_without_a_slip_header_returns_none() {
         text: String::new(),
         runs: vec![run(5.8, 40.0, "JY0000001234"), run(5.8, 60.0, ORDER_ID)],
         width: WIDTH,
+        logos: Vec::new(),
     };
     assert_eq!(read_slip(&page), None);
 }

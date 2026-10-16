@@ -1,8 +1,8 @@
 //! orders.rs: the pages → orders step, display names and the warnings / no-slip stop
 //! (03, 07). Hand-built pages only.
 
-use packing_engine::orders::{PageRef, ReadError, Warning, display_name, read_batch};
-use packing_engine::text::{PageText, Run};
+use packing_engine::orders::{LogoAnswer, PageRef, ReadError, Warning, display_name, read_batch};
+use packing_engine::text::{LogoImage, PageText, Run};
 
 const WIDTH: f64 = 298.0;
 
@@ -20,6 +20,17 @@ type Row<'a> = (&'a str, &'a str, &'a str, i64);
 /// A page carrying a slip header and the given rows, plus an optional `Qty Total` and
 /// `Customer Message`.
 fn slip_page(text: &str, rows: &[Row], qty_total: Option<i64>, message: Option<&str>) -> PageText {
+    page_with(text, rows, qty_total, message, Vec::new())
+}
+
+/// `slip_page` with header-band images on the page (the courier's logo clue).
+fn page_with(
+    text: &str,
+    rows: &[Row],
+    qty_total: Option<i64>,
+    message: Option<&str>,
+    logos: Vec<LogoImage>,
+) -> PageText {
     let mut runs = vec![
         run(5.8, 300.0, "Product Name"),
         run(129.6, 300.0, "SKU"),
@@ -52,6 +63,7 @@ fn slip_page(text: &str, rows: &[Row], qty_total: Option<i64>, message: Option<&
         text: text.to_string(),
         runs,
         width: WIDTH,
+        logos,
     }
 }
 
@@ -61,6 +73,15 @@ fn plain_page(text: &str) -> PageText {
         text: text.to_string(),
         runs: Vec::new(),
         width: WIDTH,
+        logos: Vec::new(),
+    }
+}
+
+/// One band image: its byte hash and, when `packing-pdf` computed it, its appearance hash.
+fn logo(hash: &str) -> LogoImage {
+    LogoImage {
+        hash: hash.to_string(),
+        appearance: None,
     }
 }
 
@@ -304,4 +325,135 @@ fn a_missing_tracking_id_is_warned() {
             .iter()
             .any(|w| matches!(w, Warning::TrackingIdMissing { order_ids } if order_ids == &vec!["580000000000000004".to_string()]))
     );
+}
+
+// --- unseen logos and the owner's answer (Q-LABEL-1, D-LABEL-4) ----------------------------
+
+#[test]
+fn a_known_logo_names_the_order_and_reports_no_unseen_logo() {
+    // The measured J&T Express logo hash (courier.md item 1) with its own JY form.
+    let p0 = page_with(
+        "JY0000001234\n580000000000000001",
+        &one_row(),
+        Some(1),
+        None,
+        vec![logo("39b9b7b9f61d0e7f")],
+    );
+    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"]).unwrap();
+    assert_eq!(reading.orders[0].order.courier, "J&T Express");
+    assert!(reading.unseen_logos.is_empty());
+}
+
+#[test]
+fn an_unseen_logo_is_reported_with_its_pages_and_orders() {
+    // Two orders carry the same unknown strip.
+    let p0 = page_with(
+        "JY0000001234\n580000000000000001",
+        &one_row(),
+        Some(1),
+        None,
+        vec![logo("ffff")],
+    );
+    let p1 = plain_page("Jumlah : 1pcs");
+    let p2 = page_with(
+        "JY0000001235\n580000000000000002",
+        &one_row(),
+        Some(1),
+        None,
+        vec![logo("ffff")],
+    );
+    let reading = read_batch(
+        vec![(0usize, 0usize, p0), (0, 1, p1), (0, 2, p2)],
+        &["a.pdf"],
+    )
+    .unwrap();
+
+    assert_eq!(reading.unseen_logos.len(), 1);
+    let entry = &reading.unseen_logos[0];
+    assert_eq!(entry.hash, "ffff");
+    assert_eq!(entry.appearance, None);
+    assert_eq!(entry.pages, 2);
+    assert_eq!(entry.orders(), 2);
+    assert_eq!(
+        entry.order_ids,
+        vec![
+            "580000000000000001".to_string(),
+            "580000000000000002".to_string()
+        ]
+    );
+    // The unknown logo names neither order: the table has to be asked.
+    assert_eq!(reading.orders[0].order.courier, "");
+    assert_eq!(reading.orders[1].order.courier, "");
+}
+
+#[test]
+fn an_appearance_hash_is_carried_on_the_unseen_logo() {
+    let p0 = page_with(
+        "570000000202\n580000000000000001",
+        &one_row(),
+        Some(1),
+        None,
+        vec![LogoImage {
+            hash: "ffff".to_string(),
+            appearance: Some("2a36acec58f5ab12".to_string()),
+        }],
+    );
+    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"]).unwrap();
+    assert_eq!(
+        reading.unseen_logos[0].appearance.as_deref(),
+        Some("2a36acec58f5ab12")
+    );
+    assert_eq!(reading.orders[0].order.courier, "");
+}
+
+#[test]
+fn an_answered_logo_names_the_orders_only_where_the_form_agrees() {
+    // One order with the JY form, one with the shared 00 form; both carry the unknown strip.
+    let p0 = page_with(
+        "JY0000001234\n580000000000000001",
+        &one_row(),
+        Some(1),
+        None,
+        vec![logo("ffff")],
+    );
+    let p1 = page_with(
+        "000000000205\n580000000000000002",
+        &one_row(),
+        Some(1),
+        None,
+        vec![logo("ffff")],
+    );
+    let mut reading = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"]).unwrap();
+    assert_eq!(reading.orders[0].order.courier, "");
+    assert_eq!(reading.orders[1].order.courier, "");
+
+    let named = reading.apply_logo_answer("ffff", &LogoAnswer::Courier("J&T Express".to_string()));
+    assert_eq!(named, 1);
+    assert_eq!(reading.orders[0].order.courier, "J&T Express");
+    assert_eq!(reading.orders[1].order.courier, "");
+    assert!(reading.unseen_logos.is_empty());
+    // The answer is spent: a second one changes nothing.
+    assert_eq!(
+        reading.apply_logo_answer("ffff", &LogoAnswer::Courier("SiCepat".to_string())),
+        0
+    );
+}
+
+#[test]
+fn a_not_courier_answer_names_nothing() {
+    let p0 = page_with(
+        "JY0000001234\n580000000000000001",
+        &one_row(),
+        Some(1),
+        None,
+        vec![logo("ffff")],
+    );
+    let mut reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"]).unwrap();
+    assert_eq!(
+        reading.apply_logo_answer("ffff", &LogoAnswer::NotCourier),
+        0
+    );
+    assert_eq!(reading.apply_logo_answer("ffff", &LogoAnswer::Skip), 0);
+    assert_eq!(reading.orders[0].order.courier, "");
+    assert!(reading.unseen_logos.is_empty());
 }

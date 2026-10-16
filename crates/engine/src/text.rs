@@ -9,6 +9,20 @@ pub struct Run {
     pub text: String,
 }
 
+/// One candidate courier logo of a page: an image whose whole box lies in the page's top band
+/// (Q-LABEL-5). `packing-pdf` builds these; the courier rule looks the hashes up in
+/// `couriers.toml` (courier.md items 1 and 3).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LogoImage {
+    /// XXH3-64 (16 lowercase hex) of the image's **encoded bytes**
+    /// (`FPDFImageObj_GetImageDataRaw`).
+    pub hash: String,
+    /// XXH3-64 (16 lowercase hex) of the image's **appearance**, computed by `packing-pdf` only
+    /// when `hash` is not yet known to `couriers.toml` (`logo`/`not_courier`). `None` means the
+    /// table already knew the bytes, so nothing had to be decoded (Q-LABEL-1 option 1).
+    pub appearance: Option<String>,
+}
+
 /// What `packing-pdf` reads from one page; the engine's only input from a PDF.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct PageText {
@@ -19,4 +33,6 @@ pub struct PageText {
     pub runs: Vec<Run>,
     /// Page width in points.
     pub width: f64,
+    /// The images whose whole box lies in the page's top band (Q-LABEL-5), in page order.
+    pub logos: Vec<LogoImage>,
 }

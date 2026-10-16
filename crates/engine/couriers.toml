@@ -1,29 +1,57 @@
-# Courier deduction data, loaded by packing::label with toml.
+# Courier deduction data, loaded by packing::label with toml (07 › *Inputs*).
+#
+# A hash is XXH3-64 (seed 0) of an image, as 16 lowercase hex characters.
+#
+# not_courier   hashes of images answered **Not a courier** in the logo prompt - a buying
+#               channel's strip (Q-LABEL-5). Such an image names nothing and is never asked
+#               about again. Written back by the prompt (D-LABEL-4, task 2.19).
 #
 # Each [[courier]] entry has:
-#   name             the courier name deduce_courier() returns
-#   text             case-insensitive substrings searched in the page text and in the
-#                    whitespace-collapsed text; a courier name or web address printed on
-#                    the label (in the sample only J&T prints one)
-#   tracking         optional regex for the tracking-ID form; a token (or a match in the
-#                    collapsed text) must match it fully
-#   tracking_unique  true  = the tracking form alone identifies this courier
-#                    false = another courier shares the form, so it needs a text clue too
+#   name       the courier name the rule names an order with
+#   logo       the courier's logo images, each as XXH3-64 of the image's *encoded bytes*
+#              (1.5-15 KB; one stable value per courier across every sample). A list, because
+#              one courier can have more than one asset
+#   shape      the courier's logos by *appearance*, each as XXH3-64 of a 64 x 64 1-bit canvas
+#              (the image composited onto white with its /SMask, fitted to the canvas and
+#              thresholded at 200/255). The clue for a *masked* logo, whose encoded bytes name
+#              nothing and which the platform re-rastered between exports (J&T Cargo). Tried
+#              only where no `logo` entry matched. A list like `logo`
+#   tracking   the tracking-ID form: a token (or a match in the whitespace-collapsed text) must
+#              match it fully, and it need not be repeated. The form gives the *candidate*
+#              couriers; the courier is named when the logo names one of them
+#   text       a brand line or web address printed on the label, used only where the page has
+#              no image in the header band at all (the logo's stand-in)
+
+not_courier = []
 
 [[courier]]
 name = "J&T Express"
-text = ["jet.co.id"]
+logo = ["39b9b7b9f61d0e7f"]   # 975x377 px, 14,351 bytes, the same asset in every sample file
+shape = []
 tracking = "JY\\d{10}"
-tracking_unique = true
-
-[[courier]]
-name = "IDX"
-text = []
-tracking = "TKP\\d{10}"
-tracking_unique = true
+text = ["jet.co.id"]
 
 [[courier]]
 name = "SiCepat"
-text = ["sicepat"]
+logo = ["cf33ed60daa291b1"]   # 184x60 px, 10,636 bytes
+shape = []
 tracking = "00\\d{10}"
-tracking_unique = false
+
+[[courier]]
+name = "J&T Cargo"
+logo = []                     # its base image is one flat colour: no name in those bytes
+shape = ["753ccbd14749befa"]  # the masked wordmark: one value for both rasters (680x156, 683x157)
+tracking = "57\\d{10}"
+text = ["FastTrack"]          # its header strip; its order-ID caption is `TT Order ID`
+
+[[courier]]
+name = "IDX"
+logo = ["9131c1f94ad363d4"]   # 1200x859 px, 9,810 bytes
+shape = []
+tracking = "TKP\\d{10}"
+
+[[courier]]
+name = "SPX"
+logo = ["4583097ef370a670"]   # 68x27 px, 1,495 bytes, masked: the small red SPX wordmark
+shape = []
+tracking = "SPXID\\d{11}"     # the ID carries a check letter around it on the page

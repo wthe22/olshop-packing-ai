@@ -40,15 +40,21 @@ the same way.
    (680×156, 683×157), so the encoded bytes differ between exports. For an image with no hash in
    the table, the app hashes its **appearance** instead: composite the image with its `/SMask` (if
    any), fit it into a fixed **64 × 64** canvas on white, threshold at **200/255**, and hash that
-   1-bit canvas with XXH3-64. Measured over the samples: one value per courier asset, and J&T
-   Cargo's two rasters both give `2a36acec58f5…` — so the appearance table needs one entry per
-   courier, and a re-raster does not need the owner asked again. The appearance of the three
-   plain-image logos is stable too (`31643d0eb0f1…` J&T Express, `3cf94ea34e54…` SiCepat,
-   `dc99f0056376…` iD Express), but the encoded bytes are cheaper and are tried first.
+   1-bit canvas with XXH3-64. The pipeline is fixed so the value is reproducible: the image as
+   PDFium renders it (straight RGBA, the `/SMask` being the alpha) is composited onto white;
+   scaled to fit 64 × 64 with a Lanczos (a = 3) filter in `f64` and pasted centred on a white
+   canvas; a pixel is ink when its luma (`(r·19595 + g·38470 + b·7471 + 32768) >> 16`) is below
+   200; the 64 × 64 bits are packed 8 to a byte, most significant first (512 bytes), and
+   hashed. Measured over the samples with the program's own reader: J&T Cargo's two rasters
+   both give `753ccbd14749befa`, so the appearance table needs one entry per courier and a
+   re-raster is not asked about again. The appearance is computed only for a header-band image
+   whose encoded bytes the table does not know; the encoded bytes are cheaper and tried first.
 4. **Named only when the two clues agree**: the tracking form gives the *candidate* couriers, and
    the courier is named when the logo's courier (by its bytes, else by its appearance) is among
    them. A logo whose courier and form disagree, a logo with no form, a form with no logo, or
-   neither → no name. Unknown → `courier` empty, and a warning lists those orders.
+   neither → no name. Unknown → `courier` empty, and a warning lists those orders. The one
+   exception is a page with **no header image at all** (only the made-up test labels): there a
+   lettered form (`JY`, `TKP`, `SPXID`) that fits one courier names it ([Q-LABEL-8](../questions/label.md)).
 5. **A printed text clue** (`www.jet.co.id`, `FastTrack`) stands in for the logo only where the
    logo cannot be read at all. J&T Cargo's label prints `FastTrack` in its header strip and
    `TT Order ID` as the caption of its order ID, and SiCepat and iD Express print no courier name.

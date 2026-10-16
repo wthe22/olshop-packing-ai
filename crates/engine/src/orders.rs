@@ -7,7 +7,7 @@ use jiff::civil::DateTime;
 
 use crate::label;
 use crate::slip::{self, SlipLine};
-use crate::text::PageText;
+use crate::text::{LogoImage, PageText};
 
 /// The slip's placeholder for a product without variants (Python `DEFAULT_VARIATION`).
 pub const DEFAULT_VARIATION: &str = "Default";
@@ -101,7 +101,75 @@ pub struct Reading {
     pub orders: Vec<ReadOrder>,
     /// Pages without an Order ID that continue the previous page's order.
     pub continuation_pages: Vec<PageRef>,
+    /// The header-band images the courier data does not know, in first-seen order (D-LABEL-4).
+    pub unseen_logos: Vec<UnseenLogo>,
     pub warnings: Vec<Warning>,
+}
+
+/// A header-band image the courier data does not know (Q-LABEL-1, D-LABEL-4). The logo prompt
+/// asks the owner about each one once; the answer is remembered in `couriers.toml` (task 2.19).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct UnseenLogo {
+    /// XXH3-64 (16 hex) of the image's encoded bytes.
+    pub hash: String,
+    /// XXH3-64 (16 hex) of the image's appearance, when `packing-pdf` computed it.
+    pub appearance: Option<String>,
+    /// The pages carrying the image.
+    pub pages: usize,
+    /// The orders carrying it, in download order.
+    pub order_ids: Vec<String>,
+}
+
+impl UnseenLogo {
+    /// The orders carrying the image.
+    pub fn orders(&self) -> usize {
+        self.order_ids.len()
+    }
+}
+
+/// The owner's answer about one unseen logo (the logo prompt, D-LABEL-4).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LogoAnswer {
+    /// The logo is this courier's.
+    Courier(String),
+    /// The image is no courier's logo (a buying channel's strip).
+    NotCourier,
+    /// Say nothing about it; the orders stay unknown.
+    Skip,
+}
+
+impl Reading {
+    /// Apply one answer to the unseen logo `hash` (the logo prompt, D-LABEL-4). A courier name
+    /// fills the `courier` of the orders carrying the logo **only when the two clues agree**: the
+    /// order's tracking-ID form must have that courier among its candidates (D-LABEL-2), else the
+    /// order stays unknown. *Not a courier* and *Skip* name nothing. The answered logo leaves
+    /// `unseen_logos`. Returns how many orders the answer named.
+    pub fn apply_logo_answer(&mut self, hash: &str, answer: &LogoAnswer) -> usize {
+        let Some(index) = self
+            .unseen_logos
+            .iter()
+            .position(|entry| entry.hash == hash)
+        else {
+            return 0;
+        };
+        let entry = self.unseen_logos.remove(index);
+        let LogoAnswer::Courier(name) = answer else {
+            return 0;
+        };
+        let mut named = 0;
+        for order in &mut self.orders {
+            if !entry.order_ids.iter().any(|id| id == &order.order.order_id) {
+                continue;
+            }
+            if order.order.courier.is_empty()
+                && label::form_names_courier(&order.order.tracking_id, name)
+            {
+                order.order.courier = name.clone();
+                named += 1;
+            }
+        }
+        named
+    }
 }
 
 /// A non-fatal problem found while reading; the texts are 08 › *4. Messages*.
@@ -246,13 +314,34 @@ struct Group {
     customer_message: String,
     ship_by: Option<DateTime>,
     tracking_id: String,
-    courier: String,
+    /// The first page's whole text, for the label's courier clues.
+    text: String,
+    /// The header-band images of the order's pages, deduplicated by byte hash (Q-LABEL-5).
+    logos: Vec<LogoImage>,
 }
 
 fn file_name(file_names: &[&str], file: usize) -> String {
     match file_names.get(file) {
         Some(name) => (*name).to_string(),
         None => format!("file {file}"),
+    }
+}
+
+/// Count one page of an unseen logo and the order it belongs to (first-seen order kept).
+fn record_unseen(unseen: &mut Vec<UnseenLogo>, image: &LogoImage, order_id: &str) {
+    match unseen.iter_mut().find(|entry| entry.hash == image.hash) {
+        Some(entry) => {
+            entry.pages += 1;
+            if !entry.order_ids.iter().any(|id| id == order_id) {
+                entry.order_ids.push(order_id.to_string());
+            }
+        }
+        None => unseen.push(UnseenLogo {
+            hash: image.hash.clone(),
+            appearance: image.appearance.clone(),
+            pages: 1,
+            order_ids: vec![order_id.to_string()],
+        }),
     }
 }
 
@@ -286,6 +375,7 @@ where
     let mut groups: Vec<Group> = Vec::new();
     let mut continuation_pages: Vec<PageRef> = Vec::new();
     let mut no_slip: Vec<(usize, usize)> = Vec::new();
+    let mut unseen: Vec<UnseenLogo> = Vec::new();
     let mut total_pages = 0usize;
     let mut current_file: Option<usize> = None;
     let mut previous: Option<String> = None;
@@ -328,7 +418,6 @@ where
             Some(index) => index,
             None => {
                 let tracking_id = label::find_tracking_id(&page_text.text, &order_id);
-                let courier = label::deduce_courier(&page_text.text, &tracking_id);
                 groups.push(Group {
                     order_id: order_id.clone(),
                     pages: Vec::new(),
@@ -338,11 +427,33 @@ where
                     customer_message: String::new(),
                     ship_by: None,
                     tracking_id,
-                    courier,
+                    text: page_text.text.clone(),
+                    logos: Vec::new(),
                 });
                 groups.len() - 1
             }
         };
+
+        // The page's header-band images (Q-LABEL-5): the order's logo clue, and the logos the
+        // prompt must ask the owner about (D-LABEL-4).
+        let data = label::courier_data();
+        let mut seen_on_page: Vec<&str> = Vec::new();
+        for image in &page_text.logos {
+            if !groups[index]
+                .logos
+                .iter()
+                .any(|seen| seen.hash == image.hash)
+            {
+                groups[index].logos.push(image.clone());
+            }
+            if seen_on_page.contains(&image.hash.as_str()) {
+                continue;
+            }
+            seen_on_page.push(&image.hash);
+            if label::is_unseen_logo(data, image) {
+                record_unseen(&mut unseen, image, &order_id);
+            }
+        }
 
         let group = &mut groups[index];
         group.pages.push(PageRef { file, page });
@@ -394,10 +505,11 @@ where
                 sum,
             });
         }
+        let courier = label::deduce_courier(&group.text, &group.tracking_id, &group.logos);
         let order = Order {
             order_id: group.order_id,
             tracking_id: group.tracking_id,
-            courier: group.courier,
+            courier,
             ship_by: group.ship_by,
             lines,
             customer_message: group.customer_message,
@@ -444,6 +556,7 @@ where
     Ok(Reading {
         orders,
         continuation_pages,
+        unseen_logos: unseen,
         warnings,
     })
 }
