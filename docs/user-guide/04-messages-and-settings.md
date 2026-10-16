@@ -38,7 +38,7 @@ after **Save anyway**.
 
 Open **Settings** in the top bar.
 
-- **Data folder** — where `categories.toml`, `couriers.toml` and the `labels` folder live. **Change…** switches to
+- **Data folder** — where `couriers.toml`, your picks (`categories.toml`, once you have saved some) and the `labels` folder live. **Change…** switches to
   another folder until the app closes ("Use `<folder>` until the app closes? Existing days stay in
   `<old>`."); **Open** opens it. It does not move existing files.
 - **Packing list default** — the scope and layouts the Plan screen starts with (default: one for

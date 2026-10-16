@@ -1,6 +1,6 @@
 # Open questions: screens
 
-Questions: Q-UI-1, Q-UI-2, Q-UI-3.
+Questions: Q-UI-1, Q-UI-2, Q-UI-3, Q-UI-4.
 
 ## Q-UI-1 — Unticking the rest row
 
@@ -52,3 +52,21 @@ JSON files; the IDs of an older order are still found.
 
 **What the answer changes:** the scope control and the *items not stored* row of the Search panel,
 and whether search reads `download/` at all.
+
+## Q-UI-4 — Saying that the picks are unconfigured
+
+**Words.** With no `categories.toml`, the picks are one catch-all entry that takes every order, so a
+batch saves every order in one PDF set ([inputs](../app/inputs.md)); the owner adds picks in
+[Categories](../ui/categories.md) when wanted. A line on screen can read the plain words
+**No picks yet: all orders go into one PDF set**.
+
+**Example.** The owner's first start writes no `categories.toml` ([Start](../ui/start.md)). One batch
+is read: the plan has one row and every order goes into one PDF set.
+
+| Option | What the owner sees |
+|---|---|
+| **1. The Categories screen and the Plan screen show the line; the Day screen does not** (**Default**) | Opening Categories before a pick is added, or preparing a batch, shows **No picks yet: all orders go into one PDF set** — where the picks are set and where the batch is saved. The Day screen stays as it is |
+| 2. Every screen shows the line | The Day screen shows it too, until a pick is added; the owner sees it without opening Categories or a batch |
+| 3. No line | Nothing extra; the Plan screen's one row (the catch-all entry, holding all the batch's orders) is read as everything in one PDF set |
+
+**What the answer changes:** one line on the Categories screen, the Plan screen and the Day screen.

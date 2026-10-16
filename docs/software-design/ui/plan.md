@@ -6,7 +6,7 @@ the owner checks the counts and presses **Save batch**.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Batch 3 · 2 files · 257 pages · 256 orders · 0 already saved          [Cancel]        │
+│  Batch 3 · 2 files · 257 pages · 256 orders · 0 already saved          [Back]          │
 │  Warnings: 2 ▸                                                                         │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  Use  #  Pick                         Orders  Runs   File name                         │
@@ -52,9 +52,20 @@ the owner checks the counts and presses **Save batch**.
 - Every change (tick, move, add, edit categories) recounts all rows immediately.
 - **Save batch** writes the batch ([one batch](../app/batch.md)) and returns to the Day screen;
   the write and the check before saving run on their own thread
-  ([saved-pdf-check.md](../app/saved-pdf-check.md)) — see *Saving*. **Cancel** asks "Discard
-  batch 3? Nothing has been saved."
-- Amend uses the same screen, titled "Redo batch 2", with the button **Save batch 2 again**.
+  ([saved-pdf-check.md](../app/saved-pdf-check.md)) — see *Saving*. A new batch's bottom row
+  holds **Save batch** only; there is no discard button there.
+- **Back** (top right) returns to the PDF selection page ([New batch](new-batch.md)) with the
+  files still listed, without asking, and writes nothing. The per-batch changes (ticked, moved
+  or added picks, file names) are lost when **Read labels** is pressed again: reading starts
+  again from the files ([New batch › Reading](new-batch.md#reading)). Only **Cancel** on the
+  selection page discards the draft.
+- Amend uses the same screen, titled "Redo batch 2", with **Save batch 2 again** and a bottom
+  **Cancel amend**. **Cancel amend** leaves the batch as it was and returns to the Day screen;
+  it never asks, because it writes nothing. **Back** on an amend returns to the page where the
+  amend's files are chosen ([R-APP-1](../../reviews/app.md)); the batch is untouched until
+  **Save batch 2 again**.
+- When the plan is the one catch-all entry (no picks configured), a line above the rows reads
+  **No picks yet: all orders go into one PDF set** ([Q-UI-4](../questions/ui.md)).
 
 ## Saving
 

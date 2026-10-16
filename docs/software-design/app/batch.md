@@ -51,9 +51,10 @@ nothing.
    in `state.json`: the same pages in the same order as the first time.
 2. The Plan screen opens with these orders and the current `categories.toml`; the duplicate
    guard ignores the batch's own orders.
-3. **Save** writes a new `batch <b>.partial/` with the same first number and the same
-   `download/` copy, takes the place of the old folder, and writes the batch into `state.json`.
-   **Cancel** leaves the old batch untouched.
+3. **Save batch `<b>` again** writes a new `batch <b>.partial/` with the same first number, the
+   same `download/` copy and the same packing-list choice, takes the place of the old folder, and
+   writes the batch into `state.json`. **Cancel amend** (bottom, beside the save button) leaves
+   the old batch untouched and returns to the Day screen; it never asks.
 
 Amend after printing: the printed labels may not match the new files. The confirmation says so
 ("Batch 2 was saved at 09:12. If you already printed it, print it again after amending.").

@@ -13,8 +13,8 @@ Only the newest batch can be changed — later batches depend on it.
 - **Amend** — "I fixed a category, do the last batch again". It asks:
   "Redo batch 2 with the current categories? Batch 2 was saved at 09:12. If you already printed
   it, print it again after saving." [Cancel] [Redo batch 2]. The Plan screen opens again (titled
-  *Redo batch 2*, button *Save batch 2 again*); **Save** writes the batch again over the old one,
-  **Cancel** leaves it unchanged.
+  *Redo batch 2*, button *Save batch 2 again*); **Save batch 2 again** writes it again over the old
+  one, **Cancel amend** (at the bottom) leaves it unchanged and never asks.
 
 ## Editing your categories
 

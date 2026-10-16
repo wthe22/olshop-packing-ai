@@ -90,8 +90,9 @@ categories applied in order.
   ([Editing your categories](03-changes.md#editing-your-categories)).
 - **Packing list**: choose *one per PDF*, *one for the batch* (default) or *none*, and the layouts
   *full*, *summary*, *pick* (default *pick*).
-- **Save batch** writes everything and returns to the Day screen. **Cancel** asks
-  "Discard batch 3? Nothing has been saved."
+- **Save batch** writes everything and returns to the Day screen. **Back** (top right) goes back to the
+  file list with the files still there; reading again loses the pick changes. Only **Cancel** there
+  throws the batch away.
 
 ### The check before saving
 

@@ -55,10 +55,10 @@ Packing\
 
 - Copying the folder to another PC moves the program and all its data along.
 - **New version**: replace `Packing.exe` and `pdfium.dll`; the data files stay.
-- **Finding the data folder at start**: the app looks for `categories.toml` in its own folder.
+- **Finding the data folder at start**: the app looks for `couriers.toml` in its own folder.
   Found → that folder is the data folder. Not found → the app asks, at every start until it is
-  found: **Use this folder** (writes the bundled `categories.toml` and `couriers.toml` next to
-  the program) or
+  found: **Use this folder** (writes the bundled `couriers.toml` next to the program; no
+  `categories.toml` is written, so the picks start as one catch-all entry) or
   **Choose a folder…** (used until the app closes; the next start asks again). See
   [Start](../ui/start.md).
 - Settings › Data folder › **Change…** switches to another folder until the app closes.

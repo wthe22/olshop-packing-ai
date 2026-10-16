@@ -8,5 +8,5 @@
 
 **Change…** switches the data folder until the app closes; it does not move existing files.
 The app asks "Use `<folder>` until the app closes? Existing days stay in `<old folder>`." The
-categories and couriers files of the new folder are used (the bundled file is put
-there if it has none). The next start looks in the program folder again.
+new folder's `categories.toml` (if any) and `couriers.toml` are used; a `couriers.toml` it does
+not have is written from the bundled file. The next start looks in the program folder again.

@@ -26,6 +26,10 @@ Choose the label files of this batch, then read them.
   is listed once.
 - Files are read in the order of the list, sorted by file name (= download time and part
   number). **Read labels** needs at least one file.
+- **Read labels** opens the Plan screen ([Plan](plan.md)). The top **Cancel** leaves the batch
+  and returns to the Day screen, discarding the draft; **Back** on the Plan screen returns here
+  with these files still listed, and **Read labels** then reads them again from the start (the
+  Plan changes are lost).
 
 ## Reading
 

@@ -13,8 +13,8 @@ fixed by amend.
 **Wanted.** Amend first opens a page where the owner selects the label PDFs for the batch. The page
 lists the batch's current PDFs, already selected. The owner can add PDFs (to the batch) and remove PDFs
 (from the batch). Only then does the Plan screen open, with the orders of the selected PDFs, the current
-`categories.toml`, and the duplicate guard as today. Save behaves as today. Cancel on the Plan screen returns to this page, not
-discard ([R-UI-2](ui.md)).
+`categories.toml`, and the duplicate guard as today. Save behaves as today. **Back** on the Plan screen returns to this page, not
+discard ([Plan](../software-design/ui/plan.md)).
 
 **Reading to check against the design.** This changes the design of [batch.md](../software-design/app/batch.md)
 (*Amend last batch*, step 1: the files are no longer only the batch's own) and of

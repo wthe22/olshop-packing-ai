@@ -75,6 +75,10 @@ One category switched to **Text view**, with an error:
   category not changed keeps its text exactly as in the file, line breaks included.
 - **In batch 3**: when a draft is open, the count each category takes there (in order, from
   what is left), so a change can be judged before saving. No draft → the counts are hidden.
+- **No picks yet**: a folder without `categories.toml` shows one catch-all category, no
+  condition, that takes every order, and the line **No picks yet: all orders go into one PDF
+  set** ([Q-UI-4](../questions/ui.md)). Adding a category above it and pressing **Save** writes
+  the file.
 - **Edit file as text** shows the whole file as text (comments included) for larger edits; the
   same checks apply.
 - **Save** is possible only when every category is valid. It writes `categories.toml` in the

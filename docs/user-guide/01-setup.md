@@ -29,9 +29,10 @@ whole folder to another PC moves the program and all its data along.
 When the program starts and finds no data next to it, it says
 **"No packing data next to the program (`D:\Packing\`)."** and offers two buttons:
 
-- **Use this folder** — the app writes its `categories.toml` (your list of picks) and
-  `couriers.toml` (the courier data) next to the program and keeps using this folder for every
-  later start. Choose this for a normal setup.
+- **Use this folder** — the app writes `couriers.toml` (the courier data) next to the program and
+  keeps using this folder for every later start. It does not create a picks list: until you add
+  picks, every order goes into one PDF set (see
+  [Editing your categories](03-changes.md#editing-your-categories)). Choose this for a normal setup.
 - **Choose a folder…** — pick another folder for the data. It is used only until you close the
   app; the next start asks again. Use this when the program folder cannot be written.
 
