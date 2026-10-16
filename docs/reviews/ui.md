@@ -65,8 +65,9 @@ Nothing sits next to the save button for amend.
 bottom row, and the amend title and buttons) and [new-batch.md](../software-design/ui/new-batch.md)
 (the top button of the new-batch Plan screen).
 
-**Open detail for the owner.**
-- Whether **Cancel amend** asks first, as "Discard the redo of batch 2? Batch 2 stays as it was." Default:
-  no, because nothing is written until **Save**.
-- Whether a new batch's Plan screen also needs a bottom discard button, beside **Save batch**. Default: no;
-  the top **Back** goes to the PDF selection page, whose **Cancel** discards the batch.
+**Answers from the owner.**
+- **Cancel amend never asks.** An action that writes nothing never asks for confirmation (a no-op).
+- **No bottom discard button on a new batch's Plan screen.** The top **Back** goes to the PDF selection
+  page, whose **Cancel** discards the batch.
+
+The next session writes these into the design files above and deletes this item.
