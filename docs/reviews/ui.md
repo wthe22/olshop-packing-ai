@@ -44,7 +44,6 @@ section, which today says Cancel returns to the file list), [plan.md](../softwar
 Cancel line and its "Discard batch 3?" text), and [batch.md](../software-design/app/batch.md) (amend, step 3).
 The draft lives only in memory until **Save**, so going back writes nothing.
 
-**Open detail for the owner.**
-- Whether the Plan edits (ticked or moved picks, added picks, file names) survive going back and pressing
-  **Read labels** again. (a) Lost: reading starts again from the files, as a first read does. (b) Kept while
-  the file list is unchanged. Default: (a).
+**Answer from the owner.** The Plan edits (ticked or moved picks, added picks, file names) are lost when the
+owner goes back and presses **Read labels** again: reading starts again from the files, as a first read does.
+The next session writes this into the design files above and deletes this item.
