@@ -26,3 +26,25 @@ folder writes `couriers.toml` only; the Start screen's first-use wording), and t
 **Open detail for the owner.**
 - Whether the Day screen or Categories should say that the list is unconfigured and everything is one
   pick (for example, a line "No picks yet: all orders go into one PDF set").
+
+## R-UI-2 Cancel on the Plan screen goes back to the PDF selection page
+
+**Now.** After **Read labels**, the Plan screen's **Cancel** asks "Discard batch 3? Nothing has been saved."
+and, on yes, throws the whole draft away: to change which PDFs the batch uses, the owner starts again from
+*Add files…*. Amend opens the same Plan screen, so its **Cancel** also discards the redo.
+
+**Wanted.** **Cancel** on the Plan screen does not discard. It goes back to the PDF selection page with the
+files still listed, without a confirmation. The owner can then remove or add files, press **Read labels**
+again, or leave with the selection page's **Cancel**. Only **Cancel** on the PDF selection page discards the
+draft, as today. Amend follows the same rule: its Plan screen's **Cancel** returns to the amend selection
+page ([R-APP-1](app.md)); the batch is untouched until **Save**.
+
+**Reading to check against the design.** [new-batch.md](../software-design/ui/new-batch.md) (the Reading
+section, which today says Cancel returns to the file list), [plan.md](../software-design/ui/plan.md) (the
+Cancel line and its "Discard batch 3?" text), and [batch.md](../software-design/app/batch.md) (amend, step 3).
+The draft lives only in memory until **Save**, so going back writes nothing.
+
+**Open detail for the owner.**
+- Whether the Plan edits (ticked or moved picks, added picks, file names) survive going back and pressing
+  **Read labels** again. (a) Lost: reading starts again from the files, as a first read does. (b) Kept while
+  the file list is unchanged. Default: (a).
