@@ -3,6 +3,7 @@
   // (`or`) and holds rows (field · operator · value) and other groups; **not** sits on rows and
   // groups. `onEdit` is called after every change so the caller can recount and re-check.
   import { conditionFields, numberOperators, textOperators, texts } from "../texts";
+  import type { FieldType } from "../texts";
   import {
     fieldType,
     newGroup,
@@ -12,7 +13,17 @@
     type UiTree,
   } from "./conditions";
 
-  let { tree, onEdit }: { tree: UiTree; onEdit: () => void } = $props();
+  let {
+    tree,
+    fields = conditionFields,
+    onEdit,
+  }: {
+    tree: UiTree;
+    /// The field list to offer: every field of the rules (08 › *5. Categories*), or a subset
+    /// (08 › *Search* offers only the fields a saved order keeps).
+    fields?: { value: string; label: string; type: FieldType }[];
+    onEdit: () => void;
+  } = $props();
 
   const operatorsFor = (field: string) =>
     fieldType(field) === "text" ? textOperators : numberOperators;
@@ -91,7 +102,7 @@
 {#snippet rowBox(row: UiRow, parent: UiGroup, index: number)}
   <div class="row">
     <select value={row.field} onchange={(event) => setField(row, event.currentTarget.value)}>
-      {#each conditionFields as field (field.value)}
+      {#each fields as field (field.value)}
         <option value={field.value}>{field.label}</option>
       {/each}
     </select>

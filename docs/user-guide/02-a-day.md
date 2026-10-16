@@ -134,3 +134,16 @@ Do the same for each download. The saved-PDF numbers continue through the day (b
 after batch 1's last number), so "sort by name" inside a batch folder is printing order. A file
 you read in an earlier batch today is marked *used in batch n*; if you read it again, its orders
 are found as already saved and left out (a warning lists them).
+
+## Find a saved order (Search)
+
+**Search** in the top bar opens the Search panel over the screen; **Close** returns. It only reads:
+nothing is changed or saved.
+
+- The condition is built with the same boxes as your categories: **field**, **operator** and a
+  typed **value**, **+ condition** for a row, **+ group** for a group inside, **not** to reverse one.
+- Choose **This day** (the date in the top bar; the default) or **All days**.
+- Press **Search**: "3 orders in 2 batches", then one row per order — Order ID, tracking ID,
+  courier, items, batch and its saved PDF, with **Open** to print it.
+- An order saved before Search existed shows *items not stored*; find it by Order ID or tracking ID.
+  Nothing found says "No saved order matches."

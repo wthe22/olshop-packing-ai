@@ -6,7 +6,7 @@ the label downloads, check the picks, save and print. Plain words, not for a dev
 | File | Covers | Read when |
 |---|---|---|
 | [01-setup.md](01-setup.md) | What the app is; putting the program folder on a PC; the first start; a new version of the program | once, before the first day of packing |
-| [02-a-day.md](02-a-day.md) | A normal batch, step by step; several batches a day | every day, while packing |
+| [02-a-day.md](02-a-day.md) | A normal batch, step by step; several batches a day; finding a saved order | every day, while packing |
 | [03-changes.md](03-changes.md) | Reverting or amending the last batch; editing the categories | a batch or a category needs changing |
 | [04-messages-and-settings.md](04-messages-and-settings.md) | Every message and what to do; the settings | a message appears, or a setting is changed |
 

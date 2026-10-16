@@ -3,6 +3,7 @@
 | Level | What it covers | Command |
 |---|---|---|
 | Engine unit tests | Every reading and sorting rule on hand-made text runs | `cargo test --workspace` |
+| Search | `crates/engine/tests/search.rs`: a tracking ID finds its one order, an item field matches when one line matches, `not` and *at least* behave as in a category, a day saved before search shows *items not stored* and is found by its IDs only, the fields survive a `state.json` round trip; the app reads the day folders for *This day* / *All days* and never sees an open draft's order | `cargo test --workspace` |
 | Shared fixtures | `testdata/conditions.json` (parse, print, evaluate, error texts), `testdata/expected-labels.json`, `testdata/expected-picks.json`. Expected: the results written there (the Python tools give the same); cases that use CSV fields expect the "needs the orders CSV" error in Rust | `cargo test --workspace` |
 | PDF tests | `testdata/labels-slip.pdf` (made up, from `make_testdata.py`): read, copy, packing list. Expected: page counts, text found in the output | `cargo test --workspace` |
 | Check before saving | The arithmetic on hand-made descriptions (`crates/engine/tests/saved_pdf_check.rs`: a doubled page, a dropped page, an order in two picks and in none, a wrong label, a swapped order) and the read-back on real files (`crates/pdf/tests/verify.rs`: a saved batch reads back clean; a tampered written file is caught). Each defect test fails when the check is removed | `cargo test --workspace` |

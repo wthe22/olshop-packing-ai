@@ -13,6 +13,7 @@
 | `revert_last(day)` / `start_amend(day)` | Revert / amend | New overview / a draft |
 | `rules_load()` / `rules_check(text or entries, draft?)` / `rules_save(…)` | Categories editor | Entries, errors with line/col, live counts on the open draft |
 | `condition_to_tree(text)` / `tree_to_condition(tree)` | Boxes editor: condition text → boxes, boxes → text (the engine's parser and printer, so the window has no second parser) | Tree of groups and rows, or an error with line/col / the text |
+| `search_orders(conditions, scope)` | Search the saved orders matching the condition boxes; `scope` is `day` (*This day*, the day in the title bar) or `all` (*All days*) | One row per order (Order ID, tracking ID, courier, items, batch, saved PDF name and path) and the order and batch counts |
 | `open_path(path)` / `show_in_folder(path)` | Open a PDF in the default viewer / a folder in Explorer — one call, `explorer.exe "<path>"` with the path as the only argument | — |
 | `settings_get()` / `settings_set(…)` | Settings | — |
 

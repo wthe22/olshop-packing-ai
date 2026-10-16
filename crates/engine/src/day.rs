@@ -129,7 +129,20 @@ impl Default for PackingListChoice {
     }
 }
 
-/// One order saved by a batch; the duplicate guard reads these (07 › *`state.json`*).
+/// One item line of a saved order, as the Search panel finds it (07 › *`state.json`*): the slip's
+/// `name`, `variation`, `seller_sku` and `quantity`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SavedItem {
+    pub name: String,
+    #[serde(default)]
+    pub variation: String,
+    #[serde(default)]
+    pub seller_sku: String,
+    pub quantity: i64,
+}
+
+/// One order saved by a batch; the duplicate guard reads these and the Search panel finds them by
+/// the fields kept here (07 › *`state.json`*).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SavedOrder {
     pub order_id: String,
@@ -137,6 +150,23 @@ pub struct SavedOrder {
     pub batch: i64,
     pub pdf: i64,
     pub run: usize,
+    /// The order's lines, each with its `name`, `variation`, `seller_sku` and `quantity`. Written
+    /// at save (07 › *`state.json`*); empty on an order saved before search existed, which is
+    /// found by Order ID or tracking ID only (*items not stored*, [Search](../ui/search.md)).
+    #[serde(default)]
+    pub items: Vec<SavedItem>,
+    /// The courier named for the order; empty when it is unknown.
+    #[serde(default)]
+    pub courier: String,
+    /// The order's total quantity (the sum of its lines).
+    #[serde(default)]
+    pub total_quantity: i64,
+    /// The number of lines of the order.
+    #[serde(default)]
+    pub distinct_items: i64,
+    /// The label's *In transit by*, as `YYYY-MM-DD HH:MM:SS` text; absent when the label had none.
+    #[serde(default)]
+    pub ship_by: Option<String>,
 }
 
 /// One saved batch (07 › *`state.json`*).

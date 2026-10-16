@@ -6,3 +6,4 @@
 pub mod batch;
 pub mod day;
 pub mod rules;
+pub mod search;

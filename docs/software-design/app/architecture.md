@@ -56,6 +56,7 @@ crates/
     src/orders.rs          pages → orders, contents key, display names
     src/plan.rs            plan, picks from what is left, plan edits, runs, numbering
     src/day.rs             state.json, duplicate guard, revert, amend
+    src/search.rs          saved orders found by a condition (Search)
     src/names.rs           file and folder names
     couriers.toml          bundled with include_str!
   pdf/                     package packing-pdf

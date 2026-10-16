@@ -1,8 +1,8 @@
 <script lang="ts">
   // The app shell (08 › *Window frame*, *Start*, *1. Day*, *2. New batch*, *3. Plan*,
-  // *5. Categories*, *6. Settings*): it finds the data folder, keeps the current day and screen,
-  // routes the Tauri commands, and opens Categories/Settings over the current screen (an open
-  // draft is kept). The batch flow is Day → New batch → Plan → Day.
+  // *5. Categories*, *6. Settings*, *Search*): it finds the data folder, keeps the current day and
+  // screen, routes the Tauri commands, and opens Search/Categories/Settings over the current
+  // screen (an open draft is kept). The batch flow is Day → New batch → Plan → Day.
   import { onMount } from "svelte";
   // Use the plugin's own `confirm`, not `window.confirm`: the dialog plugin patches the global to
   // call `plugin:dialog|confirm`, a command that no longer exists (it is now `message`), so the
@@ -18,11 +18,12 @@
   import PlanScreen from "../lib/PlanScreen.svelte";
   import CategoriesScreen from "../lib/CategoriesScreen.svelte";
   import SettingsScreen from "../lib/SettingsScreen.svelte";
+  import SearchScreen from "../lib/SearchScreen.svelte";
   import Overlay from "../lib/Overlay.svelte";
 
   type Screen = "day" | "new-batch" | "plan";
-  type OverlayId = "categories" | "settings";
-  type NavId = "day" | "categories" | "settings";
+  type OverlayId = "search" | "categories" | "settings";
+  type NavId = "day" | "search" | "categories" | "settings";
 
   let ready = $state(false);
   let needsFolder = $state(true);
@@ -38,7 +39,8 @@
   let about = $state<api.About | null>(null);
   let dayList = $state<string[]>([]);
   let screen = $state<Screen>("day");
-  // Categories/Settings open over the current screen and close back to it (08 › *Window frame*).
+  // Categories/Settings/Search open over the current screen and close back to it (08 › *Window
+  // frame*).
   let overlay = $state<OverlayId | null>(null);
 
   // The batch being prepared: the read result and whether the backend has an open draft.
@@ -330,6 +332,10 @@
   {#if overlay === "categories"}
     <Overlay title={texts.categories.title} onClose={closeOverlay}>
       <CategoriesScreen {draftBatch} onClose={closeOverlay} onSaved={onCategoriesSaved} />
+    </Overlay>
+  {:else if overlay === "search"}
+    <Overlay title={texts.search.title} onClose={closeOverlay}>
+      <SearchScreen onOpen={openFile} />
     </Overlay>
   {:else if overlay === "settings"}
     <Overlay title={texts.settings.title} onClose={closeOverlay}>

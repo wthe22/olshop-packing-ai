@@ -255,6 +255,7 @@ pub fn run() {
             commands::rules::rules_save_text,
             commands::rules::condition_to_tree,
             commands::rules::tree_to_condition,
+            commands::search::search_orders,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

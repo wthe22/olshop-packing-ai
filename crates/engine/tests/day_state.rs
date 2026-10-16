@@ -8,8 +8,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use packing_engine::day::{
     BatchWrite, DayError, DayState, FileEntry, Findings, Layout, PackingListChoice, PdfEntry,
-    SavedOrder, Scope, delete_batch_folder, duplicates_warning, fingerprint, now_save_time,
-    save_batch,
+    SavedItem, SavedOrder, Scope, delete_batch_folder, duplicates_warning, fingerprint,
+    now_save_time, save_batch,
 };
 use packing_engine::names::DOWNLOAD_DIR;
 use packing_engine::orders::{Order, ReadOrder};
@@ -88,6 +88,16 @@ fn saved(order_id: &str, batch: i64, pdf: i64, run: usize) -> SavedOrder {
         batch,
         pdf,
         run,
+        items: vec![SavedItem {
+            name: "Sepatu".to_string(),
+            variation: "42".to_string(),
+            seller_sku: "SP-0001".to_string(),
+            quantity: 2,
+        }],
+        courier: "J&T Express".to_string(),
+        total_quantity: 2,
+        distinct_items: 1,
+        ship_by: Some("2026-10-07T17:00:00".to_string()),
     }
 }
 
@@ -197,6 +207,45 @@ fn state_json_matches_the_07_format() {
     assert_eq!(entry["run"], 5);
     // The 07 example keeps no per-order save_time (the batch carries it).
     assert!(entry.get("save_time").is_none());
+    // The searched fields are written at save (07 › *`state.json`*; 2.21).
+    assert_eq!(entry["courier"], "J&T Express");
+    assert_eq!(entry["total_quantity"], 2);
+    assert_eq!(entry["distinct_items"], 1);
+    assert_eq!(entry["ship_by"], "2026-10-07T17:00:00");
+    assert_eq!(entry["items"][0]["name"], "Sepatu");
+    assert_eq!(entry["items"][0]["variation"], "42");
+    assert_eq!(entry["items"][0]["seller_sku"], "SP-0001");
+    assert_eq!(entry["items"][0]["quantity"], 2);
+}
+
+/// An order saved before search existed keeps only its IDs: every searched field is absent in the
+/// older `state.json` and loads as its empty value (07 › *`state.json`*; 2.21, Q-UI-3).
+#[test]
+fn a_saved_order_without_the_searched_fields_loads_with_them_empty() {
+    let dir = TempDir::new("legacy-saved");
+    let day = dir.path().join("2026-10-07");
+    fs::create_dir_all(&day).expect("create day");
+    // A day written before 2.21: the saved entry has only the IDs, the batch and the pdf/run.
+    let json = r#"{
+  "day": "2026-10-07",
+  "batches": [],
+  "saved": [
+    {"order_id": "580000000000000001", "tracking_id": "JY0000001234",
+     "batch": 1, "pdf": 1, "run": 5}
+  ]
+}"#;
+    fs::write(day.join("state.json"), json).expect("write legacy state");
+
+    let state = DayState::load(&day).expect("load legacy day");
+    let saved = &state.saved[0];
+    assert_eq!(saved.order_id, "580000000000000001");
+    assert!(saved.items.is_empty());
+    assert!(saved.courier.is_empty());
+    assert_eq!(saved.total_quantity, 0);
+    assert_eq!(saved.distinct_items, 0);
+    assert!(saved.ship_by.is_none());
+
+    std::fs::remove_dir_all(dir.path()).ok();
 }
 
 #[test]

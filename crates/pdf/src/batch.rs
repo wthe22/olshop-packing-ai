@@ -18,7 +18,8 @@ use std::sync::mpsc::{self, Sender};
 
 use packing_engine::day::{
     self, BatchWrite, DayError, DayState, Duplicate, FileEntry, Findings, Fingerprint,
-    Layout as EngineLayout, PackingListChoice, PdfEntry, SavedOrder, Scope, duplicates_warning,
+    Layout as EngineLayout, PackingListChoice, PdfEntry, SavedItem, SavedOrder, Scope,
+    duplicates_warning,
 };
 use packing_engine::label::CourierTable;
 use packing_engine::names;
@@ -648,6 +649,23 @@ fn pick_saved(
                 batch,
                 pdf: pick.number,
                 run: run.number,
+                // The fields the Search panel finds the order by, written at save (07 ›
+                // *`state.json`*): its lines and the order-level fields.
+                items: order
+                    .order
+                    .lines
+                    .iter()
+                    .map(|line| SavedItem {
+                        name: line.name.clone(),
+                        variation: line.variation.clone(),
+                        seller_sku: line.seller_sku.clone(),
+                        quantity: line.quantity,
+                    })
+                    .collect(),
+                courier: order.order.courier.clone(),
+                total_quantity: order.order.total_quantity(),
+                distinct_items: order.order.distinct_items(),
+                ship_by: order.order.ship_by.map(|time| time.to_string()),
             });
         }
     }
@@ -935,6 +953,16 @@ mod tests {
         assert_eq!(saved[0].pdf, 1);
         assert_eq!(saved[0].run, 1);
         assert_eq!(saved[1].order_id, "580000000000000002");
+        // The searched fields are written at save (07 › *`state.json`*; 2.21): the order's lines
+        // and the order-level fields.
+        assert_eq!(saved[0].courier, "J&T Express");
+        assert_eq!(saved[0].total_quantity, 1);
+        assert_eq!(saved[0].distinct_items, 1);
+        assert!(saved[0].ship_by.is_none());
+        assert_eq!(saved[0].items.len(), 1);
+        assert_eq!(saved[0].items[0].name, "Sepatu");
+        assert_eq!(saved[0].items[0].variation, "honda");
+        assert_eq!(saved[0].items[0].quantity, 1);
     }
 
     #[test]

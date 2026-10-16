@@ -80,7 +80,7 @@ Only fields with a source on the label or slip:
 |---|---|---|
 | `name`, `display_name`, `variation`, `seller_sku`, `line_quantity` | item | slip |
 | `total_quantity`, `distinct_items` | order | computed from the slip |
-| `tracking_id`, `courier`, `ship_by` | order | label |
+| `order_id`, `tracking_id`, `courier`, `ship_by` | order | label |
 
 A condition that uses a CSV field (`sku_id`, `product_category`, `channel`, `paid_time`,
 `rts_time`, `created_time`) is an error in the rules check, with line and column:

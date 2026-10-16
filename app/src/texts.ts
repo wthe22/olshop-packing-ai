@@ -10,6 +10,7 @@ export const texts = {
 
   nav: {
     day: "Day",
+    search: "Search",
     categories: "Categories",
     settings: "Settings",
     today: "Today",
@@ -225,6 +226,27 @@ export const texts = {
       "not name contains \"sepatu\" and (name contains \"spion\" or name contains \"knalpot\")",
     ],
   },
+
+  // 08 › *Search*: find a saved order by the same condition boxes as Categories (2.21). It only
+  // reads; nothing is changed or saved.
+  search: {
+    title: "Search",
+    // 08 › *Search*: the line above the rows, "N orders in M batches".
+    summary: (orders: number, batches: number) =>
+      `${count(orders, "order", "orders")} in ${count(batches, "batch", "batches")}`,
+    scope: "Scope",
+    // 08 › *Search*: *This day* (the day in the title bar) is the default (Q-UI-3).
+    scopeDay: "This day",
+    scopeAll: "All days",
+    search: "Search",
+    // 08 › *Search*: one row's items, "name × quantity".
+    item: (name: string, quantity: number) => `${name} ×${quantity}`,
+    // 08 › *Search*: an order saved before search existed keeps only its IDs (Q-UI-3).
+    itemsNotStored: "items not stored",
+    // 08 › *Search*: the batch a matching order was saved in.
+    batch: (n: number) => `batch ${n}`,
+    noMatch: "No saved order matches.",
+  },
 } as const;
 
 // 08 › *5. Categories*: the fields a condition can use (07 › *Fields the conditions can use*),
@@ -240,9 +262,28 @@ export const conditionFields: { value: string; label: string; type: FieldType }[
   { value: "total_quantity", label: "Total quantity", type: "number" },
   { value: "distinct_items", label: "Different items", type: "number" },
   { value: "courier", label: "Courier", type: "text" },
+  { value: "order_id", label: "Order ID", type: "text" },
   { value: "tracking_id", label: "Tracking ID", type: "text" },
   { value: "ship_by", label: "Ship by", type: "time" },
 ];
+
+/// The fields the Search panel offers (08 › *Search*): the ones a saved order keeps, a subset of
+/// `conditionFields` so a field reads the same in both screens. The display name and Ship by are
+/// not searched (2.21).
+const searchFieldValues = [
+  "order_id",
+  "tracking_id",
+  "courier",
+  "name",
+  "variation",
+  "seller_sku",
+  "line_quantity",
+  "total_quantity",
+  "distinct_items",
+];
+
+export const searchFields: { value: string; label: string; type: FieldType }[] =
+  conditionFields.filter((field) => searchFieldValues.includes(field.value));
 
 /// The operators a text field takes (04 › *Grammar*).
 export const textOperators: { value: string; label: string }[] = [
@@ -285,4 +326,27 @@ export function saveStageText(
   return stage === "Checking"
     ? texts.plan.saveChecking(page, pages)
     : texts.plan.saveWriting(page, pages);
+}
+
+// 08 › *Search*: the window side of the result, pure so it is tested without a window. One row
+// reads "Sepatu ×2, Spion ×1"; an order saved before search existed kept no items and its row
+// says *items not stored* (Q-UI-3).
+
+/// One Search row as the helpers below need it: the stored items, or the flag saying there are
+/// none.
+export interface SearchRowText {
+  items: { name: string; quantity: number }[];
+  items_not_stored: boolean;
+}
+
+/// The line above the Search panel's rows (08 › *Search*): "3 orders in 2 batches".
+export function searchSummary(orders: number, batches: number): string {
+  return texts.search.summary(orders, batches);
+}
+
+/// One Search row's items (08 › *Search*): "Sepatu ×2, Spion ×1", or *items not stored* for an
+/// order saved before search existed.
+export function rowItemsText(row: SearchRowText): string {
+  if (row.items_not_stored) return texts.search.itemsNotStored;
+  return row.items.map((item) => texts.search.item(item.name, item.quantity)).join(", ");
 }

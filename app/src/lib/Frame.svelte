@@ -1,12 +1,13 @@
 <script lang="ts">
-  // The window frame (08 › *Window frame*): title, the day switch and the navigation. *Categories*
-  // and *Settings* open over the current screen (08 › *Window frame*); *Day* returns to it.
+  // The window frame (08 › *Window frame*): title, the day switch and the navigation. *Search*,
+  // *Categories* and *Settings* open over the current screen (08 › *Window frame*); *Day* returns
+  // to it.
   import { texts, formatDay } from "../texts";
 
   // The batch flow screens (*new-batch*, *plan*) are not in the nav; none is active there.
   type Screen = "day" | "new-batch" | "plan";
-  type Overlay = "categories" | "settings" | null;
-  type NavId = "day" | "categories" | "settings";
+  type Overlay = "search" | "categories" | "settings" | null;
+  type NavId = "day" | "search" | "categories" | "settings";
 
   let {
     day,
@@ -26,6 +27,7 @@
 
   const items: { id: NavId; label: string }[] = [
     { id: "day", label: texts.nav.day },
+    { id: "search", label: texts.nav.search },
     { id: "categories", label: texts.nav.categories },
     { id: "settings", label: texts.nav.settings },
   ];

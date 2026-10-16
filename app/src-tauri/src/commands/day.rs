@@ -197,8 +197,9 @@ fn overview_of(state: &DayState, day_dir: &Path) -> DayOverview {
     }
 }
 
-/// The day folders to switch between, newest first (08 › *Window frame*).
-fn days_in(data_folder: &Path) -> Vec<String> {
+/// The day folders to switch between, newest first (08 › *Window frame*). Search's *All days*
+/// reads the same list (2.21).
+pub(crate) fn days_in(data_folder: &Path) -> Vec<String> {
     let Ok(entries) = std::fs::read_dir(data_folder.join(LABELS_DIR)) else {
         return Vec::new();
     };

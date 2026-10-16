@@ -70,7 +70,8 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
   "saved": [
     {"order_id": "580000000000000001", "tracking_id": "JY0000001234",
      "batch": 1, "pdf": 1, "run": 5, "courier": "J&T Express",
-     "total_quantity": 2, "items": [{"name": "Sepatu", "variation": "42",
+     "total_quantity": 2, "distinct_items": 1, "ship_by": "2026-10-07T17:00:00",
+     "items": [{"name": "Sepatu", "variation": "42",
      "seller_sku": "SP-0001", "quantity": 2}]}
   ]
 }

@@ -14,9 +14,9 @@ Reference for the reading and sorting rules: the Python package `tools/analysis/
 first implementation of the same rules, tested). Port it module by module when a rule is missing
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-| Task | Content | File |
-|---|---|---|
-| 2.21 | Search for a saved order | [2-21-search.md](2-21-search.md) |
+Every task of the phase (2.1–2.21) is finished, so this folder holds no task file. What the tasks built is
+in [software-design/](../../software-design/README.md); how to run, build and test it is in
+[../README.md](../README.md).
 
 Open choices of the owner, each with a default the app follows until the owner decides:
 [Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md) and
@@ -25,11 +25,25 @@ Open choices of the owner, each with a default the app follows until the owner d
 
 ## Status
 
-Task 2.21 is open (it follows 2.20); every other task of the phase is finished. The owner's
-review at the end of the phase waits for it.
+Phase 2 is finished: tasks 2.1–2.21 are done and 2.21's file is deleted. **Next step — the owner's:** review
+the running app (the checklist below) and write the findings.
 
-**Next step.** 2.21 (search). The task ends with a commit that deletes its file from this
-folder, and a push to `origin main`.
+**Handoff for the review session.**
+
+- **What to review:** the running app — a portable build, or `app/` under `npm run tauri dev` — against the
+  checklist below.
+- **Where the answers go:** `docs/reviews/<scope>.md` (`label.md`, `rules.md`, `app.md`, `ui.md`), one item
+  per finding as `R-<SCOPE>-n` ([reviews/README.md](../../reviews/README.md)): what the owner sees and what
+  the owner wants.
+- **What the next session does with each answer:** a fix or a feature becomes a task file in this folder; an
+  open choice becomes a question in [software-design/questions/](../../software-design/questions/README.md)
+  with options and a default; a settled design change is written into `software-design/`. The review item is
+  deleted once its answer is in the design.
+- **Turn the open review items into work first:** [R-APP-1](../../reviews/app.md) (amend lets the owner add
+  and remove the batch's label PDFs) and [R-UI-1 to R-UI-3](../../reviews/ui.md) (the first use writes no
+  `categories.toml`; the Plan screen's *Cancel* becomes *Back*, with *Cancel amend* beside Save). The owner's
+  answers are written already, so the next session folds them into the design files and, where they need
+  code, into tasks.
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
 
@@ -54,10 +68,10 @@ The owner writes findings in [`../../reviews/`](../../reviews/README.md), one fi
 
 ## Reading for a new session
 
-In this order; each task file also names its design sections.
+In this order.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
-2. The task files in this folder: 2.21.
+2. [../../reviews/README.md](../../reviews/README.md) and the items open there (APP, UI): the owner's findings, to turn into tasks or questions.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),
@@ -71,12 +85,11 @@ In this order; each task file also names its design sections.
 6. [../../software-design/questions/](../../software-design/questions/README.md): the open choices.
 7. [../../software-design/requirements.md](../../software-design/requirements.md) for concepts and words.
 8. [../../software-design/rules-file/conditions.md](../../software-design/rules-file/conditions.md): the condition
-   language that search reuses (fields, operators, the item-field "some line" rule).
+   language (fields, operators, the item-field "some line" rule).
 9. [../../business-process/02-data-sources.md](../../business-process/02-data-sources.md): read before touching any CSV
    or PDF code; [01-packing-workflow.md](../../business-process/01-packing-workflow.md) for the daily steps.
 10. [../setup.md](../setup.md), [../app.md](../app.md), [../cli.md](../cli.md), [../testing.md](../testing.md).
-11. [../../user-guide/README.md](../../user-guide/README.md): update it in the commit that changes what the owner sees
-    (2.21).
+11. [../../user-guide/README.md](../../user-guide/README.md): update it in the commit that changes what the owner sees.
 12. Code, after the documents: `crates/` (`engine`, `pdf`, `cli`), `app/` (Svelte in `src/`, Rust in `src-tauri/`),
     `testdata/` (made-up fixtures, `make_testdata.py`), `crates/engine/couriers.toml` (the bundled courier list);
     then `git status` and `git log --oneline -5`.

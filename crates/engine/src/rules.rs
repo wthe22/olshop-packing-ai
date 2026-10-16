@@ -175,6 +175,7 @@ const FIELDS: &[(&str, FieldType, Level)] = &[
     ("distinct_items", FieldType::Number, Level::Order),
     ("courier", FieldType::Text, Level::Order),
     ("channel", FieldType::Text, Level::Order),
+    ("order_id", FieldType::Text, Level::Order),
     ("tracking_id", FieldType::Text, Level::Order),
     ("ship_by", FieldType::Time, Level::Order),
     ("paid_time", FieldType::Time, Level::Order),
@@ -798,6 +799,7 @@ pub fn evaluate(cond: &Condition, order: &crate::orders::Order) -> bool {
         Condition::Or(operands) => operands.iter().any(|o| evaluate(o, order)),
         Condition::Text { field, op, value } => match field.as_str() {
             "courier" => text_match(&order.courier, *op, value),
+            "order_id" => text_match(&order.order_id, *op, value),
             "tracking_id" => text_match(&order.tracking_id, *op, value),
             "name" | "display_name" | "variation" | "seller_sku" => {
                 item_text(order, field, *op, value)

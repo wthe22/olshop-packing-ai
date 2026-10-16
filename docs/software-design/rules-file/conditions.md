@@ -73,6 +73,7 @@ The date is written year-month-day; the time is `HH:MM` without seconds.
 | `total_quantity` | number | order | — | Sum of the order's quantities |
 | `distinct_items` | number | order | — | Number of lines (different products) of the order |
 | `courier` | text | order | label or CSV | `Shipping Provider Name`, or deduced from the label ([courier.md](../labels/courier.md)) |
+| `order_id` | text | order | label | The order's Order ID; the Search panel finds an order by it ([Search](../ui/search.md)) |
 | `channel` | text | order | CSV | `Purchase Channel` (TikTok / Tokopedia). CSV-only |
 | `tracking_id` | text | order | label, CSV | The tracking ID printed on the label (also the barcode and QR value) |
 | `ship_by` | date/time | order | label | `In transit by: dd/mm/yyyy hh:mm` |
