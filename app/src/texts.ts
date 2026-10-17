@@ -335,6 +335,13 @@ export function formatDay(day: string): string {
   return dayFormat.format(new Date(`${day}T00:00:00`));
 }
 
+/// 08 › *Window frame*: the title bar's brand text — the program's name and its shown version,
+/// e.g. "Packing v0.1". The version is the one-place text the window title and *About* also show
+/// (from `StartInfo.version`, made in one function on the Rust side).
+export function brandText(version: string): string {
+  return `${texts.title} ${version}`;
+}
+
 // 08 › *3. Plan*: the stage of a running save, from the `save-progress` event (07 › *Check before
 // saving*: *Shown while it runs*) — the stage in plain words with the pages done. The Plan screen
 // shows this with a progress bar; before the first event it shows `plan.saving`.

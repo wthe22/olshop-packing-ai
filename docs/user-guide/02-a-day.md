@@ -20,8 +20,9 @@ The **Day** screen shows what has been saved today and is the way to the next ba
   ([Revert and amend the last batch](03-changes.md#revert-and-amend-the-last-batch)).
 - A day with nothing saved shows "Nothing saved on this day yet."
 
-The date in the top bar is the day everything is saved to. ◀ ▶ step a day; **Today** goes back to
-today (handy for a download just after midnight).
+The date in the top bar is the day everything is saved to. At the left of the top bar the program
+shows its name and version (**Packing v0.1**), the same on every screen. ◀ ▶ step a day; **Today**
+goes back to today (handy for a download just after midnight).
 
 ### New batch
 

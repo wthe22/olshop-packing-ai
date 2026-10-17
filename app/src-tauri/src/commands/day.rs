@@ -14,6 +14,31 @@ use crate::{
     AppState, BUILTIN_COURIERS, COURIERS_FILE, LABELS_DIR, SETTINGS_FILE, program_folder, today,
 };
 
+// ----------------------------------------------------------------------------- version
+
+/// The program's name as the window title and the title bar show it (08 › *Window frame*).
+pub(crate) const PROGRAM_NAME: &str = "Packing";
+
+/// The shown form of the program's version (08 › *6. Settings* › *The version*): `v` + the first
+/// two numbers of the workspace `version` (`0.1.0` → `v0.1`). `CARGO_PKG_VERSION` carries the
+/// workspace version, because the app inherits it (`version.workspace = true` in
+/// `app/src-tauri/Cargo.toml`), so the root `Cargo.toml` is the one place. The window title, the
+/// title bar and *About* all take their text from this one function, so the three cannot differ.
+pub(crate) fn version_text() -> String {
+    let version = env!("CARGO_PKG_VERSION");
+    let mut numbers = version.split('.');
+    let major = numbers.next().unwrap_or_default();
+    let minor = numbers.next().unwrap_or_default();
+    format!("v{major}.{minor}")
+}
+
+/// The OS window title and the title bar's brand text (08 › *Window frame*): the program's name
+/// and [`version_text`]. [`crate::run`] sets the window title with it at start; the title bar
+/// shows the same line, from `StartInfo.version`.
+pub(crate) fn window_title() -> String {
+    format!("{PROGRAM_NAME} {}", version_text())
+}
+
 // ------------------------------------------------------------------------------- start
 
 /// What the window needs to open the Start prompt or the Day screen (08 › *Start*).
@@ -29,6 +54,9 @@ pub struct StartInfo {
     pdfium_ready: bool,
     /// Today's date on the PC (`YYYY-MM-DD`); the Day screen opens here.
     today: String,
+    /// The shown version ([`version_text`]); the title bar's brand text is the program's name and
+    /// this (08 › *Window frame*).
+    version: String,
 }
 
 /// Whether `folder` is a data folder: it holds `couriers.toml` (07 › *Program folder*, 08 ›
@@ -56,6 +84,7 @@ fn start_information(state: &AppState) -> StartInfo {
             .map(|path| path.display().to_string()),
         pdfium_ready: state.ensure_worker(),
         today: day,
+        version: version_text(),
     }
 }
 
@@ -384,11 +413,12 @@ pub fn settings_set(state: State<'_, AppState>, settings: Settings) -> Result<()
     settings_save(&state.data_folder()?, &settings)
 }
 
-/// Settings › *About*: the app version and the PDFium version (08 › *6. Settings*).
+/// Settings › *About*: the app version and the PDFium version (08 › *6. Settings*). The version
+/// is the shown form from [`version_text`], the one place.
 #[tauri::command]
 pub fn about() -> About {
     About {
-        version: env!("CARGO_PKG_VERSION").to_string(),
+        version: version_text(),
         pdfium: PDFIUM_VERSION.to_string(),
     }
 }
@@ -636,8 +666,57 @@ mod tests {
     #[test]
     fn about_reports_the_app_and_pdfium_versions() {
         let about = about();
-        assert_eq!(about.version, env!("CARGO_PKG_VERSION"));
+        assert_eq!(about.version, version_text());
         assert_eq!(about.pdfium, PDFIUM_VERSION);
+    }
+
+    /// The shown version is `v` + the first two numbers of the workspace `version`, the one place
+    /// (08 › *6. Settings* › *The version*). The expected text is derived from the same
+    /// `CARGO_PKG_VERSION` here, so a hard-coded `v0.1` in the app would pass today and fail as
+    /// soon as the workspace `version` changes — which is exactly the property the owner asked
+    /// for: changing the number in `Cargo.toml` moves every spot.
+    #[test]
+    fn version_text_is_v_and_the_first_two_numbers_of_the_workspace_version() {
+        let expected = {
+            let mut numbers = env!("CARGO_PKG_VERSION").split('.');
+            let major = numbers.next().expect("a major number");
+            let minor = numbers.next().expect("a minor number");
+            format!("v{major}.{minor}")
+        };
+        assert_eq!(version_text(), expected);
+        // Only the first two numbers are shown (`0.1.0` → `v0.1`), never the third.
+        assert_eq!(version_text().matches('.').count(), 1);
+    }
+
+    /// The window title and *About* both take the version from [`version_text`], the one place, so
+    /// they cannot differ (08 › *Window frame*, 08 › *6. Settings*). A literal in either spot
+    /// passes today but fails as soon as the workspace `version` changes.
+    #[test]
+    fn the_window_title_and_about_take_the_version_from_that_one_function() {
+        let shown = version_text();
+        assert_eq!(window_title(), format!("{PROGRAM_NAME} {shown}"));
+        assert_eq!(about().version, shown);
+    }
+
+    /// `app/src-tauri/tauri.conf.json` carries no second copy of the version (08 › *6. Settings* ›
+    /// *The version*): no `version` key — Tauri then takes it from `app/src-tauri/Cargo.toml`,
+    /// which the app inherits from the workspace — and the window `title` holds no number, because
+    /// [`crate::run`] sets the real title at start.
+    #[test]
+    fn tauri_conf_has_no_version_key_and_no_number_in_the_window_title() {
+        let conf: serde_json::Value = serde_json::from_str(include_str!("../../tauri.conf.json"))
+            .expect("tauri.conf.json is JSON");
+        assert!(
+            conf.get("version").is_none(),
+            "tauri.conf.json must not carry a `version` key"
+        );
+        let title = conf["app"]["windows"][0]["title"]
+            .as_str()
+            .expect("the window title is a string");
+        assert!(
+            !title.chars().any(|character| character.is_ascii_digit()),
+            "the window title must carry no version number: {title}"
+        );
     }
 
     /// The shell calls hand Explorer the path and nothing else. `/select,<path>` is not parsed by

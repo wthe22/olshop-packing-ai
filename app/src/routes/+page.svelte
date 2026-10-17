@@ -38,6 +38,9 @@
   let day = $state("");
   let exeDir = $state("");
   let dataFolder = $state<string | null>(null);
+  // The program's shown version, for the title bar's brand text (08 › *Window frame*); the OS
+  // window title is set from the same one-place text on the Rust side at start.
+  let version = $state("");
   let overview = $state<api.DayOverview | null>(null);
   let settings = $state<api.Settings | null>(null);
   let about = $state<api.About | null>(null);
@@ -106,6 +109,7 @@
       day = info.today;
       exeDir = info.exe_dir;
       dataFolder = info.data_folder;
+      version = info.version;
       needsFolder = info.data_folder === null;
       if (!needsFolder) {
         await afterFolder();
@@ -350,7 +354,7 @@
 {:else if needsFolder}
   <StartPrompt {exeDir} {busy} onUse={useProgramFolder} onChoose={chooseFolder} />
 {:else}
-  <Frame {day} {screen} {overlay} onStep={stepDay} onToday={goToday} onNavigate={navigate} />
+  <Frame {day} {screen} {overlay} {version} onStep={stepDay} onToday={goToday} onNavigate={navigate} />
   {#if error}
     <p class="error">{error}</p>
   {/if}

@@ -43,6 +43,6 @@ Open **Settings** in the top bar.
   `<old>`."); **Open** opens it. It does not move existing files.
 - **Packing list default** — the scope and layouts the Plan screen starts with (default: one for
   the batch, layout *pick*). **Save** stores it.
-- **About** — the version and the PDFium version.
+- **About** — the program's version (**Version v0.1**) and the PDFium version.
 
 The app is in English. Every screen text is in one file, so another language can be added.

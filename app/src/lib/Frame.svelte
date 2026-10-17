@@ -2,7 +2,7 @@
   // The window frame (08 › *Window frame*): title, the day switch and the navigation. *Search*,
   // *Categories* and *Settings* open over the current screen (08 › *Window frame*); *Day* returns
   // to it.
-  import { texts, formatDay } from "../texts";
+  import { texts, formatDay, brandText } from "../texts";
 
   // The batch flow screens (*new-batch*, *plan*) are not in the nav; none is active there.
   type Screen = "day" | "new-batch" | "plan";
@@ -13,6 +13,9 @@
     day,
     screen,
     overlay,
+    // The program's shown version (08 › *Window frame*): the title bar's brand text is the
+    // program's name and this, the same line as the OS window title (from `StartInfo.version`).
+    version,
     onStep,
     onToday,
     onNavigate,
@@ -20,6 +23,7 @@
     day: string;
     screen: Screen;
     overlay: Overlay;
+    version: string;
     onStep: (delta: number) => void;
     onToday: () => void;
     onNavigate: (id: NavId) => void;
@@ -36,7 +40,7 @@
 </script>
 
 <header>
-  <span class="brand">{texts.title}</span>
+  <span class="brand">{brandText(version)}</span>
   <span class="dot">·</span>
   <button
     class="step"

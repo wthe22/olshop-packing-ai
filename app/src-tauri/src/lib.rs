@@ -17,6 +17,7 @@ use packing_engine::day::DayState;
 use packing_engine::plan::Plan;
 use packing_pdf::batch::Draft;
 use packing_pdf::worker::PdfWorker;
+use tauri::Manager;
 
 pub mod commands;
 
@@ -225,6 +226,18 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(AppState::new())
+        .setup(|app| {
+            // The OS window title carries the version from the one place
+            // ([`commands::day::window_title`]). It is set here, on the Rust side: setting it from
+            // the window would need the `core:window:allow-set-title` permission, which no screen
+            // needs (`app/src-tauri/capabilities/default.json`). The window `title` in
+            // `tauri.conf.json` is the bare name, so there is no second copy of the number
+            // (08 › *Window frame*).
+            if let Some(window) = app.get_webview_window("main") {
+                window.set_title(&commands::day::window_title())?;
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             commands::day::start_info,
             commands::day::use_program_folder,

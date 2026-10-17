@@ -9,6 +9,9 @@ export interface StartInfo {
   data_folder: string | null;
   pdfium_ready: boolean;
   today: string;
+  /// The program's shown version (`v` + major.minor); the title bar's brand text is the program's
+  /// name and this (08 › *Window frame*).
+  version: string;
 }
 
 export interface PdfView {

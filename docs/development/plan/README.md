@@ -14,9 +14,9 @@ Reference for the reading and sorting rules: the Python package `tools/analysis/
 first implementation of the same rules, tested). Port it module by module when a rule is missing
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-Tasks 2.1–2.24 are finished and what they built is in [software-design/](../../software-design/README.md);
-how to run, build and test it is in [../README.md](../README.md). The unfinished work is the three
-task files in this folder, 2.25 to 2.27 (Status below).
+Tasks 2.1–2.25 are finished and what they built is in [software-design/](../../software-design/README.md);
+how to run, build and test it is in [../README.md](../README.md). The unfinished work is the two
+task files in this folder, 2.26 and 2.27 (Status below).
 
 Open choices of the owner, each with a default the app follows until the owner decides:
 [Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md),
@@ -26,27 +26,25 @@ Open choices of the owner, each with a default the app follows until the owner d
 
 ## Status
 
-Tasks 2.1–2.24 are finished. The owner's review of them is answered in
+Tasks 2.1–2.25 are finished. The owner's review of them is answered in
 [software-design/](../../software-design/README.md): no review item is open
-([reviews/](../../reviews/README.md)). Three tasks are open, in this order:
+([reviews/](../../reviews/README.md)). Two tasks are open, in this order. The in-app pictures of the user guide (`images/02-day.png` to `08-day-saved.png`, `07-categories.png`) still show the title *Packing* without the version; retake them once 2.27 is done:
 
 | Task | File | What it does | From |
 |---|---|---|---|
-| 2.25 | [2.25-version-v0.1.md](2.25-version-v0.1.md) | The version shows as *v0.1* in the window title, the title bar and *About*, from one place | R-UI-1 |
 | 2.26 | [2.26-printed-tick.md](2.26-printed-tick.md) | A saved **Printed** checkbox beside each category row of the Day screen | R-UI-2 |
 | 2.27 | [2.27-category-sets.md](2.27-category-sets.md) | Several named sets of categories: the engine, the data folder and the screens. **Open: Q-RULES-1, default built** | R-RULES-1 |
 
 **Next step — the next session's:** nothing waits for the owner. A session resuming here runs the
 gates ([app.md](../app.md), [testing.md](../testing.md)) and continues with the first task file in
-this folder: **2.25**, then **2.26**, then **2.27** — each ending with
+this folder: **2.26**, then **2.27** — each ending with
 `bash tools/make-portable.sh` ([AGENTS.md](../../../AGENTS.md)) and its commit, the task file deleted
 in the same commit.
 
 **Handoff.** R-UI-1 and R-UI-2 are settled by the owner and are in the design. R-RULES-1 is in the
 design as the default of [Q-RULES-1](../../software-design/questions/rules.md): the owner may answer
 it at any time in that file, and the answer is written into `software-design/` and into the 2.27 task
-file before 2.27 is built, or after it, as a follow-up task. The owner is asked nothing for 2.25 and
-2.26.
+file before 2.27 is built, or after it, as a follow-up task. The owner is asked nothing for 2.26.
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
 
