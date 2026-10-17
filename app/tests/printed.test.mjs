@@ -1,6 +1,6 @@
 // The **Printed** tick's rule (07 › *`state.json`*; 08 › *1. Day*): what a tick or an untick does
-// to a batch's ticked saved-PDF numbers, and the tick's words. Pure logic; no window opens and
-// nothing is read or written.
+// to a batch's ticked saved-PDF numbers, and the tick's accessible label. Pure logic; no window
+// opens and nothing is read or written.
 //
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
@@ -10,10 +10,9 @@ import assert from "node:assert/strict";
 import { togglePrinted } from "../src/lib/printed.ts";
 import { texts } from "../src/texts.ts";
 
-test("the tick's words are the designed words", () => {
-  assert.equal(texts.day.printed, "Printed");
-  // The accessible label names the saved PDF (its file name), so one row's tick reads apart
-  // from another's.
+test("the tick's accessible label names the saved PDF", () => {
+  // The tick carries no word beside it: its accessible label and tooltip name the saved PDF (its
+  // file name), so one row's tick reads apart from another's.
   assert.equal(texts.day.printedLabel("4 A Sepatu ×88.pdf"), "Printed 4 A Sepatu ×88.pdf");
 });
 

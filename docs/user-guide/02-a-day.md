@@ -15,8 +15,9 @@ The **Day** screen shows what has been saved today and is the way to the next ba
 - **+ New batch** starts a new batch.
 - Each batch is a card: "Batch 1 · saved 07:40 · 3 files · 600 orders", with one line per saved
   PDF (number, pick code and name, orders, runs) and **Open** to open it in your PDF viewer.
-- **Printed** is a tick beside each saved PDF's **Open**: tick it to note that you have printed
-  that PDF. It is only a note — nothing is blocked or required, and an unticked row works as
+- A tick beside each saved PDF's **Open**, as large as the button, notes that you have printed that
+  PDF. The tick has no word beside it: its tooltip and screen-reader name say *Printed* with the
+  file's name. It is only a note — nothing is blocked or required, and an unticked row works as
   before. The tick is saved the moment you click it, so it is still there when you open the app
   again. A batch you amend starts with its ticks cleared.
 - **Open folder** opens the batch folder in Explorer.

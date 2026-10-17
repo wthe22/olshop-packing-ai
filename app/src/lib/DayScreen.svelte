@@ -105,9 +105,9 @@
                 type="checkbox"
                 checked={pdf.printed}
                 aria-label={texts.day.printedLabel(pdf.file)}
+                title={texts.day.printedLabel(pdf.file)}
                 onchange={(event) => onSetPrinted(batch, pdf, event.currentTarget.checked)}
               />
-              {texts.day.printed}
             </label>
             <button onclick={() => onOpen(join(batch.folder, pdf.file))}
               >{texts.day.open}</button
@@ -252,6 +252,15 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.35rem 0.75rem;
+    /* The row's *Open* button and the **Printed** tick share this height, so the tick is as large
+       as the button beside it (08 › *1. Day*). The value is the button's own box: its text line,
+       its padding and its border. */
+    --control-height: calc(1.45rem + 0.7rem + 2px);
+  }
+
+  .row button,
+  .printed input {
+    height: var(--control-height);
   }
 
   .num {
@@ -274,12 +283,17 @@
     color: #4a4a4a;
   }
 
-  /* The **Printed** tick beside *Open* (08 › *1. Day*): a note only. */
+  /* The **Printed** tick beside *Open* (08 › *1. Day*): a note only. It carries no word — the tick
+     alone says the saved PDF is printed — and it is as large as the button beside it. */
   .printed {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    white-space: nowrap;
+  }
+
+  .printed input {
+    width: var(--control-height);
+    /* No default margin: the tick is exactly as tall as the button, so the row keeps its height. */
+    margin: 0;
   }
 
   .batch-foot {

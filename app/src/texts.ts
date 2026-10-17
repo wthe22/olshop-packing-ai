@@ -40,10 +40,9 @@ export const texts = {
     batch: (n: number, time: string, files: number, orders: number) =>
       `Batch ${n} · saved ${time} · ${count(files, "file", "files")} · ${count(orders, "order", "orders")}`,
     open: "Open",
-    // 08 › *1. Day*: the **Printed** tick beside *Open* on each saved-PDF row. A note only. The
-    // accessible label names the saved PDF (its file name), so a screen reader reads one row's
-    // tick apart from another's.
-    printed: "Printed",
+    // 08 › *1. Day*: the **Printed** tick beside *Open* on each saved-PDF row. The tick carries no
+    // word, so this is its accessible name and tooltip; it names the saved PDF (its file name), so
+    // a screen reader reads one row's tick apart from another's.
     printedLabel: (file: string) => `Printed ${file}`,
     openFolder: "Open folder",
     packingList: "Packing list",

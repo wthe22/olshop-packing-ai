@@ -8,7 +8,7 @@ Only the newest batch can be changed — later batches depend on it.
   "Undo batch 2? Its 2 saved PDFs, packing list and download copies are deleted, and its 129
   orders can be saved again. If you already printed them, throw the printed labels away."
   [Cancel] [Undo batch 2]. The orders count as not saved again and the next batch reuses the
-  numbers. Any **Printed** ticks on its rows go with it. If a file is open in a PDF viewer, the app
+  numbers. Any ticks on its rows go with it. If a file is open in a PDF viewer, the app
   says which file to close and changes nothing.
 - **Amend** — "I fixed a category, do the last batch again". It names the set the batch was packed
   with and asks:
@@ -21,7 +21,7 @@ Only the newest batch can be changed — later batches depend on it.
   press **Read labels** to open the Plan screen again. Removing a file leaves its orders unsaved, so
   the next batch picks them up again. **Save batch 2 again** writes it again over the old one;
   **Cancel amend** (at the bottom) or **Cancel** on the file list leaves the batch unchanged, and
-  neither asks. A batch written again starts with its **Printed** ticks cleared.
+  neither asks. A batch written again starts with its ticks cleared.
 
 ## Editing your categories
 

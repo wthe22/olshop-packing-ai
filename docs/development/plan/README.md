@@ -35,12 +35,10 @@ program (the checklist below):
 - **R-RULES-1** — several named sets of categories (2.27), built to the default of
   [Q-RULES-1](../../software-design/questions/rules.md).
 
-**Dev review of the built program (filed):** [R-UI-3](../../reviews/ui.md) (the Printed tick is too small and
-its word goes), [R-UI-4](../../reviews/ui.md) (the set of categories is called *Grouping*) and
+**Dev review of the built program (filed):** [R-UI-4](../../reviews/ui.md) (the set of categories is called *Grouping*) and
 [R-RULES-2](../../reviews/rules.md) (a set of categories can be renamed).
 
-**Open tasks:** [2.28](2.28-printed-tick-larger.md) (R-UI-3) and [2.29](2.29-grouping-word.md) (R-UI-4), one commit
-each. R-RULES-2 (renaming a grouping) is not a task: it waits for the owner's answer to
+**Open task:** [2.29](2.29-grouping-word.md) (R-UI-4). R-RULES-2 (renaming a grouping) is not a task: it waits for the owner's answer to
 [Q-RULES-2](../../software-design/questions/rules.md); build it after the answer is written into
 `software-design/`. After the tasks, the owner tests the program folder with the checklist below. Findings go into
 [reviews/](../../reviews/README.md), one item each.
