@@ -1,6 +1,6 @@
 # Open questions: the rules file
 
-Questions: Q-RULES-1.
+Questions: Q-RULES-1, Q-RULES-2.
 
 ## Q-RULES-1 — Several sets of categories: which set a batch uses, and where the sets are kept
 
@@ -57,3 +57,30 @@ Recommended: **1** in both. A batch chooses its set where the batch is prepared,
 the owner can copy or correct by hand, and an existing data folder keeps its `categories.toml` where
 it is. Task 2.27 in [development/plan/](../../development/plan/README.md) builds this default; an
 answer is written into the design files and into that task file before it is built.
+
+## Q-RULES-2 — Renaming a grouping: which name an amend of an older batch reads
+
+**Now.** A grouping (a set of categories, [R-UI-4](../../reviews/ui.md)) is a file whose name is its
+name ([Q-RULES-1](#q-rules-1--several-sets-of-categories-which-set-a-batch-uses-and-where-the-sets-are-kept),
+default (b)). A batch records its grouping by that name in the day's `state.json`
+([batch](../app/batch.md)). The name of a grouping cannot be changed.
+
+**Wanted** ([R-RULES-2](../../reviews/rules.md)). A rename control on the Categories screen; the new
+name shows on New batch and in the Plan header. A rename must say what a batch saved earlier under the
+old name does when it is amended.
+
+**Example.** The grouping *ramadhan* is used for batches 1 and 2 of a day, then renamed *lebaran*.
+The owner amends batch 2.
+
+| Option | What the owner sees |
+|---|---|
+| **1. The rename follows the batches** (**Default**) | The rename also rewrites the grouping name in every `state.json` that records the old name (the data folder's days), and `settings.json`'s last used. Amend of batch 2 reads *lebaran*, which is the same categories. Nothing is ever missing. Cost: one rename touches many day files; a day folder copied away before the rename keeps the old name |
+| 2. A batch keeps the name it recorded | Batches are not touched. Amend of batch 2 asks for *ramadhan*, which no longer exists: it reads the one catch-all pick (the *No picks yet* line) or stops with a message naming the old grouping. The owner copies the file back under the old name to redo that batch. Simple, but the rename breaks amend of older batches |
+| 3. Rename is refused while a batch uses the name | The control says which days use the grouping and does nothing. Old batches stay valid; a grouping in use is never renamed, so the owner copies it under a new name (**+ New grouping**, copy) and deletes the old one only when no batch uses it |
+
+**What the answer changes:** the rename command (which files it writes), the amend's reading of a
+batch's grouping, `state.json` and `settings.json`.
+
+Recommended: **1**. A rename of a name is a rename everywhere, and an old batch can always be amended.
+The default is not built until the owner answers: the rename control waits, and this question stays.
+

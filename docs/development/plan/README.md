@@ -35,11 +35,15 @@ program (the checklist below):
 - **R-RULES-1** — several named sets of categories (2.27), built to the default of
   [Q-RULES-1](../../software-design/questions/rules.md).
 
-**Next step — the owner's:** test the program folder with the checklist below. Findings go into
-[reviews/](../../reviews/README.md) (`ui.md`, `rules.md`, …), one item each. The owner may also answer
-Q-RULES-1 in its file at any time. A new session turns each review item into a task (or a question) as
-[development/README.md](../README.md) says, and writes each answer of Q-RULES-1 into `software-design/`
-and into a task before changing the code.
+**Dev review of the built program (filed):** [R-UI-3](../../reviews/ui.md) (the Printed tick is too small and
+its word goes), [R-UI-4](../../reviews/ui.md) (the set of categories is called *Grouping*) and
+[R-RULES-2](../../reviews/rules.md) (a set of categories can be renamed).
+
+**Open tasks:** [2.28](2.28-printed-tick-larger.md) (R-UI-3) and [2.29](2.29-grouping-word.md) (R-UI-4), one commit
+each. R-RULES-2 (renaming a grouping) is not a task: it waits for the owner's answer to
+[Q-RULES-2](../../software-design/questions/rules.md); build it after the answer is written into
+`software-design/`. After the tasks, the owner tests the program folder with the checklist below. Findings go into
+[reviews/](../../reviews/README.md), one item each.
 
 **Not checked on a running window** (only by tests): the Printed tick (click, close, reopen), the *Set*
 control on New batch, the Categories set row (**+ New set**, **Delete set**), and the Plan header naming
@@ -93,7 +97,7 @@ In this order.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
 2. [../../reviews/README.md](../../reviews/README.md) and the items open there: the owner's findings on the
-   built program, to turn into tasks or questions. None is open until the owner has tested the program folder.
+   built program, to turn into tasks or questions. The items open there are the latest dev review.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),
