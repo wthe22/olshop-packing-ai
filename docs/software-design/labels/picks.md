@@ -1,9 +1,10 @@
 # Picks
 
-- **Default**: the `categories.toml` entries ([rules-file](../rules-file/README.md)) in file
-  order, each one pick. The last entry may have no `when` and takes the rest. A pick takes the
-  matching orders **from what is left** after the earlier picks. A folder without the file has
-  one catch-all entry that takes every order ([inputs](../app/inputs.md)).
+- **Default**: the categories of the set the batch uses ([rules file](../rules-file/README.md)) in
+  file order, each one pick. The last entry may have no `when` and takes the rest. A pick takes the
+  matching orders **from what is left** after the earlier picks. A set with no file — a fresh data
+  folder, or a folder that has none — has one catch-all entry that takes every order
+  ([inputs](../app/inputs.md)).
 - **Leftovers**: orders matching no pick stay in "the rest" and are saved as a final PDF.
 - **Duplicate guard**: an order already saved earlier the same day (the day's `state.json`,
   [data-folder](../app/data-folder.md)) is left out of the saved PDFs and listed in a warning

@@ -6,18 +6,20 @@
 |---|---|---|
 | **PC app** | Windows PC, Rust + Tauri window | Label PDFs with packing slip → picks shown and adjusted on screen, one saved label PDF per pick, A4 packing lists; revert/amend of the last batch ([PC app](app/README.md), [Screens](ui/README.md)) |
 
-The app reads one rules file, `categories.toml` ([rules file](rules-file/README.md)). The analysis helpers in
+The app packs each batch with the picks set the owner chooses; the sets live in the data folder as
+pick files ([rules file](rules-file/README.md)). The analysis helpers in
 `tools/analysis/` are an aid for agents, not a tool of the shop, and share no state with the app.
 
 ## Concepts
 
 | Term | Meaning |
 |---|---|
-| **Pick** | One entry of `categories.toml`. Its condition selects orders from what is left; the match is written as one **saved PDF** |
+| **Pick** | One entry of a picks set. Its condition selects orders from what is left; the match is written as one **saved PDF** |
 | **Saved PDF** | The output of one pick: that pick's label pages, re-ordered into **runs** and numbered through the day `1`, `2`, `3`, … ([picks](labels/picks.md)) |
 | **Run** | Inside a saved PDF, consecutive orders with identical **contents**; numbered `01`, `02`, … within the saved PDF and written `3-05` (saved PDF 3, run 05) |
 | **Contents** | The order written as text: per line `product name` + `variation` + `quantity`, lines sorted. Two orders with the same contents are packed the same way |
-| **Category** | One entry of `categories.toml`: the word the screens use for a pick |
+| **Category** | One entry of a picks set: the word the screens use for a pick |
+| **Set** | A named collection of categories, one file each in the data folder; a batch is packed with one set ([rules file](rules-file/README.md)) |
 | **Condition** | A rule in the condition language (free AND / OR / NOT), e.g. `name contains "sepatu" and total_quantity = 1`. Used by picks |
 | **Order** | Key: `Order ID`. Has one tracking ID and one or more item lines |
 | **Item line** | Product, variation and quantity, from the label's packing slip. |
@@ -37,7 +39,8 @@ in [PC app](app/README.md).
 - **F-LABEL-2** Find each order's pages and its item lines; an order can span several pages. A page's
   Order ID comes from the label text (two-step search); a page without one continues the previous
   order's pages.
-- **F-LABEL-3** Build the picks from `categories.toml` (each entry = one pick): each entry in file order
+- **F-LABEL-3** Build the picks from the categories of the set the batch uses (each entry = one pick):
+  each entry in file order
   takes the matching orders from what is left; the last entry may have no condition and takes the
   rest; the leftovers are the final "rest" pick.
 - **F-LABEL-4** Write one saved label PDF per pick (pages unchanged). Inside it the orders are re-ordered
@@ -61,9 +64,10 @@ in [PC app](app/README.md).
 ### Screens (UI)
 
 - **F-UI-1** A Windows program; daily use needs no terminal ([Screens](ui/README.md)).
-- **F-UI-2** A batch is shown as a plan (the rules in order, with counts and runs) that can be
+- **F-UI-2** A batch is shown as a plan (the categories of the batch's set in order, with counts and
+  runs) that can be
   changed for this batch only — skip, move, add a one-off condition, rename a file — before
   anything is written.
 - **F-UI-3** The day screen lists every batch with its saved PDFs and packing lists, each with an
   Open button for printing.
-- **F-UI-4** `categories.toml` is edited in the app with live checks and counts.
+- **F-UI-4** The sets of categories are edited in the app with live checks and counts.

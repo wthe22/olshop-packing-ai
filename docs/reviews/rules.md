@@ -1,12 +1,7 @@
 # RULES: the owner's feedback
 
-The owner's findings on `categories.toml` and the condition language. Open items only; see [README](README.md).
+The owner's findings on the picks sets and the condition language. Open items only; see [README](README.md).
 
-## R-RULES-1 — Several sets of categories
-
-**Now:** the app reads one `categories.toml` in the data folder, so there is one set of picks
-([rules file](../software-design/rules-file/README.md)).
-
-**Wanted:** the owner can define several named sets of categories, and use the set that fits. Which set a
-batch uses, and where the sets are kept, are open choices: the next session puts them into
-[software-design/questions/](../software-design/questions/README.md) with options and a default.
+No open items. R-RULES-1 (several named sets of categories) is an open choice of the owner,
+[Q-RULES-1](../software-design/questions/rules.md): its default is written into the design and is the
+task 2.27 of [development/plan/](../development/plan/README.md).

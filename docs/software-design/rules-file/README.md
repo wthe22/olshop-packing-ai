@@ -1,8 +1,22 @@
 # The rules file
 
-One file, `categories.toml`, holds the entries. The PC app reads it, uses each entry as one
-**pick** (one saved label PDF, [picks.md](../labels/picks.md)) and lets the owner edit it. The
-**condition language** of its entries is described in [conditions.md](conditions.md).
+The categories of one **set**: a named collection of categories that a batch is packed with. One
+file per set, in the data folder:
+
+| Set | File |
+|---|---|
+| `default` | `<data folder>/categories.toml` — the file the app already writes; it is not moved |
+| any other name | `<data folder>/categories/<set name>.toml` — the file name is the set name |
+
+The set a batch uses is chosen when the batch is prepared
+([New batch](../ui/new-batch.md#the-set)); the sets are edited in [Categories](../ui/categories.md).
+Every entry of a set is one **pick** (one saved label PDF, [picks.md](../labels/picks.md)) and the
+entries are applied in file order. The **condition language** of the entries is described in
+[conditions.md](conditions.md).
+
+Which set a batch uses, and where the sets are kept, are open with the owner
+([Q-RULES-1](../questions/rules.md)); the table above and [Sets](#sets) are the default the app
+follows until the owner decides.
 
 ## File format (TOML)
 
@@ -43,3 +57,18 @@ name = "Lainnya"
   ([conditions.md](conditions.md)).
 - In the PC app, a pick whose condition uses a field with no value (a CSV-only field) is an error
   ([inputs.md](../app/inputs.md)).
+
+## Sets
+
+- **The set list** of a data folder: `default` always, plus every `<set name>.toml` in its
+  `categories/` folder. The names are the file names without `.toml`; characters that are not
+  allowed in Windows file names (`\ / : * ? " < > |`) become `-`. A file
+  `categories/default.toml` is refused with both files named: the name `default` belongs to the
+  data folder's own `categories.toml`.
+- **A set with no file** (a fresh data folder, or a set the owner has not saved yet) has one
+  catch-all entry — code `Z`, name `Lainnya`, no condition — which takes every order, so a batch
+  packed with it saves every order in one PDF set ([inputs](../app/inputs.md)).
+- Every set is one file, so the owner may copy, rename or edit a set by hand. The set used last —
+  chosen on [New batch](../ui/new-batch.md#the-set) or opened in [Categories](../ui/categories.md) —
+  is remembered and preselected for the next batch; each batch records its own
+  ([day folder](../app/data-folder.md)).

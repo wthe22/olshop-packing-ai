@@ -47,8 +47,8 @@ packing-cli (Rust, developer tool): the same engine and the shared batch steps
 Cargo.toml                 workspace: crates/* and app/src-tauri
 crates/
   engine/                  package packing-engine
-    src/rules.rs           categories.toml, condition parser/evaluator/printer (rules file)
-    src/rules_edit.rs      a category written back into categories.toml, comments kept
+    src/rules.rs           a set's file, condition parser/evaluator/printer (rules file)
+    src/rules_edit.rs      a category written back into a set's file, comments kept
     src/text.rs            a page's text runs with x, y (input from packing-pdf)
     src/label.rs           Order ID search, label fields, the courier data (couriers.toml)
     src/couriers_edit.rs   a taught logo hash written back into couriers.toml, comments kept

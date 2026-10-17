@@ -10,7 +10,7 @@ Where a design file disagrees with the business process, the business process wi
 | [requirements.md](requirements.md) | Concepts and the features of the app (`F-<SCOPE>-n`) |
 | [conventions.md](conventions.md) | Naming and identification rules that apply to every design, document and code line |
 | [labels/](labels/README.md) | Scope LABEL: reading labels and packing slips, courier deduction, picks, saved PDFs, the A4 packing list |
-| [rules-file/](rules-file/README.md) | Scope RULES: `categories.toml` and the condition language |
+| [rules-file/](rules-file/README.md) | Scope RULES: the picks sets (`categories.toml` and `categories/`) and the condition language |
 | [app/](app/README.md) | Scope APP: one batch, the data folder, `state.json`, revert and amend, the check before saving, architecture, the portable program folder |
 | [ui/](ui/README.md) | Scope UI: the window and every screen |
 | [decisions/](decisions/README.md) | Settled choices of the owner, one record each (`D-<SCOPE>-n`) |

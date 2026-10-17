@@ -13,7 +13,7 @@ The rules and the files that hold them:
 - [Courier deduction](../labels/courier.md) — the courier from the label text and the tracking-ID form (`couriers.toml`)
 - [Picks](../labels/picks.md) — picks taken in order from what is left, the rest, runs inside a saved PDF, saved-PDF numbers through the day and run numbers `3-05`, the duplicate guard
 - [Packing list](../labels/packing-list.md) — the three layouts `full`, `summary`, `pick` and their look
-- [Rules file](../rules-file/README.md) — `categories.toml`
+- [Rules file](../rules-file/README.md) — the sets of categories (`categories.toml` and `categories/`)
 - [Conditions](../rules-file/conditions.md) — the condition language
 - [Screens](../ui/README.md) — daily use and the window frame
 - The files of this folder: [inputs.md](inputs.md), [batch.md](batch.md), [saved-pdf-check.md](saved-pdf-check.md), [data-folder.md](data-folder.md), [architecture.md](architecture.md), [program.md](program.md)
@@ -25,7 +25,7 @@ Owner decisions about how the app works:
 | How it is used | Windows program, buttons ([Screens](../ui/README.md)) |
 | Orders CSV | **Not read at all.** All order data comes from the label and its packing slip |
 | Plain labels (no packing slip) | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
-| Rules file vs interactive menu | One screen: the rules are applied in order as a proposal; the owner can skip, move or add a pick for this batch before saving ([Plan screen](../ui/plan.md)) |
+| Rules file vs interactive menu | One screen: the categories of the batch's set are applied in order as a proposal; the owner can skip, move or add a pick for this batch before saving ([Plan screen](../ui/plan.md)) |
 | Undo | **Revert** (undo the last batch) and **Amend** (redo the last batch in place), like git |
 | Output folder | `labels/<day>/batch <b>/` inside the data folder, one subfolder per batch, with a copy of the batch's label downloads |
 | Saved-PDF name | Suggested as `<n> <code> <name> ×<orders>.pdf` ([Numbering and file names](../labels/picks.md)); the owner can change the whole name before saving |
@@ -38,8 +38,8 @@ Owner decisions about how the app works:
 |---|---|
 | **Batch** | One round of the daily steps ([the packing workflow](../../business-process/01-packing-workflow.md)): arrange shipment, download the labels (one or more files of up to 200 pages), prepare them in the app. Numbered 1, 2, 3, … within the day. In the app, one **Save** = one batch |
 | **Draft** | A batch that has been read but not saved yet. It lives only in the app's memory; closing the app forgets it and nothing is written |
-| **Plan** | The list of picks of a draft, in order, with their counts. Starts as the `categories.toml` entries in file order |
-| **Data folder** | The folder where the app keeps `categories.toml`, `couriers.toml` and the `labels/` folder with every day's output. By default the program's own folder ([Program folder](program.md#program-folder-portable)) |
+| **Plan** | The list of picks of a draft, in order, with their counts. Starts as the categories of the batch's set in file order |
+| **Data folder** | The folder where the app keeps the picks sets (`categories.toml` and the `categories/` folder, [rules file](../rules-file/README.md)), `couriers.toml` and the `labels/` folder with every day's output. By default the program's own folder ([Program folder](program.md#program-folder-portable)) |
 | **Pick**, **saved PDF**, **run**, **contents** | As in [Concepts](../requirements.md#concepts) |
 
 ## Files in this folder

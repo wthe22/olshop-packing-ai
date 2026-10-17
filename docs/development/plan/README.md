@@ -14,38 +14,45 @@ Reference for the reading and sorting rules: the Python package `tools/analysis/
 first implementation of the same rules, tested). Port it module by module when a rule is missing
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-Every task of the phase (2.1–2.24) is finished, so this folder holds no task file. What the tasks built
-is in [software-design/](../../software-design/README.md); how to run, build and test it is in
-[../README.md](../README.md).
+Tasks 2.1–2.24 are finished and what they built is in [software-design/](../../software-design/README.md);
+how to run, build and test it is in [../README.md](../README.md). The unfinished work is the three
+task files in this folder, 2.25 to 2.27 (Status below).
 
 Open choices of the owner, each with a default the app follows until the owner decides:
 [Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md),
-[Q-UI-1 to Q-UI-4](../../software-design/questions/ui.md) and
-[Q-APP-1 to Q-APP-3](../../software-design/questions/app.md).
+[Q-UI-1 to Q-UI-4](../../software-design/questions/ui.md),
+[Q-APP-1 to Q-APP-3](../../software-design/questions/app.md) and
+[Q-RULES-1](../../software-design/questions/rules.md) (the sets of categories; task 2.27 builds its default).
 
 ## Status
 
-Phase 2 is finished: tasks 2.1–2.24 are done. The owner reviewed the running app and wrote three findings
-([reviews/](../../reviews/README.md)):
+Tasks 2.1–2.24 are finished. The owner's review of them is answered in
+[software-design/](../../software-design/README.md): no review item is open
+([reviews/](../../reviews/README.md)). Three tasks are open, in this order:
 
-- **R-UI-1** — the version in the window title and in *About*, for the release **v0.1** ([ui.md](../../reviews/ui.md)).
-- **R-RULES-1** — several named sets of categories ([rules.md](../../reviews/rules.md)).
-- **R-UI-2** — an optional checkbox beside each category row of the Day screen, saved, to mark it as printed (a note only) ([ui.md](../../reviews/ui.md)).
+| Task | File | What it does | From |
+|---|---|---|---|
+| 2.25 | [2.25-version-v0.1.md](2.25-version-v0.1.md) | The version shows as *v0.1* in the window title, the title bar and *About*, from one place | R-UI-1 |
+| 2.26 | [2.26-printed-tick.md](2.26-printed-tick.md) | A saved **Printed** checkbox beside each category row of the Day screen | R-UI-2 |
+| 2.27 | [2.27-category-sets.md](2.27-category-sets.md) | Several named sets of categories: the engine, the data folder and the screens. **Open: Q-RULES-1, default built** | R-RULES-1 |
 
-**Next step — the next session's:** turn each open item into work, as [development/README.md](../README.md) says:
-R-UI-2 needs no question (the owner settled it): it is written into the Day screen design and the saved state, then a task; R-UI-1 becomes a task file in this folder (the number in one place, shown in both spots, then the portable
-build); R-RULES-1 becomes a question in `software-design/questions/` (which set a batch uses, where the sets
-are kept; options and a default), and the design is written before any code.
+**Next step — the next session's:** nothing waits for the owner. A session resuming here runs the
+gates ([app.md](../app.md), [testing.md](../testing.md)) and continues with the first task file in
+this folder: **2.25**, then **2.26**, then **2.27** — each ending with
+`bash tools/make-portable.sh` ([AGENTS.md](../../../AGENTS.md)) and its commit, the task file deleted
+in the same commit.
 
-**Handoff.** Nothing is waiting for the owner. The open choices are the owner's to answer once the question
-file exists; the next session writes the answers into `software-design/`, deletes each review item once its
-answer is in the design, and then starts the tasks.
+**Handoff.** R-UI-1 and R-UI-2 are settled by the owner and are in the design. R-RULES-1 is in the
+design as the default of [Q-RULES-1](../../software-design/questions/rules.md): the owner may answer
+it at any time in that file, and the answer is written into `software-design/` and into the 2.27 task
+file before 2.27 is built, or after it, as a follow-up task. The owner is asked nothing for 2.25 and
+2.26.
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
 
 ## Owner review at the end of the phase
 
-What the owner checks, after 2.15–2.24:
+What the owner checks, after 2.15–2.27:
 
 - Open the same day's packing list: the header must stand clear of the body; a `summary` or `full` list must
   print `×`, not `ÿ`.
@@ -68,6 +75,15 @@ What the owner checks, after 2.15–2.24:
   Remove one PDF and press **Read labels**: its orders are not in the plan. **Back** returns to the list with
   the files still there, and **Cancel amend** (or the list's **Cancel**) leaves the batch unchanged and asks
   nothing.
+- After 2.25: the window title and the title bar read *Packing v0.1*, and Settings › *About* reads
+  *Version v0.1*. The number appears nowhere else: changing the workspace `version` in `Cargo.toml` and
+  building again moves all three.
+- After 2.26: tick **Printed** on a row of a batch, close the app, open it again: the tick is still
+  there. An unticked row opens and prints as before.
+- After 2.27: **New batch** shows the *Set* control with the set used last preselected; a second set
+  file in the data folder's `categories/` can be chosen and its categories make the plan; the Day
+  screen's **Amend** redoes a batch with its own set; the data folder's `categories.toml` is still
+  where it was.
 
 The owner writes findings in [`../../reviews/`](../../reviews/README.md), one file per scope.
 
@@ -76,9 +92,9 @@ The owner writes findings in [`../../reviews/`](../../reviews/README.md), one fi
 In this order.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
-2. [../../reviews/README.md](../../reviews/README.md) and the items open there: the owner's findings, to
-   turn into tasks or questions. Two items are open (R-UI-1, R-RULES-1); no task file is left. The Status block above says
-   what to do with them.
+2. [../../reviews/README.md](../../reviews/README.md): no item is open. The reviewed round's answers
+   are in [software-design/](../../software-design/README.md) and are the tasks 2.25–2.27 in this
+   folder; the Status block above runs them in order.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),
