@@ -16,11 +16,7 @@ place only. The exact form of the number (`v0.1` or `0.1.0`) is for the next ses
 
 **Now:** the app has no way to mark a category (a pick) as printed.
 
-**Wanted:** an optional checkbox on a category, which the owner may tick to note that its PDF set has been
-printed. It is a note only: nothing is enforced, blocked or required, and an unticked category works as it
-does today.
-
-**Owner's answer on the screen:** the main screen that shows all batches, the [Day screen](../software-design/ui/day.md),
-where each saved PDF row (pick code and name) gets the checkbox. Still open: whether the mark belongs to one
-batch or carries over to the next. The next session puts that into [software-design/questions/](../software-design/questions/README.md)
-with options and a default.
+**Wanted:** on the [Day screen](../software-design/ui/day.md), a checkbox beside each category row of each
+batch, next to **Open**. The owner ticks it to note that the category was printed. It is a note only: nothing
+is enforced, blocked or required, and an unticked row works as it does today. The tick is saved, so after the
+app is closed and opened again the row still shows which categories were marked.
