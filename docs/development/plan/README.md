@@ -25,26 +25,20 @@ Open choices of the owner, each with a default the app follows until the owner d
 
 ## Status
 
-Phase 2 is finished: tasks 2.1–2.24 are done, and no review item is open
-([reviews/](../../reviews/README.md)). **Next step — the owner's:** review the running app — a portable
-build, or `app/` under `npm run tauri dev` — against the checklist below, and write the findings. The owner
-has no answer pending: [Q-APP-2 and Q-APP-3](../../software-design/questions/app.md) follow their
-**Defaults** until the owner decides, and the app is built on those defaults.
+Phase 2 is finished: tasks 2.1–2.24 are done. The owner reviewed the running app and wrote two findings
+([reviews/](../../reviews/README.md)):
 
-**Handoff.**
+- **R-UI-1** — the version in the window title and in *About*, for the release **v0.1** ([ui.md](../../reviews/ui.md)).
+- **R-RULES-1** — several named sets of categories ([rules.md](../../reviews/rules.md)).
 
-- **What to review when the owner comes back:** the running app against the checklist below, and above all
-  the amendment (2.24): **Amend** on the newest batch reads the batch's own labels again and opens the Plan
-  screen (the picks), titled *Redo batch 2*; **Back** there shows the selection page with the batch's PDFs
-  listed, and removing one PDF and pressing **Read labels** gives a plan without its orders; the list's
-  **Cancel** and **Cancel amend** both leave the batch as it was and ask nothing.
-- **Where the answers go:** `docs/reviews/<scope>.md` (`label.md`, `rules.md`, `app.md`, `ui.md`), one item
-  per finding as `R-<SCOPE>-n` ([reviews/README.md](../../reviews/README.md)): what the owner sees and what
-  the owner wants.
-- **What the next session does with each answer:** a fix or a feature becomes a task file in this folder; an
-  open choice becomes a question in [software-design/questions/](../../software-design/questions/README.md)
-  with options and a default; a settled design change is written into `software-design/`. The review item is
-  deleted once its answer is in the design.
+**Next step — the next session's:** turn each open item into work, as [development/README.md](../README.md) says:
+R-UI-1 becomes a task file in this folder (the number in one place, shown in both spots, then the portable
+build); R-RULES-1 becomes a question in `software-design/questions/` (which set a batch uses, where the sets
+are kept; options and a default), and the design is written before any code.
+
+**Handoff.** Nothing is waiting for the owner. The open choices are the owner's to answer once the question
+file exists; the next session writes the answers into `software-design/`, deletes each review item once its
+answer is in the design, and then starts the tasks.
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
 
@@ -82,8 +76,8 @@ In this order.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
 2. [../../reviews/README.md](../../reviews/README.md) and the items open there: the owner's findings, to
-   turn into tasks or questions. No item is open at the moment and no task file is left; the next step is
-   the owner's review (the Status block above), so a new session starts by reading the answers there.
+   turn into tasks or questions. Two items are open (R-UI-1, R-RULES-1); no task file is left. The Status block above says
+   what to do with them.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),

@@ -15,4 +15,4 @@ as the present state and the target: what the owner sees, what the owner wants. 
 its answer is written into [../software-design/](../software-design/README.md) and the work into
 [../development/plan/](../development/plan/README.md). Numbers are never reused.
 
-Open items: none.
+Open items: R-UI-1 (`ui.md`) and R-RULES-1 (`rules.md`).
