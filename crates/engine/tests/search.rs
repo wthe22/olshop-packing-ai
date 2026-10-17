@@ -107,6 +107,7 @@ fn day_state(day: &str, saved: Vec<SavedOrder>, pdf_file: &str) -> DayState {
             runs: 1,
         }],
         packing_list: PackingListChoice::default(),
+        printed: Vec::new(),
         warnings: Vec::new(),
         errors: Vec::new(),
     });

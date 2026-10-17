@@ -21,6 +21,9 @@ export interface PdfView {
   file: string;
   orders: number;
   runs: number;
+  /// The row's **Printed** tick, from the batch's `printed` list (07 › *`state.json`*;
+  /// 08 › *1. Day*): a note only.
+  printed: boolean;
 }
 
 export interface BatchView {
@@ -80,6 +83,15 @@ export const chooseDataFolder = (path: string): Promise<string> =>
 
 export const dayOverview = (day: string): Promise<DayOverview> =>
   invoke("day_overview", { day });
+
+/// The **Printed** tick of one saved-PDF row of a batch (08 › *1. Day*): writes the day's
+/// `state.json`; it changes nothing else. An unknown batch or saved-PDF number changes nothing.
+export const setPrinted = (
+  day: string,
+  batch: number,
+  pdf: number,
+  printed: boolean,
+): Promise<void> => invoke("set_printed", { day, batch, pdf, printed });
 
 export const days = (): Promise<string[]> => invoke("days");
 

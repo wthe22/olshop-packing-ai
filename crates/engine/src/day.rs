@@ -177,6 +177,11 @@ pub struct BatchEntry {
     pub files: Vec<FileEntry>,
     pub pdfs: Vec<PdfEntry>,
     pub packing_list: PackingListChoice,
+    /// The saved-PDF numbers of the batch whose **Printed** tick is set (07 › *`state.json`*);
+    /// written when a tick is clicked; absent loads as empty. A note only: nothing is enforced,
+    /// and it belongs to the batch, so a revert takes it and an amend writes the batch afresh.
+    #[serde(default)]
+    pub printed: Vec<i64>,
     /// The read warnings of the batch, as shown on the Plan screen (07 › *`state.json`*), plus
     /// the check before saving's warnings; the Day screen *Warnings ▸* reads them without
     /// re-reading the files. Defaulted so an older file still loads.
@@ -186,6 +191,13 @@ pub struct BatchEntry {
     /// saving*); present only when the batch was saved anyway. Defaulted so an older file loads.
     #[serde(default)]
     pub errors: Vec<String>,
+}
+
+impl BatchEntry {
+    /// Whether saved-PDF row `pdf` of this batch is ticked (07 › *`state.json`*).
+    pub fn is_printed(&self, pdf: i64) -> bool {
+        self.printed.contains(&pdf)
+    }
 }
 
 /// The day's `state.json`: everything needed to continue, revert or amend a batch.
@@ -317,6 +329,34 @@ impl DayState {
         let removed = self.batches.remove(index);
         self.saved.retain(|order| order.batch != last);
         Some(removed)
+    }
+
+    /// Tick or untick saved-PDF row `pdf` of batch `batch` and write the day's `state.json`
+    /// (07 › *`state.json`*; 08 › *1. Day*): the tick is a note only. Ticking twice leaves one
+    /// entry, unticking removes it, and a batch or saved-PDF number the day does not hold changes
+    /// nothing (nothing is written then). The file is written whole, as [`save`](Self::save) does
+    /// (to `state.json.tmp`, then replace).
+    pub fn set_printed(
+        &mut self,
+        day_dir: &Path,
+        batch: i64,
+        pdf: i64,
+        printed: bool,
+    ) -> Result<(), DayError> {
+        let Some(entry) = self.batches.iter_mut().find(|entry| entry.batch == batch) else {
+            return Ok(());
+        };
+        if !entry.pdfs.iter().any(|row| row.number == pdf) {
+            return Ok(());
+        }
+        if printed {
+            if !entry.printed.contains(&pdf) {
+                entry.printed.push(pdf);
+            }
+        } else {
+            entry.printed.retain(|number| *number != pdf);
+        }
+        self.save(day_dir)
     }
 
     /// Start an amend of the last batch (07 › *Revert and amend*): the `download/` file paths in
@@ -514,6 +554,9 @@ where
         files: write.files.clone(),
         pdfs: write.pdfs.clone(),
         packing_list: write.packing_list.clone(),
+        // A batch written by a save (or written again by an amend) starts with no ticks: the
+        // amend writes the batch afresh (07 › *`state.json`*).
+        printed: Vec::new(),
         warnings,
         errors: findings.errors,
     });

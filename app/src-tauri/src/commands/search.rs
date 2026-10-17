@@ -179,6 +179,7 @@ mod tests {
                 runs: 1,
             }],
             packing_list: PackingListChoice::default(),
+            printed: Vec::new(),
             warnings: Vec::new(),
             errors: Vec::new(),
         }

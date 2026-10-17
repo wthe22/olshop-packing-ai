@@ -130,6 +130,9 @@ pub struct PdfView {
     file: String,
     orders: usize,
     runs: usize,
+    /// The row's **Printed** tick, from the batch's `printed` list (07 › *`state.json`*;
+    /// 08 › *1. Day*): a note only.
+    printed: bool,
 }
 
 /// The Day screen's view of one batch (08 › *1. Day*).
@@ -177,6 +180,22 @@ fn day_overview_at(data_folder: &Path, day: &str) -> Result<DayOverview, String>
     Ok(overview_of(&state, &day_dir))
 }
 
+/// Write one saved-PDF row's **Printed** tick into the day's `state.json` (07 › *`state.json`*;
+/// 08 › *1. Day*); a batch or saved-PDF number the day does not hold changes nothing.
+fn set_printed_at(
+    data_folder: &Path,
+    day: &str,
+    batch: i64,
+    pdf: i64,
+    printed: bool,
+) -> Result<(), String> {
+    let day_dir = data_folder.join(LABELS_DIR).join(day);
+    let mut state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
+    state
+        .set_printed(&day_dir, batch, pdf, printed)
+        .map_err(|error| error.to_string())
+}
+
 fn overview_of(state: &DayState, day_dir: &Path) -> DayOverview {
     let mut batches: Vec<BatchView> = state
         .batches
@@ -197,6 +216,7 @@ fn overview_of(state: &DayState, day_dir: &Path) -> DayOverview {
                     file: pdf.file.clone(),
                     orders: pdf.orders,
                     runs: pdf.runs,
+                    printed: batch.is_printed(pdf.number),
                 })
                 .collect(),
             packing_lists: packing_list_files(&batch.packing_list, &batch.pdfs),
@@ -395,6 +415,20 @@ pub fn day_overview(state: State<'_, AppState>, day: String) -> Result<DayOvervi
     day_overview_at(&state.data_folder()?, &day)
 }
 
+/// The **Printed** tick of one saved-PDF row of a batch (08 › *1. Day*; 07 › *`state.json`*):
+/// writes the day's `state.json`; it changes nothing else.
+#[tauri::command]
+pub fn set_printed(
+    state: State<'_, AppState>,
+    day: String,
+    batch: i64,
+    pdf: i64,
+    printed: bool,
+) -> Result<(), String> {
+    state.set_day(&day);
+    set_printed_at(&state.data_folder()?, &day, batch, pdf, printed)
+}
+
 /// The day folders to switch between (08 › *Window frame*).
 #[tauri::command]
 pub fn days(state: State<'_, AppState>) -> Result<Vec<String>, String> {
@@ -471,6 +505,7 @@ mod tests {
             files: vec![file_entry("a.pdf")],
             pdfs: vec![pdf],
             packing_list: PackingListChoice::default(),
+            printed: Vec::new(),
             warnings,
             errors,
         }
@@ -560,6 +595,53 @@ mod tests {
         let empty = day_overview_at(&dir, "2026-10-08").expect("empty");
         assert!(empty.batches.is_empty());
         assert_eq!(empty.totals.orders, 0);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// The Day screen's **Printed** tick: the write is read back by a second `day_overview` (the
+    /// tick survives closing and reopening), and an unknown batch or saved-PDF number changes
+    /// nothing (08 › *1. Day*; 07 › *`state.json`*).
+    #[test]
+    fn set_printed_writes_the_tick_and_the_overview_reports_it() {
+        let dir = temp_dir("printed");
+        let day_dir = dir.join(LABELS_DIR).join("2026-10-07");
+        let mut state = DayState::new("2026-10-07");
+        state.batches.push(batch_entry(
+            1,
+            "2026-10-07T07:40:12+07:00",
+            PdfEntry {
+                number: 1,
+                code: "A".to_string(),
+                name: "Sepatu".to_string(),
+                file: "1 A Sepatu ×172.pdf".to_string(),
+                orders: 172,
+                runs: 4,
+            },
+            Vec::new(),
+            Vec::new(),
+        ));
+        state.save(&day_dir).expect("save state");
+
+        // Before: the row is unticked.
+        let before = day_overview_at(&dir, "2026-10-07").expect("overview");
+        assert!(!before.batches[0].pdfs[0].printed);
+
+        // Ticking writes the file; a fresh `day_overview` reports the tick.
+        set_printed_at(&dir, "2026-10-07", 1, 1, true).expect("tick");
+        let after = day_overview_at(&dir, "2026-10-07").expect("overview again");
+        assert!(after.batches[0].pdfs[0].printed);
+
+        // Unticking is read back too.
+        set_printed_at(&dir, "2026-10-07", 1, 1, false).expect("untick");
+        let after = day_overview_at(&dir, "2026-10-07").expect("overview again");
+        assert!(!after.batches[0].pdfs[0].printed);
+
+        // An unknown batch or saved-PDF number changes nothing.
+        set_printed_at(&dir, "2026-10-07", 9, 1, true).expect("unknown batch");
+        set_printed_at(&dir, "2026-10-07", 1, 9, true).expect("unknown pdf");
+        let after = day_overview_at(&dir, "2026-10-07").expect("overview again");
+        assert!(!after.batches[0].pdfs[0].printed);
 
         std::fs::remove_dir_all(&dir).ok();
     }

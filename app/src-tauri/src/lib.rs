@@ -243,6 +243,7 @@ pub fn run() {
             commands::day::use_program_folder,
             commands::day::choose_data_folder,
             commands::day::day_overview,
+            commands::day::set_printed,
             commands::day::days,
             commands::day::settings_get,
             commands::day::settings_set,

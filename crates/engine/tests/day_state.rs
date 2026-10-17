@@ -140,6 +140,7 @@ fn save_and_load_state_round_trip() {
             scope: Scope::Whole,
             layouts: vec![Layout::Pick],
         },
+        printed: Vec::new(),
         warnings: Vec::new(),
         errors: Vec::new(),
     });
@@ -167,6 +168,7 @@ fn state_json_matches_the_07_format() {
             scope: Scope::Whole,
             layouts: vec![Layout::Pick],
         },
+        printed: Vec::new(),
         warnings: Vec::new(),
         errors: Vec::new(),
     });
@@ -198,6 +200,8 @@ fn state_json_matches_the_07_format() {
     assert_eq!(batch["warnings"].as_array().map(Vec::len), Some(0));
     // The check before saving's errors are stored apart from the warnings, defaulted when absent.
     assert_eq!(batch["errors"].as_array().map(Vec::len), Some(0));
+    // The **Printed** ticks are stored per batch (07 › *`state.json`*), defaulted when absent.
+    assert_eq!(batch["printed"].as_array().map(Vec::len), Some(0));
 
     let entry = &value["saved"][0];
     assert_eq!(entry["order_id"], "580000000000000001");
@@ -331,6 +335,158 @@ fn the_check_findings_are_stored_with_the_batch() {
 }
 
 #[test]
+fn a_printed_tick_survives_a_write_and_reload() {
+    let dir = TempDir::new("printed");
+    let day = dir.path().join("2026-10-07");
+    let mut state = DayState::new("2026-10-07");
+    save_batch(
+        &day,
+        &mut state,
+        &batch_write(
+            1,
+            vec![pdf_entry(1), pdf_entry(2)],
+            vec![saved("a", 1, 1, 1)],
+        ),
+        |_| Ok(Findings::default()),
+    )
+    .expect("save");
+
+    // Ticking writes the day's `state.json` straight away, as the doc says (07 › *`state.json`*).
+    state.set_printed(&day, 1, 2, true).expect("tick");
+    let loaded = DayState::load(&day).expect("load");
+    assert_eq!(loaded.batches[0].printed, vec![2]);
+    assert!(loaded.batches[0].is_printed(2));
+    assert!(!loaded.batches[0].is_printed(1));
+
+    // Ticking the same row again leaves one entry.
+    state.set_printed(&day, 1, 2, true).expect("tick again");
+    assert_eq!(state.batches[0].printed, vec![2]);
+
+    // Unticking removes it, and the file is written whole each time.
+    state.set_printed(&day, 1, 2, false).expect("untick");
+    assert!(state.batches[0].printed.is_empty());
+    assert!(
+        DayState::load(&day).expect("load").batches[0]
+            .printed
+            .is_empty()
+    );
+}
+
+#[test]
+fn a_state_without_the_printed_field_loads_with_no_ticks() {
+    let dir = TempDir::new("printed-legacy");
+    let day = dir.path().join("2026-10-07");
+    fs::create_dir_all(&day).expect("create day");
+    // A day written before the tick existed: the batch has no `printed` key.
+    let json = r#"{
+  "day": "2026-10-07",
+  "batches": [
+    {
+      "batch": 1,
+      "save_time": "2026-10-07T07:40:12+07:00",
+      "files": [{"name": "labels_1.pdf", "size": 3, "xxh3": "9f2c", "pages": 5}],
+      "pdfs": [{"number": 1, "code": "A", "name": "Sepatu", "file": "1 A Sepatu ×1.pdf", "orders": 1, "runs": 1}],
+      "packing_list": {"scope": "whole", "layouts": ["pick"]}
+    }
+  ],
+  "saved": []
+}"#;
+    fs::write(day.join("state.json"), json).expect("write legacy state");
+
+    let state = DayState::load(&day).expect("load legacy day");
+    assert!(state.batches[0].printed.is_empty());
+    assert!(!state.batches[0].is_printed(1));
+}
+
+#[test]
+fn set_printed_ignores_an_unknown_batch_or_pdf_number() {
+    let dir = TempDir::new("printed-unknown");
+    let day = dir.path().join("2026-10-07");
+    let mut state = DayState::new("2026-10-07");
+    save_batch(
+        &day,
+        &mut state,
+        &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
+        |_| Ok(Findings::default()),
+    )
+    .expect("save");
+    let before = fs::read_to_string(day.join("state.json")).expect("read");
+
+    // An unknown batch and an unknown saved-PDF number change nothing, and write nothing.
+    state.set_printed(&day, 9, 1, true).expect("unknown batch");
+    state.set_printed(&day, 1, 9, true).expect("unknown pdf");
+    assert!(state.batches[0].printed.is_empty());
+    let after = fs::read_to_string(day.join("state.json")).expect("read again");
+    assert_eq!(before, after, "an unknown row writes nothing");
+}
+
+#[test]
+fn revert_removes_the_batch_with_its_ticks() {
+    let dir = TempDir::new("printed-revert");
+    let day = dir.path().join("2026-10-07");
+    let mut state = DayState::new("2026-10-07");
+    save_batch(
+        &day,
+        &mut state,
+        &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
+        |_| Ok(Findings::default()),
+    )
+    .expect("save 1");
+    save_batch(
+        &day,
+        &mut state,
+        &batch_write(2, vec![pdf_entry(2)], vec![saved("b", 2, 2, 1)]),
+        |_| Ok(Findings::default()),
+    )
+    .expect("save 2");
+    state.set_printed(&day, 1, 1, true).expect("tick batch 1");
+    state.set_printed(&day, 2, 2, true).expect("tick batch 2");
+
+    // The ticks belong to the batch: a revert removes them with it (07 › *`state.json`*).
+    let removed = state.revert_last().expect("a batch");
+    assert_eq!(removed.batch, 2);
+    assert_eq!(removed.printed, vec![2]);
+    assert!(state.batches.iter().all(|batch| batch.batch != 2));
+    // The batch left keeps its own tick.
+    assert_eq!(state.batches[0].printed, vec![1]);
+}
+
+#[test]
+fn an_amended_batch_is_written_without_ticks() {
+    let dir = TempDir::new("printed-amend");
+    let day = dir.path().join("2026-10-07");
+    let mut state = DayState::new("2026-10-07");
+    save_batch(
+        &day,
+        &mut state,
+        &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
+        |_| Ok(Findings::default()),
+    )
+    .expect("save");
+    state.set_printed(&day, 1, 1, true).expect("tick");
+    assert_eq!(state.batches[0].printed, vec![1]);
+
+    // An amend writes the batch afresh, so its new entry starts with no ticks
+    // (07 › *`state.json`*).
+    let amend = state.amend(&day).expect("amend");
+    let mut amended = amend.state;
+    save_batch(
+        &day,
+        &mut amended,
+        &batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]),
+        |_| Ok(Findings::default()),
+    )
+    .expect("save again");
+    assert_eq!(amended.batches.len(), 1);
+    assert!(amended.batches[0].printed.is_empty());
+    assert!(
+        DayState::load(&day).expect("load").batches[0]
+            .printed
+            .is_empty()
+    );
+}
+
+#[test]
 fn next_numbers_continue_through_the_day() {
     let dir = TempDir::new("numbers");
     let day = dir.path().join("2026-10-07");
@@ -441,6 +597,7 @@ fn the_same_file_is_recognised_twice_and_a_changed_byte_is_not() {
         }],
         pdfs: vec![pdf_entry(1)],
         packing_list: PackingListChoice::default(),
+        printed: Vec::new(),
         warnings: Vec::new(),
         errors: Vec::new(),
     });

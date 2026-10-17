@@ -14,6 +14,7 @@
   import { confirm, open } from "@tauri-apps/plugin-dialog";
   import { listen } from "@tauri-apps/api/event";
   import * as api from "../lib/api";
+  import { togglePrinted } from "../lib/printed";
   import { texts, amendOpens } from "../texts";
   import Frame from "../lib/Frame.svelte";
   import StartPrompt from "../lib/StartPrompt.svelte";
@@ -347,6 +348,20 @@
       error = String(e);
     }
   }
+
+  /// The **Printed** tick of one saved-PDF row (08 › *1. Day*; 07 › *`state.json`*): write it and
+  /// update the batch's rows in place, without reloading the whole overview. The tick rule is the
+  /// pure [`togglePrinted`]; a failed save shows the usual error.
+  async function setPrinted(batch: api.BatchView, pdf: api.PdfView, printed: boolean) {
+    try {
+      await api.setPrinted(day, batch.batch, pdf.number, printed);
+      const ticked = batch.pdfs.filter((row) => row.printed).map((row) => row.number);
+      const numbers = togglePrinted(ticked, pdf.number, printed);
+      for (const row of batch.pdfs) row.printed = numbers.includes(row.number);
+    } catch (e) {
+      error = String(e);
+    }
+  }
 </script>
 
 {#if !ready}
@@ -365,6 +380,7 @@
       reading={amendReading}
       onOpen={openFile}
       onOpenFolder={openFolder}
+      onSetPrinted={setPrinted}
       onNewBatch={startBatch}
       onAmend={amend}
       onRevert={revert}

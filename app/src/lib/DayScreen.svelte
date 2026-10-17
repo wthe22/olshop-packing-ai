@@ -1,8 +1,9 @@
 <script lang="ts">
   // The Day screen (08 › *1. Day*): what has been saved today. Batches come from state.json,
-  // each with its stored warnings; *New batch* starts the batch flow.
+  // each with its stored warnings and each saved-PDF row with its **Printed** tick (a note);
+  // *New batch* starts the batch flow.
   import { texts } from "../texts";
-  import type { BatchView, DayOverview } from "./api";
+  import type { BatchView, DayOverview, PdfView } from "./api";
 
   let {
     overview,
@@ -10,6 +11,7 @@
     reading,
     onOpen,
     onOpenFolder,
+    onSetPrinted,
     onNewBatch,
     onAmend,
     onRevert,
@@ -21,6 +23,10 @@
     reading: { page: number; pages: number } | null;
     onOpen: (path: string) => void;
     onOpenFolder: (path: string) => void;
+    /// The **Printed** tick of one saved-PDF row (08 › *1. Day*): the owner ticks it to note that
+    /// this saved PDF has been printed; it is written to the day's `state.json` the moment it is
+    /// clicked.
+    onSetPrinted: (batch: BatchView, pdf: PdfView, printed: boolean) => void;
     onNewBatch: () => void;
     onAmend: (batch: BatchView) => void;
     onRevert: (batch: BatchView) => void;
@@ -94,6 +100,15 @@
             <span class="code">{pdf.code}</span>
             <span class="name">{pdf.name}</span>
             <span class="counts">{texts.day.counts(pdf.orders, pdf.runs)}</span>
+            <label class="printed">
+              <input
+                type="checkbox"
+                checked={pdf.printed}
+                aria-label={texts.day.printedLabel(pdf.file)}
+                onchange={(event) => onSetPrinted(batch, pdf, event.currentTarget.checked)}
+              />
+              {texts.day.printed}
+            </label>
             <button onclick={() => onOpen(join(batch.folder, pdf.file))}
               >{texts.day.open}</button
             >
@@ -257,6 +272,14 @@
   .counts {
     min-width: 11rem;
     color: #4a4a4a;
+  }
+
+  /* The **Printed** tick beside *Open* (08 › *1. Day*): a note only. */
+  .printed {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
   }
 
   .batch-foot {
