@@ -122,7 +122,12 @@
     });
     let result: api.ReadResult | null = null;
     try {
-      result = await api.readLabels(listed.map((file) => file.path), amend);
+      // The set picker is Part B; a screen that knows no sets reads the set `default` (04 › *Sets*).
+      result = await api.readLabels(
+        listed.map((file) => file.path),
+        api.DEFAULT_SET,
+        amend,
+      );
     } catch (e) {
       // *Cancel* returns to the file list; any other stop shows its message with Back.
       if (!cancelling) stop = String(e);

@@ -64,7 +64,7 @@ name = "Lainnya"
   `categories/` folder. The names are the file names without `.toml`; characters that are not
   allowed in Windows file names (`\ / : * ? " < > |`) become `-`. A file
   `categories/default.toml` is refused with both files named: the name `default` belongs to the
-  data folder's own `categories.toml`.
+  data folder's own `categories.toml`, so it is neither created nor deleted nor renamed.
 - **A set with no file** (a fresh data folder, or a set the owner has not saved yet) has one
   catch-all entry — code `Z`, name `Lainnya`, no condition — which takes every order, so a batch
   packed with it saves every order in one PDF set ([inputs](../app/inputs.md)).

@@ -26,10 +26,14 @@ pub mod commands;
 /// for it.
 pub(crate) const BUILTIN_COURIERS: &str = packing_engine::label::COURIERS_TOML;
 
-/// The picks file in the data folder (07 › *Rules file*). The app writes it only when the owner
-/// saves picks (08 › *5. Categories*), so it is not what marks a folder as a data folder
-/// ([`COURIERS_FILE`], 07 › *Program folder*).
-pub(crate) const CATEGORIES_FILE: &str = "categories.toml";
+/// The picks file in the data folder (07 › *Rules file*): the set `default`. The app writes it
+/// only when the owner saves picks (08 › *5. Categories*), so it is not what marks a folder as a
+/// data folder ([`COURIERS_FILE`], 07 › *Program folder*). The other sets are one file each in
+/// [`SETS_DIR`] (04 › *Sets*).
+pub(crate) const CATEGORIES_FILE: &str = packing_engine::sets::CATEGORIES_FILE;
+/// The data folder subfolder holding every set but `default`, one file each, the file name being
+/// the set name (04 › *Sets*).
+pub(crate) const SETS_DIR: &str = packing_engine::sets::SETS_DIR;
 /// The courier file in the data folder (07 › *Inputs*).
 pub(crate) const COURIERS_FILE: &str = packing_engine::label::COURIERS_FILE_NAME;
 /// The settings file in the data folder (07 › *Settings*).
@@ -50,6 +54,10 @@ pub(crate) struct OpenDraft {
     /// bundled list when it has none (07 › *Inputs*). The logo prompt's buttons and the answers
     /// use this table.
     pub couriers: packing_engine::label::CourierTable,
+    /// The picks set this batch is packed with (04 › *Sets*; 08 › *2. New batch* → *The set*), the
+    /// one chosen on the New batch screen or, for an amend, the batch's own recorded set. It is
+    /// written into the day's `state.json` at save.
+    pub set: String,
     /// Set when this draft amends the last batch (07 › *Amend*): Save replaces that batch and the
     /// plan screen is titled *Redo batch `<b>`*. `None` for a normal new batch.
     pub amend: Option<AmendState>,
@@ -265,6 +273,9 @@ pub fn run() {
             commands::rules::rules_check_text,
             commands::rules::rules_save,
             commands::rules::rules_save_text,
+            commands::rules::sets_list,
+            commands::rules::new_set,
+            commands::rules::delete_set,
             commands::rules::condition_to_tree,
             commands::rules::tree_to_condition,
             commands::search::search_orders,

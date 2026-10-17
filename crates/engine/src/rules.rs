@@ -848,7 +848,7 @@ fn collect_fields(cond: &Condition, used: &mut BTreeSet<String>) {
 
 // ---------------------------------------------------------------- rules file
 
-const RULES_FILE_NAME: &str = "categories.toml";
+pub const RULES_FILE_NAME: &str = "categories.toml";
 const CATEGORY_KEYS: &[&str] = &["code", "name", "when"];
 
 fn valid_code(code: &str) -> bool {
@@ -932,28 +932,33 @@ pub fn unconfigured<'a>(categories: impl IntoIterator<Item = &'a Category>) -> b
 /// Load the categories from the text of `categories.toml` (the app reads the file). Errors
 /// carry the line/col inside the file, like the reference implementation.
 pub fn load_rules(text: &str) -> Result<Vec<Category>, RulesError> {
+    load_rules_named(text, RULES_FILE_NAME)
+}
+
+/// Load the categories from the text of a rules file whose name is `file` (04 › *Sets*): one set
+/// each. [`load_rules`] uses the data folder's own `categories.toml`; a set's file is
+/// `categories/<set name>.toml`, so its errors name that file. The rules are the same.
+pub fn load_rules_named(text: &str, file: &str) -> Result<Vec<Category>, RulesError> {
     let table: toml::Table =
-        toml::from_str(text).map_err(|e| RulesError::new(format!("{RULES_FILE_NAME}: {e}")))?;
+        toml::from_str(text).map_err(|e| RulesError::new(format!("{file}: {e}")))?;
 
     for key in table.keys() {
         if key != "category" {
-            return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: unknown key \"{key}\""
-            )));
+            return Err(RulesError::new(format!("{file}: unknown key \"{key}\"")));
         }
     }
 
     let raw = match table.get("category") {
-        None => return Err(RulesError::new(format!("{RULES_FILE_NAME}: no categories"))),
+        None => return Err(RulesError::new(format!("{file}: no categories"))),
         Some(toml::Value::Array(entries)) => entries,
         Some(_) => {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: \"category\" must be an array of tables"
+                "{file}: \"category\" must be an array of tables"
             )));
         }
     };
     if raw.is_empty() {
-        return Err(RulesError::new(format!("{RULES_FILE_NAME}: no categories")));
+        return Err(RulesError::new(format!("{file}: no categories")));
     }
 
     let mut categories: Vec<Category> = Vec::new();
@@ -962,7 +967,7 @@ pub fn load_rules(text: &str) -> Result<Vec<Category>, RulesError> {
     for (index, entry) in raw.iter().enumerate() {
         let toml::Value::Table(entry) = entry else {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category #{}: must be a table",
+                "{file}: category #{}: must be a table",
                 index + 1
             )));
         };
@@ -976,51 +981,51 @@ pub fn load_rules(text: &str) -> Result<Vec<Category>, RulesError> {
         for key in entry.keys() {
             if !CATEGORY_KEYS.contains(&key.as_str()) {
                 return Err(RulesError::new(format!(
-                    "{RULES_FILE_NAME}: category {cid}: unknown key \"{key}\""
+                    "{file}: category {cid}: unknown key \"{key}\""
                 )));
             }
         }
 
         let Some(code_value) = code_value else {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category {cid}: missing \"code\""
+                "{file}: category {cid}: missing \"code\""
             )));
         };
         let toml::Value::String(code) = code_value else {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category {cid}: \"code\" must be a string"
+                "{file}: category {cid}: \"code\" must be a string"
             )));
         };
         if code.is_empty() {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category {cid}: \"code\" must not be empty"
+                "{file}: category {cid}: \"code\" must not be empty"
             )));
         }
         if !valid_code(code) {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category {cid}: \"code\" must be 1-3 letters or digits"
+                "{file}: category {cid}: \"code\" must be 1-3 letters or digits"
             )));
         }
         if seen.contains(code) {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category {cid}: duplicate \"code\" \"{code}\""
+                "{file}: category {cid}: duplicate \"code\" \"{code}\""
             )));
         }
         seen.insert(code.clone());
 
         let Some(name_value) = entry.get("name") else {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category {cid}: missing \"name\""
+                "{file}: category {cid}: missing \"name\""
             )));
         };
         let toml::Value::String(name) = name_value else {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category {cid}: \"name\" must be a string"
+                "{file}: category {cid}: \"name\" must be a string"
             )));
         };
         if name.is_empty() {
             return Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category {cid}: \"name\" must not be empty"
+                "{file}: category {cid}: \"name\" must not be empty"
             )));
         }
 
@@ -1029,7 +1034,7 @@ pub fn load_rules(text: &str) -> Result<Vec<Category>, RulesError> {
             Some(toml::Value::String(s)) => Some(s.clone()),
             Some(_) => {
                 return Err(RulesError::new(format!(
-                    "{RULES_FILE_NAME}: category {cid}: \"when\" must be a string"
+                    "{file}: category {cid}: \"when\" must be a string"
                 )));
             }
         };
@@ -1038,12 +1043,12 @@ pub fn load_rules(text: &str) -> Result<Vec<Category>, RulesError> {
             None => {
                 if index != count - 1 {
                     return Err(RulesError::new(format!(
-                        "{RULES_FILE_NAME}: category {cid}: missing \"when\" on a category that is not last"
+                        "{file}: category {cid}: missing \"when\" on a category that is not last"
                     )));
                 }
                 None
             }
-            Some(when) => Some(parse_when(when, text, index, &cid)?),
+            Some(when) => Some(parse_when(when, text, file, index, &cid)?),
         };
 
         categories.push(Category {
@@ -1059,6 +1064,7 @@ pub fn load_rules(text: &str) -> Result<Vec<Category>, RulesError> {
 fn parse_when(
     when: &str,
     file_text: &str,
+    file: &str,
     index: usize,
     cid: &str,
 ) -> Result<Condition, RulesError> {
@@ -1077,11 +1083,11 @@ fn parse_when(
                     (start_line + cond_line - 1, cond_col)
                 };
                 return Err(RulesError::new(format!(
-                    "{RULES_FILE_NAME}, line {file_line}, col {file_col}: category {cid} (when): {rest}"
+                    "{file}, line {file_line}, col {file_col}: category {cid} (when): {rest}"
                 )));
             }
             Err(RulesError::new(format!(
-                "{RULES_FILE_NAME}: category {cid} (when): {}",
+                "{file}: category {cid} (when): {}",
                 e.message
             )))
         }

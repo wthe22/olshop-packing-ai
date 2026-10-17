@@ -169,6 +169,7 @@ mod tests {
         BatchEntry {
             batch,
             save_time: "2026-10-07T07:40:12+07:00".to_string(),
+            set: "default".to_string(),
             files: Vec::new(),
             pdfs: vec![PdfEntry {
                 number: 1,
@@ -376,6 +377,7 @@ mod tests {
             plan: Plan::from_categories(&[]),
             first_number: 1,
             couriers: packing_engine::label::courier_data().clone(),
+            set: packing_engine::sets::DEFAULT_SET.to_string(),
             amend: None,
             logo_pictures: Default::default(),
         });

@@ -298,14 +298,19 @@ fn layout_name(layout: Layout) -> &'static str {
 
 // --------------------------------------------------------------------------- settings
 
-/// The data folder's `settings.json` (07 › *Settings*): the packing-list default. A missing key
-/// takes its default, so an older file still loads.
+/// The data folder's `settings.json` (07 › *Settings*): the packing-list default and the picks
+/// set used last. A missing key takes its default, so an older file still loads.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
     #[serde(default = "default_scope")]
     pub scope: Scope,
     #[serde(default = "default_layouts")]
     pub layouts: Vec<Layout>,
+    /// The picks set used last (07 › *Settings*; 04 › *Sets*): the [New batch](../ui/new-batch.md)
+    /// screen preselects it, and each batch records its own. Absent in an older file, which loads
+    /// as `default`.
+    #[serde(default = "default_set")]
+    pub set: String,
 }
 
 impl Default for Settings {
@@ -313,6 +318,7 @@ impl Default for Settings {
         Self {
             scope: default_scope(),
             layouts: default_layouts(),
+            set: default_set(),
         }
     }
 }
@@ -335,6 +341,11 @@ fn default_layouts() -> Vec<Layout> {
     vec![Layout::Pick]
 }
 
+/// The picks set an older `settings.json` (or one without the key) loads as (04 › *Sets*).
+fn default_set() -> String {
+    packing_engine::sets::DEFAULT_SET.to_string()
+}
+
 pub(crate) fn settings_load(data_folder: &Path) -> Result<Settings, String> {
     let path = data_folder.join(SETTINGS_FILE);
     if !path.is_file() {
@@ -351,6 +362,20 @@ fn settings_save(data_folder: &Path, settings: &Settings) -> Result<(), String> 
     text.push('\n');
     std::fs::write(&path, text)
         .map_err(|error| format!("Cannot write to {}: {error}.", path.display()))
+}
+
+/// Remember the picks set used last in the data folder's `settings.json` (07 › *Settings*; 04 ›
+/// *Sets*), so the next **New batch** preselects it. Best-effort: a read is never stopped by a
+/// settings problem, and a save of the same set writes nothing.
+pub(crate) fn remember_last_set(data_folder: &Path, set: &str) {
+    let Ok(mut settings) = settings_load(data_folder) else {
+        return;
+    };
+    if settings.set == set {
+        return;
+    }
+    settings.set = set.to_string();
+    let _ = settings_save(data_folder, &settings);
 }
 
 // ----------------------------------------------------------------------------- about
@@ -502,6 +527,7 @@ mod tests {
         BatchEntry {
             batch,
             save_time: time.to_string(),
+            set: "default".to_string(),
             files: vec![file_entry("a.pdf")],
             pdfs: vec![pdf],
             packing_list: PackingListChoice::default(),
@@ -519,16 +545,48 @@ mod tests {
         let custom = Settings {
             scope: Scope::PerPdf,
             layouts: vec![Layout::Full, Layout::Summary],
+            set: "ramadhan".to_string(),
         };
         settings_save(&dir, &custom).expect("save");
         assert_eq!(settings_load(&dir).expect("load"), custom);
         assert_eq!(custom.packing_choice().scope, Scope::PerPdf);
 
-        // A missing key takes its default.
+        // A missing key takes its default: an older file without the set loads as `default`
+        // (07 › *Settings*; 04 › *Sets*).
         std::fs::write(dir.join(SETTINGS_FILE), "{\n  \"scope\": \"none\"\n}\n").expect("write");
         let partial = settings_load(&dir).expect("partial");
         assert_eq!(partial.scope, Scope::None);
         assert_eq!(partial.layouts, vec![Layout::Pick]);
+        assert_eq!(partial.set, packing_engine::sets::DEFAULT_SET);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// The picks set used last is remembered in `settings.json` (07 › *Settings*; 04 › *Sets*), so
+    /// the next New batch preselects it; a read with the same set writes nothing, and a folder
+    /// whose settings cannot be read is left alone.
+    #[test]
+    fn the_last_used_set_is_remembered() {
+        let dir = temp_dir("settings-set");
+        // No file yet: the default, and remembering a set writes it.
+        assert_eq!(settings_load(&dir).expect("default").set, "default");
+        remember_last_set(&dir, "ramadhan");
+        assert_eq!(settings_load(&dir).expect("load").set, "ramadhan");
+
+        // The packing-list keys are kept (the file is written whole).
+        remember_last_set(&dir, "default");
+        let settings = settings_load(&dir).expect("load again");
+        assert_eq!(settings.set, "default");
+        assert_eq!(settings.scope, Scope::Whole);
+        assert_eq!(settings.layouts, vec![Layout::Pick]);
+
+        // A broken settings file is not touched.
+        std::fs::write(dir.join(SETTINGS_FILE), "not json").expect("write broken");
+        remember_last_set(&dir, "ramadhan");
+        assert_eq!(
+            std::fs::read_to_string(dir.join(SETTINGS_FILE)).expect("read"),
+            "not json"
+        );
 
         std::fs::remove_dir_all(&dir).ok();
     }

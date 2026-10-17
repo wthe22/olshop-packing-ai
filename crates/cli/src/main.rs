@@ -22,6 +22,7 @@ use packing_engine::day::{DayState, Layout, PackingListChoice, Scope, delete_bat
 use packing_engine::label::{CourierTable, load_couriers_file};
 use packing_engine::plan::{Plan, PlanResult};
 use packing_engine::rules::{Category, catch_all_category, load_rules};
+use packing_engine::sets;
 use packing_pdf::batch::{self, BatchError, Draft};
 use packing_pdf::worker::PdfWorker;
 
@@ -248,6 +249,7 @@ fn run_prepare(args: &[String]) -> Result<(), CliError> {
         &draft,
         &plan,
         &packing,
+        sets::DEFAULT_SET,
         &day,
         &day_dir,
         &mut state,
@@ -291,11 +293,13 @@ fn run_amend(args: &[String]) -> Result<(), CliError> {
     let (draft, plan) = read_and_plan(&worker, &categories, &couriers, &amend.state, &amend.files)?;
     let packing = args.packing();
     let mut amend_state = amend.state;
+    // The amend keeps the batch's own set, as the app's amend does (04 › *Sets*).
     save_and_report(
         &worker,
         &draft,
         &plan,
         &packing,
+        &amend.set,
         &day,
         &day_dir,
         &mut amend_state,
@@ -368,6 +372,7 @@ fn save_and_report(
     draft: &Draft,
     plan: &PlanResult,
     packing: &PackingListChoice,
+    set: &str,
     day: &str,
     day_dir: &Path,
     state: &mut DayState,
@@ -375,7 +380,7 @@ fn save_and_report(
 ) -> Result<(), CliError> {
     let (progress, _rx) = mpsc::channel();
     let result = batch::save(
-        worker, draft, plan, packing, day, day_dir, state, false, progress,
+        worker, draft, plan, packing, set, day, day_dir, state, false, progress,
     )?;
     if !result.saved {
         let mut message =

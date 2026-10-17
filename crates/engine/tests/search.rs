@@ -91,6 +91,7 @@ fn day_state(day: &str, saved: Vec<SavedOrder>, pdf_file: &str) -> DayState {
     state.batches.push(BatchEntry {
         batch: 1,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
+        set: "default".to_string(),
         files: vec![FileEntry {
             name: "labels_1.pdf".to_string(),
             size: 10,

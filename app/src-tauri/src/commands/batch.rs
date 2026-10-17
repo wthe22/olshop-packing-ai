@@ -20,17 +20,16 @@ use packing_engine::label::{self, CourierTable};
 use packing_engine::names;
 use packing_engine::orders::{LogoAnswer, Order, ReadOrder, UnseenLogo, display_name};
 use packing_engine::plan::{PickResult, Plan};
-use packing_engine::rules::{
-    Category, Condition, catch_all_category, evaluate, load_rules, parse_condition,
-};
+use packing_engine::rules::{Category, Condition, evaluate, parse_condition};
+use packing_engine::sets;
 use packing_pdf::batch::{self, Draft, FileCheck};
 use packing_pdf::worker::{PdfWorker, Progress, SaveProgress, SaveStage};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::{
-    AmendState, AppState, BUILTIN_COURIERS, CATEGORIES_FILE, COURIERS_FILE, OpenDraft,
-    commands::day::settings_load,
+    AmendState, AppState, BUILTIN_COURIERS, COURIERS_FILE, OpenDraft,
+    commands::day::{remember_last_set, settings_load},
 };
 
 // ------------------------------------------------------------------------- new batch
@@ -569,26 +568,33 @@ fn base64(bytes: &[u8]) -> String {
 /// Read the chosen files into a draft and store it (08 › *2. New batch* → *3. Plan*). Runs on a
 /// blocking thread; `on_progress` is called for every page (the window turns it into a
 /// `read-progress` event). A stop (no packing slip, every order already saved, a rules error,
-/// cancelled) returns its message and writes nothing.
+/// cancelled) returns its message and writes nothing. `set` is the picks set of categories the
+/// batch uses (04 › *Sets*), chosen on the New batch screen; it becomes the set used last
+/// (07 › *Settings*), which the next New batch preselects.
 fn read_draft(
     state: &AppState,
     paths: Vec<PathBuf>,
+    set: &str,
     on_progress: impl Fn(Progress) + Send + 'static,
 ) -> Result<ReadResult, String> {
     let day_dir = state.day_dir()?;
     let day_state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
-    read_into_draft(state, paths, day_state, None, true, on_progress)
+    let read = read_into_draft(state, paths, day_state, None, set, true, on_progress)?;
+    remember_last_set(&state.data_folder()?, set);
+    Ok(read)
 }
 
-/// The shared read: `base_state` supplies the duplicate guard and the day's next number; `amend`
-/// marks the draft as redoing a batch (07 › *Amend*); `sort_by_name` reads a new batch in
-/// file-name order (= download order, 08 › *2. New batch*) and an amend in the given order (its
-/// `download/` copy in the order stored in `state.json`).
+/// The shared read: `base_state` supplies the duplicate guard and the day's next number; `set` is
+/// the picks set to read with (04 › *Sets*); `amend` marks the draft as redoing a batch
+/// (07 › *Amend*); `sort_by_name` reads a new batch in file-name order (= download order,
+/// 08 › *2. New batch*) and an amend in the given order (its `download/` copy in the order stored
+/// in `state.json`).
 fn read_into_draft(
     state: &AppState,
     paths: Vec<PathBuf>,
     base_state: DayState,
     amend: Option<AmendState>,
+    set: &str,
     sort_by_name: bool,
     on_progress: impl Fn(Progress) + Send + 'static,
 ) -> Result<ReadResult, String> {
@@ -596,7 +602,7 @@ fn read_into_draft(
         return Err("Choose at least one label file first.".to_string());
     }
     let folder = state.data_folder()?;
-    let categories = load_categories(&folder)?;
+    let categories = load_categories(&folder, set)?;
     let couriers = load_couriers(&folder)?;
 
     let mut files = paths;
@@ -645,6 +651,7 @@ fn read_into_draft(
         plan,
         first_number,
         couriers,
+        set: set.to_string(),
         amend,
         logo_pictures,
     };
@@ -755,6 +762,9 @@ fn read_amend_draft(
         .filter(|amend| amend.batch == redoing)
         .ok_or_else(|| "No batch to redo on this day.".to_string())?;
     let base_state = amend.state.clone();
+    // The amend reads with the set the batch recorded, whatever was used last (04 › *Sets*;
+    // 07 › *Amend*).
+    let set = amend.set.clone();
     let amend_state = AmendState {
         batch: amend.batch,
         state: amend.state,
@@ -764,6 +774,7 @@ fn read_amend_draft(
         paths,
         base_state,
         Some(amend_state),
+        &set,
         false,
         on_progress,
     )
@@ -826,19 +837,12 @@ fn remember_logo(folder: &Path, hash: &str, answer: &LogoAnswerInput) -> Result<
         .map_err(|error| format!("Cannot write to {}: {error}.", path.display()))
 }
 
-/// Load `<data>/categories.toml`, or the one catch-all entry when the data folder has none
-/// (07 › *Inputs*, 08 › *5. Categories*): every order then goes into one PDF set. A file that
-/// does not load stops the batch with its line/col (08 › *Messages*).
-fn load_categories(folder: &Path) -> Result<Vec<Category>, String> {
-    let path = folder.join(CATEGORIES_FILE);
-    let text = match std::fs::read_to_string(&path) {
-        Ok(text) => text,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            return Ok(vec![catch_all_category()]);
-        }
-        Err(error) => return Err(format!("cannot read {}: {error}", path.display())),
-    };
-    load_rules(&text)
+/// Load the chosen set's categories — `<data>/categories.toml` for the set `default`, else
+/// `<data>/categories/<set name>.toml` — or the one catch-all entry when the set has no file
+/// (04 › *Sets*, 07 › *Inputs*, 08 › *5. Categories*): every order then goes into one PDF set. A
+/// file that does not load stops the batch with its line/col (08 › *Messages*).
+fn load_categories(folder: &Path, set: &str) -> Result<Vec<Category>, String> {
+    sets::load(folder, set)
         .map_err(|error| format!("The categories have an error: {error}. Fix it in Categories."))
 }
 
@@ -894,12 +898,15 @@ fn save_batch_impl(
         }
     });
 
+    // The batch records the set it was packed with, so an amend reads it again (04 › *Sets*).
+    let set = open.set.clone();
     let result = state.with_worker(|worker| {
         batch::save(
             worker,
             &open.draft,
             &plan,
             &packing,
+            &set,
             &day,
             &day_dir,
             &mut day_state,
@@ -993,14 +1000,17 @@ pub fn check_files(
 /// *Read labels* (08 › *Reading*): read on a blocking thread, emitting `read-progress {page,
 /// pages}`; returns the draft summary and the plan, or the stop error text. A read replaces any
 /// open draft, so the Plan screen's *Back* and a new *Read labels* start again from the files and
-/// no plan edit survives (08 › *3. Plan*). `amend` is the batch being redone when the read comes
-/// from the amend's selection page (08 › *2. New batch* → *The amend's selection page*); `None`
-/// for a new batch's file list.
+/// no plan edit survives (08 › *3. Plan*). `set` is the picks set the new batch uses, chosen on
+/// the selection page (04 › *Sets*). `redo` is the batch being redone when the read comes from the
+/// amend's selection page (08 › *2. New batch* → *The amend's selection page*); `None` for a new
+/// batch's file list. An amend reads with the set that batch recorded, whatever `set` says
+/// (04 › *Sets*).
 #[tauri::command]
 pub async fn read_labels(
     app: AppHandle,
     paths: Vec<String>,
-    amend: Option<i64>,
+    set: String,
+    redo: Option<i64>,
 ) -> Result<ReadResult, String> {
     let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
     tauri::async_runtime::spawn_blocking(move || {
@@ -1015,9 +1025,9 @@ pub async fn read_labels(
                 },
             );
         };
-        match amend {
+        match redo {
             Some(batch) => read_amend_draft(&state, paths, batch, on_progress),
-            None => read_draft(&state, paths, on_progress),
+            None => read_draft(&state, paths, &set, on_progress),
         }
     })
     .await
@@ -1129,6 +1139,9 @@ mod tests {
     use super::*;
     use packing_engine::orders::{Line, Warning};
     use packing_engine::plan::REST_CODE;
+    use packing_engine::rules::catch_all_category;
+
+    use crate::CATEGORIES_FILE;
 
     fn line(name: &str, variation: &str, quantity: i64) -> Line {
         Line {
@@ -1432,6 +1445,7 @@ mod tests {
             )]),
             first_number: 1,
             couriers: packing_engine::label::courier_data().clone(),
+            set: sets::DEFAULT_SET.to_string(),
             amend: None,
             logo_pictures: HashMap::from([(
                 "ffffffffffffffff".to_string(),
@@ -1632,7 +1646,7 @@ mod tests {
         let state = AppState::new();
         state.set_data_folder(dir.clone());
         state.set_day("2026-10-07");
-        let error = read_draft(&state, vec![dir.join("a.pdf")], |_| {})
+        let error = read_draft(&state, vec![dir.join("a.pdf")], sets::DEFAULT_SET, |_| {})
             .err()
             .expect("the read must stop");
         assert!(
@@ -1684,7 +1698,13 @@ mod tests {
         std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
         let state = app_state(&dir);
 
-        let read = read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        let read = read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .expect("read");
         assert_eq!(read.orders, 23);
         assert_eq!(read.total_orders, 23);
         assert_eq!(read.already_saved, 0);
@@ -1723,9 +1743,14 @@ mod tests {
             );
         }
         // A second read of the same file: every order was already saved today.
-        let again = read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {})
-            .err()
-            .expect("already saved");
+        let again = read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .err()
+        .expect("already saved");
         assert!(again.contains("already saved today"), "{again}");
 
         std::fs::remove_dir_all(&dir).ok();
@@ -1741,9 +1766,14 @@ mod tests {
         std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
         let state = app_state(&dir);
 
-        let error = read_draft(&state, vec![testdata("labels-plain.pdf")], |_| {})
-            .err()
-            .expect("no slip");
+        let error = read_draft(
+            &state,
+            vec![testdata("labels-plain.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .err()
+        .expect("no slip");
         assert!(error.contains("no packing slip"), "{error}");
 
         std::fs::remove_dir_all(&dir).ok();
@@ -1760,7 +1790,13 @@ mod tests {
         let dir = temp_dir("no-categories");
         let state = app_state(&dir);
 
-        let read = read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        let read = read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .expect("read");
         assert_eq!(read.orders, 23);
         assert_eq!(read.plan.rows.len(), 1);
         assert!(read.plan.no_picks);
@@ -1784,6 +1820,118 @@ mod tests {
         std::fs::remove_dir_all(&dir).ok();
     }
 
+    /// A second set with its own picks: one condition and the last entry taking the rest, so its
+    /// plan can be told apart from `default`'s (whose file has four entries and an automatic
+    /// *Uncategorised* row).
+    const RAMADHAN: &str = "# the ramadhan set\n[[category]]\ncode = \"A\"\nname = \"Sepatu\"\nwhen = 'name contains \"sepatu\"'\n\n[[category]]\ncode = \"Z\"\nname = \"Lainnya\"\n";
+
+    /// A batch reads with the set chosen on the New batch screen (04 › *Sets*): that set's own
+    /// picks, the data folder's `categories.toml` left alone; the set is remembered as the one used
+    /// last (07 › *Settings*) and recorded in the draft, so **Save batch** writes it into
+    /// `state.json` (07 › *`state.json`*).
+    #[test]
+    fn a_batch_read_uses_the_chosen_set_and_records_it() {
+        let Some(_vendor) = vendor_dir() else {
+            eprintln!("skipped: run tools/get-pdfium.sh");
+            return;
+        };
+        let dir = temp_dir("read-set");
+        let set_folder = dir.join(crate::SETS_DIR);
+        std::fs::create_dir_all(&set_folder).expect("sets folder");
+        std::fs::write(set_folder.join("ramadhan.toml"), RAMADHAN).expect("write set");
+        let state = app_state(&dir);
+
+        let read = read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            "ramadhan",
+            |_| {},
+        )
+        .expect("read");
+        assert_eq!(read.orders, 23);
+        assert!(!read.plan.no_picks);
+        let rows: Vec<(&str, Option<i64>)> = read
+            .plan
+            .rows
+            .iter()
+            .map(|row| (row.code.as_str(), row.number))
+            .collect();
+        assert_eq!(rows, vec![("A", Some(1)), ("Z", Some(2))]);
+
+        // The requested set is the one the next New batch preselects ...
+        assert_eq!(settings_load(&dir).expect("settings").set, "ramadhan");
+        // ... the draft carries it, so *Save batch* records it with the batch ...
+        state
+            .with_draft(|open| assert_eq!(open.set, "ramadhan"))
+            .expect("draft");
+        assert_eq!(
+            save_batch_impl(&state, None, false, |_| {})
+                .expect("save")
+                .batch,
+            1
+        );
+        let day_state = DayState::load(&dir.join("labels/2026-10-07")).expect("state");
+        assert_eq!(day_state.batches[0].set, "ramadhan");
+        // ... and the data folder's own `categories.toml` was never written.
+        assert!(!dir.join(CATEGORIES_FILE).exists());
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// An **Amend** reads the batch's recorded set again, whatever set was used last (04 › *Sets*;
+    /// 07 › *Amend*): the amend's plan is the recorded set's picks, not the last-used ones.
+    #[test]
+    fn an_amend_reads_the_batchs_own_set_whatever_was_used_last() {
+        let Some(_vendor) = vendor_dir() else {
+            eprintln!("skipped: run tools/get-pdfium.sh");
+            return;
+        };
+        let dir = temp_dir("amend-set");
+        std::fs::create_dir_all(dir.join(crate::SETS_DIR)).expect("sets folder");
+        std::fs::write(dir.join(crate::SETS_DIR).join("ramadhan.toml"), RAMADHAN)
+            .expect("write set");
+        std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
+        let state = app_state(&dir);
+
+        // A batch packed with `ramadhan` ...
+        read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            "ramadhan",
+            |_| {},
+        )
+        .expect("read");
+        assert_eq!(
+            save_batch_impl(&state, None, false, |_| {})
+                .expect("save")
+                .batch,
+            1
+        );
+
+        // ... is redone after another set was used last.
+        remember_last_set(&dir, sets::DEFAULT_SET);
+        assert_eq!(
+            settings_load(&dir).expect("settings").set,
+            sets::DEFAULT_SET
+        );
+
+        let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
+        let rows: Vec<&str> = start
+            .read
+            .plan
+            .rows
+            .iter()
+            .map(|row| row.code.as_str())
+            .collect();
+        assert_eq!(
+            rows,
+            vec!["A", "Z"],
+            "the amend reads `ramadhan`, the batch's own set"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
     // -------------------------------------------------- *Back* and a new read (2.23, 08 › *3. Plan*)
 
     /// The Plan screen's *Back* is a window move: the back end keeps the draft and its files, and
@@ -1798,7 +1946,13 @@ mod tests {
         std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
         let state = app_state(&dir);
 
-        let read = read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        let read = read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .expect("read");
         let numbers: Vec<Option<i64>> = read.plan.rows.iter().map(|row| row.number).collect();
         assert_eq!(numbers, vec![Some(1), Some(2), Some(3), Some(4), Some(5)]);
         assert_eq!(read.plan.rows[0].file_name, "1 A Sepatu ×7.pdf");
@@ -1830,8 +1984,13 @@ mod tests {
         assert_eq!(edited.rows[0].file_name, "renamed.pdf");
 
         // A new read replaces the draft whole: the plan is the files' plan again.
-        let again =
-            read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read again");
+        let again = read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .expect("read again");
         let numbers: Vec<Option<i64>> = again.plan.rows.iter().map(|row| row.number).collect();
         assert_eq!(numbers, vec![Some(1), Some(2), Some(3), Some(4), Some(5)]);
         assert_eq!(
@@ -1899,7 +2058,13 @@ mod tests {
         std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
         let state = app_state(&dir);
 
-        read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .expect("read");
         let save = save_batch_impl(&state, None, false, |_| {}).expect("save");
         assert_eq!(save.batch, 1);
         let folder = dir.join("labels/2026-10-07/batch 1");
@@ -1912,7 +2077,13 @@ mod tests {
         assert!(day_state.saved.is_empty());
 
         // The numbers are reused: the next batch is batch 1 again.
-        read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read again");
+        read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .expect("read again");
         let save = save_batch_impl(&state, None, false, |_| {}).expect("save again");
         assert_eq!(save.batch, 1);
 
@@ -1932,7 +2103,13 @@ mod tests {
         std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
         let state = app_state(&dir);
 
-        read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .expect("read");
         assert_eq!(
             save_batch_impl(&state, None, false, |_| {})
                 .expect("save")
@@ -1995,7 +2172,7 @@ mod tests {
             .with_worker(|worker| split_testdata_labels(worker, &dir))
             .expect("worker");
 
-        read_draft(&state, parts[..2].to_vec(), |_| {}).expect("read");
+        read_draft(&state, parts[..2].to_vec(), sets::DEFAULT_SET, |_| {}).expect("read");
         assert_eq!(
             save_batch_impl(&state, None, false, |_| {})
                 .expect("save")
@@ -2078,7 +2255,8 @@ mod tests {
             .expect("worker");
 
         // Batch 1 holds the first two files: one order each.
-        let read = read_draft(&state, parts[..2].to_vec(), |_| {}).expect("read");
+        let read =
+            read_draft(&state, parts[..2].to_vec(), sets::DEFAULT_SET, |_| {}).expect("read");
         assert_eq!(read.orders, 2);
         assert_eq!(plan_orders(&read.plan), 2);
         assert_eq!(
@@ -2144,7 +2322,13 @@ mod tests {
         std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
         let state = app_state(&dir);
 
-        read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .expect("read");
         assert_eq!(
             save_batch_impl(&state, None, false, |_| {})
                 .expect("save")
@@ -2212,7 +2396,13 @@ mod tests {
 
         // The testdata labels carry no images, so every logo is unknown-and-absent: the prompt
         // never opens, and the buttons still carry `couriers.toml`'s names in file order.
-        let read = read_draft(&state, vec![testdata("labels-slip.pdf")], |_| {}).expect("read");
+        let read = read_draft(
+            &state,
+            vec![testdata("labels-slip.pdf")],
+            sets::DEFAULT_SET,
+            |_| {},
+        )
+        .expect("read");
         assert!(read.logos.is_empty(), "the fpdf2 fixtures have no images");
         assert_eq!(
             read.couriers,

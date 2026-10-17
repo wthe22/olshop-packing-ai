@@ -75,6 +75,7 @@ fn saved(tag: &str) -> Option<Saved> {
         &draft,
         &plan,
         &packing,
+        packing_engine::sets::DEFAULT_SET,
         "2026-10-07",
         &dir,
         &mut day,

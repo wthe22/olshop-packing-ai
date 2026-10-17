@@ -19,8 +19,8 @@ use toml_edit::{ArrayOfTables, DocumentMut, Item, Table};
 
 use crate::orders::Order;
 use crate::rules::{
-    Category, Condition, NumberOp, RulesError, TextOp, evaluate, format_condition, load_rules,
-    parse_condition,
+    Category, Condition, NumberOp, RULES_FILE_NAME, RulesError, TextOp, evaluate, format_condition,
+    load_rules_named, parse_condition,
 };
 
 /// A small `RulesError` (the field is public, the constructor in `rules` is not).
@@ -355,21 +355,35 @@ pub struct Entry {
     pub when: Option<String>,
 }
 
-/// `categories.toml` as an editable document (08 › 5, *Edit file as text* / *Save*). Comments and
+/// A rules file as an editable document (08 › 5, *Edit file as text* / *Save*). Comments and
 /// the text of the entries that were not changed are kept byte-for-byte; a changed condition is
-/// written in the printer's one-line canonical form.
+/// written in the printer's one-line canonical form. `name` is the file's name — `categories.toml`
+/// or a set's `categories/<set name>.toml` — so every error names the file it came from (04 ›
+/// *Sets*).
 pub struct RulesDocument {
     doc: DocumentMut,
+    name: String,
 }
 
 impl FromStr for RulesDocument {
     type Err = RulesError;
 
-    /// Parse the text of `categories.toml`, keeping its comments and formatting.
+    /// Parse the text of the data folder's own `categories.toml` (the set `default`), keeping its
+    /// comments and formatting.
     fn from_str(text: &str) -> Result<Self, Self::Err> {
-        let doc =
-            DocumentMut::from_str(text).map_err(|e| error(format!("categories.toml: {e}")))?;
-        let document = Self { doc };
+        Self::from_str_named(text, RULES_FILE_NAME)
+    }
+}
+
+impl RulesDocument {
+    /// Parse the text of a set's file whose name is `name` (04 › *Sets*), keeping its comments and
+    /// formatting.
+    pub fn from_str_named(text: &str, name: &str) -> Result<Self, RulesError> {
+        let doc = DocumentMut::from_str(text).map_err(|e| error(format!("{name}: {e}")))?;
+        let document = Self {
+            doc,
+            name: name.to_string(),
+        };
         document.array()?; // the file must hold `[[category]]` tables
         Ok(document)
     }
@@ -383,34 +397,45 @@ impl fmt::Display for RulesDocument {
 }
 
 impl RulesDocument {
-    /// An empty document, for a data folder without `categories.toml` (07 › *Inputs*): *Save* on
-    /// the one catch-all entry then writes the file.
+    /// An empty document for the data folder's own `categories.toml` (the set `default`); *Save*
+    /// on the one catch-all entry then writes the file (07 › *Inputs*).
     pub fn empty() -> Self {
+        Self::empty_named(RULES_FILE_NAME)
+    }
+
+    /// An empty document for a set's file whose name is `name` (04 › *Sets*): a data folder
+    /// without the file starts from the one catch-all entry and *Save* writes it.
+    pub fn empty_named(name: &str) -> Self {
         Self {
             doc: DocumentMut::new(),
+            name: name.to_string(),
         }
     }
 
     fn array(&self) -> Result<&ArrayOfTables, RulesError> {
         match self.doc.get("category") {
-            Some(item) => item
-                .as_array_of_tables()
-                .ok_or_else(|| error("categories.toml: \"category\" must be an array of tables")),
-            None => Err(error("categories.toml: no categories")),
+            Some(item) => item.as_array_of_tables().ok_or_else(|| {
+                error(format!(
+                    "{}: \"category\" must be an array of tables",
+                    self.name
+                ))
+            }),
+            None => Err(error(format!("{}: no categories", self.name))),
         }
     }
 
     fn array_mut(&mut self) -> Result<&mut ArrayOfTables, RulesError> {
+        let name = self.name.clone();
         // A document without the array yet (an empty one) starts it here, so the first *Save* of
-        // a folder without `categories.toml` writes the file.
+        // a folder without the file writes it.
         if self.doc.get("category").is_none() {
             self.doc["category"] = Item::ArrayOfTables(ArrayOfTables::new());
         }
         match self.doc.get_mut("category") {
             Some(item) => item
                 .as_array_of_tables_mut()
-                .ok_or_else(|| error("categories.toml: \"category\" must be an array of tables")),
-            None => Err(error("categories.toml: no categories")),
+                .ok_or_else(|| error(format!("{name}: \"category\" must be an array of tables"))),
+            None => Err(error(format!("{name}: no categories"))),
         }
     }
 
@@ -424,14 +449,12 @@ impl RulesDocument {
     }
 
     fn table_mut(&mut self, index: usize) -> Result<&mut Table, RulesError> {
+        let name = self.name.clone();
         let array = self.array_mut()?;
         let len = array.len();
-        array.get_mut(index).ok_or_else(|| {
-            error(format!(
-                "categories.toml: no category #{} of {len}",
-                index + 1
-            ))
-        })
+        array
+            .get_mut(index)
+            .ok_or_else(|| error(format!("{name}: no category #{} of {len}", index + 1)))
     }
 
     /// Change an entry's `code` (kept byte-for-byte when it does not change).
@@ -505,11 +528,12 @@ impl RulesDocument {
             table.insert("when", when_item(&text));
         }
 
+        let name = self.name.clone();
         let array = self.array_mut()?;
         let len = array.len();
         if index > len {
             return Err(error(format!(
-                "categories.toml: cannot add at #{index}: the file has {len} categories"
+                "{name}: cannot add at #{index}: the file has {len} categories"
             )));
         }
         array.insert(index, table);
@@ -519,11 +543,12 @@ impl RulesDocument {
 
     /// Delete an entry.
     pub fn remove(&mut self, index: usize) -> Result<(), RulesError> {
+        let name = self.name.clone();
         let array = self.array_mut()?;
         let len = array.len();
         if index >= len {
             return Err(error(format!(
-                "categories.toml: no category #{} of {len}",
+                "{name}: no category #{} of {len}",
                 index + 1
             )));
         }
@@ -534,17 +559,15 @@ impl RulesDocument {
 
     /// Move the entry at `from` to position `to` (the target position after removal).
     pub fn move_to(&mut self, from: usize, to: usize) -> Result<(), RulesError> {
+        let name = self.name.clone();
         let array = self.array_mut()?;
         let len = array.len();
         if from >= len {
-            return Err(error(format!(
-                "categories.toml: no category #{} of {len}",
-                from + 1
-            )));
+            return Err(error(format!("{name}: no category #{} of {len}", from + 1)));
         }
         if to >= len {
             return Err(error(format!(
-                "categories.toml: cannot move to #{} of {len}",
+                "{name}: cannot move to #{} of {len}",
                 to + 1
             )));
         }
@@ -559,12 +582,13 @@ impl RulesDocument {
     /// position and appear at most once. The kept `Table`s are moved, not rebuilt, so a comment
     /// or a `when` text attached to an entry survives.
     pub fn reorder(&mut self, keep: &[usize]) -> Result<(), RulesError> {
+        let name = self.name.clone();
         let len = self.array()?.len();
         let mut seen = vec![false; len];
         for &index in keep {
             if index >= len || seen[index] {
                 return Err(error(format!(
-                    "categories.toml: cannot keep entry #{index} of {len}"
+                    "{name}: cannot keep entry #{index} of {len}"
                 )));
             }
             seen[index] = true;
@@ -584,7 +608,7 @@ impl RulesDocument {
     /// Validate the document as it would be written (04 validation; errors carry the file's
     /// line/col). Returns the categories, ready for the plan.
     pub fn validate(&self) -> Result<Vec<Category>, RulesError> {
-        load_rules(&self.to_string())
+        load_rules_named(&self.to_string(), &self.name)
     }
 
     /// toml_edit orders array-of-tables entries by their recorded position, so after a reorder the

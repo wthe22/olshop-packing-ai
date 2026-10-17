@@ -103,7 +103,7 @@
   </section>
 
   <div class="actions">
-    <button class="primary" onclick={() => onSave({ scope, layouts })}
+    <button class="primary" onclick={() => onSave({ scope, layouts, set: settings?.set ?? "default" })}
       >{texts.settings.save}</button
     >
   </div>

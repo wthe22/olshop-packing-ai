@@ -105,6 +105,7 @@ fn batch_write(batch: i64, pdfs: Vec<PdfEntry>, saved_orders: Vec<SavedOrder>) -
     BatchWrite {
         batch,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
+        set: packing_engine::sets::DEFAULT_SET.to_string(),
         files: vec![file_entry("labels_1.pdf", "9f2c")],
         pdfs,
         packing_list: PackingListChoice::default(),
@@ -134,6 +135,7 @@ fn save_and_load_state_round_trip() {
     state.batches.push(packing_engine::day::BatchEntry {
         batch: 1,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
+        set: "default".to_string(),
         files: vec![file_entry("labels_1.pdf", "9f2c")],
         pdfs: vec![pdf_entry(1)],
         packing_list: PackingListChoice {
@@ -162,6 +164,7 @@ fn state_json_matches_the_07_format() {
     state.batches.push(packing_engine::day::BatchEntry {
         batch: 1,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
+        set: "default".to_string(),
         files: vec![file_entry("labels_1.pdf", "9f2c")],
         pdfs: vec![pdf_entry(1)],
         packing_list: PackingListChoice {
@@ -182,6 +185,8 @@ fn state_json_matches_the_07_format() {
     let batch = &value["batches"][0];
     assert_eq!(batch["batch"], 1);
     assert_eq!(batch["save_time"], "2026-10-07T07:40:12+07:00");
+    // The picks set the batch was packed with is stored with it (04 › *Sets*).
+    assert_eq!(batch["set"], "default");
     assert_eq!(batch["files"][0]["name"], "labels_1.pdf");
     assert_eq!(batch["files"][0]["size"], 10);
     assert_eq!(batch["files"][0]["xxh3"], "9f2c");
@@ -588,6 +593,7 @@ fn the_same_file_is_recognised_twice_and_a_changed_byte_is_not() {
     state.batches.push(packing_engine::day::BatchEntry {
         batch: 1,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
+        set: "default".to_string(),
         files: vec![FileEntry {
             name: "labels_1.pdf".to_string(),
             size: print.size,
@@ -923,4 +929,54 @@ fn now_save_time_is_iso_with_an_offset() {
     assert_eq!(now.len(), 25, "{now}");
     assert_eq!(&now[10..11], "T");
     assert_eq!(&now[19..20], "+", "the test host is UTC+07:00 ({now})");
+}
+
+/// The set a batch was packed with is written at save and read back; an older `state.json` without
+/// the key loads as `default` (07 › *`state.json`*; 04 › *Sets*).
+#[test]
+fn the_batch_set_round_trips_and_an_older_state_loads_as_default() {
+    let dir = TempDir::new("batch-set");
+    let day = dir.path().join("2026-10-07");
+    let mut state = DayState::new("2026-10-07");
+    let mut write = batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]);
+    write.set = "ramadhan".to_string();
+    save_batch(&day, &mut state, &write, |_| Ok(Findings::default())).expect("save");
+    assert_eq!(state.batches[0].set, "ramadhan");
+    assert_eq!(
+        DayState::load(&day).expect("load").batches[0].set,
+        "ramadhan"
+    );
+
+    // A day written before the sets existed: the batch has no `set` key and loads as `default`.
+    let text = fs::read_to_string(day.join("state.json")).expect("read");
+    let mut value: Value = serde_json::from_str(&text).expect("parse");
+    value["batches"][0]
+        .as_object_mut()
+        .expect("batch object")
+        .remove("set");
+    fs::write(
+        day.join("state.json"),
+        serde_json::to_string_pretty(&value).expect("serialize"),
+    )
+    .expect("write");
+    assert_eq!(
+        DayState::load(&day).expect("load older state").batches[0].set,
+        "default"
+    );
+}
+
+/// An **Amend** reads the batch's own set again (07 › *Revert and amend*; 04 › *Sets*): the amend
+/// carries the set the batch recorded.
+#[test]
+fn an_amend_carries_the_batchs_own_set() {
+    let dir = TempDir::new("amend-set");
+    let day = dir.path().join("2026-10-07");
+    let mut state = DayState::new("2026-10-07");
+    let mut write = batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]);
+    write.set = "ramadhan".to_string();
+    save_batch(&day, &mut state, &write, |_| Ok(Findings::default())).expect("save");
+
+    let amend = state.amend(&day).expect("amend");
+    assert_eq!(amend.batch, 1);
+    assert_eq!(amend.set, "ramadhan", "the amend reads the batch's own set");
 }
