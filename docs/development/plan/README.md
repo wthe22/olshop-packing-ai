@@ -14,9 +14,9 @@ Reference for the reading and sorting rules: the Python package `tools/analysis/
 first implementation of the same rules, tested). Port it module by module when a rule is missing
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-Tasks 2.1–2.26 are finished and what they built is in [software-design/](../../software-design/README.md);
-how to run, build and test it is in [../README.md](../README.md). The unfinished work is the one
-task file in this folder, 2.27 (Status below).
+Every task of the phase (2.1–2.27) is finished, so this folder holds no task file. What the tasks built
+is in [software-design/](../../software-design/README.md); how to run, build and test it is in
+[../README.md](../README.md).
 
 Open choices of the owner, each with a default the app follows until the owner decides:
 [Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md),
@@ -26,30 +26,33 @@ Open choices of the owner, each with a default the app follows until the owner d
 
 ## Status
 
-Tasks 2.1–2.26 are finished. The owner's review of them is answered in
-[software-design/](../../software-design/README.md): no review item is open
-([reviews/](../../reviews/README.md)). One task is open. The in-app pictures of the user guide (`images/02-day.png` to `08-day-saved.png`, `07-categories.png`; `02-day.png` and `08-day-saved.png` also lack the **Printed** checkbox) still show the title *Packing* without the version; retake them once 2.27 is done:
+Phase 2 is finished: tasks 2.1–2.27 are done and the portable program folder `target/portable/Packing/`
+is built from them. The owner's three findings are built, and wait for the owner's test of the running
+program (the checklist below):
 
-| Task | File | What it does | From |
-|---|---|---|---|
-| 2.27 | [2.27-category-sets.md](2.27-category-sets.md) | Several named sets of categories: the engine, the data folder and the screens. **Open: Q-RULES-1, default built** | R-RULES-1 |
+- **R-UI-1** — the version *v0.1* in the window title, the title bar and *About*, from one place (2.25).
+- **R-UI-2** — a saved **Printed** tick beside each saved-PDF row of the Day screen (2.26).
+- **R-RULES-1** — several named sets of categories (2.27), built to the default of
+  [Q-RULES-1](../../software-design/questions/rules.md).
 
-**Next step — the next session's:** nothing waits for the owner. A session resuming here runs the
-gates ([app.md](../app.md), [testing.md](../testing.md)) and continues with the first task file in
-this folder: **2.27** — each ending with
-`bash tools/make-portable.sh` ([AGENTS.md](../../../AGENTS.md)) and its commit, the task file deleted
-in the same commit.
+**Next step — the owner's:** test the program folder with the checklist below. Findings go into
+[reviews/](../../reviews/README.md) (`ui.md`, `rules.md`, …), one item each. The owner may also answer
+Q-RULES-1 in its file at any time. A new session turns each review item into a task (or a question) as
+[development/README.md](../README.md) says, and writes each answer of Q-RULES-1 into `software-design/`
+and into a task before changing the code.
 
-**Handoff.** R-UI-1 and R-UI-2 are built (waiting for the owner's test of the portable build). R-RULES-1 is in the
-design as the default of [Q-RULES-1](../../software-design/questions/rules.md): the owner may answer
-it at any time in that file, and the answer is written into `software-design/` and into the 2.27 task
-file before 2.27 is built, or after it, as a follow-up task. The owner is asked nothing for 2.27 beyond Q-RULES-1.
+**Not checked on a running window** (only by tests): the Printed tick (click, close, reopen), the *Set*
+control on New batch, the Categories set row (**+ New set**, **Delete set**), and the Plan header naming
+the set. The seven in-app pictures of the user guide (`images/02-day.png` to `08-day-saved.png`,
+`images/03-new-batch.png`, `05-plan.png`, `07-categories.png`) show the old title bar; `02-day.png` and
+`08-day-saved.png` lack the **Printed** tick, `03-new-batch.png`, `05-plan.png` and `07-categories.png`
+lack the set parts. They are retaken from the built program.
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
 
 ## Owner review at the end of the phase
 
-What the owner checks, after 2.15–2.27:
+What the owner checks, after 2.15–2.27 (the last three items are 2.25–2.27):
 
 - Open the same day's packing list: the header must stand clear of the body; a `summary` or `full` list must
   print `×`, not `ÿ`.
@@ -89,9 +92,8 @@ The owner writes findings in [`../../reviews/`](../../reviews/README.md), one fi
 In this order.
 
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
-2. [../../reviews/README.md](../../reviews/README.md): no item is open. The reviewed round's answers
-   are in [software-design/](../../software-design/README.md) and are the tasks 2.25–2.27 in this
-   folder; the Status block above runs them in order.
+2. [../../reviews/README.md](../../reviews/README.md) and the items open there: the owner's findings on the
+   built program, to turn into tasks or questions. None is open until the owner has tested the program folder.
 3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),

@@ -142,6 +142,9 @@ pub struct BatchView {
     save_time: String,
     /// `HH:MM` of `save_time`.
     time: String,
+    /// The picks set the batch was packed with, from its `state.json` entry (04 › *Sets*; 07 ›
+    /// *`state.json`*). **Amend** names it in its confirmation and reads that set again.
+    set: String,
     files: usize,
     orders: usize,
     pdfs: Vec<PdfView>,
@@ -204,6 +207,7 @@ fn overview_of(state: &DayState, day_dir: &Path) -> DayOverview {
             batch: batch.batch,
             save_time: batch.save_time.clone(),
             time: clock(&batch.save_time),
+            set: batch.set.clone(),
             files: batch.files.len(),
             orders: batch.pdfs.iter().map(|pdf| pdf.orders).sum(),
             pdfs: batch
@@ -700,6 +704,49 @@ mod tests {
         set_printed_at(&dir, "2026-10-07", 1, 9, true).expect("unknown pdf");
         let after = day_overview_at(&dir, "2026-10-07").expect("overview again");
         assert!(!after.batches[0].pdfs[0].printed);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    /// The Day screen's view carries each batch's own picks set (04 › *Sets*), so **Amend**'s
+    /// confirmation can name it and an amend reads that set again; an older `state.json` without
+    /// the key reads as `default`.
+    #[test]
+    fn the_overview_reports_each_batchs_own_set() {
+        let dir = temp_dir("overview-set");
+        let day_dir = dir.join(LABELS_DIR).join("2026-10-07");
+        let mut state = DayState::new("2026-10-07");
+        let mut first = batch_entry(
+            1,
+            "2026-10-07T07:40:12+07:00",
+            PdfEntry {
+                number: 1,
+                code: "Z".to_string(),
+                name: "Lainnya".to_string(),
+                file: "1 Z Lainnya ×10.pdf".to_string(),
+                orders: 10,
+                runs: 2,
+            },
+            Vec::new(),
+            Vec::new(),
+        );
+        first.set = "ramadhan".to_string();
+        state.batches.push(first);
+        state.save(&day_dir).expect("save state");
+
+        let overview = day_overview_at(&dir, "2026-10-07").expect("overview");
+        assert_eq!(overview.batches[0].set, "ramadhan");
+
+        // The key is defaulted: a `state.json` entry without it reads as `default`.
+        let text = std::fs::read_to_string(day_dir.join("state.json")).expect("read");
+        let without: String = text
+            .lines()
+            .filter(|line| !line.contains("\"set\""))
+            .collect::<Vec<_>>()
+            .join("\n");
+        std::fs::write(day_dir.join("state.json"), without).expect("write");
+        let overview = day_overview_at(&dir, "2026-10-07").expect("overview again");
+        assert_eq!(overview.batches[0].set, "default");
 
         std::fs::remove_dir_all(&dir).ok();
     }

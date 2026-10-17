@@ -51,7 +51,7 @@ One category switched to **Text view**, with an error:
   [New batch](new-batch.md#the-set) screen. The file name of a set is its name: the set `default` is
   the data folder's `categories.toml` (never moved), every other set is
   `<data folder>/categories/<set name>.toml` ([the rules file](../rules-file/README.md)).
-  **+ New set** asks for a name and writes `categories/<name>.toml` on **Save**; **Delete set** asks
+  **+ New set** asks for a name and writes `categories/<name>.toml` at once (one catch-all entry), and the screen switches to it; **Delete set** asks
   first and deletes that set's file, whose categories then fall back to the one catch-all entry.
   The sets and which set a batch uses follow the default of
   [Q-RULES-1](../questions/rules.md) until the owner decides.

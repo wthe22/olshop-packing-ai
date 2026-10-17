@@ -50,6 +50,10 @@
   // Categories/Settings/Search open over the current screen and close back to it (08 › *Window
   // frame*).
   let overlay = $state<OverlayId | null>(null);
+  // The set the Categories overlay opens on (08 › *5. Categories*): the batch's own set when the
+  // screen comes from the Plan screen's *Edit categories*; `null` from the top bar, where the
+  // set used last is shown.
+  let categoriesSet = $state<string | null>(null);
 
   // The batch being prepared: the chosen label files (kept here, so *Back* on the Plan screen
   // shows the file list again with the files still there), the read result and whether the
@@ -75,6 +79,11 @@
   // The batch number being prepared, for the Categories *In batch `<b>`: n* column; `null` when no
   // draft is open.
   const draftBatch = $derived(draftOpen ? (readResult?.amend ?? nextBatch) : null);
+  // The batch's own picks set, for the amend's selection page's fixed *Set* line (04 › *Sets*);
+  // `null` for a new batch's file list.
+  const amendSet = $derived(
+    amendBatch !== null && readResult !== null ? readResult.plan.set : null,
+  );
 
   async function afterFolder() {
     try {
@@ -126,7 +135,10 @@
   async function openCategoriesIfBroken() {
     try {
       const rules = await api.rulesLoad();
-      if (rules.error) overlay = "categories";
+      if (rules.error) {
+        categoriesSet = null;
+        overlay = "categories";
+      }
     } catch {
       // No categories file yet: nothing to open.
     }
@@ -263,12 +275,21 @@
       overlay = null;
       screen = "day";
     } else {
+      // From the top bar: the Categories screen shows the set used last (08 › *5. Categories*).
+      if (id === "categories") categoriesSet = null;
       overlay = id;
     }
   }
 
   function closeOverlay() {
     overlay = null;
+  }
+
+  /// The Plan screen's *Edit categories* (08 › *3. Plan*): open Categories on the set the batch
+  /// uses, so a change is written into that set's file.
+  function openCategoriesFromPlan() {
+    categoriesSet = readResult?.plan.set ?? null;
+    overlay = "categories";
   }
 
   function onCategoriesSaved() {
@@ -297,7 +318,7 @@
   /// current selection listed (08 › *2. New batch* → *The amend's selection page*). The read's
   /// `read-progress` events show on the Day screen until the Plan screen opens.
   async function amend(batch: api.BatchView) {
-    const asked = await confirm(texts.day.confirmAmend(batch.batch, batch.time), {
+    const asked = await confirm(texts.day.confirmAmend(batch.batch, batch.set, batch.time), {
       title: texts.title,
       okLabel: texts.day.redoBatch(batch.batch),
     });
@@ -389,6 +410,7 @@
     <NewBatchScreen
       batchNumber={nextBatch}
       amend={amendBatch}
+      {amendSet}
       {files}
       onFiles={(next) => (files = next)}
       onPlan={onPlan}
@@ -403,13 +425,18 @@
       onSaved={onSaved}
       onBack={backToFiles}
       onCancel={cancelBatch}
-      onEditCategories={() => (overlay = "categories")}
+      onEditCategories={openCategoriesFromPlan}
     />
   {/if}
 
   {#if overlay === "categories"}
     <Overlay title={texts.categories.title} onClose={closeOverlay}>
-      <CategoriesScreen {draftBatch} onClose={closeOverlay} onSaved={onCategoriesSaved} />
+      <CategoriesScreen
+        {draftBatch}
+        openSet={categoriesSet}
+        onClose={closeOverlay}
+        onSaved={onCategoriesSaved}
+      />
     </Overlay>
   {:else if overlay === "search"}
     <Overlay title={texts.search.title} onClose={closeOverlay}>

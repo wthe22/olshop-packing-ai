@@ -68,9 +68,10 @@ export const texts = {
     // 08 › *1. Day*: the Revert confirmation, verbatim.
     confirmRevert: (n: number, pdfs: number, orders: number) =>
       `Undo batch ${n}? Its ${count(pdfs, "saved PDF", "saved PDFs")}, packing list and download copies are deleted, and its ${count(orders, "order", "orders")} can be saved again. If you already printed them, throw the printed labels away.`,
-    // 08 › *1. Day*: the Amend confirmation, verbatim.
-    confirmAmend: (n: number, time: string) =>
-      `Redo batch ${n} with the current categories? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
+    // 08 › *1. Day*: the Amend confirmation, verbatim. An amend redoes the batch with the set it
+    // was packed with, so the confirmation names that set (04 › *Sets*).
+    confirmAmend: (n: number, set: string, time: string) =>
+      `Redo batch ${n} with its set of categories (${set})? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
     // 08 › *1. Day* → *3. Plan*: while *Amend* reads the batch's own label files again (the
     // `read-progress` event), shown with a progress bar before the Plan screen opens.
     amendReading: (page: number, pages: number) =>
@@ -89,6 +90,11 @@ export const texts = {
     cancel: "Cancel",
     dropHint: "Drop label PDFs here, or",
     addFiles: "Add files…",
+    // 08 › *2. New batch* → *The set*: the Set control before *Read labels*. On the amend's
+    // selection page the batch's own set is shown and not chosen, so the name is followed by
+    // *(fixed)* (04 › *Sets*).
+    set: "Set",
+    setFixed: (name: string) => `${name} (fixed)`,
     pages: (n: number) => `${count(n, "page", "pages")}`,
     usedInBatch: (n: number) => `used in batch ${n}`,
     remove: "×",
@@ -117,15 +123,17 @@ export const texts = {
 
   // 08 › *3. Plan*.
   plan: {
-    // 08 › *3. Plan* header: "Batch 3 · 2 files · 257 pages · 256 orders · 0 already saved".
+    // 08 › *3. Plan* header: the batch names the set it is packed with (04 › *Sets*):
+    // "Batch 3 · set default · 2 files · 257 pages · 256 orders · 0 already saved".
     header: (
       batch: number,
+      set: string,
       files: number,
       pages: number,
       orders: number,
       alreadySaved: number,
     ) =>
-      `Batch ${batch} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
+      `Batch ${batch} · set ${set} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
     warnings: (n: number) => `Warnings: ${n} ▸`,
     warningsNone: "Warnings: none",
     use: "Use",
@@ -216,6 +224,24 @@ export const texts = {
     title: "Categories",
     close: "Close",
     hint: "Order matters: an order is taken by the first category whose condition matches.",
+    // 08 › *5. Categories*: the set row — the chooser, **+ New set** and **Delete set** — and the
+    // file the chosen set is kept in. A batch is packed with one set, chosen on *New batch*
+    // (04 › *Sets*); same file name as the set name.
+    set: "Set",
+    newSet: "+ New set",
+    deleteSet: "Delete set",
+    setFile: (file: string) => `file: ${file}`,
+    createSet: "Create",
+    // A new set's name is refused before the file is written (04 › *Sets*): empty, the reserved
+    // name `default` (the data folder's own `categories.toml`), or a name already in the list.
+    setNeedsName: "A set needs a name.",
+    setNameReserved:
+      "The name \"default\" belongs to the data folder's own categories.toml. Choose another name.",
+    setNameTaken: "A set with that name is already there.",
+    // **Delete set** asks first; the set's file is deleted and its categories fall back to the one
+    // catch-all entry (04 › *Sets*).
+    confirmDeleteSet: (name: string) =>
+      `Delete set ${name}? Its categories fall back to the one catch-all entry.`,
     code: "Code",
     name: "Name",
     // 08 › *5. Categories*: "In batch 3: 130", in order from what is left.

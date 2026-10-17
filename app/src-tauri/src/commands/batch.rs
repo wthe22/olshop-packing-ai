@@ -161,6 +161,10 @@ pub struct PlanView {
     /// The plan is the one catch-all entry, so the picks are unconfigured: the screen says every
     /// order goes into one PDF set (Q-UI-4, 08 › *3. Plan*).
     no_picks: bool,
+    /// The picks set the plan belongs to (04 › *Sets*): the set the batch is packed with, the one
+    /// chosen on the New batch screen or, for an amend, the batch's own recorded set. The header
+    /// names it and **Edit categories** opens it (08 › *3. Plan*).
+    set: String,
 }
 
 /// One row of the Plan screen (08 › *3. Plan*).
@@ -253,8 +257,9 @@ pub struct SaveResultView {
 /// Map the plan and the draft's orders into the Plan screen's rows (08 › *3. Plan*). Every entry
 /// becomes a row (skipped and 0-order rows included); the leftovers, if any, become the final
 /// `? Uncategorised` row. The numbers, runs and names come from [`Plan::count`] so the screen and
-/// the saved PDFs agree.
-fn plan_view(plan: &Plan, orders: &[ReadOrder], first_number: i64) -> PlanView {
+/// the saved PDFs agree. `set` is the picks set the plan was built from; the screen's header
+/// names it.
+fn plan_view(plan: &Plan, orders: &[ReadOrder], first_number: i64, set: &str) -> PlanView {
     let result = plan.count(orders, first_number);
     let entries = plan.entries();
     let index = order_index(orders);
@@ -361,6 +366,7 @@ fn plan_view(plan: &Plan, orders: &[ReadOrder], first_number: i64) -> PlanView {
         has_duplicate_names,
         add_at,
         no_picks: plan.unconfigured(),
+        set: set.to_string(),
     }
 }
 
@@ -485,7 +491,7 @@ fn read_result(open: &OpenDraft) -> ReadResult {
         // (D-LABEL-1, D-LABEL-4).
         couriers: open.couriers.names(),
         logos: logo_views(&open.draft, &open.logo_pictures),
-        plan: plan_view(&open.plan, &open.draft.orders, open.first_number),
+        plan: plan_view(&open.plan, &open.draft.orders, open.first_number, &open.set),
     }
 }
 
@@ -1067,7 +1073,12 @@ pub fn plan(state: State<'_, AppState>, edits: Vec<PlanEdit>) -> Result<PlanView
     state.with_draft(|open| {
         apply_edits(&mut open.plan, &edits)?;
         let first_number = open.first_number;
-        Ok(plan_view(&open.plan, &open.draft.orders, first_number))
+        Ok(plan_view(
+            &open.plan,
+            &open.draft.orders,
+            first_number,
+            &open.set,
+        ))
     })?
 }
 
@@ -1201,7 +1212,7 @@ mod tests {
 
     #[test]
     fn plan_view_numbers_rows_and_adds_the_rest_row() {
-        let view = plan_view(&sepatu_plan(), &orders(), 4);
+        let view = plan_view(&sepatu_plan(), &orders(), 4, sets::DEFAULT_SET);
         assert_eq!(view.rows.len(), 3);
         assert_eq!(view.add_at, 2); // after the two entries (no rest entry)
 
@@ -1247,7 +1258,7 @@ mod tests {
             }],
         )
         .expect("skip");
-        let view = plan_view(&plan, &orders(), 1);
+        let view = plan_view(&plan, &orders(), 1, sets::DEFAULT_SET);
 
         assert!(view.rows[0].skipped);
         assert_eq!(view.rows[0].orders, 0);
@@ -1262,7 +1273,7 @@ mod tests {
             category("A", "Nope", Some("name contains \"zzz\"")),
             category("Z", "Lainnya", None),
         ]);
-        let view = plan_view(&plan, &orders(), 1);
+        let view = plan_view(&plan, &orders(), 1, sets::DEFAULT_SET);
         assert!(view.rows[0].empty);
         assert_eq!(view.rows[0].number, None);
         assert_eq!(view.rows[1].number, Some(1)); // the rest entry catches everything
@@ -1287,7 +1298,7 @@ mod tests {
             ],
         )
         .expect("rename");
-        let view = plan_view(&plan, &orders(), 1);
+        let view = plan_view(&plan, &orders(), 1, sets::DEFAULT_SET);
         assert!(view.has_duplicate_names);
         assert_eq!(view.rows[0].duplicate_of, None);
         assert_eq!(view.rows[1].duplicate_of, Some(1)); // *Same name as PDF 1*
@@ -1297,7 +1308,7 @@ mod tests {
     fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
         // No `categories.toml`: one catch-all entry, every order in one PDF set (Q-UI-4).
         let plan = Plan::from_categories(&[catch_all_category()]);
-        let view = plan_view(&plan, &orders(), 1);
+        let view = plan_view(&plan, &orders(), 1, sets::DEFAULT_SET);
         assert!(view.no_picks);
         assert_eq!(view.rows.len(), 1);
         assert_eq!(view.rows[0].code, "Z");
@@ -1306,15 +1317,52 @@ mod tests {
         assert_eq!(view.add_at, 0);
 
         // A pick with a condition: configured.
-        assert!(!plan_view(&sepatu_plan(), &orders(), 1).no_picks);
+        assert!(!plan_view(&sepatu_plan(), &orders(), 1, sets::DEFAULT_SET).no_picks);
         // The picks file's own rest entry as the only entry: still unconfigured.
         let view = plan_view(
             &Plan::from_categories(&[category("Z", "Lainnya", None)]),
             &orders(),
             1,
+            sets::DEFAULT_SET,
         );
         assert!(view.no_picks);
         assert_eq!(view.rows[0].orders, 6);
+    }
+
+    /// The plan view names the picks set the plan was built from (04 › *Sets*; 08 › *3. Plan*):
+    /// the header shows it, and **Edit categories** opens it.
+    #[test]
+    fn plan_view_names_the_picks_set() {
+        assert_eq!(
+            plan_view(&sepatu_plan(), &orders(), 1, sets::DEFAULT_SET).set,
+            "default"
+        );
+        assert_eq!(
+            plan_view(&sepatu_plan(), &orders(), 1, "ramadhan").set,
+            "ramadhan"
+        );
+    }
+
+    /// A set with no file is the one catch-all entry (04 › *Sets*), so the plan is a single row
+    /// taking every order and the screen shows the *No picks yet* line (Q-UI-4).
+    #[test]
+    fn a_set_with_no_file_is_the_one_catch_all_entry() {
+        let dir = temp_dir("set-no-file");
+        let categories = load_categories(&dir, "ramadhan").expect("a set with no file still loads");
+        let view = plan_view(
+            &Plan::from_categories(&categories),
+            &orders(),
+            1,
+            "ramadhan",
+        );
+        assert!(view.no_picks, "the *No picks yet* line is shown");
+        assert_eq!(view.set, "ramadhan");
+        assert_eq!(view.rows.len(), 1);
+        assert_eq!(view.rows[0].code, "Z");
+        assert_eq!(view.rows[0].name, "Lainnya");
+        assert_eq!(view.rows[0].orders, 6);
+        assert_eq!(view.rows[0].number, Some(1));
+        std::fs::remove_dir_all(&dir).ok();
     }
 
     #[test]
@@ -1850,6 +1898,10 @@ mod tests {
         .expect("read");
         assert_eq!(read.orders, 23);
         assert!(!read.plan.no_picks);
+        assert_eq!(
+            read.plan.set, "ramadhan",
+            "the plan names the chosen set for the header"
+        );
         let rows: Vec<(&str, Option<i64>)> = read
             .plan
             .rows
@@ -1928,6 +1980,10 @@ mod tests {
             vec!["A", "Z"],
             "the amend reads `ramadhan`, the batch's own set"
         );
+        assert_eq!(
+            start.read.plan.set, "ramadhan",
+            "the amend's Plan header names the batch's own set"
+        );
 
         std::fs::remove_dir_all(&dir).ok();
     }
@@ -1977,7 +2033,12 @@ mod tests {
                     }],
                 )?;
                 let first_number = open.first_number;
-                Ok::<_, String>(plan_view(&open.plan, &open.draft.orders, first_number))
+                Ok::<_, String>(plan_view(
+                    &open.plan,
+                    &open.draft.orders,
+                    first_number,
+                    &open.set,
+                ))
             })
             .expect("draft")
             .expect("rename");

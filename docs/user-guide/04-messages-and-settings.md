@@ -38,11 +38,17 @@ after **Save anyway**.
 
 Open **Settings** in the top bar.
 
-- **Data folder** — where `couriers.toml`, your picks (`categories.toml`, once you have saved some) and the `labels` folder live. **Change…** switches to
+- **Data folder** — where `couriers.toml`, your picks and the `labels` folder live. Your picks are
+  the set `default` in `categories.toml` (once you have saved some) and every other set in the
+  `categories` folder, one file each ([Sets of categories](03-changes.md#sets-of-categories)).
+  **Change…** switches to
   another folder until the app closes ("Use `<folder>` until the app closes? Existing days stay in
   `<old>`."); **Open** opens it. It does not move existing files.
 - **Packing list default** — the scope and layouts the Plan screen starts with (default: one for
   the batch, layout *pick*). **Save** stores it.
 - **About** — the program's version (**Version v0.1**) and the PDFium version.
+
+The set of categories you used last is remembered too (in `settings.json`), and the next
+**New batch** already has it chosen; there is nothing to set for it.
 
 The app is in English. Every screen text is in one file, so another language can be added.

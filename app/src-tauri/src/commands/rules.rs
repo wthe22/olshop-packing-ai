@@ -924,4 +924,41 @@ name = \"Rest\"
         let check = rules_check_impl(&state, "a/b", &[]).expect("check");
         assert_eq!(check.file, "categories/a-b.toml");
     }
+
+    /// The Categories screen opens the set it is asked for (08 › *5. Categories*): the batch's own
+    /// set when it is opened from the Plan screen's **Edit categories**, so the entries and the
+    /// counts *In batch `<b>`* are that set's, not the data folder's own `categories.toml`.
+    #[test]
+    fn rules_load_opens_the_requested_set_with_a_draft_open() {
+        let dir = temp_dir("open-set");
+        std::fs::write(dir.join(CATEGORIES_FILE), FILE).expect("write");
+        std::fs::create_dir_all(dir.join(SETS_DIR)).expect("sets folder");
+        std::fs::write(
+            dir.join(SETS_DIR).join("ramadhan.toml"),
+            "# the batch's set\n[[category]]\ncode = \"S\"\nname = \"Sepatu\"\nwhen = 'name contains \"sepatu\"'\n\n[[category]]\ncode = \"Z\"\nname = \"Rest\"\n",
+        )
+        .expect("write the set");
+        let state = state_with_draft(&dir, vec![read_order("Sepatu A", 1), read_order("Lain", 1)]);
+
+        // The batch's set's entries, not the data folder's own file (codes A, B, Z).
+        let loaded = rules_load_impl(&dir, "ramadhan").expect("load the batch's set");
+        assert!(loaded.error.is_none());
+        let codes: Vec<&str> = loaded.entries.iter().map(|e| e.code.as_str()).collect();
+        assert_eq!(codes, ["S", "Z"]);
+
+        let entries = vec![
+            entry("S", "Sepatu", Some("name contains \"sepatu\""), Some(0)),
+            entry("Z", "Rest", None, Some(1)),
+        ];
+        let check = rules_check_impl(&state, "ramadhan", &entries).expect("check");
+        assert!(check.general.is_none());
+        assert_eq!(check.file, "categories/ramadhan.toml");
+        assert_eq!(
+            check.counts,
+            Some(vec![1, 1]),
+            "the counts are the batch's set's entries applied to the open draft"
+        );
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
 }

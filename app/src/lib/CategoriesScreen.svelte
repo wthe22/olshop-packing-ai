@@ -8,6 +8,13 @@
   // no longer exists) and it must be awaited.
   import { confirm } from "@tauri-apps/plugin-dialog";
   import * as api from "../lib/api";
+  import {
+    categoriesSet,
+    normalizeSetName,
+    setFile,
+    setProblem,
+    type SetNameProblem,
+  } from "../lib/sets";
   import { texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
   import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
@@ -15,11 +22,16 @@
 
   let {
     draftBatch,
+    openSet,
     onClose,
     onSaved,
   }: {
     /// The batch number being prepared, for *In batch `<b>`: n*; `null` when no draft is open.
     draftBatch: number | null;
+    /// The set to open on (08 › *5. Categories*): the batch's own set when the screen is opened
+    /// from the Plan screen's *Edit categories*, so its entries and its counts *In batch `<b>`*
+    /// are that set's; `null` from the top bar, where the set used last is shown.
+    openSet: string | null;
     onClose: () => void;
     onSaved: () => void;
   } = $props();
@@ -46,6 +58,18 @@
   let busy = $state(false);
   let showHelp = $state(false);
 
+  // The set row (08 › *5. Categories*): the sets of the data folder, the set being edited (and
+  // its file), and the **+ New set** form. A batch is packed with one set, chosen on *New batch*
+  // (04 › *Sets*).
+  let sets = $state<api.SetView[]>([]);
+  let currentSet = $state(api.DEFAULT_SET);
+  let newSetOpen = $state(false);
+  let newSetName = $state("");
+  let setError = $state("");
+
+  const currentFile = $derived(setFile(sets, currentSet));
+  const canDeleteSet = $derived(currentSet !== api.DEFAULT_SET);
+
   // Q-UI-4: the one catch-all entry a folder without `categories.toml` starts with, and nothing
   // else, is the unconfigured state; the line says what that means for a batch.
   const noPicks = $derived(unconfigured(entries));
@@ -61,43 +85,129 @@
 
   onMount(load);
 
+  /// Open the screen: the sets of the data folder, then the set to open on — the batch's own set
+  /// when the screen came from the Plan screen's *Edit categories*, else the set used last
+  /// (08 › *5. Categories*).
   async function load() {
     busy = true;
     try {
-      const data = await api.rulesLoad();
-      fileText = data.text;
-      loadError = data.error ?? "";
-      const list: CatEntry[] = [];
-      for (let index = 0; index < data.entries.length; index += 1) {
-        const view = data.entries[index];
-        const entry: CatEntry = {
-          code: view.code,
-          name: view.name,
-          when: view.when,
-          // `null` for the one catch-all entry of a folder without `categories.toml`: *Save* adds
-          // it, so the file is written (08 › *5. Categories*).
-          origin: view.origin,
-          mode: "boxes",
-          tree: newTree(),
-          text: view.when ?? "",
-          error: "",
-          boxesError: "",
-          count: null,
-        };
-        if (view.when !== null) {
-          try {
-            entry.tree = fromRustTree(await api.conditionToTree(view.when));
-          } catch (err) {
-            entry.mode = "text";
-            entry.error = String(err);
-          }
-        }
-        list.push(entry);
-      }
-      entries = list;
-      await refresh();
+      const list = await api.setsList();
+      sets = list.sets;
+      currentSet = categoriesSet(openSet, list.sets, list.last_used);
+      await loadSet();
     } catch (err) {
       loadError = String(err);
+    }
+    busy = false;
+  }
+
+  /// Load the set being shown: its file's entries, or the one catch-all entry when it has no file
+  /// (04 › *Sets*), then the live check and counts.
+  async function loadSet() {
+    const data = await api.rulesLoad(currentSet);
+    fileText = data.text;
+    loadError = data.error ?? "";
+    const list: CatEntry[] = [];
+    for (let index = 0; index < data.entries.length; index += 1) {
+      const view = data.entries[index];
+      const entry: CatEntry = {
+        code: view.code,
+        name: view.name,
+        when: view.when,
+        // `null` for the one catch-all entry of a set that has no file: *Save* adds it, so the
+        // file is written (08 › *5. Categories*).
+        origin: view.origin,
+        mode: "boxes",
+        tree: newTree(),
+        text: view.when ?? "",
+        error: "",
+        boxesError: "",
+        count: null,
+      };
+      if (view.when !== null) {
+        try {
+          entry.tree = fromRustTree(await api.conditionToTree(view.when));
+        } catch (err) {
+          entry.mode = "text";
+          entry.error = String(err);
+        }
+      }
+      list.push(entry);
+    }
+    entries = list;
+    await refresh();
+  }
+
+  /// The set chooser: show another set (08 › *5. Categories*).
+  async function changeSet(name: string) {
+    if (name === currentSet) return;
+    currentSet = name;
+    setError = "";
+    newSetOpen = false;
+    loadError = "";
+    fileMode = false;
+    try {
+      await loadSet();
+    } catch (err) {
+      loadError = String(err);
+    }
+  }
+
+  /// **+ New set** (08 › *5. Categories*): ask for a name; **Create** writes
+  /// `categories/<name>.toml` (the set's file) and shows it.
+  function openNewSet() {
+    newSetOpen = true;
+    newSetName = "";
+    setError = "";
+  }
+
+  function newSetProblemText(problem: SetNameProblem): string {
+    if (problem === "empty") return texts.categories.setNeedsName;
+    if (problem === "reserved") return texts.categories.setNameReserved;
+    return texts.categories.setNameTaken;
+  }
+
+  async function createSet() {
+    const problem = setProblem(newSetName, sets);
+    if (problem !== null) {
+      setError = newSetProblemText(problem);
+      return;
+    }
+    const name = normalizeSetName(newSetName);
+    busy = true;
+    try {
+      await api.newSet(name, null);
+      const list = await api.setsList();
+      sets = list.sets;
+      currentSet = name;
+      newSetOpen = false;
+      loadError = "";
+      fileMode = false;
+      await loadSet();
+    } catch (err) {
+      setError = String(err);
+    }
+    busy = false;
+  }
+
+  /// **Delete set** (08 › *5. Categories*): asks first, then deletes that set's file, whose
+  /// categories fall back to the one catch-all entry. The set `default` is the data folder's own
+  /// `categories.toml` and cannot be deleted.
+  async function removeSet() {
+    if (!canDeleteSet) return;
+    if (!(await confirm(texts.categories.confirmDeleteSet(currentSet)))) return;
+    busy = true;
+    try {
+      await api.deleteSet(currentSet);
+      const list = await api.setsList();
+      sets = list.sets;
+      currentSet = api.DEFAULT_SET;
+      setError = "";
+      loadError = "";
+      fileMode = false;
+      await loadSet();
+    } catch (err) {
+      setError = String(err);
     }
     busy = false;
   }
@@ -118,7 +228,7 @@
       return;
     }
     try {
-      const check = await api.rulesCheck(payload());
+      const check = await api.rulesCheck(payload(), currentSet);
       generalError = check.general ?? "";
       entries.forEach((entry, index) => {
         entry.error = entry.boxesError || (check.errors[index] ?? "");
@@ -230,7 +340,7 @@
   async function save() {
     busy = true;
     try {
-      await api.rulesSave(payload());
+      await api.rulesSave(payload(), currentSet);
       onSaved();
     } catch (err) {
       generalError = String(err);
@@ -245,7 +355,7 @@
 
   async function checkFile() {
     try {
-      await api.rulesCheckText(fileText);
+      await api.rulesCheckText(fileText, currentSet);
       fileError = "";
     } catch (err) {
       fileError = String(err);
@@ -255,7 +365,7 @@
   async function saveFile() {
     busy = true;
     try {
-      await api.rulesSaveText(fileText);
+      await api.rulesSaveText(fileText, currentSet);
       fileMode = false;
       onSaved();
     } catch (err) {
@@ -266,6 +376,46 @@
 </script>
 
 <div class="categories">
+  <!-- 08 › *5. Categories*: the set row — the chooser, **+ New set** and **Delete set** — and the
+       file the chosen set is kept in. The set `default` is the data folder's own
+       `categories.toml` and cannot be deleted. -->
+  <div class="set-row">
+    <label class="set">
+      {texts.categories.set}:
+      <select value={currentSet} onchange={(event) => changeSet(event.currentTarget.value)}>
+        {#each sets as option (option.name)}
+          <option value={option.name}>{option.name}</option>
+        {/each}
+      </select>
+    </label>
+    <button disabled={busy} onclick={openNewSet}>{texts.categories.newSet}</button>
+    <button disabled={!canDeleteSet || busy} onclick={removeSet}>
+      {texts.categories.deleteSet}
+    </button>
+    {#if newSetOpen}
+      <input
+        class="set-name"
+        placeholder={texts.categories.name}
+        bind:value={newSetName}
+        onkeydown={(event) => event.key === "Enter" && createSet()}
+      />
+      <button class="primary" disabled={busy} onclick={createSet}>
+        {texts.categories.createSet}
+      </button>
+      <button disabled={busy} onclick={() => (newSetOpen = false)}>
+        {texts.categories.cancel}
+      </button>
+    {/if}
+    <span class="grow"></span>
+    {#if currentFile}
+      <span class="file-line">{texts.categories.setFile(currentFile)}</span>
+    {/if}
+  </div>
+
+  {#if setError}
+    <p class="error">{setError}</p>
+  {/if}
+
   <p class="hint">{texts.categories.hint}</p>
 
   {#if loadError}
@@ -407,6 +557,35 @@
     max-width: 60rem;
   }
 
+  /* 08 › *5. Categories*: the set row at the top of the screen. */
+  .set-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .set {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #4a4a4a;
+  }
+
+  .set select {
+    max-width: 14rem;
+  }
+
+  .set-row .set-name {
+    width: 12rem;
+  }
+
+  .set-row .file-line {
+    color: #6a6a6a;
+    font-variant-numeric: tabular-nums;
+  }
+
   .hint {
     margin: 0 0 0.75rem;
     color: #4a4a4a;
@@ -535,7 +714,9 @@
     .hint,
     .count,
     .rest,
-    .rest-toggle {
+    .rest-toggle,
+    .set,
+    .set-row .file-line {
       color: #b0b0b0;
     }
 

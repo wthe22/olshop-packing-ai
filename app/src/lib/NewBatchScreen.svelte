@@ -13,6 +13,7 @@
   import { listen } from "@tauri-apps/api/event";
   import { getCurrentWebview } from "@tauri-apps/api/webview";
   import * as api from "../lib/api";
+  import { preselectSet } from "../lib/sets";
   import { LogoPrompt, needsLogoPrompt } from "../lib/logoPrompt";
   import LogoPromptDialog from "./LogoPrompt.svelte";
   import { texts } from "../texts";
@@ -20,6 +21,7 @@
   let {
     batchNumber,
     amend,
+    amendSet,
     files,
     onFiles,
     onPlan,
@@ -30,6 +32,10 @@
     /// or `null` for a new batch's file list. Decides the title, the order the files are listed
     /// and read in, and that *Read labels* reads an amend.
     amend: number | null;
+    /// The batch's own picks set on the amend's selection page (04 › *Sets*), shown fixed — an
+    /// amend reads that set again, whatever set was used last; `null` for a new batch's file
+    /// list (the *Set* control is shown there instead).
+    amendSet: string | null;
     /// The chosen files. The shell keeps them, so *Back* on the Plan screen shows this list again
     /// with the files still there (08 › *3. Plan*).
     files: api.FileCheck[];
@@ -45,6 +51,12 @@
   let error = $state("");
   // Set while *Cancel* is pressed: the read then returns to the file list, not to a stop message.
   let cancelling = false;
+
+  // The *Set* control (08 › *2. New batch* → *The set*): the sets of the data folder, with the
+  // set used last preselected, so a shop that always uses one set never touches it. The chosen
+  // set is passed to `read_labels` and remembered as the last used there.
+  let sets = $state<api.SetView[]>([]);
+  let chosenSet = $state(api.DEFAULT_SET);
 
   // The logo prompt (08 › *The logo prompt*): after a read, before the Plan screen, each unseen
   // logo is asked about once. `asking` is the logo shown now; the flow itself is in logoPrompt.ts.
@@ -122,10 +134,11 @@
     });
     let result: api.ReadResult | null = null;
     try {
-      // The set picker is Part B; a screen that knows no sets reads the set `default` (04 › *Sets*).
+      // The batch's picks come from the set chosen above (the amend's selection page reads the
+      // batch's own set, so its `set` is ignored by the back end; 04 › *Sets*).
       result = await api.readLabels(
         listed.map((file) => file.path),
-        api.DEFAULT_SET,
+        chosenSet,
         amend,
       );
     } catch (e) {
@@ -191,6 +204,18 @@
   }
 
   onMount(() => {
+    // The *Set* control's sets, with the set used last preselected (08 › *2. New batch* →
+    // *The set*). Only a new batch's file list has the control; the amend's selection page shows
+    // the batch's own set. A data folder whose sets cannot be listed keeps the set `default`.
+    if (amend === null) {
+      api
+        .setsList()
+        .then((list) => {
+          sets = list.sets;
+          chosenSet = preselectSet(list.sets, list.last_used);
+        })
+        .catch((e) => (error = String(e)));
+    }
     // Dropping PDFs on the window does the same as *Add files…* (08 › *2. New batch*).
     let unlisten: (() => void) | undefined;
     getCurrentWebview()
@@ -217,6 +242,22 @@
 <main>
   <div class="bar">
     <h2>{amend === null ? texts.newBatch.title(batchNumber) : texts.newBatch.amendTitle(amend)}</h2>
+    {#if amend === null}
+      <!-- 08 › *2. New batch* → *The set*: chosen before *Read labels*. -->
+      <label class="set">
+        {texts.newBatch.set}:
+        <select bind:value={chosenSet}>
+          {#each sets as option (option.name)}
+            <option value={option.name}>{option.name}</option>
+          {/each}
+        </select>
+      </label>
+    {:else if amendSet !== null}
+      <!-- The amend's selection page: the batch's own set, shown and not chosen. -->
+      <span class="set-fixed">
+        {texts.newBatch.set}: {texts.newBatch.setFixed(amendSet)}
+      </span>
+    {/if}
     <span class="grow"></span>
     <button onclick={cancel}>{texts.newBatch.cancel}</button>
   </div>
@@ -312,6 +353,18 @@
 
   .grow {
     flex: 1;
+  }
+
+  /* 08 › *2. New batch* → *The set*: the Set control before *Read labels*, and the amend's
+     selection page's fixed set line. */
+  .set,
+  .set-fixed {
+    margin-left: 1rem;
+    color: #4a4a4a;
+  }
+
+  .set select {
+    max-width: 14rem;
   }
 
   .drop {
@@ -426,7 +479,9 @@
 
   @media (prefers-color-scheme: dark) {
     .drop,
-    .muted {
+    .muted,
+    .set,
+    .set-fixed {
       color: #b0b0b0;
       border-color: #555555;
     }

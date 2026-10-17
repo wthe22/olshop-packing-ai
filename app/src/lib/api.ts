@@ -30,6 +30,10 @@ export interface BatchView {
   batch: number;
   save_time: string;
   time: string;
+  /// The picks set the batch was packed with (04 › *Sets*; 07 › *`state.json`*), recorded at
+  /// save; **Amend** reports it in its confirmation and reads that set again. An older
+  /// `state.json` without it reads as `default`.
+  set: string;
   files: number;
   orders: number;
   pdfs: PdfView[];
@@ -157,6 +161,9 @@ export interface PlanView {
   /// The plan is the one catch-all entry, so the picks are unconfigured: the screen shows the
   /// *No picks yet* line (Q-UI-4).
   no_picks: boolean;
+  /// The picks set the plan belongs to (04 › *Sets*): the set chosen on the New batch screen, or
+  /// the batch's own set for an amend. The header names it and **Edit categories** opens it.
+  set: string;
 }
 
 /// One unseen logo as the logo prompt shows it (08 › *2. New batch* → *The logo prompt*): the

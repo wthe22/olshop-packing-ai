@@ -69,6 +69,6 @@ name = "Lainnya"
   catch-all entry — code `Z`, name `Lainnya`, no condition — which takes every order, so a batch
   packed with it saves every order in one PDF set ([inputs](../app/inputs.md)).
 - Every set is one file, so the owner may copy, rename or edit a set by hand. The set used last —
-  chosen on [New batch](../ui/new-batch.md#the-set) or opened in [Categories](../ui/categories.md) —
+  the one a [New batch](../ui/new-batch.md#the-set) was last read with —
   is remembered and preselected for the next batch; each batch records its own
   ([day folder](../app/data-folder.md)).
