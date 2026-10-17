@@ -25,14 +25,15 @@ Open choices of the owner, each with a default the app follows until the owner d
 
 ## Status
 
-Phase 2 is finished: tasks 2.1–2.24 are done. The owner reviewed the running app and wrote two findings
+Phase 2 is finished: tasks 2.1–2.24 are done. The owner reviewed the running app and wrote three findings
 ([reviews/](../../reviews/README.md)):
 
 - **R-UI-1** — the version in the window title and in *About*, for the release **v0.1** ([ui.md](../../reviews/ui.md)).
 - **R-RULES-1** — several named sets of categories ([rules.md](../../reviews/rules.md)).
+- **R-UI-2** — a checkbox to mark a category as printed ([ui.md](../../reviews/ui.md)).
 
 **Next step — the next session's:** turn each open item into work, as [development/README.md](../README.md) says:
-R-UI-1 becomes a task file in this folder (the number in one place, shown in both spots, then the portable
+R-UI-2 (the checkbox) needs the same kind of question as R-RULES-1: the screen and the scope of the mark; R-UI-1 becomes a task file in this folder (the number in one place, shown in both spots, then the portable
 build); R-RULES-1 becomes a question in `software-design/questions/` (which set a batch uses, where the sets
 are kept; options and a default), and the design is written before any code.
 
