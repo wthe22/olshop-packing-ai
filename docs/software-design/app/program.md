@@ -6,14 +6,14 @@
 |---|---|---|
 | `day_overview(day)` | Read `state.json` of the day | Batches, saved PDFs, totals |
 | `check_files(paths)` | Page count and fingerprint of each chosen file | Name, size, time, page count, "used in batch n" |
-| `read_labels(paths, set, redo)` | Start reading on a worker thread with the chosen set of categories ([New batch › The set](../ui/new-batch.md#the-set)); `redo` is the batch being redone when the read is the amendment's ([New batch](../ui/new-batch.md#the-amends-selection-page)), nothing for a new batch (whose set is the one chosen on the screen); emits `read-progress {page, pages}` | Orders count, duplicates, warnings, the plan, or the stop error |
+| `read_labels(paths, set, redo)` | Start reading on a worker thread with the chosen grouping of categories ([New batch › The grouping](../ui/new-batch.md#the-grouping)); `redo` is the batch being redone when the read is the amendment's ([New batch](../ui/new-batch.md#the-amends-selection-page)), nothing for a new batch (whose grouping is the one chosen on the screen); emits `read-progress {page, pages}` | Orders count, duplicates, warnings, the plan, or the stop error |
 | `cancel_read()` | Stop reading | — |
 | `plan(draft, edits)` | Apply the plan edits (skip, move, add condition, rename) and recount | Picks with counts, runs (contents × orders), suggested names |
 | `save_batch(draft, plan, packing, save_anyway)` | Steps of [Save](batch.md) and the [check before saving](saved-pdf-check.md); emits `save-progress {stage, page, pages}` | Written files and summary, or the check's findings (nothing written until *Save anyway*) |
 | `revert_last(day)` / `start_amend(day)` | Revert / read the last batch's own label files again for an amend ([New batch](../ui/new-batch.md#the-amends-selection-page)) | New overview / the batch being redone, its file list (the selection page's starting list) and the read, so the Plan screen opens at once ([Plan](../ui/plan.md)); emits `read-progress {page, pages}` |
-| `rules_load(set)` / `rules_check(set, text or entries, draft?)` / `rules_save(set, …)` | Categories editor, acting on one picks set ([rules file](../rules-file/README.md)) | Entries, errors with line/col, live counts on the open draft |
-| `sets_list()` | The picks sets of the data folder ([rules file › Sets](../rules-file/README.md)) | The set names, the file each one has, and the set used last |
-| `new_set(name, copy_from)` / `delete_set(name)` | **+ New set** / **Delete set** on [Categories](../ui/categories.md): write `categories/<name>.toml`, empty (the one catch-all entry) or a copy of `copy_from`'s file, or delete that set's file | — |
+| `rules_load(set)` / `rules_check(set, text or entries, draft?)` / `rules_save(set, …)` | Categories editor, acting on one grouping ([rules file](../rules-file/README.md)) | Entries, errors with line/col, live counts on the open draft |
+| `sets_list()` | The groupings of the data folder ([rules file › Groupings](../rules-file/README.md)) | The grouping names, the file each one has, and the grouping used last |
+| `new_set(name, copy_from)` / `delete_set(name)` | **+ New grouping** / **Delete grouping** on [Categories](../ui/categories.md): write `categories/<name>.toml`, empty (the one catch-all entry) or a copy of `copy_from`'s file, or delete that grouping's file | — |
 | `set_printed(day, batch, pdf, printed)` | The **Printed** tick of one saved-PDF row of a batch ([Day screen](../ui/day.md)): writes the day's `state.json`; it changes nothing else | — |
 | `condition_to_tree(text)` / `tree_to_condition(tree)` | Boxes editor: condition text → boxes, boxes → text (the engine's parser and printer, so the window has no second parser) | Tree of groups and rows, or an error with line/col / the text |
 | `search_orders(conditions, scope)` | Search the saved orders matching the condition boxes; `scope` is `day` (*This day*, the day in the title bar) or `all` (*All days*) | One row per order (Order ID, tracking ID, courier, items, batch, saved PDF name and path) and the order and batch counts |
@@ -38,10 +38,10 @@ by that thread until it is saved, cancelled, or the app closes.
 | Setting | Default |
 |---|---|
 | Packing-list scope / layouts | `whole batch` / `pick` |
-| Picks set used last ([the sets](../rules-file/README.md)) | `default` |
+| Grouping used last ([the groupings](../rules-file/README.md)) | `default` |
 
-The last-used set is only what the [New batch](../ui/new-batch.md#the-set) screen preselects: which
-set a batch uses is chosen there, and each batch records its own ([day folder](data-folder.md)).
+The last-used grouping is only what the [New batch](../ui/new-batch.md#the-grouping) screen preselects: which
+grouping a batch uses is chosen there, and each batch records its own ([day folder](data-folder.md)).
 Where the data folder is, is not a stored setting (next section). The app is in English; every
 screen text is in one file (`app/src/texts.ts`) so another language can be added later.
 
@@ -66,7 +66,7 @@ Packing\
 - **Finding the data folder at start**: the app looks for `couriers.toml` in its own folder.
   Found → that folder is the data folder. Not found → the app asks, at every start until it is
   found: **Use this folder** (writes the bundled `couriers.toml` next to the program; no
-  `categories.toml` is written, so the picks start as one catch-all entry — the set `default`,
+  `categories.toml` is written, so the picks start as one catch-all entry — the grouping `default`,
   [rules file](../rules-file/README.md)) or
   **Choose a folder…** (used until the app closes; the next start asks again). See
   [Start](../ui/start.md).

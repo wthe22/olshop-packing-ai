@@ -16,5 +16,5 @@ owner sees, what the owner wants. A resolved item is deleted; its answer is writ
 [../development/plan/](../development/plan/README.md). Numbers are never reused. A scope file stays in
 place when it holds no item, so the next finding of that scope has a home.
 
-Open items: `ui.md` (R-UI-4) and `rules.md` (R-RULES-2), from the latest dev review. Their tasks are not
-yet in [../development/plan/](../development/plan/README.md).
+Open item: `rules.md` (R-RULES-2), from the latest dev review; it waits for the owner's answer to
+[Q-RULES-2](../software-design/questions/rules.md).

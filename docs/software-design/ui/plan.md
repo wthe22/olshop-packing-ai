@@ -6,7 +6,7 @@ the owner checks the counts and presses **Save batch**.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Batch 3 · set default · 2 files · 257 pages · 256 orders · 0 already saved   [Back]   │
+│  Batch 3 · grouping default · 2 files · 257 pages · 256 orders · 0 already saved [Back]│
 │  Warnings: 2 ▸                                                                         │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  Use  #  Pick                         Orders  Runs   File name                         │
@@ -24,21 +24,21 @@ the owner checks the counts and presses **Save batch**.
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Rows** are the picks of the set this batch uses ([New batch › The set](new-batch.md#the-set)), in
-  order; each takes its orders from what the rows above left. The header names that set
-  (*Batch 3 · set default · 2 files · 257 pages · 256 orders · 0 already saved*); the
+- **Rows** are the picks of the grouping this batch uses ([New batch › The grouping](new-batch.md#the-grouping)), in
+  order; each takes its orders from what the rows above left. The header names that grouping
+  (*Batch 3 · grouping default · 2 files · 257 pages · 256 orders · 0 already saved*); the
   numbers `#` are the saved-PDF numbers this batch will get (continuing the day).
 - **Use** unticked = skip this pick for this batch only (its orders fall to the rows below).
   The rules file is not changed. Unticking the rest row itself is an open question
   ([Q-UI-1](../questions/ui.md)).
 - **↑ ↓** move a pick for this batch only. The rest row is always last: the last
-  entry of the batch's set when it has no condition (here *Z Lainnya*), else `? Uncategorised`.
+  entry of the batch's grouping when it has no condition (here *Z Lainnya*), else `? Uncategorised`.
 - **+ Add a pick for this batch** opens a small form: code (default `X`), name, condition (the
   boxes editor of [Categories](categories.md), with the count it would take at that position).
   It is added above the rest row and can be moved. Not saved to the rules file; the form has a
   **Also add to categories** tick for that.
-- **Edit categories** opens [Categories](categories.md) on the set this batch uses, so a change is
-  written into that set's file and the open draft's plan is rebuilt from it.
+- **Edit categories** opens [Categories](categories.md) on the grouping this batch uses, so a change is
+  written into that grouping's file and the open draft's plan is rebuilt from it.
 - A pick that takes 0 orders is shown grey with "0 orders — no PDF" and gets no number.
 - **File name**: suggested `<n> <code> <name> ×<orders>`; the owner may change the whole name,
   number included (keeping the number in front keeps the files in printing order). The packing

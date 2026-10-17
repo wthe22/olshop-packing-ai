@@ -1,21 +1,21 @@
 # The rules file
 
-The categories of one **set**: a named collection of categories that a batch is packed with. One
-file per set, in the data folder:
+The categories of one **grouping**: a named collection of categories that a batch is packed with. One
+file per grouping, in the data folder:
 
-| Set | File |
+| Grouping | File |
 |---|---|
 | `default` | `<data folder>/categories.toml` — the file the app already writes; it is not moved |
-| any other name | `<data folder>/categories/<set name>.toml` — the file name is the set name |
+| any other name | `<data folder>/categories/<grouping name>.toml` — the file name is the grouping name |
 
-The set a batch uses is chosen when the batch is prepared
-([New batch](../ui/new-batch.md#the-set)); the sets are edited in [Categories](../ui/categories.md).
-Every entry of a set is one **pick** (one saved label PDF, [picks.md](../labels/picks.md)) and the
+The grouping a batch uses is chosen when the batch is prepared
+([New batch](../ui/new-batch.md#the-grouping)); the groupings are edited in [Categories](../ui/categories.md).
+Every entry of a grouping is one **pick** (one saved label PDF, [picks.md](../labels/picks.md)) and the
 entries are applied in file order. The **condition language** of the entries is described in
 [conditions.md](conditions.md).
 
-Which set a batch uses, and where the sets are kept, are open with the owner
-([Q-RULES-1](../questions/rules.md)); the table above and [Sets](#sets) are the default the app
+Which grouping a batch uses, and where the groupings are kept, are open with the owner
+([Q-RULES-1](../questions/rules.md)); the table above and [Groupings](#groupings) are the default the app
 follows until the owner decides.
 
 ## File format (TOML)
@@ -58,17 +58,17 @@ name = "Lainnya"
 - In the PC app, a pick whose condition uses a field with no value (a CSV-only field) is an error
   ([inputs.md](../app/inputs.md)).
 
-## Sets
+## Groupings
 
-- **The set list** of a data folder: `default` always, plus every `<set name>.toml` in its
+- **The grouping list** of a data folder: `default` always, plus every `<grouping name>.toml` in its
   `categories/` folder. The names are the file names without `.toml`; characters that are not
   allowed in Windows file names (`\ / : * ? " < > |`) become `-`. A file
   `categories/default.toml` is refused with both files named: the name `default` belongs to the
   data folder's own `categories.toml`, so it is neither created nor deleted nor renamed.
-- **A set with no file** (a fresh data folder, or a set the owner has not saved yet) has one
+- **A grouping with no file** (a fresh data folder, or a grouping the owner has not saved yet) has one
   catch-all entry — code `Z`, name `Lainnya`, no condition — which takes every order, so a batch
   packed with it saves every order in one PDF set ([inputs](../app/inputs.md)).
-- Every set is one file, so the owner may copy, rename or edit a set by hand. The set used last —
-  the one a [New batch](../ui/new-batch.md#the-set) was last read with —
+- Every grouping is one file, so the owner may copy, rename or edit a grouping by hand. The grouping used last —
+  the one a [New batch](../ui/new-batch.md#the-grouping) was last read with —
   is remembered and preselected for the next batch; each batch records its own
   ([day folder](../app/data-folder.md)).

@@ -41,7 +41,7 @@ clock      = digit digit ":" digit digit
   value. It does not ignore accents or other differences.
 - Errors give line and column and say what is expected, e.g.
   `line 2, col 18: expected a text operator (contains, equals, starts_with) after "name"`.
-  Inside a set's file ([the rules file](README.md)) the line and column are those of the file
+  Inside a grouping's file ([the rules file](README.md)) the line and column are those of the file
   itself, not of the condition text.
 
 ## Date and time values
@@ -88,7 +88,7 @@ The date is written year-month-day; the time is `HH:MM` without seconds.
   CSV; a pick using one without a CSV stops the run ([picks.md](../labels/picks.md)). The
   PC app reads no CSV, so in its rules these fields are always an error
   ([inputs.md](../app/inputs.md)).
-- `product_category` is the platform's category, not the shop's: do not use it in a picks set.
+- `product_category` is the platform's category, not the shop's: do not use it in a grouping.
 - Item fields need item data (a slip or a CSV); a pick using one with neither stops the run.
 - Categories may use only the fields without "app scan filters only" (a category cannot depend
   on itself or on numbering that is computed after the categories).

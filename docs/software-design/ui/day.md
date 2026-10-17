@@ -37,10 +37,10 @@ The start screen: what has been saved for the day, and the way to the next batch
   - Revert asks: "Undo batch 2? Its 2 saved PDFs, packing list and download copies are deleted, and its 129
     orders can be saved again. If you already printed them, throw the printed labels away."
     [Cancel] [Undo batch 2]
-  - Amend asks: "Redo batch 2 with its set of categories (default)? Batch 2 was saved at 09:12. If you
+  - Amend asks: "Redo batch 2 with its grouping (default)? Batch 2 was saved at 09:12. If you
     already printed it, print it again after saving." [Cancel] [Redo batch 2] reads the batch's own
-    label PDFs again with the set the batch used, recorded in its `state.json`
-    ([New batch › The set](new-batch.md#the-set)); the window shows "Reading the batch's labels …  page 143 of
+    label PDFs again with the grouping the batch used, recorded in its `state.json`
+    ([New batch › The grouping](new-batch.md#the-grouping)); the window shows "Reading the batch's labels …  page 143 of
     257" with a progress bar, then opens the Plan screen, titled *Redo batch 2* ([Plan](plan.md)).
     That screen's **Back** shows the amend's selection page with the current selection listed
     ([New batch › The amend's selection page](new-batch.md#the-amends-selection-page)); **Read

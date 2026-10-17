@@ -13,7 +13,7 @@
    couriers and missing tracking IDs are warnings.
 4. **Duplicate guard**: the orders already saved the same day are taken out and listed (Order ID,
    tracking ID, batch, saved-PDF number, time; the time is the batch's `save_time`).
-5. **Plan**: the categories of the set this batch uses ([New batch](../ui/new-batch.md#the-set)) in
+5. **Plan**: the categories of the grouping this batch uses ([New batch](../ui/new-batch.md#the-grouping)) in
    file order, each taking its orders from what is
    left; the leftovers form the last pick, the rest. The owner may change the plan for this
    batch only: skip a pick, move it up or down, add a one-off condition at any position,
@@ -49,8 +49,8 @@ nothing.
 **Amend last batch** — for "I fixed a category, do the last batch again":
 
 1. The **Plan screen** opens ([Plan](../ui/plan.md)): the batch's own label PDFs are read again
-   from its `download/` copy in the order stored in `state.json`, with the set the batch used
-   (its `state.json` entry, so an amend never switches sets). The screen is titled *Redo batch
+   from its `download/` copy in the order stored in `state.json`, with the grouping the batch used
+   (its `state.json` entry, so an amend never switches groupings). The screen is titled *Redo batch
    `<b>`*; the duplicate guard ignores the
    batch's own orders and the numbers are reused.
 2. **Back** on that Plan screen shows the **selection page**

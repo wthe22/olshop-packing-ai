@@ -2,9 +2,9 @@
 
 ```
 <data folder>/
-  categories.toml          the picks set `default` ([rules file](../rules-file/README.md))
-  categories/              every other set, one file each, the file name being the set name
-    ramadhan.toml          the set `ramadhan`
+  categories.toml          the grouping `default` ([rules file](../rules-file/README.md))
+  categories/              every other grouping, one file each, the file name being the grouping name
+    ramadhan.toml          the grouping `ramadhan`
   couriers.toml
   settings.json
   labels/
@@ -86,7 +86,7 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
 | `batches[].files` | Name, size, XXH3-64 (16 hex characters of the whole file), page count of each label file read, in reading order | Recognise a file used twice ("used in batch 1"); amend reads `download/` in this order |
 | `batches[].pdfs` | Each saved PDF: number, pick code/name, file name, counts | Day screen without re-reading the PDFs; revert knows which files are the batch's |
 | `batches[].packing_list` | Scope and layouts chosen | Amend starts with the same choice |
-| `batches[].set` | The name of the picks set the batch was packed with ([rules file](../rules-file/README.md)); absent loads as `default` | An **Amend** reads the batch's own set again, whatever set was used last; the [Plan screen](../ui/plan.md) header and **Amend**'s confirmation ([Day screen](../ui/day.md)) name it |
+| `batches[].set` | The name of the grouping the batch was packed with ([rules file](../rules-file/README.md)); absent loads as `default` | An **Amend** reads the batch's own grouping again, whatever grouping was used last; the [Plan screen](../ui/plan.md) header and **Amend**'s confirmation ([Day screen](../ui/day.md)) name it |
 | `batches[].printed` | The saved-PDF numbers of the batch whose **Printed** tick is set ([Day screen](../ui/day.md)); written when a tick is clicked; absent loads as empty | The tick is a note only, and it belongs to the batch: a revert removes it with the batch, and a batch written again by an amend starts unticked |
 | `batches[].warnings` | The read warnings of the batch, as shown on the Plan screen, plus the check before saving's warnings ([saved-pdf-check.md](saved-pdf-check.md)); absent loads as empty | Day screen *Warnings ▸* without re-reading the files |
 | `batches[].errors` | The check before saving's errors, kept apart from the warnings; written only when the batch was saved anyway (*Save anyway*), absent loads as empty | Day screen *Saved with `<n>` errors ▸* without re-reading the files |

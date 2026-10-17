@@ -46,14 +46,14 @@ pub enum SetError {
 impl fmt::Display for SetError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SetError::EmptyName => f.write_str("a set name cannot be empty"),
+            SetError::EmptyName => f.write_str("a grouping name cannot be empty"),
             SetError::ReservedDefault => write!(
                 f,
                 "the name \"{DEFAULT_SET}\" is the data folder's own {CATEGORIES_FILE}: it cannot be created, deleted or renamed"
             ),
             SetError::DefaultFile { default, file } => write!(
                 f,
-                "{file} and {default} are one set: the name \"{DEFAULT_SET}\" belongs to the data folder's own {CATEGORIES_FILE}"
+                "{file} and {default} are one grouping: the name \"{DEFAULT_SET}\" belongs to the data folder's own {CATEGORIES_FILE}"
             ),
             SetError::Exists { file } => write!(f, "cannot create {file}: it is already there"),
             SetError::Read { file, message } => write!(f, "cannot read {file}: {message}"),

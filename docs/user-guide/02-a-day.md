@@ -33,13 +33,13 @@ goes back to today (handy for a download just after midnight).
 
 ![New batch with one file](images/03-new-batch.png)
 
-The title line holds a **Set** control: the set of categories this batch is packed with
-([Sets of categories](03-changes.md#sets-of-categories)). The list holds every set of your data
-folder, with the set you used last already chosen, so a shop that always uses one set never
+The title line holds a **Grouping** control: the grouping of categories this batch is packed with
+([Groupings](03-changes.md#groupings)). The list holds every grouping of your data
+folder, with the grouping you used last already chosen, so a shop that always uses one grouping never
 touches it.
 
 1. Click **+ New batch**.
-2. If this batch needs another set of categories, choose it in **Set**; otherwise leave the set
+2. If this batch needs another grouping of categories, choose it in **Grouping**; otherwise leave the grouping
    shown.
 3. Add the label files: click **Add files…** and choose the *Shipping label + Packing slip* PDFs
    of this download, or drop them onto the window ("Drop label PDFs here, or Add files…").
@@ -87,7 +87,7 @@ button per courier name, **Not a courier**, **I don't know** and **Skip all**.
 The Plan screen is the heart of the app: which orders go into which saved PDF. It opens with your
 categories applied in order.
 
-- The header names the set the batch is packed with: "Batch 3 · set default · 2 files · 257 pages ·
+- The header names the grouping the batch is packed with: "Batch 3 · grouping default · 2 files · 257 pages ·
   256 orders · 0 already saved".
 - **Rows** are the picks in order. Each takes its orders from the rows above.
 - **Use** (the tick) turns a pick off for this batch only; its orders fall to the rows below. The

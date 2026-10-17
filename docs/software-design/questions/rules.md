@@ -60,7 +60,7 @@ answer is written into the design files and into that task file before it is bui
 
 ## Q-RULES-2 — Renaming a grouping: which name an amend of an older batch reads
 
-**Now.** A grouping (a set of categories, [R-UI-4](../../reviews/ui.md)) is a file whose name is its
+**Now.** A grouping (the owner's word for a set of categories) is a file whose name is its
 name ([Q-RULES-1](#q-rules-1--several-sets-of-categories-which-set-a-batch-uses-and-where-the-sets-are-kept),
 default (b)). A batch records its grouping by that name in the day's `state.json`
 ([batch](../app/batch.md)). The name of a grouping cannot be changed.

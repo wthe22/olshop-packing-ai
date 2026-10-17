@@ -1,8 +1,8 @@
 # Picks
 
-- **Default**: the categories of the set the batch uses ([rules file](../rules-file/README.md)) in
+- **Default**: the categories of the grouping the batch uses ([rules file](../rules-file/README.md)) in
   file order, each one pick. The last entry may have no `when` and takes the rest. A pick takes the
-  matching orders **from what is left** after the earlier picks. A set with no file — a fresh data
+  matching orders **from what is left** after the earlier picks. A grouping with no file — a fresh data
   folder, or a folder that has none — has one catch-all entry that takes every order
   ([inputs](../app/inputs.md)).
 - **Leftovers**: orders matching no pick stay in "the rest" and are saved as a final PDF.

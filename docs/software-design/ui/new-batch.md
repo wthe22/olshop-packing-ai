@@ -1,10 +1,10 @@
 # New batch
 
-Choose the label files of this batch and the set of picks it uses, then read them.
+Choose the label files of this batch and the grouping of picks it uses, then read them.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  New batch 3   Set: [default ▾]                                         [Cancel]       │
+│  New batch 3   Grouping: [default ▾]                                    [Cancel]       │
 │                                                                                        │
 │  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐       │
 │     Drop label PDFs here, or  [Add files…]                                             │
@@ -31,21 +31,21 @@ Choose the label files of this batch and the set of picks it uses, then read the
   with these files still listed, and **Read labels** then reads them again from the start (the
   Plan changes are lost).
 
-## The set
+## The grouping
 
-The picks of the batch come from one **set** of categories
+The picks of the batch come from one **grouping** of categories
 ([the rules file](../rules-file/README.md)), chosen here before **Read labels**:
 
-- **Set** lists the sets of the data folder: `default` always, plus every set file in its
-  `categories/` folder. The last-used set is preselected, so a shop that always uses one set never
+- **Grouping** lists the groupings of the data folder: `default` always, plus every grouping file in its
+  `categories/` folder. The last-used grouping is preselected, so a shop that always uses one grouping never
   touches the control. The choice is remembered as the last used and written into the batch at save
-  (`state.json`), so **Amend** reads the batch's own set again
+  (`state.json`), so **Amend** reads the batch's own grouping again
   ([revert and amend](../app/batch.md)).
-- The chosen set's categories are applied in order as the plan ([Plan](plan.md)). A set with no file
+- The chosen grouping's categories are applied in order as the plan ([Plan](plan.md)). A grouping with no file
   is the one catch-all entry, so every order of the batch goes into one PDF set
   ([inputs](../app/inputs.md), [Q-UI-4](../questions/ui.md)).
-- Which set a batch uses is an open choice of the owner ([Q-RULES-1](../questions/rules.md)); this
-  control is its default — chosen per batch, the last-used set preselected — and is built until the
+- Which grouping a batch uses is an open choice of the owner ([Q-RULES-1](../questions/rules.md)); this
+  control is its default — chosen per batch, the last-used grouping preselected — and is built until the
   owner decides.
 
 ## The amend's selection page
@@ -54,7 +54,7 @@ The picks of the batch come from one **set** of categories
 batch's label PDFs can be changed ([Amend last batch](../app/batch.md)):
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Redo batch 2   Set: default (fixed)                                    [Cancel]       │
+│  Redo batch 2   Grouping: default (fixed)                               [Cancel]       │
 │  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐       │
 │     Drop label PDFs here, or  [Add files…]                                             │
 │  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘       │
@@ -67,9 +67,9 @@ batch's label PDFs can be changed ([Amend last batch](../app/batch.md)):
 - The current selection is listed: the batch's own PDFs first, from its `download/` copy
   ([day folder](../app/data-folder.md)), in the order stored in `state.json`, then what the owner
   chose here before.
-- The batch's own set is shown in the title line and is not chosen here: an amend reads the batch's
-  set again, whatever set was used last (the batch's `state.json` holds it), so *Redo batch 2* brings
-  back the picks the batch had ([The set](#the-set), [revert and amend](../app/batch.md)).
+- The batch's own grouping is shown in the title line and is not chosen here: an amend reads the batch's
+  grouping again, whatever grouping was used last (the batch's `state.json` holds it), so *Redo batch 2* brings
+  back the picks the batch had ([The grouping](#the-grouping), [revert and amend](../app/batch.md)).
 - **Add files…** and a drop add PDFs ([Q-APP-2](../questions/app.md), default: any PDF on the PC, as
   in a new batch); an added file joins the list after the batch's own files. **×** takes a PDF off the
   list; its orders are then not in the batch

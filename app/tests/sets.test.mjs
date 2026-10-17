@@ -25,12 +25,12 @@ const sets = [
 
 test("the set control's words are the designed words", () => {
   // 08 › *2. New batch* → *The set*: *Set: [default ▾]* before *Read labels*.
-  assert.equal(texts.newBatch.set, "Set");
+  assert.equal(texts.newBatch.set, "Grouping");
   // The amend's selection page: *Set: default (fixed)*.
   assert.equal(texts.newBatch.setFixed("default"), "default (fixed)");
   // 08 › *5. Categories*: the set row's two buttons and the file line.
-  assert.equal(texts.categories.newSet, "+ New set");
-  assert.equal(texts.categories.deleteSet, "Delete set");
+  assert.equal(texts.categories.newSet, "+ New grouping");
+  assert.equal(texts.categories.deleteSet, "Delete grouping");
   assert.equal(texts.categories.setFile("categories.toml"), "file: categories.toml");
 });
 
@@ -38,7 +38,7 @@ test("the choice the batch was packed with names the set in the Plan header", ()
   // 08 › *3. Plan*: "Batch 3 · set default · 2 files · 257 pages · 256 orders · 0 already saved".
   assert.equal(
     texts.plan.header(3, "default", 2, 257, 256, 0),
-    "Batch 3 · set default · 2 files · 257 pages · 256 orders · 0 already saved",
+    "Batch 3 · grouping default · 2 files · 257 pages · 256 orders · 0 already saved",
   );
 });
 
@@ -46,7 +46,7 @@ test("the Amend confirmation names the batch's set", () => {
   // 08 › *1. Day*, verbatim.
   assert.equal(
     texts.day.confirmAmend(2, "default", "09:12"),
-    "Redo batch 2 with its set of categories (default)? Batch 2 was saved at 09:12. If you already printed it, print it again after saving.",
+    "Redo batch 2 with its grouping (default)? Batch 2 was saved at 09:12. If you already printed it, print it again after saving.",
   );
 });
 

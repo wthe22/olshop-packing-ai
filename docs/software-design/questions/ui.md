@@ -5,7 +5,7 @@ Questions: Q-UI-1, Q-UI-2, Q-UI-3, Q-UI-4.
 ## Q-UI-1 — Unticking the rest row
 
 **Words.** The *rest row* is the last row of the [Plan screen](../ui/plan.md): the last
-entry of the batch's set when it has no condition (e.g. *Z Lainnya*), else `? Uncategorised`. Unticking
+entry of the batch's grouping when it has no condition (e.g. *Z Lainnya*), else `? Uncategorised`. Unticking
 **Use** on a row skips that pick for this batch: its orders fall to the rows below. The rest row has
 no row below it.
 
@@ -55,7 +55,7 @@ and whether search reads `download/` at all.
 
 ## Q-UI-4 — Saying that the picks are unconfigured
 
-**Words.** With no picks set configured, the picks are one catch-all entry that takes every order, so a
+**Words.** With no grouping configured, the picks are one catch-all entry that takes every order, so a
 batch saves every order in one PDF set ([inputs](../app/inputs.md)); the owner adds picks in
 [Categories](../ui/categories.md) when wanted. A line on screen can read the plain words
 **No picks yet: all orders go into one PDF set**.

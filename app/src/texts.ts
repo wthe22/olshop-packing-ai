@@ -70,7 +70,7 @@ export const texts = {
     // 08 › *1. Day*: the Amend confirmation, verbatim. An amend redoes the batch with the set it
     // was packed with, so the confirmation names that set (04 › *Sets*).
     confirmAmend: (n: number, set: string, time: string) =>
-      `Redo batch ${n} with its set of categories (${set})? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
+      `Redo batch ${n} with its grouping (${set})? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
     // 08 › *1. Day* → *3. Plan*: while *Amend* reads the batch's own label files again (the
     // `read-progress` event), shown with a progress bar before the Plan screen opens.
     amendReading: (page: number, pages: number) =>
@@ -92,7 +92,7 @@ export const texts = {
     // 08 › *2. New batch* → *The set*: the Set control before *Read labels*. On the amend's
     // selection page the batch's own set is shown and not chosen, so the name is followed by
     // *(fixed)* (04 › *Sets*).
-    set: "Set",
+    set: "Grouping",
     setFixed: (name: string) => `${name} (fixed)`,
     pages: (n: number) => `${count(n, "page", "pages")}`,
     usedInBatch: (n: number) => `used in batch ${n}`,
@@ -132,7 +132,7 @@ export const texts = {
       orders: number,
       alreadySaved: number,
     ) =>
-      `Batch ${batch} · set ${set} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
+      `Batch ${batch} · grouping ${set} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
     warnings: (n: number) => `Warnings: ${n} ▸`,
     warningsNone: "Warnings: none",
     use: "Use",
@@ -226,21 +226,21 @@ export const texts = {
     // 08 › *5. Categories*: the set row — the chooser, **+ New set** and **Delete set** — and the
     // file the chosen set is kept in. A batch is packed with one set, chosen on *New batch*
     // (04 › *Sets*); same file name as the set name.
-    set: "Set",
-    newSet: "+ New set",
-    deleteSet: "Delete set",
+    set: "Grouping",
+    newSet: "+ New grouping",
+    deleteSet: "Delete grouping",
     setFile: (file: string) => `file: ${file}`,
     createSet: "Create",
     // A new set's name is refused before the file is written (04 › *Sets*): empty, the reserved
     // name `default` (the data folder's own `categories.toml`), or a name already in the list.
-    setNeedsName: "A set needs a name.",
+    setNeedsName: "A grouping needs a name.",
     setNameReserved:
       "The name \"default\" belongs to the data folder's own categories.toml. Choose another name.",
-    setNameTaken: "A set with that name is already there.",
+    setNameTaken: "A grouping with that name is already there.",
     // **Delete set** asks first; the set's file is deleted and its categories fall back to the one
     // catch-all entry (04 › *Sets*).
     confirmDeleteSet: (name: string) =>
-      `Delete set ${name}? Its categories fall back to the one catch-all entry.`,
+      `Delete grouping ${name}? Its categories fall back to the one catch-all entry.`,
     code: "Code",
     name: "Name",
     // 08 › *5. Categories*: "In batch 3: 130", in order from what is left.

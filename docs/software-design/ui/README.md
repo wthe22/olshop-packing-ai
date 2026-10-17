@@ -7,10 +7,10 @@ made-up IDs and counts.
 | Screen | Content |
 |---|---|
 | [Day](day.md) | The start screen: the batches saved for the day, the way to the next batch, revert and amend |
-| [New batch](new-batch.md) | Choosing the label files and the picks set of the batch, reading them and the logo prompt |
+| [New batch](new-batch.md) | Choosing the label files and the grouping of the batch, reading them and the logo prompt |
 | [Plan](plan.md) | The picks, the per-batch changes, the packing list and Save |
 | [Messages](messages.md) | Every stop message and warning, and what to do |
-| [Categories](categories.md) | The boxes editor for a picks set (the data folder's `categories.toml` or a file in `categories/`) |
+| [Categories](categories.md) | The boxes editor for a grouping (the data folder's `categories.toml` or a file in `categories/`) |
 | [Settings](settings.md) | The settings and the data folder |
 | [Search](search.md) | Finding saved orders of the day |
 | [Start](start.md) | Finding the data folder at every start |

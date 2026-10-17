@@ -14,7 +14,7 @@ Reference for the reading and sorting rules: the Python package `tools/analysis/
 first implementation of the same rules, tested). Port it module by module when a rule is missing
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-Every task of the phase (2.1–2.27) is finished, so this folder holds no task file. What the tasks built
+Every task of the phase (2.1–2.29) is finished, so this folder holds no task file. What the tasks built
 is in [software-design/](../../software-design/README.md); how to run, build and test it is in
 [../README.md](../README.md).
 
@@ -26,7 +26,7 @@ Open choices of the owner, each with a default the app follows until the owner d
 
 ## Status
 
-Phase 2 is finished: tasks 2.1–2.27 are done and the portable program folder `target/portable/Packing/`
+Phase 2 is finished: tasks 2.1–2.29 are done and the portable program folder `target/portable/Packing/`
 is built from them. The owner's three findings are built, and wait for the owner's test of the running
 program (the checklist below):
 
@@ -35,20 +35,19 @@ program (the checklist below):
 - **R-RULES-1** — several named sets of categories (2.27), built to the default of
   [Q-RULES-1](../../software-design/questions/rules.md).
 
-**Dev review of the built program (filed):** [R-UI-4](../../reviews/ui.md) (the set of categories is called *Grouping*) and
-[R-RULES-2](../../reviews/rules.md) (a set of categories can be renamed).
+**Dev review of the built program (done):** the Printed tick is as large as *Open* with no word (2.28), and a set of
+categories is called a *Grouping* everywhere the owner reads it (2.29). Open: [R-RULES-2](../../reviews/rules.md)
+(a grouping can be renamed) waits for the owner's answer to [Q-RULES-2](../../software-design/questions/rules.md); build
+it after the answer is written into `software-design/`. **Next step — the owner's:** test the program folder with the
+checklist below; findings go into [reviews/](../../reviews/README.md), one item each. A new session turns each into a
+task (2.30 onward) or a question.
 
-**Open task:** [2.29](2.29-grouping-word.md) (R-UI-4). R-RULES-2 (renaming a grouping) is not a task: it waits for the owner's answer to
-[Q-RULES-2](../../software-design/questions/rules.md); build it after the answer is written into
-`software-design/`. After the tasks, the owner tests the program folder with the checklist below. Findings go into
-[reviews/](../../reviews/README.md), one item each.
-
-**Not checked on a running window** (only by tests): the Printed tick (click, close, reopen), the *Set*
-control on New batch, the Categories set row (**+ New set**, **Delete set**), and the Plan header naming
-the set. The seven in-app pictures of the user guide (`images/02-day.png` to `08-day-saved.png`,
+**Not checked on a running window** (only by tests): the Printed tick (click, close, reopen), the *Grouping*
+control on New batch, the Categories grouping row (**+ New grouping**, **Delete grouping**), and the Plan header naming
+the grouping. The seven in-app pictures of the user guide (`images/02-day.png` to `08-day-saved.png`,
 `images/03-new-batch.png`, `05-plan.png`, `07-categories.png`) show the old title bar; `02-day.png` and
 `08-day-saved.png` lack the **Printed** tick, `03-new-batch.png`, `05-plan.png` and `07-categories.png`
-lack the set parts. They are retaken from the built program.
+lack the grouping parts. They are retaken from the built program.
 
 **Decided, open in detail:** the app remembers taught logos ([D-LABEL-4](../../software-design/decisions/label.md)); where they are written is [Q-LABEL-7](../../software-design/questions/label.md), default `couriers.toml`.
 
@@ -82,7 +81,7 @@ What the owner checks, after 2.15–2.27 (the last three items are 2.25–2.27):
   building again moves all three.
 - After 2.26: tick **Printed** on a row of a batch, close the app, open it again: the tick is still
   there. An unticked row opens and prints as before.
-- After 2.27: **New batch** shows the *Set* control with the set used last preselected; a second set
+- After 2.27: **New batch** shows the *Grouping* control with the set used last preselected; a second set
   file in the data folder's `categories/` can be chosen and its categories make the plan; the Day
   screen's **Amend** redoes a batch with its own set; the data folder's `categories.toml` is still
   where it was.

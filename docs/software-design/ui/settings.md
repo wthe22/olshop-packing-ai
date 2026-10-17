@@ -8,7 +8,7 @@
 
 **Change…** switches the data folder until the app closes; it does not move existing files.
 The app asks "Use `<folder>` until the app closes? Existing days stay in `<old folder>`." The
-new folder's picks sets ([rules file](../rules-file/README.md)) and its `couriers.toml` are used; a
+new folder's groupings ([rules file](../rules-file/README.md)) and its `couriers.toml` are used; a
 `couriers.toml` it does not have is written from the bundled file. The next start looks in the
 program folder again.
 
