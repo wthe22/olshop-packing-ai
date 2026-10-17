@@ -12,11 +12,12 @@ version in `Cargo.toml`.
 place only. The exact form of the number (`v0.1` or `0.1.0`) is for the next session to settle in
 [software-design/](../software-design/README.md), with the owner's *v0.1* as the default.
 
-## R-UI-2 — A checkbox to mark a category as printed
+## R-UI-2 — An optional checkbox to mark a category as printed
 
 **Now:** the app has no way to mark a category (a pick) as printed.
 
-**Wanted:** a checkbox on a category that the owner ticks once its PDF set has been printed. Which screen
-holds the checkbox, and whether the mark belongs to one batch or carries over to the next, are open choices:
-the next session puts them into [software-design/questions/](../software-design/questions/README.md) with
-options and a default.
+**Wanted:** an optional checkbox on a category, which the owner may tick to note that its PDF set has been
+printed. It is a note only: nothing is enforced, blocked or required, and an unticked category works as it
+does today. Which screen holds the checkbox, and whether the mark belongs to one batch or carries over to the
+next, are open choices: the next session puts them into [software-design/questions/](../software-design/questions/README.md)
+with options and a default.

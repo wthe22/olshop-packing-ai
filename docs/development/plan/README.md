@@ -30,7 +30,7 @@ Phase 2 is finished: tasks 2.1–2.24 are done. The owner reviewed the running a
 
 - **R-UI-1** — the version in the window title and in *About*, for the release **v0.1** ([ui.md](../../reviews/ui.md)).
 - **R-RULES-1** — several named sets of categories ([rules.md](../../reviews/rules.md)).
-- **R-UI-2** — a checkbox to mark a category as printed ([ui.md](../../reviews/ui.md)).
+- **R-UI-2** — an optional checkbox (a note only, nothing enforced) to mark a category as printed ([ui.md](../../reviews/ui.md)).
 
 **Next step — the next session's:** turn each open item into work, as [development/README.md](../README.md) says:
 R-UI-2 (the checkbox) needs the same kind of question as R-RULES-1: the screen and the scope of the mark; R-UI-1 becomes a task file in this folder (the number in one place, shown in both spots, then the portable
