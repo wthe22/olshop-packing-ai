@@ -23,6 +23,9 @@ From the repository root, Git Bash:
 | Front-end types | `cd app && npm run check` |
 | Front-end tests | `cd app && npm test` |
 
+Every change also meets the [code rules](code-rules.md): its checks, run together by `bash tools/check.sh`,
+are listed there.
+
 `cargo test --workspace` runs the engine, PDF and app tests; the test levels and their expected
 sample numbers are in [testing.md](testing.md).
 

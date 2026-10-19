@@ -47,7 +47,8 @@ npm run build                # front-end to app/build/
 npm run tauri dev            # opens the window
 ```
 
-The Rust workspace gates, run from the repository root:
+The Rust workspace gates, run from the repository root (the full list, with the code-rule checks, is in
+[code-rules.md](code-rules.md)):
 
 ```bash
 cargo fmt --all --check

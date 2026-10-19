@@ -3,6 +3,13 @@
 Only the unfinished work. A finished task is deleted from this folder in the commit that finishes it; a
 finished phase moves to `archive/`. Phase and task numbers live only here.
 
+## Next step — the code refactor
+
+Before any new feature: bring the code to the [code rules](../code-rules.md) in the steps R0–R7 of
+[refactor.md](refactor.md), without changing what the program does. The first step listed there is the
+work; it ends with the owner's regression list in the handoff below. **The code rules apply to every task
+file in this folder**: a task report states *size gate passed, no new lint suppression, coverage not lower*.
+
 ## Phase 2 — PC app (Rust + Tauri)
 
 A Windows program for the daily work: label downloads in, picks adjusted on screen, saved PDFs and packing
