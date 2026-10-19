@@ -132,7 +132,7 @@ pub(super) fn build_pages(
     if layout != Layout::Pick {
         builder.draw_pdfs(list);
     }
-    builder.draw_pick_summary(list);
+    builder.draw_category_summary(list);
     let body = builder.pages;
     let pages = body.len();
     body.into_iter()

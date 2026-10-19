@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-use packing_engine::plan::{PickResult, REST_CODE};
+use packing_engine::plan::{CategoryResult, REST_CODE};
 
 /// The pieces the batch summary is built from (03 › *Screen summary*).
 pub struct SummaryInput<'a> {
@@ -11,7 +11,7 @@ pub struct SummaryInput<'a> {
     pub pages: usize,
     pub orders: usize,
     pub slip_pages: usize,
-    pub picks: &'a [PickResult],
+    pub categories: &'a [CategoryResult],
     pub duplicates: usize,
     pub warnings: &'a [String],
     /// The check before saving's errors (07 › *Check before saving*), printed when the batch was
@@ -47,19 +47,19 @@ pub fn summary_text(input: &SummaryInput<'_>) -> String {
         "none".to_string()
     };
     lines.push(format!("  Item data: {items}"));
-    for pick in input.picks {
-        let kind = if pick.code == REST_CODE {
+    for category in input.categories {
+        let kind = if category.code == REST_CODE {
             "Rest"
         } else {
             "Pick"
         };
         lines.push(format!(
             "  {kind} {}  {}: {} orders, {} runs → {}",
-            pick.code,
-            pick.name,
-            pick.orders.len(),
-            pick.runs.len(),
-            pick.file_name
+            category.code,
+            category.name,
+            category.orders.len(),
+            category.runs.len(),
+            category.file_name
         ));
     }
     lines.push(format!("  Duplicates: {}", input.duplicates));
@@ -90,7 +90,7 @@ pub fn summary_text(input: &SummaryInput<'_>) -> String {
             }
         }
     }
-    let pdf_word = if input.picks.len() == 1 {
+    let pdf_word = if input.categories.len() == 1 {
         "saved PDF"
     } else {
         "saved PDFs"
@@ -103,7 +103,7 @@ pub fn summary_text(input: &SummaryInput<'_>) -> String {
     lines.push(format!(
         "Written: {}/  ({} {}, {})",
         input.day_dir.display(),
-        input.picks.len(),
+        input.categories.len(),
         pdf_word,
         packing
     ));

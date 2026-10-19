@@ -2,7 +2,7 @@ use super::*;
 use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::label::courier_data;
 use packing_engine::orders::Order;
-use packing_engine::plan::{PickResult, REST_CODE, RunResult};
+use packing_engine::plan::{CategoryResult, REST_CODE, RunResult};
 
 fn line(name: &str, variation: &str, quantity: i64, display: &str) -> Line {
     Line {
@@ -38,7 +38,7 @@ fn order_ids() -> Vec<OrderId> {
     ]
 }
 
-fn pick() -> (PickResult, Vec<ReadOrder>) {
+fn category() -> (CategoryResult, Vec<ReadOrder>) {
     let orders = vec![
         read_order(
             "580000000000000001",
@@ -51,7 +51,7 @@ fn pick() -> (PickResult, Vec<ReadOrder>) {
             vec![line("Sepatu", "honda", 1, "Sepatu — honda")],
         ),
     ];
-    let pick = PickResult {
+    let category = CategoryResult {
         number: PdfNumber::new(1),
         code: "A".to_string(),
         name: "Sepatu".to_string(),
@@ -63,12 +63,12 @@ fn pick() -> (PickResult, Vec<ReadOrder>) {
         pages: 2,
         file_name: "1 A Sepatu ×2.pdf".to_string(),
     };
-    (pick, orders)
+    (category, orders)
 }
 
 #[test]
-fn pick_section_maps_runs_and_lines() {
-    let (pick, orders) = pick();
+fn category_section_maps_runs_and_lines() {
+    let (category, orders) = category();
     let draft = Draft {
         files: Vec::new(),
         orders,
@@ -81,7 +81,7 @@ fn pick_section_maps_runs_and_lines() {
         read_warnings: Vec::new(),
     };
     let index = order_index(&draft);
-    let section = pick_section(&pick, &index).expect("section");
+    let section = category_section(&category, &index).expect("section");
 
     assert_eq!(section.number, PdfNumber::new(1));
     assert_eq!(section.code, "A");
@@ -104,8 +104,8 @@ fn pick_section_maps_runs_and_lines() {
 }
 
 #[test]
-fn pick_pages_and_saved_follow_the_runs() {
-    let (pick, orders) = pick();
+fn category_pages_and_saved_follow_the_runs() {
+    let (category, orders) = category();
     let draft = Draft {
         files: Vec::new(),
         orders,
@@ -120,10 +120,10 @@ fn pick_pages_and_saved_follow_the_runs() {
     let index = order_index(&draft);
 
     assert_eq!(
-        pick_pages(&pick, &index).expect("pages"),
+        category_pages(&category, &index).expect("pages"),
         vec![(0, 0), (0, 0)]
     );
-    let saved = pick_saved(&pick, &index, BatchNumber::new(1)).expect("saved");
+    let saved = category_saved(&category, &index, BatchNumber::new(1)).expect("saved");
     assert_eq!(saved.len(), 2);
     assert_eq!(saved[0].pdf, PdfNumber::new(1));
     assert_eq!(saved[0].run, 1);
@@ -141,9 +141,9 @@ fn pick_pages_and_saved_follow_the_runs() {
 }
 
 #[test]
-fn summary_text_lists_the_picks_and_the_written_folder() {
-    let (pick, orders) = pick();
-    let rest = PickResult {
+fn summary_text_lists_the_categories_and_the_written_folder() {
+    let (category, orders) = category();
+    let rest = CategoryResult {
         number: PdfNumber::new(2),
         code: REST_CODE.to_string(),
         name: "Uncategorised".to_string(),
@@ -152,7 +152,7 @@ fn summary_text_lists_the_picks_and_the_written_folder() {
         pages: 0,
         file_name: "2 - Uncategorised ×0.pdf".to_string(),
     };
-    let picks = vec![pick, rest];
+    let categories = vec![category, rest];
     let warnings = vec!["no courier could be deduced for: 580000000000000009".to_string()];
     let packing_lists = vec!["packing-list.pdf".to_string()];
     let day_dir = Path::new("data/labels/2026-10-07");
@@ -163,7 +163,7 @@ fn summary_text_lists_the_picks_and_the_written_folder() {
         pages: 2,
         orders: 2,
         slip_pages: 2,
-        picks: &picks,
+        categories: &categories,
         duplicates: 1,
         warnings: &warnings,
         check_errors: &[],
@@ -197,7 +197,7 @@ fn quiet_summary_hides_the_id_detail_lines() {
         pages: 1,
         orders: 1,
         slip_pages: 1,
-        picks: &[],
+        categories: &[],
         duplicates: 0,
         warnings: &warnings,
         check_errors: &[],

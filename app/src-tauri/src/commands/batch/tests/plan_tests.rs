@@ -116,7 +116,7 @@ fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
     // No `categories.toml`: one catch-all entry, every order in one PDF set (Q-UI-4).
     let plan = Plan::from_categories(&[catch_all_category()]);
     let view = plan_view(&plan, &orders(), PdfNumber::new(1), &Grouping::default());
-    assert!(view.no_picks);
+    assert!(view.no_categories);
     assert_eq!(view.rows.len(), 1);
     assert_eq!(view.rows[0].code, "Z");
     assert_eq!(view.rows[0].orders, 6);
@@ -131,7 +131,7 @@ fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
             PdfNumber::new(1),
             &Grouping::default()
         )
-        .no_picks
+        .no_categories
     );
     // The picks file's own rest entry as the only entry: still unconfigured.
     let view = plan_view(
@@ -140,7 +140,7 @@ fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
         PdfNumber::new(1),
         &Grouping::default(),
     );
-    assert!(view.no_picks);
+    assert!(view.no_categories);
     assert_eq!(view.rows[0].orders, 6);
 }
 
@@ -183,7 +183,7 @@ fn a_grouping_with_no_file_is_the_one_catch_all_entry() {
         PdfNumber::new(1),
         &Grouping::new("ramadhan"),
     );
-    assert!(view.no_picks, "the *No picks yet* line is shown");
+    assert!(view.no_categories, "the *No picks yet* line is shown");
     assert_eq!(view.grouping, Grouping::new("ramadhan"));
     assert_eq!(view.rows.len(), 1);
     assert_eq!(view.rows[0].code, "Z");

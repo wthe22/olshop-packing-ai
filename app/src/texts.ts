@@ -11,7 +11,7 @@ export const texts = {
   // Q-UI-4: the line the Categories screen and the Plan screen show while the picks are
   // unconfigured (the one catch-all entry a folder without `categories.toml` starts with, so
   // every order goes into one PDF set). The Day screen has no line.
-  noPicks: "No picks yet: all orders go into one PDF set",
+  noCategories: "No picks yet: all orders go into one PDF set",
 
   nav: {
     day: "Day",
@@ -137,7 +137,7 @@ export const texts = {
     warningsNone: "Warnings: none",
     use: "Use",
     hash: "#",
-    pick: "Pick",
+    category: "Pick",
     orders: "Orders",
     runs: "Runs",
     fileName: "File name",
@@ -149,7 +149,7 @@ export const texts = {
     moveDown: "Move down",
     expand: "Runs",
     collapse: "Hide runs",
-    addPick: "+ Add a pick for this batch",
+    addCategory: "+ Add a pick for this batch",
     addCode: "Code",
     addName: "Name",
     addCondition: "Condition",
@@ -162,7 +162,7 @@ export const texts = {
     scopeNone: "none",
     layoutFull: "full",
     layoutSummary: "summary",
-    layoutPick: "pick",
+    layoutCategory: "pick",
     save: "Save batch",
     // 08 › *3. Plan*: an amend uses the same screen, titled *Redo batch 2*, with this button.
     saveAgain: (n: number) => `Save batch ${n} again`,
@@ -210,7 +210,7 @@ export const texts = {
     layouts: "Layouts",
     layoutFull: "full",
     layoutSummary: "summary",
-    layoutPick: "pick",
+    layoutCategory: "pick",
     save: "Save",
     about: "About",
     version: (version: string) => `Version ${version}`,

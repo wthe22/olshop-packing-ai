@@ -405,7 +405,7 @@ fn report(request: &SaveRequest<'_>, result: &batch::SaveResult, quiet_ids: bool
             pages: request.draft.pages,
             orders: request.draft.total_orders,
             slip_pages: request.draft.slip_pages,
-            picks: &request.plan.picks,
+            categories: &request.plan.categories,
             duplicates: request.draft.duplicates.len(),
             warnings: &request.draft.warnings,
             check_errors: &result.errors,

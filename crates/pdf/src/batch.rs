@@ -24,7 +24,7 @@ use packing_engine::ids::{BatchNumber, OrderId, PdfNumber};
 use packing_engine::label::CourierTable;
 use packing_engine::names;
 use packing_engine::orders::{self, Line, LogoAnswer, ReadOrder, UnseenLogo, Warning};
-use packing_engine::plan::{PickResult, PlanResult};
+use packing_engine::plan::{CategoryResult, PlanResult};
 use packing_engine::verify::{self as engine_verify, Check, Expected};
 
 use crate::packing_list::{PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection};
@@ -249,24 +249,24 @@ pub fn save(request: &SaveRequest<'_>, state: &mut DayState) -> Result<SaveResul
     let printed = printed_time(&save_time);
     let index = order_index(request.draft);
 
-    let mut pdf_pages: Vec<Vec<(usize, usize)>> = Vec::with_capacity(request.plan.picks.len());
-    let mut sections: Vec<SavedPdfSection> = Vec::with_capacity(request.plan.picks.len());
+    let mut pdf_pages: Vec<Vec<(usize, usize)>> = Vec::with_capacity(request.plan.categories.len());
+    let mut sections: Vec<SavedPdfSection> = Vec::with_capacity(request.plan.categories.len());
     let mut saved: Vec<SavedOrder> = Vec::new();
-    let mut pdfs: Vec<PdfEntry> = Vec::with_capacity(request.plan.picks.len());
+    let mut pdfs: Vec<PdfEntry> = Vec::with_capacity(request.plan.categories.len());
     let mut page_total = 0usize;
-    for pick in &request.plan.picks {
-        let pages = pick_pages(pick, &index)?;
+    for category in &request.plan.categories {
+        let pages = category_pages(category, &index)?;
         page_total += pages.len();
         pdf_pages.push(pages);
-        sections.push(pick_section(pick, &index)?);
-        saved.extend(pick_saved(pick, &index, batch)?);
+        sections.push(category_section(category, &index)?);
+        saved.extend(category_saved(category, &index, batch)?);
         pdfs.push(PdfEntry {
-            number: pick.number,
-            code: pick.code.clone(),
-            name: pick.name.clone(),
-            file: pick.file_name.clone(),
-            orders: pick.orders.len(),
-            runs: pick.runs.len(),
+            number: category.number,
+            code: category.code.clone(),
+            name: category.name.clone(),
+            file: category.file_name.clone(),
+            orders: category.orders.len(),
+            runs: category.runs.len(),
         });
     }
 
@@ -324,8 +324,8 @@ pub fn save(request: &SaveRequest<'_>, state: &mut DayState) -> Result<SaveResul
         let download = temp.join(names::DOWNLOAD_DIR);
         fs::create_dir_all(&download).map_err(|error| write_error(&download, error))?;
         let mut written = 0usize;
-        for (pick, pages) in request.plan.picks.iter().zip(&pdf_pages) {
-            let out = temp.join(&pick.file_name);
+        for (category, pages) in request.plan.categories.iter().zip(&pdf_pages) {
+            let out = temp.join(&category.file_name);
             request
                 .worker
                 .write_pages(pages, &out)
@@ -380,7 +380,7 @@ pub fn save(request: &SaveRequest<'_>, state: &mut DayState) -> Result<SaveResul
             pages: request.draft.pages,
             orders: request.draft.total_orders,
             slip_pages: request.draft.slip_pages,
-            picks: &request.plan.picks,
+            categories: &request.plan.categories,
             duplicates: request.draft.duplicates.len(),
             warnings: &request.draft.warnings,
             check_errors: &check.error_texts(),
@@ -418,7 +418,7 @@ pub fn save(request: &SaveRequest<'_>, state: &mut DayState) -> Result<SaveResul
         folder: result_folder,
         pdf_files: request
             .plan
-            .picks
+            .categories
             .iter()
             .map(|p| p.file_name.clone())
             .collect(),
@@ -480,8 +480,8 @@ fn packing_jobs(
         Scope::None => {}
         Scope::Whole => make(None, sections.to_vec()),
         Scope::PerPdf => {
-            for (pick, section) in plan.picks.iter().zip(sections) {
-                make(Some(pick.number), vec![section.clone()]);
+            for (category, section) in plan.categories.iter().zip(sections) {
+                make(Some(category.number), vec![section.clone()]);
             }
         }
     }
@@ -499,12 +499,12 @@ fn order_index(draft: &Draft) -> OrderIndex<'_> {
         .collect()
 }
 
-fn pick_pages(
-    pick: &PickResult,
+fn category_pages(
+    category: &CategoryResult,
     index: &OrderIndex<'_>,
 ) -> Result<Vec<(usize, usize)>, BatchError> {
     let mut pages = Vec::new();
-    for run in &pick.runs {
+    for run in &category.runs {
         for id in &run.orders {
             let order = index.get(id).ok_or_else(|| missing(id))?;
             for page in &order.pages {
@@ -526,9 +526,12 @@ fn packing_line(line: &Line) -> PackingLine {
 
 /// Map a pick and its orders into a packing-list section; the run structure is the pick's, so
 /// the printed runs and the saved Pages match (03 › *Packing list (A4)*).
-fn pick_section(pick: &PickResult, index: &OrderIndex<'_>) -> Result<SavedPdfSection, BatchError> {
-    let mut runs = Vec::with_capacity(pick.runs.len());
-    for run in &pick.runs {
+fn category_section(
+    category: &CategoryResult,
+    index: &OrderIndex<'_>,
+) -> Result<SavedPdfSection, BatchError> {
+    let mut runs = Vec::with_capacity(category.runs.len());
+    for run in &category.runs {
         let mut orders = Vec::with_capacity(run.orders.len());
         for id in &run.orders {
             let order = index.get(id).ok_or_else(|| missing(id))?;
@@ -543,27 +546,27 @@ fn pick_section(pick: &PickResult, index: &OrderIndex<'_>) -> Result<SavedPdfSec
         });
     }
     Ok(SavedPdfSection {
-        number: pick.number,
-        code: pick.code.clone(),
-        name: pick.name.clone(),
+        number: category.number,
+        code: category.code.clone(),
+        name: category.name.clone(),
         runs,
     })
 }
 
-fn pick_saved(
-    pick: &PickResult,
+fn category_saved(
+    category: &CategoryResult,
     index: &OrderIndex<'_>,
     batch: BatchNumber,
 ) -> Result<Vec<SavedOrder>, BatchError> {
-    let mut entries = Vec::with_capacity(pick.orders.len());
-    for run in &pick.runs {
+    let mut entries = Vec::with_capacity(category.orders.len());
+    for run in &category.runs {
         for id in &run.orders {
             let order = index.get(id).ok_or_else(|| missing(id))?;
             entries.push(SavedOrder {
                 order_id: id.clone(),
                 tracking_id: order.order.tracking_id.clone(),
                 batch,
-                pdf: pick.number,
+                pdf: category.number,
                 run: run.number,
                 // The fields the Search panel finds the order by, written at save (07 ›
                 // *`state.json`*): its lines and the order-level fields.

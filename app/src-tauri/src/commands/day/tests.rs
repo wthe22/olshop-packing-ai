@@ -297,7 +297,7 @@ fn set_printed_writes_the_tick_and_the_overview_reports_it() {
     assert!(!before.batches[0].pdfs[0].printed);
 
     // Ticking writes the file; a fresh `day_overview` reports the tick.
-    set_printed_at(
+    set_printed_time(
         &dir,
         "2026-10-07",
         BatchNumber::new(1),
@@ -309,7 +309,7 @@ fn set_printed_writes_the_tick_and_the_overview_reports_it() {
     assert!(after.batches[0].pdfs[0].printed);
 
     // Unticking is read back too.
-    set_printed_at(
+    set_printed_time(
         &dir,
         "2026-10-07",
         BatchNumber::new(1),
@@ -321,7 +321,7 @@ fn set_printed_writes_the_tick_and_the_overview_reports_it() {
     assert!(!after.batches[0].pdfs[0].printed);
 
     // An unknown batch or saved-PDF number changes nothing.
-    set_printed_at(
+    set_printed_time(
         &dir,
         "2026-10-07",
         BatchNumber::new(9),
@@ -329,7 +329,7 @@ fn set_printed_writes_the_tick_and_the_overview_reports_it() {
         true,
     )
     .expect("unknown batch");
-    set_printed_at(
+    set_printed_time(
         &dir,
         "2026-10-07",
         BatchNumber::new(1),

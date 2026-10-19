@@ -71,15 +71,15 @@ fn stderr(output: &Output) -> String {
 /// The expected saved-PDF file names from `expected-picks.json` (07 › *Plan*).
 fn expected_file_names() -> Vec<String> {
     let text = fs::read_to_string(testdata("expected-picks.json")).expect("expected-picks");
-    let picks: Vec<Value> = serde_json::from_str(&text).expect("parse expected-picks");
-    picks
+    let categories: Vec<Value> = serde_json::from_str(&text).expect("parse expected-picks");
+    categories
         .iter()
-        .map(|pick| {
+        .map(|category| {
             names::suggested_saved_pdf_name(
-                PdfNumber::new(pick["number"].as_i64().unwrap()),
-                pick["code"].as_str().unwrap(),
-                pick["name"].as_str().unwrap(),
-                pick["orders"].as_u64().unwrap() as usize,
+                PdfNumber::new(category["number"].as_i64().unwrap()),
+                category["code"].as_str().unwrap(),
+                category["name"].as_str().unwrap(),
+                category["orders"].as_u64().unwrap() as usize,
             )
         })
         .collect()

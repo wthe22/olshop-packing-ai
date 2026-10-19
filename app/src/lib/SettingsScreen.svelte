@@ -39,7 +39,7 @@
   const layoutOptions: { value: Layout; label: string }[] = [
     { value: "full", label: texts.settings.layoutFull },
     { value: "summary", label: texts.settings.layoutSummary },
-    { value: "pick", label: texts.settings.layoutPick },
+    { value: "pick", label: texts.settings.layoutCategory },
   ];
 
   function toggleLayout(layout: Layout, checked: boolean) {

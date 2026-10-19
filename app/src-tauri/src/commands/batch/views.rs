@@ -110,7 +110,7 @@ pub struct PlanView {
     pub(super) add_at: usize,
     /// The plan is the one catch-all entry, so the picks are unconfigured: the screen says every
     /// order goes into one PDF set (Q-UI-4, 08 › *3. Plan*).
-    pub(super) no_picks: bool,
+    pub(super) no_categories: bool,
     /// The grouping the plan belongs to (04 › *Sets*): the grouping the batch is packed with, the
     /// one chosen on the New batch screen or, for an amend, the batch's own recorded grouping. The
     /// header names it and **Edit categories** opens it (08 › *3. Plan*).

@@ -242,11 +242,11 @@ pub fn expected_pdfs(plan: &PlanResult, orders: &[ReadOrder]) -> Vec<ExpectedPdf
         .iter()
         .map(|order| (&order.order.order_id, order))
         .collect();
-    plan.picks
+    plan.categories
         .iter()
-        .map(|pick| {
+        .map(|category| {
             let mut pages = Vec::new();
-            for run in &pick.runs {
+            for run in &category.runs {
                 for id in &run.orders {
                     let count = index.get(id).map_or(0, |order| order.pages.len());
                     for _ in 0..count {
@@ -255,8 +255,8 @@ pub fn expected_pdfs(plan: &PlanResult, orders: &[ReadOrder]) -> Vec<ExpectedPdf
                 }
             }
             ExpectedPdf {
-                number: pick.number,
-                file: pick.file_name.clone(),
+                number: category.number,
+                file: category.file_name.clone(),
                 pages,
             }
         })
@@ -426,13 +426,13 @@ mod tests {
     }
 
     fn plan() -> PlanResult {
-        use crate::plan::{PickResult, RunResult};
+        use crate::plan::{CategoryResult, RunResult};
         let orders = vec![
             OrderId::new("580000000000000001"),
             OrderId::new("580000000000000002"),
         ];
         PlanResult {
-            picks: vec![PickResult {
+            categories: vec![CategoryResult {
                 number: PdfNumber::new(1),
                 code: "A".to_string(),
                 name: "Sepatu".to_string(),

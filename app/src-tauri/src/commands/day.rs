@@ -187,7 +187,7 @@ fn day_overview_at(data_folder: &Path, day: &str) -> Result<DayOverview, String>
 
 /// Write one saved-PDF row's **Printed** tick into the day's `state.json` (07 › *`state.json`*;
 /// 08 › *1. Day*); a batch or saved-PDF number the day does not hold changes nothing.
-fn set_printed_at(
+fn set_printed_time(
     data_folder: &Path,
     day: &str,
     batch: BatchNumber,
@@ -471,7 +471,7 @@ pub fn set_printed(
     printed: bool,
 ) -> Result<(), String> {
     state.set_day(&day);
-    set_printed_at(&state.data_folder()?, &day, batch, pdf, printed)
+    set_printed_time(&state.data_folder()?, &day, batch, pdf, printed)
 }
 
 /// The day folders to switch between (08 › *Window frame*).

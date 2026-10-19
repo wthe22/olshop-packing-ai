@@ -130,9 +130,9 @@ fn writes_every_layout_with_the_right_text() {
 
     let (full_pages, full, _) = write_and_read(&pdfium, Layout::Full, &list, "full");
     let (_summary_pages, summary, _) = write_and_read(&pdfium, Layout::Summary, &list, "summary");
-    let (pick_pages, pick, _) = write_and_read(&pdfium, Layout::Pick, &list, "pick");
+    let (category_pages, category, _) = write_and_read(&pdfium, Layout::Pick, &list, "pick");
 
-    for text in [&full, &summary, &pick] {
+    for text in [&full, &summary, &category] {
         assert!(text.contains("Packinglist"), "title missing: {text:.80}");
         assert!(text.contains("2026-10-06"), "day missing");
         assert!(text.contains("batch1"), "batch number missing (07)");
@@ -153,12 +153,15 @@ fn writes_every_layout_with_the_right_text() {
         "summary must not show tracking IDs"
     );
     assert!(
-        !pick.contains("JY0000000001"),
+        !category.contains("JY0000000001"),
         "pick must not show tracking IDs"
     );
     // Pick is a single sheet; the long display name is wrapped, not cut.
-    assert_eq!(pick_pages, 1, "pick layout fits one page here");
-    assert!(pick.contains("PanjangSekaliLagi"), "long name must wrap");
+    assert_eq!(category_pages, 1, "pick layout fits one page here");
+    assert!(
+        category.contains("PanjangSekaliLagi"),
+        "long name must wrap"
+    );
     assert!(full_pages >= 1);
     // Review round 1: the multiplication sign must be a real `×` (U+00D7), drawn and in the text
     // layer. It is drawn by a CID copy of Arial, because PDFium's non-CID font path writes `ÿ`.

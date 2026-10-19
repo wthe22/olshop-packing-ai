@@ -105,7 +105,7 @@
   const layoutOptions: { value: api.Layout; label: string }[] = [
     { value: "full", label: texts.plan.layoutFull },
     { value: "summary", label: texts.plan.layoutSummary },
-    { value: "pick", label: texts.plan.layoutPick },
+    { value: "pick", label: texts.plan.layoutCategory },
   ];
 
   async function apply(edits: api.PlanEdit[]) {
@@ -188,7 +188,7 @@
     }
   }
 
-  async function addPick() {
+  async function addCategory() {
     addError = "";
     if (addMode === "boxes") {
       await addTreeChanged();
@@ -313,8 +313,8 @@
     <p class="error">{error}</p>
   {/if}
 
-  {#if view.no_picks}
-    <p class="no-picks">{texts.noPicks}</p>
+  {#if view.no_categories}
+    <p class="no-categories">{texts.noCategories}</p>
   {/if}
 
   <table>
@@ -322,7 +322,7 @@
       <tr>
         <th class="c-use">{texts.plan.use}</th>
         <th class="c-num">{texts.plan.hash}</th>
-        <th class="c-pick">{texts.plan.pick}</th>
+        <th class="c-category">{texts.plan.category}</th>
         <th class="c-orders">{texts.plan.orders}</th>
         <th class="c-runs">{texts.plan.runs}</th>
         <th class="c-file">{texts.plan.fileName}</th>
@@ -342,7 +342,7 @@
             {/if}
           </td>
           <td class="c-num">{row.number ?? ""}</td>
-          <td class="c-pick">
+          <td class="c-category">
             <span class="code">{row.code}</span>
             <span class="name">{row.name}</span>
             {#if row.kind !== "entry"}<span class="tag">{texts.plan.rest}</span>{/if}
@@ -387,7 +387,7 @@
             <tr class="run">
               <td class="c-use"></td>
               <td class="c-num"></td>
-              <td class="c-pick" colspan="2">{run.label}&nbsp;&nbsp;{run.contents}</td>
+              <td class="c-category" colspan="2">{run.label}&nbsp;&nbsp;{run.contents}</td>
               <td class="c-runs run-orders">
                 {run.orders} {run.orders === 1 ? "order" : "orders"}
               </td>
@@ -401,7 +401,7 @@
   </table>
 
   <div class="add-bar">
-    <button onclick={toggleAdd}>{texts.plan.addPick}</button>
+    <button onclick={toggleAdd}>{texts.plan.addCategory}</button>
     <button onclick={onEditCategories}>{texts.plan.editCategories}</button>
   </div>
 
@@ -417,7 +417,7 @@
           <input class="name" bind:value={addName} />
         </label>
         <span class="grow"></span>
-        <button class="primary" onclick={addPick}>{texts.plan.addSubmit}</button>
+        <button class="primary" onclick={addCategory}>{texts.plan.addSubmit}</button>
         <button onclick={() => (showAdd = false)}>{texts.plan.addCancel}</button>
       </div>
       <div class="add-condition">
@@ -534,7 +534,7 @@
   }
 
   /* Q-UI-4: the plan is the one catch-all entry, so every order goes into one PDF set. */
-  .no-picks {
+  .no-categories {
     margin: 0 0 0.75rem;
     color: #4a4a4a;
     font-weight: 600;

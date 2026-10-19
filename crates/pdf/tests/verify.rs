@@ -18,7 +18,7 @@ use packing_engine::day::{DayState, PackingListChoice};
 use packing_engine::groupings::Grouping;
 use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::orders::ReadOrder;
-use packing_engine::plan::{PickResult, Plan, PlanResult};
+use packing_engine::plan::{CategoryResult, Plan, PlanResult};
 use packing_engine::rules::load_rules;
 use packing_engine::verify::{Check, Finding};
 use packing_pdf::batch::{self, Draft};
@@ -108,24 +108,24 @@ fn saved(tag: &str) -> Option<Saved> {
 }
 
 impl Saved {
-    fn pick(&self, number: i64) -> &PickResult {
+    fn category(&self, number: i64) -> &CategoryResult {
         self.plan
-            .picks
+            .categories
             .iter()
-            .find(|pick| pick.number == PdfNumber::new(number))
+            .find(|category| category.number == PdfNumber::new(number))
             .expect("a pick")
     }
 
     /// A pick's written file path.
     fn file(&self, number: i64) -> PathBuf {
-        self.folder.join(&self.pick(number).file_name)
+        self.folder.join(&self.category(number).file_name)
     }
 
     /// A pick's pages in run order, as `(file index, page index)` into the label files.
     fn pages(&self, number: i64) -> Vec<(usize, usize)> {
         let index = self.index();
         let mut pages = Vec::new();
-        for run in &self.pick(number).runs {
+        for run in &self.category(number).runs {
             for id in &run.orders {
                 let order = index.get(id).expect("an order of the pick");
                 for page in &order.pages {
@@ -140,7 +140,7 @@ impl Saved {
     fn page_orders(&self, number: i64) -> Vec<OrderId> {
         let index = self.index();
         let mut ids = Vec::new();
-        for run in &self.pick(number).runs {
+        for run in &self.category(number).runs {
             for id in &run.orders {
                 let order = index.get(id).expect("an order of the pick");
                 for _ in &order.pages {
@@ -189,8 +189,8 @@ impl Saved {
 }
 
 /// The first order of a pick whose pages are not shared with another pick, for the two-picks test.
-fn first_order(pick: &PickResult) -> &OrderId {
-    &pick.runs[0].orders[0]
+fn first_order(category: &CategoryResult) -> &OrderId {
+    &category.runs[0].orders[0]
 }
 
 #[test]
@@ -275,7 +275,7 @@ fn an_order_in_no_saved_pdf_is_reported() {
     let Some(saved) = saved("no-pdf") else {
         return;
     };
-    let order = first_order(saved.pick(1));
+    let order = first_order(saved.category(1));
     // Write pick 1 without that order's pages at all.
     let pages: Vec<(usize, usize)> = saved
         .pages(1)

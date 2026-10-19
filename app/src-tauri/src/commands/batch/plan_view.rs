@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use packing_engine::groupings::Grouping;
 use packing_engine::ids::PdfNumber;
 use packing_engine::orders::{Order, ReadOrder, display_name};
-use packing_engine::plan::{PickResult, Plan};
+use packing_engine::plan::{CategoryResult, Plan};
 use packing_engine::rules::{Category, Condition, evaluate, parse_condition};
 
 use super::views::{PlanEdit, PlanRow, PlanRowKind, PlanView, RunView};
@@ -34,7 +34,7 @@ pub(super) fn plan_view(
     let add_at = rest_entry.unwrap_or(entries.len());
 
     let mut remaining: Vec<&ReadOrder> = orders.iter().collect();
-    let mut picks = result.picks.iter();
+    let mut categories = result.categories.iter();
     let mut rows: Vec<PlanRow> = Vec::with_capacity(entries.len() + 1);
 
     for (position, entry) in entries.iter().enumerate() {
@@ -65,12 +65,12 @@ pub(super) fn plan_view(
             let (taken, left) = split(&remaining, entry.category.condition.as_ref());
             remaining = left;
             if !taken.is_empty() {
-                let pick = picks.next().expect("a pick for every non-empty entry");
-                row.number = Some(pick.number);
-                row.orders = pick.orders.len();
-                row.runs = run_views(pick, &index);
-                row.pages = pick.pages;
-                row.file_name = pick.file_name.clone();
+                let category = categories.next().expect("a pick for every non-empty entry");
+                row.number = Some(category.number);
+                row.orders = category.orders.len();
+                row.runs = run_views(category, &index);
+                row.pages = category.pages;
+                row.file_name = category.file_name.clone();
             }
         }
         rows.push(row);
@@ -78,17 +78,17 @@ pub(super) fn plan_view(
 
     // The leftovers when no entry took them become `? Uncategorised` (08 › *3. Plan*).
     if !remaining.is_empty() {
-        let pick = picks.next().expect("the rest pick");
+        let category = categories.next().expect("the rest pick");
         rows.push(PlanRow {
             kind: PlanRowKind::Generated,
-            number: Some(pick.number),
-            code: pick.code.clone(),
-            name: pick.name.clone(),
+            number: Some(category.number),
+            code: category.code.clone(),
+            name: category.name.clone(),
             condition: None,
-            orders: pick.orders.len(),
-            runs: run_views(pick, &index),
-            pages: pick.pages,
-            file_name: pick.file_name.clone(),
+            orders: category.orders.len(),
+            runs: run_views(category, &index),
+            pages: category.pages,
+            file_name: category.file_name.clone(),
             skipped: false,
             duplicate_of: None,
             can_move_up: false,
@@ -116,7 +116,7 @@ pub(super) fn plan_view(
         rows,
         has_duplicate_names,
         add_at,
-        no_picks: plan.unconfigured(),
+        no_categories: plan.unconfigured(),
         grouping: grouping.clone(),
     }
 }
@@ -151,11 +151,12 @@ fn split<'a>(
 }
 
 /// A pick's runs as the expanded row shows them; the label is `<pick number>-<run number>`.
-fn run_views(pick: &PickResult, index: &HashMap<&str, &ReadOrder>) -> Vec<RunView> {
-    pick.runs
+fn run_views(category: &CategoryResult, index: &HashMap<&str, &ReadOrder>) -> Vec<RunView> {
+    category
+        .runs
         .iter()
         .map(|run| RunView {
-            label: format!("{}-{:02}", pick.number, run.number),
+            label: format!("{}-{:02}", category.number, run.number),
             contents: run
                 .orders
                 .first()

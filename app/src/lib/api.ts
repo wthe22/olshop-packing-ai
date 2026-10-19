@@ -163,7 +163,7 @@ export interface PlanView {
   add_at: number;
   /// The plan is the one catch-all entry, so the picks are unconfigured: the screen shows the
   /// *No picks yet* line (Q-UI-4).
-  no_picks: boolean;
+  no_categories: boolean;
   /// The grouping the plan belongs to (04 › *Sets*): the grouping chosen on the New batch
   /// screen, or the batch's own grouping for an amend. The header names it and **Edit
   /// categories** opens it.

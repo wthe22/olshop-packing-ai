@@ -48,7 +48,7 @@ test("the top button is *Back* on both kinds of batch, and neither leaves for th
   assert.notEqual(planButtons(null).topTarget, "day");
 });
 
-test("Amend opens the Plan screen (the picks), not the PDF selection page", () => {
+test("Amend opens the Plan screen (the categories), not the PDF selection page", () => {
   // 08 › *1. Day* → *3. Plan*: the batch's own files are read again and the Plan screen opens at
   // once; the selection page comes only from that Plan screen's *Back*.
   assert.equal(amendOpens(), "plan");

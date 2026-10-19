@@ -72,7 +72,7 @@
 
   // Q-UI-4: the one catch-all entry a folder without `categories.toml` starts with, and nothing
   // else, is the unconfigured state; the line says what that means for a batch.
-  const noPicks = $derived(unconfigured(entries));
+  const noCategories = $derived(unconfigured(entries));
 
   // *Edit file as text* (08 › *5. Categories*).
   let fileMode = $state(false);
@@ -443,8 +443,8 @@
       </div>
     </div>
   {:else}
-    {#if noPicks}
-      <p class="no-picks">{texts.noPicks}</p>
+    {#if noCategories}
+      <p class="no-categories">{texts.noCategories}</p>
     {/if}
 
     {#if generalError}
@@ -592,7 +592,7 @@
   }
 
   /* Q-UI-4: the picks are unconfigured (the one catch-all entry, which takes every order). */
-  .no-picks {
+  .no-categories {
     margin: 0 0 0.75rem;
     color: #4a4a4a;
     font-weight: 600;

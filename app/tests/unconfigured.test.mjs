@@ -12,14 +12,14 @@ import { unconfigured } from "../src/lib/unconfigured.ts";
 import { texts } from "../src/texts.ts";
 
 test("the line's words are the designed words", () => {
-  assert.equal(texts.noPicks, "No picks yet: all orders go into one PDF set");
+  assert.equal(texts.noCategories, "No picks yet: all orders go into one PDF set");
 });
 
 test("the one catch-all entry is the unconfigured state", () => {
   assert.equal(unconfigured([{ when: null }]), true);
 });
 
-test("a pick, two entries and an empty list are not the unconfigured state", () => {
+test("a category, two entries and an empty list are not the unconfigured state", () => {
   assert.equal(unconfigured([{ when: 'name contains "sepatu"' }]), false);
   assert.equal(unconfigured([{ when: 'name contains "sepatu"' }, { when: null }]), false);
   assert.equal(unconfigured([]), false);

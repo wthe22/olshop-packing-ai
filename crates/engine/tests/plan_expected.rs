@@ -126,7 +126,7 @@ fn slip_orders() -> Vec<ReadOrder> {
 }
 
 #[test]
-fn candidates_plan_matches_expected_picks_json() {
+fn candidates_plan_matches_expected_categories_json() {
     let orders = slip_orders();
     assert_eq!(orders.len(), 23);
 
@@ -142,18 +142,18 @@ fn candidates_plan_matches_expected_picks_json() {
     .expect("parse expected-picks");
     let expected = expected.as_array().expect("array");
 
-    assert_eq!(result.picks.len(), expected.len());
+    assert_eq!(result.categories.len(), expected.len());
     assert_eq!(result.total_orders(), orders.len());
 
-    for (pick, entry) in result.picks.iter().zip(expected) {
+    for (category, entry) in result.categories.iter().zip(expected) {
         assert_eq!(
-            pick.number,
+            category.number,
             PdfNumber::new(entry["number"].as_i64().unwrap())
         );
-        assert_eq!(pick.code, entry["code"].as_str().unwrap());
-        assert_eq!(pick.name, entry["name"].as_str().unwrap());
+        assert_eq!(category.code, entry["code"].as_str().unwrap());
+        assert_eq!(category.name, entry["name"].as_str().unwrap());
         assert_eq!(
-            pick.orders.len(),
+            category.orders.len(),
             entry["orders"].as_u64().unwrap() as usize
         );
 
@@ -169,19 +169,20 @@ fn candidates_plan_matches_expected_picks_json() {
                     .collect()
             })
             .collect();
-        let got_runs: Vec<Vec<OrderId>> = pick.runs.iter().map(|run| run.orders.clone()).collect();
-        assert_eq!(got_runs, want_runs, "runs of pick {}", pick.number);
+        let got_runs: Vec<Vec<OrderId>> =
+            category.runs.iter().map(|run| run.orders.clone()).collect();
+        assert_eq!(got_runs, want_runs, "runs of pick {}", category.number);
 
         // The runs are the orders, in printing order.
         let flattened: Vec<OrderId> = got_runs.into_iter().flatten().collect();
-        let mut sorted_orders = pick.orders.clone();
+        let mut sorted_orders = category.orders.clone();
         sorted_orders.sort();
         let mut sorted_flat = flattened.clone();
         sorted_flat.sort();
         assert_eq!(sorted_flat, sorted_orders);
     }
 
-    let rest = result.picks.last().unwrap();
+    let rest = result.categories.last().unwrap();
     assert_eq!(rest.code, REST_CODE);
     assert_eq!(rest.name, REST_NAME);
 }

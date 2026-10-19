@@ -123,7 +123,7 @@ fn a_read_without_a_categories_file_saves_every_order_in_one_pdf() {
     .expect("read");
     assert_eq!(read.orders, 23);
     assert_eq!(read.plan.rows.len(), 1);
-    assert!(read.plan.no_picks);
+    assert!(read.plan.no_categories);
     assert_eq!(read.plan.rows[0].code, "Z");
     assert_eq!(read.plan.rows[0].name, "Lainnya");
     assert_eq!(read.plan.rows[0].orders, 23);
@@ -173,7 +173,7 @@ fn a_batch_read_uses_the_chosen_set_and_records_it() {
     )
     .expect("read");
     assert_eq!(read.orders, 23);
-    assert!(!read.plan.no_picks);
+    assert!(!read.plan.no_categories);
     assert_eq!(
         read.plan.grouping,
         Grouping::new("ramadhan"),

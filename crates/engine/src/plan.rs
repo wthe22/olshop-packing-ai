@@ -213,7 +213,7 @@ impl Plan {
     /// and only picks that take orders get a number (03 › *Picks*).
     pub fn count(&self, orders: &[ReadOrder], first_number: PdfNumber) -> PlanResult {
         let mut remaining: Vec<&ReadOrder> = orders.iter().collect();
-        let mut picks: Vec<PickResult> = Vec::new();
+        let mut categories: Vec<CategoryResult> = Vec::new();
         let mut number = first_number;
 
         for entry in &self.entries {
@@ -225,16 +225,16 @@ impl Plan {
             if taken.is_empty() {
                 continue;
             }
-            picks.push(build_pick(number, entry, &taken));
+            categories.push(build_category(number, entry, &taken));
             number = number.next();
         }
 
         if !remaining.is_empty() {
             let rest = PlanEntry::new(rest_category());
-            picks.push(build_pick(number, &rest, &remaining));
+            categories.push(build_category(number, &rest, &remaining));
         }
 
-        PlanResult { picks }
+        PlanResult { categories }
     }
 }
 
@@ -260,12 +260,12 @@ fn split_matching<'a>(
     (taken, left)
 }
 
-fn build_pick(number: PdfNumber, entry: &PlanEntry, orders: &[&ReadOrder]) -> PickResult {
+fn build_category(number: PdfNumber, entry: &PlanEntry, orders: &[&ReadOrder]) -> CategoryResult {
     let category = &entry.category;
     let file_name = entry.file_name.clone().unwrap_or_else(|| {
         names::suggested_saved_pdf_name(number, &category.code, &category.name, orders.len())
     });
-    PickResult {
+    CategoryResult {
         number,
         code: category.code.clone(),
         name: category.name.clone(),
@@ -318,7 +318,7 @@ pub struct RunResult {
 
 /// One pick: the saved PDF it will become (07 › *Plan*).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PickResult {
+pub struct CategoryResult {
     pub number: PdfNumber,
     pub code: String,
     pub name: String,
@@ -334,22 +334,25 @@ pub struct PickResult {
 /// Every pick of a plan, in printing order.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlanResult {
-    pub picks: Vec<PickResult>,
+    pub categories: Vec<CategoryResult>,
 }
 
 impl PlanResult {
     pub fn total_orders(&self) -> usize {
-        self.picks.iter().map(|pick| pick.orders.len()).sum()
+        self.categories
+            .iter()
+            .map(|category| category.orders.len())
+            .sum()
     }
 
     pub fn total_pages(&self) -> usize {
-        self.picks.iter().map(|pick| pick.pages).sum()
+        self.categories.iter().map(|category| category.pages).sum()
     }
 
     pub fn file_names(&self) -> Vec<String> {
-        self.picks
+        self.categories
             .iter()
-            .map(|pick| pick.file_name.clone())
+            .map(|category| category.file_name.clone())
             .collect()
     }
 

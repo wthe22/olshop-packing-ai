@@ -13,7 +13,7 @@ use crate::worker::PdfWorker;
 
 use super::Draft;
 use super::error::BatchError;
-use super::{ListRequest, PackingJob, order_index, packing_jobs, pick_section};
+use super::{ListRequest, PackingJob, category_section, order_index, packing_jobs};
 
 /// One chosen label file: what 07 › *New batch* shows before reading (page count, fingerprint,
 /// `used in batch n`).
@@ -78,9 +78,9 @@ pub fn check_saved(
     packing: &PackingListChoice,
 ) -> Result<Check, BatchError> {
     let index = order_index(draft);
-    let mut sections = Vec::with_capacity(plan.picks.len());
-    for pick in &plan.picks {
-        sections.push(pick_section(pick, &index)?);
+    let mut sections = Vec::with_capacity(plan.categories.len());
+    for category in &plan.categories {
+        sections.push(category_section(category, &index)?);
     }
     // Only the names and counts are compared, so the list belongs to no batch and no day.
     let jobs = packing_jobs(

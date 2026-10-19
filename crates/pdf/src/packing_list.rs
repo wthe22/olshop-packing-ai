@@ -285,8 +285,8 @@ impl<'m, 'a> Builder<'m, 'a> {
         }
     }
 
-    fn draw_pick_summary(&mut self, list: &PackingList) {
-        let entries = pick_entries(list);
+    fn draw_category_summary(&mut self, list: &PackingList) {
+        let entries = category_entries(list);
         if entries.is_empty() {
             return;
         }
@@ -309,12 +309,12 @@ impl<'m, 'a> Builder<'m, 'a> {
         let mut top = self.y;
         let mut index = 0;
         while index < entries.len() {
-            let mut take = pick_fit(&entries[index..], BOTTOM - top, self.measure);
+            let mut take = category_fit(&entries[index..], BOTTOM - top, self.measure);
             if take == 0 {
                 self.pages.push(Vec::new());
                 self.y = BODY_TOP;
                 top = self.y;
-                take = pick_fit(&entries[index..], BOTTOM - top, self.measure).max(1);
+                take = category_fit(&entries[index..], BOTTOM - top, self.measure).max(1);
             }
             let chunk = &entries[index..index + take];
             let half = chunk.len().div_ceil(2);
@@ -377,7 +377,7 @@ fn run_items(run: &RunRows) -> Vec<String> {
 
 /// One `(units, display name)` per `(name, variation)`, sorted by display name then key
 /// (Python `_pick_entries`).
-fn pick_entries(list: &PackingList) -> Vec<(i64, String)> {
+fn category_entries(list: &PackingList) -> Vec<(i64, String)> {
     let mut units: Vec<((String, String), i64)> = Vec::new();
     let mut names: Vec<((String, String), String)> = Vec::new();
     for section in &list.sections {
@@ -424,7 +424,7 @@ fn pick_entries(list: &PackingList) -> Vec<(i64, String)> {
 
 /// Largest count of the leading entries whose balanced two-column split fits `avail`
 /// (Python `_pick_fit`).
-fn pick_fit(entries: &[(i64, String)], avail: f32, measure: &Measure<'_>) -> usize {
+fn category_fit(entries: &[(i64, String)], avail: f32, measure: &Measure<'_>) -> usize {
     let mut heights: Vec<f32> = Vec::with_capacity(entries.len());
     for (_units, name) in entries {
         let lines = measure.wrap(name, COL_W - 2.0 * CELL_MARGIN, Font::Arial, 10.0);
