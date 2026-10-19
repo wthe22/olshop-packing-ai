@@ -5,7 +5,7 @@ finished phase moves to `archive/`. Phase and task numbers live only here.
 
 ## Next step — the code refactor
 
-Before any new feature: bring the code to the [code rules](../code-rules.md) in the steps R2–R7 of
+Before any new feature: bring the code to the [code rules](../code-rules.md) in the steps R3–R7 of
 [refactor.md](refactor.md), without changing what the program does. The first step listed there is the
 work; it ends with the owner's regression list in the handoff below. **The code rules apply to every task
 file in this folder**: a task report states *size gate passed, no new lint suppression, coverage not lower*.
