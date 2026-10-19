@@ -24,9 +24,12 @@ Build, all as Node scripts (`.mjs`, no new npm dependency) run from the reposito
 3. **`tools/check-coverage.mjs`** + `tools/baselines/coverage.json`. Rust: `cargo llvm-cov --workspace
    --json --summary-only` (lines, regions, functions, in percent, per crate and total; `cargo-llvm-cov` and
    `llvm-tools-preview` are installed on this PC). TypeScript: `node --test --experimental-test-coverage`
-   from `app/` (the line percent of the files under `app/src`). Compare mode (default) fails when any
+   from `app/` (the line percent of the files under `app/src`; Node counts only the files a test loads, so
+   list the `.ts` and `.svelte` files no test loads and count them as uncovered, in the script and in coverage.md). Compare mode (default) fails when any
    baseline number is lower than recorded by more than 0.1 point; `--record` writes the baseline (used in
-   this step only; later steps never record).
+   this step only; later steps never record). The instrumented build is about 5 GB and the disk holding
+   `target/` may be nearly full: the script uses the folder in `CARGO_LLVM_COV_TARGET_DIR` when it is set,
+   and `setup.md` says to set it to a drive with room (this PC: `C:/Users/wthe22/llvm-cov-target`).
 4. **`tools/check.sh`**: the checks listed in code-rules.md, in that order, stopping at the first failure;
    `--coverage` adds the coverage compare. Run from any folder.
 5. Record the **coverage BEFORE** with `--record`, then write `docs/development/coverage.md` (one table per
