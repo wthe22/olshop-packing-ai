@@ -7,7 +7,8 @@ Read first: [../code-rules.md](../code-rules.md) (binding; the *Tests* section i
    the fixtures declared once per file today: building a `Line`, an `Order`, a `ReadOrder` and a `Category`
    (about ten copies in `engine/tests/*`, `pdf/src/batch`, `commands/*` tests), `temp_dir` (six copies),
    `vendor_dir` and `testdata` (four copies, `pdf/tests/common`). Only what three or more files use; no
-   builder framework, plain functions.
+   builder framework, plain functions. Add `crates/testkit` to the ignore list of `tools/check-coverage.mjs` (fixtures are not
+   product code).
 2. **Merge tiny tests** into scenarios at the public surface: one scenario per behaviour, many branches
    inside it. Candidates: `engine/tests/day_state.rs` (28 tests, 982 lines; over the 800 ceiling),
    `labels.rs` (20), `labels_reading.rs` (16), `plan_edits.rs` (17), `names.rs` (10), the `commands/` tests,
