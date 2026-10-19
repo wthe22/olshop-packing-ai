@@ -4,6 +4,6 @@
     "app/src/lib/CategoriesScreen.svelte": 732,
     "app/src/lib/NewBatchScreen.svelte": 509,
     "app/src/lib/PlanScreen.svelte": 804,
-    "crates/engine/tests/day_state.rs": 982
+    "crates/engine/tests/day_state.rs": 979
   }
 }

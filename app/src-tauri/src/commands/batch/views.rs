@@ -4,6 +4,7 @@
 
 use std::path::Path;
 
+use packing_engine::groupings::Grouping;
 use packing_engine::orders::LogoAnswer;
 use packing_pdf::batch::FileCheck;
 use packing_pdf::worker::{SaveProgress, SaveStage};
@@ -136,10 +137,10 @@ pub struct PlanView {
     /// The plan is the one catch-all entry, so the picks are unconfigured: the screen says every
     /// order goes into one PDF set (Q-UI-4, 08 › *3. Plan*).
     pub(super) no_picks: bool,
-    /// The picks set the plan belongs to (04 › *Sets*): the set the batch is packed with, the one
-    /// chosen on the New batch screen or, for an amend, the batch's own recorded set. The header
-    /// names it and **Edit categories** opens it (08 › *3. Plan*).
-    pub(super) set: String,
+    /// The grouping the plan belongs to (04 › *Sets*): the grouping the batch is packed with, the
+    /// one chosen on the New batch screen or, for an amend, the batch's own recorded grouping. The
+    /// header names it and **Edit categories** opens it (08 › *3. Plan*).
+    pub(super) grouping: Grouping,
 }
 
 /// One row of the Plan screen (08 › *3. Plan*).

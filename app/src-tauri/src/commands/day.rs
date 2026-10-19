@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use packing_engine::day::{DayState, Layout, PackingListChoice, PdfEntry, Scope};
+use packing_engine::groupings::Grouping;
 use packing_engine::names;
 use packing_pdf::PDFIUM_VERSION;
 use serde::{Deserialize, Serialize};
@@ -142,9 +143,9 @@ pub struct BatchView {
     save_time: String,
     /// `HH:MM` of `save_time`.
     time: String,
-    /// The picks set the batch was packed with, from its `state.json` entry (04 › *Sets*; 07 ›
-    /// *`state.json`*). **Amend** names it in its confirmation and reads that set again.
-    set: String,
+    /// The grouping the batch was packed with, from its `state.json` entry (04 › *Sets*; 07 ›
+    /// *`state.json`*). **Amend** names it in its confirmation and reads that grouping again.
+    grouping: Grouping,
     files: usize,
     orders: usize,
     pdfs: Vec<PdfView>,
@@ -207,7 +208,7 @@ fn overview_of(state: &DayState, day_dir: &Path) -> DayOverview {
             batch: batch.batch,
             save_time: batch.save_time.clone(),
             time: clock(&batch.save_time),
-            set: batch.set.clone(),
+            grouping: batch.grouping.clone(),
             files: batch.files.len(),
             orders: batch.pdfs.iter().map(|pdf| pdf.orders).sum(),
             pdfs: batch
@@ -302,19 +303,19 @@ fn layout_name(layout: Layout) -> &'static str {
 
 // --------------------------------------------------------------------------- settings
 
-/// The data folder's `settings.json` (07 › *Settings*): the packing-list default and the picks
-/// set used last. A missing key takes its default, so an older file still loads.
+/// The data folder's `settings.json` (07 › *Settings*): the packing-list default and the grouping
+/// used last. A missing key takes its default, so an older file still loads.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
     #[serde(default = "default_scope")]
     pub scope: Scope,
     #[serde(default = "default_layouts")]
     pub layouts: Vec<Layout>,
-    /// The picks set used last (07 › *Settings*; 04 › *Sets*): the [New batch](../ui/new-batch.md)
-    /// screen preselects it, and each batch records its own. Absent in an older file, which loads
-    /// as `default`.
-    #[serde(default = "default_set")]
-    pub set: String,
+    /// The grouping used last (07 › *Settings*; 04 › *Sets*): the
+    /// [New batch](../ui/new-batch.md) screen preselects it, and each batch records its own.
+    /// Absent in an older file, which loads as `default`.
+    #[serde(rename = "set", default)]
+    pub grouping: Grouping,
 }
 
 impl Default for Settings {
@@ -322,7 +323,7 @@ impl Default for Settings {
         Self {
             scope: default_scope(),
             layouts: default_layouts(),
-            set: default_set(),
+            grouping: Grouping::default(),
         }
     }
 }
@@ -345,9 +346,31 @@ fn default_layouts() -> Vec<Layout> {
     vec![Layout::Pick]
 }
 
-/// The picks set an older `settings.json` (or one without the key) loads as (04 › *Sets*).
-fn default_set() -> String {
-    packing_engine::sets::DEFAULT_SET.to_string()
+/// The settings as the Settings screen sends and receives them: the stored values with the
+/// grouping under its own name, so no screen carries the stored key `set` (07 › *Settings*).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SettingsView {
+    scope: Scope,
+    layouts: Vec<Layout>,
+    grouping: Grouping,
+}
+
+impl SettingsView {
+    fn of(settings: Settings) -> Self {
+        Self {
+            scope: settings.scope,
+            layouts: settings.layouts,
+            grouping: settings.grouping,
+        }
+    }
+
+    fn into_settings(self) -> Settings {
+        Settings {
+            scope: self.scope,
+            layouts: self.layouts,
+            grouping: self.grouping,
+        }
+    }
 }
 
 pub(crate) fn settings_load(data_folder: &Path) -> Result<Settings, String> {
@@ -368,17 +391,17 @@ fn settings_save(data_folder: &Path, settings: &Settings) -> Result<(), String> 
         .map_err(|error| format!("Cannot write to {}: {error}.", path.display()))
 }
 
-/// Remember the picks set used last in the data folder's `settings.json` (07 › *Settings*; 04 ›
+/// Remember the grouping used last in the data folder's `settings.json` (07 › *Settings*; 04 ›
 /// *Sets*), so the next **New batch** preselects it. Best-effort: a read is never stopped by a
-/// settings problem, and a save of the same set writes nothing.
-pub(crate) fn remember_last_set(data_folder: &Path, set: &str) {
+/// settings problem, and a save of the same grouping writes nothing.
+pub(crate) fn remember_last_grouping(data_folder: &Path, grouping: &Grouping) {
     let Ok(mut settings) = settings_load(data_folder) else {
         return;
     };
-    if settings.set == set {
+    if settings.grouping == *grouping {
         return;
     }
-    settings.set = set.to_string();
+    settings.grouping = grouping.clone();
     let _ = settings_save(data_folder, &settings);
 }
 
@@ -466,14 +489,14 @@ pub fn days(state: State<'_, AppState>) -> Result<Vec<String>, String> {
 
 /// The settings (08 › *6. Settings*).
 #[tauri::command]
-pub fn settings_get(state: State<'_, AppState>) -> Result<Settings, String> {
-    settings_load(&state.data_folder()?)
+pub fn settings_get(state: State<'_, AppState>) -> Result<SettingsView, String> {
+    Ok(SettingsView::of(settings_load(&state.data_folder()?)?))
 }
 
 /// Save the settings (08 › *6. Settings*).
 #[tauri::command]
-pub fn settings_set(state: State<'_, AppState>, settings: Settings) -> Result<(), String> {
-    settings_save(&state.data_folder()?, &settings)
+pub fn settings_set(state: State<'_, AppState>, settings: SettingsView) -> Result<(), String> {
+    settings_save(&state.data_folder()?, &settings.into_settings())
 }
 
 /// Settings › *About*: the app version and the PDFium version (08 › *6. Settings*). The version

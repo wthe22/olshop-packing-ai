@@ -49,7 +49,7 @@ fn state_with_logo_draft(folder: &Path) -> AppState {
         plan: Plan::from_categories(&[category("A", "J&T", Some("courier starts_with \"J&T\""))]),
         first_number: 1,
         couriers: packing_engine::label::courier_data().clone(),
-        set: sets::DEFAULT_SET.to_string(),
+        grouping: Grouping::default(),
         amend: None,
         logo_pictures: HashMap::from([(
             "ffffffffffffffff".to_string(),
@@ -250,9 +250,14 @@ fn a_broken_couriers_file_stops_the_read_with_its_line() {
     let state = AppState::new();
     state.set_data_folder(dir.clone());
     state.set_day("2026-10-07");
-    let error = read_draft(&state, vec![dir.join("a.pdf")], sets::DEFAULT_SET, |_| {})
-        .err()
-        .expect("the read must stop");
+    let error = read_draft(
+        &state,
+        vec![dir.join("a.pdf")],
+        &Grouping::default(),
+        |_| {},
+    )
+    .err()
+    .expect("the read must stop");
     assert!(
         error.starts_with("The couriers have an error: couriers.toml: "),
         "{error}"

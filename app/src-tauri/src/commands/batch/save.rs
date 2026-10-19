@@ -55,15 +55,15 @@ pub(super) fn save_batch_impl(
         }
     });
 
-    // The batch records the set it was packed with, so an amend reads it again (04 › *Sets*).
-    let set = open.set.clone();
+    // The batch records the grouping it was packed with, so an amend reads it again (04 › *Sets*).
+    let grouping = open.grouping.clone();
     let result = state.with_worker(|worker| {
         batch::save(
             worker,
             &open.draft,
             &plan,
             &packing,
-            &set,
+            &grouping,
             &day,
             &day_dir,
             &mut day_state,

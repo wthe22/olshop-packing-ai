@@ -47,6 +47,11 @@
       ? [...layouts, layout]
       : layouts.filter((item) => item !== layout);
   }
+
+  /// *Save* keeps the grouping the batch screen recorded; this screen does not change it.
+  function save() {
+    onSave({ scope, layouts, grouping: settings?.grouping ?? "default" });
+  }
 </script>
 
 <div class="settings">
@@ -103,9 +108,7 @@
   </section>
 
   <div class="actions">
-    <button class="primary" onclick={() => onSave({ scope, layouts, set: settings?.set ?? "default" })}
-      >{texts.settings.save}</button
-    >
+    <button class="primary" onclick={save}>{texts.settings.save}</button>
   </div>
 </div>
 

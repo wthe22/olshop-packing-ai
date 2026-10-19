@@ -268,7 +268,7 @@
       {:else}
         {texts.plan.header(
           batchNo,
-          read.plan.set,
+          read.plan.grouping,
           read.files,
           read.pages,
           read.orders,
@@ -280,7 +280,7 @@
       <span class="sub">
         {texts.plan.header(
           batchNo,
-          read.plan.set,
+          read.plan.grouping,
           read.files,
           read.pages,
           read.orders,

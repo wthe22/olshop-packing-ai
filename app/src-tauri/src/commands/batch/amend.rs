@@ -113,9 +113,9 @@ pub(super) fn read_amend_draft(
         .filter(|amend| amend.batch == redoing)
         .ok_or_else(|| "No batch to redo on this day.".to_string())?;
     let base_state = amend.state.clone();
-    // The amend reads with the set the batch recorded, whatever was used last (04 › *Sets*;
+    // The amend reads with the grouping the batch recorded, whatever was used last (04 › *Sets*;
     // 07 › *Amend*).
-    let set = amend.set.clone();
+    let grouping = amend.grouping.clone();
     let amend_state = AmendState {
         batch: amend.batch,
         state: amend.state,
@@ -125,7 +125,7 @@ pub(super) fn read_amend_draft(
         paths,
         base_state,
         Some(amend_state),
-        &set,
+        &grouping,
         false,
         on_progress,
     )

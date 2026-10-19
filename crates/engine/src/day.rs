@@ -14,9 +14,9 @@ use jiff::Zoned;
 use serde::{Deserialize, Serialize};
 use xxhash_rust::xxh3::Xxh3;
 
+use crate::groupings::Grouping;
 use crate::names;
 use crate::orders::ReadOrder;
-use crate::sets;
 
 /// A `state.json` could not be read or written, or a batch folder deleted.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -175,11 +175,11 @@ pub struct SavedOrder {
 pub struct BatchEntry {
     pub batch: i64,
     pub save_time: String,
-    /// The name of the picks set the batch was packed with (07 › *`state.json`*; 04 › *Sets*);
-    /// written at save and absent in an older file, which loads as `default`. An **Amend** reads
-    /// the batch's own set again, whatever set was used last.
-    #[serde(default = "default_set")]
-    pub set: String,
+    /// The grouping the batch was packed with (07 › *`state.json`*; 04 › *Sets*); written at
+    /// save and absent in an older file, which loads as `default`. An **Amend** reads the
+    /// batch's own grouping again, whatever grouping was used last.
+    #[serde(rename = "set", default)]
+    pub grouping: Grouping,
     pub files: Vec<FileEntry>,
     pub pdfs: Vec<PdfEntry>,
     pub packing_list: PackingListChoice,
@@ -204,11 +204,6 @@ impl BatchEntry {
     pub fn is_printed(&self, pdf: i64) -> bool {
         self.printed.contains(&pdf)
     }
-}
-
-/// The set an older `state.json` (or one without the key) loads as (04 › *Sets*).
-fn default_set() -> String {
-    sets::DEFAULT_SET.to_string()
 }
 
 /// The day's `state.json`: everything needed to continue, revert or amend a batch.
@@ -392,7 +387,7 @@ impl DayState {
         state.revert_last();
         Some(Amend {
             batch: last,
-            set: entry.set,
+            grouping: entry.grouping,
             files,
             state,
         })
@@ -403,9 +398,9 @@ impl DayState {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Amend {
     pub batch: i64,
-    /// The set the batch was packed with (04 › *Sets*): an amend reads it again, whatever set was
-    /// used last.
-    pub set: String,
+    /// The grouping the batch was packed with (04 › *Sets*): an amend reads it again, whatever
+    /// grouping was used last.
+    pub grouping: Grouping,
     pub files: Vec<PathBuf>,
     pub state: DayState,
 }
@@ -502,8 +497,8 @@ pub fn fingerprint(path: &Path) -> Result<Fingerprint, DayError> {
 pub struct BatchWrite {
     pub batch: i64,
     pub save_time: String,
-    /// The name of the picks set the batch was packed with (04 › *Sets*).
-    pub set: String,
+    /// The grouping the batch was packed with (04 › *Sets*).
+    pub grouping: Grouping,
     pub files: Vec<FileEntry>,
     pub pdfs: Vec<PdfEntry>,
     pub packing_list: PackingListChoice,
@@ -568,7 +563,7 @@ where
     state.batches.push(BatchEntry {
         batch: write.batch,
         save_time: write.save_time.clone(),
-        set: write.set.clone(),
+        grouping: write.grouping.clone(),
         files: write.files.clone(),
         pdfs: write.pdfs.clone(),
         packing_list: write.packing_list.clone(),

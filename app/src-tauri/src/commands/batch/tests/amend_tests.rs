@@ -60,7 +60,7 @@ fn revert_last_deletes_the_folder_and_the_state() {
     read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .expect("read");
@@ -79,7 +79,7 @@ fn revert_last_deletes_the_folder_and_the_state() {
     read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .expect("read again");
@@ -105,7 +105,7 @@ fn amend_reads_the_download_copy_and_replaces_the_batch() {
     read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .expect("read");
@@ -171,7 +171,7 @@ fn amend_starts_on_the_plan_reads_the_batchs_files_and_writes_nothing() {
         .with_worker(|worker| split_testdata_labels(worker, &dir))
         .expect("worker");
 
-    read_draft(&state, parts[..2].to_vec(), sets::DEFAULT_SET, |_| {}).expect("read");
+    read_draft(&state, parts[..2].to_vec(), &Grouping::default(), |_| {}).expect("read");
     assert_eq!(
         save_batch_impl(&state, None, false, |_| {})
             .expect("save")
@@ -254,7 +254,7 @@ fn the_amend_read_takes_the_selection_as_it_is() {
         .expect("worker");
 
     // Batch 1 holds the first two files: one order each.
-    let read = read_draft(&state, parts[..2].to_vec(), sets::DEFAULT_SET, |_| {}).expect("read");
+    let read = read_draft(&state, parts[..2].to_vec(), &Grouping::default(), |_| {}).expect("read");
     assert_eq!(read.orders, 2);
     assert_eq!(plan_orders(&read.plan), 2);
     assert_eq!(
@@ -323,7 +323,7 @@ fn cancel_amend_leaves_the_batch_and_the_state_untouched() {
     read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .expect("read");
@@ -397,7 +397,7 @@ fn the_testdata_labels_show_no_logo_prompt_and_list_the_couriers() {
     let read = read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .expect("read");

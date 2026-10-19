@@ -6,14 +6,14 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 
+use packing_engine::groupings::Grouping;
 use packing_engine::orders::{Line, Order, ReadOrder, UnseenLogo, Warning, display_name};
 use packing_engine::plan::{Plan, REST_CODE};
 use packing_engine::rules::{Category, catch_all_category};
-use packing_engine::sets;
 use packing_pdf::batch::Draft;
 use packing_pdf::worker::{PdfWorker, SaveProgress, SaveStage};
 
-use crate::commands::day::{remember_last_set, settings_load};
+use crate::commands::day::{remember_last_grouping, settings_load};
 use crate::{CATEGORIES_FILE, COURIERS_FILE, OpenDraft};
 
 use super::*;

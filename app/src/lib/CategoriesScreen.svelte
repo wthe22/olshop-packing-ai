@@ -9,12 +9,12 @@
   import { confirm } from "@tauri-apps/plugin-dialog";
   import * as api from "../lib/api";
   import {
-    categoriesSet,
-    normalizeSetName,
-    setFile,
-    setProblem,
-    type SetNameProblem,
-  } from "../lib/sets";
+    categoriesGrouping,
+    normalizeGroupingName,
+    groupingFile,
+    groupingProblem,
+    type GroupingNameProblem,
+  } from "../lib/groupings";
   import { texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
   import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
@@ -22,7 +22,7 @@
 
   let {
     draftBatch,
-    openSet,
+    openGrouping,
     onClose,
     onSaved,
   }: {
@@ -31,7 +31,7 @@
     /// The set to open on (08 › *5. Categories*): the batch's own set when the screen is opened
     /// from the Plan screen's *Edit categories*, so its entries and its counts *In batch `<b>`*
     /// are that set's; `null` from the top bar, where the set used last is shown.
-    openSet: string | null;
+    openGrouping: string | null;
     onClose: () => void;
     onSaved: () => void;
   } = $props();
@@ -61,14 +61,14 @@
   // The set row (08 › *5. Categories*): the sets of the data folder, the set being edited (and
   // its file), and the **+ New set** form. A batch is packed with one set, chosen on *New batch*
   // (04 › *Sets*).
-  let sets = $state<api.SetView[]>([]);
-  let currentSet = $state(api.DEFAULT_SET);
-  let newSetOpen = $state(false);
-  let newSetName = $state("");
-  let setError = $state("");
+  let groupings = $state<api.GroupingView[]>([]);
+  let currentGrouping = $state(api.DEFAULT_GROUPING);
+  let newGroupingOpen = $state(false);
+  let newGroupingName = $state("");
+  let groupingError = $state("");
 
-  const currentFile = $derived(setFile(sets, currentSet));
-  const canDeleteSet = $derived(currentSet !== api.DEFAULT_SET);
+  const currentFile = $derived(groupingFile(groupings, currentGrouping));
+  const canDeleteGrouping = $derived(currentGrouping !== api.DEFAULT_GROUPING);
 
   // Q-UI-4: the one catch-all entry a folder without `categories.toml` starts with, and nothing
   // else, is the unconfigured state; the line says what that means for a batch.
@@ -91,10 +91,10 @@
   async function load() {
     busy = true;
     try {
-      const list = await api.setsList();
-      sets = list.sets;
-      currentSet = categoriesSet(openSet, list.sets, list.last_used);
-      await loadSet();
+      const list = await api.groupingsList();
+      groupings = list.groupings;
+      currentGrouping = categoriesGrouping(openGrouping, list.groupings, list.last_grouping);
+      await loadGrouping();
     } catch (err) {
       loadError = String(err);
     }
@@ -103,8 +103,8 @@
 
   /// Load the set being shown: its file's entries, or the one catch-all entry when it has no file
   /// (04 › *Sets*), then the live check and counts.
-  async function loadSet() {
-    const data = await api.rulesLoad(currentSet);
+  async function loadGrouping() {
+    const data = await api.rulesLoad(currentGrouping);
     fileText = data.text;
     loadError = data.error ?? "";
     const list: CatEntry[] = [];
@@ -139,15 +139,15 @@
   }
 
   /// The set chooser: show another set (08 › *5. Categories*).
-  async function changeSet(name: string) {
-    if (name === currentSet) return;
-    currentSet = name;
-    setError = "";
-    newSetOpen = false;
+  async function changeGrouping(name: string) {
+    if (name === currentGrouping) return;
+    currentGrouping = name;
+    groupingError = "";
+    newGroupingOpen = false;
     loadError = "";
     fileMode = false;
     try {
-      await loadSet();
+      await loadGrouping();
     } catch (err) {
       loadError = String(err);
     }
@@ -156,36 +156,36 @@
   /// **+ New set** (08 › *5. Categories*): ask for a name; **Create** writes
   /// `categories/<name>.toml` (the set's file) and shows it.
   function openNewSet() {
-    newSetOpen = true;
-    newSetName = "";
-    setError = "";
+    newGroupingOpen = true;
+    newGroupingName = "";
+    groupingError = "";
   }
 
-  function newSetProblemText(problem: SetNameProblem): string {
-    if (problem === "empty") return texts.categories.setNeedsName;
-    if (problem === "reserved") return texts.categories.setNameReserved;
-    return texts.categories.setNameTaken;
+  function newGroupingProblemText(problem: GroupingNameProblem): string {
+    if (problem === "empty") return texts.categories.groupingNeedsName;
+    if (problem === "reserved") return texts.categories.groupingNameReserved;
+    return texts.categories.groupingNameTaken;
   }
 
-  async function createSet() {
-    const problem = setProblem(newSetName, sets);
+  async function createGrouping() {
+    const problem = groupingProblem(newGroupingName, groupings);
     if (problem !== null) {
-      setError = newSetProblemText(problem);
+      groupingError = newGroupingProblemText(problem);
       return;
     }
-    const name = normalizeSetName(newSetName);
+    const name = normalizeGroupingName(newGroupingName);
     busy = true;
     try {
-      await api.newSet(name, null);
-      const list = await api.setsList();
-      sets = list.sets;
-      currentSet = name;
-      newSetOpen = false;
+      await api.newGrouping(name, null);
+      const list = await api.groupingsList();
+      groupings = list.groupings;
+      currentGrouping = name;
+      newGroupingOpen = false;
       loadError = "";
       fileMode = false;
-      await loadSet();
+      await loadGrouping();
     } catch (err) {
-      setError = String(err);
+      groupingError = String(err);
     }
     busy = false;
   }
@@ -193,21 +193,21 @@
   /// **Delete set** (08 › *5. Categories*): asks first, then deletes that set's file, whose
   /// categories fall back to the one catch-all entry. The set `default` is the data folder's own
   /// `categories.toml` and cannot be deleted.
-  async function removeSet() {
-    if (!canDeleteSet) return;
-    if (!(await confirm(texts.categories.confirmDeleteSet(currentSet)))) return;
+  async function removeGrouping() {
+    if (!canDeleteGrouping) return;
+    if (!(await confirm(texts.categories.confirmDeleteGrouping(currentGrouping)))) return;
     busy = true;
     try {
-      await api.deleteSet(currentSet);
-      const list = await api.setsList();
-      sets = list.sets;
-      currentSet = api.DEFAULT_SET;
-      setError = "";
+      await api.deleteGrouping(currentGrouping);
+      const list = await api.groupingsList();
+      groupings = list.groupings;
+      currentGrouping = api.DEFAULT_GROUPING;
+      groupingError = "";
       loadError = "";
       fileMode = false;
-      await loadSet();
+      await loadGrouping();
     } catch (err) {
-      setError = String(err);
+      groupingError = String(err);
     }
     busy = false;
   }
@@ -228,7 +228,7 @@
       return;
     }
     try {
-      const check = await api.rulesCheck(payload(), currentSet);
+      const check = await api.rulesCheck(payload(), currentGrouping);
       generalError = check.general ?? "";
       entries.forEach((entry, index) => {
         entry.error = entry.boxesError || (check.errors[index] ?? "");
@@ -340,7 +340,7 @@
   async function save() {
     busy = true;
     try {
-      await api.rulesSave(payload(), currentSet);
+      await api.rulesSave(payload(), currentGrouping);
       onSaved();
     } catch (err) {
       generalError = String(err);
@@ -355,7 +355,7 @@
 
   async function checkFile() {
     try {
-      await api.rulesCheckText(fileText, currentSet);
+      await api.rulesCheckText(fileText, currentGrouping);
       fileError = "";
     } catch (err) {
       fileError = String(err);
@@ -365,7 +365,7 @@
   async function saveFile() {
     busy = true;
     try {
-      await api.rulesSaveText(fileText, currentSet);
+      await api.rulesSaveText(fileText, currentGrouping);
       fileMode = false;
       onSaved();
     } catch (err) {
@@ -379,41 +379,41 @@
   <!-- 08 › *5. Categories*: the set row — the chooser, **+ New set** and **Delete set** — and the
        file the chosen set is kept in. The set `default` is the data folder's own
        `categories.toml` and cannot be deleted. -->
-  <div class="set-row">
-    <label class="set">
-      {texts.categories.set}:
-      <select value={currentSet} onchange={(event) => changeSet(event.currentTarget.value)}>
-        {#each sets as option (option.name)}
+  <div class="grouping-row">
+    <label class="grouping">
+      {texts.categories.grouping}:
+      <select value={currentGrouping} onchange={(event) => changeGrouping(event.currentTarget.value)}>
+        {#each groupings as option (option.name)}
           <option value={option.name}>{option.name}</option>
         {/each}
       </select>
     </label>
-    <button disabled={busy} onclick={openNewSet}>{texts.categories.newSet}</button>
-    <button disabled={!canDeleteSet || busy} onclick={removeSet}>
-      {texts.categories.deleteSet}
+    <button disabled={busy} onclick={openNewSet}>{texts.categories.newGrouping}</button>
+    <button disabled={!canDeleteGrouping || busy} onclick={removeGrouping}>
+      {texts.categories.deleteGrouping}
     </button>
-    {#if newSetOpen}
+    {#if newGroupingOpen}
       <input
-        class="set-name"
+        class="grouping-name"
         placeholder={texts.categories.name}
-        bind:value={newSetName}
-        onkeydown={(event) => event.key === "Enter" && createSet()}
+        bind:value={newGroupingName}
+        onkeydown={(event) => event.key === "Enter" && createGrouping()}
       />
-      <button class="primary" disabled={busy} onclick={createSet}>
-        {texts.categories.createSet}
+      <button class="primary" disabled={busy} onclick={createGrouping}>
+        {texts.categories.createGrouping}
       </button>
-      <button disabled={busy} onclick={() => (newSetOpen = false)}>
+      <button disabled={busy} onclick={() => (newGroupingOpen = false)}>
         {texts.categories.cancel}
       </button>
     {/if}
     <span class="grow"></span>
     {#if currentFile}
-      <span class="file-line">{texts.categories.setFile(currentFile)}</span>
+      <span class="file-line">{texts.categories.groupingFile(currentFile)}</span>
     {/if}
   </div>
 
-  {#if setError}
-    <p class="error">{setError}</p>
+  {#if groupingError}
+    <p class="error">{groupingError}</p>
   {/if}
 
   <p class="hint">{texts.categories.hint}</p>
@@ -558,7 +558,7 @@
   }
 
   /* 08 › *5. Categories*: the set row at the top of the screen. */
-  .set-row {
+  .grouping-row {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -566,22 +566,22 @@
     flex-wrap: wrap;
   }
 
-  .set {
+  .grouping {
     display: flex;
     align-items: center;
     gap: 0.35rem;
     color: #4a4a4a;
   }
 
-  .set select {
+  .grouping select {
     max-width: 14rem;
   }
 
-  .set-row .set-name {
+  .grouping-row .grouping-name {
     width: 12rem;
   }
 
-  .set-row .file-line {
+  .grouping-row .file-line {
     color: #6a6a6a;
     font-variant-numeric: tabular-nums;
   }
@@ -715,8 +715,8 @@
     .count,
     .rest,
     .rest-toggle,
-    .set,
-    .set-row .file-line {
+    .grouping,
+    .grouping-row .file-line {
       color: #b0b0b0;
     }
 

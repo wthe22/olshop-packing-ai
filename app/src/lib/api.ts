@@ -30,10 +30,10 @@ export interface BatchView {
   batch: number;
   save_time: string;
   time: string;
-  /// The picks set the batch was packed with (04 › *Sets*; 07 › *`state.json`*), recorded at
-  /// save; **Amend** reports it in its confirmation and reads that set again. An older
+  /// The grouping the batch was packed with (04 › *Sets*; 07 › *`state.json`*), recorded at
+  /// save; **Amend** reports it in its confirmation and reads that grouping again. An older
   /// `state.json` without it reads as `default`.
-  set: string;
+  grouping: string;
   files: number;
   orders: number;
   pdfs: PdfView[];
@@ -63,9 +63,9 @@ export type Layout = "full" | "summary" | "pick";
 export interface Settings {
   scope: Scope;
   layouts: Layout[];
-  /// The picks set used last (07 › *Settings*; 04 › *Sets*): the New batch screen preselects it.
+  /// The grouping used last (07 › *Settings*; 04 › *Sets*): the New batch screen preselects it.
   /// An older `settings.json` without it reads as `default`.
-  set: string;
+  grouping: string;
 }
 
 /// The packing-list choice sent to `save_batch` (07 › *Packing list*).
@@ -161,9 +161,10 @@ export interface PlanView {
   /// The plan is the one catch-all entry, so the picks are unconfigured: the screen shows the
   /// *No picks yet* line (Q-UI-4).
   no_picks: boolean;
-  /// The picks set the plan belongs to (04 › *Sets*): the set chosen on the New batch screen, or
-  /// the batch's own set for an amend. The header names it and **Edit categories** opens it.
-  set: string;
+  /// The grouping the plan belongs to (04 › *Sets*): the grouping chosen on the New batch
+  /// screen, or the batch's own grouping for an amend. The header names it and **Edit
+  /// categories** opens it.
+  grouping: string;
 }
 
 /// One unseen logo as the logo prompt shows it (08 › *2. New batch* → *The logo prompt*): the
@@ -251,18 +252,18 @@ export type PlanEdit =
 export const checkFiles = (paths: string[]): Promise<FileCheck[]> =>
   invoke("check_files", { paths });
 
-/// *Read labels* (08 › *Reading*): read the chosen files and open the Plan screen. `set` is the
-/// picks set the batch uses, chosen on the selection page (04 › *Sets*); `default` for the data
+/// *Read labels* (08 › *Reading*): read the chosen files and open the Plan screen. `grouping` is
+/// the grouping the batch uses, chosen on the selection page (04 › *Sets*); `default` for the data
 /// folder's own `categories.toml`. `redo` is the batch being redone when the read comes from the
 /// amend's selection page (08 › *2. New batch* → *The amend's selection page*); `null` for a new
-/// batch's file list — an amend reads with the set that batch recorded, whatever `set` says. The
-/// selection is read exactly as it stands: the batch's own `download/` copy in its stored order,
-/// an added file where the owner put it, a file taken off the list not read at all.
+/// batch's file list — an amend reads with the grouping that batch recorded, whatever `grouping`
+/// says. The selection is read exactly as it stands: the batch's own `download/` copy in its
+/// stored order, an added file where the owner put it, a file taken off the list not read at all.
 export const readLabels = (
   paths: string[],
-  set = "default",
+  grouping = "default",
   redo: number | null = null,
-): Promise<ReadResult> => invoke("read_labels", { paths, set, redo });
+): Promise<ReadResult> => invoke("read_labels", { paths, grouping, redo });
 
 export const cancelRead = (): Promise<void> => invoke("cancel_read");
 
@@ -335,61 +336,64 @@ export interface RulesCheck {
   errors: (string | null)[];
   general: string | null;
   counts: number[] | null;
-  /// The file of the set the check ran on, relative to the data folder: `categories.toml` for the
-  /// set `default`, else `categories/<set name>.toml` (04 › *Sets*).
+  /// The file of the grouping the check ran on, relative to the data folder: `categories.toml` for
+  /// the grouping `default`, else `categories/<grouping name>.toml` (04 › *Sets*).
   file: string;
 }
 
-/// One set of the data folder as the Categories screen lists it (04 › *Sets*; 08 › *5.
+/// One grouping of the data folder as the Categories screen lists it (04 › *Sets*; 08 › *5.
 /// Categories*): its name and the file it is kept in, relative to the data folder.
-export interface SetView {
+export interface GroupingView {
   name: string;
   file: string;
 }
 
-/// The picks sets of a data folder (04 › *Sets*): every set with its file, and the set used last,
-/// which the next New batch preselects (07 › *Settings*).
-export interface SetsList {
-  sets: SetView[];
-  /// The set used last, from `settings.json`; `default` when the file has none.
-  last_used: string;
+/// The groupings of a data folder (04 › *Sets*): every grouping with its file, and the grouping
+/// used last, which the next New batch preselects (07 › *Settings*).
+export interface GroupingsList {
+  groupings: GroupingView[];
+  /// The grouping used last, from `settings.json`; `default` when the file has none.
+  last_grouping: string;
 }
 
-/// The set `default` is the data folder's own `categories.toml` (04 › *Sets*); every other set is
-/// `categories/<set name>.toml`. The screens send a set name; `default` is what an older screen
-/// that knows no sets uses.
-export const DEFAULT_SET = "default";
+/// The grouping `default` is the data folder's own `categories.toml` (04 › *Sets*); every other
+/// grouping is `categories/<grouping name>.toml`. The screens send a grouping name; `default` is
+/// what an older screen that knows no groupings uses.
+export const DEFAULT_GROUPING = "default";
 
-/// The sets of the data folder and the set used last (04 › *Sets*).
-export const setsList = (): Promise<SetsList> => invoke("sets_list");
+/// The groupings of the data folder and the grouping used last (04 › *Sets*).
+export const groupingsList = (): Promise<GroupingsList> => invoke("groupings_list");
 
 /// **+ New set** (08 › *5. Categories*; 04 › *Sets*): write `categories/<name>.toml`, empty (the
 /// one catch-all entry) or a copy of `copyFrom`'s file. The name `default` is refused (it is the
 /// data folder's own `categories.toml`) and an existing file is never overwritten.
-export const newSet = (name: string, copyFrom: string | null = null): Promise<void> =>
-  invoke("new_set", { name, copyFrom });
+export const newGrouping = (name: string, copyFrom: string | null = null): Promise<void> =>
+  invoke("new_grouping", { name, copyFrom });
 
-/// **Delete set** (08 › *5. Categories*; 04 › *Sets*): delete that set's file, whose categories
-/// then fall back to the one catch-all entry. The set `default` cannot be deleted.
-export const deleteSet = (name: string): Promise<void> =>
-  invoke("delete_set", { name });
+/// **Delete set** (08 › *5. Categories*; 04 › *Sets*): delete that grouping's file, whose
+/// categories then fall back to the one catch-all entry. The grouping `default` cannot be
+/// deleted.
+export const deleteGrouping = (name: string): Promise<void> =>
+  invoke("delete_grouping", { name });
 
-export const rulesLoad = (set = DEFAULT_SET): Promise<RulesLoad> =>
-  invoke("rules_load", { set });
+export const rulesLoad = (grouping = DEFAULT_GROUPING): Promise<RulesLoad> =>
+  invoke("rules_load", { grouping });
 
 export const rulesCheck = (
   entries: EntryInput[],
-  set = DEFAULT_SET,
-): Promise<RulesCheck> => invoke("rules_check", { entries, set });
+  grouping = DEFAULT_GROUPING,
+): Promise<RulesCheck> => invoke("rules_check", { entries, grouping });
 
-export const rulesCheckText = (text: string, set = DEFAULT_SET): Promise<void> =>
-  invoke("rules_check_text", { text, set });
+export const rulesCheckText = (text: string, grouping = DEFAULT_GROUPING): Promise<void> =>
+  invoke("rules_check_text", { text, grouping });
 
-export const rulesSave = (entries: EntryInput[], set = DEFAULT_SET): Promise<void> =>
-  invoke("rules_save", { entries, set });
+export const rulesSave = (
+  entries: EntryInput[],
+  grouping = DEFAULT_GROUPING,
+): Promise<void> => invoke("rules_save", { entries, grouping });
 
-export const rulesSaveText = (text: string, set = DEFAULT_SET): Promise<void> =>
-  invoke("rules_save_text", { text, set });
+export const rulesSaveText = (text: string, grouping = DEFAULT_GROUPING): Promise<void> =>
+  invoke("rules_save_text", { text, grouping });
 
 /// A condition text → boxes tree (the engine's parser); an error carries line/col.
 export const conditionToTree = (text: string): Promise<unknown> =>

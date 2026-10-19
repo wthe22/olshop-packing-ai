@@ -11,15 +11,15 @@ use std::sync::mpsc;
 use std::thread;
 
 use packing_engine::day::{DayState, PackingListChoice};
+use packing_engine::groupings::{self, Grouping};
 use packing_engine::label::{self, CourierTable};
 use packing_engine::plan::Plan;
 use packing_engine::rules::{Category, parse_condition};
-use packing_engine::sets;
 use packing_pdf::batch;
 use packing_pdf::worker::Progress;
 use tauri::{AppHandle, Emitter, Manager, State};
 
-use crate::commands::day::remember_last_set;
+use crate::commands::day::remember_last_grouping;
 use crate::{AmendState, AppState, COURIERS_FILE, OpenDraft};
 
 mod amend;
@@ -55,16 +55,16 @@ pub fn check_files(
 /// *Read labels* (08 › *Reading*): read on a blocking thread, emitting `read-progress {page,
 /// pages}`; returns the draft summary and the plan, or the stop error text. A read replaces any
 /// open draft, so the Plan screen's *Back* and a new *Read labels* start again from the files and
-/// no plan edit survives (08 › *3. Plan*). `set` is the picks set the new batch uses, chosen on
-/// the selection page (04 › *Sets*). `redo` is the batch being redone when the read comes from the
-/// amend's selection page (08 › *2. New batch* → *The amend's selection page*); `None` for a new
-/// batch's file list. An amend reads with the set that batch recorded, whatever `set` says
-/// (04 › *Sets*).
+/// no plan edit survives (08 › *3. Plan*). `grouping` is the grouping the new batch uses, chosen
+/// on the selection page (04 › *Sets*). `redo` is the batch being redone when the read comes from
+/// the amend's selection page (08 › *2. New batch* → *The amend's selection page*); `None` for a
+/// new batch's file list. An amend reads with the grouping that batch recorded, whatever
+/// `grouping` says (04 › *Sets*).
 #[tauri::command]
 pub async fn read_labels(
     app: AppHandle,
     paths: Vec<String>,
-    set: String,
+    grouping: Grouping,
     redo: Option<i64>,
 ) -> Result<ReadResult, String> {
     let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
@@ -82,7 +82,7 @@ pub async fn read_labels(
         };
         match redo {
             Some(batch) => read_amend_draft(&state, paths, batch, on_progress),
-            None => read_draft(&state, paths, &set, on_progress),
+            None => read_draft(&state, paths, &grouping, on_progress),
         }
     })
     .await
@@ -126,7 +126,7 @@ pub fn plan(state: State<'_, AppState>, edits: Vec<PlanEdit>) -> Result<PlanView
             &open.plan,
             &open.draft.orders,
             first_number,
-            &open.set,
+            &open.grouping,
         ))
     })?
 }
@@ -199,25 +199,25 @@ pub async fn start_amend(app: AppHandle, day: String) -> Result<AmendStart, Stri
 /// Read the chosen files into a draft and store it (08 › *2. New batch* → *3. Plan*). Runs on a
 /// blocking thread; `on_progress` is called for every page (the window turns it into a
 /// `read-progress` event). A stop (no packing slip, every order already saved, a rules error,
-/// cancelled) returns its message and writes nothing. `set` is the picks set of categories the
-/// batch uses (04 › *Sets*), chosen on the New batch screen; it becomes the set used last
+/// cancelled) returns its message and writes nothing. `grouping` is the grouping of categories the
+/// batch uses (04 › *Sets*), chosen on the New batch screen; it becomes the grouping used last
 /// (07 › *Settings*), which the next New batch preselects.
 pub(super) fn read_draft(
     state: &AppState,
     paths: Vec<PathBuf>,
-    set: &str,
+    grouping: &Grouping,
     on_progress: impl Fn(Progress) + Send + 'static,
 ) -> Result<ReadResult, String> {
     let day_dir = state.day_dir()?;
     let day_state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
-    let read = read_into_draft(state, paths, day_state, None, set, true, on_progress)?;
-    remember_last_set(&state.data_folder()?, set);
+    let read = read_into_draft(state, paths, day_state, None, grouping, true, on_progress)?;
+    remember_last_grouping(&state.data_folder()?, grouping);
     Ok(read)
 }
 
-/// The shared read: `base_state` supplies the duplicate guard and the day's next number; `set` is
-/// the picks set to read with (04 › *Sets*); `amend` marks the draft as redoing a batch
-/// (07 › *Amend*); `sort_by_name` reads a new batch in file-name order (= download order,
+/// The shared read: `base_state` supplies the duplicate guard and the day's next number;
+/// `grouping` is the grouping to read with (04 › *Sets*); `amend` marks the draft as redoing a
+/// batch (07 › *Amend*); `sort_by_name` reads a new batch in file-name order (= download order,
 /// 08 › *2. New batch*) and an amend in the given order (its `download/` copy in the order stored
 /// in `state.json`).
 pub(super) fn read_into_draft(
@@ -225,7 +225,7 @@ pub(super) fn read_into_draft(
     paths: Vec<PathBuf>,
     base_state: DayState,
     amend: Option<AmendState>,
-    set: &str,
+    grouping: &Grouping,
     sort_by_name: bool,
     on_progress: impl Fn(Progress) + Send + 'static,
 ) -> Result<ReadResult, String> {
@@ -233,7 +233,7 @@ pub(super) fn read_into_draft(
         return Err("Choose at least one label file first.".to_string());
     }
     let folder = state.data_folder()?;
-    let categories = load_categories(&folder, set)?;
+    let categories = load_categories(&folder, grouping)?;
     let couriers = load_couriers(&folder)?;
 
     let mut files = paths;
@@ -282,7 +282,7 @@ pub(super) fn read_into_draft(
         plan,
         first_number,
         couriers,
-        set: set.to_string(),
+        grouping: grouping.clone(),
         amend,
         logo_pictures,
     };
@@ -291,12 +291,12 @@ pub(super) fn read_into_draft(
     Ok(read)
 }
 
-/// Load the chosen set's categories — `<data>/categories.toml` for the set `default`, else
-/// `<data>/categories/<set name>.toml` — or the one catch-all entry when the set has no file
+/// Load the chosen grouping's categories — `<data>/categories.toml` for the grouping `default`,
+/// else `<data>/categories/<grouping name>.toml` — or the one catch-all entry when it has no file
 /// (04 › *Sets*, 07 › *Inputs*, 08 › *5. Categories*): every order then goes into one PDF set. A
 /// file that does not load stops the batch with its line/col (08 › *Messages*).
-pub(super) fn load_categories(folder: &Path, set: &str) -> Result<Vec<Category>, String> {
-    sets::load(folder, set)
+pub(super) fn load_categories(folder: &Path, grouping: &Grouping) -> Result<Vec<Category>, String> {
+    groupings::load(folder, grouping)
         .map_err(|error| format!("The categories have an error: {error}. Fix it in Categories."))
 }
 

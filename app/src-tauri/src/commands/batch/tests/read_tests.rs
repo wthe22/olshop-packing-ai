@@ -15,7 +15,7 @@ fn read_and_save_testdata_labels_slip() {
     let read = read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .expect("read");
@@ -60,7 +60,7 @@ fn read_and_save_testdata_labels_slip() {
     let again = read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .err()
@@ -83,7 +83,7 @@ fn read_plain_labels_stops_with_no_slip() {
     let error = read_draft(
         &state,
         vec![testdata("labels-plain.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .err()
@@ -107,7 +107,7 @@ fn a_read_without_a_categories_file_saves_every_order_in_one_pdf() {
     let read = read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .expect("read");
@@ -149,23 +149,24 @@ fn a_batch_read_uses_the_chosen_set_and_records_it() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    let dir = temp_dir("read-set");
-    let set_folder = dir.join(crate::SETS_DIR);
-    std::fs::create_dir_all(&set_folder).expect("sets folder");
-    std::fs::write(set_folder.join("ramadhan.toml"), RAMADHAN).expect("write set");
+    let dir = temp_dir("read-grouping");
+    let groupings_folder = dir.join(crate::GROUPINGS_DIR);
+    std::fs::create_dir_all(&groupings_folder).expect("groupings folder");
+    std::fs::write(groupings_folder.join("ramadhan.toml"), RAMADHAN).expect("write set");
     let state = app_state(&dir);
 
     let read = read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        "ramadhan",
+        &Grouping::new("ramadhan"),
         |_| {},
     )
     .expect("read");
     assert_eq!(read.orders, 23);
     assert!(!read.plan.no_picks);
     assert_eq!(
-        read.plan.set, "ramadhan",
+        read.plan.grouping,
+        Grouping::new("ramadhan"),
         "the plan names the chosen set for the header"
     );
     let rows: Vec<(&str, Option<i64>)> = read
@@ -177,10 +178,13 @@ fn a_batch_read_uses_the_chosen_set_and_records_it() {
     assert_eq!(rows, vec![("A", Some(1)), ("Z", Some(2))]);
 
     // The requested set is the one the next New batch preselects ...
-    assert_eq!(settings_load(&dir).expect("settings").set, "ramadhan");
+    assert_eq!(
+        settings_load(&dir).expect("settings").grouping,
+        Grouping::new("ramadhan")
+    );
     // ... the draft carries it, so *Save batch* records it with the batch ...
     state
-        .with_draft(|open| assert_eq!(open.set, "ramadhan"))
+        .with_draft(|open| assert_eq!(open.grouping, Grouping::new("ramadhan")))
         .expect("draft");
     assert_eq!(
         save_batch_impl(&state, None, false, |_| {})
@@ -189,7 +193,7 @@ fn a_batch_read_uses_the_chosen_set_and_records_it() {
         1
     );
     let day_state = DayState::load(&dir.join("labels/2026-10-07")).expect("state");
-    assert_eq!(day_state.batches[0].set, "ramadhan");
+    assert_eq!(day_state.batches[0].grouping, Grouping::new("ramadhan"));
     // ... and the data folder's own `categories.toml` was never written.
     assert!(!dir.join(CATEGORIES_FILE).exists());
 
@@ -204,9 +208,13 @@ fn an_amend_reads_the_batchs_own_set_whatever_was_used_last() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    let dir = temp_dir("amend-set");
-    std::fs::create_dir_all(dir.join(crate::SETS_DIR)).expect("sets folder");
-    std::fs::write(dir.join(crate::SETS_DIR).join("ramadhan.toml"), RAMADHAN).expect("write set");
+    let dir = temp_dir("amend-grouping");
+    std::fs::create_dir_all(dir.join(crate::GROUPINGS_DIR)).expect("groupings folder");
+    std::fs::write(
+        dir.join(crate::GROUPINGS_DIR).join("ramadhan.toml"),
+        RAMADHAN,
+    )
+    .expect("write set");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
     let state = app_state(&dir);
 
@@ -214,7 +222,7 @@ fn an_amend_reads_the_batchs_own_set_whatever_was_used_last() {
     read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        "ramadhan",
+        &Grouping::new("ramadhan"),
         |_| {},
     )
     .expect("read");
@@ -226,10 +234,10 @@ fn an_amend_reads_the_batchs_own_set_whatever_was_used_last() {
     );
 
     // ... is redone after another set was used last.
-    remember_last_set(&dir, sets::DEFAULT_SET);
+    remember_last_grouping(&dir, &Grouping::default());
     assert_eq!(
-        settings_load(&dir).expect("settings").set,
-        sets::DEFAULT_SET
+        settings_load(&dir).expect("settings").grouping,
+        Grouping::default()
     );
 
     let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
@@ -246,7 +254,8 @@ fn an_amend_reads_the_batchs_own_set_whatever_was_used_last() {
         "the amend reads `ramadhan`, the batch's own set"
     );
     assert_eq!(
-        start.read.plan.set, "ramadhan",
+        start.read.plan.grouping,
+        Grouping::new("ramadhan"),
         "the amend's Plan header names the batch's own set"
     );
 
@@ -270,7 +279,7 @@ fn back_keeps_the_draft_and_a_new_read_replaces_its_plan_edits() {
     let read = read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .expect("read");
@@ -302,7 +311,7 @@ fn back_keeps_the_draft_and_a_new_read_replaces_its_plan_edits() {
                 &open.plan,
                 &open.draft.orders,
                 first_number,
-                &open.set,
+                &open.grouping,
             ))
         })
         .expect("draft")
@@ -313,7 +322,7 @@ fn back_keeps_the_draft_and_a_new_read_replaces_its_plan_edits() {
     let again = read_draft(
         &state,
         vec![testdata("labels-slip.pdf")],
-        sets::DEFAULT_SET,
+        &Grouping::default(),
         |_| {},
     )
     .expect("read again");

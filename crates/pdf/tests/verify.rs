@@ -15,6 +15,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 
 use packing_engine::day::{DayState, PackingListChoice};
+use packing_engine::groupings::Grouping;
 use packing_engine::orders::ReadOrder;
 use packing_engine::plan::{PickResult, Plan, PlanResult};
 use packing_engine::rules::load_rules;
@@ -75,7 +76,7 @@ fn saved(tag: &str) -> Option<Saved> {
         &draft,
         &plan,
         &packing,
-        packing_engine::sets::DEFAULT_SET,
+        &Grouping::default(),
         "2026-10-07",
         &dir,
         &mut day,

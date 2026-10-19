@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 fn plan_view_numbers_rows_and_adds_the_rest_row() {
-    let view = plan_view(&sepatu_plan(), &orders(), 4, sets::DEFAULT_SET);
+    let view = plan_view(&sepatu_plan(), &orders(), 4, &Grouping::default());
     assert_eq!(view.rows.len(), 3);
     assert_eq!(view.add_at, 2); // after the two entries (no rest entry)
 
@@ -50,7 +50,7 @@ fn plan_view_shows_zero_order_and_skipped_rows() {
         }],
     )
     .expect("skip");
-    let view = plan_view(&plan, &orders(), 1, sets::DEFAULT_SET);
+    let view = plan_view(&plan, &orders(), 1, &Grouping::default());
 
     assert!(view.rows[0].skipped);
     assert_eq!(view.rows[0].orders, 0);
@@ -65,7 +65,7 @@ fn plan_view_shows_zero_order_and_skipped_rows() {
         category("A", "Nope", Some("name contains \"zzz\"")),
         category("Z", "Lainnya", None),
     ]);
-    let view = plan_view(&plan, &orders(), 1, sets::DEFAULT_SET);
+    let view = plan_view(&plan, &orders(), 1, &Grouping::default());
     assert!(view.rows[0].empty);
     assert_eq!(view.rows[0].number, None);
     assert_eq!(view.rows[1].number, Some(1)); // the rest entry catches everything
@@ -90,7 +90,7 @@ fn plan_view_flags_duplicate_file_names() {
         ],
     )
     .expect("rename");
-    let view = plan_view(&plan, &orders(), 1, sets::DEFAULT_SET);
+    let view = plan_view(&plan, &orders(), 1, &Grouping::default());
     assert!(view.has_duplicate_names);
     assert_eq!(view.rows[0].duplicate_of, None);
     assert_eq!(view.rows[1].duplicate_of, Some(1)); // *Same name as PDF 1*
@@ -100,7 +100,7 @@ fn plan_view_flags_duplicate_file_names() {
 fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
     // No `categories.toml`: one catch-all entry, every order in one PDF set (Q-UI-4).
     let plan = Plan::from_categories(&[catch_all_category()]);
-    let view = plan_view(&plan, &orders(), 1, sets::DEFAULT_SET);
+    let view = plan_view(&plan, &orders(), 1, &Grouping::default());
     assert!(view.no_picks);
     assert_eq!(view.rows.len(), 1);
     assert_eq!(view.rows[0].code, "Z");
@@ -109,13 +109,13 @@ fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
     assert_eq!(view.add_at, 0);
 
     // A pick with a condition: configured.
-    assert!(!plan_view(&sepatu_plan(), &orders(), 1, sets::DEFAULT_SET).no_picks);
+    assert!(!plan_view(&sepatu_plan(), &orders(), 1, &Grouping::default()).no_picks);
     // The picks file's own rest entry as the only entry: still unconfigured.
     let view = plan_view(
         &Plan::from_categories(&[category("Z", "Lainnya", None)]),
         &orders(),
         1,
-        sets::DEFAULT_SET,
+        &Grouping::default(),
     );
     assert!(view.no_picks);
     assert_eq!(view.rows[0].orders, 6);
@@ -124,31 +124,32 @@ fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
 /// The plan view names the picks set the plan was built from (04 › *Sets*; 08 › *3. Plan*):
 /// the header shows it, and **Edit categories** opens it.
 #[test]
-fn plan_view_names_the_picks_set() {
+fn plan_view_names_the_grouping() {
     assert_eq!(
-        plan_view(&sepatu_plan(), &orders(), 1, sets::DEFAULT_SET).set,
-        "default"
+        plan_view(&sepatu_plan(), &orders(), 1, &Grouping::default()).grouping,
+        Grouping::default()
     );
     assert_eq!(
-        plan_view(&sepatu_plan(), &orders(), 1, "ramadhan").set,
-        "ramadhan"
+        plan_view(&sepatu_plan(), &orders(), 1, &Grouping::new("ramadhan")).grouping,
+        Grouping::new("ramadhan")
     );
 }
 
 /// A set with no file is the one catch-all entry (04 › *Sets*), so the plan is a single row
 /// taking every order and the screen shows the *No picks yet* line (Q-UI-4).
 #[test]
-fn a_set_with_no_file_is_the_one_catch_all_entry() {
-    let dir = temp_dir("set-no-file");
-    let categories = load_categories(&dir, "ramadhan").expect("a set with no file still loads");
+fn a_grouping_with_no_file_is_the_one_catch_all_entry() {
+    let dir = temp_dir("grouping-no-file");
+    let categories =
+        load_categories(&dir, &Grouping::new("ramadhan")).expect("a set with no file still loads");
     let view = plan_view(
         &Plan::from_categories(&categories),
         &orders(),
         1,
-        "ramadhan",
+        &Grouping::new("ramadhan"),
     );
     assert!(view.no_picks, "the *No picks yet* line is shown");
-    assert_eq!(view.set, "ramadhan");
+    assert_eq!(view.grouping, Grouping::new("ramadhan"));
     assert_eq!(view.rows.len(), 1);
     assert_eq!(view.rows[0].code, "Z");
     assert_eq!(view.rows[0].name, "Lainnya");

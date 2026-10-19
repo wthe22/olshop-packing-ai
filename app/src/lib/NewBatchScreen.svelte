@@ -13,7 +13,7 @@
   import { listen } from "@tauri-apps/api/event";
   import { getCurrentWebview } from "@tauri-apps/api/webview";
   import * as api from "../lib/api";
-  import { preselectSet } from "../lib/sets";
+  import { preselectGrouping } from "../lib/groupings";
   import { LogoPrompt, needsLogoPrompt } from "../lib/logoPrompt";
   import LogoPromptDialog from "./LogoPrompt.svelte";
   import { texts } from "../texts";
@@ -21,7 +21,7 @@
   let {
     batchNumber,
     amend,
-    amendSet,
+    amendGrouping,
     files,
     onFiles,
     onPlan,
@@ -35,7 +35,7 @@
     /// The batch's own picks set on the amend's selection page (04 › *Sets*), shown fixed — an
     /// amend reads that set again, whatever set was used last; `null` for a new batch's file
     /// list (the *Set* control is shown there instead).
-    amendSet: string | null;
+    amendGrouping: string | null;
     /// The chosen files. The shell keeps them, so *Back* on the Plan screen shows this list again
     /// with the files still there (08 › *3. Plan*).
     files: api.FileCheck[];
@@ -55,8 +55,8 @@
   // The *Set* control (08 › *2. New batch* → *The set*): the sets of the data folder, with the
   // set used last preselected, so a shop that always uses one set never touches it. The chosen
   // set is passed to `read_labels` and remembered as the last used there.
-  let sets = $state<api.SetView[]>([]);
-  let chosenSet = $state(api.DEFAULT_SET);
+  let groupings = $state<api.GroupingView[]>([]);
+  let chosenGrouping = $state(api.DEFAULT_GROUPING);
 
   // The logo prompt (08 › *The logo prompt*): after a read, before the Plan screen, each unseen
   // logo is asked about once. `asking` is the logo shown now; the flow itself is in logoPrompt.ts.
@@ -138,7 +138,7 @@
       // batch's own set, so its `set` is ignored by the back end; 04 › *Sets*).
       result = await api.readLabels(
         listed.map((file) => file.path),
-        chosenSet,
+        chosenGrouping,
         amend,
       );
     } catch (e) {
@@ -209,10 +209,10 @@
     // the batch's own set. A data folder whose sets cannot be listed keeps the set `default`.
     if (amend === null) {
       api
-        .setsList()
+        .groupingsList()
         .then((list) => {
-          sets = list.sets;
-          chosenSet = preselectSet(list.sets, list.last_used);
+          groupings = list.groupings;
+          chosenGrouping = preselectGrouping(list.groupings, list.last_grouping);
         })
         .catch((e) => (error = String(e)));
     }
@@ -244,18 +244,18 @@
     <h2>{amend === null ? texts.newBatch.title(batchNumber) : texts.newBatch.amendTitle(amend)}</h2>
     {#if amend === null}
       <!-- 08 › *2. New batch* → *The set*: chosen before *Read labels*. -->
-      <label class="set">
-        {texts.newBatch.set}:
-        <select bind:value={chosenSet}>
-          {#each sets as option (option.name)}
+      <label class="grouping">
+        {texts.newBatch.grouping}:
+        <select bind:value={chosenGrouping}>
+          {#each groupings as option (option.name)}
             <option value={option.name}>{option.name}</option>
           {/each}
         </select>
       </label>
-    {:else if amendSet !== null}
+    {:else if amendGrouping !== null}
       <!-- The amend's selection page: the batch's own set, shown and not chosen. -->
-      <span class="set-fixed">
-        {texts.newBatch.set}: {texts.newBatch.setFixed(amendSet)}
+      <span class="grouping-fixed">
+        {texts.newBatch.grouping}: {texts.newBatch.groupingFixed(amendGrouping)}
       </span>
     {/if}
     <span class="grow"></span>
@@ -357,13 +357,13 @@
 
   /* 08 › *2. New batch* → *The set*: the Set control before *Read labels*, and the amend's
      selection page's fixed set line. */
-  .set,
-  .set-fixed {
+  .grouping,
+  .grouping-fixed {
     margin-left: 1rem;
     color: #4a4a4a;
   }
 
-  .set select {
+  .grouping select {
     max-width: 14rem;
   }
 
@@ -480,8 +480,8 @@
   @media (prefers-color-scheme: dark) {
     .drop,
     .muted,
-    .set,
-    .set-fixed {
+    .grouping,
+    .grouping-fixed {
       color: #b0b0b0;
       border-color: #555555;
     }

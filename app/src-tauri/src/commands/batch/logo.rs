@@ -32,7 +32,12 @@ pub(super) fn read_result(open: &OpenDraft) -> ReadResult {
         // (D-LABEL-1, D-LABEL-4).
         couriers: open.couriers.names(),
         logos: logo_views(&open.draft, &open.logo_pictures),
-        plan: plan_view(&open.plan, &open.draft.orders, open.first_number, &open.set),
+        plan: plan_view(
+            &open.plan,
+            &open.draft.orders,
+            open.first_number,
+            &open.grouping,
+        ),
     }
 }
 

@@ -1,5 +1,6 @@
 use super::*;
 use packing_engine::day::{BatchEntry, PackingListChoice, PdfEntry, SavedItem, SavedOrder};
+use packing_engine::groupings::Grouping;
 use packing_engine::plan::Plan;
 use packing_engine::rules_edit::condition_to_tree;
 use packing_pdf::batch::Draft;
@@ -18,7 +19,7 @@ fn batch_entry(batch: i64, pdf_file: &str) -> BatchEntry {
     BatchEntry {
         batch,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
-        set: "default".to_string(),
+        grouping: Grouping::default(),
         files: Vec::new(),
         pdfs: vec![PdfEntry {
             number: 1,
@@ -226,7 +227,7 @@ fn an_order_of_an_open_draft_is_not_found() {
         plan: Plan::from_categories(&[]),
         first_number: 1,
         couriers: packing_engine::label::courier_data().clone(),
-        set: packing_engine::sets::DEFAULT_SET.to_string(),
+        grouping: Grouping::default(),
         amend: None,
         logo_pictures: Default::default(),
     });

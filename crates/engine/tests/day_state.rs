@@ -11,6 +11,7 @@ use packing_engine::day::{
     SavedItem, SavedOrder, Scope, delete_batch_folder, duplicates_warning, fingerprint,
     now_save_time, save_batch,
 };
+use packing_engine::groupings::Grouping;
 use packing_engine::names::DOWNLOAD_DIR;
 use packing_engine::orders::{Order, ReadOrder};
 use serde_json::Value;
@@ -105,7 +106,7 @@ fn batch_write(batch: i64, pdfs: Vec<PdfEntry>, saved_orders: Vec<SavedOrder>) -
     BatchWrite {
         batch,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
-        set: packing_engine::sets::DEFAULT_SET.to_string(),
+        grouping: Grouping::default(),
         files: vec![file_entry("labels_1.pdf", "9f2c")],
         pdfs,
         packing_list: PackingListChoice::default(),
@@ -135,7 +136,7 @@ fn save_and_load_state_round_trip() {
     state.batches.push(packing_engine::day::BatchEntry {
         batch: 1,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
-        set: "default".to_string(),
+        grouping: Grouping::default(),
         files: vec![file_entry("labels_1.pdf", "9f2c")],
         pdfs: vec![pdf_entry(1)],
         packing_list: PackingListChoice {
@@ -164,7 +165,7 @@ fn state_json_matches_the_07_format() {
     state.batches.push(packing_engine::day::BatchEntry {
         batch: 1,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
-        set: "default".to_string(),
+        grouping: Grouping::default(),
         files: vec![file_entry("labels_1.pdf", "9f2c")],
         pdfs: vec![pdf_entry(1)],
         packing_list: PackingListChoice {
@@ -593,7 +594,7 @@ fn the_same_file_is_recognised_twice_and_a_changed_byte_is_not() {
     state.batches.push(packing_engine::day::BatchEntry {
         batch: 1,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
-        set: "default".to_string(),
+        grouping: Grouping::default(),
         files: vec![FileEntry {
             name: "labels_1.pdf".to_string(),
             size: print.size,
@@ -931,23 +932,21 @@ fn now_save_time_is_iso_with_an_offset() {
     assert_eq!(&now[19..20], "+", "the test host is UTC+07:00 ({now})");
 }
 
-/// The set a batch was packed with is written at save and read back; an older `state.json` without
-/// the key loads as `default` (07 › *`state.json`*; 04 › *Sets*).
+/// The grouping a batch was packed with is written at save and read back; an older `state.json`
+/// without the key loads as `default` (07 › *`state.json`*; 04 › *Sets*).
 #[test]
-fn the_batch_set_round_trips_and_an_older_state_loads_as_default() {
+fn the_batch_grouping_round_trips_and_an_older_state_loads_as_default() {
     let dir = TempDir::new("batch-set");
     let day = dir.path().join("2026-10-07");
     let mut state = DayState::new("2026-10-07");
     let mut write = batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]);
-    write.set = "ramadhan".to_string();
+    write.grouping = Grouping::new("ramadhan");
     save_batch(&day, &mut state, &write, |_| Ok(Findings::default())).expect("save");
-    assert_eq!(state.batches[0].set, "ramadhan");
-    assert_eq!(
-        DayState::load(&day).expect("load").batches[0].set,
-        "ramadhan"
-    );
+    assert_eq!(state.batches[0].grouping, Grouping::new("ramadhan"));
+    let loaded = DayState::load(&day).expect("load");
+    assert_eq!(loaded.batches[0].grouping.as_str(), "ramadhan");
 
-    // A day written before the sets existed: the batch has no `set` key and loads as `default`.
+    // A day written before the groupings existed has no `set` key and loads as `default`.
     let text = fs::read_to_string(day.join("state.json")).expect("read");
     let mut value: Value = serde_json::from_str(&text).expect("parse");
     value["batches"][0]
@@ -959,24 +958,22 @@ fn the_batch_set_round_trips_and_an_older_state_loads_as_default() {
         serde_json::to_string_pretty(&value).expect("serialize"),
     )
     .expect("write");
-    assert_eq!(
-        DayState::load(&day).expect("load older state").batches[0].set,
-        "default"
-    );
+    let older = DayState::load(&day).expect("load older state");
+    assert_eq!(older.batches[0].grouping, Grouping::default());
 }
 
-/// An **Amend** reads the batch's own set again (07 › *Revert and amend*; 04 › *Sets*): the amend
-/// carries the set the batch recorded.
+/// An **Amend** reads the batch's own grouping again (07 › *Revert and amend*; 04 › *Sets*): the
+/// amend carries the grouping the batch recorded.
 #[test]
-fn an_amend_carries_the_batchs_own_set() {
+fn an_amend_carries_the_batchs_own_grouping() {
     let dir = TempDir::new("amend-set");
     let day = dir.path().join("2026-10-07");
     let mut state = DayState::new("2026-10-07");
     let mut write = batch_write(1, vec![pdf_entry(1)], vec![saved("a", 1, 1, 1)]);
-    write.set = "ramadhan".to_string();
+    write.grouping = Grouping::new("ramadhan");
     save_batch(&day, &mut state, &write, |_| Ok(Findings::default())).expect("save");
 
     let amend = state.amend(&day).expect("amend");
     assert_eq!(amend.batch, 1);
-    assert_eq!(amend.set, "ramadhan", "the amend reads the batch's own set");
+    assert_eq!(amend.grouping, Grouping::new("ramadhan"));
 }

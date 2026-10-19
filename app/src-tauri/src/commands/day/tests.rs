@@ -1,5 +1,6 @@
 use super::*;
 use packing_engine::day::{BatchEntry, FileEntry, PackingListChoice, PdfEntry};
+use packing_engine::groupings::Grouping;
 
 fn temp_dir(label: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("packing-app-test-{}-{label}", std::process::id()));
@@ -28,7 +29,7 @@ fn batch_entry(
     BatchEntry {
         batch,
         save_time: time.to_string(),
-        set: "default".to_string(),
+        grouping: Grouping::default(),
         files: vec![file_entry("a.pdf")],
         pdfs: vec![pdf],
         packing_list: PackingListChoice::default(),
@@ -46,44 +47,112 @@ fn settings_default_and_round_trip() {
     let custom = Settings {
         scope: Scope::PerPdf,
         layouts: vec![Layout::Full, Layout::Summary],
-        set: "ramadhan".to_string(),
+        grouping: Grouping::new("ramadhan"),
     };
     settings_save(&dir, &custom).expect("save");
     assert_eq!(settings_load(&dir).expect("load"), custom);
     assert_eq!(custom.packing_choice().scope, Scope::PerPdf);
 
-    // A missing key takes its default: an older file without the set loads as `default`
+    // A missing key takes its default: an older file without the grouping loads as `default`
     // (07 › *Settings*; 04 › *Sets*).
     std::fs::write(dir.join(SETTINGS_FILE), "{\n  \"scope\": \"none\"\n}\n").expect("write");
     let partial = settings_load(&dir).expect("partial");
     assert_eq!(partial.scope, Scope::None);
     assert_eq!(partial.layouts, vec![Layout::Pick]);
-    assert_eq!(partial.set, packing_engine::sets::DEFAULT_SET);
+    assert_eq!(partial.grouping, Grouping::default());
 
     std::fs::remove_dir_all(&dir).ok();
 }
 
-/// The picks set used last is remembered in `settings.json` (07 › *Settings*; 04 › *Sets*), so
-/// the next New batch preselects it; a read with the same set writes nothing, and a folder
+/// A `state.json` and a `settings.json` written before the grouping had a type still load, and a
+/// save writes the same stored key `set` back (07 › *`state.json`*, *Settings*; 04 › *Sets*).
+#[test]
+fn an_old_state_and_settings_keep_the_stored_set_key() {
+    let dir = temp_dir("stored-set-key");
+    let day_dir = dir.join(LABELS_DIR).join("2026-10-07");
+    std::fs::create_dir_all(&day_dir).expect("day folder");
+    let state_json = r#"{
+  "day": "2026-10-07",
+  "batches": [
+    {
+      "batch": 1,
+      "save_time": "2026-10-07T07:40:12+07:00",
+      "set": "ramadhan",
+      "files": [],
+      "pdfs": [],
+      "packing_list": { "scope": "whole", "layouts": ["pick"] }
+    }
+  ],
+  "saved": []
+}
+"#;
+    std::fs::write(day_dir.join("state.json"), state_json).expect("write state");
+    let settings_json =
+        "{\n  \"scope\": \"whole\",\n  \"layouts\": [\"pick\"],\n  \"set\": \"ramadhan\"\n}\n";
+    std::fs::write(dir.join(SETTINGS_FILE), settings_json).expect("write settings");
+
+    // Both files are read in their old shape, then written back.
+    let state = DayState::load(&day_dir).expect("load state");
+    assert_eq!(state.batches[0].grouping, Grouping::new("ramadhan"));
+    state.save(&day_dir).expect("save state");
+    let settings = settings_load(&dir).expect("load settings");
+    assert_eq!(settings.grouping, Grouping::new("ramadhan"));
+    settings_save(&dir, &settings).expect("save settings");
+
+    // The Settings screen's own view carries the grouping the other way, unchanged.
+    let view = SettingsView::of(settings);
+    assert_eq!(view.grouping, Grouping::new("ramadhan"));
+    settings_save(&dir, &view.into_settings()).expect("save the view");
+
+    // The stored key is `set` in both files, and no `grouping` key appears.
+    for (name, path) in [
+        ("state.json", day_dir.join("state.json")),
+        (SETTINGS_FILE, dir.join(SETTINGS_FILE)),
+    ] {
+        let text = std::fs::read_to_string(path).expect("read");
+        let value: serde_json::Value = serde_json::from_str(&text).expect("parse");
+        let written = if name == "state.json" {
+            value["batches"][0].clone()
+        } else {
+            value.clone()
+        };
+        assert_eq!(written["set"], "ramadhan", "{name} keeps the `set` key");
+        assert!(
+            written.get("grouping").is_none(),
+            "{name} adds no `grouping` key"
+        );
+    }
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+/// The grouping used last is remembered in `settings.json` (07 › *Settings*; 04 › *Sets*), so
+/// the next New batch preselects it; a read with the same grouping writes nothing, and a folder
 /// whose settings cannot be read is left alone.
 #[test]
-fn the_last_used_set_is_remembered() {
-    let dir = temp_dir("settings-set");
+fn the_last_used_grouping_is_remembered() {
+    let dir = temp_dir("settings-grouping");
     // No file yet: the default, and remembering a set writes it.
-    assert_eq!(settings_load(&dir).expect("default").set, "default");
-    remember_last_set(&dir, "ramadhan");
-    assert_eq!(settings_load(&dir).expect("load").set, "ramadhan");
+    assert_eq!(
+        settings_load(&dir).expect("default").grouping,
+        Grouping::default()
+    );
+    remember_last_grouping(&dir, &Grouping::new("ramadhan"));
+    assert_eq!(
+        settings_load(&dir).expect("load").grouping,
+        Grouping::new("ramadhan")
+    );
 
     // The packing-list keys are kept (the file is written whole).
-    remember_last_set(&dir, "default");
+    remember_last_grouping(&dir, &Grouping::default());
     let settings = settings_load(&dir).expect("load again");
-    assert_eq!(settings.set, "default");
+    assert_eq!(settings.grouping, Grouping::default());
     assert_eq!(settings.scope, Scope::Whole);
     assert_eq!(settings.layouts, vec![Layout::Pick]);
 
     // A broken settings file is not touched.
     std::fs::write(dir.join(SETTINGS_FILE), "not json").expect("write broken");
-    remember_last_set(&dir, "ramadhan");
+    remember_last_grouping(&dir, &Grouping::new("ramadhan"));
     assert_eq!(
         std::fs::read_to_string(dir.join(SETTINGS_FILE)).expect("read"),
         "not json"
@@ -205,12 +274,12 @@ fn set_printed_writes_the_tick_and_the_overview_reports_it() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
-/// The Day screen's view carries each batch's own picks set (04 › *Sets*), so **Amend**'s
-/// confirmation can name it and an amend reads that set again; an older `state.json` without
-/// the key reads as `default`.
+/// The Day screen's view carries each batch's own grouping (04 › *Sets*), so **Amend**'s
+/// confirmation can name it and an amend reads that grouping again; an older `state.json`
+/// without the key reads as `default`.
 #[test]
-fn the_overview_reports_each_batchs_own_set() {
-    let dir = temp_dir("overview-set");
+fn the_overview_reports_each_batchs_own_grouping() {
+    let dir = temp_dir("overview-grouping");
     let day_dir = dir.join(LABELS_DIR).join("2026-10-07");
     let mut state = DayState::new("2026-10-07");
     let mut first = batch_entry(
@@ -227,12 +296,12 @@ fn the_overview_reports_each_batchs_own_set() {
         Vec::new(),
         Vec::new(),
     );
-    first.set = "ramadhan".to_string();
+    first.grouping = Grouping::new("ramadhan");
     state.batches.push(first);
     state.save(&day_dir).expect("save state");
 
     let overview = day_overview_at(&dir, "2026-10-07").expect("overview");
-    assert_eq!(overview.batches[0].set, "ramadhan");
+    assert_eq!(overview.batches[0].grouping, Grouping::new("ramadhan"));
 
     // The key is defaulted: a `state.json` entry without it reads as `default`.
     let text = std::fs::read_to_string(day_dir.join("state.json")).expect("read");
@@ -243,7 +312,7 @@ fn the_overview_reports_each_batchs_own_set() {
         .join("\n");
     std::fs::write(day_dir.join("state.json"), without).expect("write");
     let overview = day_overview_at(&dir, "2026-10-07").expect("overview again");
-    assert_eq!(overview.batches[0].set, "default");
+    assert_eq!(overview.batches[0].grouping, Grouping::default());
 
     std::fs::remove_dir_all(&dir).ok();
 }

@@ -9,16 +9,16 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
+use packing_engine::groupings::{self, Grouping};
 use packing_engine::orders::Order;
 use packing_engine::plan::Plan;
 use packing_engine::rules::{Category, catch_all_category, load_rules_named, parse_condition};
 use packing_engine::rules_edit::{self, RulesDocument, Tree};
-use packing_engine::sets;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
 use crate::commands::day::settings_load;
-use crate::{AppState, CATEGORIES_FILE, SETS_DIR};
+use crate::{AppState, CATEGORIES_FILE, GROUPINGS_DIR};
 
 /// One category entry as the file holds it (08 › *5. Categories*): its values and, for an entry
 /// the file holds, the index it has there (`origin`). The one catch-all entry of a folder
@@ -63,8 +63,8 @@ pub struct RulesCheck {
     errors: Vec<Option<String>>,
     general: Option<String>,
     counts: Option<Vec<usize>>,
-    /// The file the checked set is kept in, relative to the data folder: `categories.toml` for the
-    /// set `default`, else `categories/<set name>.toml` (04 › *Sets*).
+    /// The file the checked grouping is kept in, relative to the data folder: `categories.toml`
+    /// for the grouping `default`, else `categories/<grouping name>.toml` (04 › *Sets*).
     file: String,
 }
 
@@ -76,8 +76,8 @@ fn valid_code(code: &str) -> bool {
 
 // ------------------------------------------------------------------------------- load
 
-fn rules_load_impl(folder: &Path, set: &str) -> Result<RulesLoad, String> {
-    let file = sets::file_of(set).map_err(|error| error.to_string())?;
+fn rules_load_impl(folder: &Path, grouping: &Grouping) -> Result<RulesLoad, String> {
+    let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
     let path = folder.join(&file);
     let text = match std::fs::read_to_string(&path) {
         Ok(text) => text,
@@ -126,10 +126,10 @@ fn rules_load_impl(folder: &Path, set: &str) -> Result<RulesLoad, String> {
 
 fn rules_check_impl(
     state: &AppState,
-    set: &str,
+    grouping: &Grouping,
     entries: &[EntryInput],
 ) -> Result<RulesCheck, String> {
-    let file = sets::file_of(set).map_err(|error| error.to_string())?;
+    let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
     let mut errors: Vec<Option<String>> = Vec::with_capacity(entries.len());
     let mut general: Option<String> = None;
     let mut categories: Vec<Category> = Vec::with_capacity(entries.len());
@@ -215,9 +215,10 @@ fn rules_check_impl(
 }
 
 /// Check the whole file text (*Edit file as text*): nothing when it loads, the error otherwise.
-/// The check is the same for every set; `set` names the file the error comes from (04 › *Sets*).
-fn rules_check_text_impl(set: &str, text: &str) -> Result<(), String> {
-    let file = sets::file_of(set).map_err(|error| error.to_string())?;
+/// The check is the same for every grouping; `grouping` names the file the error comes from
+/// (04 › *Sets*).
+fn rules_check_text_impl(grouping: &Grouping, text: &str) -> Result<(), String> {
+    let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
     load_rules_named(text, &file)
         .map(|_| ())
         .map_err(|error| error.to_string())
@@ -229,13 +230,17 @@ fn rules_check_text_impl(set: &str, text: &str) -> Result<(), String> {
 /// comment and unchanged condition text (its `origin`), a new one is appended (the one catch-all
 /// entry of a folder without `categories.toml` included, which writes the file), a missing one is
 /// dropped, and the order is applied in one `reorder` (08 › *5. Categories*: "comments kept").
-fn rules_save_impl(state: &AppState, set: &str, entries: &[EntryInput]) -> Result<(), String> {
+fn rules_save_impl(
+    state: &AppState,
+    grouping: &Grouping,
+    entries: &[EntryInput],
+) -> Result<(), String> {
     let folder = state.data_folder()?;
-    let file = sets::file_of(set).map_err(|error| error.to_string())?;
+    let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
     // A set's file lives in `<data>/categories/`; the folder is created here, so the first save of
     // a new set (04 › *Sets*) can write the file.
     if file != CATEGORIES_FILE {
-        let dir = folder.join(SETS_DIR);
+        let dir = folder.join(GROUPINGS_DIR);
         std::fs::create_dir_all(&dir)
             .map_err(|error| format!("Cannot write to {}: {error}.", dir.display()))?;
     }
@@ -302,12 +307,12 @@ fn rules_save_impl(state: &AppState, set: &str, entries: &[EntryInput]) -> Resul
 }
 
 /// *Edit file as text*: check the whole file, write it, and rebuild the open draft's plan.
-fn rules_save_text_impl(state: &AppState, set: &str, text: &str) -> Result<(), String> {
+fn rules_save_text_impl(state: &AppState, grouping: &Grouping, text: &str) -> Result<(), String> {
     let folder = state.data_folder()?;
-    let file = sets::file_of(set).map_err(|error| error.to_string())?;
+    let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
     let categories = load_rules_named(text, &file).map_err(|error| error.to_string())?;
     if file != CATEGORIES_FILE {
-        let dir = folder.join(SETS_DIR);
+        let dir = folder.join(GROUPINGS_DIR);
         std::fs::create_dir_all(&dir)
             .map_err(|error| format!("Cannot write to {}: {error}.", dir.display()))?;
     }
@@ -331,8 +336,8 @@ fn rebuild_plan(state: &AppState, categories: Vec<Category>) {
 /// The set's file: its text, its entries and any file-level error (08 › *5. Categories*; 04 ›
 /// *Sets*).
 #[tauri::command]
-pub fn rules_load(state: State<'_, AppState>, set: String) -> Result<RulesLoad, String> {
-    rules_load_impl(&state.data_folder()?, &set)
+pub fn rules_load(state: State<'_, AppState>, grouping: Grouping) -> Result<RulesLoad, String> {
+    rules_load_impl(&state.data_folder()?, &grouping)
 }
 
 /// Check the entries while the screen is edited: condition errors with line/col, a file-level
@@ -341,70 +346,71 @@ pub fn rules_load(state: State<'_, AppState>, set: String) -> Result<RulesLoad, 
 #[tauri::command]
 pub fn rules_check(
     state: State<'_, AppState>,
-    set: String,
+    grouping: Grouping,
     entries: Vec<EntryInput>,
 ) -> Result<RulesCheck, String> {
-    rules_check_impl(&state, &set, &entries)
+    rules_check_impl(&state, &grouping, &entries)
 }
 
 /// Check the whole file text (*Edit file as text*): nothing when it loads, the error otherwise.
 #[tauri::command]
-pub fn rules_check_text(set: String, text: String) -> Result<(), String> {
-    rules_check_text_impl(&set, &text)
+pub fn rules_check_text(grouping: Grouping, text: String) -> Result<(), String> {
+    rules_check_text_impl(&grouping, &text)
 }
 
 /// *Save* the entries (08 › *5. Categories*): write the set's file and recount the open draft.
 #[tauri::command]
 pub fn rules_save(
     state: State<'_, AppState>,
-    set: String,
+    grouping: Grouping,
     entries: Vec<EntryInput>,
 ) -> Result<(), String> {
-    rules_save_impl(&state, &set, &entries)
+    rules_save_impl(&state, &grouping, &entries)
 }
 
 /// *Edit file as text* → *Save*: write the whole of the set's file (checked first).
 #[tauri::command]
 pub fn rules_save_text(
     state: State<'_, AppState>,
-    set: String,
+    grouping: Grouping,
     text: String,
 ) -> Result<(), String> {
-    rules_save_text_impl(&state, &set, &text)
+    rules_save_text_impl(&state, &grouping, &text)
 }
 
-/// One set of the data folder as the Categories screen lists it (04 › *Sets*; 08 › *5.
-/// Categories*): its name and the file it is kept in, relative to the data folder.
+/// One grouping of the data folder as the Categories screen lists it (04 › *Sets*;
+/// 08 › *5. Categories*): its name and the file it is kept in, relative to the data folder.
 #[derive(Serialize)]
-pub struct SetView {
-    name: String,
+pub struct GroupingView {
+    name: Grouping,
     file: String,
 }
 
-/// The picks sets of a data folder (07 › *Commands between window and Rust*: `sets_list`): every
-/// set with its file, and the set used last, which the next **New batch** preselects.
+/// The groupings of a data folder (07 › *Commands between window and Rust*: `groupings_list`):
+/// every grouping with its file, and the grouping used last, which the next **New batch**
+/// preselects.
 #[derive(Serialize)]
-pub struct SetsList {
-    sets: Vec<SetView>,
-    /// The set used last, from the data folder's `settings.json` (07 › *Settings*); `default` when
-    /// the file has none or cannot be read.
-    last_used: String,
+pub struct GroupingsList {
+    groupings: Vec<GroupingView>,
+    /// The grouping used last, from the data folder's `settings.json` (07 › *Settings*);
+    /// `default` when the file has none or cannot be read.
+    last_grouping: Grouping,
 }
 
-fn sets_list_impl(folder: &Path) -> Result<SetsList, String> {
-    let sets = sets::list(folder).map_err(|error| error.to_string())?;
-    let last_used = settings_load(folder)
-        .map(|settings| settings.set)
-        .unwrap_or_else(|_| sets::DEFAULT_SET.to_string());
-    Ok(SetsList {
-        sets: sets
+fn groupings_list_impl(folder: &Path) -> Result<GroupingsList, String> {
+    let groupings = groupings::list(folder).map_err(|error| error.to_string())?;
+    let last_grouping = settings_load(folder)
+        .map(|settings| settings.grouping)
+        .unwrap_or_else(|_| Grouping::default());
+    Ok(GroupingsList {
+        groupings: groupings
             .into_iter()
-            .map(|set| SetView {
-                name: set.name,
-                file: set.file,
+            .map(|entry| GroupingView {
+                name: entry.name,
+                file: entry.file,
             })
             .collect(),
-        last_used,
+        last_grouping,
     })
 }
 
@@ -412,28 +418,29 @@ fn sets_list_impl(folder: &Path) -> Result<SetsList, String> {
 /// copy of `copy_from`'s file. The name `default` is the data folder's own `categories.toml` and
 /// cannot be created, and an existing file is never overwritten.
 #[tauri::command]
-pub fn new_set(
+pub fn new_grouping(
     state: State<'_, AppState>,
-    name: String,
-    copy_from: Option<String>,
+    name: Grouping,
+    copy_from: Option<Grouping>,
 ) -> Result<(), String> {
     let folder = state.data_folder()?;
-    sets::create(&folder, &name, copy_from.as_deref()).map_err(|error| error.to_string())
+    groupings::create(&folder, &name, copy_from.as_ref()).map_err(|error| error.to_string())
 }
 
-/// **Delete set** (08 › *5. Categories*; 04 › *Sets*): delete that set's file, whose categories
-/// then fall back to the one catch-all entry. The set `default` cannot be deleted.
+/// **Delete set** (08 › *5. Categories*; 04 › *Sets*): delete that grouping's file, whose
+/// categories then fall back to the one catch-all entry. The grouping `default` cannot be
+/// deleted.
 #[tauri::command]
-pub fn delete_set(state: State<'_, AppState>, name: String) -> Result<(), String> {
+pub fn delete_grouping(state: State<'_, AppState>, name: Grouping) -> Result<(), String> {
     let folder = state.data_folder()?;
-    sets::delete(&folder, &name).map_err(|error| error.to_string())
+    groupings::delete(&folder, &name).map_err(|error| error.to_string())
 }
 
-/// The picks sets of the data folder (07 › *Commands*: `sets_list`): the set names, the file of
-/// each and the set used last.
+/// The groupings of the data folder (07 › *Commands*: `groupings_list`): the grouping names, the
+/// file of each and the grouping used last.
 #[tauri::command]
-pub fn sets_list(state: State<'_, AppState>) -> Result<SetsList, String> {
-    sets_list_impl(&state.data_folder()?)
+pub fn groupings_list(state: State<'_, AppState>) -> Result<GroupingsList, String> {
+    groupings_list_impl(&state.data_folder()?)
 }
 
 /// A condition text → boxes tree, for the boxes editor (07 › *Commands*: the engine's parser).

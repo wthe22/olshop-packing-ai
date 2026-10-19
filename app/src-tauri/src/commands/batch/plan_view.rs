@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 
+use packing_engine::groupings::Grouping;
 use packing_engine::orders::{Order, ReadOrder, display_name};
 use packing_engine::plan::{PickResult, Plan};
 use packing_engine::rules::{Category, Condition, evaluate, parse_condition};
@@ -18,7 +19,7 @@ pub(super) fn plan_view(
     plan: &Plan,
     orders: &[ReadOrder],
     first_number: i64,
-    set: &str,
+    grouping: &Grouping,
 ) -> PlanView {
     let result = plan.count(orders, first_number);
     let entries = plan.entries();
@@ -126,7 +127,7 @@ pub(super) fn plan_view(
         has_duplicate_names,
         add_at,
         no_picks: plan.unconfigured(),
-        set: set.to_string(),
+        grouping: grouping.clone(),
     }
 }
 

@@ -19,6 +19,7 @@ use packing_engine::day::{
     self, BatchWrite, DayError, DayState, Duplicate, FileEntry, Findings, Layout as EngineLayout,
     PackingListChoice, PdfEntry, SavedItem, SavedOrder, Scope, duplicates_warning,
 };
+use packing_engine::groupings::Grouping;
 use packing_engine::label::CourierTable;
 use packing_engine::names;
 use packing_engine::orders::{self, Line, LogoAnswer, ReadOrder, UnseenLogo, Warning};
@@ -200,8 +201,8 @@ pub struct SaveResult {
 /// Write a batch into `batch <b>.partial/`, check it, then rename it and add it to the state
 /// (07 › *Save* step 6, *Check before saving*). The saved PDFs are the picks' pages in run order
 /// (03 › *A saved PDF*), the packing lists follow the scope and layouts, `summary.txt` is
-/// written and the label files are copied into `download/`. `set` is the name of the picks set
-/// the batch was packed with, stored with it (04 › *Sets*).
+/// written and the label files are copied into `download/`. `grouping` is the grouping the batch
+/// was packed with, stored with it (04 › *Sets*).
 ///
 /// The check before saving runs on every save (D-APP-2): the written files are read back and
 /// compared with the plan. A finding stops the save — nothing is renamed, the temporary folder
@@ -214,7 +215,7 @@ pub fn save(
     draft: &Draft,
     plan: &PlanResult,
     packing: &PackingListChoice,
-    set: &str,
+    grouping: &Grouping,
     day: &str,
     day_dir: &Path,
     state: &mut DayState,
@@ -272,7 +273,7 @@ pub fn save(
     let write = BatchWrite {
         batch,
         save_time,
-        set: set.to_string(),
+        grouping: grouping.clone(),
         files,
         pdfs,
         packing_list: packing.clone(),
