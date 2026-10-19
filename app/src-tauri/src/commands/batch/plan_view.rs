@@ -9,7 +9,7 @@ use packing_engine::orders::{Order, ReadOrder, display_name};
 use packing_engine::plan::{PickResult, Plan};
 use packing_engine::rules::{Category, Condition, evaluate, parse_condition};
 
-use super::views::{PlanEdit, PlanRow, PlanView, RunView};
+use super::views::{PlanEdit, PlanRow, PlanRowKind, PlanView, RunView};
 
 /// Map the plan and the draft's orders into the Plan screen's rows (08 › *3. Plan*). Every entry
 /// becomes a row (skipped and 0-order rows included); the leftovers, if any, become the final
@@ -39,55 +39,48 @@ pub(super) fn plan_view(
 
     for (position, entry) in entries.iter().enumerate() {
         let is_rest = rest_entry == Some(position);
-        let base =
-            |number, orders: usize, runs, pages, file_name: String, empty, skipped| PlanRow {
-                index: Some(position),
-                number,
-                code: entry.category.code.clone(),
-                name: entry.category.name.clone(),
-                condition: entry.category.when.clone(),
-                orders,
-                runs,
-                pages,
-                file_name,
-                skipped,
-                generated: false,
-                is_rest,
-                duplicate_of: None,
-                can_use: true,
-                can_move_up: position > 0 && !is_rest,
-                can_move_down: position + 1 < entries.len()
-                    && rest_entry != Some(position + 1)
-                    && !is_rest,
-                empty,
-            };
-        if entry.skipped {
-            rows.push(base(None, 0, Vec::new(), 0, String::new(), false, true));
-            continue;
-        }
-        let (taken, left) = split(&remaining, entry.category.condition.as_ref());
-        remaining = left;
-        if taken.is_empty() {
-            rows.push(base(None, 0, Vec::new(), 0, String::new(), true, false));
+        let kind = if is_rest {
+            PlanRowKind::Rest { index: position }
         } else {
-            let pick = picks.next().expect("a pick for every non-empty entry");
-            rows.push(base(
-                Some(pick.number),
-                pick.orders.len(),
-                run_views(pick, &index),
-                pick.pages,
-                pick.file_name.clone(),
-                false,
-                false,
-            ));
+            PlanRowKind::Entry { index: position }
+        };
+        let mut row = PlanRow {
+            kind,
+            number: None,
+            code: entry.category.code.clone(),
+            name: entry.category.name.clone(),
+            condition: entry.category.when.clone(),
+            orders: 0,
+            runs: Vec::new(),
+            pages: 0,
+            file_name: String::new(),
+            skipped: entry.skipped,
+            duplicate_of: None,
+            can_move_up: position > 0 && !is_rest,
+            can_move_down: position + 1 < entries.len()
+                && rest_entry != Some(position + 1)
+                && !is_rest,
+        };
+        if !entry.skipped {
+            let (taken, left) = split(&remaining, entry.category.condition.as_ref());
+            remaining = left;
+            if !taken.is_empty() {
+                let pick = picks.next().expect("a pick for every non-empty entry");
+                row.number = Some(pick.number);
+                row.orders = pick.orders.len();
+                row.runs = run_views(pick, &index);
+                row.pages = pick.pages;
+                row.file_name = pick.file_name.clone();
+            }
         }
+        rows.push(row);
     }
 
     // The leftovers when no entry took them become `? Uncategorised` (08 › *3. Plan*).
     if !remaining.is_empty() {
         let pick = picks.next().expect("the rest pick");
         rows.push(PlanRow {
-            index: None,
+            kind: PlanRowKind::Generated,
             number: Some(pick.number),
             code: pick.code.clone(),
             name: pick.name.clone(),
@@ -97,13 +90,9 @@ pub(super) fn plan_view(
             pages: pick.pages,
             file_name: pick.file_name.clone(),
             skipped: false,
-            generated: true,
-            is_rest: true,
             duplicate_of: None,
-            can_use: false,
             can_move_up: false,
             can_move_down: false,
-            empty: false,
         });
     }
 

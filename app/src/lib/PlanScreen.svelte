@@ -52,7 +52,7 @@
   // svelte-ignore state_referenced_locally
   let view = $state<api.PlanView>(read.plan);
   let showWarnings = $state(false);
-  let expanded = $state<number[]>([]);
+  let expanded = $state<string[]>([]);
   let error = $state("");
 
   // The packing-list choice, starting from the Settings default (08 › *6. Settings*).
@@ -118,21 +118,21 @@
   }
 
   function toggleUse(row: api.PlanRow, checked: boolean) {
-    if (row.index === null) return;
+    if (row.kind === "generated") return;
     apply([{ kind: "set_skipped", index: row.index, skipped: !checked }]);
   }
 
   function move(row: api.PlanRow, up: boolean) {
-    if (row.index === null) return;
+    if (row.kind === "generated") return;
     apply([{ kind: up ? "move_up" : "move_down", index: row.index }]);
   }
 
   function rename(row: api.PlanRow, name: string) {
-    if (row.index === null) return;
+    if (row.kind === "generated") return;
     apply([{ kind: "rename", index: row.index, name }]);
   }
 
-  function toggleExpanded(key: number) {
+  function toggleExpanded(key: string) {
     expanded = expanded.includes(key)
       ? expanded.filter((item) => item !== key)
       : [...expanded, key];
@@ -257,7 +257,7 @@
     onBack();
   }
 
-  const rowKey = (row: api.PlanRow) => row.index ?? -1;
+  const rowKey = (row: api.PlanRow) => (row.kind === "generated" ? "generated" : String(row.index));
 </script>
 
 <main>
@@ -331,9 +331,9 @@
     </thead>
     <tbody>
       {#each view.rows as row (rowKey(row))}
-        <tr class:skipped={row.skipped} class:empty={row.empty} class:rest={row.generated}>
+        <tr class:skipped={row.skipped} class:empty={row.orders === 0 && !row.skipped} class:rest={row.kind === "generated"}>
           <td class="c-use">
-            {#if row.can_use}
+            {#if row.kind !== "generated"}
               <input
                 type="checkbox"
                 checked={!row.skipped}
@@ -345,7 +345,7 @@
           <td class="c-pick">
             <span class="code">{row.code}</span>
             <span class="name">{row.name}</span>
-            {#if row.is_rest}<span class="tag">{texts.plan.rest}</span>{/if}
+            {#if row.kind !== "entry"}<span class="tag">{texts.plan.rest}</span>{/if}
             {#if row.skipped}<span class="tag">{texts.plan.skipped}</span>{/if}
             {#if row.condition}
               <div class="condition">{row.condition}</div>
@@ -354,7 +354,7 @@
           <td class="c-orders">{row.orders > 0 ? row.orders : ""}</td>
           <td class="c-runs">{row.orders > 0 ? row.runs.length : ""}</td>
           <td class="c-file">
-            {#if row.empty}
+            {#if row.orders === 0 && !row.skipped}
               <span class="no-pdf">{texts.plan.noPdf}</span>
             {:else}
               <input

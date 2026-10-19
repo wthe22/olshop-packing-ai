@@ -295,7 +295,7 @@
         <li>
           <span class="name">{file.name}</span>
           <span class="pages">{texts.newBatch.pages(file.pages)}</span>
-          <span class="time">{file.time}</span>
+          <span class="time">{file.time ?? ""}</span>
           {#if file.used_in_batch !== null}
             <span class="used">{texts.newBatch.usedInBatch(file.used_in_batch)}</span>
           {/if}

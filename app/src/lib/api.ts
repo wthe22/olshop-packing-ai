@@ -120,7 +120,8 @@ export interface FileCheck {
   path: string;
   name: string;
   size: number;
-  time: string;
+  /// `HH:MM` of the file's modified time (its download time); `null` when it cannot be read.
+  time: string | null;
   pages: number;
   used_in_batch: number | null;
 }
@@ -132,9 +133,8 @@ export interface RunView {
   orders: number;
 }
 
-/// One row of the Plan screen (08 › *3. Plan*).
-export interface PlanRow {
-  index: number | null;
+/// The fields every Plan row carries (08 › *3. Plan*).
+export interface PlanRowFields {
   number: number | null;
   code: string;
   name: string;
@@ -144,14 +144,17 @@ export interface PlanRow {
   pages: number;
   file_name: string;
   skipped: boolean;
-  generated: boolean;
-  is_rest: boolean;
   duplicate_of: number | null;
-  can_use: boolean;
   can_move_up: boolean;
   can_move_down: boolean;
-  empty: boolean;
 }
+
+/// One row of the Plan screen (08 › *3. Plan*): a plan entry the window edits through `index`, the
+/// plan's own rest entry (an entry too), or the generated `? Uncategorised` row (no index, no edits).
+export type PlanRow =
+  | (PlanRowFields & { kind: "entry"; index: number })
+  | (PlanRowFields & { kind: "rest"; index: number })
+  | (PlanRowFields & { kind: "generated" });
 
 /// The Plan screen's data (08 › *3. Plan*).
 export interface PlanView {
@@ -417,7 +420,8 @@ export interface SearchItem {
 export interface SearchRow {
   day: string;
   order_id: string;
-  tracking_id: string;
+  /// The order's tracking ID; `null` when the label carried none (the table shows an empty cell).
+  tracking_id: string | null;
   courier: string;
   items: SearchItem[];
   batch: number;

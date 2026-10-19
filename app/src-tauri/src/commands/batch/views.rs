@@ -17,8 +17,8 @@ pub struct FileCheckView {
     pub(super) path: String,
     pub(super) name: String,
     pub(super) size: u64,
-    /// `HH:MM` of the file's modified time (its download time).
-    pub(super) time: String,
+    /// `HH:MM` of the file's modified time (its download time); `None` when it cannot be read.
+    pub(super) time: Option<String>,
     pub(super) pages: usize,
     pub(super) used_in_batch: Option<BatchNumber>,
 }
@@ -117,11 +117,14 @@ pub struct PlanView {
     pub(super) grouping: Grouping,
 }
 
-/// One row of the Plan screen (08 › *3. Plan*).
+/// One row of the Plan screen (08 › *3. Plan*): a plan entry, the plan's rest entry, or the
+/// generated `? Uncategorised` row. Which one it is lives in [`PlanRowKind`]; the flags the kind
+/// or another field already tells (whether *Use* is offered, whether the row takes no orders)
+/// are derived in the screen.
 #[derive(Serialize)]
 pub struct PlanRow {
-    /// The plan entry's index, for the edits; `None` for the generated `? Uncategorised` row.
-    pub(super) index: Option<usize>,
+    #[serde(flatten)]
+    pub(super) kind: PlanRowKind,
     /// The saved-PDF number this row will get; `None` when it takes no orders.
     pub(super) number: Option<PdfNumber>,
     pub(super) code: String,
@@ -134,17 +137,25 @@ pub struct PlanRow {
     pub(super) file_name: String,
     /// Skipped for this batch only (08 › *3. Plan*: *Use* unticked).
     pub(super) skipped: bool,
-    /// The generated rest row (not a plan entry): no *Use* tick and no moving.
-    pub(super) generated: bool,
-    /// The rest row: the last entry when it has no condition, else `? Uncategorised`.
-    pub(super) is_rest: bool,
     /// The `#` of the earlier row with the same file name (*Same name as PDF 6*).
     pub(super) duplicate_of: Option<PdfNumber>,
-    pub(super) can_use: bool,
     pub(super) can_move_up: bool,
     pub(super) can_move_down: bool,
-    /// Takes 0 orders: shown grey with *0 orders — no PDF* and no number.
-    pub(super) empty: bool,
+}
+
+/// What a Plan row is (08 › *3. Plan*), serialised under the `kind` tag. The window edits only the
+/// rows that are plan entries, so only those carry the [`index`](PlanRowKind::Entry) the edits name.
+#[derive(Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum PlanRowKind {
+    /// A plan entry, edited through its index (an entry with a condition, or one added for the batch).
+    Entry { index: usize },
+    /// The plan's own rest entry: its last entry, which has no condition and takes the leftover
+    /// orders. An entry too, so its index edits it, but it never moves.
+    Rest { index: usize },
+    /// The generated `? Uncategorised` row, when no entry took the leftovers: not a plan entry, so
+    /// no *Use* tick and no edits.
+    Generated,
 }
 
 /// One run inside a saved PDF, as the expanded row shows it (08 › *3. Plan*):
@@ -213,19 +224,15 @@ pub(super) fn file_check_view(check: FileCheck) -> FileCheckView {
     }
 }
 
-/// `HH:MM` of a file's modified time, or empty when it cannot be read.
-pub(super) fn modified_time(path: &Path) -> String {
-    let Ok(metadata) = std::fs::metadata(path) else {
-        return String::new();
-    };
-    let Ok(modified) = metadata.modified() else {
-        return String::new();
-    };
-    let Ok(timestamp) = jiff::Timestamp::try_from(modified) else {
-        return String::new();
-    };
-    timestamp
-        .to_zoned(jiff::tz::TimeZone::system())
-        .strftime("%H:%M")
-        .to_string()
+/// `HH:MM` of a file's modified time, or `None` when it cannot be read.
+pub(super) fn modified_time(path: &Path) -> Option<String> {
+    let metadata = std::fs::metadata(path).ok()?;
+    let modified = metadata.modified().ok()?;
+    let timestamp = jiff::Timestamp::try_from(modified).ok()?;
+    Some(
+        timestamp
+            .to_zoned(jiff::tz::TimeZone::system())
+            .strftime("%H:%M")
+            .to_string(),
+    )
 }

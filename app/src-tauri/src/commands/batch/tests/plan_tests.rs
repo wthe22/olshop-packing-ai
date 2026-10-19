@@ -3,6 +3,15 @@
 use super::*;
 use packing_engine::ids::PdfNumber;
 
+/// The plan-entry index a row's kind carries — the index its edits name — or `None` for the
+/// generated row (08 › *3. Plan*).
+fn entry_index(kind: &PlanRowKind) -> Option<usize> {
+    match kind {
+        PlanRowKind::Entry { index } | PlanRowKind::Rest { index } => Some(*index),
+        PlanRowKind::Generated => None,
+    }
+}
+
 #[test]
 fn plan_view_numbers_rows_and_adds_the_rest_row() {
     let view = plan_view(
@@ -24,7 +33,7 @@ fn plan_view_numbers_rows_and_adds_the_rest_row() {
     assert_eq!(a.runs[0].contents, "Sepatu A ×1");
     assert_eq!(a.runs[2].label, "4-03");
     assert_eq!(a.file_name, "4 A Sepatu ×3.pdf");
-    assert!(!a.empty && !a.is_rest && a.can_use);
+    assert_eq!(entry_index(&a.kind), Some(0));
     assert!(!a.can_move_up && a.can_move_down); // first row
 
     let b = &view.rows[1];
@@ -33,8 +42,7 @@ fn plan_view_numbers_rows_and_adds_the_rest_row() {
     assert_eq!(b.condition.as_deref(), Some("name contains \"spion\""));
 
     let rest = &view.rows[2];
-    assert!(rest.generated && rest.is_rest && !rest.can_use);
-    assert_eq!(rest.index, None);
+    assert_eq!(entry_index(&rest.kind), None);
     assert_eq!(rest.number, Some(PdfNumber::new(6)));
     assert_eq!(rest.code, REST_CODE);
     assert_eq!(rest.name, "Uncategorised");
@@ -72,10 +80,11 @@ fn plan_view_shows_zero_order_and_skipped_rows() {
         category("Z", "Lainnya", None),
     ]);
     let view = plan_view(&plan, &orders(), PdfNumber::new(1), &Grouping::default());
-    assert!(view.rows[0].empty);
+    assert_eq!(view.rows[0].orders, 0);
+    assert!(!view.rows[0].skipped);
     assert_eq!(view.rows[0].number, None);
     assert_eq!(view.rows[1].number, Some(PdfNumber::new(1))); // the rest entry catches everything
-    assert!(view.rows[1].is_rest);
+    assert_eq!(entry_index(&view.rows[1].kind), Some(1));
     assert_eq!(view.add_at, 1); // before the rest entry
 }
 
@@ -111,7 +120,7 @@ fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
     assert_eq!(view.rows.len(), 1);
     assert_eq!(view.rows[0].code, "Z");
     assert_eq!(view.rows[0].orders, 6);
-    assert!(view.rows[0].is_rest);
+    assert_eq!(entry_index(&view.rows[0].kind), Some(0));
     assert_eq!(view.add_at, 0);
 
     // A pick with a condition: configured.
@@ -268,4 +277,24 @@ fn save_progress_names_the_two_stages() {
         serde_json::to_string(&checking).expect("serialise"),
         r#"{"stage":"Checking","page":1,"pages":4}"#
     );
+}
+
+/// The window reads a row's kind from the `kind` tag, and only a plan entry carries the index its
+/// edits name (08 › *3. Plan*).
+#[test]
+fn a_plan_row_serialises_its_kind_and_an_entry_only_index() {
+    let view = plan_view(
+        &sepatu_plan(),
+        &orders(),
+        PdfNumber::new(4),
+        &Grouping::default(),
+    );
+
+    let entry: serde_json::Value = serde_json::to_value(&view.rows[0]).expect("entry json");
+    assert_eq!(entry["kind"], "entry");
+    assert_eq!(entry["index"], 0);
+
+    let generated: serde_json::Value = serde_json::to_value(&view.rows[2]).expect("rest json");
+    assert_eq!(generated["kind"], "generated");
+    assert!(generated.get("index").is_none(), "{generated}");
 }

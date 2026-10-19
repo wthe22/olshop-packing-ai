@@ -43,7 +43,8 @@ pub struct SearchRowView {
     /// The day folder the order was saved in (`YYYY-MM-DD`).
     day: String,
     order_id: OrderId,
-    tracking_id: TrackingId,
+    /// The order's tracking ID; `None` when the label carried none (the table shows an empty cell).
+    tracking_id: Option<TrackingId>,
     /// The named courier; empty when it is unknown.
     courier: String,
     items: Vec<SearchItemView>,
@@ -112,11 +113,7 @@ fn search_results_view(results: &SearchResults, labels: &Path) -> SearchResultsV
             .map(|row| SearchRowView {
                 day: row.day.clone(),
                 order_id: row.order_id.clone(),
-                // The table prints an order with no tracking ID as an empty cell (08 › *Search*).
-                tracking_id: row
-                    .tracking_id
-                    .clone()
-                    .unwrap_or_else(|| TrackingId::new("")),
+                tracking_id: row.tracking_id.clone(),
                 courier: row.courier.clone(),
                 items: row
                     .items
