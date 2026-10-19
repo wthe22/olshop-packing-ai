@@ -16,14 +16,17 @@ and types.
    day overview and the printed tick; give it its own module. `commands/rules.rs` and `commands/search.rs`:
    one job per file, the `*_impl` functions that only wrap another call removed when the command can call the
    engine directly (keep an `_impl` only where a test needs it without a Tauri `State`).
-4. **Duplicates, extracted on the third copy**: `file_name` (`engine/orders.rs`, `pdf/batch`, `pdf/read.rs`),
+4. R1 left `crates/pdf/src/batch.rs` (the draft read, the save, the plan-to-packing-job mapping, text parsing
+   of scope and layout) and `app/src-tauri/src/commands/batch.rs` as module roots holding more than one job:
+   move the mapping and the read each into their own module of the folder beside them.
+5. **Duplicates, extracted on the third copy**: `file_name` (`engine/orders.rs`, `pdf/batch`, `pdf/read.rs`),
    the order index by ID (`pdf/batch` and `commands/batch`) and the split of orders per run (`commands/batch`
    and `engine/plan.rs`), `modified_time`, any write-to-a-temporary-file-then-replace helper written more than
    twice (`day.rs` `replace`, the `toml_edit` writers), the PDFium page lookup repeated in `pdf/read.rs`.
    Two copies stay two; say so in the report.
-5. Remove dead code found on the way (a function or parameter nothing calls; `cargo llvm-cov` at 0 % on a
+6. Remove dead code found on the way (a function or parameter nothing calls; `cargo llvm-cov` at 0 % on a
    production function is the lead). List each removal in the report.
-6. Update `docs/software-design/` only if a module name written there changed (a document names a file or
+7. Update `docs/software-design/` only if a module name written there changed (a document names a file or
    module); keep the facts.
 
 Done when: `bash tools/check.sh --coverage` is green, no file in the engine crate or `commands/` is over its
