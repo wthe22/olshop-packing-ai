@@ -1,12 +1,11 @@
 # Refactor to the code rules
 
 Brings the code to [../code-rules.md](../code-rules.md) without changing what the program does. Run as
-steps R1–R7 (R0, the tools, is done), in order, each delegated to a subagent and checked by the parent. Every step file below names the
+steps R2–R7 (R0 and R1 are done), in order, each delegated to a subagent and checked by the parent. Every step file below names the
 code rules; every report states **size gate passed, no new lint suppression, coverage not lower**.
 
 | Step | Scope | Effort | File |
 |---|---|---|---|
-| R1 | Split the files over the ceiling by job, and move big inline test blocks out: pure moves | L | [refactor-r1.md](refactor-r1.md) |
 | R2 | The typed boundary: newtypes, enums, one word per concept, parameter groups. **Minimal review after it** | L | [refactor-r2.md](refactor-r2.md) |
 | R3 | The UI: split the big screens and `api.ts` | L | [refactor-r3.md](refactor-r3.md) |
 | R4 | The data and storage layer: split by job, remove duplicated helpers | M | [refactor-r4.md](refactor-r4.md) |

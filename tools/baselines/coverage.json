@@ -4,15 +4,15 @@
   "commit": "490e48d",
   "rust": {
     "totals": {
-      "lines": 86.29,
-      "regions": 86.56,
-      "functions": 79.56
+      "lines": 82.7,
+      "regions": 82.14,
+      "functions": 75.79
     },
     "crates": {
       "app/src-tauri": {
-        "lines": 86.38,
-        "regions": 88.11,
-        "functions": 70.65
+        "lines": 71.14,
+        "regions": 70.5,
+        "functions": 51.65
       },
       "crates/cli": {
         "lines": 25.44,
@@ -25,9 +25,9 @@
         "functions": 92.64
       },
       "crates/pdf": {
-        "lines": 87.97,
-        "regions": 86.99,
-        "functions": 82.1
+        "lines": 86.41,
+        "regions": 85.52,
+        "functions": 80.84
       }
     }
   },

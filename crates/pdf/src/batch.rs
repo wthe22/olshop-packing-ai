@@ -1,131 +1,43 @@
-//! The batch steps shared by the developer CLI (now) and the Tauri app (later), so the app
-//! does not duplicate them: check the chosen files, read them with progress, the duplicate
-//! guard, and save a batch atomically (07 › *What happens in one batch*).
+//! The batch's own steps: read the chosen label files into a draft, map the plan into the packing
+//! jobs, and save the batch atomically (07 › *What happens in one batch*). The checks that
+//! surround them are in the modules beside this file.
 //!
 //! Everything PDF-related happens on the [`PdfWorker`] thread (PDFium is not thread-safe); the
-//! mapping (a [`PlanResult`] into a [`PackingList`]) and the summary text are plain functions
-//! so they are tested without a PDF library.
+//! mapping (a [`PlanResult`] into a [`PackingList`]) is plain functions so it is tested without a
+//! PDF library.
 
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
-use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
-use std::sync::mpsc::{self, Sender};
+use std::sync::mpsc::Sender;
 
 use packing_engine::day::{
-    self, BatchWrite, DayError, DayState, Duplicate, FileEntry, Findings, Fingerprint,
-    Layout as EngineLayout, PackingListChoice, PdfEntry, SavedItem, SavedOrder, Scope,
-    duplicates_warning,
+    self, BatchWrite, DayError, DayState, Duplicate, FileEntry, Findings, Layout as EngineLayout,
+    PackingListChoice, PdfEntry, SavedItem, SavedOrder, Scope, duplicates_warning,
 };
 use packing_engine::label::CourierTable;
 use packing_engine::names;
-use packing_engine::orders::{self, Line, LogoAnswer, ReadError, ReadOrder, UnseenLogo, Warning};
-use packing_engine::plan::{PickResult, PlanResult, REST_CODE};
-use packing_engine::verify::{self as engine_verify, Check, Expected, ExpectedList};
+use packing_engine::orders::{self, Line, LogoAnswer, ReadOrder, UnseenLogo, Warning};
+use packing_engine::plan::{PickResult, PlanResult};
+use packing_engine::verify::{self as engine_verify, Check, Expected};
 
-use crate::PdfError;
 use crate::packing_list::{self, PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection};
 use crate::worker::{PdfWorker, Progress, SaveProgress, SaveStage};
 
-/// A batch step failed. The stop texts are those of 08 › *Messages*.
-#[derive(Debug)]
-pub enum BatchError {
-    /// A PDF job failed (a file cannot be opened, a write failed).
-    Pdf(PdfError),
-    /// Saving into the day folder failed.
-    Day(DayError),
-    /// Reading stopped the batch (no Order ID on a first page, a page with no packing slip).
-    Read(ReadError),
-    /// Every order was already saved today (08 › *Messages*).
-    AllSaved { orders: usize, batch: i64 },
-    /// A plain message.
-    Message(String),
-}
+mod check;
+mod error;
+mod summary;
 
-impl fmt::Display for BatchError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            BatchError::Pdf(error) => error.fmt(f),
-            BatchError::Day(error) => error.fmt(f),
-            BatchError::Read(error) => error.fmt(f),
-            BatchError::AllSaved { orders, batch } => write!(
-                f,
-                "All {orders} orders were already saved today (batch {batch}). \
-                 These labels were prepared before; nothing to do."
-            ),
-            BatchError::Message(message) => f.write_str(message),
-        }
-    }
-}
+pub use check::{FileCheck, check_files, check_saved};
+pub use error::BatchError;
+pub use summary::{SummaryInput, summary_text};
 
-impl std::error::Error for BatchError {}
-
-impl From<PdfError> for BatchError {
-    fn from(error: PdfError) -> Self {
-        BatchError::Pdf(error)
-    }
-}
-
-impl From<DayError> for BatchError {
-    fn from(error: DayError) -> Self {
-        BatchError::Day(error)
-    }
-}
-
-impl From<ReadError> for BatchError {
-    fn from(error: ReadError) -> Self {
-        BatchError::Read(error)
-    }
-}
-
-fn missing(id: &str) -> BatchError {
-    BatchError::Message(format!("order {id} is not in the draft"))
-}
-
-// ---------------------------------------------------------------------- check files
-
-/// One chosen label file: what 07 › *New batch* shows before reading (page count, fingerprint,
-/// `used in batch n`).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FileCheck {
-    pub name: String,
-    pub path: PathBuf,
-    pub size: u64,
-    pub pages: usize,
-    pub fingerprint: Fingerprint,
-    /// The batch that read this same file earlier today, if any.
-    pub used_in_batch: Option<i64>,
-}
-
-/// Read each chosen file's page count and fingerprint and check it against the day's state
-/// (07 › *New batch*; 08 › *Messages*: a file that cannot be opened stops the batch).
-pub fn check_files(
-    worker: &PdfWorker,
-    paths: &[PathBuf],
-    state: &DayState,
-) -> Result<Vec<FileCheck>, BatchError> {
-    let counts = worker.open(paths)?;
-    let mut checks = Vec::with_capacity(paths.len());
-    for (path, pages) in paths.iter().zip(counts) {
-        let fingerprint = day::fingerprint(path)?;
-        let used_in_batch = state.used_in_batch(&fingerprint);
-        checks.push(FileCheck {
-            name: file_name(path),
-            path: path.clone(),
-            size: fingerprint.size,
-            pages,
-            fingerprint,
-            used_in_batch,
-        });
-    }
-    Ok(checks)
-}
-
-// ---------------------------------------------------------------------------- read
+use self::check::expected_lists;
+use self::error::missing;
 
 /// A batch that has been read but not saved (07 › *Words used in this document*): the files,
 /// the orders left after the duplicate guard, the duplicates and the warnings.
@@ -262,8 +174,6 @@ pub fn read(
         read_warnings: reading.warnings,
     })
 }
-
-// ---------------------------------------------------------------------------- save
 
 /// What a save produced (07 › *Save*, *Check before saving*).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -483,46 +393,6 @@ pub fn save(
     })
 }
 
-/// The check's plan side (07 › *Check before saving*): every saved PDF's page sequence and every
-/// packing list's counts.
-fn expected_lists(jobs: &[PackingJob]) -> Vec<ExpectedList> {
-    jobs.iter()
-        .map(|job| {
-            let (orders, units, runs) = job.list.counts();
-            ExpectedList {
-                file: job.name.clone(),
-                orders,
-                units,
-                runs,
-            }
-        })
-        .collect()
-}
-
-/// Read the files written in `folder` back and compare them with the plan (07 › *Check before
-/// saving*), saving nothing. Public so the check can be run on its own.
-pub fn check_saved(
-    worker: &PdfWorker,
-    folder: &Path,
-    draft: &Draft,
-    plan: &PlanResult,
-    packing: &PackingListChoice,
-) -> Result<Check, BatchError> {
-    let index = order_index(draft);
-    let mut sections = Vec::with_capacity(plan.picks.len());
-    for pick in &plan.picks {
-        sections.push(pick_section(pick, &index)?);
-    }
-    let jobs = packing_jobs(plan, &sections, packing, "", 0, "");
-    let expected = Expected {
-        pdfs: engine_verify::expected_pdfs(plan, &draft.orders),
-        lists: expected_lists(&jobs),
-    };
-    let (progress, _rx) = mpsc::channel();
-    let written = crate::verify::read_back(worker, folder, &expected, progress)?;
-    Ok(engine_verify::compare(&expected, &written))
-}
-
 fn write_error(path: &Path, error: std::io::Error) -> DayError {
     DayError::Write {
         folder: path.to_path_buf(),
@@ -696,122 +566,6 @@ fn to_pdf_layout(layout: EngineLayout) -> packing_list::Layout {
     }
 }
 
-// ------------------------------------------------------------------------- summary
-
-/// The pieces the batch summary is built from (03 › *Screen summary*).
-pub struct SummaryInput<'a> {
-    pub day: &'a str,
-    pub files: usize,
-    pub pages: usize,
-    pub orders: usize,
-    pub slip_pages: usize,
-    pub picks: &'a [PickResult],
-    pub duplicates: usize,
-    pub warnings: &'a [String],
-    /// The check before saving's errors (07 › *Check before saving*), printed when the batch was
-    /// saved anyway.
-    pub check_errors: &'a [String],
-    /// The check before saving's warnings.
-    pub check_warnings: &'a [String],
-    pub day_dir: &'a Path,
-    pub packing_lists: &'a [String],
-    /// The developer's `--quiet-ids`: keep the warning count, drop the detail lines that name
-    /// orders and tracking IDs.
-    pub quiet_ids: bool,
-}
-
-/// The batch summary (03 › *Screen summary*), the text printed and written to `summary.txt`.
-pub fn summary_text(input: &SummaryInput<'_>) -> String {
-    let file_word = if input.files == 1 {
-        "label file"
-    } else {
-        "label files"
-    };
-    let mut lines = vec![format!(
-        "Day {} · {} {} · no CSV",
-        input.day, input.files, file_word
-    )];
-    lines.push(format!(
-        "  Pages: {} read · {} orders",
-        input.pages, input.orders
-    ));
-    let items = if input.slip_pages > 0 {
-        format!("slips ({} pages)", input.slip_pages)
-    } else {
-        "none".to_string()
-    };
-    lines.push(format!("  Item data: {items}"));
-    for pick in input.picks {
-        let kind = if pick.code == REST_CODE {
-            "Rest"
-        } else {
-            "Pick"
-        };
-        lines.push(format!(
-            "  {kind} {}  {}: {} orders, {} runs → {}",
-            pick.code,
-            pick.name,
-            pick.orders.len(),
-            pick.runs.len(),
-            pick.file_name
-        ));
-    }
-    lines.push(format!("  Duplicates: {}", input.duplicates));
-    if input.warnings.is_empty() {
-        lines.push("  Warnings: none".to_string());
-    } else {
-        lines.push(format!("  Warnings: {}", input.warnings.len()));
-        if !input.quiet_ids {
-            for warning in input.warnings {
-                lines.push(format!("    - {warning}"));
-            }
-        }
-    }
-    // The check before saving's two lists, kept apart (07 › *Check before saving*).
-    if !input.check_errors.is_empty() {
-        lines.push(format!("  Check errors: {}", input.check_errors.len()));
-        if !input.quiet_ids {
-            for error in input.check_errors {
-                lines.push(format!("    - {error}"));
-            }
-        }
-    }
-    if !input.check_warnings.is_empty() {
-        lines.push(format!("  Check warnings: {}", input.check_warnings.len()));
-        if !input.quiet_ids {
-            for warning in input.check_warnings {
-                lines.push(format!("    - {warning}"));
-            }
-        }
-    }
-    let pdf_word = if input.picks.len() == 1 {
-        "saved PDF"
-    } else {
-        "saved PDFs"
-    };
-    let packing = if input.packing_lists.is_empty() {
-        "no packing list".to_string()
-    } else {
-        input.packing_lists.join(", ")
-    };
-    lines.push(format!(
-        "Written: {}/  ({} {}, {})",
-        input.day_dir.display(),
-        input.picks.len(),
-        pdf_word,
-        packing
-    ));
-    lines.join("\n") + "\n"
-}
-
-// --------------------------------------------------------------------------- helpers
-
-fn file_name(path: &Path) -> String {
-    path.file_name()
-        .map(|name| name.to_string_lossy().into_owned())
-        .unwrap_or_else(|| path.to_string_lossy().into_owned())
-}
-
 /// Parse a packing-list scope name (`--packing-list`).
 pub fn parse_scope(name: &str) -> Option<Scope> {
     match name {
@@ -833,359 +587,4 @@ pub fn parse_layout(name: &str) -> Option<EngineLayout> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use packing_engine::label::courier_data;
-    use packing_engine::orders::Order;
-    use packing_engine::plan::{PickResult, RunResult};
-
-    fn line(name: &str, variation: &str, quantity: i64, display: &str) -> Line {
-        Line {
-            name: name.to_string(),
-            variation: variation.to_string(),
-            seller_sku: String::new(),
-            quantity,
-            display_name: display.to_string(),
-        }
-    }
-
-    fn read_order(id: &str, tracking: &str, lines: Vec<Line>) -> ReadOrder {
-        ReadOrder {
-            order: Order {
-                order_id: id.to_string(),
-                tracking_id: tracking.to_string(),
-                courier: "J&T Express".to_string(),
-                ship_by: None,
-                lines,
-                customer_message: String::new(),
-            },
-            pages: vec![packing_engine::orders::PageRef { file: 0, page: 0 }],
-            position: 1,
-            has_slip: true,
-            qty_total: None,
-        }
-    }
-
-    fn pick() -> (PickResult, Vec<ReadOrder>) {
-        let orders = vec![
-            read_order(
-                "580000000000000001",
-                "JY0000000101",
-                vec![line("Sepatu", "honda", 1, "Sepatu — honda")],
-            ),
-            read_order(
-                "580000000000000002",
-                "JY0000000102",
-                vec![line("Sepatu", "honda", 1, "Sepatu — honda")],
-            ),
-        ];
-        let pick = PickResult {
-            number: 1,
-            code: "A".to_string(),
-            name: "Sepatu".to_string(),
-            orders: vec![
-                "580000000000000001".to_string(),
-                "580000000000000002".to_string(),
-            ],
-            runs: vec![RunResult {
-                number: 1,
-                orders: vec![
-                    "580000000000000001".to_string(),
-                    "580000000000000002".to_string(),
-                ],
-            }],
-            pages: 2,
-            file_name: "1 A Sepatu ×2.pdf".to_string(),
-        };
-        (pick, orders)
-    }
-
-    #[test]
-    fn pick_section_maps_runs_and_lines() {
-        let (pick, orders) = pick();
-        let draft = Draft {
-            files: Vec::new(),
-            orders,
-            duplicates: Vec::new(),
-            warnings: Vec::new(),
-            pages: 2,
-            total_orders: 2,
-            slip_pages: 2,
-            unseen_logos: Vec::new(),
-            read_warnings: Vec::new(),
-        };
-        let index = order_index(&draft);
-        let section = pick_section(&pick, &index).expect("section");
-
-        assert_eq!(section.number, 1);
-        assert_eq!(section.code, "A");
-        assert_eq!(section.name, "Sepatu");
-        assert_eq!(section.runs.len(), 1);
-        assert_eq!(section.runs[0].number, 1);
-        assert_eq!(section.runs[0].orders.len(), 2);
-        assert_eq!(section.runs[0].orders[0].tracking_id, "JY0000000101");
-        assert_eq!(section.runs[0].orders[0].lines[0].quantity, 1);
-        assert_eq!(
-            section.runs[0].orders[0].lines[0].display_name,
-            "Sepatu — honda"
-        );
-    }
-
-    #[test]
-    fn pick_pages_and_saved_follow_the_runs() {
-        let (pick, orders) = pick();
-        let draft = Draft {
-            files: Vec::new(),
-            orders,
-            duplicates: Vec::new(),
-            warnings: Vec::new(),
-            pages: 2,
-            total_orders: 2,
-            slip_pages: 2,
-            unseen_logos: Vec::new(),
-            read_warnings: Vec::new(),
-        };
-        let index = order_index(&draft);
-
-        assert_eq!(
-            pick_pages(&pick, &index).expect("pages"),
-            vec![(0, 0), (0, 0)]
-        );
-        let saved = pick_saved(&pick, &index, 1).expect("saved");
-        assert_eq!(saved.len(), 2);
-        assert_eq!(saved[0].pdf, 1);
-        assert_eq!(saved[0].run, 1);
-        assert_eq!(saved[1].order_id, "580000000000000002");
-        // The searched fields are written at save (07 › *`state.json`*; 2.21): the order's lines
-        // and the order-level fields.
-        assert_eq!(saved[0].courier, "J&T Express");
-        assert_eq!(saved[0].total_quantity, 1);
-        assert_eq!(saved[0].distinct_items, 1);
-        assert!(saved[0].ship_by.is_none());
-        assert_eq!(saved[0].items.len(), 1);
-        assert_eq!(saved[0].items[0].name, "Sepatu");
-        assert_eq!(saved[0].items[0].variation, "honda");
-        assert_eq!(saved[0].items[0].quantity, 1);
-    }
-
-    #[test]
-    fn summary_text_lists_the_picks_and_the_written_folder() {
-        let (pick, orders) = pick();
-        let rest = PickResult {
-            number: 2,
-            code: REST_CODE.to_string(),
-            name: "Uncategorised".to_string(),
-            orders: Vec::new(),
-            runs: Vec::new(),
-            pages: 0,
-            file_name: "2 - Uncategorised ×0.pdf".to_string(),
-        };
-        let picks = vec![pick, rest];
-        let warnings = vec!["no courier could be deduced for: 580000000000000009".to_string()];
-        let packing_lists = vec!["packing-list.pdf".to_string()];
-        let day_dir = Path::new("data/labels/2026-10-07");
-
-        let text = summary_text(&SummaryInput {
-            day: "2026-10-07",
-            files: 1,
-            pages: 2,
-            orders: 2,
-            slip_pages: 2,
-            picks: &picks,
-            duplicates: 1,
-            warnings: &warnings,
-            check_errors: &[],
-            check_warnings: &[],
-            day_dir,
-            packing_lists: &packing_lists,
-            quiet_ids: false,
-        });
-
-        assert!(text.starts_with("Day 2026-10-07 · 1 label file · no CSV\n"));
-        assert!(text.contains("  Pages: 2 read · 2 orders\n"));
-        assert!(text.contains("  Item data: slips (2 pages)\n"));
-        assert!(text.contains("  Pick A  Sepatu: 2 orders, 1 runs → 1 A Sepatu ×2.pdf\n"));
-        assert!(
-            text.contains("  Rest ?  Uncategorised: 0 orders, 0 runs → 2 - Uncategorised ×0.pdf\n")
-        );
-        assert!(text.contains("  Duplicates: 1\n"));
-        assert!(text.contains("  Warnings: 1\n"));
-        assert!(text.contains("    - no courier could be deduced for: 580000000000000009\n"));
-        assert!(
-            text.contains("Written: data/labels/2026-10-07/  (2 saved PDFs, packing-list.pdf)\n")
-        );
-        // Keeps the orders variable referenced even though it is only used for the index above.
-        assert_eq!(orders.len(), 2);
-    }
-
-    #[test]
-    fn quiet_summary_hides_the_id_detail_lines() {
-        let warnings = vec!["no tracking ID for: 580000000000000004".to_string()];
-        let text = summary_text(&SummaryInput {
-            day: "2026-10-07",
-            files: 1,
-            pages: 1,
-            orders: 1,
-            slip_pages: 1,
-            picks: &[],
-            duplicates: 0,
-            warnings: &warnings,
-            check_errors: &[],
-            check_warnings: &[],
-            day_dir: Path::new("d"),
-            packing_lists: &[],
-            quiet_ids: true,
-        });
-        assert!(text.contains("  Warnings: 1\n"));
-        assert!(!text.contains("580000000000000004"), "no IDs: {text}");
-        assert!(text.contains("Written: d/  (0 saved PDFs, no packing list)\n"));
-    }
-
-    #[test]
-    fn parse_helpers_accept_the_documented_names() {
-        assert_eq!(parse_scope("whole"), Some(Scope::Whole));
-        assert_eq!(parse_scope("per-pdf"), Some(Scope::PerPdf));
-        assert_eq!(parse_scope("none"), Some(Scope::None));
-        assert_eq!(parse_scope("nope"), None);
-        assert_eq!(parse_layout("pick"), Some(EngineLayout::Pick));
-        assert_eq!(parse_layout("nope"), None);
-    }
-
-    #[test]
-    fn printed_time_slices_the_clock() {
-        assert_eq!(printed_time("2026-10-07T07:40:12+07:00"), "07:40");
-    }
-
-    // --------------------------------------------------- the logo prompt's answer (D-LABEL-4)
-
-    /// Two orders of the batch with no courier: one `JY…` (J&T Express alone) and one `00…`
-    /// (shared with SiCepat), both carrying one unseen logo.
-    fn draft_with_unseen_logo(order_ids: Vec<&str>) -> Draft {
-        let mut first = read_order(
-            "580000000000000001",
-            "JY0000001234",
-            vec![line("Sepatu", "", 1, "Sepatu")],
-        );
-        first.order.courier = String::new();
-        let mut second = read_order(
-            "580000000000000002",
-            "000000000202",
-            vec![line("Sepatu", "", 1, "Sepatu")],
-        );
-        second.order.courier = String::new();
-        let mut draft = Draft {
-            files: Vec::new(),
-            orders: vec![first, second],
-            duplicates: Vec::new(),
-            warnings: Vec::new(),
-            pages: 2,
-            total_orders: 2,
-            slip_pages: 2,
-            unseen_logos: vec![UnseenLogo {
-                hash: "ffff".to_string(),
-                appearance: None,
-                pages: 2,
-                order_ids: order_ids.into_iter().map(str::to_string).collect(),
-            }],
-            read_warnings: Vec::new(),
-        };
-        draft.read_warnings = vec![Warning::unknown_courier(&draft.orders).expect("both unknown")];
-        draft.warnings = draft
-            .read_warnings
-            .iter()
-            .map(|warning| warning.to_string())
-            .collect();
-        draft
-    }
-
-    #[test]
-    fn an_answer_names_only_the_form_agreeing_orders_and_refreshes_the_warning() {
-        let mut draft = draft_with_unseen_logo(vec!["580000000000000001", "580000000000000002"]);
-        assert_eq!(
-            draft.warnings,
-            vec![
-                "Courier unknown for 2 orders: JY0000001234, 000000000202. They are sorted \
-                 normally; only a condition on courier cannot see them."
-                    .to_string()
-            ]
-        );
-
-        // The JY form names J&T Express; the shared 00 form does not.
-        let named = draft.answer_logo(
-            "ffff",
-            &LogoAnswer::Courier("J&T Express".to_string()),
-            courier_data(),
-        );
-        assert_eq!(named, 1);
-        assert_eq!(draft.orders[0].order.courier, "J&T Express");
-        assert_eq!(draft.orders[1].order.courier, "");
-        assert!(draft.unseen_logos.is_empty(), "the answered logo is spent");
-        assert_eq!(
-            draft.warnings,
-            vec![
-                "Courier unknown for 1 order: 000000000202. They are sorted normally; only a \
-                 condition on courier cannot see them."
-                    .to_string()
-            ]
-        );
-        // A second answer about the same hash changes nothing.
-        assert_eq!(
-            draft.answer_logo(
-                "ffff",
-                &LogoAnswer::Courier("SiCepat".to_string()),
-                courier_data(),
-            ),
-            0
-        );
-    }
-
-    #[test]
-    fn an_answer_naming_every_order_removes_the_warning() {
-        let mut draft = draft_with_unseen_logo(vec!["580000000000000002"]);
-        let named = draft.answer_logo(
-            "ffff",
-            &LogoAnswer::Courier("SiCepat".to_string()),
-            courier_data(),
-        );
-        assert_eq!(named, 1);
-        assert_eq!(draft.orders[1].order.courier, "SiCepat");
-        // The JY order was not carrying the logo: it stays unknown and keeps its warning.
-        assert_eq!(draft.orders[0].order.courier, "");
-        assert_eq!(draft.warnings.len(), 1);
-        assert!(draft.warnings[0].contains("Courier unknown for 1 order: JY0000001234"));
-    }
-
-    #[test]
-    fn not_a_courier_and_skip_name_nothing_but_leave_the_list() {
-        for answer in [LogoAnswer::NotCourier, LogoAnswer::Skip] {
-            let mut draft = draft_with_unseen_logo(vec!["580000000000000001"]);
-            assert_eq!(draft.answer_logo("ffff", &answer, courier_data()), 0);
-            assert_eq!(draft.orders[0].order.courier, "");
-            assert!(draft.unseen_logos.is_empty());
-            // Both orders are still unknown: the warning is unchanged.
-            assert!(draft.warnings[0].contains("Courier unknown for 2 orders"));
-        }
-    }
-
-    #[test]
-    fn the_duplicate_warning_stays_after_a_logo_answer() {
-        let mut draft = draft_with_unseen_logo(vec!["580000000000000001"]);
-        draft.duplicates = vec![Duplicate {
-            order_id: "580000000000000009".to_string(),
-            tracking_id: "JY0000009999".to_string(),
-            batch: 1,
-            pdf: 2,
-            time: "07:40".to_string(),
-        }];
-        draft.warnings.push(duplicates_warning(&draft.duplicates));
-
-        draft.answer_logo(
-            "ffff",
-            &LogoAnswer::Courier("J&T Express".to_string()),
-            courier_data(),
-        );
-        assert_eq!(draft.warnings.len(), 2);
-        assert!(draft.warnings[0].contains("Courier unknown for 1 order"));
-        assert!(draft.warnings[1].starts_with("1 orders were already saved today"));
-    }
-}
+mod tests;
