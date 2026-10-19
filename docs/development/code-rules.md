@@ -32,10 +32,12 @@ lines. A ratchet enforces it: `tools/check-size.mjs` lists the files over the ce
 fails only for a file that is not in `tools/baselines/size.json` or that has grown. A small file with two
 jobs is still wrong (rule 1).
 
-**Lint ratchet.** `clippy.toml` sets the parameter limit (5) and the cognitive-complexity warning (25).
-`tools/check-lint.mjs` counts, per file, those two warnings and every lint suppression (`#[allow`,
-`svelte-ignore`, `@ts-ignore`, `eslint-disable`) and fails for a file not in `tools/baselines/lint.json` or one
-that has grown. A baseline only shrinks; a new suppression is never added to it.
+**Lint ratchet.** `clippy.toml` sets the parameter limit (5) and the cognitive-complexity warning (25). The
+parameter limit is a plain deny (`-D clippy::too_many_arguments` in `tools/check.sh`), so a suppression never
+hides it. `tools/check-lint.mjs` counts, per file, the cognitive-complexity warning and every lint suppression
+(`#[allow`, `svelte-ignore`, `@ts-ignore`, `eslint-disable`) and fails for a file not in
+`tools/baselines/lint.json` or one that has grown. A baseline only shrinks; a new suppression is never added
+to it.
 
 **Types.** One type per concept, shared by the layers; the TypeScript interfaces mirror the Rust view types
 by hand in `app/src/lib/api/` and change in the same commit. IDs are newtypes (`OrderId`, `TrackingId`,

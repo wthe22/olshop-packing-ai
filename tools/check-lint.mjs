@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Lint ratchet (code-rules.md, "Lint ratchet"): per file, counts the two ratcheted clippy warnings
-// (`too_many_arguments`, `cognitive_complexity`, thresholds in the repository's `clippy.toml`) and
-// every lint suppression (`#[allow]`/`#![allow]`, `svelte-ignore`, `@ts-ignore`/`@ts-expect-error`,
-// `eslint-disable`). A file with a count not in the baseline, or above it, fails the gate.
+// Lint ratchet (code-rules.md, "Lint ratchet"): per file, counts the cognitive-complexity clippy
+// warning (threshold in the repository's `clippy.toml`) and every lint suppression (`#[allow]`/
+// `#![allow]`, `svelte-ignore`, `@ts-ignore`/`@ts-expect-error`, `eslint-disable`). A file with a
+// count not in the baseline, or above it, fails the gate.
 //
-// `tools/check.sh` runs the plain clippy gate with `-A clippy::too_many_arguments
-// -A clippy::cognitive_complexity`, so those two warnings reach this script instead of `-D warnings`.
+// `tools/check.sh` runs the plain clippy gate with `-A clippy::cognitive_complexity`, so that warning
+// reaches this script instead of `-D warnings`; the parameter limit is a plain deny in that gate.
 //
 // Run from anywhere; paths are taken from this file's own location. `--update` rewrites the baseline
 // and may only lower a count or remove an entry: a new suppression is never added.
@@ -22,7 +22,6 @@ const UPDATE = process.argv.includes("--update");
 
 // The clippy warnings the ratchet counts, and the source patterns that count as a suppression.
 const CLIPPY_KINDS = {
-  "clippy::too_many_arguments": "too_many_arguments",
   "clippy::cognitive_complexity": "cognitive_complexity",
 };
 const SUPPRESSION_PATTERNS = {
@@ -90,8 +89,6 @@ function clippyCounts() {
       "--message-format=json",
       "--",
       "-W",
-      "clippy::too_many_arguments",
-      "-W",
       "clippy::cognitive_complexity",
     ],
     { cwd: ROOT, encoding: "utf8", maxBuffer: 512 * 1024 * 1024 },
@@ -158,7 +155,7 @@ function readBaseline() {
 function writeBaseline(files) {
   mkdirSync(dirname(BASELINE_PATH), { recursive: true });
   const body = {
-    note: "Per file: the counts of the ratcheted clippy warnings (tools/check-lint.mjs) and of every lint suppression. Measured by tools/check-lint.mjs. Only shrinks: a new entry or suppression is never added.",
+    note: "Per file: the count of the ratcheted clippy warning (cognitive_complexity, threshold in clippy.toml) and of every lint suppression. Measured by tools/check-lint.mjs. Only shrinks: a new entry or suppression is never added.",
     files,
   };
   writeFileSync(BASELINE_PATH, `${JSON.stringify(body, null, 2)}\n`);

@@ -212,16 +212,6 @@ fn quiet_summary_hides_the_id_detail_lines() {
 }
 
 #[test]
-fn parse_helpers_accept_the_documented_names() {
-    assert_eq!(parse_scope("whole"), Some(Scope::Whole));
-    assert_eq!(parse_scope("per-pdf"), Some(Scope::PerPdf));
-    assert_eq!(parse_scope("none"), Some(Scope::None));
-    assert_eq!(parse_scope("nope"), None);
-    assert_eq!(parse_layout("pick"), Some(EngineLayout::Pick));
-    assert_eq!(parse_layout("nope"), None);
-}
-
-#[test]
 fn printed_time_slices_the_clock() {
     assert_eq!(printed_time("2026-10-07T07:40:12+07:00"), "07:40");
 }
@@ -283,7 +273,9 @@ fn an_answer_names_only_the_form_agreeing_orders_and_refreshes_the_warning() {
     // The JY form names J&T Express; the shared 00 form does not.
     let named = draft.answer_logo(
         "ffff",
-        &LogoAnswer::Courier("J&T Express".to_string()),
+        &LogoAnswer::Courier {
+            name: "J&T Express".to_string(),
+        },
         courier_data(),
     );
     assert_eq!(named, 1);
@@ -302,7 +294,9 @@ fn an_answer_names_only_the_form_agreeing_orders_and_refreshes_the_warning() {
     assert_eq!(
         draft.answer_logo(
             "ffff",
-            &LogoAnswer::Courier("SiCepat".to_string()),
+            &LogoAnswer::Courier {
+                name: "SiCepat".to_string(),
+            },
             courier_data(),
         ),
         0
@@ -314,7 +308,9 @@ fn an_answer_naming_every_order_removes_the_warning() {
     let mut draft = draft_with_unseen_logo(vec!["580000000000000002"]);
     let named = draft.answer_logo(
         "ffff",
-        &LogoAnswer::Courier("SiCepat".to_string()),
+        &LogoAnswer::Courier {
+            name: "SiCepat".to_string(),
+        },
         courier_data(),
     );
     assert_eq!(named, 1);
@@ -351,7 +347,9 @@ fn the_duplicate_warning_stays_after_a_logo_answer() {
 
     draft.answer_logo(
         "ffff",
-        &LogoAnswer::Courier("J&T Express".to_string()),
+        &LogoAnswer::Courier {
+            name: "J&T Express".to_string(),
+        },
         courier_data(),
     );
     assert_eq!(draft.warnings.len(), 2);

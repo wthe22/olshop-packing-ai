@@ -228,6 +228,46 @@ fn overview_reads_state_newest_first_totals_and_warnings() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
+/// The Day card lists the packing lists a per-PDF batch wrote, one per saved PDF and layout, the
+/// layout in the name because several were written (07 › *Day folder*).
+#[test]
+fn overview_lists_the_packing_lists_of_a_per_pdf_batch() {
+    let dir = temp_dir("overview-packing-lists");
+    let day_dir = dir.join(LABELS_DIR).join("2026-10-07");
+    let mut state = DayState::new("2026-10-07");
+    let mut entry = batch_entry(
+        BatchNumber::new(1),
+        "2026-10-07T07:40:12+07:00",
+        PdfEntry {
+            number: PdfNumber::new(1),
+            code: "A".to_string(),
+            name: "Sepatu".to_string(),
+            file: "1 A Sepatu ×172.pdf".to_string(),
+            orders: 172,
+            runs: 4,
+        },
+        Vec::new(),
+        Vec::new(),
+    );
+    entry.packing_list = PackingListChoice {
+        scope: Scope::PerPdf,
+        layouts: vec![Layout::Full, Layout::Summary],
+    };
+    state.batches.push(entry);
+    state.save(&day_dir).expect("save state");
+
+    let overview = day_overview_at(&dir, "2026-10-07").expect("overview");
+    assert_eq!(
+        overview.batches[0].packing_lists,
+        vec![
+            "packing-list-1-full.pdf".to_string(),
+            "packing-list-1-summary.pdf".to_string(),
+        ]
+    );
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
 /// The Day screen's **Printed** tick: the write is read back by a second `day_overview` (the
 /// tick survives closing and reopening), and an unknown batch or saved-PDF number changes
 /// nothing (08 › *1. Day*; 07 › *`state.json`*).

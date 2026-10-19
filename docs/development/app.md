@@ -19,7 +19,7 @@ From the repository root, Git Bash:
 |---|---|
 | All the checks, in order | `bash tools/check.sh` (`--coverage` adds the coverage compare) |
 | Rust format | `cargo fmt --all --check` |
-| Rust lints | `cargo clippy --workspace --all-targets -- -D warnings` |
+| Rust lints | `cargo clippy --workspace --all-targets -- -D warnings -D clippy::too_many_arguments -A clippy::cognitive_complexity` |
 | Rust tests | `cargo test --workspace` |
 | Front-end types | `cd app && npm run check` |
 | Front-end tests | `cd app && npm test` |
@@ -29,7 +29,9 @@ From the repository root, Git Bash:
 
 Every change also meets the [code rules](code-rules.md): its checks, run together by `bash tools/check.sh`,
 are listed there. The two ratchets read the counts in `tools/baselines/` and fail for a file that grew or
-is new; the coverage numbers and what no test reaches are in [coverage.md](coverage.md).
+is new — the lint ratchet counts the cognitive-complexity warning and every suppression, while the parameter
+limit (at most five) is denied by the clippy gate itself; the coverage numbers and what no test reaches are
+in [coverage.md](coverage.md).
 
 `cargo test --workspace` runs the engine, PDF and app tests; the test levels and their expected
 sample numbers are in [testing.md](testing.md).

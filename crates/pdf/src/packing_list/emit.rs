@@ -7,9 +7,10 @@ use pdfium_render::prelude::*;
 
 use crate::PdfError;
 
+use super::Layout;
 use super::fonts::{FONT_DIR, Font, FontSet, cid_required};
 use super::measure::{Measure, to_pt};
-use super::model::{Layout, PackingList};
+use super::model::PackingList;
 use super::{Builder, CELL_MARGIN, MARGIN, NO_ITEM_DATA, Op, PAGE_H};
 
 /// Write the packing list for `layout` and return the number of pages written. `pdfium` is the

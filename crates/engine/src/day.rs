@@ -115,6 +115,54 @@ pub enum Layout {
     Pick,
 }
 
+impl Layout {
+    /// The name the command line and the packing-list file names use.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Layout::Full => "full",
+            Layout::Summary => "summary",
+            Layout::Pick => "pick",
+        }
+    }
+
+    /// Whether this layout prints each run's tracking IDs.
+    pub fn tracking(self) -> bool {
+        self == Layout::Full
+    }
+}
+
+impl fmt::Display for Layout {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for Layout {
+    type Err = String;
+
+    fn from_str(name: &str) -> Result<Self, Self::Err> {
+        match name {
+            "full" => Ok(Layout::Full),
+            "summary" => Ok(Layout::Summary),
+            "pick" => Ok(Layout::Pick),
+            other => Err(other.to_string()),
+        }
+    }
+}
+
+impl std::str::FromStr for Scope {
+    type Err = String;
+
+    fn from_str(name: &str) -> Result<Self, Self::Err> {
+        match name {
+            "per-pdf" | "per_pdf" | "perpdf" => Ok(Scope::PerPdf),
+            "whole" => Ok(Scope::Whole),
+            "none" => Ok(Scope::None),
+            other => Err(other.to_string()),
+        }
+    }
+}
+
 /// The batch's packing-list choice (07 › *Packing list*).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PackingListChoice {
@@ -618,4 +666,35 @@ pub fn delete_batch_folder(day_dir: &Path, batch: BatchNumber) -> Result<(), Day
         return Ok(());
     }
     fs::remove_dir_all(&path).map_err(|error| io_error(&path, error))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Layout, Scope};
+
+    /// The packing-list names the command line and the packing-list file names use: parsing
+    /// accepts exactly the names the two enums write.
+    #[test]
+    fn packing_list_names_round_trip() {
+        for (name, scope) in [
+            ("whole", Scope::Whole),
+            ("per-pdf", Scope::PerPdf),
+            ("per_pdf", Scope::PerPdf),
+            ("perpdf", Scope::PerPdf),
+            ("none", Scope::None),
+        ] {
+            assert_eq!(name.parse::<Scope>(), Ok(scope), "{name}");
+        }
+        assert!("nope".parse::<Scope>().is_err());
+
+        for (name, layout) in [
+            ("pick", Layout::Pick),
+            ("full", Layout::Full),
+            ("summary", Layout::Summary),
+        ] {
+            assert_eq!(name.parse::<Layout>(), Ok(layout), "{name}");
+            assert_eq!(layout.as_str(), name);
+        }
+        assert!("nope".parse::<Layout>().is_err());
+    }
 }

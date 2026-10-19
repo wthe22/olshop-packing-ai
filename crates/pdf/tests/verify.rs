@@ -53,14 +53,14 @@ fn saved(tag: &str) -> Option<Saved> {
     let checks =
         batch::check_files(&worker, std::slice::from_ref(&labels), &state).expect("check files");
     let (progress, _rx) = mpsc::channel();
-    let draft = batch::read(
-        &worker,
-        &checks,
-        &state,
-        Arc::new(AtomicBool::new(false)),
+    let draft = batch::read(&batch::ReadRequest {
+        worker: &worker,
+        files: &checks,
+        state: &state,
+        cancel: Arc::new(AtomicBool::new(false)),
         progress,
-        packing_engine::label::courier_data(),
-    )
+        couriers: packing_engine::label::courier_data(),
+    })
     .expect("read the labels");
 
     let categories = load_rules(
@@ -73,16 +73,18 @@ fn saved(tag: &str) -> Option<Saved> {
     let mut day = DayState::new("2026-10-07");
     let (progress, _rx) = mpsc::channel();
     let result = batch::save(
-        &worker,
-        &draft,
-        &plan,
-        &packing,
-        &Grouping::default(),
-        "2026-10-07",
-        &dir,
+        &batch::SaveRequest {
+            worker: &worker,
+            draft: &draft,
+            plan: &plan,
+            packing: &packing,
+            grouping: &Grouping::default(),
+            day: "2026-10-07",
+            day_dir: &dir,
+            save_anyway: false,
+            progress,
+        },
         &mut day,
-        false,
-        progress,
     )
     .expect("save");
     assert!(

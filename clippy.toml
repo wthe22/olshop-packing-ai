@@ -1,6 +1,6 @@
-# Clippy thresholds for the ratcheted lints (docs/development/code-rules.md, "Lint ratchet").
-# tools/check-lint.mjs counts the warnings these produce, per file; tools/check.sh runs the plain
-# clippy gate with the two lints allowed, so the counts reach the script and not `-D warnings`.
+# Clippy thresholds of docs/development/code-rules.md ("Lint ratchet"). The parameter limit is denied
+# by the clippy gate of tools/check.sh; tools/check-lint.mjs counts the cognitive-complexity warning
+# per file, so that gate allows it and the count reaches the script.
 
 # At most five parameters: more means a missing type that groups them.
 too-many-arguments-threshold = 5

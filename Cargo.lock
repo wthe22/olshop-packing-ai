@@ -2601,6 +2601,7 @@ dependencies = [
  "image",
  "packing-engine",
  "pdfium-render",
+ "serde",
  "serde_json",
  "xxhash-rust",
 ]

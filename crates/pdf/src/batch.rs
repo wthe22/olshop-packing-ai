@@ -16,7 +16,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::mpsc::Sender;
 
 use packing_engine::day::{
-    self, BatchWrite, DayError, DayState, Duplicate, FileEntry, Findings, Layout as EngineLayout,
+    self, BatchWrite, DayError, DayState, Duplicate, FileEntry, Findings, Layout,
     PackingListChoice, PdfEntry, SavedItem, SavedOrder, Scope, duplicates_warning,
 };
 use packing_engine::groupings::Grouping;
@@ -27,7 +27,7 @@ use packing_engine::orders::{self, Line, LogoAnswer, ReadOrder, UnseenLogo, Warn
 use packing_engine::plan::{PickResult, PlanResult};
 use packing_engine::verify::{self as engine_verify, Check, Expected};
 
-use crate::packing_list::{self, PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection};
+use crate::packing_list::{PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection};
 use crate::worker::{PdfWorker, Progress, SaveProgress, SaveStage};
 
 mod check;
@@ -115,26 +115,34 @@ impl Draft {
     }
 }
 
+/// Everything one read of a batch needs: the label files, the day state it is checked against,
+/// the read's cancel flag and progress, and the data folder's courier data.
+pub struct ReadRequest<'a> {
+    pub worker: &'a PdfWorker,
+    pub files: &'a [FileCheck],
+    pub state: &'a DayState,
+    pub cancel: Arc<AtomicBool>,
+    pub progress: Sender<Progress>,
+    pub couriers: &'a CourierTable,
+}
+
 /// Open the files on the worker, read every page with progress and a cancel flag, group the
 /// pages into orders, then apply the duplicate guard (07 › *What happens in one batch* steps
 /// 2-4). `state` supplies the duplicate guard (amend passes its state without the batch);
 /// `couriers` is the data folder's courier data.
-pub fn read(
-    worker: &PdfWorker,
-    files: &[FileCheck],
-    state: &DayState,
-    cancel: Arc<AtomicBool>,
-    progress: Sender<Progress>,
-    couriers: &CourierTable,
-) -> Result<Draft, BatchError> {
-    let paths: Vec<PathBuf> = files.iter().map(|file| file.path.clone()).collect();
-    worker.open(&paths)?;
-    let items = worker.read(cancel, progress, couriers.clone())?;
+pub fn read(request: &ReadRequest<'_>) -> Result<Draft, BatchError> {
+    let paths: Vec<PathBuf> = request.files.iter().map(|file| file.path.clone()).collect();
+    request.worker.open(&paths)?;
+    let items = request.worker.read(
+        request.cancel.clone(),
+        request.progress.clone(),
+        request.couriers.clone(),
+    )?;
     let pages = items.len();
 
-    let names: Vec<String> = files.iter().map(|file| file.name.clone()).collect();
+    let names: Vec<String> = request.files.iter().map(|file| file.name.clone()).collect();
     let name_refs: Vec<&str> = names.iter().map(String::as_str).collect();
-    let reading = orders::read_batch(items, &name_refs, couriers)?;
+    let reading = orders::read_batch(items, &name_refs, request.couriers)?;
 
     let slip_pages = reading
         .orders
@@ -143,7 +151,7 @@ pub fn read(
         .map(|order| order.pages.len())
         .sum();
 
-    let (kept, duplicates) = state.drop_saved(&reading.orders);
+    let (kept, duplicates) = request.state.drop_saved(&reading.orders);
     if kept.is_empty() {
         if reading.orders.is_empty() {
             return Err(BatchError::Message("no orders were read".to_string()));
@@ -169,7 +177,7 @@ pub fn read(
 
     let total_orders = reading.orders.len();
     Ok(Draft {
-        files: files.to_vec(),
+        files: request.files.to_vec(),
         orders: kept,
         duplicates,
         warnings,
@@ -203,6 +211,23 @@ pub struct SaveResult {
     pub warnings: Vec<String>,
 }
 
+/// Everything one save of a batch needs: the draft and its plan, the packing-list choice and the
+/// batch's grouping, the day, and where the writing and checking progress goes.
+pub struct SaveRequest<'a> {
+    pub worker: &'a PdfWorker,
+    pub draft: &'a Draft,
+    pub plan: &'a PlanResult,
+    pub packing: &'a PackingListChoice,
+    pub grouping: &'a Grouping,
+    pub day: &'a str,
+    pub day_dir: &'a Path,
+    /// *Save anyway* was chosen: a finding then renames the batch and stores the two lists with
+    /// it (07 › *Check before saving*).
+    pub save_anyway: bool,
+    /// The writing and the checking progress (the app turns it into a `save-progress` event).
+    pub progress: Sender<SaveProgress>,
+}
+
 /// Write a batch into `batch <b>.partial/`, check it, then rename it and add it to the state
 /// (07 › *Save* step 6, *Check before saving*). The saved PDFs are the picks' pages in run order
 /// (03 › *A saved PDF*), the packing lists follow the scope and layouts, `summary.txt` is
@@ -212,35 +237,24 @@ pub struct SaveResult {
 /// The check before saving runs on every save (D-APP-2): the written files are read back and
 /// compared with the plan. A finding stops the save — nothing is renamed, the temporary folder
 /// is deleted, `state.json` is untouched and the findings are returned — unless `save_anyway` is
-/// set, which renames the batch and stores the two lists with it. `progress` reports the writing
-/// and the checking (the app turns it into a `save-progress` event).
-#[allow(clippy::too_many_arguments)] // the batch's whole step-6 context, as `read` already takes
-pub fn save(
-    worker: &PdfWorker,
-    draft: &Draft,
-    plan: &PlanResult,
-    packing: &PackingListChoice,
-    grouping: &Grouping,
-    day: &str,
-    day_dir: &Path,
-    state: &mut DayState,
-    save_anyway: bool,
-    progress: Sender<SaveProgress>,
-) -> Result<SaveResult, BatchError> {
-    plan.check_file_names()
+/// set, which renames the batch and stores the two lists with it.
+pub fn save(request: &SaveRequest<'_>, state: &mut DayState) -> Result<SaveResult, BatchError> {
+    request
+        .plan
+        .check_file_names()
         .map_err(|error| BatchError::Message(error.to_string()))?;
 
     let batch = state.next_batch_number();
     let save_time = day::now_save_time();
     let printed = printed_time(&save_time);
-    let index = order_index(draft);
+    let index = order_index(request.draft);
 
-    let mut pdf_pages: Vec<Vec<(usize, usize)>> = Vec::with_capacity(plan.picks.len());
-    let mut sections: Vec<SavedPdfSection> = Vec::with_capacity(plan.picks.len());
+    let mut pdf_pages: Vec<Vec<(usize, usize)>> = Vec::with_capacity(request.plan.picks.len());
+    let mut sections: Vec<SavedPdfSection> = Vec::with_capacity(request.plan.picks.len());
     let mut saved: Vec<SavedOrder> = Vec::new();
-    let mut pdfs: Vec<PdfEntry> = Vec::with_capacity(plan.picks.len());
+    let mut pdfs: Vec<PdfEntry> = Vec::with_capacity(request.plan.picks.len());
     let mut page_total = 0usize;
-    for pick in &plan.picks {
+    for pick in &request.plan.picks {
         let pages = pick_pages(pick, &index)?;
         page_total += pages.len();
         pdf_pages.push(pages);
@@ -256,7 +270,8 @@ pub fn save(
         });
     }
 
-    let files: Vec<FileEntry> = draft
+    let files: Vec<FileEntry> = request
+        .draft
         .files
         .iter()
         .map(|file| FileEntry {
@@ -268,21 +283,30 @@ pub fn save(
         })
         .collect();
 
-    let jobs = packing_jobs(plan, &sections, packing, day, Some(batch), &printed);
+    let jobs = packing_jobs(
+        request.plan,
+        &sections,
+        ListRequest {
+            packing: request.packing,
+            day: request.day,
+            batch: Some(batch),
+            printed: &printed,
+        },
+    );
     let packing_lists: Vec<String> = jobs.iter().map(|job| job.name.clone()).collect();
     let expected = Expected {
-        pdfs: engine_verify::expected_pdfs(plan, &draft.orders),
+        pdfs: engine_verify::expected_pdfs(request.plan, &request.draft.orders),
         lists: expected_lists(&jobs),
     };
 
     let write = BatchWrite {
         batch,
         save_time,
-        grouping: grouping.clone(),
+        grouping: request.grouping.clone(),
         files,
         pdfs,
-        packing_list: packing.clone(),
-        warnings: draft.warnings.clone(),
+        packing_list: request.packing.clone(),
+        warnings: request.draft.warnings.clone(),
         saved,
     };
 
@@ -296,32 +320,34 @@ pub fn save(
         Rc::clone(&summary_slot),
     );
 
-    let folder = day::save_batch(day_dir, state, &write, move |temp| {
+    let folder = day::save_batch(request.day_dir, state, &write, move |temp| {
         let download = temp.join(names::DOWNLOAD_DIR);
         fs::create_dir_all(&download).map_err(|error| write_error(&download, error))?;
         let mut written = 0usize;
-        for (pick, pages) in plan.picks.iter().zip(&pdf_pages) {
+        for (pick, pages) in request.plan.picks.iter().zip(&pdf_pages) {
             let out = temp.join(&pick.file_name);
-            worker
+            request
+                .worker
                 .write_pages(pages, &out)
                 .map_err(|error| DayError::Write {
                     folder: out,
                     message: error.to_string(),
                 })?;
             written += pages.len();
-            let _ = progress.send(SaveProgress {
+            let _ = request.progress.send(SaveProgress {
                 stage: SaveStage::Writing,
                 page: written,
                 pages: page_total,
             });
         }
-        for file in &draft.files {
+        for file in &request.draft.files {
             let out = download.join(&file.name);
             fs::copy(&file.path, &out).map_err(|error| write_error(&out, error))?;
         }
         for job in &jobs {
             let out = temp.join(&job.name);
-            worker
+            request
+                .worker
                 .write_packing_list(job.layout, &out, &job.list)
                 .map_err(|error| DayError::Write {
                     folder: out,
@@ -330,14 +356,14 @@ pub fn save(
         }
 
         // Check before saving: read the written files back and compare them with the plan.
-        let written = crate::verify::read_back(worker, temp, &expected, progress.clone()).map_err(
-            |error| DayError::Write {
-                folder: temp.to_path_buf(),
-                message: error.to_string(),
-            },
-        )?;
+        let written =
+            crate::verify::read_back(request.worker, temp, &expected, request.progress.clone())
+                .map_err(|error| DayError::Write {
+                    folder: temp.to_path_buf(),
+                    message: error.to_string(),
+                })?;
         let check = engine_verify::compare(&expected, &written);
-        let stop = !save_anyway && !check.is_empty();
+        let stop = !request.save_anyway && !check.is_empty();
         *findings_fill.borrow_mut() = Some(check.clone());
         if stop {
             // Nothing is renamed: the temporary folder goes, `state.json` is untouched.
@@ -349,17 +375,17 @@ pub fn save(
         }
 
         let summary = summary_text(&SummaryInput {
-            day,
-            files: draft.files.len(),
-            pages: draft.pages,
-            orders: draft.total_orders,
-            slip_pages: draft.slip_pages,
-            picks: &plan.picks,
-            duplicates: draft.duplicates.len(),
-            warnings: &draft.warnings,
+            day: request.day,
+            files: request.draft.files.len(),
+            pages: request.draft.pages,
+            orders: request.draft.total_orders,
+            slip_pages: request.draft.slip_pages,
+            picks: &request.plan.picks,
+            duplicates: request.draft.duplicates.len(),
+            warnings: &request.draft.warnings,
             check_errors: &check.error_texts(),
             check_warnings: &check.warning_texts(),
-            day_dir,
+            day_dir: request.day_dir,
             packing_lists: &packing_lists_fill,
             quiet_ids: false,
         });
@@ -373,7 +399,7 @@ pub fn save(
     });
 
     let check = findings.borrow().clone().unwrap_or_default();
-    let mut result_folder = day_dir.join(names::batch_folder(batch));
+    let mut result_folder = request.day_dir.join(names::batch_folder(batch));
     let saved = match folder {
         Ok(folder) => {
             result_folder = folder;
@@ -390,7 +416,12 @@ pub fn save(
     Ok(SaveResult {
         batch,
         folder: result_folder,
-        pdf_files: plan.picks.iter().map(|p| p.file_name.clone()).collect(),
+        pdf_files: request
+            .plan
+            .picks
+            .iter()
+            .map(|p| p.file_name.clone())
+            .collect(),
         packing_lists,
         summary: summary_slot.borrow().clone(),
         saved,
@@ -409,37 +440,43 @@ fn write_error(path: &Path, error: std::io::Error) -> DayError {
 /// One packing list to write: its file name, layout and built list.
 struct PackingJob {
     name: String,
-    layout: packing_list::Layout,
+    layout: Layout,
     list: PackingList,
+}
+
+/// The lists one batch asks for: the scope and layouts chosen, and the header texts every written
+/// list carries.
+struct ListRequest<'a> {
+    packing: &'a PackingListChoice,
+    day: &'a str,
+    batch: Option<BatchNumber>,
+    printed: &'a str,
 }
 
 fn packing_jobs(
     plan: &PlanResult,
     sections: &[SavedPdfSection],
-    packing: &PackingListChoice,
-    day: &str,
-    batch: Option<BatchNumber>,
-    printed: &str,
+    list: ListRequest<'_>,
 ) -> Vec<PackingJob> {
-    let several = packing.layouts.len() > 1;
+    let several = list.packing.layouts.len() > 1;
     let mut jobs = Vec::new();
     let mut make = |number: Option<PdfNumber>, section: Vec<SavedPdfSection>| {
-        for layout in &packing.layouts {
-            let suffix = several.then(|| layout_name(*layout));
+        for layout in &list.packing.layouts {
+            let suffix = several.then(|| layout.as_str());
             let name = names::packing_list_file_name(number, suffix);
             jobs.push(PackingJob {
                 name,
-                layout: to_pdf_layout(*layout),
+                layout: *layout,
                 list: PackingList {
-                    day: day.to_string(),
-                    batch,
-                    printed: printed.to_string(),
+                    day: list.day.to_string(),
+                    batch: list.batch,
+                    printed: list.printed.to_string(),
                     sections: section.clone(),
                 },
             });
         }
     };
-    match packing.scope {
+    match list.packing.scope {
         Scope::None => {}
         Scope::Whole => make(None, sections.to_vec()),
         Scope::PerPdf => {
@@ -554,42 +591,6 @@ fn pick_saved(
 /// `HH:MM` of an ISO save time (`2026-10-07T07:40:12+07:00` → `07:40`).
 fn printed_time(save_time: &str) -> String {
     save_time.chars().skip(11).take(5).collect()
-}
-
-fn layout_name(layout: EngineLayout) -> &'static str {
-    match layout {
-        EngineLayout::Full => "full",
-        EngineLayout::Summary => "summary",
-        EngineLayout::Pick => "pick",
-    }
-}
-
-fn to_pdf_layout(layout: EngineLayout) -> packing_list::Layout {
-    match layout {
-        EngineLayout::Full => packing_list::Layout::Full,
-        EngineLayout::Summary => packing_list::Layout::Summary,
-        EngineLayout::Pick => packing_list::Layout::Pick,
-    }
-}
-
-/// Parse a packing-list scope name (`--packing-list`).
-pub fn parse_scope(name: &str) -> Option<Scope> {
-    match name {
-        "per-pdf" | "per_pdf" | "perpdf" => Some(Scope::PerPdf),
-        "whole" => Some(Scope::Whole),
-        "none" => Some(Scope::None),
-        _ => None,
-    }
-}
-
-/// Parse a packing-list layout name (`--layout`).
-pub fn parse_layout(name: &str) -> Option<EngineLayout> {
-    match name {
-        "full" => Some(EngineLayout::Full),
-        "summary" => Some(EngineLayout::Summary),
-        "pick" => Some(EngineLayout::Pick),
-        _ => None,
-    }
 }
 
 #[cfg(test)]

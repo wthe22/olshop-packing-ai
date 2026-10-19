@@ -9,6 +9,7 @@ publish.workspace = true
 image.workspace = true
 packing-engine.workspace = true
 pdfium-render.workspace = true
+serde.workspace = true
 xxhash-rust.workspace = true
 
 [dev-dependencies]

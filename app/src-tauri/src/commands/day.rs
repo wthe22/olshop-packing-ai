@@ -273,7 +273,7 @@ fn clock(save_time: &str) -> String {
 fn packing_list_files(choice: &PackingListChoice, pdfs: &[PdfEntry]) -> Vec<String> {
     let several = choice.layouts.len() > 1;
     let name = |number: Option<PdfNumber>, layout: Layout| {
-        names::packing_list_file_name(number, several.then(|| layout_name(layout)))
+        names::packing_list_file_name(number, several.then(|| layout.as_str()))
     };
     match choice.scope {
         Scope::None => Vec::new(),
@@ -291,14 +291,6 @@ fn packing_list_files(choice: &PackingListChoice, pdfs: &[PdfEntry]) -> Vec<Stri
                     .map(move |layout| name(Some(pdf.number), *layout))
             })
             .collect(),
-    }
-}
-
-fn layout_name(layout: Layout) -> &'static str {
-    match layout {
-        Layout::Full => "full",
-        Layout::Summary => "summary",
-        Layout::Pick => "pick",
     }
 }
 

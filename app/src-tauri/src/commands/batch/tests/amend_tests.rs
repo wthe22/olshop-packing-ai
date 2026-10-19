@@ -437,8 +437,7 @@ fn the_testdata_labels_show_no_logo_prompt_and_list_the_couriers() {
     assert_eq!(start.read.couriers, read.couriers);
 
     // Answering a hash no logo carries changes nothing and still returns a full result.
-    let again =
-        answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswerInput::Skip).expect("answer");
+    let again = answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswer::Skip).expect("answer");
     assert_eq!(again.orders, start.read.orders);
     assert!(again.logos.is_empty());
 

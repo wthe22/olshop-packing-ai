@@ -22,10 +22,11 @@ step() { printf '\n== %s\n' "$*"; }
 step "cargo fmt --all --check"
 cargo fmt --all --check
 
-# The two ratcheted lints are counted by tools/check-lint.mjs, not by `-D warnings`.
+# The parameter limit is a plain deny; the cognitive-complexity warning is counted by
+# tools/check-lint.mjs, not by `-D warnings`.
 step "cargo clippy --workspace --all-targets -- -D warnings"
 cargo clippy --workspace --all-targets -- \
-  -D warnings -A clippy::too_many_arguments -A clippy::cognitive_complexity
+  -D warnings -D clippy::too_many_arguments -A clippy::cognitive_complexity
 
 step "cargo test --workspace"
 cargo test --workspace

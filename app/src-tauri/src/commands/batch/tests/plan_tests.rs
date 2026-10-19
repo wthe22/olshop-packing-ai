@@ -246,7 +246,7 @@ fn save_progress_names_the_two_stages() {
         page: 3,
         pages: 10,
     });
-    assert_eq!(writing.stage, "Writing");
+    assert_eq!(writing.stage, SaveStage::Writing);
     assert_eq!(writing.page, 3);
     assert_eq!(writing.pages, 10);
 
@@ -255,7 +255,17 @@ fn save_progress_names_the_two_stages() {
         page: 1,
         pages: 4,
     });
-    assert_eq!(checking.stage, "Checking");
+    assert_eq!(checking.stage, SaveStage::Checking);
     assert_eq!(checking.page, 1);
     assert_eq!(checking.pages, 4);
+
+    // The stage names the window's `save-progress` handler compares.
+    assert_eq!(
+        serde_json::to_string(&writing).expect("serialise"),
+        r#"{"stage":"Writing","page":3,"pages":10}"#
+    );
+    assert_eq!(
+        serde_json::to_string(&checking).expect("serialise"),
+        r#"{"stage":"Checking","page":1,"pages":4}"#
+    );
 }

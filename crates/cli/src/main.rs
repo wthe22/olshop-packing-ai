@@ -23,7 +23,7 @@ use packing_engine::groupings::Grouping;
 use packing_engine::label::{CourierTable, load_couriers_file};
 use packing_engine::plan::{Plan, PlanResult};
 use packing_engine::rules::{Category, catch_all_category, load_rules};
-use packing_pdf::batch::{self, BatchError, Draft};
+use packing_pdf::batch::{self, BatchError, Draft, SaveRequest};
 use packing_pdf::worker::PdfWorker;
 
 const USAGE: &str = "\
@@ -153,7 +153,7 @@ impl Args {
                 "--quiet-ids" => parsed.quiet_ids = true,
                 "--packing-list" => {
                     let name = value(args, &mut index, flag)?;
-                    parsed.scope = batch::parse_scope(&name).ok_or_else(|| {
+                    parsed.scope = name.parse::<Scope>().map_err(|_| {
                         CliError::Usage(format!(
                             "unknown packing-list scope \"{name}\"; expected one per batch, \
                              one per PDF or none"
@@ -163,7 +163,7 @@ impl Args {
                 "--layout" => {
                     let list = value(args, &mut index, flag)?;
                     for name in list.split(',').map(str::trim).filter(|s| !s.is_empty()) {
-                        let layout = batch::parse_layout(name).ok_or_else(|| {
+                        let layout = name.parse::<Layout>().map_err(|_| {
                             CliError::Usage(format!(
                                 "unknown layout \"{name}\"; expected pick, full or summary"
                             ))
@@ -244,14 +244,20 @@ fn run_prepare(args: &[String]) -> Result<(), CliError> {
     let (draft, plan) = read_and_plan(&worker, &categories, &couriers, &state, &labels)?;
 
     let packing = args.packing();
+    let grouping = Grouping::default();
+    let (progress, _progress_rx) = mpsc::channel();
     save_and_report(
-        &worker,
-        &draft,
-        &plan,
-        &packing,
-        &Grouping::default(),
-        &day,
-        &day_dir,
+        &SaveRequest {
+            worker: &worker,
+            draft: &draft,
+            plan: &plan,
+            packing: &packing,
+            grouping: &grouping,
+            day: &day,
+            day_dir: &day_dir,
+            save_anyway: false,
+            progress,
+        },
         &mut state,
         args.quiet_ids,
     )?;
@@ -293,15 +299,20 @@ fn run_amend(args: &[String]) -> Result<(), CliError> {
     let (draft, plan) = read_and_plan(&worker, &categories, &couriers, &amend.state, &amend.files)?;
     let packing = args.packing();
     let mut amend_state = amend.state;
+    let (progress, _progress_rx) = mpsc::channel();
     // The amend keeps the batch's own grouping, as the app's amend does (04 › *Sets*).
     save_and_report(
-        &worker,
-        &draft,
-        &plan,
-        &packing,
-        &amend.grouping,
-        &day,
-        &day_dir,
+        &SaveRequest {
+            worker: &worker,
+            draft: &draft,
+            plan: &plan,
+            packing: &packing,
+            grouping: &amend.grouping,
+            day: &day,
+            day_dir: &day_dir,
+            save_anyway: false,
+            progress,
+        },
         &mut amend_state,
         args.quiet_ids,
     )?;
@@ -351,14 +362,14 @@ fn read_and_plan(
 ) -> Result<(Draft, PlanResult), CliError> {
     let checks = batch::check_files(worker, files, state)?;
     let (progress, _rx) = mpsc::channel();
-    let draft = batch::read(
+    let draft = batch::read(&batch::ReadRequest {
         worker,
-        &checks,
+        files: &checks,
         state,
-        Arc::new(AtomicBool::new(false)),
+        cancel: Arc::new(AtomicBool::new(false)),
         progress,
         couriers,
-    )?;
+    })?;
     let plan = Plan::from_categories(categories).count(&draft.orders, state.next_pdf_number());
     Ok((draft, plan))
 }
@@ -366,22 +377,12 @@ fn read_and_plan(
 /// Save the batch and print its summary (07 › *Save*, *Check before saving*). The check runs on
 /// every save; a finding stops the batch and the command ends with the findings, because the
 /// command line has no *Save anyway*.
-#[allow(clippy::too_many_arguments)] // mirrors `batch::save`'s context
 fn save_and_report(
-    worker: &PdfWorker,
-    draft: &Draft,
-    plan: &PlanResult,
-    packing: &PackingListChoice,
-    grouping: &Grouping,
-    day: &str,
-    day_dir: &Path,
+    request: &SaveRequest<'_>,
     state: &mut DayState,
     quiet_ids: bool,
 ) -> Result<(), CliError> {
-    let (progress, _rx) = mpsc::channel();
-    let result = batch::save(
-        worker, draft, plan, packing, grouping, day, day_dir, state, false, progress,
-    )?;
+    let result = batch::save(request, state)?;
     if !result.saved {
         let mut message =
             String::from("the saved PDFs do not match the plan; the batch was not saved");
@@ -390,33 +391,26 @@ fn save_and_report(
         }
         return Err(CliError::Io(message));
     }
-    report(&result, draft, plan, day, day_dir, quiet_ids);
+    report(request, &result, quiet_ids);
     Ok(())
 }
 
 /// Print the summary; `--quiet-ids` prints counts only, never the warning details that name
 /// orders and tracking IDs.
-fn report(
-    result: &batch::SaveResult,
-    draft: &Draft,
-    plan: &PlanResult,
-    day: &str,
-    day_dir: &Path,
-    quiet_ids: bool,
-) {
+fn report(request: &SaveRequest<'_>, result: &batch::SaveResult, quiet_ids: bool) {
     if quiet_ids {
         let text = batch::summary_text(&batch::SummaryInput {
-            day,
-            files: draft.files.len(),
-            pages: draft.pages,
-            orders: draft.total_orders,
-            slip_pages: draft.slip_pages,
-            picks: &plan.picks,
-            duplicates: draft.duplicates.len(),
-            warnings: &draft.warnings,
+            day: request.day,
+            files: request.draft.files.len(),
+            pages: request.draft.pages,
+            orders: request.draft.total_orders,
+            slip_pages: request.draft.slip_pages,
+            picks: &request.plan.picks,
+            duplicates: request.draft.duplicates.len(),
+            warnings: &request.draft.warnings,
             check_errors: &result.errors,
             check_warnings: &result.warnings,
-            day_dir,
+            day_dir: request.day_dir,
             packing_lists: &result.packing_lists,
             quiet_ids: true,
         });

@@ -6,7 +6,6 @@ use std::path::Path;
 
 use packing_engine::groupings::Grouping;
 use packing_engine::ids::{BatchNumber, PdfNumber};
-use packing_engine::orders::LogoAnswer;
 use packing_pdf::batch::FileCheck;
 use packing_pdf::worker::{SaveProgress, SaveStage};
 use serde::{Deserialize, Serialize};
@@ -35,7 +34,7 @@ pub struct ReadProgress {
 /// is *Writing* or *Checking*; the window shows it with a progress bar on the Plan screen.
 #[derive(Clone, Serialize)]
 pub struct SaveProgressEvent {
-    pub(super) stage: String,
+    pub(super) stage: SaveStage,
     pub(super) page: usize,
     pub(super) pages: usize,
 }
@@ -43,10 +42,7 @@ pub struct SaveProgressEvent {
 impl SaveProgressEvent {
     pub(super) fn of(progress: SaveProgress) -> Self {
         Self {
-            stage: match progress.stage {
-                SaveStage::Writing => "Writing".to_string(),
-                SaveStage::Checking => "Checking".to_string(),
-            },
+            stage: progress.stage,
             page: progress.page,
             pages: progress.pages,
         }
@@ -102,29 +98,6 @@ pub struct LogoView {
     pub(super) pages: usize,
     pub(super) orders: usize,
     pub(super) picture: Option<String>,
-}
-
-/// The owner's answer about one unseen logo (08 › *The logo prompt*); `kind` is the tag, as for
-/// [`PlanEdit`]. *Skip all* never reaches Rust: it only stops the screen asking (D-LABEL-4).
-#[derive(Deserialize, Debug)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum LogoAnswerInput {
-    /// The logo is this courier's: name the orders whose tracking form agrees.
-    Courier { name: String },
-    /// The image is no courier's logo (a buying channel's strip).
-    NotCourier,
-    /// Say nothing about it (*I don't know*, and Esc): the orders stay unknown.
-    Skip,
-}
-
-impl LogoAnswerInput {
-    pub(super) fn to_engine(&self) -> LogoAnswer {
-        match self {
-            LogoAnswerInput::Courier { name } => LogoAnswer::Courier(name.clone()),
-            LogoAnswerInput::NotCourier => LogoAnswer::NotCourier,
-            LogoAnswerInput::Skip => LogoAnswer::Skip,
-        }
-    }
 }
 
 /// The Plan screen's data (08 › *3. Plan*).

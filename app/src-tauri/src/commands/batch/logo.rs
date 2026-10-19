@@ -6,14 +6,14 @@ use std::path::Path;
 use std::str::FromStr;
 
 use packing_engine::couriers_edit::CouriersDocument;
-use packing_engine::orders::UnseenLogo;
+use packing_engine::orders::{LogoAnswer, UnseenLogo};
 use packing_pdf::batch::Draft;
 use packing_pdf::worker::PdfWorker;
 
 use crate::{AppState, BUILTIN_COURIERS, COURIERS_FILE, OpenDraft};
 
 use super::plan_view::plan_view;
-use super::views::{LogoAnswerInput, LogoView, ReadResult};
+use super::views::{LogoView, ReadResult};
 
 /// The screen's read result (08 › *2. New batch*, *The logo prompt*, *3. Plan*): the draft's
 /// counts and warnings, the couriers the prompt's buttons show, the unseen logos still to ask
@@ -124,7 +124,7 @@ pub(super) fn base64(bytes: &[u8]) -> String {
 pub(super) fn answer_logo_impl(
     state: &AppState,
     hash: &str,
-    answer: &LogoAnswerInput,
+    answer: &LogoAnswer,
 ) -> Result<ReadResult, String> {
     let folder = state.data_folder()?;
     // Only a logo the draft really asked about is remembered; an unknown hash is written nowhere.
@@ -135,8 +135,7 @@ pub(super) fn answer_logo_impl(
             .unseen_logos
             .iter()
             .any(|entry| entry.hash == hash);
-        open.draft
-            .answer_logo(hash, &answer.to_engine(), &open.couriers);
+        open.draft.answer_logo(hash, answer, &open.couriers);
         // The answered logo is spent; its picture is no longer needed.
         open.logo_pictures.remove(hash);
         read_result(open)
@@ -151,8 +150,8 @@ pub(super) fn answer_logo_impl(
 /// kept (D-LABEL-4, Q-LABEL-7 default): a courier name appends it to that courier's `logo` list,
 /// *Not a courier* appends it to `not_courier`, *I don't know* (`Skip`) writes nothing. A file
 /// the data folder does not have yet starts as the built-in list.
-fn remember_logo(folder: &Path, hash: &str, answer: &LogoAnswerInput) -> Result<(), String> {
-    if matches!(answer, LogoAnswerInput::Skip) {
+fn remember_logo(folder: &Path, hash: &str, answer: &LogoAnswer) -> Result<(), String> {
+    if matches!(answer, LogoAnswer::Skip) {
         return Ok(());
     }
     let path = folder.join(COURIERS_FILE);
@@ -163,9 +162,9 @@ fn remember_logo(folder: &Path, hash: &str, answer: &LogoAnswerInput) -> Result<
     };
     let mut document = CouriersDocument::from_str(&text).map_err(|error| error.to_string())?;
     match answer {
-        LogoAnswerInput::Courier { name } => document.add_courier_logo(name, hash),
-        LogoAnswerInput::NotCourier => document.add_not_courier(hash),
-        LogoAnswerInput::Skip => Ok(()),
+        LogoAnswer::Courier { name } => document.add_courier_logo(name, hash),
+        LogoAnswer::NotCourier => document.add_not_courier(hash),
+        LogoAnswer::Skip => Ok(()),
     }
     .map_err(|error| error.to_string())?;
     std::fs::write(&path, document.to_string())

@@ -13,7 +13,7 @@ use crate::worker::PdfWorker;
 
 use super::Draft;
 use super::error::BatchError;
-use super::{PackingJob, order_index, packing_jobs, pick_section};
+use super::{ListRequest, PackingJob, order_index, packing_jobs, pick_section};
 
 /// One chosen label file: what 07 › *New batch* shows before reading (page count, fingerprint,
 /// `used in batch n`).
@@ -83,7 +83,16 @@ pub fn check_saved(
         sections.push(pick_section(pick, &index)?);
     }
     // Only the names and counts are compared, so the list belongs to no batch and no day.
-    let jobs = packing_jobs(plan, &sections, packing, "", None, "");
+    let jobs = packing_jobs(
+        plan,
+        &sections,
+        ListRequest {
+            packing,
+            day: "",
+            batch: None,
+            printed: "",
+        },
+    );
     let expected = Expected {
         pdfs: engine_verify::expected_pdfs(plan, &draft.orders),
         lists: expected_lists(&jobs),

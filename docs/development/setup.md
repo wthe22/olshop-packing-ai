@@ -54,7 +54,7 @@ The Rust workspace gates, run from the repository root (the full list, with the 
 
 ```bash
 cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
+cargo clippy --workspace --all-targets -- -D warnings -D clippy::too_many_arguments -A clippy::cognitive_complexity
 cargo test --workspace
 ```
 

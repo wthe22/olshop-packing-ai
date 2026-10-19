@@ -13,7 +13,8 @@ mod measure;
 mod model;
 
 pub use emit::write;
-pub use model::{Layout, PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection};
+pub use model::{PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection};
+pub use packing_engine::day::Layout;
 
 use packing_engine::ids::TrackingId;
 
@@ -70,6 +71,17 @@ enum Op {
     },
 }
 
+/// One piece of text the list draws: where it sits (millimetres from the page's top-left, `y` is
+/// the cell's top), the cell's height and the font.
+struct Cell<'t> {
+    x: f32,
+    y: f32,
+    h: f32,
+    size_pt: f32,
+    font: Font,
+    text: &'t str,
+}
+
 struct Builder<'m, 'a> {
     pages: Vec<Vec<Op>>,
     y: f32,
@@ -97,37 +109,27 @@ impl<'m, 'a> Builder<'m, 'a> {
     }
 
     /// Left-aligned cell text (fpdf indents by the cell margin).
-    fn cell(&mut self, x: f32, y_top: f32, h: f32, size_pt: f32, font: Font, text: &str) {
-        let baseline = Self::baseline(y_top, h, size_pt);
+    fn cell(&mut self, cell: Cell<'_>) {
+        let baseline = Self::baseline(cell.y, cell.h, cell.size_pt);
         self.ops().push(Op::Text {
-            x: x + CELL_MARGIN,
+            x: cell.x + CELL_MARGIN,
             baseline,
-            size_pt,
-            font,
-            text: text.to_string(),
+            size_pt: cell.size_pt,
+            font: cell.font,
+            text: cell.text.to_string(),
         });
     }
 
-    /// Right-aligned text inside a cell at `x` of width `w`.
-    #[allow(clippy::too_many_arguments)] // mirrors fpdf cell(x, w, y, h, size, font, text)
-    fn cell_right(
-        &mut self,
-        x: f32,
-        w: f32,
-        y_top: f32,
-        h: f32,
-        size_pt: f32,
-        font: Font,
-        text: &str,
-    ) {
-        let width = self.measure.width_mm(text, font, size_pt);
-        let baseline = Self::baseline(y_top, h, size_pt);
+    /// Right-aligned text inside a cell of width `w`.
+    fn cell_right(&mut self, cell: Cell<'_>, w: f32) {
+        let width = self.measure.width_mm(cell.text, cell.font, cell.size_pt);
+        let baseline = Self::baseline(cell.y, cell.h, cell.size_pt);
         self.ops().push(Op::Text {
-            x: x + w - CELL_MARGIN - width,
+            x: cell.x + w - CELL_MARGIN - width,
             baseline,
-            size_pt,
-            font,
-            text: text.to_string(),
+            size_pt: cell.size_pt,
+            font: cell.font,
+            text: cell.text.to_string(),
         });
     }
 
@@ -151,7 +153,14 @@ impl<'m, 'a> Builder<'m, 'a> {
             self.pages.push(Vec::new());
             self.y = BODY_TOP;
             if let Some(continued) = continued {
-                self.cell(MARGIN, self.y, 5.0, 9.5, Font::Arial, continued);
+                self.cell(Cell {
+                    x: MARGIN,
+                    y: self.y,
+                    h: 5.0,
+                    size_pt: 9.5,
+                    font: Font::Arial,
+                    text: continued,
+                });
                 self.y += 5.0;
             }
             true
@@ -173,26 +182,28 @@ impl<'m, 'a> Builder<'m, 'a> {
             self.need(BAR_H + LH * 2.0, None);
             let top = self.y;
             self.fill(MARGIN, top, 190.0, BAR_H);
-            self.cell(
-                MARGIN,
-                top,
-                BAR_H,
-                11.0,
-                Font::ArialBold,
-                &format!(" {}  {}  {}", section.number, section.code, section.name),
-            );
+            self.cell(Cell {
+                x: MARGIN,
+                y: top,
+                h: BAR_H,
+                size_pt: 11.0,
+                font: Font::ArialBold,
+                text: &format!(" {}  {}  {}", section.number, section.code, section.name),
+            });
             self.cell_right(
-                160.0,
+                Cell {
+                    x: 160.0,
+                    y: top,
+                    h: BAR_H,
+                    size_pt: 9.5,
+                    font: Font::Arial,
+                    text: &format!(
+                        "{} orders · {} units",
+                        grouped(orders as i64),
+                        grouped(units)
+                    ),
+                },
                 40.0,
-                top,
-                BAR_H,
-                9.5,
-                Font::Arial,
-                &format!(
-                    "{} orders · {} units",
-                    grouped(orders as i64),
-                    grouped(units)
-                ),
             );
             self.y = top + BAR_H;
             for run in &section.runs {
@@ -211,25 +222,34 @@ impl<'m, 'a> Builder<'m, 'a> {
             None,
         );
         let top = self.y;
-        self.cell(MARGIN, top, LH, 11.5, Font::ArialBold, &label);
+        self.cell(Cell {
+            x: MARGIN,
+            y: top,
+            h: LH,
+            size_pt: 11.5,
+            font: Font::ArialBold,
+            text: &label,
+        });
         for (index, text) in items.iter().enumerate() {
-            self.cell(
-                X_ITEMS,
-                top + LH * index as f32,
-                LH,
-                10.5,
-                Font::Arial,
+            self.cell(Cell {
+                x: X_ITEMS,
+                y: top + LH * index as f32,
+                h: LH,
+                size_pt: 10.5,
+                font: Font::Arial,
                 text,
-            );
+            });
         }
         self.cell_right(
-            180.0,
+            Cell {
+                x: 180.0,
+                y: top,
+                h: LH,
+                size_pt: 11.5,
+                font: Font::ArialBold,
+                text: &grouped(run.orders.len() as i64),
+            },
             20.0,
-            top,
-            LH,
-            11.5,
-            Font::ArialBold,
-            &grouped(run.orders.len() as i64),
         );
         self.y = top + LH * items.len() as f32;
         if tracking {
@@ -252,14 +272,14 @@ impl<'m, 'a> Builder<'m, 'a> {
             self.need(TH, Some(&continued));
             let row_y = self.y;
             for (column, id) in ids[start..].iter().take(NCOL).enumerate() {
-                self.cell(
-                    X_ITEMS + column as f32 * CW,
-                    row_y,
-                    TH,
-                    10.0,
-                    Font::Consola,
-                    id,
-                );
+                self.cell(Cell {
+                    x: X_ITEMS + column as f32 * CW,
+                    y: row_y,
+                    h: TH,
+                    size_pt: 10.0,
+                    font: Font::Consola,
+                    text: id,
+                });
             }
             self.y = row_y + TH;
         }
@@ -277,14 +297,14 @@ impl<'m, 'a> Builder<'m, 'a> {
         self.y += 1.0;
         let top = self.y;
         self.fill(MARGIN, top, 190.0, BAR_H);
-        self.cell(
-            MARGIN,
-            top,
-            BAR_H,
-            11.0,
-            Font::ArialBold,
-            " Pick summary (units to take from stock)",
-        );
+        self.cell(Cell {
+            x: MARGIN,
+            y: top,
+            h: BAR_H,
+            size_pt: 11.0,
+            font: Font::ArialBold,
+            text: " Pick summary (units to take from stock)",
+        });
         self.y = top + BAR_H;
         let mut top = self.y;
         let mut index = 0;
@@ -305,16 +325,26 @@ impl<'m, 'a> Builder<'m, 'a> {
                     let lines =
                         self.measure
                             .wrap(name, COL_W - 2.0 * CELL_MARGIN, Font::Arial, 10.0);
-                    self.cell_right(x, 12.0, y, ROW_H, 10.5, Font::ArialBold, &grouped(*units));
+                    self.cell_right(
+                        Cell {
+                            x,
+                            y,
+                            h: ROW_H,
+                            size_pt: 10.5,
+                            font: Font::ArialBold,
+                            text: &grouped(*units),
+                        },
+                        12.0,
+                    );
                     for (i, text) in lines.iter().enumerate() {
-                        self.cell(
-                            x + 14.0,
-                            y + ROW_H * i as f32,
-                            ROW_H,
-                            10.0,
-                            Font::Arial,
+                        self.cell(Cell {
+                            x: x + 14.0,
+                            y: y + ROW_H * i as f32,
+                            h: ROW_H,
+                            size_pt: 10.0,
+                            font: Font::Arial,
                             text,
-                        );
+                        });
                     }
                     y += ROW_H * lines.len() as f32 + 0.4;
                 }

@@ -1,46 +1,7 @@
-//! The packing list's data model: the three layouts, one slip line, one order of a run, one
-//! run, one saved PDF's section, and the whole list with the counts its header prints.
-
-use std::fmt;
+//! The packing list's data model: one slip line, one order of a run, one run, one saved PDF's
+//! section, and the whole list with the counts its header prints.
 
 use packing_engine::ids::{BatchNumber, PdfNumber, TrackingId};
-
-/// The three layouts (03 › *Packing list (A4)*).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Layout {
-    /// Item lines and the run's tracking IDs.
-    Full,
-    /// Item lines, no tracking IDs.
-    Summary,
-    /// Only the pick summary.
-    Pick,
-}
-
-impl Layout {
-    /// Parse a layout name; `None` for an unknown one.
-    pub fn parse(name: &str) -> Option<Layout> {
-        match name {
-            "full" => Some(Layout::Full),
-            "summary" => Some(Layout::Summary),
-            "pick" => Some(Layout::Pick),
-            _ => None,
-        }
-    }
-
-    pub(super) fn tracking(self) -> bool {
-        self == Layout::Full
-    }
-}
-
-impl fmt::Display for Layout {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            Layout::Full => "full",
-            Layout::Summary => "summary",
-            Layout::Pick => "pick",
-        })
-    }
-}
 
 /// One slip line of an order as the packing list needs it (Python `orders.Line`).
 #[derive(Clone, Debug, PartialEq, Eq)]

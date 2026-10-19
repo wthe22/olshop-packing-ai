@@ -3,6 +3,8 @@
 
 use std::fmt;
 
+use serde::Deserialize;
+
 use jiff::civil::DateTime;
 
 use crate::ids::{OrderId, TrackingId};
@@ -139,7 +141,7 @@ impl UnseenLogo {
         answer: &LogoAnswer,
         table: &CourierTable,
     ) -> usize {
-        let LogoAnswer::Courier(name) = answer else {
+        let LogoAnswer::Courier { name } = answer else {
             return 0;
         };
         let mut named = 0;
@@ -161,11 +163,13 @@ impl UnseenLogo {
     }
 }
 
-/// The owner's answer about one unseen logo (the logo prompt, D-LABEL-4).
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// The owner's answer about one unseen logo (the logo prompt): the shape the window sends, tagged
+/// by `kind`.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
 pub enum LogoAnswer {
     /// The logo is this courier's.
-    Courier(String),
+    Courier { name: String },
     /// The image is no courier's logo (a buying channel's strip).
     NotCourier,
     /// Say nothing about it; the orders stay unknown.

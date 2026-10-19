@@ -100,7 +100,7 @@ fn answer_logo_names_the_form_agreeing_orders_and_recounts_the_plan() {
     let after = answer_logo_impl(
         &state,
         "ffffffffffffffff",
-        &LogoAnswerInput::Courier {
+        &LogoAnswer::Courier {
             name: "J&T Express".to_string(),
         },
     )
@@ -118,7 +118,7 @@ fn answer_logo_names_the_form_agreeing_orders_and_recounts_the_plan() {
 
 #[test]
 fn skip_and_not_a_courier_leave_the_orders_unknown() {
-    for answer in [LogoAnswerInput::Skip, LogoAnswerInput::NotCourier] {
+    for answer in [LogoAnswer::Skip, LogoAnswer::NotCourier] {
         let dir = temp_dir("logo-skip");
         let state = state_with_logo_draft(&dir);
         let result = answer_logo_impl(&state, "ffffffffffffffff", &answer).expect("answer");
@@ -145,7 +145,7 @@ fn an_unknown_hash_changes_nothing() {
     let result = answer_logo_impl(
         &state,
         "0123456789abcdef",
-        &LogoAnswerInput::Courier {
+        &LogoAnswer::Courier {
             name: "SiCepat".to_string(),
         },
     )
@@ -164,7 +164,7 @@ fn a_courier_answer_remembers_the_logo_in_the_data_folders_file() {
     answer_logo_impl(
         &state,
         "ffffffffffffffff",
-        &LogoAnswerInput::Courier {
+        &LogoAnswer::Courier {
             name: "J&T Express".to_string(),
         },
     )
@@ -195,7 +195,7 @@ fn a_courier_answer_remembers_the_logo_in_the_data_folders_file() {
 fn a_not_a_courier_answer_goes_to_the_top_level_list() {
     let dir = temp_dir("logo-not-courier");
     let state = state_with_logo_draft(&dir);
-    answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswerInput::NotCourier).expect("answer");
+    answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswer::NotCourier).expect("answer");
     let text = std::fs::read_to_string(dir.join(COURIERS_FILE)).expect("written");
     assert!(
         text.contains("not_courier = [\"ffffffffffffffff\"]"),
@@ -213,7 +213,7 @@ fn a_not_a_courier_answer_goes_to_the_top_level_list() {
 fn skip_and_an_unknown_hash_write_no_courier_file() {
     let dir = temp_dir("logo-no-write");
     let state = state_with_logo_draft(&dir);
-    answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswerInput::Skip).expect("answer");
+    answer_logo_impl(&state, "ffffffffffffffff", &LogoAnswer::Skip).expect("answer");
     assert!(
         !dir.join(COURIERS_FILE).exists(),
         "*I don't know* writes nothing"
@@ -221,7 +221,7 @@ fn skip_and_an_unknown_hash_write_no_courier_file() {
     answer_logo_impl(
         &state,
         "0123456789abcdef",
-        &LogoAnswerInput::Courier {
+        &LogoAnswer::Courier {
             name: "SiCepat".to_string(),
         },
     )

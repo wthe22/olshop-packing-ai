@@ -458,7 +458,9 @@ fn an_answered_logo_names_the_orders_only_where_the_form_agrees() {
 
     let named = reading.apply_logo_answer(
         "ffff",
-        &LogoAnswer::Courier("J&T Express".to_string()),
+        &LogoAnswer::Courier {
+            name: "J&T Express".to_string(),
+        },
         table(),
     );
     assert_eq!(named, 1);
@@ -467,7 +469,13 @@ fn an_answered_logo_names_the_orders_only_where_the_form_agrees() {
     assert!(reading.unseen_logos.is_empty());
     // The answer is spent: a second one changes nothing.
     assert_eq!(
-        reading.apply_logo_answer("ffff", &LogoAnswer::Courier("SiCepat".to_string()), table()),
+        reading.apply_logo_answer(
+            "ffff",
+            &LogoAnswer::Courier {
+                name: "SiCepat".to_string(),
+            },
+            table(),
+        ),
         0
     );
 }

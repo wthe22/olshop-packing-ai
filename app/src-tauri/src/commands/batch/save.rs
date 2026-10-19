@@ -59,16 +59,18 @@ pub(super) fn save_batch_impl(
     let grouping = open.grouping.clone();
     let result = state.with_worker(|worker| {
         batch::save(
-            worker,
-            &open.draft,
-            &plan,
-            &packing,
-            &grouping,
-            &day,
-            &day_dir,
+            &batch::SaveRequest {
+                worker,
+                draft: &open.draft,
+                plan: &plan,
+                packing: &packing,
+                grouping: &grouping,
+                day: &day,
+                day_dir: &day_dir,
+                save_anyway,
+                progress: progress_tx,
+            },
             &mut day_state,
-            save_anyway,
-            progress_tx,
         )
     });
 

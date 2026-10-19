@@ -14,6 +14,7 @@ use packing_engine::day::{DayState, PackingListChoice};
 use packing_engine::groupings::{self, Grouping};
 use packing_engine::ids::BatchNumber;
 use packing_engine::label::{self, CourierTable};
+use packing_engine::orders::LogoAnswer;
 use packing_engine::plan::Plan;
 use packing_engine::rules::{Category, parse_condition};
 use packing_pdf::batch;
@@ -103,7 +104,7 @@ pub fn cancel_read(state: State<'_, AppState>) {
 pub fn answer_logo(
     state: State<'_, AppState>,
     hash: String,
-    answer: LogoAnswerInput,
+    answer: LogoAnswer,
 ) -> Result<ReadResult, String> {
     answer_logo_impl(&state, &hash, &answer)
 }
@@ -211,34 +212,51 @@ pub(super) fn read_draft(
 ) -> Result<ReadResult, String> {
     let day_dir = state.day_dir()?;
     let day_state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
-    let read = read_into_draft(state, paths, day_state, None, grouping, true, on_progress)?;
+    let read = read_into_draft(
+        state,
+        ReadRequest {
+            paths,
+            base_state: day_state,
+            amend: None,
+            grouping: grouping.clone(),
+            sort_by_name: true,
+        },
+        on_progress,
+    )?;
     remember_last_grouping(&state.data_folder()?, grouping);
     Ok(read)
 }
 
-/// The shared read: `base_state` supplies the duplicate guard and the day's next number;
-/// `grouping` is the grouping to read with (04 › *Sets*); `amend` marks the draft as redoing a
-/// batch (07 › *Amend*); `sort_by_name` reads a new batch in file-name order (= download order,
-/// 08 › *2. New batch*) and an amend in the given order (its `download/` copy in the order stored
-/// in `state.json`).
+/// What the shared read needs beyond `state`: the chosen files, the state it is checked against,
+/// the batch being redone when this is an amend, the grouping to read with, and whether the files
+/// are read in file-name order.
+pub(super) struct ReadRequest {
+    paths: Vec<PathBuf>,
+    /// Supplies the duplicate guard and the day's next number.
+    base_state: DayState,
+    /// Marks the draft as redoing a batch (07 › *Amend*).
+    amend: Option<AmendState>,
+    /// The grouping to read with (04 › *Sets*).
+    grouping: Grouping,
+    /// Read a new batch in file-name order (= download order, 08 › *2. New batch*) and an amend in
+    /// the given order (its `download/` copy in the order stored in `state.json`).
+    sort_by_name: bool,
+}
+
 pub(super) fn read_into_draft(
     state: &AppState,
-    paths: Vec<PathBuf>,
-    base_state: DayState,
-    amend: Option<AmendState>,
-    grouping: &Grouping,
-    sort_by_name: bool,
+    request: ReadRequest,
     on_progress: impl Fn(Progress) + Send + 'static,
 ) -> Result<ReadResult, String> {
-    if paths.is_empty() {
+    if request.paths.is_empty() {
         return Err("Choose at least one label file first.".to_string());
     }
     let folder = state.data_folder()?;
-    let categories = load_categories(&folder, grouping)?;
+    let categories = load_categories(&folder, &request.grouping)?;
     let couriers = load_couriers(&folder)?;
 
-    let mut files = paths;
-    if sort_by_name {
+    let mut files = request.paths;
+    if request.sort_by_name {
         files.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
     }
 
@@ -253,15 +271,15 @@ pub(super) fn read_into_draft(
     });
 
     let inner = state.with_worker(|worker| {
-        batch::check_files(worker, &files, &base_state).and_then(|checks| {
-            batch::read(
+        batch::check_files(worker, &files, &request.base_state).and_then(|checks| {
+            batch::read(&batch::ReadRequest {
                 worker,
-                &checks,
-                &base_state,
-                cancel.clone(),
-                progress_tx,
-                &couriers,
-            )
+                files: &checks,
+                state: &request.base_state,
+                cancel: cancel.clone(),
+                progress: progress_tx,
+                couriers: &couriers,
+            })
         })
     });
 
@@ -277,14 +295,14 @@ pub(super) fn read_into_draft(
         .with_worker(|worker| read_pictures(worker, &draft))
         .unwrap_or_default();
     let plan = Plan::from_categories(&categories);
-    let first_number = base_state.next_pdf_number();
+    let first_number = request.base_state.next_pdf_number();
     let open = OpenDraft {
         draft,
         plan,
         first_number,
         couriers,
-        grouping: grouping.clone(),
-        amend,
+        grouping: request.grouping,
+        amend: request.amend,
         logo_pictures,
     };
     let read = read_result(&open);

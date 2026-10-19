@@ -205,7 +205,7 @@ export interface AmendStart {
   read: ReadResult;
 }
 
-/// The owner's answer about one unseen logo (08 › *The logo prompt*), as Rust's `LogoAnswerInput`
+/// The owner's answer about one unseen logo (08 › *The logo prompt*), as Rust's `LogoAnswer`
 /// reads it (`kind` is the tag). *Skip all* is the screen's alone: it sends nothing.
 export type LogoAnswer =
   | { kind: "courier"; name: string }

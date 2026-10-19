@@ -16,6 +16,7 @@ use pdfium_render::prelude::Pdfium;
 use packing_engine::label::CourierTable;
 use packing_engine::orders::PageItem;
 use packing_engine::text::PageText;
+use serde::Serialize;
 
 use crate::PdfError;
 use crate::packing_list::{self, Layout, PackingList};
@@ -29,8 +30,10 @@ pub struct Progress {
     pub pages: usize,
 }
 
-/// Which part of a save is running (07 › *Check before saving*).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// Which part of a save is running (07 › *Check before saving*). The names are the window's
+/// `save-progress` stage names.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum SaveStage {
     /// The saved PDFs and packing lists are being written.
     Writing,
