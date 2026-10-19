@@ -13,4 +13,5 @@
 | By eye | Saved PDFs and packing lists from a sample run | a sample run ([cli.md](cli.md)), then compare the pages with the download (rendered side by side); the layout is as in [packing-list.md](../software-design/labels/packing-list.md) |
 
 All Rust levels run from the repository root; the Python tests need the virtual environment
-([setup.md](setup.md)). Setup, run and build commands are in [app.md](app.md).
+([setup.md](setup.md)). Setup, run and build commands are in [app.md](app.md); what each level covers
+in percent, and where no test reaches, is in [coverage.md](coverage.md).

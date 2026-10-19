@@ -1,0 +1,9 @@
+# Clippy thresholds for the ratcheted lints (docs/development/code-rules.md, "Lint ratchet").
+# tools/check-lint.mjs counts the warnings these produce, per file; tools/check.sh runs the plain
+# clippy gate with the two lints allowed, so the counts reach the script and not `-D warnings`.
+
+# At most five parameters: more means a missing type that groups them.
+too-many-arguments-threshold = 5
+
+# A function is too much when it does several separately named jobs in sequence.
+cognitive-complexity-threshold = 25

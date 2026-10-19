@@ -1,0 +1,68 @@
+{
+  "note": "Coverage BEFORE the refactor (R0). The gate compares the Rust totals and per-crate figures and the TypeScript totals; a compared number must not drop by more than 0.1 point. tools/check-coverage.mjs reads this file; only tools/check-coverage.mjs --record writes it.",
+  "measured_time": "2026-10-19T12:33:40.021Z",
+  "commit": "490e48d",
+  "rust": {
+    "totals": {
+      "lines": 86.29,
+      "regions": 86.56,
+      "functions": 79.56
+    },
+    "crates": {
+      "app/src-tauri": {
+        "lines": 86.38,
+        "regions": 88.11,
+        "functions": 70.65
+      },
+      "crates/cli": {
+        "lines": 25.44,
+        "regions": 23.17,
+        "functions": 22.73
+      },
+      "crates/engine": {
+        "lines": 91.1,
+        "regions": 91.46,
+        "functions": 92.64
+      },
+      "crates/pdf": {
+        "lines": 87.97,
+        "regions": 86.99,
+        "functions": 82.1
+      }
+    }
+  },
+  "typescript": {
+    "totals": {
+      "lines": 72.43,
+      "branches": 98.88,
+      "functions": 66.67
+    },
+    "files": {
+      "app/src/lib/api.ts": 50.34,
+      "app/src/lib/conditions.ts": 22.07,
+      "app/src/lib/logoPrompt.ts": 100,
+      "app/src/lib/printed.ts": 100,
+      "app/src/lib/saveCheck.ts": 100,
+      "app/src/lib/sets.ts": 100,
+      "app/src/lib/unconfigured.ts": 100,
+      "app/src/routes/+layout.ts": 0,
+      "app/src/texts.ts": 99.56
+    },
+    "not_reached": [
+      "app/src/lib/BoxesEditor.svelte",
+      "app/src/lib/CategoriesScreen.svelte",
+      "app/src/lib/DayScreen.svelte",
+      "app/src/lib/Frame.svelte",
+      "app/src/lib/LogoPrompt.svelte",
+      "app/src/lib/NewBatchScreen.svelte",
+      "app/src/lib/Overlay.svelte",
+      "app/src/lib/PlanScreen.svelte",
+      "app/src/lib/SaveCheckDialog.svelte",
+      "app/src/lib/SearchScreen.svelte",
+      "app/src/lib/SettingsScreen.svelte",
+      "app/src/lib/StartPrompt.svelte",
+      "app/src/routes/+layout.svelte",
+      "app/src/routes/+page.svelte"
+    ]
+  }
+}

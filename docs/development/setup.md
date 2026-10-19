@@ -18,6 +18,8 @@ fresh clone of the repository, run from its root in Git Bash.
 | WebView2 runtime | The window (Edge WebView2, bundled with Windows 11) | at `C:\Program Files (x86)\Microsoft\EdgeWebView\Application` |
 | `tauri-cli` | The Tauri build tool, run as `cargo tauri` | 2.12.1 (`cargo install tauri-cli --locked`), matching the `tauri` 2.12 of [architecture.md](../software-design/app/architecture.md) |
 | `pdfium.dll` | PDFium: read the page text, copy pages, write the packing lists ([program.md](../software-design/app/program.md)) | `chromium/7881` from bblanchon/pdfium-binaries, matching `pdfium-render` 0.9.4; fetched by `bash tools/get-pdfium.sh` into `vendor/pdfium.dll` (git-ignored), SHA256 checked, with a Python fallback for the download because `curl` fails on GitHub release files on this PC |
+| `cargo-llvm-cov` | The Rust coverage measurement of `bash tools/check.sh --coverage` | 0.9.1 (`cargo install cargo-llvm-cov --locked`) |
+| `llvm-tools-preview` (rustup component) | The `llvm-cov` and `llvm-profdata` binaries `cargo-llvm-cov` calls | `rustup component add llvm-tools-preview` |
 
 ## Steps
 
@@ -55,6 +57,19 @@ cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ```
+
+### Coverage tools
+
+```bash
+cargo install cargo-llvm-cov --locked       # cargo llvm-cov
+rustup component add llvm-tools-preview     # llvm-cov, llvm-profdata
+export CARGO_LLVM_COV_TARGET_DIR=C:/Users/wthe22/llvm-cov-target
+```
+
+The instrumented Rust build is about 5 GB, so `CARGO_LLVM_COV_TARGET_DIR` moves it to a drive with
+room (`C:` on this PC, `target/` lives on `D:`). `tools/check-coverage.mjs` uses that folder when the
+variable is set, so it is exported before `bash tools/check.sh --coverage`. The measured numbers and
+what no test reaches are in [coverage.md](coverage.md).
 
 ### Build the program folder (portable)
 

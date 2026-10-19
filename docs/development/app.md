@@ -17,14 +17,19 @@ From the repository root, Git Bash:
 
 | Gate | Command |
 |---|---|
+| All the checks, in order | `bash tools/check.sh` (`--coverage` adds the coverage compare) |
 | Rust format | `cargo fmt --all --check` |
 | Rust lints | `cargo clippy --workspace --all-targets -- -D warnings` |
 | Rust tests | `cargo test --workspace` |
 | Front-end types | `cd app && npm run check` |
 | Front-end tests | `cd app && npm test` |
+| File size ratchet | `node tools/check-size.mjs` |
+| Lint ratchet | `node tools/check-lint.mjs` |
+| Coverage compare | `node tools/check-coverage.mjs` |
 
 Every change also meets the [code rules](code-rules.md): its checks, run together by `bash tools/check.sh`,
-are listed there.
+are listed there. The two ratchets read the counts in `tools/baselines/` and fail for a file that grew or
+is new; the coverage numbers and what no test reaches are in [coverage.md](coverage.md).
 
 `cargo test --workspace` runs the engine, PDF and app tests; the test levels and their expected
 sample numbers are in [testing.md](testing.md).

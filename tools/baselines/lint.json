@@ -1,0 +1,32 @@
+{
+  "note": "Per file: the counts of the ratcheted clippy warnings (tools/check-lint.mjs) and of every lint suppression. Measured by tools/check-lint.mjs. Only shrinks: a new entry or suppression is never added.",
+  "files": {
+    "app/src-tauri/src/commands/batch.rs": {
+      "too_many_arguments": 1
+    },
+    "crates/cli/src/main.rs": {
+      "too_many_arguments": 1,
+      "allow": 1
+    },
+    "crates/engine/tests/day_state.rs": {
+      "cognitive_complexity": 1
+    },
+    "crates/pdf/src/batch.rs": {
+      "too_many_arguments": 2,
+      "allow": 1
+    },
+    "crates/pdf/src/packing_list.rs": {
+      "too_many_arguments": 1,
+      "allow": 1
+    },
+    "app/src/lib/PlanScreen.svelte": {
+      "svelte_ignore": 4
+    },
+    "app/vite.config.js": {
+      "ts_ignore": 1
+    },
+    "crates/pdf/tests/common/mod.rs": {
+      "allow": 1
+    }
+  }
+}
