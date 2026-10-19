@@ -1,7 +1,10 @@
 //! orders.rs: the pages → orders step, display names and the warnings / no-slip stop
 //! (03, 07). Hand-built pages only.
 
-use packing_engine::orders::{LogoAnswer, PageRef, ReadError, Warning, display_name, read_batch};
+use packing_engine::ids::{OrderId, TrackingId};
+use packing_engine::orders::{
+    LogoAnswer, OrderLabel, PageRef, ReadError, Warning, display_name, read_batch,
+};
 use packing_engine::text::{LogoImage, PageText, Run};
 
 /// The built-in courier list: the default of a data folder without a `couriers.toml`.
@@ -124,8 +127,11 @@ fn second_page_without_order_id_continues_the_first() {
 
     assert_eq!(reading.orders.len(), 1);
     let order = &reading.orders[0];
-    assert_eq!(order.order.order_id, "580000000000000001");
-    assert_eq!(order.order.tracking_id, "JY0000001234");
+    assert_eq!(order.order.order_id.as_str(), "580000000000000001");
+    assert_eq!(
+        order.order.tracking_id.as_ref().map(TrackingId::as_str),
+        Some("JY0000001234")
+    );
     assert_eq!(order.order.courier, "J&T Express");
     assert_eq!(
         order.order.ship_by.unwrap().to_string(),
@@ -297,8 +303,8 @@ fn qty_total_difference_is_warned() {
     assert_eq!(
         reading.warnings,
         vec![Warning::QtyTotalDiffers {
-            order_id: "580000000000000001".into(),
-            tracking_id: "JY0000001234".into(),
+            order_id: OrderId::new("580000000000000001"),
+            tracking_id: Some(TrackingId::new("JY0000001234")),
             qty_total: 5,
             sum: 1,
         }]
@@ -318,8 +324,7 @@ fn unknown_courier_is_warned() {
     assert_eq!(
         reading.warnings,
         vec![Warning::UnknownCourier {
-            order_ids: vec!["580000000000000003".into()],
-            tracking_ids: vec!["000000000202".into()],
+            orders: vec![OrderLabel::Tracking(TrackingId::new("000000000202"))],
         }]
     );
     assert_eq!(
@@ -333,12 +338,19 @@ fn unknown_courier_is_warned() {
 fn a_missing_tracking_id_is_warned() {
     let p0 = slip_page("580000000000000004", &one_row(), Some(1), None);
     let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
-    assert!(reading.orders[0].order.tracking_id.is_empty());
+    assert!(reading.orders[0].order.tracking_id.is_none());
+    // The unknown-courier line names that order by its Order ID, as it has no tracking ID.
+    let unknown = reading
+        .warnings
+        .iter()
+        .find(|warning| matches!(warning, Warning::UnknownCourier { .. }))
+        .expect("the courier is unknown");
+    assert!(unknown.to_string().contains("580000000000000004"));
     assert!(
         reading
             .warnings
             .iter()
-            .any(|w| matches!(w, Warning::TrackingIdMissing { order_ids } if order_ids == &vec!["580000000000000004".to_string()]))
+            .any(|w| matches!(w, Warning::TrackingIdMissing { order_ids } if order_ids == &vec![OrderId::new("580000000000000004")]))
     );
 }
 
@@ -393,8 +405,8 @@ fn an_unseen_logo_is_reported_with_its_pages_and_orders() {
     assert_eq!(
         entry.order_ids,
         vec![
-            "580000000000000001".to_string(),
-            "580000000000000002".to_string()
+            OrderId::new("580000000000000001"),
+            OrderId::new("580000000000000002")
         ]
     );
     // The unknown logo names neither order: the table has to be asked.

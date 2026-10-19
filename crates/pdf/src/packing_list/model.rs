@@ -3,6 +3,8 @@
 
 use std::fmt;
 
+use packing_engine::ids::{BatchNumber, PdfNumber, TrackingId};
+
 /// The three layouts (03 › *Packing list (A4)*).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Layout {
@@ -54,7 +56,8 @@ pub struct PackingLine {
 /// One order of a run (Python `orders.Order`): its tracking ID and slip lines.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RunOrder {
-    pub tracking_id: String,
+    /// The courier's parcel number; `None` prints an empty cell.
+    pub tracking_id: Option<TrackingId>,
     pub lines: Vec<PackingLine>,
 }
 
@@ -69,7 +72,7 @@ pub struct RunRows {
 /// One saved PDF (Python `picks.SavedPdf`): a pick's number, code, name and its runs.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SavedPdfSection {
-    pub number: u32,
+    pub number: PdfNumber,
     pub code: String,
     pub name: String,
     pub runs: Vec<RunRows>,
@@ -82,7 +85,7 @@ pub struct PackingList {
     /// `YYYY-MM-DD`.
     pub day: String,
     /// The batch number shown in the header, when the list belongs to one batch.
-    pub batch: Option<u32>,
+    pub batch: Option<BatchNumber>,
     /// Already-formatted `HH:MM` print time.
     pub printed: String,
     pub sections: Vec<SavedPdfSection>,

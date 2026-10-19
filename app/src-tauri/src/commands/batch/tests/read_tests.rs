@@ -1,6 +1,7 @@
 //! Reading and saving a batch on `testdata/`, skipped when `vendor/pdfium.dll` is missing.
 
 use super::*;
+use packing_engine::ids::{BatchNumber, PdfNumber};
 
 #[test]
 fn read_and_save_testdata_labels_slip() {
@@ -23,13 +24,22 @@ fn read_and_save_testdata_labels_slip() {
     assert_eq!(read.total_orders, 23);
     assert_eq!(read.already_saved, 0);
     assert_eq!(read.pages, 24);
-    let numbered: Vec<(i64, usize)> = read
+    let numbered: Vec<(PdfNumber, usize)> = read
         .plan
         .rows
         .iter()
         .filter_map(|row| row.number.map(|number| (number, row.orders)))
         .collect();
-    assert_eq!(numbered, vec![(1, 7), (2, 8), (3, 4), (4, 2), (5, 2)]);
+    assert_eq!(
+        numbered,
+        vec![
+            (PdfNumber::new(1), 7),
+            (PdfNumber::new(2), 8),
+            (PdfNumber::new(3), 4),
+            (PdfNumber::new(4), 2),
+            (PdfNumber::new(5), 2),
+        ]
+    );
 
     // The save reports its two stages through the progress channel (the window's
     // `save-progress` event): *Writing* then *Checking*.
@@ -39,7 +49,7 @@ fn read_and_save_testdata_labels_slip() {
         collect.lock().unwrap().push(progress);
     })
     .expect("save");
-    assert_eq!(save.batch, 1);
+    assert_eq!(save.batch, BatchNumber::new(1));
     assert_eq!(save.pdfs, 5);
     assert_eq!(save.packing_lists, 1);
     assert!(dir.join("labels/2026-10-07/state.json").is_file());
@@ -117,10 +127,10 @@ fn a_read_without_a_categories_file_saves_every_order_in_one_pdf() {
     assert_eq!(read.plan.rows[0].code, "Z");
     assert_eq!(read.plan.rows[0].name, "Lainnya");
     assert_eq!(read.plan.rows[0].orders, 23);
-    assert_eq!(read.plan.rows[0].number, Some(1));
+    assert_eq!(read.plan.rows[0].number, Some(PdfNumber::new(1)));
 
     let save = save_batch_impl(&state, None, false, |_| {}).expect("save");
-    assert_eq!(save.batch, 1);
+    assert_eq!(save.batch, BatchNumber::new(1));
     assert_eq!(save.pdfs, 1, "one PDF set for every order");
     let day_state = DayState::load(&dir.join("labels/2026-10-07")).expect("state");
     assert_eq!(day_state.batches[0].pdfs.len(), 1);
@@ -169,13 +179,19 @@ fn a_batch_read_uses_the_chosen_set_and_records_it() {
         Grouping::new("ramadhan"),
         "the plan names the chosen set for the header"
     );
-    let rows: Vec<(&str, Option<i64>)> = read
+    let rows: Vec<(&str, Option<PdfNumber>)> = read
         .plan
         .rows
         .iter()
         .map(|row| (row.code.as_str(), row.number))
         .collect();
-    assert_eq!(rows, vec![("A", Some(1)), ("Z", Some(2))]);
+    assert_eq!(
+        rows,
+        vec![
+            ("A", Some(PdfNumber::new(1))),
+            ("Z", Some(PdfNumber::new(2)))
+        ]
+    );
 
     // The requested set is the one the next New batch preselects ...
     assert_eq!(
@@ -190,7 +206,7 @@ fn a_batch_read_uses_the_chosen_set_and_records_it() {
         save_batch_impl(&state, None, false, |_| {})
             .expect("save")
             .batch,
-        1
+        BatchNumber::new(1)
     );
     let day_state = DayState::load(&dir.join("labels/2026-10-07")).expect("state");
     assert_eq!(day_state.batches[0].grouping, Grouping::new("ramadhan"));
@@ -230,7 +246,7 @@ fn an_amend_reads_the_batchs_own_set_whatever_was_used_last() {
         save_batch_impl(&state, None, false, |_| {})
             .expect("save")
             .batch,
-        1
+        BatchNumber::new(1)
     );
 
     // ... is redone after another set was used last.
@@ -283,8 +299,17 @@ fn back_keeps_the_draft_and_a_new_read_replaces_its_plan_edits() {
         |_| {},
     )
     .expect("read");
-    let numbers: Vec<Option<i64>> = read.plan.rows.iter().map(|row| row.number).collect();
-    assert_eq!(numbers, vec![Some(1), Some(2), Some(3), Some(4), Some(5)]);
+    let numbers: Vec<Option<PdfNumber>> = read.plan.rows.iter().map(|row| row.number).collect();
+    assert_eq!(
+        numbers,
+        vec![
+            Some(PdfNumber::new(1)),
+            Some(PdfNumber::new(2)),
+            Some(PdfNumber::new(3)),
+            Some(PdfNumber::new(4)),
+            Some(PdfNumber::new(5)),
+        ]
+    );
     assert_eq!(read.plan.rows[0].file_name, "1 A Sepatu ×7.pdf");
 
     // *Back* changes nothing here: the draft is still open with its one file and its orders.
@@ -326,8 +351,17 @@ fn back_keeps_the_draft_and_a_new_read_replaces_its_plan_edits() {
         |_| {},
     )
     .expect("read again");
-    let numbers: Vec<Option<i64>> = again.plan.rows.iter().map(|row| row.number).collect();
-    assert_eq!(numbers, vec![Some(1), Some(2), Some(3), Some(4), Some(5)]);
+    let numbers: Vec<Option<PdfNumber>> = again.plan.rows.iter().map(|row| row.number).collect();
+    assert_eq!(
+        numbers,
+        vec![
+            Some(PdfNumber::new(1)),
+            Some(PdfNumber::new(2)),
+            Some(PdfNumber::new(3)),
+            Some(PdfNumber::new(4)),
+            Some(PdfNumber::new(5)),
+        ]
+    );
     assert_eq!(
         again.plan.rows[0].file_name, "1 A Sepatu ×7.pdf",
         "no plan edit survives a new read"

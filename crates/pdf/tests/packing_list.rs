@@ -3,6 +3,7 @@
 
 mod common;
 
+use packing_engine::ids::{BatchNumber, PdfNumber, TrackingId};
 use packing_pdf::packing_list::{
     Layout, PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection, write,
 };
@@ -19,7 +20,7 @@ fn line(name: &str, variation: &str, quantity: i64, display: &str) -> PackingLin
 
 fn order(tracking: &str, lines: Vec<PackingLine>) -> RunOrder {
     RunOrder {
-        tracking_id: tracking.to_string(),
+        tracking_id: (!tracking.is_empty()).then(|| TrackingId::new(tracking)),
         lines,
     }
 }
@@ -48,10 +49,10 @@ fn sample_list() -> PackingList {
         .collect();
     PackingList {
         day: "2026-10-06".to_string(),
-        batch: Some(1),
+        batch: Some(BatchNumber::new(1)),
         printed: "16:40".to_string(),
         sections: vec![SavedPdfSection {
-            number: 1,
+            number: PdfNumber::new(1),
             code: "A".to_string(),
             name: "Sepatu".to_string(),
             runs: vec![
@@ -181,7 +182,7 @@ fn whole_scope_names_the_number_range() {
     }
     let mut list = sample_list();
     list.sections.push(SavedPdfSection {
-        number: 2,
+        number: PdfNumber::new(2),
         code: "B".to_string(),
         name: "Spion".to_string(),
         runs: list.sections[0].runs.clone(),
@@ -241,10 +242,10 @@ fn long_list() -> PackingList {
         .collect();
     PackingList {
         day: "2026-10-11".to_string(),
-        batch: Some(1),
+        batch: Some(BatchNumber::new(1)),
         printed: "13:46".to_string(),
         sections: vec![SavedPdfSection {
-            number: 1,
+            number: PdfNumber::new(1),
             code: "A".to_string(),
             name: "Sepatu".to_string(),
             runs,

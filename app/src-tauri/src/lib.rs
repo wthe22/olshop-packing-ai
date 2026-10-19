@@ -15,6 +15,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use packing_engine::day::DayState;
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{BatchNumber, PdfNumber};
 use packing_engine::plan::Plan;
 use packing_pdf::batch::Draft;
 use packing_pdf::worker::PdfWorker;
@@ -50,7 +51,7 @@ pub(crate) struct OpenDraft {
     pub draft: Draft,
     pub plan: Plan,
     /// The day's next saved-PDF number at the time of reading (08 › *3. Plan*: the numbers `#`).
-    pub first_number: i64,
+    pub first_number: PdfNumber,
     /// The courier data the batch was read with: the data folder's `couriers.toml`, or the
     /// bundled list when it has none (07 › *Inputs*). The logo prompt's buttons and the answers
     /// use this table.
@@ -72,7 +73,7 @@ pub(crate) struct OpenDraft {
 /// same batch and saved-PDF numbers and the duplicate guard ignores the batch's own orders
 /// (07 › *Revert and amend*).
 pub(crate) struct AmendState {
-    pub batch: i64,
+    pub batch: BatchNumber,
     pub state: DayState,
 }
 

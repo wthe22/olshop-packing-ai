@@ -4,6 +4,7 @@
 use std::collections::HashMap;
 
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::PdfNumber;
 use packing_engine::orders::{Order, ReadOrder, display_name};
 use packing_engine::plan::{PickResult, Plan};
 use packing_engine::rules::{Category, Condition, evaluate, parse_condition};
@@ -18,7 +19,7 @@ use super::views::{PlanEdit, PlanRow, PlanView, RunView};
 pub(super) fn plan_view(
     plan: &Plan,
     orders: &[ReadOrder],
-    first_number: i64,
+    first_number: PdfNumber,
     grouping: &Grouping,
 ) -> PlanView {
     let result = plan.count(orders, first_number);
@@ -107,7 +108,7 @@ pub(super) fn plan_view(
     }
 
     // Duplicate saved-PDF names, case-insensitive as Windows is (08 › *3. Plan*).
-    let mut seen: Vec<(String, i64)> = Vec::new();
+    let mut seen: Vec<(String, PdfNumber)> = Vec::new();
     let mut has_duplicate_names = false;
     for row in &mut rows {
         let Some(number) = row.number else {

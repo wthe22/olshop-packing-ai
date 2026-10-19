@@ -8,6 +8,7 @@
 
 use std::fmt;
 
+use crate::ids::{OrderId, PdfNumber};
 use crate::names::{self, NameError};
 use crate::orders::ReadOrder;
 use crate::rules::{self, Category, Condition, evaluate};
@@ -210,7 +211,7 @@ impl Plan {
     /// The counts and runs of every pick: the rows in order, each taking its matching orders
     /// from what is left; the leftovers are the rest pick. Numbering starts at `first_number`
     /// and only picks that take orders get a number (03 › *Picks*).
-    pub fn count(&self, orders: &[ReadOrder], first_number: i64) -> PlanResult {
+    pub fn count(&self, orders: &[ReadOrder], first_number: PdfNumber) -> PlanResult {
         let mut remaining: Vec<&ReadOrder> = orders.iter().collect();
         let mut picks: Vec<PickResult> = Vec::new();
         let mut number = first_number;
@@ -225,7 +226,7 @@ impl Plan {
                 continue;
             }
             picks.push(build_pick(number, entry, &taken));
-            number += 1;
+            number = number.next();
         }
 
         if !remaining.is_empty() {
@@ -259,7 +260,7 @@ fn split_matching<'a>(
     (taken, left)
 }
 
-fn build_pick(number: i64, entry: &PlanEntry, orders: &[&ReadOrder]) -> PickResult {
+fn build_pick(number: PdfNumber, entry: &PlanEntry, orders: &[&ReadOrder]) -> PickResult {
     let category = &entry.category;
     let file_name = entry.file_name.clone().unwrap_or_else(|| {
         names::suggested_saved_pdf_name(number, &category.code, &category.name, orders.len())
@@ -312,17 +313,17 @@ fn runs(orders: &[&ReadOrder]) -> Vec<RunResult> {
 pub struct RunResult {
     pub number: usize,
     /// The order IDs in download order.
-    pub orders: Vec<String>,
+    pub orders: Vec<OrderId>,
 }
 
 /// One pick: the saved PDF it will become (07 › *Plan*).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PickResult {
-    pub number: i64,
+    pub number: PdfNumber,
     pub code: String,
     pub name: String,
     /// The order IDs in download order.
-    pub orders: Vec<String>,
+    pub orders: Vec<OrderId>,
     pub runs: Vec<RunResult>,
     /// The label pages of the pick's orders.
     pub pages: usize,

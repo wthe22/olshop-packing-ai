@@ -4,6 +4,7 @@
 use std::path::{Path, PathBuf};
 
 use packing_engine::day::{DayState, delete_batch_folder};
+use packing_engine::ids::BatchNumber;
 use packing_engine::names;
 use packing_pdf::batch;
 use packing_pdf::worker::Progress;
@@ -103,7 +104,7 @@ pub(super) fn start_amend_impl(
 pub(super) fn read_amend_draft(
     state: &AppState,
     paths: Vec<PathBuf>,
-    redoing: i64,
+    redoing: BatchNumber,
     on_progress: impl Fn(Progress) + Send + 'static,
 ) -> Result<ReadResult, String> {
     let day_dir = state.day_dir()?;

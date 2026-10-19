@@ -5,6 +5,7 @@
 use std::path::Path;
 
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{BatchNumber, PdfNumber};
 use packing_engine::orders::LogoAnswer;
 use packing_pdf::batch::FileCheck;
 use packing_pdf::worker::{SaveProgress, SaveStage};
@@ -20,7 +21,7 @@ pub struct FileCheckView {
     /// `HH:MM` of the file's modified time (its download time).
     pub(super) time: String,
     pub(super) pages: usize,
-    pub(super) used_in_batch: Option<i64>,
+    pub(super) used_in_batch: Option<BatchNumber>,
 }
 
 /// The `read-progress` event payload (07 › *Commands between window and Rust*).
@@ -65,7 +66,7 @@ pub struct ReadResult {
     pub(super) warnings: Vec<String>,
     /// The batch being redone when this read is an amend (07 › *Amend*): the Plan screen is then
     /// titled *Redo batch `<b>`*; `None` for a normal new batch.
-    pub(super) amend: Option<i64>,
+    pub(super) amend: Option<BatchNumber>,
     /// The courier names the prompt's buttons show, in `couriers.toml` order (D-LABEL-1).
     pub(super) couriers: Vec<String>,
     /// The header-band images the courier data does not know (D-LABEL-4): the prompt asks about
@@ -82,7 +83,7 @@ pub struct ReadResult {
 #[derive(Serialize)]
 pub struct AmendStart {
     /// The batch being redone: titles the Plan screen and the selection page *Redo batch `<b>`*.
-    pub(super) batch: i64,
+    pub(super) batch: BatchNumber,
     /// The batch's `download/` files, already selected — the selection page's starting list
     /// (08 › *2. New batch* → *The amend's selection page*, Q-APP-2).
     pub(super) files: Vec<FileCheckView>,
@@ -149,7 +150,7 @@ pub struct PlanRow {
     /// The plan entry's index, for the edits; `None` for the generated `? Uncategorised` row.
     pub(super) index: Option<usize>,
     /// The saved-PDF number this row will get; `None` when it takes no orders.
-    pub(super) number: Option<i64>,
+    pub(super) number: Option<PdfNumber>,
     pub(super) code: String,
     pub(super) name: String,
     /// The condition text as written (under the row); `None` when the row has no condition.
@@ -165,7 +166,7 @@ pub struct PlanRow {
     /// The rest row: the last entry when it has no condition, else `? Uncategorised`.
     pub(super) is_rest: bool,
     /// The `#` of the earlier row with the same file name (*Same name as PDF 6*).
-    pub(super) duplicate_of: Option<i64>,
+    pub(super) duplicate_of: Option<PdfNumber>,
     pub(super) can_use: bool,
     pub(super) can_move_up: bool,
     pub(super) can_move_down: bool,
@@ -216,7 +217,7 @@ pub enum PlanEdit {
 /// before saving*).
 #[derive(Serialize)]
 pub struct SaveResultView {
-    pub(super) batch: i64,
+    pub(super) batch: BatchNumber,
     pub(super) pdfs: usize,
     pub(super) packing_lists: usize,
     /// Whether the batch was written; `false` when the check found something and the dialog's

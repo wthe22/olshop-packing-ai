@@ -63,8 +63,9 @@ fn title(list: &PackingList) -> String {
             section.number, section.code, section.name
         ));
     } else {
-        let first = list.sections.first().map(|s| s.number).unwrap_or(0);
-        let last = list.sections.last().map(|s| s.number).unwrap_or(0);
+        let first = list.sections.first().map(|s| s.number.to_string());
+        let last = list.sections.last().map(|s| s.number.to_string());
+        let (first, last) = (first.unwrap_or_default(), last.unwrap_or_default());
         title.push_str(&format!(" · saved PDFs {first}-{last}"));
     }
     title

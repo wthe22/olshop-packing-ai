@@ -14,6 +14,7 @@ use packing_engine::day::{
     BatchEntry, DayState, FileEntry, PackingListChoice, PdfEntry, SavedItem, SavedOrder,
 };
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::orders::{Line, Order};
 use packing_engine::rules::{evaluate, parse_condition};
 use packing_engine::search::search;
@@ -49,10 +50,10 @@ impl Drop for TempDir {
 /// A saved order with the searched fields written, as a save does; `lines` are `(name, quantity)`.
 fn saved(order_id: &str, tracking_id: &str, lines: &[(&str, i64)]) -> SavedOrder {
     SavedOrder {
-        order_id: order_id.to_string(),
-        tracking_id: tracking_id.to_string(),
-        batch: 1,
-        pdf: 1,
+        order_id: OrderId::new(order_id),
+        tracking_id: tracking_id_or_none(tracking_id),
+        batch: BatchNumber::new(1),
+        pdf: PdfNumber::new(1),
         run: 1,
         items: lines
             .iter()
@@ -70,13 +71,18 @@ fn saved(order_id: &str, tracking_id: &str, lines: &[(&str, i64)]) -> SavedOrder
     }
 }
 
+/// A tracking ID as the tests write it: the empty text is the order whose label printed none.
+fn tracking_id_or_none(tracking_id: &str) -> Option<TrackingId> {
+    (!tracking_id.is_empty()).then(|| TrackingId::new(tracking_id))
+}
+
 /// An order saved before search existed: only its IDs, no searched fields.
 fn legacy(order_id: &str, tracking_id: &str) -> SavedOrder {
     SavedOrder {
-        order_id: order_id.to_string(),
-        tracking_id: tracking_id.to_string(),
-        batch: 1,
-        pdf: 1,
+        order_id: OrderId::new(order_id),
+        tracking_id: tracking_id_or_none(tracking_id),
+        batch: BatchNumber::new(1),
+        pdf: PdfNumber::new(1),
         run: 1,
         items: Vec::new(),
         courier: String::new(),
@@ -90,7 +96,7 @@ fn legacy(order_id: &str, tracking_id: &str) -> SavedOrder {
 fn day_state(day: &str, saved: Vec<SavedOrder>, pdf_file: &str) -> DayState {
     let mut state = DayState::new(day);
     state.batches.push(BatchEntry {
-        batch: 1,
+        batch: BatchNumber::new(1),
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
         grouping: Grouping::default(),
         files: vec![FileEntry {
@@ -101,7 +107,7 @@ fn day_state(day: &str, saved: Vec<SavedOrder>, pdf_file: &str) -> DayState {
             legacy_sha256: None,
         }],
         pdfs: vec![PdfEntry {
-            number: 1,
+            number: PdfNumber::new(1),
             code: "A".to_string(),
             name: "Sepatu".to_string(),
             file: pdf_file.to_string(),
@@ -120,8 +126,8 @@ fn day_state(day: &str, saved: Vec<SavedOrder>, pdf_file: &str) -> DayState {
 /// The order the saved fields describe, for a "same as a category" comparison.
 fn read_order(order_id: &str, tracking_id: &str, lines: &[(&str, i64)]) -> Order {
     Order {
-        order_id: order_id.to_string(),
-        tracking_id: tracking_id.to_string(),
+        order_id: OrderId::new(order_id),
+        tracking_id: tracking_id_or_none(tracking_id),
         courier: "J&T Express".to_string(),
         ship_by: None,
         lines: lines
@@ -155,14 +161,17 @@ fn a_tracking_id_finds_its_one_order() {
     assert_eq!(results.batches, 1);
     assert_eq!(results.rows.len(), 1);
     let row = &results.rows[0];
-    assert_eq!(row.order_id, "580000000000000001");
-    assert_eq!(row.tracking_id, "JY0000001234");
+    assert_eq!(row.order_id.as_str(), "580000000000000001");
+    assert_eq!(
+        row.tracking_id.as_ref().map(TrackingId::as_str),
+        Some("JY0000001234")
+    );
     assert_eq!(row.courier, "J&T Express");
     assert_eq!(row.items.len(), 1);
     assert_eq!(row.items[0].name, "Sepatu");
     assert_eq!(row.items[0].quantity, 2);
-    assert_eq!(row.batch, 1);
-    assert_eq!(row.pdf, 1);
+    assert_eq!(row.batch, BatchNumber::new(1));
+    assert_eq!(row.pdf, PdfNumber::new(1));
     assert_eq!(row.file, "1 A Sepatu ×1.pdf");
     assert!(!row.items_not_stored);
 }
@@ -253,14 +262,14 @@ fn this_day_does_not_see_another_days_order_but_all_days_does() {
     // *This day*: one day state only.
     let this_day = search(&cond, &[("2026-10-07", &day_1)]);
     assert_eq!(this_day.orders, 1);
-    assert_eq!(this_day.rows[0].order_id, "580000000000000001");
+    assert_eq!(this_day.rows[0].order_id.as_str(), "580000000000000001");
 
     // *All days*: every day state; both orders match.
     let all = search(&cond, &[("2026-10-07", &day_1), ("2026-10-06", &day_2)]);
     assert_eq!(all.orders, 2);
     assert_eq!(all.batches, 2, "one batch per day");
-    assert_eq!(all.rows[0].order_id, "580000000000000001");
-    assert_eq!(all.rows[1].order_id, "580000000000000009");
+    assert_eq!(all.rows[0].order_id.as_str(), "580000000000000001");
+    assert_eq!(all.rows[1].order_id.as_str(), "580000000000000009");
 }
 
 #[test]
@@ -345,4 +354,30 @@ fn the_searched_fields_round_trip_through_state_json() {
     let loaded = DayState::load(&day_dir).expect("load");
     let cond = parse_condition("name contains \"sepatu\" and total_quantity = 2").expect("cond");
     assert_eq!(search(&cond, &[("2026-10-07", &loaded)]).orders, 1);
+
+    // A `state.json` with its IDs as plain text and numbers loads and saves back every key and
+    // value unchanged, the empty tracking ID included.
+    let older = concat!(
+        r#"{"day":"2026-10-07","batches":[{"batch":2,"save_time":"2026-10-07T07:40:12+07:00","#,
+        r#""set":"default","files":[],"pdfs":[{"number":7,"code":"A","name":"Sepatu","#,
+        r#""file":"7 A Sepatu x1.pdf","orders":1,"runs":1}],"packing_list":{"scope":"whole","#,
+        r#""layouts":["pick"]},"printed":[7],"warnings":[],"errors":[]}],"#,
+        r#""saved":[{"order_id":"580000000000000001","tracking_id":"JY0000001234","batch":2,"#,
+        r#""pdf":7,"run":1,"items":[],"courier":"","total_quantity":0,"distinct_items":0,"#,
+        r#""ship_by":null},{"order_id":"580000000000000002","tracking_id":"","batch":2,"#,
+        r#""pdf":7,"run":1,"items":[],"courier":"","total_quantity":0,"distinct_items":0,"#,
+        r#""ship_by":null}]}"#
+    );
+    fs::write(day_dir.join("state.json"), older).expect("write a day");
+    let reloaded = DayState::load(&day_dir).expect("load the day");
+    assert_eq!(reloaded.saved[1].tracking_id, None);
+    assert_eq!(reloaded.batches[0].printed, vec![PdfNumber::new(7)]);
+    reloaded.save(&day_dir).expect("save it again");
+    let written: Value =
+        serde_json::from_str(&fs::read_to_string(day_dir.join("state.json")).expect("read"))
+            .expect("parse the second write");
+    assert_eq!(
+        written,
+        serde_json::from_str::<Value>(older).expect("parse")
+    );
 }

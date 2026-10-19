@@ -9,6 +9,7 @@
 //! one cannot match (2.21; Q-UI-3).
 
 use crate::day::{DayState, SavedOrder};
+use crate::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use crate::orders::{Line, Order, display_name};
 use crate::rules::{Condition, evaluate, fields_used};
 
@@ -24,13 +25,13 @@ pub struct SearchItem {
 pub struct SearchRow {
     /// The day folder the order was saved in (`YYYY-MM-DD`).
     pub day: String,
-    pub order_id: String,
-    pub tracking_id: String,
+    pub order_id: OrderId,
+    pub tracking_id: Option<TrackingId>,
     /// The named courier; empty when it is unknown.
     pub courier: String,
     pub items: Vec<SearchItem>,
-    pub batch: i64,
-    pub pdf: i64,
+    pub batch: BatchNumber,
+    pub pdf: PdfNumber,
     /// The saved PDF's file name (07 › *Day folder*); the app prepends the folder path.
     pub file: String,
     /// The order has no stored items: the row says *items not stored*.
@@ -88,7 +89,7 @@ fn only_ids(condition: &Condition) -> bool {
 /// never found.
 pub fn search(condition: &Condition, days: &[(&str, &DayState)]) -> SearchResults {
     let mut rows: Vec<SearchRow> = Vec::new();
-    let mut batches: Vec<(String, i64)> = Vec::new();
+    let mut batches: Vec<(String, BatchNumber)> = Vec::new();
     for (day, state) in days {
         for saved in &state.saved {
             let stored = !saved.items.is_empty();

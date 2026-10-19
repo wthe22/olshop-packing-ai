@@ -1,4 +1,5 @@
 use super::*;
+use packing_engine::ids::{OrderId, PdfNumber, TrackingId};
 use packing_engine::orders::{Line, ReadOrder};
 use packing_engine::plan::Plan;
 use packing_engine::rules::load_rules;
@@ -57,8 +58,8 @@ fn line(name: &str, quantity: i64) -> Line {
 
 fn order(name: &str, quantity: i64) -> Order {
     Order {
-        order_id: "580000000000000999".to_string(),
-        tracking_id: "JY0000009999".to_string(),
+        order_id: OrderId::new("580000000000000999"),
+        tracking_id: Some(TrackingId::new("JY0000009999")),
         courier: "JNE".to_string(),
         ship_by: None,
         lines: vec![line(name, quantity)],
@@ -95,7 +96,7 @@ fn state_with_draft(folder: &Path, orders: Vec<ReadOrder>) -> AppState {
     state.set_draft(OpenDraft {
         draft,
         plan,
-        first_number: 1,
+        first_number: PdfNumber::new(1),
         couriers: packing_engine::label::courier_data().clone(),
         grouping: Grouping::default(),
         amend: None,

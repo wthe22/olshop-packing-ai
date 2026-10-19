@@ -10,6 +10,7 @@ use std::process::{Command, Output};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use packing_engine::day::DayState;
+use packing_engine::ids::{BatchNumber, PdfNumber};
 use packing_engine::names;
 use serde_json::Value;
 
@@ -75,7 +76,7 @@ fn expected_file_names() -> Vec<String> {
         .iter()
         .map(|pick| {
             names::suggested_saved_pdf_name(
-                pick["number"].as_i64().unwrap(),
+                PdfNumber::new(pick["number"].as_i64().unwrap()),
                 pick["code"].as_str().unwrap(),
                 pick["name"].as_str().unwrap(),
                 pick["orders"].as_u64().unwrap() as usize,
@@ -136,7 +137,7 @@ fn assert_batch_one(data: &Path, count: &dyn Fn(&Path) -> usize) -> Vec<String> 
     let state = DayState::load(&data.join("labels").join(DAY)).expect("state");
     assert_eq!(state.batches.len(), 1);
     assert_eq!(state.saved.len(), 23);
-    assert_eq!(state.batches[0].batch, 1);
+    assert_eq!(state.batches[0].batch, BatchNumber::new(1));
     assert_eq!(state.batches[0].pdfs.len(), expected.len());
 
     names

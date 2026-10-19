@@ -6,6 +6,7 @@
 //! empty, so removing the check makes these tests fail, exactly as the 2.15 display tests fail
 //! when their fix is reverted.
 
+use packing_engine::ids::{OrderId, PdfNumber};
 use packing_engine::verify::{
     Check, Expected, ExpectedList, ExpectedPdf, Finding, Written, WrittenList, WrittenPdf, compare,
 };
@@ -15,18 +16,18 @@ fn plan() -> Expected {
     Expected {
         pdfs: vec![
             ExpectedPdf {
-                number: 1,
+                number: PdfNumber::new(1),
                 file: "1 A Sepatu ×2.pdf".to_string(),
-                pages: vec![
-                    "580000000000000001".to_string(),
-                    "580000000000000001".to_string(),
-                    "580000000000000002".to_string(),
-                ],
+                pages: order_ids(&[
+                    "580000000000000001",
+                    "580000000000000001",
+                    "580000000000000002",
+                ]),
             },
             ExpectedPdf {
-                number: 2,
+                number: PdfNumber::new(2),
                 file: "2 B Spion ×1.pdf".to_string(),
-                pages: vec!["580000000000000003".to_string()],
+                pages: order_ids(&["580000000000000003"]),
             },
         ],
         lists: vec![ExpectedList {
@@ -51,8 +52,12 @@ fn written(pdfs: Vec<WrittenPdf>) -> Written {
     }
 }
 
-fn pages(ids: &[&str]) -> Vec<Option<String>> {
-    ids.iter().map(|id| Some((*id).to_string())).collect()
+fn pages(ids: &[&str]) -> Vec<Option<OrderId>> {
+    ids.iter().map(|id| Some(OrderId::new(*id))).collect()
+}
+
+fn order_ids(ids: &[&str]) -> Vec<OrderId> {
+    ids.iter().map(|id| OrderId::new(*id)).collect()
 }
 
 fn pdf1(ids: &[&str]) -> WrittenPdf {
@@ -120,9 +125,9 @@ fn a_doubled_page_is_an_error_in_its_own_list() {
     assert!(has(
         &result.errors,
         &Finding::DoubledPageInOnePdf {
-            pdf: 1,
+            pdf: PdfNumber::new(1),
             file: "1 A Sepatu ×2.pdf".to_string(),
-            order_id: "580000000000000001".to_string(),
+            order_id: OrderId::new("580000000000000001"),
             expected: 2,
             found: 3,
         },
@@ -144,9 +149,9 @@ fn a_dropped_page_is_an_error_in_its_own_list() {
     assert!(has(
         &result.errors,
         &Finding::MissingPage {
-            pdf: 1,
+            pdf: PdfNumber::new(1),
             file: "1 A Sepatu ×2.pdf".to_string(),
-            order_id: "580000000000000002".to_string(),
+            order_id: OrderId::new("580000000000000002"),
             expected: 1,
             found: 0,
         },
@@ -171,8 +176,8 @@ fn an_order_in_two_pdfs_is_an_error_in_its_own_list() {
     assert!(has(
         &result.errors,
         &Finding::OrderInTwoPdfs {
-            order_id: "580000000000000001".to_string(),
-            pdfs: vec![1, 2],
+            order_id: OrderId::new("580000000000000001"),
+            pdfs: vec![PdfNumber::new(1), PdfNumber::new(2)],
         },
         "order in two picks",
     ));
@@ -191,14 +196,14 @@ fn an_order_in_no_pdf_is_an_error_in_its_own_list() {
     assert!(has(
         &result.errors,
         &Finding::OrderInNoPdf {
-            order_id: "580000000000000002".to_string(),
+            order_id: OrderId::new("580000000000000002"),
         },
         "order in no pick",
     ));
     assert!(has(
         &result.errors,
         &Finding::OrderInNoPdf {
-            order_id: "580000000000000003".to_string(),
+            order_id: OrderId::new("580000000000000003"),
         },
         "order in no pick",
     ));
@@ -220,10 +225,10 @@ fn a_wrong_label_on_a_page_is_an_error() {
     assert!(has(
         &result.errors,
         &Finding::WrongOrderLabelOnPage {
-            pdf: 1,
+            pdf: PdfNumber::new(1),
             file: "1 A Sepatu ×2.pdf".to_string(),
             page: 1,
-            order_id: "580000000000000003".to_string(),
+            order_id: OrderId::new("580000000000000003"),
         },
         "wrong label",
     ));
@@ -244,7 +249,7 @@ fn a_page_count_that_is_not_the_plans_is_an_error() {
     assert!(has(
         &result.errors,
         &Finding::PageCountDiffersFromPlan {
-            pdf: 1,
+            pdf: PdfNumber::new(1),
             file: "1 A Sepatu ×2.pdf".to_string(),
             expected: 3,
             found: 4,
@@ -270,7 +275,7 @@ fn a_swapped_page_order_is_a_warning_only_in_its_own_list() {
     assert!(has(
         &result.warnings,
         &Finding::PageOrderDiffers {
-            pdf: 1,
+            pdf: PdfNumber::new(1),
             file: "1 A Sepatu ×2.pdf".to_string(),
         },
         "swapped page order",

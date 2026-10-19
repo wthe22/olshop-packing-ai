@@ -5,6 +5,7 @@ use std::fmt;
 
 use jiff::civil::DateTime;
 
+use crate::ids::{OrderId, TrackingId};
 use crate::label::{self, CourierTable};
 use crate::slip::{self, SlipLine};
 use crate::text::{LogoImage, PageText};
@@ -27,8 +28,9 @@ pub struct Line {
 /// One order as the PC app knows it: label fields and slip lines only (no CSV).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Order {
-    pub order_id: String,
-    pub tracking_id: String,
+    pub order_id: OrderId,
+    /// The courier's parcel number; `None` when the label printed none.
+    pub tracking_id: Option<TrackingId>,
     /// Deduced from the label; empty when unknown.
     pub courier: String,
     /// The label's `In transit by`.
@@ -117,7 +119,7 @@ pub struct UnseenLogo {
     /// The pages carrying the image.
     pub pages: usize,
     /// The orders carrying it, in download order.
-    pub order_ids: Vec<String>,
+    pub order_ids: Vec<OrderId>,
 }
 
 impl UnseenLogo {
@@ -145,8 +147,11 @@ impl UnseenLogo {
             if !self.order_ids.iter().any(|id| id == &order.order.order_id) {
                 continue;
             }
+            let Some(tracking_id) = &order.order.tracking_id else {
+                continue;
+            };
             if order.order.courier.is_empty()
-                && label::form_names_courier_in(table, &order.order.tracking_id, name)
+                && label::form_names_courier_in(table, tracking_id, name)
             {
                 order.order.courier = name.clone();
                 named += 1;
@@ -195,18 +200,32 @@ impl Reading {
 pub enum Warning {
     /// The slip's `Qty Total` differs from the sum of the order's `Qty`.
     QtyTotalDiffers {
-        order_id: String,
-        tracking_id: String,
+        order_id: OrderId,
+        tracking_id: Option<TrackingId>,
         qty_total: i64,
         sum: i64,
     },
     /// These orders' couriers could not be deduced.
-    UnknownCourier {
-        order_ids: Vec<String>,
-        tracking_ids: Vec<String>,
-    },
+    UnknownCourier { orders: Vec<OrderLabel> },
     /// These orders' tracking IDs were not found on the label.
-    TrackingIdMissing { order_ids: Vec<String> },
+    TrackingIdMissing { order_ids: Vec<OrderId> },
+}
+
+/// How a read warning names an order: by the tracking ID that is printed big on the label, or by
+/// the Order ID when the label printed no tracking ID (08 › *Messages*).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum OrderLabel {
+    Tracking(TrackingId),
+    Order(OrderId),
+}
+
+impl fmt::Display for OrderLabel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            OrderLabel::Tracking(tracking_id) => tracking_id.fmt(f),
+            OrderLabel::Order(order_id) => order_id.fmt(f),
+        }
+    }
 }
 
 impl Warning {
@@ -223,16 +242,13 @@ impl Warning {
             return None;
         }
         Some(Warning::UnknownCourier {
-            order_ids: unknown.iter().map(|o| o.order_id.clone()).collect(),
-            // 08 names tracking IDs (what is printed big on the label); the Order ID when none.
-            tracking_ids: unknown
+            orders: unknown
                 .iter()
-                .map(|o| {
-                    if o.tracking_id.is_empty() {
-                        o.order_id.clone()
-                    } else {
-                        o.tracking_id.clone()
-                    }
+                .map(|order| match &order.tracking_id {
+                    Some(tracking_id) => OrderLabel::Tracking(tracking_id.clone()),
+                    // 08 names tracking IDs (what is printed big on the label); the Order ID
+                    // when none was read.
+                    None => OrderLabel::Order(order.order_id.clone()),
                 })
                 .collect(),
         })
@@ -248,10 +264,9 @@ impl fmt::Display for Warning {
                 qty_total,
                 sum,
             } => {
-                let label = if tracking_id.is_empty() {
-                    format!("Order {order_id}")
-                } else {
-                    tracking_id.clone()
+                let label = match tracking_id {
+                    Some(tracking_id) => tracking_id.to_string(),
+                    None => format!("Order {order_id}"),
                 };
                 write!(
                     f,
@@ -259,26 +274,32 @@ impl fmt::Display for Warning {
                      Check that order's slip when packing."
                 )
             }
-            Warning::UnknownCourier { tracking_ids, .. } => write!(
-                f,
-                "Courier unknown for {} order{}: {}. They are sorted normally; only a \
-                 condition on courier cannot see them.",
-                tracking_ids.len(),
-                if tracking_ids.len() == 1 { "" } else { "s" },
-                tracking_ids.join(", ")
-            ),
+            Warning::UnknownCourier { orders } => {
+                let labels: Vec<String> = orders.iter().map(OrderLabel::to_string).collect();
+                write!(
+                    f,
+                    "Courier unknown for {} order{}: {}. They are sorted normally; only a \
+                     condition on courier cannot see them.",
+                    labels.len(),
+                    if labels.len() == 1 { "" } else { "s" },
+                    labels.join(", ")
+                )
+            }
             Warning::TrackingIdMissing { order_ids } if order_ids.len() == 1 => write!(
                 f,
                 "No tracking ID read for Order {}. Its label is saved as usual; only a \
                  condition on tracking_id cannot see it.",
                 order_ids[0]
             ),
-            Warning::TrackingIdMissing { order_ids } => write!(
-                f,
-                "No tracking ID read for Orders {}. Their labels are saved as usual; only a \
-                 condition on tracking_id cannot see them.",
-                order_ids.join(", ")
-            ),
+            Warning::TrackingIdMissing { order_ids } => {
+                let ids: Vec<String> = order_ids.iter().map(OrderId::to_string).collect();
+                write!(
+                    f,
+                    "No tracking ID read for Orders {}. Their labels are saved as usual; only a \
+                     condition on tracking_id cannot see them.",
+                    ids.join(", ")
+                )
+            }
         }
     }
 }
@@ -354,14 +375,15 @@ impl fmt::Display for ReadError {
 
 /// One order while its pages are still being merged (labels.py `LabelSet.orders`).
 struct Group {
-    order_id: String,
+    order_id: OrderId,
     pages: Vec<PageRef>,
     has_slip: bool,
     lines: Vec<SlipLine>,
     qty_total: Option<i64>,
     customer_message: String,
     ship_by: Option<DateTime>,
-    tracking_id: String,
+    /// The courier's parcel number; `None` when the label printed none.
+    tracking_id: Option<TrackingId>,
     /// The first page's whole text, for the label's courier clues.
     text: String,
     /// The header-band images of the order's pages, deduplicated by byte hash (Q-LABEL-5).
@@ -376,19 +398,19 @@ fn file_name(file_names: &[&str], file: usize) -> String {
 }
 
 /// Count one page of an unseen logo and the order it belongs to (first-seen order kept).
-fn record_unseen(unseen: &mut Vec<UnseenLogo>, image: &LogoImage, order_id: &str) {
+fn record_unseen(unseen: &mut Vec<UnseenLogo>, image: &LogoImage, order_id: &OrderId) {
     match unseen.iter_mut().find(|entry| entry.hash == image.hash) {
         Some(entry) => {
             entry.pages += 1;
             if !entry.order_ids.iter().any(|id| id == order_id) {
-                entry.order_ids.push(order_id.to_string());
+                entry.order_ids.push(order_id.clone());
             }
         }
         None => unseen.push(UnseenLogo {
             hash: image.hash.clone(),
             appearance: image.appearance.clone(),
             pages: 1,
-            order_ids: vec![order_id.to_string()],
+            order_ids: vec![order_id.clone()],
         }),
     }
 }
@@ -430,7 +452,7 @@ where
     let mut unseen: Vec<UnseenLogo> = Vec::new();
     let mut total_pages = 0usize;
     let mut current_file: Option<usize> = None;
-    let mut previous: Option<String> = None;
+    let mut previous: Option<OrderId> = None;
 
     for (file, page, page_text) in pages {
         total_pages += 1;
@@ -557,7 +579,7 @@ where
             });
         }
         let courier =
-            label::deduce_courier_in(table, &group.text, &group.tracking_id, &group.logos);
+            label::deduce_courier_in(table, &group.text, group.tracking_id.as_ref(), &group.logos);
         let order = Order {
             order_id: group.order_id,
             tracking_id: group.tracking_id,
@@ -578,9 +600,9 @@ where
     if let Some(unknown) = Warning::unknown_courier(&orders) {
         warnings.push(unknown);
     }
-    let missing: Vec<String> = orders
+    let missing: Vec<OrderId> = orders
         .iter()
-        .filter(|order| order.order.tracking_id.is_empty())
+        .filter(|order| order.order.tracking_id.is_none())
         .map(|order| order.order.order_id.clone())
         .collect();
     if !missing.is_empty() {

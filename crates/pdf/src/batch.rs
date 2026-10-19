@@ -20,6 +20,7 @@ use packing_engine::day::{
     PackingListChoice, PdfEntry, SavedItem, SavedOrder, Scope, duplicates_warning,
 };
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{BatchNumber, OrderId, PdfNumber};
 use packing_engine::label::CourierTable;
 use packing_engine::names;
 use packing_engine::orders::{self, Line, LogoAnswer, ReadOrder, UnseenLogo, Warning};
@@ -149,7 +150,11 @@ pub fn read(
         }
         return Err(BatchError::AllSaved {
             orders: reading.orders.len(),
-            batch: duplicates.first().map(|dup| dup.batch).unwrap_or(0),
+            // Every read order was a duplicate, so the list names a batch.
+            batch: duplicates
+                .first()
+                .map(|dup| dup.batch)
+                .expect("every order was a duplicate"),
         });
     }
 
@@ -179,7 +184,7 @@ pub fn read(
 /// What a save produced (07 › *Save*, *Check before saving*).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SaveResult {
-    pub batch: i64,
+    pub batch: BatchNumber,
     /// The batch folder once the save was renamed (07 › *Day folder*); the path the batch would
     /// have taken when the check stopped the save.
     pub folder: PathBuf,
@@ -263,7 +268,7 @@ pub fn save(
         })
         .collect();
 
-    let jobs = packing_jobs(plan, &sections, packing, day, batch, &printed);
+    let jobs = packing_jobs(plan, &sections, packing, day, Some(batch), &printed);
     let packing_lists: Vec<String> = jobs.iter().map(|job| job.name.clone()).collect();
     let expected = Expected {
         pdfs: engine_verify::expected_pdfs(plan, &draft.orders),
@@ -413,12 +418,12 @@ fn packing_jobs(
     sections: &[SavedPdfSection],
     packing: &PackingListChoice,
     day: &str,
-    batch: i64,
+    batch: Option<BatchNumber>,
     printed: &str,
 ) -> Vec<PackingJob> {
     let several = packing.layouts.len() > 1;
     let mut jobs = Vec::new();
-    let mut make = |number: Option<i64>, section: Vec<SavedPdfSection>| {
+    let mut make = |number: Option<PdfNumber>, section: Vec<SavedPdfSection>| {
         for layout in &packing.layouts {
             let suffix = several.then(|| layout_name(*layout));
             let name = names::packing_list_file_name(number, suffix);
@@ -427,7 +432,7 @@ fn packing_jobs(
                 layout: to_pdf_layout(*layout),
                 list: PackingList {
                     day: day.to_string(),
-                    batch: Some(batch as u32),
+                    batch,
                     printed: printed.to_string(),
                     sections: section.clone(),
                 },
@@ -447,13 +452,13 @@ fn packing_jobs(
 }
 
 /// A saved PDF's pages in run order (03 › *A saved PDF*).
-type OrderIndex<'a> = HashMap<&'a str, &'a ReadOrder>;
+type OrderIndex<'a> = HashMap<&'a OrderId, &'a ReadOrder>;
 
 fn order_index(draft: &Draft) -> OrderIndex<'_> {
     draft
         .orders
         .iter()
-        .map(|order| (order.order.order_id.as_str(), order))
+        .map(|order| (&order.order.order_id, order))
         .collect()
 }
 
@@ -464,7 +469,7 @@ fn pick_pages(
     let mut pages = Vec::new();
     for run in &pick.runs {
         for id in &run.orders {
-            let order = index.get(id.as_str()).ok_or_else(|| missing(id))?;
+            let order = index.get(id).ok_or_else(|| missing(id))?;
             for page in &order.pages {
                 pages.push((page.file, page.page));
             }
@@ -489,7 +494,7 @@ fn pick_section(pick: &PickResult, index: &OrderIndex<'_>) -> Result<SavedPdfSec
     for run in &pick.runs {
         let mut orders = Vec::with_capacity(run.orders.len());
         for id in &run.orders {
-            let order = index.get(id.as_str()).ok_or_else(|| missing(id))?;
+            let order = index.get(id).ok_or_else(|| missing(id))?;
             orders.push(RunOrder {
                 tracking_id: order.order.tracking_id.clone(),
                 lines: order.order.lines.iter().map(packing_line).collect(),
@@ -501,7 +506,7 @@ fn pick_section(pick: &PickResult, index: &OrderIndex<'_>) -> Result<SavedPdfSec
         });
     }
     Ok(SavedPdfSection {
-        number: pick.number as u32,
+        number: pick.number,
         code: pick.code.clone(),
         name: pick.name.clone(),
         runs,
@@ -511,12 +516,12 @@ fn pick_section(pick: &PickResult, index: &OrderIndex<'_>) -> Result<SavedPdfSec
 fn pick_saved(
     pick: &PickResult,
     index: &OrderIndex<'_>,
-    batch: i64,
+    batch: BatchNumber,
 ) -> Result<Vec<SavedOrder>, BatchError> {
     let mut entries = Vec::with_capacity(pick.orders.len());
     for run in &pick.runs {
         for id in &run.orders {
-            let order = index.get(id.as_str()).ok_or_else(|| missing(id))?;
+            let order = index.get(id).ok_or_else(|| missing(id))?;
             entries.push(SavedOrder {
                 order_id: id.clone(),
                 tracking_id: order.order.tracking_id.clone(),

@@ -4,6 +4,7 @@
 pub mod couriers_edit;
 pub mod day;
 pub mod groupings;
+pub mod ids;
 pub mod label;
 pub mod names;
 pub mod orders;

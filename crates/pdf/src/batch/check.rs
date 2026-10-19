@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 
 use packing_engine::day::{self, DayState, Fingerprint, PackingListChoice};
+use packing_engine::ids::BatchNumber;
 use packing_engine::plan::PlanResult;
 use packing_engine::verify::{self as engine_verify, Check, Expected, ExpectedList};
 
@@ -24,7 +25,7 @@ pub struct FileCheck {
     pub pages: usize,
     pub fingerprint: Fingerprint,
     /// The batch that read this same file earlier today, if any.
-    pub used_in_batch: Option<i64>,
+    pub used_in_batch: Option<BatchNumber>,
 }
 
 /// Read each chosen file's page count and fingerprint and check it against the day's state
@@ -81,7 +82,8 @@ pub fn check_saved(
     for pick in &plan.picks {
         sections.push(pick_section(pick, &index)?);
     }
-    let jobs = packing_jobs(plan, &sections, packing, "", 0, "");
+    // Only the names and counts are compared, so the list belongs to no batch and no day.
+    let jobs = packing_jobs(plan, &sections, packing, "", None, "");
     let expected = Expected {
         pdfs: engine_verify::expected_pdfs(plan, &draft.orders),
         lists: expected_lists(&jobs),

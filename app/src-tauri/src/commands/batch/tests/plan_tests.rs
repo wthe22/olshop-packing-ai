@@ -1,15 +1,21 @@
 //! The Plan screen's view and its edits, on orders built in code.
 
 use super::*;
+use packing_engine::ids::PdfNumber;
 
 #[test]
 fn plan_view_numbers_rows_and_adds_the_rest_row() {
-    let view = plan_view(&sepatu_plan(), &orders(), 4, &Grouping::default());
+    let view = plan_view(
+        &sepatu_plan(),
+        &orders(),
+        PdfNumber::new(4),
+        &Grouping::default(),
+    );
     assert_eq!(view.rows.len(), 3);
     assert_eq!(view.add_at, 2); // after the two entries (no rest entry)
 
     let a = &view.rows[0];
-    assert_eq!(a.number, Some(4));
+    assert_eq!(a.number, Some(PdfNumber::new(4)));
     assert_eq!(a.code, "A");
     assert_eq!(a.orders, 3);
     assert_eq!(a.runs.len(), 3); // three different contents, one order each
@@ -22,14 +28,14 @@ fn plan_view_numbers_rows_and_adds_the_rest_row() {
     assert!(!a.can_move_up && a.can_move_down); // first row
 
     let b = &view.rows[1];
-    assert_eq!(b.number, Some(5));
+    assert_eq!(b.number, Some(PdfNumber::new(5)));
     assert_eq!(b.orders, 2);
     assert_eq!(b.condition.as_deref(), Some("name contains \"spion\""));
 
     let rest = &view.rows[2];
     assert!(rest.generated && rest.is_rest && !rest.can_use);
     assert_eq!(rest.index, None);
-    assert_eq!(rest.number, Some(6));
+    assert_eq!(rest.number, Some(PdfNumber::new(6)));
     assert_eq!(rest.code, REST_CODE);
     assert_eq!(rest.name, "Uncategorised");
     assert_eq!(rest.orders, 1);
@@ -50,7 +56,7 @@ fn plan_view_shows_zero_order_and_skipped_rows() {
         }],
     )
     .expect("skip");
-    let view = plan_view(&plan, &orders(), 1, &Grouping::default());
+    let view = plan_view(&plan, &orders(), PdfNumber::new(1), &Grouping::default());
 
     assert!(view.rows[0].skipped);
     assert_eq!(view.rows[0].orders, 0);
@@ -58,17 +64,17 @@ fn plan_view_shows_zero_order_and_skipped_rows() {
     // Spion takes 2; the rest row takes the 3 sepatu + 1 lain.
     assert_eq!(view.rows[1].orders, 2);
     assert_eq!(view.rows[2].orders, 4);
-    assert_eq!(view.rows[2].number, Some(2)); // the skipped row used no number
+    assert_eq!(view.rows[2].number, Some(PdfNumber::new(2))); // the skipped row used no number
 
     // A condition that matches nothing shows a 0-order row with no number.
     let plan = Plan::from_categories(&[
         category("A", "Nope", Some("name contains \"zzz\"")),
         category("Z", "Lainnya", None),
     ]);
-    let view = plan_view(&plan, &orders(), 1, &Grouping::default());
+    let view = plan_view(&plan, &orders(), PdfNumber::new(1), &Grouping::default());
     assert!(view.rows[0].empty);
     assert_eq!(view.rows[0].number, None);
-    assert_eq!(view.rows[1].number, Some(1)); // the rest entry catches everything
+    assert_eq!(view.rows[1].number, Some(PdfNumber::new(1))); // the rest entry catches everything
     assert!(view.rows[1].is_rest);
     assert_eq!(view.add_at, 1); // before the rest entry
 }
@@ -90,17 +96,17 @@ fn plan_view_flags_duplicate_file_names() {
         ],
     )
     .expect("rename");
-    let view = plan_view(&plan, &orders(), 1, &Grouping::default());
+    let view = plan_view(&plan, &orders(), PdfNumber::new(1), &Grouping::default());
     assert!(view.has_duplicate_names);
     assert_eq!(view.rows[0].duplicate_of, None);
-    assert_eq!(view.rows[1].duplicate_of, Some(1)); // *Same name as PDF 1*
+    assert_eq!(view.rows[1].duplicate_of, Some(PdfNumber::new(1))); // *Same name as PDF 1*
 }
 
 #[test]
 fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
     // No `categories.toml`: one catch-all entry, every order in one PDF set (Q-UI-4).
     let plan = Plan::from_categories(&[catch_all_category()]);
-    let view = plan_view(&plan, &orders(), 1, &Grouping::default());
+    let view = plan_view(&plan, &orders(), PdfNumber::new(1), &Grouping::default());
     assert!(view.no_picks);
     assert_eq!(view.rows.len(), 1);
     assert_eq!(view.rows[0].code, "Z");
@@ -109,12 +115,20 @@ fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
     assert_eq!(view.add_at, 0);
 
     // A pick with a condition: configured.
-    assert!(!plan_view(&sepatu_plan(), &orders(), 1, &Grouping::default()).no_picks);
+    assert!(
+        !plan_view(
+            &sepatu_plan(),
+            &orders(),
+            PdfNumber::new(1),
+            &Grouping::default()
+        )
+        .no_picks
+    );
     // The picks file's own rest entry as the only entry: still unconfigured.
     let view = plan_view(
         &Plan::from_categories(&[category("Z", "Lainnya", None)]),
         &orders(),
-        1,
+        PdfNumber::new(1),
         &Grouping::default(),
     );
     assert!(view.no_picks);
@@ -126,11 +140,23 @@ fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
 #[test]
 fn plan_view_names_the_grouping() {
     assert_eq!(
-        plan_view(&sepatu_plan(), &orders(), 1, &Grouping::default()).grouping,
+        plan_view(
+            &sepatu_plan(),
+            &orders(),
+            PdfNumber::new(1),
+            &Grouping::default()
+        )
+        .grouping,
         Grouping::default()
     );
     assert_eq!(
-        plan_view(&sepatu_plan(), &orders(), 1, &Grouping::new("ramadhan")).grouping,
+        plan_view(
+            &sepatu_plan(),
+            &orders(),
+            PdfNumber::new(1),
+            &Grouping::new("ramadhan")
+        )
+        .grouping,
         Grouping::new("ramadhan")
     );
 }
@@ -145,7 +171,7 @@ fn a_grouping_with_no_file_is_the_one_catch_all_entry() {
     let view = plan_view(
         &Plan::from_categories(&categories),
         &orders(),
-        1,
+        PdfNumber::new(1),
         &Grouping::new("ramadhan"),
     );
     assert!(view.no_picks, "the *No picks yet* line is shown");
@@ -154,7 +180,7 @@ fn a_grouping_with_no_file_is_the_one_catch_all_entry() {
     assert_eq!(view.rows[0].code, "Z");
     assert_eq!(view.rows[0].name, "Lainnya");
     assert_eq!(view.rows[0].orders, 6);
-    assert_eq!(view.rows[0].number, Some(1));
+    assert_eq!(view.rows[0].number, Some(PdfNumber::new(1)));
     std::fs::remove_dir_all(&dir).ok();
 }
 

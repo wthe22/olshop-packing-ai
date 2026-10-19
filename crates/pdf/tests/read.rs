@@ -6,6 +6,7 @@ mod common;
 use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 
+use packing_engine::ids::TrackingId;
 use packing_engine::label::courier_data;
 use packing_engine::orders::{ReadError, ReadOrder, read_batch};
 use packing_pdf::read;
@@ -27,8 +28,8 @@ fn compare(order: &ReadOrder, expected: &Value) {
         "{id}: pages"
     );
     assert_eq!(
-        order.order.tracking_id,
-        expected["tracking_id"].as_str().unwrap(),
+        order.order.tracking_id.as_ref().map(TrackingId::as_str),
+        expected["tracking_id"].as_str(),
         "{id}: tracking_id"
     );
     assert_eq!(
@@ -120,12 +121,14 @@ fn reads_labels_slip_and_matches_the_fixture() {
 
     let mut matched = 0;
     for order in &reading.orders {
-        let entry = expected.get(&order.order.order_id).unwrap_or_else(|| {
-            panic!(
-                "order {} is not in expected-labels.json",
-                order.order.order_id
-            )
-        });
+        let entry = expected
+            .get(order.order.order_id.as_str())
+            .unwrap_or_else(|| {
+                panic!(
+                    "order {} is not in expected-labels.json",
+                    order.order.order_id
+                )
+            });
         compare(order, entry);
         matched += 1;
     }

@@ -7,11 +7,11 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use packing_engine::day::{
-    BatchWrite, DayError, DayState, FileEntry, Findings, Layout, PackingListChoice, PdfEntry,
-    SavedItem, SavedOrder, Scope, delete_batch_folder, duplicates_warning, fingerprint,
-    now_save_time, save_batch,
+    BatchWrite, DayError, DayState, FileEntry, Findings, PackingListChoice, PdfEntry, SavedItem,
+    SavedOrder, delete_batch_folder, duplicates_warning, fingerprint, now_save_time, save_batch,
 };
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::names::DOWNLOAD_DIR;
 use packing_engine::orders::{Order, ReadOrder};
 use serde_json::Value;
@@ -25,10 +25,8 @@ impl TempDir {
             .duration_since(UNIX_EPOCH)
             .expect("clock")
             .as_nanos();
-        let path = std::env::temp_dir().join(format!(
-            "packing-engine-{tag}-{}-{nanos}",
-            std::process::id()
-        ));
+        let name = format!("packing-engine-{tag}-{}-{nanos}", std::process::id());
+        let path = std::env::temp_dir().join(name);
         fs::create_dir_all(&path).expect("create temp dir");
         TempDir(path)
     }
@@ -44,11 +42,19 @@ impl Drop for TempDir {
     }
 }
 
+fn batch(number: i64) -> BatchNumber {
+    BatchNumber::new(number)
+}
+
+fn pdf(number: i64) -> PdfNumber {
+    PdfNumber::new(number)
+}
+
 fn read_order(id: &str) -> ReadOrder {
     ReadOrder {
         order: Order {
-            order_id: id.to_string(),
-            tracking_id: format!("JY{id}"),
+            order_id: OrderId::new(id),
+            tracking_id: Some(TrackingId::new(format!("JY{id}"))),
             courier: "J&T Express".to_string(),
             ship_by: None,
             lines: Vec::new(),
@@ -73,7 +79,7 @@ fn file_entry(name: &str, xxh3: &str) -> FileEntry {
 
 fn pdf_entry(number: i64) -> PdfEntry {
     PdfEntry {
-        number,
+        number: pdf(number),
         code: "A".to_string(),
         name: "Sepatu".to_string(),
         file: format!("{number} A Sepatu ×1.pdf"),
@@ -82,12 +88,12 @@ fn pdf_entry(number: i64) -> PdfEntry {
     }
 }
 
-fn saved(order_id: &str, batch: i64, pdf: i64, run: usize) -> SavedOrder {
+fn saved(order_id: &str, batch_number: i64, pdf_number: i64, run: usize) -> SavedOrder {
     SavedOrder {
-        order_id: order_id.to_string(),
-        tracking_id: format!("JY{order_id}"),
-        batch,
-        pdf,
+        order_id: OrderId::new(order_id),
+        tracking_id: Some(TrackingId::new(format!("JY{order_id}"))),
+        batch: batch(batch_number),
+        pdf: pdf(pdf_number),
         run,
         items: vec![SavedItem {
             name: "Sepatu".to_string(),
@@ -102,9 +108,24 @@ fn saved(order_id: &str, batch: i64, pdf: i64, run: usize) -> SavedOrder {
     }
 }
 
-fn batch_write(batch: i64, pdfs: Vec<PdfEntry>, saved_orders: Vec<SavedOrder>) -> BatchWrite {
+/// One saved batch with the fixture's file and packing-list choice.
+fn batch_entry(number: i64, pdfs: Vec<PdfEntry>) -> packing_engine::day::BatchEntry {
+    packing_engine::day::BatchEntry {
+        batch: batch(number),
+        save_time: "2026-10-07T07:40:12+07:00".to_string(),
+        grouping: Grouping::default(),
+        files: vec![file_entry("labels_1.pdf", "9f2c")],
+        pdfs,
+        packing_list: PackingListChoice::default(),
+        printed: Vec::new(),
+        warnings: Vec::new(),
+        errors: Vec::new(),
+    }
+}
+
+fn batch_write(number: i64, pdfs: Vec<PdfEntry>, saved_orders: Vec<SavedOrder>) -> BatchWrite {
     BatchWrite {
-        batch,
+        batch: batch(number),
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
         grouping: Grouping::default(),
         files: vec![file_entry("labels_1.pdf", "9f2c")],
@@ -123,8 +144,8 @@ fn missing_state_is_an_empty_state_for_the_folder_day() {
     assert_eq!(state.day, "2026-10-07");
     assert!(state.batches.is_empty());
     assert!(state.saved.is_empty());
-    assert_eq!(state.next_batch_number(), 1);
-    assert_eq!(state.next_pdf_number(), 1);
+    assert_eq!(state.next_batch_number(), batch(1));
+    assert_eq!(state.next_pdf_number(), pdf(1));
 }
 
 #[test]
@@ -133,20 +154,7 @@ fn save_and_load_state_round_trip() {
     let day = dir.path().join("2026-10-07");
 
     let mut state = DayState::new("2026-10-07");
-    state.batches.push(packing_engine::day::BatchEntry {
-        batch: 1,
-        save_time: "2026-10-07T07:40:12+07:00".to_string(),
-        grouping: Grouping::default(),
-        files: vec![file_entry("labels_1.pdf", "9f2c")],
-        pdfs: vec![pdf_entry(1)],
-        packing_list: PackingListChoice {
-            scope: Scope::Whole,
-            layouts: vec![Layout::Pick],
-        },
-        printed: Vec::new(),
-        warnings: Vec::new(),
-        errors: Vec::new(),
-    });
+    state.batches.push(batch_entry(1, vec![pdf_entry(1)]));
     state.saved.push(saved("580000000000000001", 1, 1, 5));
     state.save(&day).expect("save");
 
@@ -162,20 +170,7 @@ fn state_json_matches_the_07_format() {
     let day = dir.path().join("2026-10-07");
 
     let mut state = DayState::new("2026-10-07");
-    state.batches.push(packing_engine::day::BatchEntry {
-        batch: 1,
-        save_time: "2026-10-07T07:40:12+07:00".to_string(),
-        grouping: Grouping::default(),
-        files: vec![file_entry("labels_1.pdf", "9f2c")],
-        pdfs: vec![pdf_entry(1)],
-        packing_list: PackingListChoice {
-            scope: Scope::Whole,
-            layouts: vec![Layout::Pick],
-        },
-        printed: Vec::new(),
-        warnings: Vec::new(),
-        errors: Vec::new(),
-    });
+    state.batches.push(batch_entry(1, vec![pdf_entry(1)]));
     state.saved.push(saved("580000000000000001", 1, 1, 5));
     state.save(&day).expect("save");
 
@@ -248,14 +243,12 @@ fn a_saved_order_without_the_searched_fields_loads_with_them_empty() {
 
     let state = DayState::load(&day).expect("load legacy day");
     let saved = &state.saved[0];
-    assert_eq!(saved.order_id, "580000000000000001");
+    assert_eq!(saved.order_id.as_str(), "580000000000000001");
     assert!(saved.items.is_empty());
     assert!(saved.courier.is_empty());
     assert_eq!(saved.total_quantity, 0);
     assert_eq!(saved.distinct_items, 0);
     assert!(saved.ship_by.is_none());
-
-    std::fs::remove_dir_all(dir.path()).ok();
 }
 
 #[test]
@@ -286,8 +279,6 @@ fn batch_warnings_round_trip_and_default_when_absent() {
     .expect("write");
     let loaded = DayState::load(&day).expect("load");
     assert!(loaded.batches[0].warnings.is_empty());
-
-    std::fs::remove_dir_all(dir.path()).ok();
 }
 
 #[test]
@@ -331,13 +322,8 @@ fn the_check_findings_are_stored_with_the_batch() {
         serde_json::to_string_pretty(&value).expect("serialize"),
     )
     .expect("write");
-    assert!(
-        DayState::load(&day).expect("load").batches[0]
-            .errors
-            .is_empty()
-    );
-
-    std::fs::remove_dir_all(dir.path()).ok();
+    let reloaded = DayState::load(&day).expect("load");
+    assert!(reloaded.batches[0].errors.is_empty());
 }
 
 #[test]
@@ -358,24 +344,27 @@ fn a_printed_tick_survives_a_write_and_reload() {
     .expect("save");
 
     // Ticking writes the day's `state.json` straight away, as the doc says (07 › *`state.json`*).
-    state.set_printed(&day, 1, 2, true).expect("tick");
+    state
+        .set_printed(&day, batch(1), pdf(2), true)
+        .expect("tick");
     let loaded = DayState::load(&day).expect("load");
-    assert_eq!(loaded.batches[0].printed, vec![2]);
-    assert!(loaded.batches[0].is_printed(2));
-    assert!(!loaded.batches[0].is_printed(1));
+    assert_eq!(loaded.batches[0].printed, vec![pdf(2)]);
+    assert!(loaded.batches[0].is_printed(pdf(2)));
+    assert!(!loaded.batches[0].is_printed(pdf(1)));
 
     // Ticking the same row again leaves one entry.
-    state.set_printed(&day, 1, 2, true).expect("tick again");
-    assert_eq!(state.batches[0].printed, vec![2]);
+    state
+        .set_printed(&day, batch(1), pdf(2), true)
+        .expect("tick again");
+    assert_eq!(state.batches[0].printed, vec![pdf(2)]);
 
     // Unticking removes it, and the file is written whole each time.
-    state.set_printed(&day, 1, 2, false).expect("untick");
+    state
+        .set_printed(&day, batch(1), pdf(2), false)
+        .expect("untick");
     assert!(state.batches[0].printed.is_empty());
-    assert!(
-        DayState::load(&day).expect("load").batches[0]
-            .printed
-            .is_empty()
-    );
+    let reloaded = DayState::load(&day).expect("load");
+    assert!(reloaded.batches[0].printed.is_empty());
 }
 
 #[test]
@@ -401,7 +390,7 @@ fn a_state_without_the_printed_field_loads_with_no_ticks() {
 
     let state = DayState::load(&day).expect("load legacy day");
     assert!(state.batches[0].printed.is_empty());
-    assert!(!state.batches[0].is_printed(1));
+    assert!(!state.batches[0].is_printed(pdf(1)));
 }
 
 #[test]
@@ -419,8 +408,12 @@ fn set_printed_ignores_an_unknown_batch_or_pdf_number() {
     let before = fs::read_to_string(day.join("state.json")).expect("read");
 
     // An unknown batch and an unknown saved-PDF number change nothing, and write nothing.
-    state.set_printed(&day, 9, 1, true).expect("unknown batch");
-    state.set_printed(&day, 1, 9, true).expect("unknown pdf");
+    state
+        .set_printed(&day, batch(9), pdf(1), true)
+        .expect("unknown batch");
+    state
+        .set_printed(&day, batch(1), pdf(9), true)
+        .expect("unknown pdf");
     assert!(state.batches[0].printed.is_empty());
     let after = fs::read_to_string(day.join("state.json")).expect("read again");
     assert_eq!(before, after, "an unknown row writes nothing");
@@ -445,16 +438,20 @@ fn revert_removes_the_batch_with_its_ticks() {
         |_| Ok(Findings::default()),
     )
     .expect("save 2");
-    state.set_printed(&day, 1, 1, true).expect("tick batch 1");
-    state.set_printed(&day, 2, 2, true).expect("tick batch 2");
+    state
+        .set_printed(&day, batch(1), pdf(1), true)
+        .expect("tick batch 1");
+    state
+        .set_printed(&day, batch(2), pdf(2), true)
+        .expect("tick batch 2");
 
     // The ticks belong to the batch: a revert removes them with it (07 › *`state.json`*).
     let removed = state.revert_last().expect("a batch");
-    assert_eq!(removed.batch, 2);
-    assert_eq!(removed.printed, vec![2]);
-    assert!(state.batches.iter().all(|batch| batch.batch != 2));
+    assert_eq!(removed.batch, batch(2));
+    assert_eq!(removed.printed, vec![pdf(2)]);
+    assert!(state.batches.iter().all(|entry| entry.batch != batch(2)));
     // The batch left keeps its own tick.
-    assert_eq!(state.batches[0].printed, vec![1]);
+    assert_eq!(state.batches[0].printed, vec![pdf(1)]);
 }
 
 #[test]
@@ -469,8 +466,10 @@ fn an_amended_batch_is_written_without_ticks() {
         |_| Ok(Findings::default()),
     )
     .expect("save");
-    state.set_printed(&day, 1, 1, true).expect("tick");
-    assert_eq!(state.batches[0].printed, vec![1]);
+    state
+        .set_printed(&day, batch(1), pdf(1), true)
+        .expect("tick");
+    assert_eq!(state.batches[0].printed, vec![pdf(1)]);
 
     // An amend writes the batch afresh, so its new entry starts with no ticks
     // (07 › *`state.json`*).
@@ -485,11 +484,8 @@ fn an_amended_batch_is_written_without_ticks() {
     .expect("save again");
     assert_eq!(amended.batches.len(), 1);
     assert!(amended.batches[0].printed.is_empty());
-    assert!(
-        DayState::load(&day).expect("load").batches[0]
-            .printed
-            .is_empty()
-    );
+    let reloaded = DayState::load(&day).expect("load");
+    assert!(reloaded.batches[0].printed.is_empty());
 }
 
 #[test]
@@ -510,8 +506,8 @@ fn next_numbers_continue_through_the_day() {
     )
     .expect("save batch 1");
 
-    assert_eq!(state.next_batch_number(), 2);
-    assert_eq!(state.next_pdf_number(), 3);
+    assert_eq!(state.next_batch_number(), batch(2));
+    assert_eq!(state.next_pdf_number(), pdf(3));
 
     save_batch(
         &day,
@@ -520,8 +516,8 @@ fn next_numbers_continue_through_the_day() {
         |_| Ok(Findings::default()),
     )
     .expect("save batch 2");
-    assert_eq!(state.next_batch_number(), 3);
-    assert_eq!(state.next_pdf_number(), 5);
+    assert_eq!(state.next_batch_number(), batch(3));
+    assert_eq!(state.next_pdf_number(), pdf(5));
 }
 
 #[test]
@@ -567,7 +563,7 @@ fn used_in_batch_finds_the_file_by_fingerprint() {
         size: 10,
         xxh3: "9f2c".to_string(),
     };
-    assert_eq!(state.used_in_batch(&stored), Some(1));
+    assert_eq!(state.used_in_batch(&stored), Some(batch(1)));
     assert_eq!(state.used_in_batch(&print), None);
     assert_eq!(
         state.used_in_batch(&packing_engine::day::Fingerprint {
@@ -592,7 +588,7 @@ fn the_same_file_is_recognised_twice_and_a_changed_byte_is_not() {
 
     let mut state = DayState::new("2026-10-07");
     state.batches.push(packing_engine::day::BatchEntry {
-        batch: 1,
+        batch: batch(1),
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
         grouping: Grouping::default(),
         files: vec![FileEntry {
@@ -609,7 +605,7 @@ fn the_same_file_is_recognised_twice_and_a_changed_byte_is_not() {
         errors: Vec::new(),
     });
     // The same file, again: recognised as used in batch 1.
-    assert_eq!(state.used_in_batch(&print), Some(1));
+    assert_eq!(state.used_in_batch(&print), Some(batch(1)));
 
     // One changed byte gives a different hash, so the file is not recognised (same size).
     let mut changed = bytes.clone();
@@ -712,13 +708,16 @@ fn duplicate_guard_drops_saved_orders_with_batch_pdf_and_time() {
     ];
     let (kept, duplicates) = state.drop_saved(&orders);
     assert_eq!(kept.len(), 1);
-    assert_eq!(kept[0].order.order_id, "580000000000000002");
+    assert_eq!(kept[0].order.order_id.as_str(), "580000000000000002");
     assert_eq!(duplicates.len(), 1);
     let dup = &duplicates[0];
-    assert_eq!(dup.order_id, "580000000000000001");
-    assert_eq!(dup.tracking_id, "JY580000000000000001");
-    assert_eq!(dup.batch, 1);
-    assert_eq!(dup.pdf, 1);
+    assert_eq!(dup.order_id.as_str(), "580000000000000001");
+    assert_eq!(
+        dup.tracking_id.as_ref().map(TrackingId::as_str),
+        Some("JY580000000000000001")
+    );
+    assert_eq!(dup.batch, batch(1));
+    assert_eq!(dup.pdf, pdf(1));
     assert_eq!(dup.time, "2026-10-07T07:40:12+07:00");
     assert_eq!(
         duplicates_warning(&duplicates),
@@ -747,11 +746,11 @@ fn revert_forgets_the_last_batch_and_reuses_its_numbers() {
     .expect("save 2");
 
     let removed = state.revert_last().expect("a batch");
-    assert_eq!(removed.batch, 2);
+    assert_eq!(removed.batch, batch(2));
     assert_eq!(state.batches.len(), 1);
-    assert!(state.saved.iter().all(|order| order.batch != 2));
-    assert_eq!(state.next_batch_number(), 2);
-    assert_eq!(state.next_pdf_number(), 2);
+    assert!(state.saved.iter().all(|order| order.batch != batch(2)));
+    assert_eq!(state.next_batch_number(), batch(2));
+    assert_eq!(state.next_pdf_number(), pdf(2));
 
     // No batch: revert is a no-op.
     state.revert_last();
@@ -772,9 +771,9 @@ fn delete_batch_folder_removes_the_folder_and_ignores_a_missing_one() {
     .expect("save");
 
     assert!(day.join("batch 1").is_dir());
-    delete_batch_folder(&day, 1).expect("delete");
+    delete_batch_folder(&day, batch(1)).expect("delete");
     assert!(!day.join("batch 1").exists());
-    delete_batch_folder(&day, 9).expect("missing is fine");
+    delete_batch_folder(&day, batch(9)).expect("missing is fine");
 }
 
 #[cfg(windows)]
@@ -802,7 +801,7 @@ fn a_file_open_in_another_program_reports_file_in_use() {
         .share_mode(0)
         .open(&file)
         .expect("lock");
-    let error = delete_batch_folder(&day, 1).expect_err("locked folder cannot be deleted");
+    let error = delete_batch_folder(&day, batch(1)).expect_err("locked folder cannot be deleted");
     assert!(matches!(error, DayError::FileInUse { .. }), "{error:?}");
 }
 
@@ -827,14 +826,14 @@ fn amend_gives_the_download_files_and_the_state_without_the_batch() {
     .expect("save 2");
 
     let amend = state.amend(&day).expect("amend");
-    assert_eq!(amend.batch, 2);
+    assert_eq!(amend.batch, batch(2));
     assert_eq!(
         amend.files,
         vec![day.join("batch 2").join(DOWNLOAD_DIR).join("labels_1.pdf")]
     );
     assert_eq!(amend.state.batches.len(), 1);
-    assert_eq!(amend.state.next_batch_number(), 2);
-    assert_eq!(amend.state.next_pdf_number(), 2);
+    assert_eq!(amend.state.next_batch_number(), batch(2));
+    assert_eq!(amend.state.next_pdf_number(), pdf(2));
     // The original state is untouched.
     assert_eq!(state.batches.len(), 2);
 }
@@ -974,6 +973,6 @@ fn an_amend_carries_the_batchs_own_grouping() {
     save_batch(&day, &mut state, &write, |_| Ok(Findings::default())).expect("save");
 
     let amend = state.amend(&day).expect("amend");
-    assert_eq!(amend.batch, 1);
+    assert_eq!(amend.batch, batch(1));
     assert_eq!(amend.grouping, Grouping::new("ramadhan"));
 }

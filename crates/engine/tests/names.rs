@@ -2,6 +2,7 @@
 //! duplicate names and the folder / file names (07 › *Day folder*; 03 › *Numbering and file
 //! names*; mirrors the file-name cases of tools/analysis/tests/test_picks.py).
 
+use packing_engine::ids::{BatchNumber, PdfNumber};
 use packing_engine::names::{
     NAME_LIMIT, NameError, batch_folder, check_unique_names, day_folder, normalize_saved_pdf_name,
     packing_list_file_name, sanitize_file_name, suggested_saved_pdf_name, temp_batch_folder,
@@ -10,11 +11,11 @@ use packing_engine::names::{
 #[test]
 fn suggested_name_matches_the_spec_example() {
     assert_eq!(
-        suggested_saved_pdf_name(3, "Z", "Lainnya", 2),
+        suggested_saved_pdf_name(PdfNumber::new(3), "Z", "Lainnya", 2),
         "3 Z Lainnya ×2.pdf"
     );
     assert_eq!(
-        suggested_saved_pdf_name(1, "A", "Sepatu", 172),
+        suggested_saved_pdf_name(PdfNumber::new(1), "A", "Sepatu", 172),
         "1 A Sepatu ×172.pdf"
     );
 }
@@ -22,7 +23,7 @@ fn suggested_name_matches_the_spec_example() {
 #[test]
 fn the_rest_code_becomes_a_dash() {
     assert_eq!(
-        suggested_saved_pdf_name(5, "?", "Uncategorised", 2),
+        suggested_saved_pdf_name(PdfNumber::new(5), "?", "Uncategorised", 2),
         "5 - Uncategorised ×2.pdf"
     );
 }
@@ -31,7 +32,7 @@ fn the_rest_code_becomes_a_dash() {
 fn illegal_characters_become_a_dash() {
     let name = "A\\B/C:D*E?F\"G<H>I|J";
     assert_eq!(
-        suggested_saved_pdf_name(1, "A", name, 1),
+        suggested_saved_pdf_name(PdfNumber::new(1), "A", name, 1),
         "1 A A-B-C-D-E-F-G-H-I-J ×1.pdf"
     );
 }
@@ -39,7 +40,7 @@ fn illegal_characters_become_a_dash() {
 #[test]
 fn the_name_part_is_cut_at_100_characters() {
     let long_name = "Produk ".repeat(40);
-    let file_name = suggested_saved_pdf_name(1, "A", &long_name, 3);
+    let file_name = suggested_saved_pdf_name(PdfNumber::new(1), "A", &long_name, 3);
     assert!(file_name.starts_with("1 A "));
     assert!(file_name.ends_with(" ×3.pdf"));
     let name_part = &file_name["1 A ".len()..file_name.len() - " ×3.pdf".len()];
@@ -94,8 +95,8 @@ fn sanitize_only_touches_the_forbidden_characters() {
 
 #[test]
 fn folder_and_file_names() {
-    assert_eq!(batch_folder(1), "batch 1");
-    assert_eq!(temp_batch_folder(2), "batch 2.partial");
+    assert_eq!(batch_folder(BatchNumber::new(1)), "batch 1");
+    assert_eq!(temp_batch_folder(BatchNumber::new(2)), "batch 2.partial");
     let date: jiff::civil::Date = "2026-10-07".parse().expect("date");
     assert_eq!(day_folder(date), "2026-10-07");
 }
@@ -111,9 +112,12 @@ fn packing_list_file_names() {
     );
     // Scope per-pdf, several layouts: number and layout.
     assert_eq!(
-        packing_list_file_name(Some(3), Some("pick")),
+        packing_list_file_name(Some(PdfNumber::new(3)), Some("pick")),
         "packing-list-3-pick.pdf"
     );
     // Scope per-pdf, one layout: the number only.
-    assert_eq!(packing_list_file_name(Some(1), None), "packing-list-1.pdf");
+    assert_eq!(
+        packing_list_file_name(Some(PdfNumber::new(1)), None),
+        "packing-list-1.pdf"
+    );
 }

@@ -1,6 +1,7 @@
 use super::*;
 use packing_engine::day::{BatchEntry, PackingListChoice, PdfEntry, SavedItem, SavedOrder};
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::plan::Plan;
 use packing_engine::rules_edit::condition_to_tree;
 use packing_pdf::batch::Draft;
@@ -15,14 +16,14 @@ fn temp_dir(label: &str) -> std::path::PathBuf {
     dir
 }
 
-fn batch_entry(batch: i64, pdf_file: &str) -> BatchEntry {
+fn batch_entry(batch: BatchNumber, pdf_file: &str) -> BatchEntry {
     BatchEntry {
         batch,
         save_time: "2026-10-07T07:40:12+07:00".to_string(),
         grouping: Grouping::default(),
         files: Vec::new(),
         pdfs: vec![PdfEntry {
-            number: 1,
+            number: PdfNumber::new(1),
             code: "A".to_string(),
             name: "Sepatu".to_string(),
             file: pdf_file.to_string(),
@@ -39,10 +40,10 @@ fn batch_entry(batch: i64, pdf_file: &str) -> BatchEntry {
 /// One saved order with the searched fields written (as a save does, 07 › *`state.json`*).
 fn saved_order(order_id: &str, tracking_id: &str, name: &str, quantity: i64) -> SavedOrder {
     SavedOrder {
-        order_id: order_id.to_string(),
-        tracking_id: tracking_id.to_string(),
-        batch: 1,
-        pdf: 1,
+        order_id: OrderId::new(order_id),
+        tracking_id: Some(TrackingId::new(tracking_id)),
+        batch: BatchNumber::new(1),
+        pdf: PdfNumber::new(1),
         run: 1,
         items: vec![SavedItem {
             name: name.to_string(),
@@ -60,10 +61,10 @@ fn saved_order(order_id: &str, tracking_id: &str, name: &str, quantity: i64) -> 
 /// One saved order as an older day holds it: only its IDs, no searched fields.
 fn legacy_order(order_id: &str, tracking_id: &str) -> SavedOrder {
     SavedOrder {
-        order_id: order_id.to_string(),
-        tracking_id: tracking_id.to_string(),
-        batch: 1,
-        pdf: 1,
+        order_id: OrderId::new(order_id),
+        tracking_id: Some(TrackingId::new(tracking_id)),
+        batch: BatchNumber::new(1),
+        pdf: PdfNumber::new(1),
         run: 1,
         items: Vec::new(),
         courier: String::new(),
@@ -76,7 +77,9 @@ fn legacy_order(order_id: &str, tracking_id: &str) -> SavedOrder {
 fn write_day(folder: &Path, day: &str, saved: Vec<SavedOrder>) {
     let day_dir = folder.join(LABELS_DIR).join(day);
     let mut state = DayState::new(day);
-    state.batches.push(batch_entry(1, "1 A Sepatu ×1.pdf"));
+    state
+        .batches
+        .push(batch_entry(BatchNumber::new(1), "1 A Sepatu ×1.pdf"));
     state.saved = saved;
     state.save(&day_dir).expect("save state");
 }
@@ -115,13 +118,13 @@ fn a_tracking_id_finds_its_one_order_with_the_saved_pdf_path() {
     assert_eq!(view.batches, 1);
     assert_eq!(view.rows.len(), 1);
     let row = &view.rows[0];
-    assert_eq!(row.order_id, "580000000000000001");
+    assert_eq!(row.order_id.as_str(), "580000000000000001");
     assert_eq!(row.courier, "J&T Express");
     assert_eq!(row.items.len(), 1);
     assert_eq!(row.items[0].name, "Sepatu");
     assert_eq!(row.items[0].quantity, 2);
     assert_eq!(row.file, "1 A Sepatu ×1.pdf");
-    assert_eq!(row.batch, 1);
+    assert_eq!(row.batch, BatchNumber::new(1));
     assert_eq!(row.day, "2026-10-07");
     assert!(!row.items_not_stored);
     assert!(
@@ -194,8 +197,8 @@ fn an_order_of_an_open_draft_is_not_found() {
     // An open draft holding an order that was not saved: Search reads `saved[]` only.
     let order = packing_engine::orders::ReadOrder {
         order: packing_engine::orders::Order {
-            order_id: "580000000000000777".to_string(),
-            tracking_id: "JY0000000777".to_string(),
+            order_id: OrderId::new("580000000000000777"),
+            tracking_id: Some(TrackingId::new("JY0000000777")),
             courier: "JNE".to_string(),
             ship_by: None,
             lines: vec![packing_engine::orders::Line {
@@ -225,7 +228,7 @@ fn an_order_of_an_open_draft_is_not_found() {
             read_warnings: Vec::new(),
         },
         plan: Plan::from_categories(&[]),
-        first_number: 1,
+        first_number: PdfNumber::new(1),
         couriers: packing_engine::label::courier_data().clone(),
         grouping: Grouping::default(),
         amend: None,

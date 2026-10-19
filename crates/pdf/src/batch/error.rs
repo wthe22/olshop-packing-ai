@@ -3,6 +3,7 @@
 use std::fmt;
 
 use packing_engine::day::DayError;
+use packing_engine::ids::{BatchNumber, OrderId};
 use packing_engine::orders::ReadError;
 
 use crate::PdfError;
@@ -17,7 +18,7 @@ pub enum BatchError {
     /// Reading stopped the batch (no Order ID on a first page, a page with no packing slip).
     Read(ReadError),
     /// Every order was already saved today (08 › *Messages*).
-    AllSaved { orders: usize, batch: i64 },
+    AllSaved { orders: usize, batch: BatchNumber },
     /// A plain message.
     Message(String),
 }
@@ -58,6 +59,6 @@ impl From<ReadError> for BatchError {
     }
 }
 
-pub(super) fn missing(id: &str) -> BatchError {
+pub(super) fn missing(id: &OrderId) -> BatchError {
     BatchError::Message(format!("order {id} is not in the draft"))
 }

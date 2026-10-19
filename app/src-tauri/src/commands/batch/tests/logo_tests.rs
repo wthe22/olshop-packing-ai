@@ -2,6 +2,7 @@
 //! into `couriers.toml`.
 
 use super::*;
+use packing_engine::ids::{OrderId, PdfNumber};
 
 /// A state holding a draft of two orders the courier data could not name — one `JY…` (J&T
 /// Express alone), one `00…` (shared with SiCepat) — both carrying one unseen logo, with a
@@ -28,8 +29,8 @@ fn state_with_logo_draft(folder: &Path) -> AppState {
             appearance: None,
             pages: 2,
             order_ids: vec![
-                "580000000000000001".to_string(),
-                "580000000000000002".to_string(),
+                OrderId::new("580000000000000001"),
+                OrderId::new("580000000000000002"),
             ],
         }],
         read_warnings: Vec::new(),
@@ -47,7 +48,7 @@ fn state_with_logo_draft(folder: &Path) -> AppState {
     state.set_draft(OpenDraft {
         draft,
         plan: Plan::from_categories(&[category("A", "J&T", Some("courier starts_with \"J&T\""))]),
-        first_number: 1,
+        first_number: PdfNumber::new(1),
         couriers: packing_engine::label::courier_data().clone(),
         grouping: Grouping::default(),
         amend: None,
@@ -106,9 +107,9 @@ fn answer_logo_names_the_form_agreeing_orders_and_recounts_the_plan() {
     .expect("answer");
     assert!(after.logos.is_empty(), "the answered logo is spent");
     assert_eq!(after.plan.rows[0].orders, 1); // the courier pick takes the JY order
-    assert_eq!(after.plan.rows[0].number, Some(1));
+    assert_eq!(after.plan.rows[0].number, Some(PdfNumber::new(1)));
     assert_eq!(after.plan.rows[1].orders, 1);
-    assert_eq!(after.plan.rows[1].number, Some(2));
+    assert_eq!(after.plan.rows[1].number, Some(PdfNumber::new(2)));
     assert_eq!(after.orders, before.orders); // no order left or joined the batch
     assert!(after.warnings[0].contains("Courier unknown for 1 order: 000000000202"));
 

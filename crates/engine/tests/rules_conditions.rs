@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::PathBuf;
 
+use packing_engine::ids::{OrderId, TrackingId};
 use packing_engine::orders::{Line, Order};
 use packing_engine::rules::{evaluate, fields_used, format_condition, parse_condition};
 use serde_json::Value;
@@ -47,11 +48,11 @@ fn build_order(value: &Value) -> Order {
         })
         .collect();
     Order {
-        order_id: value["order_id"].as_str().unwrap_or_default().to_string(),
+        order_id: OrderId::new(value["order_id"].as_str().unwrap_or_default()),
         tracking_id: value["tracking_id"]
             .as_str()
-            .unwrap_or_default()
-            .to_string(),
+            .filter(|text| !text.is_empty())
+            .map(TrackingId::new),
         courier: value["courier"].as_str().unwrap_or_default().to_string(),
         ship_by: parse_ship_by(&value["ship_by"]),
         lines,

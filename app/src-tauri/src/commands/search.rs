@@ -9,6 +9,7 @@
 use std::path::Path;
 
 use packing_engine::day::DayState;
+use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::names;
 use packing_engine::rules::parse_condition;
 use packing_engine::rules_edit::{self, Tree};
@@ -41,13 +42,13 @@ pub struct SearchItemView {
 pub struct SearchRowView {
     /// The day folder the order was saved in (`YYYY-MM-DD`).
     day: String,
-    order_id: String,
-    tracking_id: String,
+    order_id: OrderId,
+    tracking_id: TrackingId,
     /// The named courier; empty when it is unknown.
     courier: String,
     items: Vec<SearchItemView>,
-    batch: i64,
-    pdf: i64,
+    batch: BatchNumber,
+    pdf: PdfNumber,
     /// The saved PDF's file name.
     file: String,
     /// The saved PDF's full path, for *Open* (`open_path`).
@@ -111,7 +112,11 @@ fn search_results_view(results: &SearchResults, labels: &Path) -> SearchResultsV
             .map(|row| SearchRowView {
                 day: row.day.clone(),
                 order_id: row.order_id.clone(),
-                tracking_id: row.tracking_id.clone(),
+                // The table prints an order with no tracking ID as an empty cell (08 › *Search*).
+                tracking_id: row
+                    .tracking_id
+                    .clone()
+                    .unwrap_or_else(|| TrackingId::new("")),
                 courier: row.courier.clone(),
                 items: row
                     .items

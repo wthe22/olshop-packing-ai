@@ -1,4 +1,5 @@
 use super::*;
+use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::label::courier_data;
 use packing_engine::orders::Order;
 use packing_engine::plan::{PickResult, REST_CODE, RunResult};
@@ -16,8 +17,8 @@ fn line(name: &str, variation: &str, quantity: i64, display: &str) -> Line {
 fn read_order(id: &str, tracking: &str, lines: Vec<Line>) -> ReadOrder {
     ReadOrder {
         order: Order {
-            order_id: id.to_string(),
-            tracking_id: tracking.to_string(),
+            order_id: OrderId::new(id),
+            tracking_id: (!tracking.is_empty()).then(|| TrackingId::new(tracking)),
             courier: "J&T Express".to_string(),
             ship_by: None,
             lines,
@@ -28,6 +29,13 @@ fn read_order(id: &str, tracking: &str, lines: Vec<Line>) -> ReadOrder {
         has_slip: true,
         qty_total: None,
     }
+}
+
+fn order_ids() -> Vec<OrderId> {
+    vec![
+        OrderId::new("580000000000000001"),
+        OrderId::new("580000000000000002"),
+    ]
 }
 
 fn pick() -> (PickResult, Vec<ReadOrder>) {
@@ -44,19 +52,13 @@ fn pick() -> (PickResult, Vec<ReadOrder>) {
         ),
     ];
     let pick = PickResult {
-        number: 1,
+        number: PdfNumber::new(1),
         code: "A".to_string(),
         name: "Sepatu".to_string(),
-        orders: vec![
-            "580000000000000001".to_string(),
-            "580000000000000002".to_string(),
-        ],
+        orders: order_ids(),
         runs: vec![RunResult {
             number: 1,
-            orders: vec![
-                "580000000000000001".to_string(),
-                "580000000000000002".to_string(),
-            ],
+            orders: order_ids(),
         }],
         pages: 2,
         file_name: "1 A Sepatu ×2.pdf".to_string(),
@@ -81,13 +83,19 @@ fn pick_section_maps_runs_and_lines() {
     let index = order_index(&draft);
     let section = pick_section(&pick, &index).expect("section");
 
-    assert_eq!(section.number, 1);
+    assert_eq!(section.number, PdfNumber::new(1));
     assert_eq!(section.code, "A");
     assert_eq!(section.name, "Sepatu");
     assert_eq!(section.runs.len(), 1);
     assert_eq!(section.runs[0].number, 1);
     assert_eq!(section.runs[0].orders.len(), 2);
-    assert_eq!(section.runs[0].orders[0].tracking_id, "JY0000000101");
+    assert_eq!(
+        section.runs[0].orders[0]
+            .tracking_id
+            .as_ref()
+            .map(TrackingId::as_str),
+        Some("JY0000000101")
+    );
     assert_eq!(section.runs[0].orders[0].lines[0].quantity, 1);
     assert_eq!(
         section.runs[0].orders[0].lines[0].display_name,
@@ -115,11 +123,11 @@ fn pick_pages_and_saved_follow_the_runs() {
         pick_pages(&pick, &index).expect("pages"),
         vec![(0, 0), (0, 0)]
     );
-    let saved = pick_saved(&pick, &index, 1).expect("saved");
+    let saved = pick_saved(&pick, &index, BatchNumber::new(1)).expect("saved");
     assert_eq!(saved.len(), 2);
-    assert_eq!(saved[0].pdf, 1);
+    assert_eq!(saved[0].pdf, PdfNumber::new(1));
     assert_eq!(saved[0].run, 1);
-    assert_eq!(saved[1].order_id, "580000000000000002");
+    assert_eq!(saved[1].order_id.as_str(), "580000000000000002");
     // The searched fields are written at save (07 › *`state.json`*; 2.21): the order's lines
     // and the order-level fields.
     assert_eq!(saved[0].courier, "J&T Express");
@@ -136,7 +144,7 @@ fn pick_pages_and_saved_follow_the_runs() {
 fn summary_text_lists_the_picks_and_the_written_folder() {
     let (pick, orders) = pick();
     let rest = PickResult {
-        number: 2,
+        number: PdfNumber::new(2),
         code: REST_CODE.to_string(),
         name: "Uncategorised".to_string(),
         orders: Vec::new(),
@@ -247,7 +255,7 @@ fn draft_with_unseen_logo(order_ids: Vec<&str>) -> Draft {
             hash: "ffff".to_string(),
             appearance: None,
             pages: 2,
-            order_ids: order_ids.into_iter().map(str::to_string).collect(),
+            order_ids: order_ids.into_iter().map(OrderId::new).collect(),
         }],
         read_warnings: Vec::new(),
     };
@@ -333,10 +341,10 @@ fn not_a_courier_and_skip_name_nothing_but_leave_the_list() {
 fn the_duplicate_warning_stays_after_a_logo_answer() {
     let mut draft = draft_with_unseen_logo(vec!["580000000000000001"]);
     draft.duplicates = vec![Duplicate {
-        order_id: "580000000000000009".to_string(),
-        tracking_id: "JY0000009999".to_string(),
-        batch: 1,
-        pdf: 2,
+        order_id: OrderId::new("580000000000000009"),
+        tracking_id: Some(TrackingId::new("JY0000009999")),
+        batch: BatchNumber::new(1),
+        pdf: PdfNumber::new(2),
         time: "07:40".to_string(),
     }];
     draft.warnings.push(duplicates_warning(&draft.duplicates));

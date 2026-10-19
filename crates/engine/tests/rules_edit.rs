@@ -7,6 +7,7 @@
 use std::fs;
 use std::path::PathBuf;
 
+use packing_engine::ids::{OrderId, TrackingId};
 use packing_engine::orders::{Line, Order};
 use packing_engine::rules::{Category, parse_condition};
 use packing_engine::rules_edit::{GroupKind, Node, condition_to_tree, counts, tree_to_condition};
@@ -228,8 +229,8 @@ fn line(name: &str, quantity: i64) -> Line {
 
 fn order(name: &str, quantity: i64, courier: &str) -> Order {
     Order {
-        order_id: "580000000000000999".to_string(),
-        tracking_id: "JY0000009999".to_string(),
+        order_id: OrderId::new("580000000000000999"),
+        tracking_id: Some(TrackingId::new("JY0000009999")),
         courier: courier.to_string(),
         ship_by: None,
         lines: vec![line(name, quantity)],

@@ -7,6 +7,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{OrderId, TrackingId};
 use packing_engine::orders::{Line, Order, ReadOrder, UnseenLogo, Warning, display_name};
 use packing_engine::plan::{Plan, REST_CODE};
 use packing_engine::rules::{Category, catch_all_category};
@@ -65,8 +66,8 @@ fn line(name: &str, variation: &str, quantity: i64) -> Line {
 fn read_order(id: &str, tracking: &str, lines: Vec<Line>) -> ReadOrder {
     ReadOrder {
         order: Order {
-            order_id: id.to_string(),
-            tracking_id: tracking.to_string(),
+            order_id: OrderId::new(id),
+            tracking_id: (!tracking.is_empty()).then(|| TrackingId::new(tracking)),
             courier: "J&T Express".to_string(),
             ship_by: None,
             lines,

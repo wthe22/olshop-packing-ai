@@ -6,6 +6,7 @@ use std::process::Command;
 
 use packing_engine::day::{DayState, Layout, PackingListChoice, PdfEntry, Scope};
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{BatchNumber, PdfNumber};
 use packing_engine::names;
 use packing_pdf::PDFIUM_VERSION;
 use serde::{Deserialize, Serialize};
@@ -125,7 +126,7 @@ fn use_chosen_folder(state: &AppState, path: &str) -> Result<String, String> {
 /// The Day screen's view of one saved PDF (08 › *1. Day*).
 #[derive(Serialize)]
 pub struct PdfView {
-    number: i64,
+    number: PdfNumber,
     code: String,
     name: String,
     file: String,
@@ -139,7 +140,7 @@ pub struct PdfView {
 /// The Day screen's view of one batch (08 › *1. Day*).
 #[derive(Serialize)]
 pub struct BatchView {
-    batch: i64,
+    batch: BatchNumber,
     save_time: String,
     /// `HH:MM` of `save_time`.
     time: String,
@@ -189,8 +190,8 @@ fn day_overview_at(data_folder: &Path, day: &str) -> Result<DayOverview, String>
 fn set_printed_at(
     data_folder: &Path,
     day: &str,
-    batch: i64,
-    pdf: i64,
+    batch: BatchNumber,
+    pdf: PdfNumber,
     printed: bool,
 ) -> Result<(), String> {
     let day_dir = data_folder.join(LABELS_DIR).join(day);
@@ -271,7 +272,7 @@ fn clock(save_time: &str) -> String {
 /// layout is part of the name only when several layouts were written.
 fn packing_list_files(choice: &PackingListChoice, pdfs: &[PdfEntry]) -> Vec<String> {
     let several = choice.layouts.len() > 1;
-    let name = |number: Option<i64>, layout: Layout| {
+    let name = |number: Option<PdfNumber>, layout: Layout| {
         names::packing_list_file_name(number, several.then(|| layout_name(layout)))
     };
     match choice.scope {
@@ -473,8 +474,8 @@ pub fn day_overview(state: State<'_, AppState>, day: String) -> Result<DayOvervi
 pub fn set_printed(
     state: State<'_, AppState>,
     day: String,
-    batch: i64,
-    pdf: i64,
+    batch: BatchNumber,
+    pdf: PdfNumber,
     printed: bool,
 ) -> Result<(), String> {
     state.set_day(&day);

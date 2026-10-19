@@ -5,6 +5,7 @@
 use std::fs;
 use std::path::PathBuf;
 
+use packing_engine::ids::{OrderId, PdfNumber, TrackingId};
 use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
 use packing_engine::plan::{Plan, REST_CODE, REST_NAME};
 use packing_engine::rules::load_rules;
@@ -90,9 +91,10 @@ fn read_order(order_id: &str, entry: &Value, position: usize) -> ReadOrder {
         .and_then(Value::as_str)
         .map(|text| text.parse().expect("ISO date-time"));
     let pages = entry.get("pages").and_then(Value::as_u64).unwrap_or(0) as usize;
+    let tracking_id = str_field(entry, "tracking_id");
     let order = Order {
-        order_id: order_id.to_string(),
-        tracking_id: str_field(entry, "tracking_id"),
+        order_id: OrderId::new(order_id),
+        tracking_id: (!tracking_id.is_empty()).then(|| TrackingId::new(tracking_id)),
         courier: str_field(entry, "courier"),
         ship_by,
         lines,
@@ -132,7 +134,7 @@ fn candidates_plan_matches_expected_picks_json() {
         load_rules(&fs::read_to_string(testdata("categories.toml")).expect("read categories"))
             .expect("load rules");
     let plan = Plan::from_categories(&categories);
-    let result = plan.count(&orders, 1);
+    let result = plan.count(&orders, PdfNumber::new(1));
 
     let expected: Value = serde_json::from_str(
         &fs::read_to_string(testdata("expected-picks.json")).expect("read expected-picks"),
@@ -144,7 +146,10 @@ fn candidates_plan_matches_expected_picks_json() {
     assert_eq!(result.total_orders(), orders.len());
 
     for (pick, entry) in result.picks.iter().zip(expected) {
-        assert_eq!(pick.number, entry["number"].as_i64().unwrap());
+        assert_eq!(
+            pick.number,
+            PdfNumber::new(entry["number"].as_i64().unwrap())
+        );
         assert_eq!(pick.code, entry["code"].as_str().unwrap());
         assert_eq!(pick.name, entry["name"].as_str().unwrap());
         assert_eq!(
@@ -152,7 +157,7 @@ fn candidates_plan_matches_expected_picks_json() {
             entry["orders"].as_u64().unwrap() as usize
         );
 
-        let want_runs: Vec<Vec<String>> = entry["runs"]
+        let want_runs: Vec<Vec<OrderId>> = entry["runs"]
             .as_array()
             .unwrap()
             .iter()
@@ -160,15 +165,15 @@ fn candidates_plan_matches_expected_picks_json() {
                 run.as_array()
                     .unwrap()
                     .iter()
-                    .map(|id| id.as_str().unwrap().to_string())
+                    .map(|id| OrderId::new(id.as_str().unwrap()))
                     .collect()
             })
             .collect();
-        let got_runs: Vec<Vec<String>> = pick.runs.iter().map(|run| run.orders.clone()).collect();
+        let got_runs: Vec<Vec<OrderId>> = pick.runs.iter().map(|run| run.orders.clone()).collect();
         assert_eq!(got_runs, want_runs, "runs of pick {}", pick.number);
 
         // The runs are the orders, in printing order.
-        let flattened: Vec<String> = got_runs.into_iter().flatten().collect();
+        let flattened: Vec<OrderId> = got_runs.into_iter().flatten().collect();
         let mut sorted_orders = pick.orders.clone();
         sorted_orders.sort();
         let mut sorted_flat = flattened.clone();

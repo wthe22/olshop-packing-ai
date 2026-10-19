@@ -8,6 +8,8 @@ use std::fmt;
 
 use jiff::civil::Date;
 
+use crate::ids::{BatchNumber, PdfNumber};
+
 /// `<name>` limit; keeps file names clear of the Windows path limit (03).
 pub const NAME_LIMIT: usize = 100;
 
@@ -79,7 +81,12 @@ fn cut_name(name: &str) -> String {
 /// The suggested saved-PDF name `<n> <code> <name> ×<orders>.pdf` (07 › *Plan*): the `<name>`
 /// part is cut at [`NAME_LIMIT`], then illegal characters in the whole name become `-` (the code
 /// `?` of the rest pick becomes `-`).
-pub fn suggested_saved_pdf_name(number: i64, code: &str, name: &str, orders: usize) -> String {
+pub fn suggested_saved_pdf_name(
+    number: PdfNumber,
+    code: &str,
+    name: &str,
+    orders: usize,
+) -> String {
     let name = cut_name(name);
     sanitize_file_name(&format!("{number} {code} {name} ×{orders}.pdf"))
 }
@@ -101,12 +108,12 @@ pub fn normalize_saved_pdf_name(name: &str) -> Result<String, NameError> {
 }
 
 /// A batch folder name `batch <b>` (07 › *Day folder*).
-pub fn batch_folder(batch: i64) -> String {
+pub fn batch_folder(batch: BatchNumber) -> String {
     format!("batch {batch}")
 }
 
 /// The temporary folder a save is written into before it is renamed (07 › *Save*).
-pub fn temp_batch_folder(batch: i64) -> String {
+pub fn temp_batch_folder(batch: BatchNumber) -> String {
     format!("batch {batch}.partial")
 }
 
@@ -117,7 +124,7 @@ pub fn day_folder(date: Date) -> String {
 
 /// A packing-list file name (07 › *Day folder*): `number` is the saved-PDF number for scope
 /// `per-pdf` (`None` for `whole`); `layout` is added only when several layouts are written.
-pub fn packing_list_file_name(number: Option<i64>, layout: Option<&str>) -> String {
+pub fn packing_list_file_name(number: Option<PdfNumber>, layout: Option<&str>) -> String {
     let mut name = String::from("packing-list");
     if let Some(number) = number {
         name.push_str(&format!("-{number}"));

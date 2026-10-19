@@ -7,6 +7,7 @@ use jiff::civil::{Date, DateTime};
 
 use super::condition::{Condition, NumberOp, TextOp};
 use super::parser::{is_clock_form, is_date_form, is_datetime_form};
+use crate::ids::TrackingId;
 
 fn text_match(field_value: &str, op: TextOp, literal: &str) -> bool {
     let value = field_value.trim().to_lowercase();
@@ -104,8 +105,13 @@ pub fn evaluate(cond: &Condition, order: &crate::orders::Order) -> bool {
         Condition::Or(operands) => operands.iter().any(|o| evaluate(o, order)),
         Condition::Text { field, op, value } => match field.as_str() {
             "courier" => text_match(&order.courier, *op, value),
-            "order_id" => text_match(&order.order_id, *op, value),
-            "tracking_id" => text_match(&order.tracking_id, *op, value),
+            "order_id" => text_match(order.order_id.as_str(), *op, value),
+            // An order with no tracking ID matches text as the empty string.
+            "tracking_id" => text_match(
+                order.tracking_id.as_ref().map_or("", TrackingId::as_str),
+                *op,
+                value,
+            ),
             "name" | "display_name" | "variation" | "seller_sku" => {
                 item_text(order, field, *op, value)
             }

@@ -15,6 +15,8 @@ mod model;
 pub use emit::write;
 pub use model::{Layout, PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection};
 
+use packing_engine::ids::TrackingId;
+
 use self::emit::grouped;
 use self::fonts::Font;
 use self::measure::{Measure, PT_PER_MM};
@@ -242,7 +244,7 @@ impl<'m, 'a> Builder<'m, 'a> {
         let ids: Vec<&str> = run
             .orders
             .iter()
-            .map(|order| order.tracking_id.as_str())
+            .map(|order| order.tracking_id.as_ref().map_or("", TrackingId::as_str))
             .collect();
         let continued = format!("{label} (continued)  {}", items.join("  /  "));
         self.y += 0.6;

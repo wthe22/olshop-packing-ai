@@ -8,6 +8,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::Sender;
 
+use packing_engine::ids::OrderId;
 use packing_engine::label::find_order_id;
 use packing_engine::orders::PageItem;
 use packing_engine::text::PageText;
@@ -71,9 +72,9 @@ fn pages_of(items: &[PageItem], file: usize) -> Vec<PageText> {
 
 /// The Order ID of every page, in order: a page with none continues the previous order (the
 /// reading step groups pages the same way).
-pub fn order_ids(pages: &[PageText]) -> Vec<Option<String>> {
+pub fn order_ids(pages: &[PageText]) -> Vec<Option<OrderId>> {
     let mut ids = Vec::with_capacity(pages.len());
-    let mut previous: Option<String> = None;
+    let mut previous: Option<OrderId> = None;
     for page in pages {
         let found = find_order_id(&page.text);
         if let Some(id) = &found {
@@ -175,9 +176,9 @@ mod tests {
         assert_eq!(
             order_ids(&pages),
             vec![
-                Some("580000000000000001".to_string()),
-                Some("580000000000000001".to_string()),
-                Some("580000000000000002".to_string()),
+                Some(OrderId::new("580000000000000001")),
+                Some(OrderId::new("580000000000000001")),
+                Some(OrderId::new("580000000000000002")),
             ]
         );
         // A first page with nothing to continue stays unknown.

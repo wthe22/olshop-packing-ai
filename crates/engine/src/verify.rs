@@ -8,6 +8,7 @@
 use std::collections::BTreeMap;
 use std::fmt;
 
+use crate::ids::{OrderId, PdfNumber};
 use crate::orders::ReadOrder;
 use crate::plan::PlanResult;
 
@@ -15,9 +16,9 @@ use crate::plan::PlanResult;
 /// (an order of two pages repeats its ID once per page).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExpectedPdf {
-    pub number: i64,
+    pub number: PdfNumber,
     pub file: String,
-    pub pages: Vec<String>,
+    pub pages: Vec<OrderId>,
 }
 
 /// One packing list as the plan wants it: the counts it must print.
@@ -41,7 +42,7 @@ pub struct Expected {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WrittenPdf {
     pub file: String,
-    pub pages: Vec<Option<String>>,
+    pub pages: Vec<Option<OrderId>>,
 }
 
 /// One packing list as it was read back; a count is `None` when its line could not be read.
@@ -65,34 +66,37 @@ pub struct Written {
 pub enum Finding {
     /// A page of an order is missing from a saved PDF.
     MissingPage {
-        pdf: i64,
+        pdf: PdfNumber,
         file: String,
-        order_id: String,
+        order_id: OrderId,
         expected: usize,
         found: usize,
     },
     /// A page is twice in one saved PDF.
     DoubledPageInOnePdf {
-        pdf: i64,
+        pdf: PdfNumber,
         file: String,
-        order_id: String,
+        order_id: OrderId,
         expected: usize,
         found: usize,
     },
     /// An order is in two saved PDFs.
-    OrderInTwoPdfs { order_id: String, pdfs: Vec<i64> },
+    OrderInTwoPdfs {
+        order_id: OrderId,
+        pdfs: Vec<PdfNumber>,
+    },
     /// An order is in no saved PDF.
-    OrderInNoPdf { order_id: String },
+    OrderInNoPdf { order_id: OrderId },
     /// A page holds another pick's label.
     WrongOrderLabelOnPage {
-        pdf: i64,
+        pdf: PdfNumber,
         file: String,
         page: usize,
-        order_id: String,
+        order_id: OrderId,
     },
     /// A written page count differs from the plan.
     PageCountDiffersFromPlan {
-        pdf: i64,
+        pdf: PdfNumber,
         file: String,
         expected: usize,
         found: usize,
@@ -108,7 +112,7 @@ pub enum Finding {
         found_runs: Option<usize>,
     },
     /// Every page is there exactly once, but not in the run order (a warning).
-    PageOrderDiffers { pdf: i64, file: String },
+    PageOrderDiffers { pdf: PdfNumber, file: String },
 }
 
 impl Finding {
@@ -152,7 +156,7 @@ impl fmt::Display for Finding {
                  the plan has {expected}."
             ),
             Finding::OrderInTwoPdfs { order_id, pdfs } => {
-                let list: Vec<String> = pdfs.iter().map(i64::to_string).collect();
+                let list: Vec<String> = pdfs.iter().map(PdfNumber::to_string).collect();
                 write!(
                     f,
                     "order {order_id} is in {} saved PDFs ({}); it must be in one.",
@@ -234,9 +238,9 @@ impl Check {
 /// The page sequence of every saved PDF: the pick's runs, their orders, each repeated once per
 /// page (07 › *Check before saving*).
 pub fn expected_pdfs(plan: &PlanResult, orders: &[ReadOrder]) -> Vec<ExpectedPdf> {
-    let index: BTreeMap<&str, &ReadOrder> = orders
+    let index: BTreeMap<&OrderId, &ReadOrder> = orders
         .iter()
-        .map(|order| (order.order.order_id.as_str(), order))
+        .map(|order| (&order.order.order_id, order))
         .collect();
     plan.picks
         .iter()
@@ -244,7 +248,7 @@ pub fn expected_pdfs(plan: &PlanResult, orders: &[ReadOrder]) -> Vec<ExpectedPdf
             let mut pages = Vec::new();
             for run in &pick.runs {
                 for id in &run.orders {
-                    let count = index.get(id.as_str()).map_or(0, |order| order.pages.len());
+                    let count = index.get(id).map_or(0, |order| order.pages.len());
                     for _ in 0..count {
                         pages.push(id.clone());
                     }
@@ -267,7 +271,7 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
     let mut warnings = Vec::new();
 
     for pdf in &expected.pdfs {
-        let actual: &[Option<String>] = written
+        let actual: &[Option<OrderId>] = written
             .pdfs
             .iter()
             .find(|read| read.file == pdf.file)
@@ -280,8 +284,8 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
                 found: actual.len(),
             });
         }
-        let want = order_counts(pdf.pages.iter().map(String::as_str));
-        let have = order_counts(actual.iter().flatten().map(String::as_str));
+        let want = order_counts(pdf.pages.iter());
+        let have = order_counts(actual.iter().flatten());
 
         // A page holding another pick's label.
         for order in have.keys() {
@@ -289,7 +293,7 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
                 continue;
             }
             for (index, id) in actual.iter().enumerate() {
-                if id.as_deref() == Some(order.as_str()) {
+                if id.as_ref() == Some(order) {
                     errors.push(Finding::WrongOrderLabelOnPage {
                         pdf: pdf.number,
                         file: pdf.file.clone(),
@@ -322,8 +326,8 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
         }
         // The warning: all pages are there exactly once, in another order.
         if actual.iter().all(Option::is_some) && actual.len() == pdf.pages.len() && have == want {
-            let sequence: Vec<&str> = actual.iter().filter_map(|id| id.as_deref()).collect();
-            let wanted: Vec<&str> = pdf.pages.iter().map(String::as_str).collect();
+            let sequence: Vec<&OrderId> = actual.iter().flatten().collect();
+            let wanted: Vec<&OrderId> = pdf.pages.iter().collect();
             if sequence != wanted {
                 warnings.push(Finding::PageOrderDiffers {
                     pdf: pdf.number,
@@ -334,7 +338,7 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
     }
 
     // An order in no saved PDF, or in two: over the whole batch.
-    let mut places: BTreeMap<String, Vec<i64>> = BTreeMap::new();
+    let mut places: BTreeMap<OrderId, Vec<PdfNumber>> = BTreeMap::new();
     for pdf in &expected.pdfs {
         for order in &pdf.pages {
             places.entry(order.clone()).or_default();
@@ -344,12 +348,12 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
         let Some(pdf) = expected.pdfs.iter().find(|p| p.file == read.file) else {
             continue;
         };
-        let mut seen: Vec<&str> = Vec::new();
+        let mut seen: Vec<&OrderId> = Vec::new();
         for order in read.pages.iter().flatten() {
-            if seen.contains(&order.as_str()) {
+            if seen.contains(&order) {
                 continue;
             }
-            seen.push(order.as_str());
+            seen.push(order);
             places.entry(order.clone()).or_default().push(pdf.number);
         }
     }
@@ -389,10 +393,10 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
     Check { errors, warnings }
 }
 
-fn order_counts<'a>(ids: impl Iterator<Item = &'a str>) -> BTreeMap<String, usize> {
+fn order_counts<'a>(ids: impl Iterator<Item = &'a OrderId>) -> BTreeMap<OrderId, usize> {
     let mut counts = BTreeMap::new();
     for id in ids {
-        *counts.entry(id.to_string()).or_default() += 1;
+        *counts.entry(id.clone()).or_default() += 1;
     }
     counts
 }
@@ -402,11 +406,13 @@ mod tests {
     use super::*;
     use crate::orders::{Order, PageRef};
 
+    use crate::ids::TrackingId;
+
     fn read_order(id: &str, pages: usize) -> ReadOrder {
         ReadOrder {
             order: Order {
-                order_id: id.to_string(),
-                tracking_id: format!("JY{id}"),
+                order_id: OrderId::new(id),
+                tracking_id: Some(TrackingId::new(format!("JY{id}"))),
                 courier: "J&T Express".to_string(),
                 ship_by: None,
                 lines: Vec::new(),
@@ -421,22 +427,17 @@ mod tests {
 
     fn plan() -> PlanResult {
         use crate::plan::{PickResult, RunResult};
+        let orders = vec![
+            OrderId::new("580000000000000001"),
+            OrderId::new("580000000000000002"),
+        ];
         PlanResult {
             picks: vec![PickResult {
-                number: 1,
+                number: PdfNumber::new(1),
                 code: "A".to_string(),
                 name: "Sepatu".to_string(),
-                orders: vec![
-                    "580000000000000001".to_string(),
-                    "580000000000000002".to_string(),
-                ],
-                runs: vec![RunResult {
-                    number: 1,
-                    orders: vec![
-                        "580000000000000001".to_string(),
-                        "580000000000000002".to_string(),
-                    ],
-                }],
+                orders: orders.clone(),
+                runs: vec![RunResult { number: 1, orders }],
                 pages: 3,
                 file_name: "1 A Sepatu ×2.pdf".to_string(),
             }],
@@ -451,14 +452,14 @@ mod tests {
         ];
         let pdfs = expected_pdfs(&plan(), &orders);
         assert_eq!(pdfs.len(), 1);
-        assert_eq!(pdfs[0].number, 1);
+        assert_eq!(pdfs[0].number, PdfNumber::new(1));
         assert_eq!(pdfs[0].file, "1 A Sepatu ×2.pdf");
         assert_eq!(
             pdfs[0].pages,
             vec![
-                "580000000000000001".to_string(),
-                "580000000000000001".to_string(),
-                "580000000000000002".to_string(),
+                OrderId::new("580000000000000001"),
+                OrderId::new("580000000000000001"),
+                OrderId::new("580000000000000002"),
             ]
         );
     }
@@ -466,9 +467,9 @@ mod tests {
     #[test]
     fn a_finding_names_itself_in_plain_words_and_keeps_the_severity() {
         let finding = Finding::MissingPage {
-            pdf: 1,
+            pdf: PdfNumber::new(1),
             file: "1 A Sepatu ×2.pdf".to_string(),
-            order_id: "580000000000000001".to_string(),
+            order_id: OrderId::new("580000000000000001"),
             expected: 1,
             found: 0,
         };
@@ -480,7 +481,7 @@ mod tests {
         assert!(!finding.is_warning());
 
         let warning = Finding::PageOrderDiffers {
-            pdf: 1,
+            pdf: PdfNumber::new(1),
             file: "1 A Sepatu ×2.pdf".to_string(),
         };
         assert!(warning.is_warning());

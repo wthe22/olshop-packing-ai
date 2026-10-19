@@ -1,6 +1,7 @@
 //! label.rs: Order ID search, ship_by and courier deduction, on plain text (cases ported from
 //! `tools/analysis/tests/test_labels.py`).
 
+use packing_engine::ids::{OrderId, TrackingId};
 use packing_engine::label::{deduce_courier, find_order_id, find_ship_by, find_tracking_id};
 
 // --- find_order_id -------------------------------------------------------------------------
@@ -9,7 +10,9 @@ use packing_engine::label::{deduce_courier, find_order_id, find_ship_by, find_tr
 fn jt_order_id_is_found_before_whitespace_is_removed() {
     // Removing whitespace first would glue tracking ID and Order ID into one number.
     assert_eq!(
-        find_order_id("JY0000001234\n580000000000000001").as_deref(),
+        find_order_id("JY0000001234\n580000000000000001")
+            .as_ref()
+            .map(OrderId::as_str),
         Some("580000000000000001")
     );
 }
@@ -26,7 +29,7 @@ fn lookbehind_and_lookahead_reject_longer_numbers() {
 fn spaced_characters_page_uses_the_second_search() {
     let spaced = format!("O r d e r I d : {}", "5 8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2");
     assert_eq!(
-        find_order_id(&spaced).as_deref(),
+        find_order_id(&spaced).as_ref().map(OrderId::as_str),
         Some("580000000000000002")
     );
 }
@@ -34,31 +37,41 @@ fn spaced_characters_page_uses_the_second_search() {
 #[test]
 fn second_search_accepts_the_fullwidth_colon() {
     let spaced = "O r d e r I d ： 5 8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2";
-    assert_eq!(find_order_id(spaced).as_deref(), Some("580000000000000002"));
+    assert_eq!(
+        find_order_id(spaced).as_ref().map(OrderId::as_str),
+        Some("580000000000000002")
+    );
 }
 
 // --- find_tracking_id ----------------------------------------------------------------------
 
 #[test]
 fn tracking_id_is_never_the_order_id() {
-    let order_id = "580000000000000001";
+    let order_id = OrderId::new("580000000000000001");
     assert_eq!(
-        find_tracking_id(&format!("{order_id} {order_id}"), order_id),
-        ""
+        find_tracking_id(&format!("{order_id} {order_id}"), &order_id),
+        None
     );
 }
 
 #[test]
 fn tracking_id_is_the_most_frequent_token() {
     let text = "JY0000001234 junk JY0000001234 JY0000001234 JY0000009999";
-    assert_eq!(find_tracking_id(text, ""), "JY0000001234");
+    assert_eq!(
+        find_tracking_id(text, &OrderId::new(""))
+            .as_ref()
+            .map(TrackingId::as_str),
+        Some("JY0000001234")
+    );
 }
 
 #[test]
 fn tracking_id_of_a_spaced_page_uses_the_collapsed_text() {
     assert_eq!(
-        find_tracking_id("T K P 0 0 0 0 0 0 0 1 0 6 a b c", ""),
-        "TKP0000000106"
+        find_tracking_id("T K P 0 0 0 0 0 0 0 1 0 6 a b c", &OrderId::new(""))
+            .as_ref()
+            .map(TrackingId::as_str),
+        Some("TKP0000000106")
     );
 }
 
@@ -94,6 +107,11 @@ fn table() -> CourierTable {
     }
 }
 
+/// A tracking ID as the tests write it: no text is the page whose label printed none.
+fn tracking(text: &str) -> Option<TrackingId> {
+    (!text.is_empty()).then(|| TrackingId::new(text))
+}
+
 /// A band image whose encoded bytes were hashed.
 fn logo(hash: &str) -> LogoImage {
     LogoImage {
@@ -115,7 +133,12 @@ fn the_logo_and_the_tracking_form_together_name_the_courier() {
     let table = table();
     // The byte hash names Alpha, whose form is JY.
     assert_eq!(
-        deduce_courier_in(&table, "no clue", "JY0000001234", &[logo("aa11")]),
+        deduce_courier_in(
+            &table,
+            "no clue",
+            tracking("JY0000001234").as_ref(),
+            &[logo("aa11")]
+        ),
         "Alpha"
     );
     // A masked logo is named by its appearance hash (courier.md item 3).
@@ -123,7 +146,7 @@ fn the_logo_and_the_tracking_form_together_name_the_courier() {
         deduce_courier_in(
             &table,
             "no clue",
-            "000000000202",
+            tracking("000000000202").as_ref(),
             &[masked("dd44", "shape-b")]
         ),
         "Beta"
@@ -135,7 +158,12 @@ fn a_logo_with_a_foreign_form_names_nothing() {
     let table = table();
     // Alpha's logo on a page whose tracking form is the shared 00 one.
     assert_eq!(
-        deduce_courier_in(&table, "no clue", "000000000202", &[logo("aa11")]),
+        deduce_courier_in(
+            &table,
+            "no clue",
+            tracking("000000000202").as_ref(),
+            &[logo("aa11")]
+        ),
         ""
     );
 }
@@ -144,11 +172,11 @@ fn a_logo_with_a_foreign_form_names_nothing() {
 fn a_logo_without_a_form_names_nothing() {
     let table = table();
     assert_eq!(
-        deduce_courier_in(&table, "no clue", "", &[logo("aa11")]),
+        deduce_courier_in(&table, "no clue", None, &[logo("aa11")]),
         ""
     );
     // No form and no logo at all, either.
-    assert_eq!(deduce_courier_in(&table, "no clue", "", &[]), "");
+    assert_eq!(deduce_courier_in(&table, "no clue", None, &[]), "");
 }
 
 #[test]
@@ -156,18 +184,18 @@ fn a_form_without_a_logo_names_the_courier_only_when_it_carries_a_marker() {
     let table = table();
     // Two couriers share the 00 form, so the form alone names neither.
     assert_eq!(
-        deduce_courier_in(&table, "no clue", "000000000202", &[]),
+        deduce_courier_in(&table, "no clue", tracking("000000000202").as_ref(), &[]),
         ""
     );
     // Delta's 57 form names only Delta, but a bare number is no clue by itself: nothing.
     assert_eq!(
-        deduce_courier_in(&table, "no clue", "570000000202", &[]),
+        deduce_courier_in(&table, "no clue", tracking("570000000202").as_ref(), &[]),
         ""
     );
     // The JY form carries the vendor's marker (a lettered prefix), so a page whose image is
     // missing altogether still gets its courier.
     assert_eq!(
-        deduce_courier_in(&table, "no clue", "JY0000001234", &[]),
+        deduce_courier_in(&table, "no clue", tracking("JY0000001234").as_ref(), &[]),
         "Alpha"
     );
 }
@@ -177,18 +205,33 @@ fn the_text_clue_stands_in_only_where_the_page_has_no_band_image() {
     let table = table();
     // No band image: the printed clue may name a candidate.
     assert_eq!(
-        deduce_courier_in(&table, "FastTrack parcel", "000000000202", &[]),
+        deduce_courier_in(
+            &table,
+            "FastTrack parcel",
+            tracking("000000000202").as_ref(),
+            &[]
+        ),
         "Gamma"
     );
     // A band image the table does not know means the logo was there but unreadable: the text
     // clue does NOT stand in for it.
     assert_eq!(
-        deduce_courier_in(&table, "FastTrack parcel", "000000000202", &[logo("dd44")]),
+        deduce_courier_in(
+            &table,
+            "FastTrack parcel",
+            tracking("000000000202").as_ref(),
+            &[logo("dd44")]
+        ),
         ""
     );
     // The text clue must be a candidate too.
     assert_eq!(
-        deduce_courier_in(&table, "FastTrack parcel", "JY0000001234", &[]),
+        deduce_courier_in(
+            &table,
+            "FastTrack parcel",
+            tracking("JY0000001234").as_ref(),
+            &[]
+        ),
         "Alpha"
     );
 }
@@ -198,7 +241,12 @@ fn a_not_courier_image_is_ignored() {
     let table = table();
     // cc33 was answered Not a courier (a channel strip): it names nothing...
     assert_eq!(
-        deduce_courier_in(&table, "no clue", "JY0000001234", &[logo("cc33")]),
+        deduce_courier_in(
+            &table,
+            "no clue",
+            tracking("JY0000001234").as_ref(),
+            &[logo("cc33")]
+        ),
         ""
     );
     // ...and it does not get in the way of the courier's own logo beside it.
@@ -206,7 +254,7 @@ fn a_not_courier_image_is_ignored() {
         deduce_courier_in(
             &table,
             "no clue",
-            "JY0000001234",
+            tracking("JY0000001234").as_ref(),
             &[logo("cc33"), logo("aa11")]
         ),
         "Alpha"
@@ -220,7 +268,7 @@ fn two_band_images_naming_different_couriers_name_nothing() {
         deduce_courier_in(
             &table,
             "no clue",
-            "JY0000001234",
+            tracking("JY0000001234").as_ref(),
             &[logo("aa11"), masked("ee55", "shape-b")]
         ),
         ""
@@ -231,24 +279,44 @@ fn two_band_images_naming_different_couriers_name_nothing() {
 fn the_built_in_table_names_the_measured_logos() {
     // The measured logo hashes of courier.md item 1, each with the form of its own courier.
     assert_eq!(
-        deduce_courier("no clue", "JY0000001234", &[logo("39b9b7b9f61d0e7f")]),
+        deduce_courier(
+            "no clue",
+            tracking("JY0000001234").as_ref(),
+            &[logo("39b9b7b9f61d0e7f")]
+        ),
         "J&T Express"
     );
     assert_eq!(
-        deduce_courier("no clue", "000000000202", &[logo("cf33ed60daa291b1")]),
+        deduce_courier(
+            "no clue",
+            tracking("000000000202").as_ref(),
+            &[logo("cf33ed60daa291b1")]
+        ),
         "SiCepat"
     );
     assert_eq!(
-        deduce_courier("no clue", "TKP0000000106", &[logo("9131c1f94ad363d4")]),
+        deduce_courier(
+            "no clue",
+            tracking("TKP0000000106").as_ref(),
+            &[logo("9131c1f94ad363d4")]
+        ),
         "IDX"
     );
     assert_eq!(
-        deduce_courier("no clue", "SPXID00000000002", &[logo("4583097ef370a670")]),
+        deduce_courier(
+            "no clue",
+            tracking("SPXID00000000002").as_ref(),
+            &[logo("4583097ef370a670")]
+        ),
         "SPX"
     );
     // A recognised logo with someone else's form names nothing.
     assert_eq!(
-        deduce_courier("no clue", "JY0000001234", &[logo("cf33ed60daa291b1")]),
+        deduce_courier(
+            "no clue",
+            tracking("JY0000001234").as_ref(),
+            &[logo("cf33ed60daa291b1")]
+        ),
         ""
     );
 }
@@ -259,7 +327,7 @@ fn an_unseen_logo_is_not_a_name() {
     assert_eq!(
         deduce_courier(
             "Shipping label",
-            "JY0000001234",
+            tracking("JY0000001234").as_ref(),
             &[logo("0123456789abcdef")]
         ),
         ""
@@ -267,11 +335,15 @@ fn an_unseen_logo_is_not_a_name() {
     // J&T Cargo: its form is one candidate, so the text clue can name it where no logo is read;
     // its masked logo needs the appearance table (empty until the measured value is written).
     assert_eq!(
-        deduce_courier("FastTrack parcel", "570000000202", &[]),
+        deduce_courier("FastTrack parcel", tracking("570000000202").as_ref(), &[]),
         "J&T Cargo"
     );
     assert_eq!(
-        deduce_courier("no clue", "570000000202", &[masked("331b", "unknown")]),
+        deduce_courier(
+            "no clue",
+            tracking("570000000202").as_ref(),
+            &[masked("331b", "unknown")]
+        ),
         ""
     );
 }
@@ -279,7 +351,11 @@ fn an_unseen_logo_is_not_a_name() {
 #[test]
 fn the_built_in_text_clue_still_names_jt_where_no_logo_image_is_read() {
     assert_eq!(
-        deduce_courier("Shipped with www.jet.co.id today", "JY0000001234", &[]),
+        deduce_courier(
+            "Shipped with www.jet.co.id today",
+            tracking("JY0000001234").as_ref(),
+            &[]
+        ),
         "J&T Express"
     );
 }
@@ -288,12 +364,15 @@ fn the_built_in_text_clue_still_names_jt_where_no_logo_image_is_read() {
 fn the_shared_twelve_digit_form_alone_gives_an_empty_courier() {
     // 12 digits starting 00 is SiCepat's own form now, but a bare number carries no vendor
     // marker: without a logo (or a text clue) the order stays unknown.
-    assert_eq!(deduce_courier("no text clue", "000000000202", &[]), "");
+    assert_eq!(
+        deduce_courier("no text clue", tracking("000000000202").as_ref(), &[]),
+        ""
+    );
 }
 
 #[test]
 fn courier_is_empty_when_nothing_matches() {
-    assert_eq!(deduce_courier("no text clue", "", &[]), "");
+    assert_eq!(deduce_courier("no text clue", None, &[]), "");
 }
 
 // --- find_ship_by --------------------------------------------------------------------------

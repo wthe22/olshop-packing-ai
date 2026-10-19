@@ -1,6 +1,7 @@
 use super::*;
 use packing_engine::day::{BatchEntry, FileEntry, PackingListChoice, PdfEntry};
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{BatchNumber, PdfNumber};
 
 fn temp_dir(label: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("packing-app-test-{}-{label}", std::process::id()));
@@ -20,7 +21,7 @@ fn file_entry(name: &str) -> FileEntry {
 }
 
 fn batch_entry(
-    batch: i64,
+    batch: BatchNumber,
     time: &str,
     pdf: PdfEntry,
     warnings: Vec<String>,
@@ -167,10 +168,10 @@ fn overview_reads_state_newest_first_totals_and_warnings() {
     let day_dir = dir.join(LABELS_DIR).join("2026-10-07");
     let mut state = DayState::new("2026-10-07");
     state.batches.push(batch_entry(
-        1,
+        BatchNumber::new(1),
         "2026-10-07T07:40:12+07:00",
         PdfEntry {
-            number: 1,
+            number: PdfNumber::new(1),
             code: "A".to_string(),
             name: "Sepatu".to_string(),
             file: "1 A Sepatu ×172.pdf".to_string(),
@@ -181,10 +182,10 @@ fn overview_reads_state_newest_first_totals_and_warnings() {
         Vec::new(),
     ));
     state.batches.push(batch_entry(
-        2,
+        BatchNumber::new(2),
         "2026-10-07T09:12:00+07:00",
         PdfEntry {
-            number: 2,
+            number: PdfNumber::new(2),
             code: "Z".to_string(),
             name: "Lainnya".to_string(),
             file: "2 Z Lainnya ×10.pdf".to_string(),
@@ -199,7 +200,7 @@ fn overview_reads_state_newest_first_totals_and_warnings() {
     let overview = day_overview_at(&dir, "2026-10-07").expect("overview");
     assert_eq!(overview.day, "2026-10-07");
     assert_eq!(overview.batches.len(), 2);
-    assert_eq!(overview.batches[0].batch, 2); // newest on top
+    assert_eq!(overview.batches[0].batch, BatchNumber::new(2)); // newest on top
     assert_eq!(overview.batches[0].time, "09:12");
     assert_eq!(overview.batches[0].orders, 10);
     assert!(overview.batches[0].warnings.is_empty());
@@ -236,10 +237,10 @@ fn set_printed_writes_the_tick_and_the_overview_reports_it() {
     let day_dir = dir.join(LABELS_DIR).join("2026-10-07");
     let mut state = DayState::new("2026-10-07");
     state.batches.push(batch_entry(
-        1,
+        BatchNumber::new(1),
         "2026-10-07T07:40:12+07:00",
         PdfEntry {
-            number: 1,
+            number: PdfNumber::new(1),
             code: "A".to_string(),
             name: "Sepatu".to_string(),
             file: "1 A Sepatu ×172.pdf".to_string(),
@@ -256,18 +257,46 @@ fn set_printed_writes_the_tick_and_the_overview_reports_it() {
     assert!(!before.batches[0].pdfs[0].printed);
 
     // Ticking writes the file; a fresh `day_overview` reports the tick.
-    set_printed_at(&dir, "2026-10-07", 1, 1, true).expect("tick");
+    set_printed_at(
+        &dir,
+        "2026-10-07",
+        BatchNumber::new(1),
+        PdfNumber::new(1),
+        true,
+    )
+    .expect("tick");
     let after = day_overview_at(&dir, "2026-10-07").expect("overview again");
     assert!(after.batches[0].pdfs[0].printed);
 
     // Unticking is read back too.
-    set_printed_at(&dir, "2026-10-07", 1, 1, false).expect("untick");
+    set_printed_at(
+        &dir,
+        "2026-10-07",
+        BatchNumber::new(1),
+        PdfNumber::new(1),
+        false,
+    )
+    .expect("untick");
     let after = day_overview_at(&dir, "2026-10-07").expect("overview again");
     assert!(!after.batches[0].pdfs[0].printed);
 
     // An unknown batch or saved-PDF number changes nothing.
-    set_printed_at(&dir, "2026-10-07", 9, 1, true).expect("unknown batch");
-    set_printed_at(&dir, "2026-10-07", 1, 9, true).expect("unknown pdf");
+    set_printed_at(
+        &dir,
+        "2026-10-07",
+        BatchNumber::new(9),
+        PdfNumber::new(1),
+        true,
+    )
+    .expect("unknown batch");
+    set_printed_at(
+        &dir,
+        "2026-10-07",
+        BatchNumber::new(1),
+        PdfNumber::new(9),
+        true,
+    )
+    .expect("unknown pdf");
     let after = day_overview_at(&dir, "2026-10-07").expect("overview again");
     assert!(!after.batches[0].pdfs[0].printed);
 
@@ -283,10 +312,10 @@ fn the_overview_reports_each_batchs_own_grouping() {
     let day_dir = dir.join(LABELS_DIR).join("2026-10-07");
     let mut state = DayState::new("2026-10-07");
     let mut first = batch_entry(
-        1,
+        BatchNumber::new(1),
         "2026-10-07T07:40:12+07:00",
         PdfEntry {
-            number: 1,
+            number: PdfNumber::new(1),
             code: "Z".to_string(),
             name: "Lainnya".to_string(),
             file: "1 Z Lainnya ×10.pdf".to_string(),

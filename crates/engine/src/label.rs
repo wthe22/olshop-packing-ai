@@ -12,6 +12,7 @@ use std::sync::OnceLock;
 use jiff::civil::DateTime;
 use regex::Regex;
 
+use crate::ids::{OrderId, TrackingId};
 use crate::text::LogoImage;
 
 /// The courier data built into the program, written into a new data folder (07 › *Inputs*).
@@ -376,7 +377,7 @@ pub fn load_couriers(text: &str) -> Result<CourierTable, CouriersError> {
 
 /// The candidate couriers of a tracking-ID form (courier.md item 2): every courier whose
 /// `tracking` matches the whole of `tracking_id`.
-pub fn candidates<'a>(table: &'a CourierTable, tracking_id: &str) -> Vec<&'a Courier> {
+pub fn candidates<'a>(table: &'a CourierTable, tracking_id: &TrackingId) -> Vec<&'a Courier> {
     table
         .couriers
         .iter()
@@ -386,18 +387,18 @@ pub fn candidates<'a>(table: &'a CourierTable, tracking_id: &str) -> Vec<&'a Cou
 
 /// Whether the tracking-ID form names `name` among its candidates (the two-clue rule's second
 /// half; the order's `courier` is filled only where this holds — D-LABEL-2).
-pub fn form_names_courier_in(table: &CourierTable, tracking_id: &str, name: &str) -> bool {
+pub fn form_names_courier_in(table: &CourierTable, tracking_id: &TrackingId, name: &str) -> bool {
     candidates(table, tracking_id)
         .iter()
         .any(|courier| courier.name == name)
 }
 
-fn form_matches(courier: &Courier, tracking_id: &str) -> bool {
-    !tracking_id.is_empty()
+fn form_matches(courier: &Courier, tracking_id: &TrackingId) -> bool {
+    !tracking_id.as_str().is_empty()
         && courier
             .tracking_full
             .as_ref()
-            .is_some_and(|re| re.is_match(tracking_id))
+            .is_some_and(|re| re.is_match(tracking_id.as_str()))
 }
 
 /// The courier one header-band image names: its byte hash in a courier's `logo`, else its
@@ -472,11 +473,11 @@ fn has_digit_right(text: &str, end: usize) -> bool {
 }
 
 /// `labels.find_order_id`: the Order ID on a page, or `None`.
-pub fn find_order_id(text: &str) -> Option<String> {
+pub fn find_order_id(text: &str) -> Option<OrderId> {
     for m in order_id_re().find_iter(text) {
         let (start, end) = (m.start(), m.end());
         if !has_digit_left(text, start) && !has_digit_right(text, end) {
-            return Some(m.as_str().to_string());
+            return Some(OrderId::new(m.as_str()));
         }
     }
     // Whitespace is dropped only in this second pass: on J&T labels the Order ID sits on its own
@@ -485,7 +486,7 @@ pub fn find_order_id(text: &str) -> Option<String> {
     let collapsed = whitespace_re().replace_all(text, "");
     labelled_order_id_re()
         .captures(&collapsed)
-        .map(|c| c[1].to_string())
+        .map(|c| OrderId::new(&c[1]))
 }
 
 fn bump(counts: &mut Vec<(String, usize)>, token: &str) {
@@ -506,13 +507,13 @@ fn most_frequent(counts: &[(String, usize)]) -> Option<&str> {
     best.map(|(token, _)| token.as_str())
 }
 
-/// `labels.find_tracking_id`: the most frequent tracking token of the text, `""` when none
+/// `labels.find_tracking_id`: the most frequent tracking token of the text, `None` when none
 /// matches a courier form.
-pub fn find_tracking_id(text: &str, order_id: &str) -> String {
+pub fn find_tracking_id(text: &str, order_id: &OrderId) -> Option<TrackingId> {
     let mut counts: Vec<(String, usize)> = Vec::new();
     for raw in text.split_whitespace() {
         let token = raw.trim_matches(|c| TOKEN_TRIM.contains(c));
-        if token.is_empty() || token == order_id {
+        if token.is_empty() || token == order_id.as_str() {
             continue;
         }
         for courier in couriers() {
@@ -541,13 +542,13 @@ pub fn find_tracking_id(text: &str, order_id: &str) -> String {
                 if has_digit_right(&collapsed, m.end()) {
                     continue;
                 }
-                if m.as_str() != order_id {
+                if m.as_str() != order_id.as_str() {
                     bump(&mut counts, m.as_str());
                 }
             }
         }
     }
-    most_frequent(&counts).unwrap_or_default().to_string()
+    most_frequent(&counts).map(TrackingId::new)
 }
 
 /// The two-clue courier rule (D-LABEL-2; courier.md items 1, 2, 4, 5): the tracking-ID form gives
@@ -567,9 +568,12 @@ pub fn find_tracking_id(text: &str, order_id: &str) -> String {
 pub fn deduce_courier_in(
     table: &CourierTable,
     text: &str,
-    tracking_id: &str,
+    tracking_id: Option<&TrackingId>,
     logos: &[LogoImage],
 ) -> String {
+    let Some(tracking_id) = tracking_id else {
+        return String::new();
+    };
     let candidates = candidates(table, tracking_id);
     if candidates.is_empty() {
         return String::new();
@@ -626,7 +630,7 @@ fn has_marker_prefix(courier: &Courier) -> bool {
 }
 
 /// The two-clue rule on the built-in `couriers.toml`.
-pub fn deduce_courier(text: &str, tracking_id: &str, logos: &[LogoImage]) -> String {
+pub fn deduce_courier(text: &str, tracking_id: Option<&TrackingId>, logos: &[LogoImage]) -> String {
     deduce_courier_in(courier_data(), text, tracking_id, logos)
 }
 

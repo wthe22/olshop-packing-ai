@@ -16,6 +16,7 @@ use std::sync::mpsc;
 
 use packing_engine::day::{DayState, PackingListChoice};
 use packing_engine::groupings::Grouping;
+use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::orders::ReadOrder;
 use packing_engine::plan::{PickResult, Plan, PlanResult};
 use packing_engine::rules::load_rules;
@@ -66,7 +67,7 @@ fn saved(tag: &str) -> Option<Saved> {
         &std::fs::read_to_string(common::testdata("categories.toml")).expect("rules file"),
     )
     .expect("parse the rules");
-    let plan = Plan::from_categories(&categories).count(&draft.orders, 1);
+    let plan = Plan::from_categories(&categories).count(&draft.orders, PdfNumber::new(1));
     let packing = PackingListChoice::default();
 
     let mut day = DayState::new("2026-10-07");
@@ -109,7 +110,7 @@ impl Saved {
         self.plan
             .picks
             .iter()
-            .find(|pick| pick.number == number)
+            .find(|pick| pick.number == PdfNumber::new(number))
             .expect("a pick")
     }
 
@@ -124,7 +125,7 @@ impl Saved {
         let mut pages = Vec::new();
         for run in &self.pick(number).runs {
             for id in &run.orders {
-                let order = index.get(id.as_str()).expect("an order of the pick");
+                let order = index.get(id).expect("an order of the pick");
                 for page in &order.pages {
                     pages.push((page.file, page.page));
                 }
@@ -134,12 +135,12 @@ impl Saved {
     }
 
     /// The Order ID of every page of a pick, in run order.
-    fn page_orders(&self, number: i64) -> Vec<String> {
+    fn page_orders(&self, number: i64) -> Vec<OrderId> {
         let index = self.index();
         let mut ids = Vec::new();
         for run in &self.pick(number).runs {
             for id in &run.orders {
-                let order = index.get(id.as_str()).expect("an order of the pick");
+                let order = index.get(id).expect("an order of the pick");
                 for _ in &order.pages {
                     ids.push(id.clone());
                 }
@@ -148,11 +149,11 @@ impl Saved {
         ids
     }
 
-    fn index(&self) -> HashMap<&str, &ReadOrder> {
+    fn index(&self) -> HashMap<&OrderId, &ReadOrder> {
         self.draft
             .orders
             .iter()
-            .map(|order| (order.order.order_id.as_str(), order))
+            .map(|order| (&order.order.order_id, order))
             .collect()
     }
 
@@ -186,7 +187,7 @@ impl Saved {
 }
 
 /// The first order of a pick whose pages are not shared with another pick, for the two-picks test.
-fn first_order(pick: &PickResult) -> &str {
+fn first_order(pick: &PickResult) -> &OrderId {
     &pick.runs[0].orders[0]
 }
 
@@ -272,13 +273,13 @@ fn an_order_in_no_saved_pdf_is_reported() {
     let Some(saved) = saved("no-pdf") else {
         return;
     };
-    let order = first_order(saved.pick(1)).to_string();
+    let order = first_order(saved.pick(1));
     // Write pick 1 without that order's pages at all.
     let pages: Vec<(usize, usize)> = saved
         .pages(1)
         .into_iter()
         .zip(saved.page_orders(1))
-        .filter(|(_, id)| id != &order)
+        .filter(|(_, id)| id != order)
         .map(|(page, _)| page)
         .collect();
     saved.rewrite(1, &pages);
@@ -393,16 +394,16 @@ fn a_changed_packing_list_count_is_reported() {
 fn wrong_list() -> PackingList {
     PackingList {
         day: "2026-10-07".to_string(),
-        batch: Some(1),
+        batch: Some(BatchNumber::new(1)),
         printed: "07:40".to_string(),
         sections: vec![SavedPdfSection {
-            number: 1,
+            number: PdfNumber::new(1),
             code: "A".to_string(),
             name: "Sepatu".to_string(),
             runs: vec![RunRows {
                 number: 1,
                 orders: vec![RunOrder {
-                    tracking_id: "JY0000001234".to_string(),
+                    tracking_id: Some(TrackingId::new("JY0000001234")),
                     lines: vec![PackingLine {
                         name: "Sepatu".to_string(),
                         variation: String::new(),

@@ -12,6 +12,7 @@ use std::thread;
 
 use packing_engine::day::{DayState, PackingListChoice};
 use packing_engine::groupings::{self, Grouping};
+use packing_engine::ids::BatchNumber;
 use packing_engine::label::{self, CourierTable};
 use packing_engine::plan::Plan;
 use packing_engine::rules::{Category, parse_condition};
@@ -65,7 +66,7 @@ pub async fn read_labels(
     app: AppHandle,
     paths: Vec<String>,
     grouping: Grouping,
-    redo: Option<i64>,
+    redo: Option<BatchNumber>,
 ) -> Result<ReadResult, String> {
     let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
     tauri::async_runtime::spawn_blocking(move || {

@@ -65,7 +65,7 @@ fn revert_last_deletes_the_folder_and_the_state() {
     )
     .expect("read");
     let save = save_batch_impl(&state, None, false, |_| {}).expect("save");
-    assert_eq!(save.batch, 1);
+    assert_eq!(save.batch, BatchNumber::new(1));
     let folder = dir.join("labels/2026-10-07/batch 1");
     assert!(folder.is_dir());
 
@@ -84,7 +84,7 @@ fn revert_last_deletes_the_folder_and_the_state() {
     )
     .expect("read again");
     let save = save_batch_impl(&state, None, false, |_| {}).expect("save again");
-    assert_eq!(save.batch, 1);
+    assert_eq!(save.batch, BatchNumber::new(1));
 
     // No batch to undo on an untouched day.
     assert!(revert_last_impl(&state, "2026-10-08").is_err());
@@ -113,7 +113,7 @@ fn amend_reads_the_download_copy_and_replaces_the_batch() {
         save_batch_impl(&state, None, false, |_| {})
             .expect("save")
             .batch,
-        1
+        BatchNumber::new(1)
     );
     let day_dir = dir.join("labels").join("2026-10-07");
     let folder = day_dir.join("batch 1");
@@ -123,10 +123,10 @@ fn amend_reads_the_download_copy_and_replaces_the_batch() {
     // list comes back for the selection page, the read holds the batch's own orders (none seen
     // as already saved) and the draft is open.
     let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
-    assert_eq!(start.batch, 1);
+    assert_eq!(start.batch, BatchNumber::new(1));
     assert_eq!(start.files.len(), 1);
     assert_eq!(start.files[0].name, "labels-slip.pdf");
-    assert_eq!(start.read.amend, Some(1));
+    assert_eq!(start.read.amend, Some(BatchNumber::new(1)));
     assert_eq!(start.read.orders, 23);
     assert_eq!(start.read.already_saved, 0);
     state.with_draft(|_| ()).expect("the amend draft is open");
@@ -136,11 +136,11 @@ fn amend_reads_the_download_copy_and_replaces_the_batch() {
         save_batch_impl(&state, None, false, |_| {})
             .expect("save again")
             .batch,
-        1
+        BatchNumber::new(1)
     );
     let day_state = DayState::load(&day_dir).expect("state");
     assert_eq!(day_state.batches.len(), 1);
-    assert_eq!(day_state.batches[0].batch, 1);
+    assert_eq!(day_state.batches[0].batch, BatchNumber::new(1));
     assert!(folder.is_dir());
 
     // Cancel leaves the old batch untouched.
@@ -176,7 +176,7 @@ fn amend_starts_on_the_plan_reads_the_batchs_files_and_writes_nothing() {
         save_batch_impl(&state, None, false, |_| {})
             .expect("save")
             .batch,
-        1
+        BatchNumber::new(1)
     );
     let day_dir = dir.join("labels").join("2026-10-07");
     let download = day_dir.join("batch 1").join("download");
@@ -185,8 +185,8 @@ fn amend_starts_on_the_plan_reads_the_batchs_files_and_writes_nothing() {
     // *Amend* opens the Plan screen: the batch's own orders read again, none seen as already
     // saved, and the draft open.
     let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
-    assert_eq!(start.batch, 1);
-    assert_eq!(start.read.amend, Some(1));
+    assert_eq!(start.batch, BatchNumber::new(1));
+    assert_eq!(start.read.amend, Some(BatchNumber::new(1)));
     assert_eq!(start.read.files, 2);
     assert_eq!(start.read.orders, 2);
     assert_eq!(
@@ -195,7 +195,12 @@ fn amend_starts_on_the_plan_reads_the_batchs_files_and_writes_nothing() {
     );
     assert_eq!(plan_orders(&start.read.plan), 2);
     state
-        .with_draft(|open| assert_eq!(open.amend.as_ref().map(|amend| amend.batch), Some(1)))
+        .with_draft(|open| {
+            assert_eq!(
+                open.amend.as_ref().map(|amend| amend.batch),
+                Some(BatchNumber::new(1))
+            )
+        })
         .expect("the amend draft is open");
 
     // The *Back* selection page's list: the batch's `download/` copies, already selected in
@@ -225,12 +230,17 @@ fn amend_starts_on_the_plan_reads_the_batchs_files_and_writes_nothing() {
         save_batch_impl(&state, None, false, |_| {})
             .expect("save again")
             .batch,
-        1
+        BatchNumber::new(1)
     );
     let day_state = DayState::load(&day_dir).expect("state");
     assert_eq!(day_state.batches.len(), 1);
-    assert_eq!(day_state.batches[0].batch, 1);
-    assert!(day_state.saved.iter().all(|order| order.batch == 1));
+    assert_eq!(day_state.batches[0].batch, BatchNumber::new(1));
+    assert!(
+        day_state
+            .saved
+            .iter()
+            .all(|order| order.batch == BatchNumber::new(1))
+    );
     assert_eq!(day_state.batches[0].files.len(), 2);
     assert!(day_dir.join("batch 1").is_dir());
 
@@ -261,7 +271,7 @@ fn the_amend_read_takes_the_selection_as_it_is() {
         save_batch_impl(&state, None, false, |_| {})
             .expect("save")
             .batch,
-        1
+        BatchNumber::new(1)
     );
     let day_dir = dir.join("labels/2026-10-07");
     let download = day_dir.join("batch 1").join("download");
@@ -270,7 +280,7 @@ fn the_amend_read_takes_the_selection_as_it_is() {
     let whole = read_amend_draft(
         &state,
         vec![download.join("part1.pdf"), download.join("part2.pdf")],
-        1,
+        BatchNumber::new(1),
         |_| {},
     )
     .expect("amend read");
@@ -281,8 +291,13 @@ fn the_amend_read_takes_the_selection_as_it_is() {
 
     // **×** on the second file (Q-APP-3 default): its order is out of the plan and is not
     // saved by the amendment.
-    let kept =
-        read_amend_draft(&state, vec![download.join("part1.pdf")], 1, |_| {}).expect("amend read");
+    let kept = read_amend_draft(
+        &state,
+        vec![download.join("part1.pdf")],
+        BatchNumber::new(1),
+        |_| {},
+    )
+    .expect("amend read");
     assert_eq!(kept.files, 1);
     assert_eq!(kept.orders, 1, "the taken-off file's order is gone");
     assert_eq!(plan_orders(&kept.plan), 1);
@@ -296,7 +311,7 @@ fn the_amend_read_takes_the_selection_as_it_is() {
             download.join("part2.pdf"),
             parts[2].clone(),
         ],
-        1,
+        BatchNumber::new(1),
         |_| {},
     )
     .expect("amend read");
@@ -331,7 +346,7 @@ fn cancel_amend_leaves_the_batch_and_the_state_untouched() {
         save_batch_impl(&state, None, false, |_| {})
             .expect("save")
             .batch,
-        1
+        BatchNumber::new(1)
     );
     let day_dir = dir.join("labels/2026-10-07");
     let folder = day_dir.join("batch 1");
@@ -340,7 +355,7 @@ fn cancel_amend_leaves_the_batch_and_the_state_untouched() {
     // The Plan screen's *Cancel amend*: *Amend* opened the amend draft at once, and the
     // `discard_draft` command's body drops it without writing anything.
     let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
-    assert_eq!(start.batch, 1);
+    assert_eq!(start.batch, BatchNumber::new(1));
     state.with_draft(|_| ()).expect("the amend draft is open");
     state.clear_draft();
     assert!(state.with_draft(|_| ()).is_err(), "the draft is gone");
@@ -356,11 +371,11 @@ fn cancel_amend_leaves_the_batch_and_the_state_untouched() {
     let amend = read_amend_draft(
         &state,
         vec![folder.join("download").join("labels-slip.pdf")],
-        1,
+        BatchNumber::new(1),
         |_| {},
     )
     .expect("amend read");
-    assert_eq!(amend.amend, Some(1));
+    assert_eq!(amend.amend, Some(BatchNumber::new(1)));
     state.with_draft(|_| ()).expect("the amend draft is open");
     state.clear_draft();
 
@@ -413,11 +428,11 @@ fn the_testdata_labels_show_no_logo_prompt_and_list_the_couriers() {
         save_batch_impl(&state, None, false, |_| {})
             .expect("save")
             .batch,
-        1
+        BatchNumber::new(1)
     );
     let start = start_amend_impl(&state, "2026-10-07", |_| {}).expect("amend");
-    assert_eq!(start.batch, 1);
-    assert_eq!(start.read.amend, Some(1));
+    assert_eq!(start.batch, BatchNumber::new(1));
+    assert_eq!(start.read.amend, Some(BatchNumber::new(1)));
     assert!(start.read.logos.is_empty());
     assert_eq!(start.read.couriers, read.couriers);
 

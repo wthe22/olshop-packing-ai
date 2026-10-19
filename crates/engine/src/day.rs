@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use xxhash_rust::xxh3::Xxh3;
 
 use crate::groupings::Grouping;
+use crate::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use crate::names;
 use crate::orders::ReadOrder;
 
@@ -88,7 +89,7 @@ pub struct FileEntry {
 /// One saved PDF of a batch (07 › *`state.json`*).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PdfEntry {
-    pub number: i64,
+    pub number: PdfNumber,
     pub code: String,
     pub name: String,
     pub file: String,
@@ -146,10 +147,17 @@ pub struct SavedItem {
 /// the fields kept here (07 › *`state.json`*).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SavedOrder {
-    pub order_id: String,
-    pub tracking_id: String,
-    pub batch: i64,
-    pub pdf: i64,
+    pub order_id: OrderId,
+    /// The courier's parcel number; `None` when the label printed none. `state.json` stores the
+    /// empty string for that, so the field is written back the same way.
+    #[serde(
+        default,
+        serialize_with = "serialize_tracking_id",
+        deserialize_with = "deserialize_tracking_id"
+    )]
+    pub tracking_id: Option<TrackingId>,
+    pub batch: BatchNumber,
+    pub pdf: PdfNumber,
     pub run: usize,
     /// The order's lines, each with its `name`, `variation`, `seller_sku` and `quantity`. Written
     /// at save (07 › *`state.json`*); empty on an order saved before search existed, which is
@@ -170,10 +178,30 @@ pub struct SavedOrder {
     pub ship_by: Option<String>,
 }
 
+/// A saved order's tracking ID as `state.json` keeps it: text, and the empty string when the
+/// label printed none.
+fn serialize_tracking_id<S>(
+    tracking_id: &Option<TrackingId>,
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    serializer.serialize_str(tracking_id.as_ref().map_or("", TrackingId::as_str))
+}
+
+fn deserialize_tracking_id<'de, D>(deserializer: D) -> Result<Option<TrackingId>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let text = String::deserialize(deserializer)?;
+    Ok((!text.is_empty()).then(|| TrackingId::new(text)))
+}
+
 /// One saved batch (07 › *`state.json`*).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BatchEntry {
-    pub batch: i64,
+    pub batch: BatchNumber,
     pub save_time: String,
     /// The grouping the batch was packed with (07 › *`state.json`*; 04 › *Sets*); written at
     /// save and absent in an older file, which loads as `default`. An **Amend** reads the
@@ -187,7 +215,7 @@ pub struct BatchEntry {
     /// written when a tick is clicked; absent loads as empty. A note only: nothing is enforced,
     /// and it belongs to the batch, so a revert takes it and an amend writes the batch afresh.
     #[serde(default)]
-    pub printed: Vec<i64>,
+    pub printed: Vec<PdfNumber>,
     /// The read warnings of the batch, as shown on the Plan screen (07 › *`state.json`*), plus
     /// the check before saving's warnings; the Day screen *Warnings ▸* reads them without
     /// re-reading the files. Defaulted so an older file still loads.
@@ -201,7 +229,7 @@ pub struct BatchEntry {
 
 impl BatchEntry {
     /// Whether saved-PDF row `pdf` of this batch is ticked (07 › *`state.json`*).
-    pub fn is_printed(&self, pdf: i64) -> bool {
+    pub fn is_printed(&self, pdf: PdfNumber) -> bool {
         self.printed.contains(&pdf)
     }
 }
@@ -261,28 +289,29 @@ impl DayState {
     }
 
     /// The next batch number `1, 2, 3, …` within the day.
-    pub fn next_batch_number(&self) -> i64 {
+    pub fn next_batch_number(&self) -> BatchNumber {
         self.batches
             .iter()
             .map(|batch| batch.batch)
             .max()
-            .unwrap_or(0)
-            + 1
+            .map_or(BatchNumber::new(1), BatchNumber::next)
     }
 
     /// The day's next saved-PDF number, after the last batch's last number (07 › *Save* step 1).
-    pub fn next_pdf_number(&self) -> i64 {
+    pub fn next_pdf_number(&self) -> PdfNumber {
         let from_batches = self
             .batches
             .iter()
             .flat_map(|batch| batch.pdfs.iter().map(|pdf| pdf.number))
             .max();
         let from_saved = self.saved.iter().map(|order| order.pdf).max();
-        from_batches.max(from_saved).unwrap_or(0) + 1
+        from_batches
+            .max(from_saved)
+            .map_or(PdfNumber::new(1), PdfNumber::next)
     }
 
     /// The batch that read this file (`used in batch n`, 07 › *New batch*), by XXH3-64 and size.
-    pub fn used_in_batch(&self, fingerprint: &Fingerprint) -> Option<i64> {
+    pub fn used_in_batch(&self, fingerprint: &Fingerprint) -> Option<BatchNumber> {
         self.batches
             .iter()
             .find(|batch| {
@@ -294,10 +323,10 @@ impl DayState {
             .map(|batch| batch.batch)
     }
 
-    fn saved_entry(&self, order_id: &str) -> Option<&SavedOrder> {
+    fn saved_entry(&self, order_id: &OrderId) -> Option<&SavedOrder> {
         self.saved
             .iter()
-            .filter(|order| order.order_id == order_id)
+            .filter(|order| &order.order_id == order_id)
             .min_by_key(|order| order.batch)
     }
 
@@ -345,8 +374,8 @@ impl DayState {
     pub fn set_printed(
         &mut self,
         day_dir: &Path,
-        batch: i64,
-        pdf: i64,
+        batch: BatchNumber,
+        pdf: PdfNumber,
         printed: bool,
     ) -> Result<(), DayError> {
         let Some(entry) = self.batches.iter_mut().find(|entry| entry.batch == batch) else {
@@ -397,7 +426,7 @@ impl DayState {
 /// An amend in progress: the last batch's `download/` files and the state without it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Amend {
-    pub batch: i64,
+    pub batch: BatchNumber,
     /// The grouping the batch was packed with (04 › *Sets*): an amend reads it again, whatever
     /// grouping was used last.
     pub grouping: Grouping,
@@ -408,10 +437,10 @@ pub struct Amend {
 /// An order already saved today (07 › *What happens in one batch* step 4).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Duplicate {
-    pub order_id: String,
-    pub tracking_id: String,
-    pub batch: i64,
-    pub pdf: i64,
+    pub order_id: OrderId,
+    pub tracking_id: Option<TrackingId>,
+    pub batch: BatchNumber,
+    pub pdf: PdfNumber,
     pub time: String,
 }
 
@@ -421,7 +450,10 @@ impl fmt::Display for Duplicate {
         write!(
             f,
             "{} (batch {}, PDF {}, {})",
-            self.tracking_id, self.batch, self.pdf, self.time
+            self.tracking_id.as_ref().map_or("", TrackingId::as_str),
+            self.batch,
+            self.pdf,
+            self.time
         )
     }
 }
@@ -495,7 +527,7 @@ pub fn fingerprint(path: &Path) -> Result<Fingerprint, DayError> {
 /// Everything a finished batch adds to the day, except the files a closure writes (07 › *Save*).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BatchWrite {
-    pub batch: i64,
+    pub batch: BatchNumber,
     pub save_time: String,
     /// The grouping the batch was packed with (04 › *Sets*).
     pub grouping: Grouping,
@@ -580,7 +612,7 @@ where
 
 /// Delete a batch folder (07 › *Revert* step 1); a file open in another program is a
 /// [`DayError::FileInUse`].
-pub fn delete_batch_folder(day_dir: &Path, batch: i64) -> Result<(), DayError> {
+pub fn delete_batch_folder(day_dir: &Path, batch: BatchNumber) -> Result<(), DayError> {
     let path = day_dir.join(names::batch_folder(batch));
     if !path.exists() {
         return Ok(());
