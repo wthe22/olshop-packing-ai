@@ -60,14 +60,24 @@ impl From<NameError> for PlanError {
     }
 }
 
+/// A plan row's saved-PDF name: the owner's chosen whole name, or the name the plan suggests
+/// (07 › *Plan*).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum FileName {
+    /// No name chosen: the suggested name is used.
+    Suggested,
+    /// The owner's chosen whole name, already normalised.
+    Chosen(String),
+}
+
 /// One row of the plan: a pick from the rules file or one added for this batch only.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlanEntry {
     pub category: Category,
     /// Skipped for this batch only; its orders fall to the rows below (07 › *Plan*).
     pub skipped: bool,
-    /// The owner's whole saved-PDF name; `None` = the suggested name (07 › *Plan*).
-    pub file_name: Option<String>,
+    /// The owner's whole saved-PDF name, or the suggested one (07 › *Plan*).
+    pub file_name: FileName,
 }
 
 impl PlanEntry {
@@ -75,7 +85,7 @@ impl PlanEntry {
         Self {
             category,
             skipped: false,
-            file_name: None,
+            file_name: FileName::Suggested,
         }
     }
 }
@@ -204,7 +214,7 @@ impl Plan {
     /// Set the whole saved-PDF name for a pick (07 › *Plan*; whole name editable).
     pub fn rename(&mut self, index: usize, name: &str) -> Result<(), PlanError> {
         self.check_index(index)?;
-        self.entries[index].file_name = Some(names::normalize_saved_pdf_name(name)?);
+        self.entries[index].file_name = FileName::Chosen(names::normalize_saved_pdf_name(name)?);
         Ok(())
     }
 
@@ -262,9 +272,12 @@ fn split_matching<'a>(
 
 fn build_category(number: PdfNumber, entry: &PlanEntry, orders: &[&ReadOrder]) -> CategoryResult {
     let category = &entry.category;
-    let file_name = entry.file_name.clone().unwrap_or_else(|| {
-        names::suggested_saved_pdf_name(number, &category.code, &category.name, orders.len())
-    });
+    let file_name = match &entry.file_name {
+        FileName::Chosen(name) => name.clone(),
+        FileName::Suggested => {
+            names::suggested_saved_pdf_name(number, &category.code, &category.name, orders.len())
+        }
+    };
     CategoryResult {
         number,
         code: category.code.clone(),

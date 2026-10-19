@@ -10,7 +10,7 @@ use packing_engine::ids::{OrderId, PdfNumber};
 fn state_with_logo_draft(folder: &Path) -> AppState {
     let unknown = |id: &str, tracking: &str, name: &str| {
         let mut order = read_order(id, tracking, vec![line(name, "", 1)]);
-        order.order.courier = String::new();
+        order.order.courier = None;
         order
     };
     let mut draft = Draft {
@@ -129,8 +129,8 @@ fn skip_and_not_a_courier_leave_the_orders_unknown() {
         // Nothing was applied: the orders still have no courier.
         state
             .with_draft(|open| {
-                assert_eq!(open.draft.orders[0].order.courier, "");
-                assert_eq!(open.draft.orders[1].order.courier, "");
+                assert!(open.draft.orders[0].order.courier.is_none());
+                assert!(open.draft.orders[1].order.courier.is_none());
             })
             .expect("draft");
 

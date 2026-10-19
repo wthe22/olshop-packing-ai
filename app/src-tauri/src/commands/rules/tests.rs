@@ -60,7 +60,7 @@ fn order(name: &str, quantity: i64) -> Order {
     Order {
         order_id: OrderId::new("580000000000000999"),
         tracking_id: Some(TrackingId::new("JY0000009999")),
-        courier: "JNE".to_string(),
+        courier: Some("JNE".to_string()),
         ship_by: None,
         lines: vec![line(name, quantity)],
         customer_message: String::new(),

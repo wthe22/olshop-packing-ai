@@ -68,7 +68,7 @@ fn read_order(id: &str, tracking: &str, lines: Vec<Line>) -> ReadOrder {
         order: Order {
             order_id: OrderId::new(id),
             tracking_id: (!tracking.is_empty()).then(|| TrackingId::new(tracking)),
-            courier: "J&T Express".to_string(),
+            courier: Some("J&T Express".to_string()),
             ship_by: None,
             lines,
             customer_message: String::new(),

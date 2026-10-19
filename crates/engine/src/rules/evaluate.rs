@@ -104,7 +104,7 @@ pub fn evaluate(cond: &Condition, order: &crate::orders::Order) -> bool {
         Condition::And(operands) => operands.iter().all(|o| evaluate(o, order)),
         Condition::Or(operands) => operands.iter().any(|o| evaluate(o, order)),
         Condition::Text { field, op, value } => match field.as_str() {
-            "courier" => text_match(&order.courier, *op, value),
+            "courier" => text_match(order.courier.as_deref().unwrap_or(""), *op, value),
             "order_id" => text_match(order.order_id.as_str(), *op, value),
             // An order with no tracking ID matches text as the empty string.
             "tracking_id" => text_match(

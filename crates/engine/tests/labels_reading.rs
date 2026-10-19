@@ -132,7 +132,7 @@ fn second_page_without_order_id_continues_the_first() {
         order.order.tracking_id.as_ref().map(TrackingId::as_str),
         Some("JY0000001234")
     );
-    assert_eq!(order.order.courier, "J&T Express");
+    assert_eq!(order.order.courier.as_deref(), Some("J&T Express"));
     assert_eq!(
         order.order.ship_by.unwrap().to_string(),
         "2026-10-07T15:30:00"
@@ -320,7 +320,7 @@ fn unknown_courier_is_warned() {
         None,
     );
     let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
-    assert_eq!(reading.orders[0].order.courier, "");
+    assert_eq!(reading.orders[0].order.courier, None);
     assert_eq!(
         reading.warnings,
         vec![Warning::UnknownCourier {
@@ -367,7 +367,10 @@ fn a_known_logo_names_the_order_and_reports_no_unseen_logo() {
         vec![logo("39b9b7b9f61d0e7f")],
     );
     let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
-    assert_eq!(reading.orders[0].order.courier, "J&T Express");
+    assert_eq!(
+        reading.orders[0].order.courier.as_deref(),
+        Some("J&T Express")
+    );
     assert!(reading.unseen_logos.is_empty());
 }
 
@@ -410,8 +413,8 @@ fn an_unseen_logo_is_reported_with_its_pages_and_orders() {
         ]
     );
     // The unknown logo names neither order: the table has to be asked.
-    assert_eq!(reading.orders[0].order.courier, "");
-    assert_eq!(reading.orders[1].order.courier, "");
+    assert_eq!(reading.orders[0].order.courier, None);
+    assert_eq!(reading.orders[1].order.courier, None);
 }
 
 #[test]
@@ -431,7 +434,7 @@ fn an_appearance_hash_is_carried_on_the_unseen_logo() {
         reading.unseen_logos[0].appearance.as_deref(),
         Some("2a36acec58f5ab12")
     );
-    assert_eq!(reading.orders[0].order.courier, "");
+    assert_eq!(reading.orders[0].order.courier, None);
 }
 
 #[test]
@@ -453,8 +456,8 @@ fn an_answered_logo_names_the_orders_only_where_the_form_agrees() {
     );
     let mut reading =
         read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap();
-    assert_eq!(reading.orders[0].order.courier, "");
-    assert_eq!(reading.orders[1].order.courier, "");
+    assert_eq!(reading.orders[0].order.courier, None);
+    assert_eq!(reading.orders[1].order.courier, None);
 
     let named = reading.apply_logo_answer(
         "ffff",
@@ -464,8 +467,11 @@ fn an_answered_logo_names_the_orders_only_where_the_form_agrees() {
         table(),
     );
     assert_eq!(named, 1);
-    assert_eq!(reading.orders[0].order.courier, "J&T Express");
-    assert_eq!(reading.orders[1].order.courier, "");
+    assert_eq!(
+        reading.orders[0].order.courier.as_deref(),
+        Some("J&T Express")
+    );
+    assert_eq!(reading.orders[1].order.courier, None);
     assert!(reading.unseen_logos.is_empty());
     // The answer is spent: a second one changes nothing.
     assert_eq!(
@@ -498,6 +504,6 @@ fn a_not_courier_answer_names_nothing() {
         reading.apply_logo_answer("ffff", &LogoAnswer::Skip, table()),
         0
     );
-    assert_eq!(reading.orders[0].order.courier, "");
+    assert_eq!(reading.orders[0].order.courier, None);
     assert!(reading.unseen_logos.is_empty());
 }

@@ -24,11 +24,11 @@ fn line(name: &str, quantity: i64) -> Line {
     }
 }
 
-fn order(name: &str, quantity: i64, courier: &str) -> Order {
+fn order(name: &str, quantity: i64, courier: Option<&str>) -> Order {
     Order {
         order_id: OrderId::new("580000000000000999"),
         tracking_id: Some(TrackingId::new("JY0000009999")),
-        courier: courier.to_string(),
+        courier: courier.map(str::to_string),
         ship_by: None,
         lines: vec![line(name, quantity)],
         customer_message: String::new(),
@@ -212,37 +212,37 @@ fn categorize_first_match_and_none() {
     let text = fs::read_to_string(testdata_categories()).expect("read testdata categories");
     let categories = load_rules(&text).expect("load");
 
-    let sepatu = order("Sepatu Standar", 1, "JNE");
+    let sepatu = order("Sepatu Standar", 1, Some("JNE"));
     assert_eq!(
         categorize(&sepatu, &categories).map(|c| c.code.as_str()),
         Some("A")
     );
 
-    let spion = order("Spion Beat", 1, "JNE");
+    let spion = order("Spion Beat", 1, Some("JNE"));
     assert_eq!(
         categorize(&spion, &categories).map(|c| c.code.as_str()),
         Some("B")
     );
 
-    let knalpot = order("Cover Knalpot Beat", 1, "JNE");
+    let knalpot = order("Cover Knalpot Beat", 1, Some("JNE"));
     assert_eq!(
         categorize(&knalpot, &categories).map(|c| c.code.as_str()),
         Some("B")
     );
 
     // A sepatu with quantity 3 would also match C, but A comes first.
-    let sepatu_many = order("Sepatu Standar", 3, "JNE");
+    let sepatu_many = order("Sepatu Standar", 3, Some("JNE"));
     assert_eq!(
         categorize(&sepatu_many, &categories).map(|c| c.code.as_str()),
         Some("A")
     );
 
     // Matches no entry.
-    let other = order("Busi Iridium", 1, "JNE");
+    let other = order("Busi Iridium", 1, Some("JNE"));
     assert!(categorize(&other, &categories).is_none());
 
     // Only the last entry (courier J&T) matches.
-    let jnt = order("Busi Iridium", 1, "J&T Express");
+    let jnt = order("Busi Iridium", 1, Some("J&T Express"));
     assert_eq!(
         categorize(&jnt, &categories).map(|c| c.code.as_str()),
         Some("Z")

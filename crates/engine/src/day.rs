@@ -212,9 +212,14 @@ pub struct SavedOrder {
     /// found by Order ID or tracking ID only (*items not stored*, [Search](../ui/search.md)).
     #[serde(default)]
     pub items: Vec<SavedItem>,
-    /// The courier named for the order; empty when it is unknown.
-    #[serde(default)]
-    pub courier: String,
+    /// The courier named for the order; `None` when it is unknown. `state.json` stores the
+    /// empty string for that, so the field is written back the same way.
+    #[serde(
+        default,
+        serialize_with = "serialize_courier",
+        deserialize_with = "deserialize_courier"
+    )]
+    pub courier: Option<String>,
     /// The order's total quantity (the sum of its lines).
     #[serde(default)]
     pub total_quantity: i64,
@@ -244,6 +249,23 @@ where
 {
     let text = String::deserialize(deserializer)?;
     Ok((!text.is_empty()).then(|| TrackingId::new(text)))
+}
+
+/// A saved order's courier as `state.json` keeps it: text, and the empty string when the
+/// courier is unknown.
+fn serialize_courier<S>(courier: &Option<String>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    serializer.serialize_str(courier.as_deref().unwrap_or(""))
+}
+
+fn deserialize_courier<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let text = String::deserialize(deserializer)?;
+    Ok((!text.is_empty()).then_some(text))
 }
 
 /// One saved batch (07 › *`state.json`*).

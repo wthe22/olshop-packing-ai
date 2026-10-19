@@ -32,9 +32,10 @@ fn compare(order: &ReadOrder, expected: &Value) {
         expected["tracking_id"].as_str(),
         "{id}: tracking_id"
     );
+    let courier = expected["courier"].as_str().unwrap();
     assert_eq!(
-        order.order.courier,
-        expected["courier"].as_str().unwrap(),
+        order.order.courier.as_deref(),
+        (!courier.is_empty()).then_some(courier),
         "{id}: courier"
     );
     let ship_by = order.order.ship_by.map(|dt| dt.to_string());

@@ -64,7 +64,7 @@ fn saved(order_id: &str, tracking_id: &str, lines: &[(&str, i64)]) -> SavedOrder
                 quantity: *quantity,
             })
             .collect(),
-        courier: "J&T Express".to_string(),
+        courier: Some("J&T Express".to_string()),
         total_quantity: lines.iter().map(|(_, quantity)| quantity).sum(),
         distinct_items: lines.len() as i64,
         ship_by: None,
@@ -85,7 +85,7 @@ fn legacy(order_id: &str, tracking_id: &str) -> SavedOrder {
         pdf: PdfNumber::new(1),
         run: 1,
         items: Vec::new(),
-        courier: String::new(),
+        courier: None,
         total_quantity: 0,
         distinct_items: 0,
         ship_by: None,
@@ -128,7 +128,7 @@ fn read_order(order_id: &str, tracking_id: &str, lines: &[(&str, i64)]) -> Order
     Order {
         order_id: OrderId::new(order_id),
         tracking_id: tracking_id_or_none(tracking_id),
-        courier: "J&T Express".to_string(),
+        courier: Some("J&T Express".to_string()),
         ship_by: None,
         lines: lines
             .iter()
@@ -166,7 +166,7 @@ fn a_tracking_id_finds_its_one_order() {
         row.tracking_id.as_ref().map(TrackingId::as_str),
         Some("JY0000001234")
     );
-    assert_eq!(row.courier, "J&T Express");
+    assert_eq!(row.courier.as_deref(), Some("J&T Express"));
     assert_eq!(row.items.len(), 1);
     assert_eq!(row.items[0].name, "Sepatu");
     assert_eq!(row.items[0].quantity, 2);
@@ -371,6 +371,8 @@ fn the_searched_fields_round_trip_through_state_json() {
     fs::write(day_dir.join("state.json"), older).expect("write a day");
     let reloaded = DayState::load(&day_dir).expect("load the day");
     assert_eq!(reloaded.saved[1].tracking_id, None);
+    // The empty courier is unknown, and the empty tracking ID is none (07 › *`state.json`*).
+    assert!(reloaded.saved[0].courier.is_none());
     assert_eq!(reloaded.batches[0].printed, vec![PdfNumber::new(7)]);
     reloaded.save(&day_dir).expect("save it again");
     let written: Value =

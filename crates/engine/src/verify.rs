@@ -413,7 +413,7 @@ mod tests {
             order: Order {
                 order_id: OrderId::new(id),
                 tracking_id: Some(TrackingId::new(format!("JY{id}"))),
-                courier: "J&T Express".to_string(),
+                courier: Some("J&T Express".to_string()),
                 ship_by: None,
                 lines: Vec::new(),
                 customer_message: String::new(),

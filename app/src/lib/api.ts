@@ -422,7 +422,8 @@ export interface SearchRow {
   order_id: string;
   /// The order's tracking ID; `null` when the label carried none (the table shows an empty cell).
   tracking_id: string | null;
-  courier: string;
+  /// The named courier; `null` when it is unknown.
+  courier: string | null;
   items: SearchItem[];
   batch: number;
   pdf: number;

@@ -16,12 +16,12 @@ fn line(name: &str, quantity: i64, variation: &str) -> Line {
     }
 }
 
-fn order(id: &str, lines: Vec<Line>, courier: &str) -> ReadOrder {
+fn order(id: &str, lines: Vec<Line>, courier: Option<&str>) -> ReadOrder {
     ReadOrder {
         order: Order {
             order_id: OrderId::new(id),
             tracking_id: Some(TrackingId::new(format!("JY{id}"))),
-            courier: courier.to_string(),
+            courier: courier.map(str::to_string),
             ship_by: None,
             lines,
             customer_message: String::new(),
@@ -48,22 +48,22 @@ fn sample_orders() -> Vec<ReadOrder> {
         order(
             "580000000000000001",
             vec![line("Sepatu A", 1, "")],
-            "J&T Express",
+            Some("J&T Express"),
         ),
         order(
             "580000000000000002",
             vec![line("Sepatu B", 1, "")],
-            "J&T Express",
+            Some("J&T Express"),
         ),
         order(
             "580000000000000003",
             vec![line("Spion C", 1, "")],
-            "SiCepat",
+            Some("SiCepat"),
         ),
         order(
             "580000000000000004",
             vec![line("Lainnya D", 1, "")],
-            "J&T Express",
+            Some("J&T Express"),
         ),
     ]
 }
@@ -300,9 +300,13 @@ fn suggested_file_name_follows_the_spec() {
 fn runs_group_by_contents_sorted_by_count_then_contents() {
     let same = line("Spion Beat", 1, "honda");
     let orders = vec![
-        order("580000000000000001", vec![same.clone()], "J&T"),
-        order("580000000000000002", vec![same.clone()], "J&T"),
-        order("580000000000000003", vec![line("Alpha", 1, "")], "J&T"),
+        order("580000000000000001", vec![same.clone()], Some("J&T")),
+        order("580000000000000002", vec![same.clone()], Some("J&T")),
+        order(
+            "580000000000000003",
+            vec![line("Alpha", 1, "")],
+            Some("J&T"),
+        ),
     ];
     // No entry: everything falls to the rest pick.
     let result = Plan::from_categories(&[]).count(&orders, PdfNumber::new(1));
@@ -316,7 +320,11 @@ fn runs_group_by_contents_sorted_by_count_then_contents() {
 
 #[test]
 fn a_category_reports_its_page_count() {
-    let mut first = order("580000000000000001", vec![line("Sepatu", 1, "")], "J&T");
+    let mut first = order(
+        "580000000000000001",
+        vec![line("Sepatu", 1, "")],
+        Some("J&T"),
+    );
     first.pages = vec![PageRef { file: 0, page: 0 }, PageRef { file: 0, page: 1 }];
     let orders = vec![first];
     let result = Plan::from_categories(&base_categories()).count(&orders, PdfNumber::new(1));

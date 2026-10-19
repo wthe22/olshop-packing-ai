@@ -55,7 +55,7 @@ fn read_order(id: &str) -> ReadOrder {
         order: Order {
             order_id: OrderId::new(id),
             tracking_id: Some(TrackingId::new(format!("JY{id}"))),
-            courier: "J&T Express".to_string(),
+            courier: Some("J&T Express".to_string()),
             ship_by: None,
             lines: Vec::new(),
             customer_message: String::new(),
@@ -101,7 +101,7 @@ fn saved(order_id: &str, batch_number: i64, pdf_number: i64, run: usize) -> Save
             seller_sku: "SP-0001".to_string(),
             quantity: 2,
         }],
-        courier: "J&T Express".to_string(),
+        courier: Some("J&T Express".to_string()),
         total_quantity: 2,
         distinct_items: 1,
         ship_by: Some("2026-10-07T17:00:00".to_string()),
@@ -245,7 +245,7 @@ fn a_saved_order_without_the_searched_fields_loads_with_them_empty() {
     let saved = &state.saved[0];
     assert_eq!(saved.order_id.as_str(), "580000000000000001");
     assert!(saved.items.is_empty());
-    assert!(saved.courier.is_empty());
+    assert!(saved.courier.is_none());
     assert_eq!(saved.total_quantity, 0);
     assert_eq!(saved.distinct_items, 0);
     assert!(saved.ship_by.is_none());

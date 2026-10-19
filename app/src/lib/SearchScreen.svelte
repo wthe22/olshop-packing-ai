@@ -92,7 +92,7 @@
               {/if}
               <td class="order">{row.order_id}</td>
               <td class="tracking">{row.tracking_id ?? ""}</td>
-              <td class="courier">{row.courier}</td>
+              <td class="courier">{row.courier ?? ""}</td>
               <td class="items">{rowItemsText(row)}</td>
               <td class="batch">{texts.search.batch(row.batch)}</td>
               <td class="file">{row.file}</td>

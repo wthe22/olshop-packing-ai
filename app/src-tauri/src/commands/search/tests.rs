@@ -51,7 +51,7 @@ fn saved_order(order_id: &str, tracking_id: &str, name: &str, quantity: i64) -> 
             seller_sku: "SP-0001".to_string(),
             quantity,
         }],
-        courier: "J&T Express".to_string(),
+        courier: Some("J&T Express".to_string()),
         total_quantity: quantity,
         distinct_items: 1,
         ship_by: None,
@@ -67,7 +67,7 @@ fn legacy_order(order_id: &str, tracking_id: &str) -> SavedOrder {
         pdf: PdfNumber::new(1),
         run: 1,
         items: Vec::new(),
-        courier: String::new(),
+        courier: None,
         total_quantity: 0,
         distinct_items: 0,
         ship_by: None,
@@ -119,7 +119,7 @@ fn a_tracking_id_finds_its_one_order_with_the_saved_pdf_path() {
     assert_eq!(view.rows.len(), 1);
     let row = &view.rows[0];
     assert_eq!(row.order_id.as_str(), "580000000000000001");
-    assert_eq!(row.courier, "J&T Express");
+    assert_eq!(row.courier.as_deref(), Some("J&T Express"));
     assert_eq!(row.items.len(), 1);
     assert_eq!(row.items[0].name, "Sepatu");
     assert_eq!(row.items[0].quantity, 2);
@@ -199,7 +199,7 @@ fn an_order_of_an_open_draft_is_not_found() {
         order: packing_engine::orders::Order {
             order_id: OrderId::new("580000000000000777"),
             tracking_id: Some(TrackingId::new("JY0000000777")),
-            courier: "JNE".to_string(),
+            courier: Some("JNE".to_string()),
             ship_by: None,
             lines: vec![packing_engine::orders::Line {
                 name: "Sepatu".to_string(),

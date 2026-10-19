@@ -33,8 +33,8 @@ pub struct Order {
     pub order_id: OrderId,
     /// The courier's parcel number; `None` when the label printed none.
     pub tracking_id: Option<TrackingId>,
-    /// Deduced from the label; empty when unknown.
-    pub courier: String,
+    /// Deduced from the label; `None` when unknown.
+    pub courier: Option<String>,
     /// The label's `In transit by`.
     pub ship_by: Option<DateTime>,
     /// Slip row order.
@@ -152,10 +152,10 @@ impl UnseenLogo {
             let Some(tracking_id) = &order.order.tracking_id else {
                 continue;
             };
-            if order.order.courier.is_empty()
+            if order.order.courier.is_none()
                 && label::form_names_courier_in(table, tracking_id, name)
             {
-                order.order.courier = name.clone();
+                order.order.courier = Some(name.clone());
                 named += 1;
             }
         }
@@ -240,7 +240,7 @@ impl Warning {
         let unknown: Vec<&Order> = orders
             .iter()
             .map(|order| &order.order)
-            .filter(|order| order.courier.is_empty())
+            .filter(|order| order.courier.is_none())
             .collect();
         if unknown.is_empty() {
             return None;

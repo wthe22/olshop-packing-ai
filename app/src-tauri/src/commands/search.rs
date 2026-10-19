@@ -45,8 +45,8 @@ pub struct SearchRowView {
     order_id: OrderId,
     /// The order's tracking ID; `None` when the label carried none (the table shows an empty cell).
     tracking_id: Option<TrackingId>,
-    /// The named courier; empty when it is unknown.
-    courier: String,
+    /// The named courier; `None` when it is unknown.
+    courier: Option<String>,
     items: Vec<SearchItemView>,
     batch: BatchNumber,
     pdf: PdfNumber,

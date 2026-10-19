@@ -53,7 +53,10 @@ fn build_order(value: &Value) -> Order {
             .as_str()
             .filter(|text| !text.is_empty())
             .map(TrackingId::new),
-        courier: value["courier"].as_str().unwrap_or_default().to_string(),
+        courier: value["courier"]
+            .as_str()
+            .filter(|name| !name.is_empty())
+            .map(str::to_string),
         ship_by: parse_ship_by(&value["ship_by"]),
         lines,
         customer_message: String::new(),

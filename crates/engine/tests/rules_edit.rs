@@ -227,11 +227,11 @@ fn line(name: &str, quantity: i64) -> Line {
     }
 }
 
-fn order(name: &str, quantity: i64, courier: &str) -> Order {
+fn order(name: &str, quantity: i64, courier: Option<&str>) -> Order {
     Order {
         order_id: OrderId::new("580000000000000999"),
         tracking_id: Some(TrackingId::new("JY0000009999")),
-        courier: courier.to_string(),
+        courier: courier.map(str::to_string),
         ship_by: None,
         lines: vec![line(name, quantity)],
         customer_message: String::new(),
@@ -255,11 +255,11 @@ fn counts_take_from_what_is_left() {
         category("Z", None), // the rest: no condition
     ];
     let orders = vec![
-        order("Sepatu Standar", 1, "JNE"), // A
-        order("Sepatu Standar", 1, "JNE"), // A
-        order("Spion Beat", 1, "JNE"),     // B
-        order("Busi Iridium", 1, "JNE"),   // the rest
-        order("Knalpot", 1, "JNE"),        // the rest
+        order("Sepatu Standar", 1, Some("JNE")), // A
+        order("Sepatu Standar", 1, Some("JNE")), // A
+        order("Spion Beat", 1, Some("JNE")),     // B
+        order("Busi Iridium", 1, Some("JNE")),   // the rest
+        order("Knalpot", 1, Some("JNE")),        // the rest
     ];
     assert_eq!(counts(&categories, &orders), vec![2, 1, 2]);
 

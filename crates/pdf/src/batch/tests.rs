@@ -19,7 +19,7 @@ fn read_order(id: &str, tracking: &str, lines: Vec<Line>) -> ReadOrder {
         order: Order {
             order_id: OrderId::new(id),
             tracking_id: (!tracking.is_empty()).then(|| TrackingId::new(tracking)),
-            courier: "J&T Express".to_string(),
+            courier: Some("J&T Express".to_string()),
             ship_by: None,
             lines,
             customer_message: String::new(),
@@ -130,7 +130,7 @@ fn category_pages_and_saved_follow_the_runs() {
     assert_eq!(saved[1].order_id.as_str(), "580000000000000002");
     // The searched fields are written at save (07 › *`state.json`*; 2.21): the order's lines
     // and the order-level fields.
-    assert_eq!(saved[0].courier, "J&T Express");
+    assert_eq!(saved[0].courier.as_deref(), Some("J&T Express"));
     assert_eq!(saved[0].total_quantity, 1);
     assert_eq!(saved[0].distinct_items, 1);
     assert!(saved[0].ship_by.is_none());
@@ -226,13 +226,13 @@ fn draft_with_unseen_logo(order_ids: Vec<&str>) -> Draft {
         "JY0000001234",
         vec![line("Sepatu", "", 1, "Sepatu")],
     );
-    first.order.courier = String::new();
+    first.order.courier = None;
     let mut second = read_order(
         "580000000000000002",
         "000000000202",
         vec![line("Sepatu", "", 1, "Sepatu")],
     );
-    second.order.courier = String::new();
+    second.order.courier = None;
     let mut draft = Draft {
         files: Vec::new(),
         orders: vec![first, second],
@@ -279,8 +279,11 @@ fn an_answer_names_only_the_form_agreeing_orders_and_refreshes_the_warning() {
         courier_data(),
     );
     assert_eq!(named, 1);
-    assert_eq!(draft.orders[0].order.courier, "J&T Express");
-    assert_eq!(draft.orders[1].order.courier, "");
+    assert_eq!(
+        draft.orders[0].order.courier.as_deref(),
+        Some("J&T Express")
+    );
+    assert_eq!(draft.orders[1].order.courier, None);
     assert!(draft.unseen_logos.is_empty(), "the answered logo is spent");
     assert_eq!(
         draft.warnings,
@@ -314,9 +317,9 @@ fn an_answer_naming_every_order_removes_the_warning() {
         courier_data(),
     );
     assert_eq!(named, 1);
-    assert_eq!(draft.orders[1].order.courier, "SiCepat");
+    assert_eq!(draft.orders[1].order.courier.as_deref(), Some("SiCepat"));
     // The JY order was not carrying the logo: it stays unknown and keeps its warning.
-    assert_eq!(draft.orders[0].order.courier, "");
+    assert_eq!(draft.orders[0].order.courier, None);
     assert_eq!(draft.warnings.len(), 1);
     assert!(draft.warnings[0].contains("Courier unknown for 1 order: JY0000001234"));
 }
@@ -326,7 +329,7 @@ fn not_a_courier_and_skip_name_nothing_but_leave_the_list() {
     for answer in [LogoAnswer::NotCourier, LogoAnswer::Skip] {
         let mut draft = draft_with_unseen_logo(vec!["580000000000000001"]);
         assert_eq!(draft.answer_logo("ffff", &answer, courier_data()), 0);
-        assert_eq!(draft.orders[0].order.courier, "");
+        assert_eq!(draft.orders[0].order.courier, None);
         assert!(draft.unseen_logos.is_empty());
         // Both orders are still unknown: the warning is unchanged.
         assert!(draft.warnings[0].contains("Courier unknown for 2 orders"));

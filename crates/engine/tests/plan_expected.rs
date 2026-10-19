@@ -92,10 +92,11 @@ fn read_order(order_id: &str, entry: &Value, position: usize) -> ReadOrder {
         .map(|text| text.parse().expect("ISO date-time"));
     let pages = entry.get("pages").and_then(Value::as_u64).unwrap_or(0) as usize;
     let tracking_id = str_field(entry, "tracking_id");
+    let courier = str_field(entry, "courier");
     let order = Order {
         order_id: OrderId::new(order_id),
         tracking_id: (!tracking_id.is_empty()).then(|| TrackingId::new(tracking_id)),
-        courier: str_field(entry, "courier"),
+        courier: (!courier.is_empty()).then_some(courier),
         ship_by,
         lines,
         customer_message: str_field(entry, "customer_message"),

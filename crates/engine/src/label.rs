@@ -570,13 +570,11 @@ pub fn deduce_courier_in(
     text: &str,
     tracking_id: Option<&TrackingId>,
     logos: &[LogoImage],
-) -> String {
-    let Some(tracking_id) = tracking_id else {
-        return String::new();
-    };
+) -> Option<String> {
+    let tracking_id = tracking_id?;
     let candidates = candidates(table, tracking_id);
     if candidates.is_empty() {
-        return String::new();
+        return None;
     }
 
     if !logos.is_empty() {
@@ -588,15 +586,15 @@ pub fn deduce_courier_in(
                 continue;
             };
             match named {
-                Some(other) if other.name != courier.name => return String::new(),
+                Some(other) if other.name != courier.name => return None,
                 _ => named = Some(courier),
             }
         }
         return match named {
             Some(courier) if candidates.iter().any(|c| c.name == courier.name) => {
-                courier.name.clone()
+                Some(courier.name.clone())
             }
-            _ => String::new(),
+            _ => None,
         };
     }
 
@@ -608,16 +606,16 @@ pub fn deduce_courier_in(
             let clue = clue.to_lowercase();
             lowered.contains(&clue) || collapsed.contains(&clue)
         }) {
-            return courier.name.clone();
+            return Some(courier.name.clone());
         }
     }
     // A label whose image is missing altogether, and the form carries the vendor's own marker.
     if let [courier] = candidates.as_slice()
         && has_marker_prefix(courier)
     {
-        return courier.name.clone();
+        return Some(courier.name.clone());
     }
-    String::new()
+    None
 }
 
 /// Whether the tracking form carries the vendor's own marker: its pattern begins with a letter
@@ -630,7 +628,11 @@ fn has_marker_prefix(courier: &Courier) -> bool {
 }
 
 /// The two-clue rule on the built-in `couriers.toml`.
-pub fn deduce_courier(text: &str, tracking_id: Option<&TrackingId>, logos: &[LogoImage]) -> String {
+pub fn deduce_courier(
+    text: &str,
+    tracking_id: Option<&TrackingId>,
+    logos: &[LogoImage],
+) -> Option<String> {
     deduce_courier_in(courier_data(), text, tracking_id, logos)
 }
 

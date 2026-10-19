@@ -27,8 +27,8 @@ pub struct SearchRow {
     pub day: String,
     pub order_id: OrderId,
     pub tracking_id: Option<TrackingId>,
-    /// The named courier; empty when it is unknown.
-    pub courier: String,
+    /// The named courier; `None` when it is unknown.
+    pub courier: Option<String>,
     pub items: Vec<SearchItem>,
     pub batch: BatchNumber,
     pub pdf: PdfNumber,
