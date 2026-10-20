@@ -3,12 +3,57 @@
 Only the unfinished work. A finished task is deleted from this folder in the commit that finishes it; a
 finished phase moves to `archive/`. Phase and task numbers live only here.
 
-## Next step — the code refactor
+## Next step — the owner's regression test of the refactor
 
-Before any new feature: bring the code to the [code rules](../code-rules.md) in the steps R7 of
-[refactor.md](refactor.md), without changing what the program does. The first step listed there is the
-work; it ends with the owner's regression list in the handoff below. **The code rules apply to every task
-file in this folder**: a task report states *size gate passed, no new lint suppression, coverage not lower*.
+The code refactor (steps R0 to R7) is done and committed; the program does what it did. The portable folder
+`target/portable/Packing/` is built from it. **Test it with the list below, then write findings into
+[reviews/](../../reviews/README.md), one item each; a new session turns each into a task.** Until then no
+feature work starts. The code rules apply to every task file in this folder: a task report states *size gate
+passed, no new lint suppression, coverage not lower*.
+
+**What was done.** Complexity 3 of 5 before, 2 after. Rust files over the 800-line ceiling: 4 to 0; UI files
+over 500: 3 to 0 (largest now `commands`-level production file 524 lines, largest test file 749). Types: `Grouping`,
+`OrderId`, `TrackingId`, `BatchNumber`, `PdfNumber`, `FileName`, one layout/scope enum, a plan-row kind; no
+function has more than five parameters; no function nests deeper than four levels; about 100 comments with IDs, 720 with numbered design pointers and 30 banners are gone, with a zero gate
+(`tools/check-comments.mjs`); `crates/testkit` holds the shared test fixtures and the PDFium lock (the app tests no longer crash about 1 run in 20). Tests:
+Rust 273 to 191, TypeScript 53 to 33, merged into scenarios and tables. Coverage before and after ([coverage.md](../coverage.md)), on production code only, which is the like-for-like
+measure (the first figures, 86.29 Rust and 72.43 TypeScript, also counted test code and left unmeasured the
+logic inside `.svelte` files): Rust lines 82.70 to 84.22, TypeScript lines 54.72 to 97.04.
+
+**Findings of the reviews** (the minimal one after R2 and the full one at the end): none needed a fix. Left as
+they are, each with its reason:
+
+- `crates/engine/tests/day_state.rs` keeps one cognitive-complexity warning (a merged scenario, 43 against 25):
+  split it when the file is next touched. `crates/pdf/tests/common/mod.rs` keeps `#![allow(dead_code)]`
+  (each test binary uses a subset of the shared module) and `app/vite.config.js` one `@ts-expect-error` (no
+  `@types/node`).
+- `AppState.day` is an empty string until a day is chosen (internal, always set before use); the stored
+  `state.json` and `settings.json` keep the key `set` for a grouping (renaming it is a migration).
+- Several test files were not merged (`couriers_*`, `rules_*`, `pdf/tests`, `commands/{batch,search}` tests): about
+  100 small tests, covered; merge them when next touched.
+
+**Small changes a user could notice** (from the commit messages): the command-line usage text no longer ends
+with a pointer to a design file. Nothing else on screen, in a saved PDF or in a stored file changed.
+
+**Regression test, in this order** (the screens whose code moved most):
+
+1. Start the program on the existing data folder; the Day screen lists the saved batches; a saved row's
+   **Printed** tick keeps its state after closing and reopening; **Open** opens the saved PDF.
+2. **New batch**: add label files, change the *Grouping*, **Read labels**; an unknown logo asks *Which courier
+   is this logo?* and the answer is remembered.
+3. **Plan**: rows with their runs expand; **Skip**, **Use**, move up and down, rename a file, **Add a category
+   for this batch**, the packing-list scope and layouts, **Save** with its progress bar, the saved-PDF check
+   dialog, **Back**.
+4. **Day**: **Amend** the newest batch (Plan titled *Redo batch N*, **Cancel amend**), **Revert**.
+5. **Categories**: choose, **+ New grouping**, **Delete grouping**, edit a category's name, condition and
+   boxes, the text view, the live counts.
+6. **Search**: by tracking ID, item name and quantity; the courier cell reads as before.
+7. **Settings**: the data folder, *About* reads *Version v0.1*.
+8. Print one packing list; check the header, `×`, and the summary page.
+
+**To decide (the owner):** the owner-visible word *pick* is still on screens and in printed text (*+ Add a pick
+for this batch*, the *Pick* layout, the summary's *Pick* lines) while the code and the glossary say *category*;
+the stored layout name `pick` would then be a migration. Default until the owner decides: keep the words.
 
 ## Phase 2 — PC app (Rust + Tauri)
 

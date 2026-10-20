@@ -9,7 +9,7 @@ The two measurements are `cargo llvm-cov --workspace --json --summary-only` (Rus
 build goes to the folder in `CARGO_LLVM_COV_TARGET_DIR`, see [setup.md](setup.md)) and `node --test
 --experimental-test-coverage` from `app/` (TypeScript). The numbers below are the state at commit
 `81fb900`, measured 2026-10-19, after the first refactor step (the code split into modules) and before the
-rest of [plan/refactor.md](plan/refactor.md).
+rest of the first refactor.
 
 `cargo llvm-cov` leaves out a file named `tests.rs` or under a `tests/` folder. The first baseline, taken
 when the big files still held their tests inline, counted that test code as covered: Rust total 86.29 lines,
@@ -56,7 +56,7 @@ five-line layout load).
   `CategoriesScreen`, `SearchScreen`, `SettingsScreen`), the dialogs and frames (`Frame`, `Overlay`,
   `SaveCheckDialog`, `BoxesEditor`, `LogoPrompt`, `StartPrompt`) and `app/src/routes/+layout.svelte`
   and `+page.svelte`. No test renders a component in this refactor; `svelte-check` and the front-end
-  tests are the only guard ([plan/refactor.md](plan/refactor.md), "Choices taken").
+  tests are the only guard ([code-rules.md](code-rules.md), "Choices taken").
 - `app/src-tauri/src/main.rs`: it only starts the window.
 
 The front-end flow tests reach the logic behind the screens through the shared `.ts` modules

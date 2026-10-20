@@ -17,8 +17,6 @@
   lint suppression, coverage not lower. Never weaken a check or add to a baseline.
 - The project is in heavy development: build for what is decided now; no compatibility layer or option for
   a change that might come. A change to the shape of stored user data is a migration.
-- While `docs/development/plan/refactor.md` lists steps, the first step there is the work (it comes before
-  new features). Behaviour does not change in a refactor step.
 - Another session may be editing: run `git status` and `git log --oneline -5` before editing a file, and
   never touch a file that session owns.
 - This repository is the PC app.

@@ -108,3 +108,17 @@ tools/check-lint.mjs`, `node tools/check-comments.mjs` (zero: no ID, task number
   migration and refusal does, what is stored. A small change nobody would hardly notice (a message's wording
   unified, a default made consistent, a field order, an ID's form) is allowed, is named in its commit message
   and is collected for the handoff. A change to a mechanism or a workflow is its own commit later.
+
+## Choices taken in the first refactor
+
+- Ceilings: 800 production lines for Rust, 500 for a Svelte or TypeScript file, 800 for a Rust test file.
+- `tools/analysis/` (the frozen Python reference) and `spike/` are out of scope of the gates.
+- The gate scripts are Node (`tools/*.mjs`): Node is already needed for the app.
+- Rust and TypeScript view types stay hand-mirrored (no generator); they change in the same commit.
+- No DOM test harness for the Svelte screens: the guards are `svelte-check`, the front-end scenario tests
+  (the shell store with a faked `invoke`) and the owner's regression list.
+- Newtypes serialise transparently, so a stored file keeps its shape and needs no migration.
+- Tauri commands keep `Result<_, String>`: the bridge to the window is the one place an error becomes text.
+- A comment points at a design file by path, never by number or ID (`tools/check-comments.mjs`, zero).
+- The coverage compare tolerates 0.1 percentage point (rounding), nothing more; the baselines are in
+  [coverage.md](coverage.md).
