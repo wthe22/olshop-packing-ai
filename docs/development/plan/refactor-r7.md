@@ -12,6 +12,8 @@ Read first: [../code-rules.md](../code-rules.md) (binding; the *Tests* section i
    The app crate's tests start several `PdfWorker`s in parallel and crash about once in twenty runs
    (access violation or illegal instruction inside PDFium); `crates/pdf/tests/common` already serialises
    PDFium use with a lock. Put that lock in `testkit` and use it in the app tests: a flaky gate is a defect.
+   Add a scenario test of `app/src/lib/shell.svelte.ts` with a faked `invoke` (0.79 % covered, the largest
+   gap in the front-end), and of `categoryEntry.ts`.
 2. **Merge tiny tests** into scenarios at the public surface: one scenario per behaviour, many branches
    inside it. Candidates: `engine/tests/day_state.rs` (28 tests, 982 lines; over the 800 ceiling),
    `labels.rs` (20), `labels_reading.rs` (16), `plan_edits.rs` (17), `names.rs` (10), the `commands/` tests,

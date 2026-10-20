@@ -2,7 +2,7 @@
   // The logo prompt (08 › *2. New batch* → *The logo prompt*): one unseen logo of the batch, the
   // logo as printed, how many pages and orders carry it, and the answers. Only the view lives
   // here; the flow is in `logoPrompt.ts` and nothing is written by this component.
-  import type { LogoAnswer, LogoView } from "./api";
+  import type { LogoAnswer, LogoView } from "./api/batch";
   import { texts } from "../texts";
 
   let {

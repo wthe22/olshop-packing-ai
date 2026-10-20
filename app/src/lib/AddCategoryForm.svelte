@@ -2,7 +2,8 @@
   // *+ Add a pick for this batch* (08 › *3. Plan*): the condition is built in the boxes editor
   // (the same as Categories) with a text view toggle.
   import { onMount } from "svelte";
-  import * as api from "./api";
+  import { checkCondition as validateCondition } from "./api/batch";
+  import { conditionToTree, treeToCondition } from "./api/categories";
   import { texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
   import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
@@ -11,10 +12,10 @@
     onAdd,
     onClose,
   }: {
-    /// *Add*: the code, name and condition of the new category; `true` when the plan took it and
-    /// this form can close.
+    // *Add*: the code, name and condition of the new category; `true` when the plan took it and
+    // this form can close.
     onAdd: (code: string, name: string, condition: string) => Promise<boolean>;
-    /// *Cancel*, and after a successful *Add*.
+    // *Cancel*, and after a successful *Add*.
     onClose: () => void;
   } = $props();
 
@@ -28,10 +29,10 @@
   // The form opens on the boxes editor: its condition is what the empty tree reads as.
   onMount(treeChanged);
 
-  /// The boxes editor changed: turn the tree into the condition text (the printer's form).
+  // The boxes editor changed: turn the tree into the condition text (the printer's form).
   async function treeChanged() {
     try {
-      condition = await api.treeToCondition(toRustTree(tree));
+      condition = await treeToCondition(toRustTree(tree));
       error = "";
     } catch (e) {
       error = String(e);
@@ -44,7 +45,7 @@
       return;
     }
     try {
-      await api.checkCondition(condition);
+      await validateCondition(condition);
       error = "";
     } catch (e) {
       error = String(e);
@@ -53,7 +54,7 @@
 
   async function toBoxes() {
     try {
-      tree = fromRustTree(await api.conditionToTree(condition));
+      tree = fromRustTree(await conditionToTree(condition));
       mode = "boxes";
       error = "";
     } catch (e) {
@@ -68,7 +69,7 @@
       if (error) return;
     } else {
       try {
-        await api.checkCondition(condition);
+        await validateCondition(condition);
       } catch (e) {
         error = String(e);
         return;

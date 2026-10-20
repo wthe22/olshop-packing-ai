@@ -7,7 +7,8 @@
   // amend's selection page — with the files still listed (only that page's *Cancel* and
   // *Cancel amend* discard).
   import { untrack } from "svelte";
-  import * as api from "../lib/api";
+  import * as batch from "../lib/api/batch";
+  import type { Layout, Scope, Settings } from "../lib/api/start";
   import { listen } from "@tauri-apps/api/event";
   import { texts, planButtons } from "../texts";
   import AddCategoryForm from "./AddCategoryForm.svelte";
@@ -27,17 +28,17 @@
     onEditCategories,
   }: {
     batchNumber: number;
-    read: api.ReadResult;
-    settings: api.Settings | null;
-    /// Bumped when the Categories screen saves, so the plan is recounted (08 › *Window frame*).
+    read: batch.ReadResult;
+    settings: Settings | null;
+    // Bumped when the Categories screen saves, so the plan is recounted (08 › *Window frame*).
     refresh: number;
-    onSaved: (result: api.SaveResult) => void;
-    /// *Back* (top): return to the PDF selection page — a new batch's file list, or the amend's
-    /// selection page — with the files still listed and the draft kept (a new *Read labels*
-    /// replaces it). Never asks and writes nothing.
+    onSaved: (result: batch.SaveResult) => void;
+    // *Back* (top): return to the PDF selection page — a new batch's file list, or the amend's
+    // selection page — with the files still listed and the draft kept (a new *Read labels*
+    // replaces it). Never asks and writes nothing.
     onBack: () => void;
-    /// *Cancel amend* (bottom): leave the batch for the Day screen and discard its draft. Never
-    /// asks, because an amend writes nothing before *Save batch `<b>` again*.
+    // *Cancel amend* (bottom): leave the batch for the Day screen and discard its draft. Never
+    // asks, because an amend writes nothing before *Save batch `<b>` again*.
     onCancel: () => void;
     onEditCategories: () => void;
   } = $props();
@@ -52,20 +53,20 @@
 
   // The read result is fixed for the life of the screen; the view is then updated by `plan()`.
   // (`untrack`: the screen starts from it once; it is not a value the read keeps in step.)
-  let view = $state<api.PlanView>(untrack(() => read.plan));
+  let view = $state<batch.PlanView>(untrack(() => read.plan));
   let showWarnings = $state(false);
   let expanded = $state<string[]>([]);
   let error = $state("");
 
   // The packing-list choice, starting from the Settings default (08 › *6. Settings*).
-  let scope = $state<api.Scope>(untrack(() => settings?.scope ?? "whole"));
-  let layouts = $state<api.Layout[]>(untrack(() => settings?.layouts ?? ["pick"]));
+  let scope = $state<Scope>(untrack(() => settings?.scope ?? "whole"));
+  let layouts = $state<Layout[]>(untrack(() => settings?.layouts ?? ["pick"]));
 
   let saving = $state(false);
   let saveError = $state("");
   // The check before saving's progress (the `save-progress` event: the stage and a progress bar)
   // and the findings dialog it shows when the save stopped (07 › *Check before saving*).
-  let saveProgress = $state<api.SaveProgress | null>(null);
+  let saveProgress = $state<batch.SaveProgress | null>(null);
   let findings = $state<Findings | null>(null);
 
   let showAdd = $state(false);
@@ -82,32 +83,32 @@
 
   async function reload() {
     try {
-      view = await api.plan([]);
+      view = await batch.plan([]);
     } catch (e) {
       error = String(e);
     }
   }
 
-  async function apply(edits: api.PlanEdit[]) {
+  async function apply(edits: batch.PlanEdit[]) {
     error = "";
     try {
-      view = await api.plan(edits);
+      view = await batch.plan(edits);
     } catch (e) {
       error = String(e);
     }
   }
 
-  function toggleUse(row: api.PlanRow, checked: boolean) {
+  function toggleUse(row: batch.PlanRow, checked: boolean) {
     if (row.kind === "generated") return;
     apply([{ kind: "set_skipped", index: row.index, skipped: !checked }]);
   }
 
-  function move(row: api.PlanRow, up: boolean) {
+  function move(row: batch.PlanRow, up: boolean) {
     if (row.kind === "generated") return;
     apply([{ kind: up ? "move_up" : "move_down", index: row.index }]);
   }
 
-  function rename(row: api.PlanRow, name: string) {
+  function rename(row: batch.PlanRow, name: string) {
     if (row.kind === "generated") return;
     apply([{ kind: "rename", index: row.index, name }]);
   }
@@ -118,14 +119,14 @@
       : [...expanded, key];
   }
 
-  function toggleLayout(layout: api.Layout, checked: boolean) {
+  function toggleLayout(layout: Layout, checked: boolean) {
     layouts = checked
       ? [...layouts, layout]
       : layouts.filter((item) => item !== layout);
   }
 
-  /// *Add* on the add form: the new entry goes at the plan's own add position. `false` leaves the
-  /// form open; the error line above the table says why.
+  // *Add* on the add form: the new entry goes at the plan's own add position. `false` leaves the
+  // form open; the error line above the table says why.
   async function addCategory(code: string, name: string, condition: string): Promise<boolean> {
     await apply([
       {
@@ -143,20 +144,20 @@
     showAdd = !showAdd;
   }
 
-  /// *Save batch* (08 › *3. Plan*): write the batch and go to the Day screen. While it runs the
-  /// stage and a progress bar are shown (the `save-progress` event). When the check before saving
-  /// finds something and this is not the dialog's *Save anyway*, the findings dialog opens and the
-  /// draft is kept (07 › *Check before saving*).
+  // *Save batch* (08 › *3. Plan*): write the batch and go to the Day screen. While it runs the
+  // stage and a progress bar are shown (the `save-progress` event). When the check before saving
+  // finds something and this is not the dialog's *Save anyway*, the findings dialog opens and the
+  // draft is kept (07 › *Check before saving*).
   async function save(saveAnyway = false) {
     saving = true;
     saveError = "";
     saveProgress = null;
     findings = null;
-    const unlisten = await listen<api.SaveProgress>("save-progress", (event) => {
+    const unlisten = await listen<batch.SaveProgress>("save-progress", (event) => {
       saveProgress = event.payload;
     });
     try {
-      const result = await api.saveBatch({ scope, layouts }, saveAnyway);
+      const result = await batch.saveBatch({ scope, layouts }, saveAnyway);
       findings = findingsOf(result);
       if (result.saved) onSaved(result);
     } catch (e) {
@@ -167,14 +168,14 @@
     saveProgress = null;
   }
 
-  /// *Back* (top, 08 › *3. Plan*): return to the PDF selection page with the files still listed —
-  /// the draft is kept and a new *Read labels* replaces it, so the per-batch changes are lost.
-  /// It is not a discard and it never asks (08 › *2. New batch* → *The amend's selection page*).
+  // *Back* (top, 08 › *3. Plan*): return to the PDF selection page with the files still listed —
+  // the draft is kept and a new *Read labels* replaces it, so the per-batch changes are lost.
+  // It is not a discard and it never asks (08 › *2. New batch* → *The amend's selection page*).
   function back() {
     onBack();
   }
 
-  const rowKey = (row: api.PlanRow) => (row.kind === "generated" ? "generated" : String(row.index));
+  const rowKey = (row: batch.PlanRow) => (row.kind === "generated" ? "generated" : String(row.index));
 </script>
 
 <main>

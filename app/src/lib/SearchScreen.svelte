@@ -3,7 +3,7 @@
   // over *This day* (the day in the title bar, the default) or *All days*. It only reads
   // `state.json`: nothing is changed or saved, and an order of an open draft is never found.
   // A row's *Open* goes through the app shell (`open_path`), as on the Day screen.
-  import * as api from "../lib/api";
+  import * as search from "../lib/api/search";
   import { formatDay, rowItemsText, searchFields, searchSummary, texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
   import { newTree, toRustTree, type UiTree } from "./conditions";
@@ -11,22 +11,22 @@
   let {
     onOpen,
   }: {
-    /// *Open* on a row: the app shell opens that saved PDF in the PC's viewer.
+    // *Open* on a row: the app shell opens that saved PDF in the PC's viewer.
     onOpen: (path: string) => void;
   } = $props();
 
   // The condition boxes: the same component as Categories, with the fields Search offers.
   let tree = $state<UiTree>(newTree());
   // The scope (08 › *Search*; Q-UI-3): *This day* is the default.
-  let scope = $state<api.SearchScope>("day");
+  let scope = $state<search.SearchScope>("day");
   let busy = $state(false);
   // A bad condition, or a read error, in plain text (08 › *Search*).
   let error = $state("");
   // The last search's rows; `null` before the first *Search*, and after an error or any change,
   // so the rows on screen always match the boxes and the scope shown.
-  let result = $state<api.SearchResults | null>(null);
+  let result = $state<search.SearchResults | null>(null);
 
-  const scopes: { value: api.SearchScope; label: string }[] = [
+  const scopes: { value: search.SearchScope; label: string }[] = [
     { value: "day", label: texts.search.scopeDay },
     { value: "all", label: texts.search.scopeAll },
   ];
@@ -36,7 +36,7 @@
     result = null;
   }
 
-  function setScope(value: api.SearchScope) {
+  function setScope(value: search.SearchScope) {
     scope = value;
     invalidate();
   }
@@ -45,7 +45,7 @@
     busy = true;
     invalidate();
     try {
-      result = await api.searchOrders(toRustTree(tree), scope);
+      result = await search.searchOrders(toRustTree(tree), scope);
     } catch (e) {
       error = String(e);
     }

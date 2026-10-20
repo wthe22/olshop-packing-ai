@@ -2,7 +2,7 @@
   // The save in flight (08 › *3. Plan*; 07 › *Check before saving*): the stage and a progress bar
   // while *Save batch* runs, and the findings dialog the check before saving ends with. The dialog's
   // *Save anyway* is handed back to the screen, which runs the save again. Nothing is written here.
-  import type { SaveProgress } from "./api";
+  import type { SaveProgress } from "./api/batch";
   import { saveStageText, texts } from "../texts";
   import type { Findings } from "./saveCheck";
   import SaveCheckDialog from "./SaveCheckDialog.svelte";
@@ -15,9 +15,9 @@
     onCancel,
   }: {
     saving: boolean;
-    /// The last `save-progress` event; `null` before the first one arrives.
+    // The last `save-progress` event; `null` before the first one arrives.
     progress: SaveProgress | null;
-    /// What the check before saving caught; `null` while there is nothing to show.
+    // What the check before saving caught; `null` while there is nothing to show.
     findings: Findings | null;
     onSaveAnyway: () => void;
     onCancel: () => void;

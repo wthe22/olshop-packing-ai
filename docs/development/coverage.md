@@ -40,15 +40,18 @@ adds `--test-coverage-include-all` for that).
 
 | Scope | Lines % | Branches % | Functions % |
 |---|---|---|---|
-| Total | 72.43 | 98.88 | 66.67 |
+| Total | 54.72 | 98.88 | 66.67 |
 
-Per file, lines %: `app/src/lib/logoPrompt.ts`, `printed.ts`, `saveCheck.ts`, `sets.ts` and
-`unconfigured.ts` 100; `app/src/texts.ts` 99.56; `app/src/lib/api.ts` 50.34; `app/src/lib/conditions.ts`
-22.07; `app/src/routes/+layout.ts` 0.
+The first baseline (72.43 lines) was taken while the screens' logic sat inside `.svelte` files, which no
+run measures. Splitting the shell out of `+page.svelte` (`app/src/lib/shell.svelte.ts`, 381 lines) and the
+API wrapper into `app/src/lib/api/` moved about 600 lines of untested code into `.ts` files, which are
+measured: the lines went from unmeasured to uncovered, and no tested line was lost. The figures above are
+the production code as it is now and are the baseline for the later steps. Raising them is the job of the
+scenario tests (the shell store with a faked `invoke`).
 
-Under 50 % of lines: `app/src/lib/conditions.ts` (22.07 %, the condition-language evaluator, reached
-only through its shared field table) and `app/src/routes/+layout.ts` (0 %, the five-line layout load
-function).
+Per file, lines %: `app/src/lib/groupings.ts`, `logoPrompt.ts`, `printed.ts`, `saveCheck.ts` and
+`unconfigured.ts` 100; `app/src/texts.ts` 99.56; `app/src/lib/api/` 32 to 59; `categoryEntry.ts` 28.85;
+`conditions.ts` 22.07; `shell.svelte.ts` 0.79; `app/src/routes/+layout.ts` 0.
 
 ## What no test reaches
 

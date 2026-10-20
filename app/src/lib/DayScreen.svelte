@@ -3,7 +3,7 @@
   // each with its stored warnings and each saved-PDF row with its **Printed** tick (a note);
   // *New batch* starts the batch flow.
   import { texts } from "../texts";
-  import type { BatchView, DayOverview, PdfView } from "./api";
+  import type { BatchView, DayOverview, PdfView } from "./api/day";
 
   let {
     overview,
@@ -18,14 +18,14 @@
   }: {
     overview: DayOverview | null;
     saved: string | null;
-    /// *Amend*'s read of the batch's own files (`read-progress`): its page progress is shown until
-    /// the Plan screen opens (08 › *1. Day* → *3. Plan*); `null` when nothing reads.
+    // *Amend*'s read of the batch's own files (`read-progress`): its page progress is shown until
+    // the Plan screen opens (08 › *1. Day* → *3. Plan*); `null` when nothing reads.
     reading: { page: number; pages: number } | null;
     onOpen: (path: string) => void;
     onOpenFolder: (path: string) => void;
-    /// The **Printed** tick of one saved-PDF row (08 › *1. Day*): the owner ticks it to note that
-    /// this saved PDF has been printed; it is written to the day's `state.json` the moment it is
-    /// clicked.
+    // The **Printed** tick of one saved-PDF row (08 › *1. Day*): the owner ticks it to note that
+    // this saved PDF has been printed; it is written to the day's `state.json` the moment it is
+    // clicked.
     onSetPrinted: (batch: BatchView, pdf: PdfView, printed: boolean) => void;
     onNewBatch: () => void;
     onAmend: (batch: BatchView) => void;

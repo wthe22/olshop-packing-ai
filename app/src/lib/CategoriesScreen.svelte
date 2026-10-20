@@ -7,7 +7,7 @@
   // The plugin's `confirm` (not `window.confirm`, which the dialog plugin patches to a command that
   // no longer exists) and it must be awaited.
   import { confirm } from "@tauri-apps/plugin-dialog";
-  import * as api from "../lib/api";
+  import * as api from "../lib/api/categories";
   import { categoriesGrouping, groupingFile } from "../lib/groupings";
   import { texts } from "../texts";
   import CategoryRow from "./CategoryRow.svelte";
@@ -23,11 +23,11 @@
     onClose,
     onSaved,
   }: {
-    /// The batch number being prepared, for *In batch `<b>`: n*; `null` when no draft is open.
+    // The batch number being prepared, for *In batch `<b>`: n*; `null` when no draft is open.
     draftBatch: number | null;
-    /// The set to open on (08 › *5. Categories*): the batch's own set when the screen is opened
-    /// from the Plan screen's *Edit categories*, so its entries and its counts *In batch `<b>`*
-    /// are that set's; `null` from the top bar, where the set used last is shown.
+    // The set to open on (08 › *5. Categories*): the batch's own set when the screen is opened
+    // from the Plan screen's *Edit categories*, so its entries and its counts *In batch `<b>`*
+    // are that set's; `null` from the top bar, where the set used last is shown.
     openGrouping: string | null;
     onClose: () => void;
     onSaved: () => void;
@@ -63,9 +63,9 @@
 
   onMount(load);
 
-  /// Open the screen: the sets of the data folder, then the set to open on — the batch's own set
-  /// when the screen came from the Plan screen's *Edit categories*, else the set used last
-  /// (08 › *5. Categories*).
+  // Open the screen: the sets of the data folder, then the set to open on — the batch's own set
+  // when the screen came from the Plan screen's *Edit categories*, else the set used last
+  // (08 › *5. Categories*).
   async function load() {
     busy = true;
     try {
@@ -79,8 +79,8 @@
     busy = false;
   }
 
-  /// Load the set being shown: its file's entries, or the one catch-all entry when it has no file
-  /// (04 › *Sets*), then the live check and counts.
+  // Load the set being shown: its file's entries, or the one catch-all entry when it has no file
+  // (04 › *Sets*), then the live check and counts.
   async function loadGrouping() {
     const data = await api.rulesLoad(currentGrouping);
     fileText = data.text;
@@ -116,7 +116,7 @@
     await refresh();
   }
 
-  /// The set chooser: show another set (08 › *5. Categories*).
+  // The set chooser: show another set (08 › *5. Categories*).
   async function changeGrouping(name: string) {
     if (name === currentGrouping) return;
     currentGrouping = name;
@@ -129,8 +129,8 @@
     }
   }
 
-  /// **+ New set** (08 › *5. Categories*): **Create** writes `categories/<name>.toml` (the set's
-  /// file) and shows it. The caller shows the refusal.
+  // **+ New set** (08 › *5. Categories*): **Create** writes `categories/<name>.toml` (the set's
+  // file) and shows it. The caller shows the refusal.
   async function createGrouping(name: string) {
     busy = true;
     try {
@@ -146,9 +146,9 @@
     }
   }
 
-  /// **Delete set** (08 › *5. Categories*): asks first, then deletes that set's file, whose
-  /// categories fall back to the one catch-all entry. The set `default` is the data folder's own
-  /// `categories.toml` and cannot be deleted.
+  // **Delete set** (08 › *5. Categories*): asks first, then deletes that set's file, whose
+  // categories fall back to the one catch-all entry. The set `default` is the data folder's own
+  // `categories.toml` and cannot be deleted.
   async function removeGrouping() {
     if (!canDeleteGrouping) return;
     if (!(await confirm(texts.categories.confirmDeleteGrouping(currentGrouping)))) return;
@@ -175,7 +175,7 @@
     }));
   }
 
-  /// Recount and re-check every entry (08 › *5. Categories*: "every change recounts all rows").
+  // Recount and re-check every entry (08 › *5. Categories*: "every change recounts all rows").
   async function refresh() {
     if (entries.length === 0) {
       generalError = "";

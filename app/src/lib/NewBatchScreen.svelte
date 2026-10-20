@@ -12,10 +12,13 @@
   import { open } from "@tauri-apps/plugin-dialog";
   import { listen } from "@tauri-apps/api/event";
   import { getCurrentWebview } from "@tauri-apps/api/webview";
-  import * as api from "../lib/api";
+  import * as batch from "../lib/api/batch";
+  import { DEFAULT_GROUPING, groupingsList, type GroupingView } from "../lib/api/categories";
   import { preselectGrouping } from "../lib/groupings";
   import { LogoPrompt, needsLogoPrompt } from "../lib/logoPrompt";
   import LogoPromptDialog from "./LogoPrompt.svelte";
+  import BatchFiles from "./BatchFiles.svelte";
+  import GroupingControl from "./GroupingControl.svelte";
   import { texts } from "../texts";
 
   let {
@@ -28,19 +31,19 @@
     onCancel,
   }: {
     batchNumber: number;
-    /// The batch being redone on an amend's selection page (08 › *The amend's selection page*),
-    /// or `null` for a new batch's file list. Decides the title, the order the files are listed
-    /// and read in, and that *Read labels* reads an amend.
+    // The batch being redone on an amend's selection page (08 › *The amend's selection page*),
+    // or `null` for a new batch's file list. Decides the title, the order the files are listed
+    // and read in, and that *Read labels* reads an amend.
     amend: number | null;
-    /// The batch's own picks set on the amend's selection page (04 › *Sets*), shown fixed — an
-    /// amend reads that set again, whatever set was used last; `null` for a new batch's file
-    /// list (the *Set* control is shown there instead).
+    // The batch's own picks set on the amend's selection page (04 › *Sets*), shown fixed — an
+    // amend reads that set again, whatever set was used last; `null` for a new batch's file
+    // list (the *Set* control is shown there instead).
     amendGrouping: string | null;
-    /// The chosen files. The shell keeps them, so *Back* on the Plan screen shows this list again
-    /// with the files still there (08 › *3. Plan*).
-    files: api.FileCheck[];
-    onFiles: (files: api.FileCheck[]) => void;
-    onPlan: (result: api.ReadResult) => void;
+    // The chosen files. The shell keeps them, so *Back* on the Plan screen shows this list again
+    // with the files still there (08 › *3. Plan*).
+    files: batch.FileCheck[];
+    onFiles: (files: batch.FileCheck[]) => void;
+    onPlan: (result: batch.ReadResult) => void;
     onCancel: () => void;
   } = $props();
 
@@ -55,13 +58,13 @@
   // The *Set* control (08 › *2. New batch* → *The set*): the sets of the data folder, with the
   // set used last preselected, so a shop that always uses one set never touches it. The chosen
   // set is passed to `read_labels` and remembered as the last used there.
-  let groupings = $state<api.GroupingView[]>([]);
-  let chosenGrouping = $state(api.DEFAULT_GROUPING);
+  let groupings = $state<GroupingView[]>([]);
+  let chosenGrouping = $state(DEFAULT_GROUPING);
 
   // The logo prompt (08 › *The logo prompt*): after a read, before the Plan screen, each unseen
   // logo is asked about once. `asking` is the logo shown now; the flow itself is in logoPrompt.ts.
   let prompt = $state<LogoPrompt | null>(null);
-  let asking = $state<api.LogoView | null>(null);
+  let asking = $state<batch.LogoView | null>(null);
   let couriers = $state<string[]>([]);
   let answering = $state(false);
 
@@ -95,7 +98,7 @@
     busy = true;
     error = "";
     try {
-      const checks = await api.checkFiles(fresh);
+      const checks = await batch.checkFiles(fresh);
       const seen = new Set(files.map((file) => file.path.toLowerCase()));
       const added = checks.filter((check) => {
         if (seen.has(check.path.toLowerCase())) return false;
@@ -129,14 +132,14 @@
     progress = null;
     stop = "";
     error = "";
-    const unlisten = await listen<api.ReadProgress>("read-progress", (event) => {
+    const unlisten = await listen<batch.ReadProgress>("read-progress", (event) => {
       progress = event.payload;
     });
-    let result: api.ReadResult | null = null;
+    let result: batch.ReadResult | null = null;
     try {
       // The batch's picks come from the set chosen above (the amend's selection page reads the
       // batch's own set, so its `set` is ignored by the back end; 04 › *Sets*).
-      result = await api.readLabels(
+      result = await batch.readLabels(
         listed.map((file) => file.path),
         chosenGrouping,
         amend,
@@ -152,18 +155,18 @@
   }
 
   // A read ended: ask about the unseen logos first, or open the Plan screen at once.
-  function begin(result: api.ReadResult) {
+  function begin(result: batch.ReadResult) {
     if (!needsLogoPrompt(result)) {
       onPlan(result);
       return;
     }
-    prompt = new LogoPrompt(result, api.answerLogo);
+    prompt = new LogoPrompt(result, batch.answerLogo);
     couriers = result.couriers;
     asking = prompt.current;
   }
 
   // One answer (a courier name, *Not a courier*, or *I don't know*/Esc, which both send `skip`).
-  async function answer(reply: api.LogoAnswer) {
+  async function answer(reply: batch.LogoAnswer) {
     if (!prompt || answering) return;
     answering = true;
     error = "";
@@ -197,7 +200,7 @@
   async function cancel() {
     if (reading) {
       cancelling = true;
-      await api.cancelRead();
+      await batch.cancelRead();
       return;
     }
     onCancel();
@@ -208,8 +211,7 @@
     // *The set*). Only a new batch's file list has the control; the amend's selection page shows
     // the batch's own set. A data folder whose sets cannot be listed keeps the set `default`.
     if (amend === null) {
-      api
-        .groupingsList()
+      groupingsList()
         .then((list) => {
           groupings = list.groupings;
           chosenGrouping = preselectGrouping(list.groupings, list.last_grouping);
@@ -242,22 +244,13 @@
 <main>
   <div class="bar">
     <h2>{amend === null ? texts.newBatch.title(batchNumber) : texts.newBatch.amendTitle(amend)}</h2>
-    {#if amend === null}
-      <!-- 08 › *2. New batch* → *The set*: chosen before *Read labels*. -->
-      <label class="grouping">
-        {texts.newBatch.grouping}:
-        <select bind:value={chosenGrouping}>
-          {#each groupings as option (option.name)}
-            <option value={option.name}>{option.name}</option>
-          {/each}
-        </select>
-      </label>
-    {:else if amendGrouping !== null}
-      <!-- The amend's selection page: the batch's own set, shown and not chosen. -->
-      <span class="grouping-fixed">
-        {texts.newBatch.grouping}: {texts.newBatch.groupingFixed(amendGrouping)}
-      </span>
-    {/if}
+    <GroupingControl
+      {amend}
+      {amendGrouping}
+      {groupings}
+      chosen={chosenGrouping}
+      onChosen={(value) => (chosenGrouping = value)}
+    />
     <span class="grow"></span>
     <button onclick={cancel}>{texts.newBatch.cancel}</button>
   </div>
@@ -281,43 +274,15 @@
       <button onclick={cancel}>{texts.newBatch.cancel}</button>
     </div>
   {:else}
-    <div class="drop">
-      <span>{texts.newBatch.dropHint}</span>
-      <button disabled={busy} onclick={pickFiles}>{texts.newBatch.addFiles}</button>
-    </div>
-
-    {#if error}
-      <p class="error">{error}</p>
-    {/if}
-
-    <ul class="files">
-      {#each listed as file (file.path)}
-        <li>
-          <span class="name">{file.name}</span>
-          <span class="pages">{texts.newBatch.pages(file.pages)}</span>
-          <span class="time">{file.time ?? ""}</span>
-          {#if file.used_in_batch !== null}
-            <span class="used">{texts.newBatch.usedInBatch(file.used_in_batch)}</span>
-          {/if}
-          <button
-            class="remove"
-            title={texts.newBatch.removeTitle}
-            onclick={() => remove(file.path)}>{texts.newBatch.remove}</button
-          >
-        </li>
-      {/each}
-    </ul>
-
-    <div class="foot">
-      <span class="selected">
-        {#if listed.length > 0}
-          {texts.newBatch.selected(listed.length, totalPages)}
-        {/if}
-      </span>
-      <button class="primary" disabled={listed.length === 0} onclick={read}>
-        {texts.newBatch.read}
-      </button>
-    </div>
+    <BatchFiles
+      {listed}
+      {totalPages}
+      {busy}
+      {error}
+      onAdd={pickFiles}
+      onRemove={remove}
+      onRead={read}
+    />
   {/if}
 
   {#if asking}
@@ -353,83 +318,6 @@
 
   .grow {
     flex: 1;
-  }
-
-  /* 08 › *2. New batch* → *The set*: the Set control before *Read labels*, and the amend's
-     selection page's fixed set line. */
-  .grouping,
-  .grouping-fixed {
-    margin-left: 1rem;
-    color: #4a4a4a;
-  }
-
-  .grouping select {
-    max-width: 14rem;
-  }
-
-  .drop {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    border: 2px dashed #b8b8b8;
-    border-radius: 8px;
-    color: #4a4a4a;
-  }
-
-  .files {
-    list-style: none;
-    margin: 0 0 1rem;
-    padding: 0;
-  }
-
-  .files li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.35rem 0.25rem;
-    border-bottom: 1px solid #ececec;
-  }
-
-  .name {
-    flex: 1;
-    overflow-wrap: anywhere;
-  }
-
-  .pages {
-    min-width: 5rem;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .time {
-    min-width: 3.5rem;
-    text-align: right;
-    color: #6a6a6a;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .used {
-    color: #c07a00;
-    min-width: 8rem;
-  }
-
-  .remove {
-    padding: 0.1rem 0.5rem;
-  }
-
-  .foot {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding-top: 0.5rem;
-  }
-
-  .selected {
-    flex: 1;
-    font-weight: 600;
   }
 
   .reading {
@@ -478,19 +366,7 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .drop,
-    .muted,
-    .grouping,
-    .grouping-fixed {
-      color: #b0b0b0;
-      border-color: #555555;
-    }
-
-    .files li {
-      border-color: #3a3a3a;
-    }
-
-    .time {
+    .muted {
       color: #b0b0b0;
     }
 

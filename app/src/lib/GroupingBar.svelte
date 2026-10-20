@@ -3,7 +3,7 @@
   // set** with its name form, **Delete set** and the file the shown set is kept in. The set
   // `default` is the data folder's own `categories.toml` and cannot be deleted. The screen does the
   // writing: a refusal of its call is caught here and shown under the row.
-  import type { GroupingView } from "./api";
+  import type { GroupingView } from "./api/categories";
   import { groupingProblem, normalizeGroupingName, type GroupingNameProblem } from "./groupings";
   import { texts } from "../texts";
 
@@ -19,15 +19,15 @@
   }: {
     groupings: GroupingView[];
     current: string;
-    /// The file the shown set is kept in, relative to the data folder; `null` when it is unknown.
+    // The file the shown set is kept in, relative to the data folder; `null` when it is unknown.
     file: string | null;
-    /// *Delete set* is offered at all (the set `default` is never deleted).
+    // *Delete set* is offered at all (the set `default` is never deleted).
     canDelete: boolean;
     busy: boolean;
     onSelect: (name: string) => void;
-    /// **Create** the named set and show it; `default` and a taken name are refused by the screen.
+    // **Create** the named set and show it; `default` and a taken name are refused by the screen.
     onCreate: (name: string) => Promise<void>;
-    /// *Delete set*: the screen asks first and falls back to `default`.
+    // *Delete set*: the screen asks first and falls back to `default`.
     onDelete: () => Promise<void>;
   } = $props();
 

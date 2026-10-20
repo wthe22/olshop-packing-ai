@@ -1,7 +1,7 @@
 <script lang="ts">
   // Settings (08 › *6. Settings*): the data folder and the packing-list default.
   import { texts } from "../texts";
-  import type { About, Layout, Scope, Settings } from "./api";
+  import type { About, Layout, Scope, Settings } from "./api/start";
 
   let {
     settings,
@@ -48,7 +48,7 @@
       : layouts.filter((item) => item !== layout);
   }
 
-  /// *Save* keeps the grouping the batch screen recorded; this screen does not change it.
+  // *Save* keeps the grouping the batch screen recorded; this screen does not change it.
   function save() {
     onSave({ scope, layouts, grouping: settings?.grouping ?? "default" });
   }
