@@ -137,12 +137,7 @@ impl Args {
             let flag = args[index].as_str();
             index += 1;
             match flag {
-                "--labels" => {
-                    while index < args.len() && !args[index].starts_with("--") {
-                        parsed.labels.push(PathBuf::from(&args[index]));
-                        index += 1;
-                    }
-                }
+                "--labels" => collect_labels(args, &mut index, &mut parsed.labels),
                 "--rules" => parsed.rules = Some(PathBuf::from(value(args, &mut index, flag)?)),
                 "--couriers" => {
                     parsed.couriers = Some(PathBuf::from(value(args, &mut index, flag)?));
@@ -151,26 +146,8 @@ impl Args {
                 "--data" => parsed.data = PathBuf::from(value(args, &mut index, flag)?),
                 "--pdfium" => parsed.pdfium = Some(PathBuf::from(value(args, &mut index, flag)?)),
                 "--quiet-ids" => parsed.quiet_ids = true,
-                "--packing-list" => {
-                    let name = value(args, &mut index, flag)?;
-                    parsed.scope = name.parse::<Scope>().map_err(|_| {
-                        CliError::Usage(format!(
-                            "unknown packing-list scope \"{name}\"; expected one per batch, \
-                             one per PDF or none"
-                        ))
-                    })?;
-                }
-                "--layout" => {
-                    let list = value(args, &mut index, flag)?;
-                    for name in list.split(',').map(str::trim).filter(|s| !s.is_empty()) {
-                        let layout = name.parse::<Layout>().map_err(|_| {
-                            CliError::Usage(format!(
-                                "unknown layout \"{name}\"; expected pick, full or summary"
-                            ))
-                        })?;
-                        parsed.layouts.push(layout);
-                    }
-                }
+                "--packing-list" => parsed.scope = parse_scope(args, &mut index, flag)?,
+                "--layout" => parse_layouts(args, &mut index, flag, &mut parsed.layouts)?,
                 other => return Err(CliError::Usage(format!("unknown option \"{other}\""))),
             }
         }
@@ -220,6 +197,44 @@ fn value(args: &[String], index: &mut usize, flag: &str) -> Result<String, CliEr
         .ok_or_else(|| CliError::Usage(format!("{flag} needs a value")))?;
     *index += 1;
     Ok(value.clone())
+}
+
+/// Every `--labels` value up to the next flag.
+fn collect_labels(args: &[String], index: &mut usize, labels: &mut Vec<PathBuf>) {
+    while *index < args.len() && !args[*index].starts_with("--") {
+        labels.push(PathBuf::from(&args[*index]));
+        *index += 1;
+    }
+}
+
+/// The `--packing-list` scope.
+fn parse_scope(args: &[String], index: &mut usize, flag: &str) -> Result<Scope, CliError> {
+    let name = value(args, index, flag)?;
+    name.parse::<Scope>().map_err(|_| {
+        CliError::Usage(format!(
+            "unknown packing-list scope \"{name}\"; expected one per batch, \
+             one per PDF or none"
+        ))
+    })
+}
+
+/// The comma-separated `--layout` list.
+fn parse_layouts(
+    args: &[String],
+    index: &mut usize,
+    flag: &str,
+    layouts: &mut Vec<Layout>,
+) -> Result<(), CliError> {
+    let list = value(args, index, flag)?;
+    for name in list.split(',').map(str::trim).filter(|s| !s.is_empty()) {
+        let layout = name.parse::<Layout>().map_err(|_| {
+            CliError::Usage(format!(
+                "unknown layout \"{name}\"; expected pick, full or summary"
+            ))
+        })?;
+        layouts.push(layout);
+    }
+    Ok(())
 }
 
 // --------------------------------------------------------------------------- commands

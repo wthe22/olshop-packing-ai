@@ -38,8 +38,8 @@ pub use summary::{SummaryInput, summary_text};
 
 use self::check::expected_lists;
 use self::mapping::{
-    ListRequest, category_pages, category_saved, category_section, order_index, packing_jobs,
-    printed_time,
+    ListRequest, OrderIndex, PackingJob, category_pages, category_saved, category_section,
+    order_index, packing_jobs, printed_time,
 };
 
 /// What a save produced (07 › *Save*, *Check before saving*).
@@ -102,39 +102,14 @@ pub fn save(request: &SaveRequest<'_>, state: &mut DayState) -> Result<SaveResul
     let printed = printed_time(&save_time);
     let index = order_index(request.draft);
 
-    let mut pdf_pages: Vec<Vec<(usize, usize)>> = Vec::with_capacity(request.plan.categories.len());
-    let mut sections: Vec<SavedPdfSection> = Vec::with_capacity(request.plan.categories.len());
-    let mut saved: Vec<SavedOrder> = Vec::new();
-    let mut pdfs: Vec<PdfEntry> = Vec::with_capacity(request.plan.categories.len());
-    let mut page_total = 0usize;
-    for category in &request.plan.categories {
-        let pages = category_pages(category, &index)?;
-        page_total += pages.len();
-        pdf_pages.push(pages);
-        sections.push(category_section(category, &index)?);
-        saved.extend(category_saved(category, &index, batch)?);
-        pdfs.push(PdfEntry {
-            number: category.number,
-            code: category.code.clone(),
-            name: category.name.clone(),
-            file: category.file_name.clone(),
-            orders: category.orders.len(),
-            runs: category.runs.len(),
-        });
-    }
-
-    let files: Vec<FileEntry> = request
-        .draft
-        .files
-        .iter()
-        .map(|file| FileEntry {
-            name: file.name.clone(),
-            size: file.size,
-            xxh3: file.fingerprint.xxh3.clone(),
-            pages: file.pages,
-            legacy_sha256: None,
-        })
-        .collect();
+    let CategoryPieces {
+        pdf_pages,
+        sections,
+        saved,
+        pdfs,
+        page_total,
+    } = category_pieces(request.plan, &index, batch)?;
+    let files = file_entries(request.draft);
 
     let jobs = packing_jobs(
         request.plan,
@@ -174,51 +149,12 @@ pub fn save(request: &SaveRequest<'_>, state: &mut DayState) -> Result<SaveResul
     );
 
     let folder = day::save_batch(request.day_dir, state, &write, move |temp| {
-        let download = temp.join(names::DOWNLOAD_DIR);
-        fs::create_dir_all(&download).map_err(|error| write_error(&download, error))?;
-        let mut written = 0usize;
-        for (category, pages) in request.plan.categories.iter().zip(&pdf_pages) {
-            let out = temp.join(&category.file_name);
-            request
-                .worker
-                .write_pages(pages, &out)
-                .map_err(|error| DayError::Write {
-                    folder: out,
-                    message: error.to_string(),
-                })?;
-            written += pages.len();
-            let _ = request.progress.send(SaveProgress {
-                stage: SaveStage::Writing,
-                page: written,
-                pages: page_total,
-            });
-        }
-        for file in &request.draft.files {
-            let out = download.join(&file.name);
-            fs::copy(&file.path, &out).map_err(|error| write_error(&out, error))?;
-        }
-        for job in &jobs {
-            let out = temp.join(&job.name);
-            request
-                .worker
-                .write_packing_list(job.layout, &out, &job.list)
-                .map_err(|error| DayError::Write {
-                    folder: out,
-                    message: error.to_string(),
-                })?;
-        }
+        write_batch_files(temp, request, &pdf_pages, page_total, &jobs)?;
 
         // Check before saving: read the written files back and compare them with the plan.
-        let written =
-            crate::verify::read_back(request.worker, temp, &expected, request.progress.clone())
-                .map_err(|error| DayError::Write {
-                    folder: temp.to_path_buf(),
-                    message: error.to_string(),
-                })?;
-        let check = engine_verify::compare(&expected, &written);
-        let stop = !request.save_anyway && !check.is_empty();
+        let check = check_written(request, temp, &expected)?;
         *findings_fill.borrow_mut() = Some(check.clone());
-        if stop {
+        if !request.save_anyway && !check.is_empty() {
             // Nothing is renamed: the temporary folder goes, `state.json` is untouched.
             stopped_fill.set(true);
             return Err(DayError::Write {
@@ -227,24 +163,7 @@ pub fn save(request: &SaveRequest<'_>, state: &mut DayState) -> Result<SaveResul
             });
         }
 
-        let summary = summary_text(&SummaryInput {
-            day: request.day,
-            files: request.draft.files.len(),
-            pages: request.draft.pages,
-            orders: request.draft.total_orders,
-            slip_pages: request.draft.slip_pages,
-            categories: &request.plan.categories,
-            duplicates: request.draft.duplicates.len(),
-            warnings: &request.draft.warnings,
-            check_errors: &check.error_texts(),
-            check_warnings: &check.warning_texts(),
-            day_dir: request.day_dir,
-            packing_lists: &packing_lists_fill,
-            quiet_ids: false,
-        });
-        let out = temp.join(names::SUMMARY_FILE);
-        fs::write(&out, &summary).map_err(|error| write_error(&out, error))?;
-        *summary_fill.borrow_mut() = summary;
+        *summary_fill.borrow_mut() = write_summary(request, temp, &check, &packing_lists_fill)?;
         Ok(Findings {
             errors: check.error_texts(),
             warnings: check.warning_texts(),
@@ -281,6 +200,153 @@ pub fn save(request: &SaveRequest<'_>, state: &mut DayState) -> Result<SaveResul
         errors: check.error_texts(),
         warnings: check.warning_texts(),
     })
+}
+
+/// The pieces one save builds from the plan before the batch is written: the saved PDFs' pages in
+/// run order, the packing-list sections, the state's saved orders and saved-PDF entries, and the
+/// total page count.
+struct CategoryPieces {
+    pdf_pages: Vec<Vec<(usize, usize)>>,
+    sections: Vec<SavedPdfSection>,
+    saved: Vec<SavedOrder>,
+    pdfs: Vec<PdfEntry>,
+    page_total: usize,
+}
+
+fn category_pieces(
+    plan: &PlanResult,
+    index: &OrderIndex<'_>,
+    batch: BatchNumber,
+) -> Result<CategoryPieces, BatchError> {
+    let mut pdf_pages: Vec<Vec<(usize, usize)>> = Vec::with_capacity(plan.categories.len());
+    let mut sections: Vec<SavedPdfSection> = Vec::with_capacity(plan.categories.len());
+    let mut saved: Vec<SavedOrder> = Vec::new();
+    let mut pdfs: Vec<PdfEntry> = Vec::with_capacity(plan.categories.len());
+    let mut page_total = 0usize;
+    for category in &plan.categories {
+        let pages = category_pages(category, index)?;
+        page_total += pages.len();
+        pdf_pages.push(pages);
+        sections.push(category_section(category, index)?);
+        saved.extend(category_saved(category, index, batch)?);
+        pdfs.push(PdfEntry {
+            number: category.number,
+            code: category.code.clone(),
+            name: category.name.clone(),
+            file: category.file_name.clone(),
+            orders: category.orders.len(),
+            runs: category.runs.len(),
+        });
+    }
+    Ok(CategoryPieces {
+        pdf_pages,
+        sections,
+        saved,
+        pdfs,
+        page_total,
+    })
+}
+
+/// The label files of the batch as the state holds them.
+fn file_entries(draft: &Draft) -> Vec<FileEntry> {
+    draft
+        .files
+        .iter()
+        .map(|file| FileEntry {
+            name: file.name.clone(),
+            size: file.size,
+            xxh3: file.fingerprint.xxh3.clone(),
+            pages: file.pages,
+            legacy_sha256: None,
+        })
+        .collect()
+}
+
+/// Write the saved PDFs, the copied label files and the packing lists into `temp`.
+fn write_batch_files(
+    temp: &Path,
+    request: &SaveRequest<'_>,
+    pdf_pages: &[Vec<(usize, usize)>],
+    page_total: usize,
+    jobs: &[PackingJob],
+) -> Result<(), DayError> {
+    let download = temp.join(names::DOWNLOAD_DIR);
+    fs::create_dir_all(&download).map_err(|error| write_error(&download, error))?;
+    let mut written = 0usize;
+    for (category, pages) in request.plan.categories.iter().zip(pdf_pages) {
+        let out = temp.join(&category.file_name);
+        request
+            .worker
+            .write_pages(pages, &out)
+            .map_err(|error| DayError::Write {
+                folder: out,
+                message: error.to_string(),
+            })?;
+        written += pages.len();
+        let _ = request.progress.send(SaveProgress {
+            stage: SaveStage::Writing,
+            page: written,
+            pages: page_total,
+        });
+    }
+    for file in &request.draft.files {
+        let out = download.join(&file.name);
+        fs::copy(&file.path, &out).map_err(|error| write_error(&out, error))?;
+    }
+    for job in jobs {
+        let out = temp.join(&job.name);
+        request
+            .worker
+            .write_packing_list(job.layout, &out, &job.list)
+            .map_err(|error| DayError::Write {
+                folder: out,
+                message: error.to_string(),
+            })?;
+    }
+    Ok(())
+}
+
+/// Read the written files of `temp` back and compare them with the plan
+/// (07 › *Check before saving*).
+fn check_written(
+    request: &SaveRequest<'_>,
+    temp: &Path,
+    expected: &Expected,
+) -> Result<Check, DayError> {
+    let written =
+        crate::verify::read_back(request.worker, temp, expected, request.progress.clone())
+            .map_err(|error| DayError::Write {
+                folder: temp.to_path_buf(),
+                message: error.to_string(),
+            })?;
+    Ok(engine_verify::compare(expected, &written))
+}
+
+/// Write the batch summary into `temp` and return its text.
+fn write_summary(
+    request: &SaveRequest<'_>,
+    temp: &Path,
+    check: &Check,
+    packing_lists: &[String],
+) -> Result<String, DayError> {
+    let summary = summary_text(&SummaryInput {
+        day: request.day,
+        files: request.draft.files.len(),
+        pages: request.draft.pages,
+        orders: request.draft.total_orders,
+        slip_pages: request.draft.slip_pages,
+        categories: &request.plan.categories,
+        duplicates: request.draft.duplicates.len(),
+        warnings: &request.draft.warnings,
+        check_errors: &check.error_texts(),
+        check_warnings: &check.warning_texts(),
+        day_dir: request.day_dir,
+        packing_lists,
+        quiet_ids: false,
+    });
+    let out = temp.join(names::SUMMARY_FILE);
+    fs::write(&out, &summary).map_err(|error| write_error(&out, error))?;
+    Ok(summary)
 }
 
 fn write_error(path: &Path, error: std::io::Error) -> DayError {

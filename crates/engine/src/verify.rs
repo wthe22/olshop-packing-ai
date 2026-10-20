@@ -276,68 +276,84 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
             .iter()
             .find(|read| read.file == pdf.file)
             .map_or(&[], |read| read.pages.as_slice());
-        if actual.len() != pdf.pages.len() {
-            errors.push(Finding::PageCountDiffersFromPlan {
-                pdf: pdf.number,
-                file: pdf.file.clone(),
-                expected: pdf.pages.len(),
-                found: actual.len(),
-            });
-        }
-        let want = order_counts(pdf.pages.iter());
-        let have = order_counts(actual.iter().flatten());
+        compare_pdf(pdf, actual, &mut errors, &mut warnings);
+    }
+    compare_places(expected, written, &mut errors);
+    compare_lists(expected, written, &mut errors);
 
-        // A page holding another pick's label.
-        for order in have.keys() {
-            if want.contains_key(order) {
-                continue;
-            }
-            for (index, id) in actual.iter().enumerate() {
-                if id.as_ref() == Some(order) {
-                    errors.push(Finding::WrongOrderLabelOnPage {
-                        pdf: pdf.number,
-                        file: pdf.file.clone(),
-                        page: index + 1,
-                        order_id: order.clone(),
-                    });
-                }
-            }
+    Check { errors, warnings }
+}
+
+/// One saved PDF's page sequence against the plan (07 › *Check before saving*).
+fn compare_pdf(
+    pdf: &ExpectedPdf,
+    actual: &[Option<OrderId>],
+    errors: &mut Vec<Finding>,
+    warnings: &mut Vec<Finding>,
+) {
+    if actual.len() != pdf.pages.len() {
+        errors.push(Finding::PageCountDiffersFromPlan {
+            pdf: pdf.number,
+            file: pdf.file.clone(),
+            expected: pdf.pages.len(),
+            found: actual.len(),
+        });
+    }
+    let want = order_counts(pdf.pages.iter());
+    let have = order_counts(actual.iter().flatten());
+
+    // A page holding another pick's label.
+    for order in have.keys() {
+        if want.contains_key(order) {
+            continue;
         }
-        // A page missing, or twice, in this saved PDF.
-        for (order, expected_count) in &want {
-            let found = have.get(order).copied().unwrap_or(0);
-            if found < *expected_count {
-                errors.push(Finding::MissingPage {
+        for (index, id) in actual.iter().enumerate() {
+            if id.as_ref() == Some(order) {
+                errors.push(Finding::WrongOrderLabelOnPage {
                     pdf: pdf.number,
                     file: pdf.file.clone(),
+                    page: index + 1,
                     order_id: order.clone(),
-                    expected: *expected_count,
-                    found,
-                });
-            } else if found > *expected_count {
-                errors.push(Finding::DoubledPageInOnePdf {
-                    pdf: pdf.number,
-                    file: pdf.file.clone(),
-                    order_id: order.clone(),
-                    expected: *expected_count,
-                    found,
-                });
-            }
-        }
-        // The warning: all pages are there exactly once, in another order.
-        if actual.iter().all(Option::is_some) && actual.len() == pdf.pages.len() && have == want {
-            let sequence: Vec<&OrderId> = actual.iter().flatten().collect();
-            let wanted: Vec<&OrderId> = pdf.pages.iter().collect();
-            if sequence != wanted {
-                warnings.push(Finding::PageOrderDiffers {
-                    pdf: pdf.number,
-                    file: pdf.file.clone(),
                 });
             }
         }
     }
+    // A page missing, or twice, in this saved PDF.
+    for (order, expected_count) in &want {
+        let found = have.get(order).copied().unwrap_or(0);
+        if found < *expected_count {
+            errors.push(Finding::MissingPage {
+                pdf: pdf.number,
+                file: pdf.file.clone(),
+                order_id: order.clone(),
+                expected: *expected_count,
+                found,
+            });
+        } else if found > *expected_count {
+            errors.push(Finding::DoubledPageInOnePdf {
+                pdf: pdf.number,
+                file: pdf.file.clone(),
+                order_id: order.clone(),
+                expected: *expected_count,
+                found,
+            });
+        }
+    }
+    // The warning: all pages are there exactly once, in another order.
+    if actual.iter().all(Option::is_some) && actual.len() == pdf.pages.len() && have == want {
+        let sequence: Vec<&OrderId> = actual.iter().flatten().collect();
+        let wanted: Vec<&OrderId> = pdf.pages.iter().collect();
+        if sequence != wanted {
+            warnings.push(Finding::PageOrderDiffers {
+                pdf: pdf.number,
+                file: pdf.file.clone(),
+            });
+        }
+    }
+}
 
-    // An order in no saved PDF, or in two: over the whole batch.
+/// An order in no saved PDF, or in two: over the whole batch.
+fn compare_places(expected: &Expected, written: &Written, errors: &mut Vec<Finding>) {
     let mut places: BTreeMap<OrderId, Vec<PdfNumber>> = BTreeMap::new();
     for pdf in &expected.pdfs {
         for order in &pdf.pages {
@@ -369,8 +385,10 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
             });
         }
     }
+}
 
-    // The packing lists' printed counts.
+/// The packing lists' printed counts against the plan.
+fn compare_lists(expected: &Expected, written: &Written, errors: &mut Vec<Finding>) {
     for list in &expected.lists {
         let read = written.lists.iter().find(|read| read.file == list.file);
         let (orders, units, runs) = match read {
@@ -389,8 +407,6 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
             });
         }
     }
-
-    Check { errors, warnings }
 }
 
 fn order_counts<'a>(ids: impl Iterator<Item = &'a OrderId>) -> BTreeMap<OrderId, usize> {

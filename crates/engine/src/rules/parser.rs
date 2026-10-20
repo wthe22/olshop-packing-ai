@@ -180,104 +180,9 @@ impl Parser {
         self.advance();
 
         let node = match ftype {
-            FieldType::Text => {
-                let op_token = self.peek().clone();
-                let op = (op_token.kind == TokenKind::Word)
-                    .then(|| TextOp::parse(&op_token.text.to_lowercase()))
-                    .flatten();
-                let Some(op) = op else {
-                    return Err(RulesError::new(format!(
-                        "line {}, col {}: expected a text operator (contains, equals, starts_with) after \"{field}\"",
-                        op_token.line, op_token.col
-                    )));
-                };
-                self.advance();
-                let value_token = self.peek().clone();
-                if value_token.kind != TokenKind::Str {
-                    return Err(RulesError::new(format!(
-                        "line {}, col {}: expected a string after \"{field} {}\"",
-                        value_token.line,
-                        value_token.col,
-                        op.as_str()
-                    )));
-                }
-                self.advance();
-                Condition::Text {
-                    field: field.clone(),
-                    op,
-                    value: value_token.text,
-                }
-            }
-            FieldType::Time => {
-                let op_token = self.peek().clone();
-                let op = (op_token.kind == TokenKind::Op)
-                    .then(|| NumberOp::parse(&op_token.text))
-                    .flatten();
-                let Some(op) = op else {
-                    return Err(RulesError::new(format!(
-                        "line {}, col {}: expected a number operator (=, !=, <, <=, >, >=) after \"{field}\"",
-                        op_token.line, op_token.col
-                    )));
-                };
-                self.advance();
-                let value_token = self.peek().clone();
-                let value = if value_token.kind == TokenKind::Str {
-                    normalise_time_value(&value_token.text)
-                } else {
-                    None
-                };
-                let Some(value) = value else {
-                    return Err(RulesError::new(format!(
-                        "line {}, col {}: {TIME_ERROR}",
-                        value_token.line, value_token.col
-                    )));
-                };
-                self.advance();
-                Condition::Time {
-                    field: field.clone(),
-                    op,
-                    value,
-                }
-            }
-            FieldType::Number => {
-                let op_token = self.peek().clone();
-                let op = (op_token.kind == TokenKind::Op)
-                    .then(|| NumberOp::parse(&op_token.text))
-                    .flatten();
-                let Some(op) = op else {
-                    return Err(RulesError::new(format!(
-                        "line {}, col {}: expected a number operator (=, !=, <, <=, >, >=) after \"{field}\"",
-                        op_token.line, op_token.col
-                    )));
-                };
-                self.advance();
-                let value_token = self.peek().clone();
-                let is_integer = value_token.kind == TokenKind::Word
-                    && !value_token.text.is_empty()
-                    && value_token.text.chars().all(|c| c.is_ascii_digit());
-                if !is_integer {
-                    return Err(RulesError::new(format!(
-                        "line {}, col {}: expected an integer after \"{field} {}\"",
-                        value_token.line,
-                        value_token.col,
-                        op.as_str()
-                    )));
-                }
-                let parsed = value_token.text.parse::<i64>().map_err(|_| {
-                    RulesError::new(format!(
-                        "line {}, col {}: expected an integer after \"{field} {}\"",
-                        value_token.line,
-                        value_token.col,
-                        op.as_str()
-                    ))
-                })?;
-                self.advance();
-                Condition::Number {
-                    field: field.clone(),
-                    op,
-                    value: parsed,
-                }
-            }
+            FieldType::Text => self.parse_text_comparison(&field)?,
+            FieldType::Time => self.parse_time_comparison(&field)?,
+            FieldType::Number => self.parse_number_comparison(&field)?,
         };
 
         // CSV-only fields are known but unusable in the PC app: report after the comparison is
@@ -289,6 +194,107 @@ impl Parser {
             )));
         }
         Ok(node)
+    }
+
+    fn parse_text_comparison(&mut self, field: &str) -> Result<Condition, RulesError> {
+        let op_token = self.peek().clone();
+        let op = (op_token.kind == TokenKind::Word)
+            .then(|| TextOp::parse(&op_token.text.to_lowercase()))
+            .flatten();
+        let Some(op) = op else {
+            return Err(RulesError::new(format!(
+                "line {}, col {}: expected a text operator (contains, equals, starts_with) after \"{field}\"",
+                op_token.line, op_token.col
+            )));
+        };
+        self.advance();
+        let value_token = self.peek().clone();
+        if value_token.kind != TokenKind::Str {
+            return Err(RulesError::new(format!(
+                "line {}, col {}: expected a string after \"{field} {}\"",
+                value_token.line,
+                value_token.col,
+                op.as_str()
+            )));
+        }
+        self.advance();
+        Ok(Condition::Text {
+            field: field.to_string(),
+            op,
+            value: value_token.text,
+        })
+    }
+
+    fn parse_time_comparison(&mut self, field: &str) -> Result<Condition, RulesError> {
+        let op_token = self.peek().clone();
+        let op = (op_token.kind == TokenKind::Op)
+            .then(|| NumberOp::parse(&op_token.text))
+            .flatten();
+        let Some(op) = op else {
+            return Err(RulesError::new(format!(
+                "line {}, col {}: expected a number operator (=, !=, <, <=, >, >=) after \"{field}\"",
+                op_token.line, op_token.col
+            )));
+        };
+        self.advance();
+        let value_token = self.peek().clone();
+        let value = if value_token.kind == TokenKind::Str {
+            normalise_time_value(&value_token.text)
+        } else {
+            None
+        };
+        let Some(value) = value else {
+            return Err(RulesError::new(format!(
+                "line {}, col {}: {TIME_ERROR}",
+                value_token.line, value_token.col
+            )));
+        };
+        self.advance();
+        Ok(Condition::Time {
+            field: field.to_string(),
+            op,
+            value,
+        })
+    }
+
+    fn parse_number_comparison(&mut self, field: &str) -> Result<Condition, RulesError> {
+        let op_token = self.peek().clone();
+        let op = (op_token.kind == TokenKind::Op)
+            .then(|| NumberOp::parse(&op_token.text))
+            .flatten();
+        let Some(op) = op else {
+            return Err(RulesError::new(format!(
+                "line {}, col {}: expected a number operator (=, !=, <, <=, >, >=) after \"{field}\"",
+                op_token.line, op_token.col
+            )));
+        };
+        self.advance();
+        let value_token = self.peek().clone();
+        let is_integer = value_token.kind == TokenKind::Word
+            && !value_token.text.is_empty()
+            && value_token.text.chars().all(|c| c.is_ascii_digit());
+        if !is_integer {
+            return Err(RulesError::new(format!(
+                "line {}, col {}: expected an integer after \"{field} {}\"",
+                value_token.line,
+                value_token.col,
+                op.as_str()
+            )));
+        }
+        let parsed = value_token.text.parse::<i64>().map_err(|_| {
+            RulesError::new(format!(
+                "line {}, col {}: expected an integer after \"{field} {}\"",
+                value_token.line,
+                value_token.col,
+                op.as_str()
+            ))
+        })?;
+        self.advance();
+        Ok(Condition::Number {
+            field: field.to_string(),
+            op,
+            value: parsed,
+        })
     }
 }
 

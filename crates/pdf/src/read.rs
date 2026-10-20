@@ -373,14 +373,24 @@ fn build_runs_objects(page: &PdfPage, text: &PdfPageText) -> Result<Vec<Run>, Pd
 /// horizontal gap wider than `SPLIT_POINTS`, or a font name/size change; a gap wider than
 /// `SPACE_POINTS` inside a run becomes a space. A run's (x, y) is its first character's origin.
 fn build_runs_geometry(text: &PdfPageText) -> Result<Vec<Run>, PdfError> {
-    const SPLIT_POINTS: f64 = 5.0;
-    const SPACE_POINTS: f64 = 1.0;
-    const LINE_TOLERANCE: f64 = 0.7;
+    let mut items = collect_glyphs(text)?;
+    // Top to bottom, then left to right.
+    items.sort_by(|a, b| {
+        b.0.partial_cmp(&a.0)
+            .unwrap_or(Ordering::Equal)
+            .then(a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal))
+    });
+    Ok(glyph_runs(items))
+}
 
+/// One placed character: (baseline y, left, right, origin x, font, size, text).
+type PlacedChar = (f64, f64, f64, f64, String, f32, String);
+
+/// The page's characters with their boxes and origins, whitespace dropped.
+fn collect_glyphs(text: &PdfPageText) -> Result<Vec<PlacedChar>, PdfError> {
     let chars = text.chars();
     let count = chars.len();
-    // (baseline y, left, right, origin x, font, size, text); whitespace dropped.
-    let mut items: Vec<(f64, f64, f64, f64, String, f32, String)> = Vec::new();
+    let mut items: Vec<PlacedChar> = Vec::new();
     let mut last_y = 0.0f64;
     for i in 0..count {
         let character = chars.get(i)?;
@@ -416,11 +426,16 @@ fn build_runs_geometry(text: &PdfPageText) -> Result<Vec<Run>, PdfError> {
             string,
         ));
     }
-    items.sort_by(|a, b| {
-        b.0.partial_cmp(&a.0)
-            .unwrap_or(Ordering::Equal)
-            .then(a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal))
-    });
+    Ok(items)
+}
+
+/// Group the placed characters into runs: a run ends at a line change, a horizontal gap wider
+/// than `SPLIT_POINTS`, or a font name/size change; a gap wider than `SPACE_POINTS` inside a run
+/// becomes a space.
+fn glyph_runs(items: Vec<PlacedChar>) -> Vec<Run> {
+    const SPLIT_POINTS: f64 = 5.0;
+    const SPACE_POINTS: f64 = 1.0;
+    const LINE_TOLERANCE: f64 = 0.7;
 
     let mut runs: Vec<Run> = Vec::new();
     let mut buffer = String::new();
@@ -456,7 +471,7 @@ fn build_runs_geometry(text: &PdfPageText) -> Result<Vec<Run>, PdfError> {
     if have {
         push_run(&mut runs, &mut buffer, run_x, run_y);
     }
-    Ok(runs)
+    runs
 }
 
 fn push_run(runs: &mut Vec<Run>, buffer: &mut str, x: f64, y: f64) {

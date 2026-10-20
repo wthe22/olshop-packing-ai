@@ -77,26 +77,14 @@ pub(super) fn save_batch_impl(
     let _ = forwarder.join(); // the sender is dropped when `with_worker` returns
 
     match result {
-        Ok(Ok(save)) if save.saved => Ok(SaveResultView {
-            batch: save.batch,
-            pdfs: save.pdf_files.len(),
-            packing_lists: save.packing_lists.len(),
-            saved: true,
-            errors: save.errors,
-            warnings: save.warnings,
-        }),
-        // The check stopped the save (the temporary folder is gone, `state.json` is untouched):
-        // the draft stays so *Save anyway* can be pressed again.
         Ok(Ok(save)) => {
-            state.restore_draft(open);
-            Ok(SaveResultView {
-                batch: save.batch,
-                pdfs: 0,
-                packing_lists: 0,
-                saved: false,
-                errors: save.errors,
-                warnings: save.warnings,
-            })
+            let saved = save.saved;
+            // The check stopped the save (the temporary folder is gone, `state.json` is
+            // untouched): the draft stays so *Save anyway* can be pressed again.
+            if !saved {
+                state.restore_draft(open);
+            }
+            Ok(save_view(save, saved))
         }
         Ok(Err(error)) => {
             state.restore_draft(open);
@@ -106,5 +94,17 @@ pub(super) fn save_batch_impl(
             state.restore_draft(open);
             Err(message)
         }
+    }
+}
+
+/// The save's outcome as the window's view (`saved: false` when the check stopped it).
+fn save_view(save: batch::SaveResult, saved: bool) -> SaveResultView {
+    SaveResultView {
+        batch: save.batch,
+        pdfs: if saved { save.pdf_files.len() } else { 0 },
+        packing_lists: if saved { save.packing_lists.len() } else { 0 },
+        saved,
+        errors: save.errors,
+        warnings: save.warnings,
     }
 }

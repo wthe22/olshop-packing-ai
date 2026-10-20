@@ -257,27 +257,7 @@ fn serve(pdfium: &Pdfium, rx: &Receiver<Job>) {
                 reply,
             } => {
                 let result = match &draft {
-                    Some(files) => {
-                        let mut pages: Vec<PageItem> = Vec::new();
-                        let mut on_page =
-                            |file: usize, page: usize, text: &PageText| -> Result<(), PdfError> {
-                                pages.push((file, page, text.clone()));
-                                Ok(())
-                            };
-                        read::for_each_page(
-                            files,
-                            &cancel,
-                            &mut |done, total| {
-                                let _ = progress.send(Progress {
-                                    page: done,
-                                    pages: total,
-                                });
-                            },
-                            &couriers,
-                            &mut on_page,
-                        )
-                        .map(|()| pages)
-                    }
+                    Some(files) => read_current(files, &cancel, &progress, &couriers),
                     None => Err(PdfError::Message("no labels are open".into())),
                 };
                 let _ = reply.send(result);
@@ -287,23 +267,7 @@ fn serve(pdfium: &Pdfium, rx: &Receiver<Job>) {
                 progress,
                 reply,
             } => {
-                let result = read::open_all(pdfium, &paths).and_then(|files| {
-                    let total: usize = files.iter().map(|file| file.pages).sum();
-                    let mut pages: Vec<PageItem> = Vec::with_capacity(total);
-                    let mut done = 0usize;
-                    for (file_index, file) in files.iter().enumerate() {
-                        for page_index in 0..file.pages {
-                            pages.push((file_index, page_index, file.page_text_plain(page_index)?));
-                            done += 1;
-                            let _ = progress.send(SaveProgress {
-                                stage: SaveStage::Checking,
-                                page: done,
-                                pages: total,
-                            });
-                        }
-                    }
-                    Ok(pages)
-                });
+                let result = read_back_pages(pdfium, &paths, &progress);
                 let _ = reply.send(result);
             }
             Job::WritePages { pages, out, reply } => {
@@ -340,4 +304,56 @@ fn serve(pdfium: &Pdfium, rx: &Receiver<Job>) {
             Job::Shutdown => break,
         }
     }
+}
+
+/// Read every page of the open draft, sending progress and honouring the cancel flag.
+fn read_current(
+    files: &[OpenedFile<'_>],
+    cancel: &AtomicBool,
+    progress: &Sender<Progress>,
+    couriers: &CourierTable,
+) -> Result<Vec<PageItem>, PdfError> {
+    let mut pages: Vec<PageItem> = Vec::new();
+    read::for_each_page(
+        files,
+        cancel,
+        &mut |done, total| {
+            let _ = progress.send(Progress {
+                page: done,
+                pages: total,
+            });
+        },
+        couriers,
+        &mut |file: usize, page: usize, text: &PageText| -> Result<(), PdfError> {
+            pages.push((file, page, text.clone()));
+            Ok(())
+        },
+    )
+    .map(|()| pages)
+}
+
+/// Read the given files' pages back without replacing the current draft (the check before saving
+/// reads the written files, so the label documents stay open).
+fn read_back_pages(
+    pdfium: &Pdfium,
+    paths: &[PathBuf],
+    progress: &Sender<SaveProgress>,
+) -> Result<Vec<PageItem>, PdfError> {
+    read::open_all(pdfium, paths).and_then(|files| {
+        let total: usize = files.iter().map(|file| file.pages).sum();
+        let mut pages: Vec<PageItem> = Vec::with_capacity(total);
+        let mut done = 0usize;
+        for (file_index, file) in files.iter().enumerate() {
+            for page_index in 0..file.pages {
+                pages.push((file_index, page_index, file.page_text_plain(page_index)?));
+                done += 1;
+                let _ = progress.send(SaveProgress {
+                    stage: SaveStage::Checking,
+                    page: done,
+                    pages: total,
+                });
+            }
+        }
+        Ok(pages)
+    })
 }

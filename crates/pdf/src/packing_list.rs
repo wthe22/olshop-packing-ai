@@ -290,10 +290,13 @@ impl<'m, 'a> Builder<'m, 'a> {
         if entries.is_empty() {
             return;
         }
-        self.need(
-            BAR_H + entries.len().min(4) as f32 * (ROW_H + 1.0) + 2.0,
-            None,
-        );
+        self.draw_summary_bar(entries.len());
+        self.draw_summary_rows(&entries);
+    }
+
+    /// The pick summary's heading bar.
+    fn draw_summary_bar(&mut self, rows: usize) {
+        self.need(BAR_H + rows.min(4) as f32 * (ROW_H + 1.0) + 2.0, None);
         self.y += 1.0;
         let top = self.y;
         self.fill(MARGIN, top, 190.0, BAR_H);
@@ -306,6 +309,10 @@ impl<'m, 'a> Builder<'m, 'a> {
             text: " Pick summary (units to take from stock)",
         });
         self.y = top + BAR_H;
+    }
+
+    /// The summary's rows, breaking to a new page when the next chunk does not fit.
+    fn draw_summary_rows(&mut self, entries: &[(i64, String)]) {
         let mut top = self.y;
         let mut index = 0;
         while index < entries.len() {
@@ -316,39 +323,7 @@ impl<'m, 'a> Builder<'m, 'a> {
                 top = self.y;
                 take = category_fit(&entries[index..], BOTTOM - top, self.measure).max(1);
             }
-            let chunk = &entries[index..index + take];
-            let half = chunk.len().div_ceil(2);
-            for (column, part) in [&chunk[..half], &chunk[half..]].into_iter().enumerate() {
-                let mut y = top;
-                let x = COL_X[column];
-                for (units, name) in part {
-                    let lines =
-                        self.measure
-                            .wrap(name, COL_W - 2.0 * CELL_MARGIN, Font::Arial, 10.0);
-                    self.cell_right(
-                        Cell {
-                            x,
-                            y,
-                            h: ROW_H,
-                            size_pt: 10.5,
-                            font: Font::ArialBold,
-                            text: &grouped(*units),
-                        },
-                        12.0,
-                    );
-                    for (i, text) in lines.iter().enumerate() {
-                        self.cell(Cell {
-                            x: x + 14.0,
-                            y: y + ROW_H * i as f32,
-                            h: ROW_H,
-                            size_pt: 10.0,
-                            font: Font::Arial,
-                            text,
-                        });
-                    }
-                    y += ROW_H * lines.len() as f32 + 0.4;
-                }
-            }
+            self.draw_summary_chunk(&entries[index..index + take], top);
             index += take;
             if index < entries.len() {
                 self.pages.push(Vec::new());
@@ -356,6 +331,42 @@ impl<'m, 'a> Builder<'m, 'a> {
                 top = self.y;
             } else {
                 self.y = top;
+            }
+        }
+    }
+
+    /// One chunk of the summary's rows, in two columns.
+    fn draw_summary_chunk(&mut self, chunk: &[(i64, String)], top: f32) {
+        let half = chunk.len().div_ceil(2);
+        for (column, part) in [&chunk[..half], &chunk[half..]].into_iter().enumerate() {
+            let mut y = top;
+            let x = COL_X[column];
+            for (units, name) in part {
+                let lines = self
+                    .measure
+                    .wrap(name, COL_W - 2.0 * CELL_MARGIN, Font::Arial, 10.0);
+                self.cell_right(
+                    Cell {
+                        x,
+                        y,
+                        h: ROW_H,
+                        size_pt: 10.5,
+                        font: Font::ArialBold,
+                        text: &grouped(*units),
+                    },
+                    12.0,
+                );
+                for (i, text) in lines.iter().enumerate() {
+                    self.cell(Cell {
+                        x: x + 14.0,
+                        y: y + ROW_H * i as f32,
+                        h: ROW_H,
+                        size_pt: 10.0,
+                        font: Font::Arial,
+                        text,
+                    });
+                }
+                y += ROW_H * lines.len() as f32 + 0.4;
             }
         }
     }
@@ -375,27 +386,45 @@ fn run_items(run: &RunRows) -> Vec<String> {
     items
 }
 
+/// The `(name, variation)` an item's quantities are totalled by.
+type ItemKey = (String, String);
+/// The total quantity of each item key.
+type ItemUnits = Vec<(ItemKey, i64)>;
+/// The display name of each item key.
+type ItemNames = Vec<(ItemKey, String)>;
+
 /// One `(units, display name)` per `(name, variation)`, sorted by display name then key
 /// (Python `_pick_entries`).
 fn category_entries(list: &PackingList) -> Vec<(i64, String)> {
-    let mut units: Vec<((String, String), i64)> = Vec::new();
-    let mut names: Vec<((String, String), String)> = Vec::new();
-    for section in &list.sections {
-        for run in &section.runs {
-            for order in &run.orders {
-                for line in &order.lines {
-                    let key = (line.name.clone(), line.variation.clone());
-                    match units.iter_mut().find(|(k, _)| *k == key) {
-                        Some((_, value)) => *value += line.quantity,
-                        None => units.push((key.clone(), line.quantity)),
-                    }
-                    if !names.iter().any(|(k, _)| *k == key) {
-                        names.push((key, line.display_name.clone()));
-                    }
-                }
-            }
+    let (units, names) = entry_totals(list);
+    sorted_entries(units, names)
+}
+
+/// Total the quantity of every `(name, variation)`, and remember its display name.
+fn entry_totals(list: &PackingList) -> (ItemUnits, ItemNames) {
+    let mut units: ItemUnits = Vec::new();
+    let mut names: ItemNames = Vec::new();
+    let lines = list
+        .sections
+        .iter()
+        .flat_map(|section| &section.runs)
+        .flat_map(|run| &run.orders)
+        .flat_map(|order| &order.lines);
+    for line in lines {
+        let key = (line.name.clone(), line.variation.clone());
+        match units.iter_mut().find(|(k, _)| *k == key) {
+            Some((_, value)) => *value += line.quantity,
+            None => units.push((key.clone(), line.quantity)),
+        }
+        if !names.iter().any(|(k, _)| *k == key) {
+            names.push((key, line.display_name.clone()));
         }
     }
+    (units, names)
+}
+
+/// The totals ordered by display name, name and variation.
+fn sorted_entries(units: ItemUnits, names: ItemNames) -> Vec<(i64, String)> {
     let name_of = |key: &(String, String)| -> String {
         names
             .iter()

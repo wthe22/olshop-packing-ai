@@ -123,104 +123,155 @@ pub fn load_rules_named(text: &str, file: &str) -> Result<Vec<Category>, RulesEr
         return Err(RulesError::new(format!("{file}: no categories")));
     }
 
+    let source = Source { file, text };
     let mut categories: Vec<Category> = Vec::new();
     let mut seen: BTreeSet<String> = BTreeSet::new();
     let count = raw.len();
     for (index, entry) in raw.iter().enumerate() {
-        let toml::Value::Table(entry) = entry else {
-            return Err(RulesError::new(format!(
-                "{file}: category #{}: must be a table",
-                index + 1
-            )));
-        };
-        let code_value = entry.get("code");
-        // Name the category by code when there is one, else by its position.
-        let cid = match code_value {
-            Some(toml::Value::String(s)) if !s.is_empty() => format!("\"{s}\""),
-            _ => format!("#{}", index + 1),
-        };
-
-        for key in entry.keys() {
-            if !CATEGORY_KEYS.contains(&key.as_str()) {
-                return Err(RulesError::new(format!(
-                    "{file}: category {cid}: unknown key \"{key}\""
-                )));
-            }
-        }
-
-        let Some(code_value) = code_value else {
-            return Err(RulesError::new(format!(
-                "{file}: category {cid}: missing \"code\""
-            )));
-        };
-        let toml::Value::String(code) = code_value else {
-            return Err(RulesError::new(format!(
-                "{file}: category {cid}: \"code\" must be a string"
-            )));
-        };
-        if code.is_empty() {
-            return Err(RulesError::new(format!(
-                "{file}: category {cid}: \"code\" must not be empty"
-            )));
-        }
-        if !valid_code(code) {
-            return Err(RulesError::new(format!(
-                "{file}: category {cid}: \"code\" must be 1-3 letters or digits"
-            )));
-        }
-        if seen.contains(code) {
-            return Err(RulesError::new(format!(
-                "{file}: category {cid}: duplicate \"code\" \"{code}\""
-            )));
-        }
-        seen.insert(code.clone());
-
-        let Some(name_value) = entry.get("name") else {
-            return Err(RulesError::new(format!(
-                "{file}: category {cid}: missing \"name\""
-            )));
-        };
-        let toml::Value::String(name) = name_value else {
-            return Err(RulesError::new(format!(
-                "{file}: category {cid}: \"name\" must be a string"
-            )));
-        };
-        if name.is_empty() {
-            return Err(RulesError::new(format!(
-                "{file}: category {cid}: \"name\" must not be empty"
-            )));
-        }
-
-        let when_text = match entry.get("when") {
-            None => None,
-            Some(toml::Value::String(s)) => Some(s.clone()),
-            Some(_) => {
-                return Err(RulesError::new(format!(
-                    "{file}: category {cid}: \"when\" must be a string"
-                )));
-            }
-        };
-
-        let condition = match &when_text {
-            None => {
-                if index != count - 1 {
-                    return Err(RulesError::new(format!(
-                        "{file}: category {cid}: missing \"when\" on a category that is not last"
-                    )));
-                }
-                None
-            }
-            Some(when) => Some(parse_when(when, text, file, index, &cid)?),
-        };
-
-        categories.push(Category {
-            code: code.clone(),
-            name: name.clone(),
-            condition,
-            when: when_text,
-        });
+        categories.push(read_category(&source, index, count, entry, &mut seen)?);
     }
     Ok(categories)
+}
+
+/// The rules file being read: its name and its whole text, for the errors and the positions.
+struct Source<'a> {
+    file: &'a str,
+    text: &'a str,
+}
+
+/// One `[[category]]` entry, checked and built.
+fn read_category(
+    source: &Source<'_>,
+    index: usize,
+    count: usize,
+    entry: &toml::Value,
+    seen: &mut BTreeSet<String>,
+) -> Result<Category, RulesError> {
+    let file = source.file;
+    let toml::Value::Table(entry) = entry else {
+        return Err(RulesError::new(format!(
+            "{file}: category #{}: must be a table",
+            index + 1
+        )));
+    };
+    let code_value = entry.get("code");
+    // Name the category by code when there is one, else by its position.
+    let cid = match code_value {
+        Some(toml::Value::String(s)) if !s.is_empty() => format!("\"{s}\""),
+        _ => format!("#{}", index + 1),
+    };
+
+    for key in entry.keys() {
+        if !CATEGORY_KEYS.contains(&key.as_str()) {
+            return Err(RulesError::new(format!(
+                "{file}: category {cid}: unknown key \"{key}\""
+            )));
+        }
+    }
+
+    let code = entry_code(entry, &cid, file, seen)?;
+    let name = entry_name(entry, &cid, file)?;
+    let when = entry_when(entry, &cid, file)?;
+    let condition = read_condition(source, index, count, &cid, when.as_deref())?;
+    Ok(Category {
+        code,
+        name,
+        condition,
+        when,
+    })
+}
+
+fn entry_code(
+    entry: &toml::Table,
+    cid: &str,
+    file: &str,
+    seen: &mut BTreeSet<String>,
+) -> Result<String, RulesError> {
+    let Some(code_value) = entry.get("code") else {
+        return Err(RulesError::new(format!(
+            "{file}: category {cid}: missing \"code\""
+        )));
+    };
+    let toml::Value::String(code) = code_value else {
+        return Err(RulesError::new(format!(
+            "{file}: category {cid}: \"code\" must be a string"
+        )));
+    };
+    if code.is_empty() {
+        return Err(RulesError::new(format!(
+            "{file}: category {cid}: \"code\" must not be empty"
+        )));
+    }
+    if !valid_code(code) {
+        return Err(RulesError::new(format!(
+            "{file}: category {cid}: \"code\" must be 1-3 letters or digits"
+        )));
+    }
+    if seen.contains(code) {
+        return Err(RulesError::new(format!(
+            "{file}: category {cid}: duplicate \"code\" \"{code}\""
+        )));
+    }
+    seen.insert(code.clone());
+    Ok(code.clone())
+}
+
+fn entry_name(entry: &toml::Table, cid: &str, file: &str) -> Result<String, RulesError> {
+    let Some(name_value) = entry.get("name") else {
+        return Err(RulesError::new(format!(
+            "{file}: category {cid}: missing \"name\""
+        )));
+    };
+    let toml::Value::String(name) = name_value else {
+        return Err(RulesError::new(format!(
+            "{file}: category {cid}: \"name\" must be a string"
+        )));
+    };
+    if name.is_empty() {
+        return Err(RulesError::new(format!(
+            "{file}: category {cid}: \"name\" must not be empty"
+        )));
+    }
+    Ok(name.clone())
+}
+
+fn entry_when(entry: &toml::Table, cid: &str, file: &str) -> Result<Option<String>, RulesError> {
+    match entry.get("when") {
+        None => Ok(None),
+        Some(toml::Value::String(s)) => Ok(Some(s.clone())),
+        Some(_) => Err(RulesError::new(format!(
+            "{file}: category {cid}: \"when\" must be a string"
+        ))),
+    }
+}
+
+/// The parsed condition of an entry: `None` for the last entry's missing `when`, an error for
+/// every other one.
+fn read_condition(
+    source: &Source<'_>,
+    index: usize,
+    count: usize,
+    cid: &str,
+    when: Option<&str>,
+) -> Result<Option<Condition>, RulesError> {
+    match when {
+        None => {
+            if index != count - 1 {
+                return Err(RulesError::new(format!(
+                    "{}: category {cid}: missing \"when\" on a category that is not last",
+                    source.file
+                )));
+            }
+            Ok(None)
+        }
+        Some(when) => Ok(Some(parse_when(
+            when,
+            source.text,
+            source.file,
+            index,
+            cid,
+        )?)),
+    }
 }
 
 fn parse_when(

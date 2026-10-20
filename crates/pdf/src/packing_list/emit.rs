@@ -155,8 +155,25 @@ pub(super) fn emit(
 ) -> Result<usize, PdfError> {
     let mut doc = pdfium.create_new_pdf()?;
     let mut fonts = FontSet::load(&mut doc, font_dir)?;
-    // The CID flavour is embedded only for the fonts a page really needs, so a list whose text has
-    // no such character keeps the smaller file (D2).
+    load_cid_fonts(&mut doc, &mut fonts, pages, font_dir)?;
+    for page_ops in pages {
+        draw_page(&mut doc, page_ops, &fonts, measure)?;
+    }
+    doc.save_to_file(path).map_err(|e| PdfError::Io {
+        path: path.to_path_buf(),
+        message: e.to_string(),
+    })?;
+    Ok(pages.len())
+}
+
+/// The CID flavour is embedded only for the fonts a page really needs, so a list whose text has no
+/// such character keeps the smaller file (D2).
+fn load_cid_fonts(
+    doc: &mut PdfDocument<'_>,
+    fonts: &mut FontSet,
+    pages: &[Vec<Op>],
+    font_dir: &Path,
+) -> Result<(), PdfError> {
     for font in [Font::Arial, Font::ArialBold, Font::Consola] {
         let needed = pages.iter().flatten().any(|op| match op {
             Op::Text {
@@ -165,62 +182,65 @@ pub(super) fn emit(
             _ => false,
         });
         if needed {
-            fonts.load_cid(&mut doc, font_dir, font)?;
+            fonts.load_cid(doc, font_dir, font)?;
         }
     }
-    for page_ops in pages {
-        let mut page = doc.pages_mut().create_page_at_end(PdfPagePaperSize::a4())?;
-        let objects = page.objects_mut();
-        for op in page_ops {
-            match op {
-                Op::Text {
-                    x,
-                    baseline,
-                    size_pt,
-                    font,
-                    text,
-                } => {
-                    for (offset, chunk, cid) in measure.segments_with_offsets(text, *font, *size_pt)
-                    {
-                        objects.create_text_object(
-                            PdfPoints::new(to_pt(*x + offset)),
-                            PdfPoints::new(to_pt(PAGE_H - *baseline)),
-                            chunk,
-                            fonts.token(*font, cid),
-                            PdfPoints::new(*size_pt),
-                        )?;
-                    }
-                }
-                Op::Line { x1, y1, x2, y2 } => {
-                    objects.create_path_object_line(
-                        PdfPoints::new(to_pt(*x1)),
-                        PdfPoints::new(to_pt(PAGE_H - *y1)),
-                        PdfPoints::new(to_pt(*x2)),
-                        PdfPoints::new(to_pt(PAGE_H - *y2)),
-                        PdfColor::new(170, 170, 170, 255),
-                        PdfPoints::new(to_pt(0.2)),
-                    )?;
-                }
-                Op::Fill { x, y, w, h } => {
-                    let rect = PdfRect::new_from_values(
-                        to_pt(PAGE_H - *y - *h),
-                        to_pt(*x),
-                        to_pt(PAGE_H - *y),
-                        to_pt(*x + *w),
-                    );
-                    objects.create_path_object_rect(
-                        rect,
-                        None,
-                        None,
-                        Some(PdfColor::new(225, 225, 225, 255)),
+    Ok(())
+}
+
+/// Draw one page's operations into a new A4 page.
+fn draw_page(
+    doc: &mut PdfDocument<'_>,
+    page_ops: &[Op],
+    fonts: &FontSet,
+    measure: &Measure<'_>,
+) -> Result<(), PdfError> {
+    let mut page = doc.pages_mut().create_page_at_end(PdfPagePaperSize::a4())?;
+    let objects = page.objects_mut();
+    for op in page_ops {
+        match op {
+            Op::Text {
+                x,
+                baseline,
+                size_pt,
+                font,
+                text,
+            } => {
+                for (offset, chunk, cid) in measure.segments_with_offsets(text, *font, *size_pt) {
+                    objects.create_text_object(
+                        PdfPoints::new(to_pt(*x + offset)),
+                        PdfPoints::new(to_pt(PAGE_H - *baseline)),
+                        chunk,
+                        fonts.token(*font, cid),
+                        PdfPoints::new(*size_pt),
                     )?;
                 }
             }
+            Op::Line { x1, y1, x2, y2 } => {
+                objects.create_path_object_line(
+                    PdfPoints::new(to_pt(*x1)),
+                    PdfPoints::new(to_pt(PAGE_H - *y1)),
+                    PdfPoints::new(to_pt(*x2)),
+                    PdfPoints::new(to_pt(PAGE_H - *y2)),
+                    PdfColor::new(170, 170, 170, 255),
+                    PdfPoints::new(to_pt(0.2)),
+                )?;
+            }
+            Op::Fill { x, y, w, h } => {
+                let rect = PdfRect::new_from_values(
+                    to_pt(PAGE_H - *y - *h),
+                    to_pt(*x),
+                    to_pt(PAGE_H - *y),
+                    to_pt(*x + *w),
+                );
+                objects.create_path_object_rect(
+                    rect,
+                    None,
+                    None,
+                    Some(PdfColor::new(225, 225, 225, 255)),
+                )?;
+            }
         }
     }
-    doc.save_to_file(path).map_err(|e| PdfError::Io {
-        path: path.to_path_buf(),
-        message: e.to_string(),
-    })?;
-    Ok(pages.len())
+    Ok(())
 }

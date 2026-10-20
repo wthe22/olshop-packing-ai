@@ -131,63 +131,18 @@ fn rules_check_impl(
     entries: &[EntryInput],
 ) -> Result<RulesCheck, String> {
     let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
-    let mut errors: Vec<Option<String>> = Vec::with_capacity(entries.len());
-    let mut general: Option<String> = None;
-    let mut categories: Vec<Category> = Vec::with_capacity(entries.len());
-    let mut seen: BTreeSet<String> = BTreeSet::new();
     let count = entries.len();
-    let mut conditions_ok = true;
-
+    let mut check = EntryCheck::new(count);
     for (index, entry) in entries.iter().enumerate() {
-        let code = entry.code.trim();
-        let name = entry.name.trim();
-        if code.is_empty() {
-            general.get_or_insert(format!("category #{}: missing \"code\"", index + 1));
-        } else if !valid_code(code) {
-            general.get_or_insert(format!(
-                "category #{}: \"code\" must be 1-3 letters or digits",
-                index + 1
-            ));
-        } else if !seen.insert(code.to_string()) {
-            general.get_or_insert(format!("category \"{code}\": duplicate \"code\""));
-        }
-        if name.is_empty() {
-            general.get_or_insert(format!("category #{}: missing \"name\"", index + 1));
-        }
-
-        match &entry.when {
-            None => {
-                if index + 1 != count {
-                    general.get_or_insert(format!(
-                        "category #{}: missing \"when\" on a category that is not last",
-                        index + 1
-                    ));
-                }
-                categories.push(Category {
-                    code: code.to_string(),
-                    name: name.to_string(),
-                    condition: None,
-                    when: None,
-                });
-                errors.push(None);
-            }
-            Some(text) => match parse_condition(text) {
-                Ok(condition) => {
-                    categories.push(Category {
-                        code: code.to_string(),
-                        name: name.to_string(),
-                        condition: Some(condition),
-                        when: Some(text.clone()),
-                    });
-                    errors.push(None);
-                }
-                Err(error) => {
-                    errors.push(Some(error.to_string()));
-                    conditions_ok = false;
-                }
-            },
-        }
+        check.add(index, count, entry);
     }
+    let EntryCheck {
+        errors,
+        general,
+        categories,
+        conditions_ok,
+        ..
+    } = check;
 
     // The counts in the open batch: the same first-match, take-from-what-is-left rule as the plan
     // (08 › *5. Categories*: "In batch 3").
@@ -215,6 +170,83 @@ fn rules_check_impl(
     })
 }
 
+/// The running state of the live check: each entry's condition error, the first file-level error,
+/// the categories built so far, the codes seen and whether every condition parsed.
+struct EntryCheck {
+    errors: Vec<Option<String>>,
+    general: Option<String>,
+    categories: Vec<Category>,
+    seen: BTreeSet<String>,
+    conditions_ok: bool,
+}
+
+impl EntryCheck {
+    fn new(entries: usize) -> EntryCheck {
+        EntryCheck {
+            errors: Vec::with_capacity(entries),
+            general: None,
+            categories: Vec::with_capacity(entries),
+            seen: BTreeSet::new(),
+            conditions_ok: true,
+        }
+    }
+
+    /// Check one entry and add its category.
+    fn add(&mut self, index: usize, count: usize, entry: &EntryInput) {
+        let code = entry.code.trim();
+        let name = entry.name.trim();
+        if code.is_empty() {
+            self.general
+                .get_or_insert(format!("category #{}: missing \"code\"", index + 1));
+        } else if !valid_code(code) {
+            self.general.get_or_insert(format!(
+                "category #{}: \"code\" must be 1-3 letters or digits",
+                index + 1
+            ));
+        } else if !self.seen.insert(code.to_string()) {
+            self.general
+                .get_or_insert(format!("category \"{code}\": duplicate \"code\""));
+        }
+        if name.is_empty() {
+            self.general
+                .get_or_insert(format!("category #{}: missing \"name\"", index + 1));
+        }
+
+        match &entry.when {
+            None => {
+                if index + 1 != count {
+                    self.general.get_or_insert(format!(
+                        "category #{}: missing \"when\" on a category that is not last",
+                        index + 1
+                    ));
+                }
+                self.categories.push(Category {
+                    code: code.to_string(),
+                    name: name.to_string(),
+                    condition: None,
+                    when: None,
+                });
+                self.errors.push(None);
+            }
+            Some(text) => match parse_condition(text) {
+                Ok(condition) => {
+                    self.categories.push(Category {
+                        code: code.to_string(),
+                        name: name.to_string(),
+                        condition: Some(condition),
+                        when: Some(text.clone()),
+                    });
+                    self.errors.push(None);
+                }
+                Err(error) => {
+                    self.errors.push(Some(error.to_string()));
+                    self.conditions_ok = false;
+                }
+            },
+        }
+    }
+}
+
 // -------------------------------------------------------------------------------- save
 
 /// Save the edited entries through `RulesDocument`: an entry that came from the file keeps its
@@ -228,24 +260,45 @@ fn rules_save_impl(
 ) -> Result<(), String> {
     let folder = state.data_folder()?;
     let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
-    // A set's file lives in `<data>/categories/`; the folder is created here, so the first save of
-    // a new set (04 › *Sets*) can write the file.
-    if file != CATEGORIES_FILE {
-        let dir = folder.join(GROUPINGS_DIR);
-        std::fs::create_dir_all(&dir)
-            .map_err(|error| format!("Cannot write to {}: {error}.", dir.display()))?;
-    }
+    ensure_grouping_dir(&folder, &file)?;
     let path = folder.join(&file);
-    let mut document = match std::fs::read_to_string(&path) {
-        Ok(text) => {
-            RulesDocument::from_str_named(&text, &file).map_err(|error| error.to_string())?
-        }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            RulesDocument::empty_named(&file)
-        }
-        Err(error) => return Err(format!("cannot read {}: {error}", path.display())),
-    };
+    let mut document = load_document(&path, &file)?;
     let original = document.entries().len();
+    check_origins(&file, original, entries)?;
+    edit_existing(&mut document, entries)?;
+    place_entries(&mut document, entries)?;
+
+    let categories = document.validate().map_err(|error| error.to_string())?;
+    std::fs::write(&path, document.to_string())
+        .map_err(|error| format!("Cannot write to {}: {error}.", path.display()))?;
+    rebuild_plan(state, categories);
+    Ok(())
+}
+
+/// A set's file lives in `<data>/categories/`; the folder is created here, so the first save of a
+/// new set (04 › *Sets*) can write the file.
+fn ensure_grouping_dir(folder: &Path, file: &str) -> Result<(), String> {
+    if file == CATEGORIES_FILE {
+        return Ok(());
+    }
+    let dir = folder.join(GROUPINGS_DIR);
+    std::fs::create_dir_all(&dir)
+        .map_err(|error| format!("Cannot write to {}: {error}.", dir.display()))
+}
+
+/// The set's document: its file's entries, or a new one when the file is not there yet.
+fn load_document(path: &Path, file: &str) -> Result<RulesDocument, String> {
+    match std::fs::read_to_string(path) {
+        Ok(text) => RulesDocument::from_str_named(&text, file).map_err(|error| error.to_string()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            Ok(RulesDocument::empty_named(file))
+        }
+        Err(error) => Err(format!("cannot read {}: {error}", path.display())),
+    }
+}
+
+/// Every `origin` the screen sent must name an entry the document holds.
+fn check_origins(file: &str, original: usize, entries: &[EntryInput]) -> Result<(), String> {
     for entry in entries {
         if let Some(origin) = entry.origin
             && origin >= original
@@ -253,8 +306,11 @@ fn rules_save_impl(
             return Err(format!("{file}: no category #{} of {original}", origin + 1));
         }
     }
+    Ok(())
+}
 
-    // Change the code, name and condition of the entries that came from the file.
+/// Change the code, name and condition of the entries that came from the file.
+fn edit_existing(document: &mut RulesDocument, entries: &[EntryInput]) -> Result<(), String> {
     for entry in entries {
         if let Some(origin) = entry.origin {
             document
@@ -268,8 +324,11 @@ fn rules_save_impl(
                 .map_err(|error| error.to_string())?;
         }
     }
+    Ok(())
+}
 
-    // Append the new entries, remembering every entry's index in the document, then reorder.
+/// Append the new entries, remembering every entry's index in the document, then reorder.
+fn place_entries(document: &mut RulesDocument, entries: &[EntryInput]) -> Result<(), String> {
     let mut keep: Vec<usize> = Vec::with_capacity(entries.len());
     for entry in entries {
         match entry.origin {
@@ -288,13 +347,7 @@ fn rules_save_impl(
             }
         }
     }
-    document.reorder(&keep).map_err(|error| error.to_string())?;
-
-    let categories = document.validate().map_err(|error| error.to_string())?;
-    std::fs::write(&path, document.to_string())
-        .map_err(|error| format!("Cannot write to {}: {error}.", path.display()))?;
-    rebuild_plan(state, categories);
-    Ok(())
+    document.reorder(&keep).map_err(|error| error.to_string())
 }
 
 /// *Edit file as text*: check the whole file, write it, and rebuild the open draft's plan.
@@ -302,11 +355,7 @@ fn rules_save_text_impl(state: &AppState, grouping: &Grouping, text: &str) -> Re
     let folder = state.data_folder()?;
     let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
     let categories = load_rules_named(text, &file).map_err(|error| error.to_string())?;
-    if file != CATEGORIES_FILE {
-        let dir = folder.join(GROUPINGS_DIR);
-        std::fs::create_dir_all(&dir)
-            .map_err(|error| format!("Cannot write to {}: {error}.", dir.display()))?;
-    }
+    ensure_grouping_dir(&folder, &file)?;
     let path = folder.join(&file);
     std::fs::write(&path, text)
         .map_err(|error| format!("Cannot write to {}: {error}.", path.display()))?;

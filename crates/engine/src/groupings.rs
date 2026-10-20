@@ -147,27 +147,9 @@ pub fn list(folder: &Path) -> Result<Vec<GroupingEntry>, GroupingError> {
                     file: GROUPINGS_DIR.to_string(),
                     message: error.to_string(),
                 })?;
-                if !entry
-                    .file_type()
-                    .map(|kind| kind.is_file())
-                    .unwrap_or(false)
-                {
-                    continue;
+                if let Some(name) = grouping_file(&entry)? {
+                    names.push(name);
                 }
-                let file_name = entry.file_name();
-                let Some(file_name) = file_name.to_str() else {
-                    continue;
-                };
-                let Some(name) = file_name.strip_suffix(GROUPING_EXTENSION) else {
-                    continue;
-                };
-                if name == DEFAULT_GROUPING {
-                    return Err(GroupingError::DefaultFile {
-                        default: CATEGORIES_FILE.to_string(),
-                        file: format!("{GROUPINGS_DIR}/{file_name}"),
-                    });
-                }
-                names.push(name.to_string());
             }
         }
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
@@ -275,6 +257,32 @@ fn copied_text(folder: &Path, from: &Grouping) -> Result<String, GroupingError> 
             message: error.to_string(),
         }),
     }
+}
+
+/// The grouping name `entry` holds, or `None` when it is not a `<name>.toml` file; a file named
+/// `default.toml` is refused.
+fn grouping_file(entry: &std::fs::DirEntry) -> Result<Option<String>, GroupingError> {
+    if !entry
+        .file_type()
+        .map(|kind| kind.is_file())
+        .unwrap_or(false)
+    {
+        return Ok(None);
+    }
+    let file_name = entry.file_name();
+    let Some(file_name) = file_name.to_str() else {
+        return Ok(None);
+    };
+    let Some(name) = file_name.strip_suffix(GROUPING_EXTENSION) else {
+        return Ok(None);
+    };
+    if name == DEFAULT_GROUPING {
+        return Err(GroupingError::DefaultFile {
+            default: CATEGORIES_FILE.to_string(),
+            file: format!("{GROUPINGS_DIR}/{file_name}"),
+        });
+    }
+    Ok(Some(name.to_string()))
 }
 
 /// The one catch-all entry as a rules file's text (04 › *Sets*): code `Z`, name `Lainnya`, no

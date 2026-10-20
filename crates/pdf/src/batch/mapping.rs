@@ -67,7 +67,7 @@ pub(super) fn packing_jobs(
 }
 
 /// A saved PDF's pages in run order (03 › *A saved PDF*).
-type OrderIndex<'a> = HashMap<&'a OrderId, &'a ReadOrder>;
+pub(super) type OrderIndex<'a> = HashMap<&'a OrderId, &'a ReadOrder>;
 
 pub(super) fn order_index(draft: &Draft) -> OrderIndex<'_> {
     draft

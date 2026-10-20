@@ -6,7 +6,7 @@ use jiff::civil::DateTime;
 use crate::ids::{OrderId, TrackingId};
 use crate::label::{self, CourierTable};
 use crate::slip::{self, SlipLine};
-use crate::text::LogoImage;
+use crate::text::{LogoImage, PageText};
 
 use super::{
     Line, NoSlip, NoSlipFile, Order, PageItem, PageRef, ReadError, ReadOrder, Reading, UnseenLogo,
@@ -105,23 +105,13 @@ where
         }
 
         let found = label::find_order_id(&page_text.text);
-        let order_id = match &found {
-            Some(id) => id.clone(),
-            None => match &previous {
-                // No Order ID = the previous page's order continues (a long label); a first
-                // page has nothing to continue.
-                Some(id) => {
-                    continuation_pages.push(PageRef { file, page });
-                    id.clone()
-                }
-                None => {
-                    return Err(ReadError::NoOrderId {
-                        name: file_name(file_names, file),
-                        page,
-                    });
-                }
-            },
-        };
+        let order_id = page_order_id(
+            &found,
+            &previous,
+            PageRef { file, page },
+            file_names,
+            &mut continuation_pages,
+        )?;
         previous = Some(order_id.clone());
 
         let slip = slip::read_slip(&page_text);
@@ -129,45 +119,14 @@ where
             no_slip.push((file, page));
         }
 
-        let index = match groups.iter().position(|group| group.order_id == order_id) {
-            Some(index) => index,
-            None => {
-                let tracking_id = label::find_tracking_id(&page_text.text, &order_id);
-                groups.push(Group {
-                    order_id: order_id.clone(),
-                    pages: Vec::new(),
-                    has_slip: false,
-                    lines: Vec::new(),
-                    qty_total: None,
-                    customer_message: String::new(),
-                    ship_by: None,
-                    tracking_id,
-                    text: page_text.text.clone(),
-                    logos: Vec::new(),
-                });
-                groups.len() - 1
-            }
-        };
-
-        // The page's header-band images (Q-LABEL-5): the order's logo clue, and the logos the
-        // prompt must ask the owner about (D-LABEL-4).
-        let mut seen_on_page: Vec<&str> = Vec::new();
-        for image in &page_text.logos {
-            if !groups[index]
-                .logos
-                .iter()
-                .any(|seen| seen.hash == image.hash)
-            {
-                groups[index].logos.push(image.clone());
-            }
-            if seen_on_page.contains(&image.hash.as_str()) {
-                continue;
-            }
-            seen_on_page.push(&image.hash);
-            if label::is_unseen_logo(table, image) {
-                record_unseen(&mut unseen, image, &order_id);
-            }
-        }
+        let index = find_or_create_group(&mut groups, &order_id, &page_text);
+        collect_logos(
+            &mut groups[index],
+            &page_text,
+            table,
+            &order_id,
+            &mut unseen,
+        );
 
         let group = &mut groups[index];
         group.pages.push(PageRef { file, page });
@@ -194,6 +153,92 @@ where
         )));
     }
 
+    let (orders, mut warnings) = build_orders(groups, table);
+    warnings.extend(order_warnings(&orders));
+
+    Ok(Reading {
+        orders,
+        continuation_pages,
+        unseen_logos: unseen,
+        warnings,
+    })
+}
+
+/// The page's order ID: the one its text prints, or the previous page's when a page prints none
+/// and continues a long label; a first page with no Order ID is an error (03 › *Order ID from the
+/// label*).
+fn page_order_id(
+    found: &Option<OrderId>,
+    previous: &Option<OrderId>,
+    at: PageRef,
+    file_names: &[&str],
+    continuation_pages: &mut Vec<PageRef>,
+) -> Result<OrderId, ReadError> {
+    if let Some(id) = found {
+        return Ok(id.clone());
+    }
+    // No Order ID = the previous page's order continues (a long label); a first page has nothing
+    // to continue.
+    let Some(id) = previous else {
+        return Err(ReadError::NoOrderId {
+            name: file_name(file_names, at.file),
+            page: at.page,
+        });
+    };
+    continuation_pages.push(at);
+    Ok(id.clone())
+}
+
+/// The index of `order_id`'s group, started from this page when it is the order's first page
+/// (03 › *Multi-page orders*).
+fn find_or_create_group(groups: &mut Vec<Group>, order_id: &OrderId, page: &PageText) -> usize {
+    match groups.iter().position(|group| group.order_id == *order_id) {
+        Some(index) => index,
+        None => {
+            groups.push(Group {
+                order_id: order_id.clone(),
+                pages: Vec::new(),
+                has_slip: false,
+                lines: Vec::new(),
+                qty_total: None,
+                customer_message: String::new(),
+                ship_by: None,
+                tracking_id: label::find_tracking_id(&page.text, order_id),
+                text: page.text.clone(),
+                logos: Vec::new(),
+            });
+            groups.len() - 1
+        }
+    }
+}
+
+/// The page's header-band images (Q-LABEL-5): the order's logo clue, and the logos the prompt must
+/// ask the owner about (D-LABEL-4).
+fn collect_logos(
+    group: &mut Group,
+    page: &PageText,
+    table: &CourierTable,
+    order_id: &OrderId,
+    unseen: &mut Vec<UnseenLogo>,
+) {
+    let mut seen_on_page: Vec<&str> = Vec::new();
+    for image in &page.logos {
+        if !group.logos.iter().any(|seen| seen.hash == image.hash) {
+            group.logos.push(image.clone());
+        }
+        if seen_on_page.contains(&image.hash.as_str()) {
+            continue;
+        }
+        seen_on_page.push(&image.hash);
+        if label::is_unseen_logo(table, image) {
+            record_unseen(unseen, image, order_id);
+        }
+    }
+}
+
+/// Turn the merged groups into the batch's orders, with each order's quantity warning
+/// (07 › *What happens in one batch* step 3).
+fn build_orders(groups: Vec<Group>, table: &CourierTable) -> (Vec<ReadOrder>, Vec<Warning>) {
     let mut warnings = Vec::new();
     let mut orders = Vec::with_capacity(groups.len());
     for (index, group) in groups.into_iter().enumerate() {
@@ -237,8 +282,14 @@ where
             qty_total: group.qty_total,
         });
     }
+    (orders, warnings)
+}
 
-    if let Some(unknown) = Warning::unknown_courier(&orders) {
+/// The batch-wide warnings: an order whose courier could not be deduced, and the orders with no
+/// tracking ID (07 › *What happens in one batch* step 3).
+fn order_warnings(orders: &[ReadOrder]) -> Vec<Warning> {
+    let mut warnings = Vec::new();
+    if let Some(unknown) = Warning::unknown_courier(orders) {
         warnings.push(unknown);
     }
     let missing: Vec<OrderId> = orders
@@ -249,11 +300,5 @@ where
     if !missing.is_empty() {
         warnings.push(Warning::TrackingIdMissing { order_ids: missing });
     }
-
-    Ok(Reading {
-        orders,
-        continuation_pages,
-        unseen_logos: unseen,
-        warnings,
-    })
+    warnings
 }
