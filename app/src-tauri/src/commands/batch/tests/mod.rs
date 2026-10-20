@@ -17,6 +17,8 @@ use packing_pdf::worker::{PdfWorker, SaveProgress, SaveStage};
 use crate::commands::day::{remember_last_grouping, settings_load};
 use crate::{CATEGORIES_FILE, COURIERS_FILE, OpenDraft};
 
+use super::read::{load_categories, load_couriers, read_draft};
+
 use super::*;
 
 /// The pinned `pdfium.dll` directory, or `None` when it has not been downloaded.

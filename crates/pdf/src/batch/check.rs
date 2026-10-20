@@ -9,11 +9,12 @@ use packing_engine::ids::BatchNumber;
 use packing_engine::plan::PlanResult;
 use packing_engine::verify::{self as engine_verify, Check, Expected, ExpectedList};
 
+use crate::read::file_name;
 use crate::worker::PdfWorker;
 
-use super::Draft;
 use super::error::BatchError;
-use super::{ListRequest, PackingJob, category_section, order_index, packing_jobs};
+use super::mapping::{ListRequest, PackingJob, category_section, order_index, packing_jobs};
+use super::read::Draft;
 
 /// One chosen label file: what 07 › *New batch* shows before reading (page count, fingerprint,
 /// `used in batch n`).
@@ -100,10 +101,4 @@ pub fn check_saved(
     let (progress, _rx) = mpsc::channel();
     let written = crate::verify::read_back(worker, folder, &expected, progress)?;
     Ok(engine_verify::compare(&expected, &written))
-}
-
-fn file_name(path: &Path) -> String {
-    path.file_name()
-        .map(|name| name.to_string_lossy().into_owned())
-        .unwrap_or_else(|| path.to_string_lossy().into_owned())
 }

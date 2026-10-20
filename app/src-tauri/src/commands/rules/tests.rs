@@ -3,6 +3,8 @@ use packing_engine::ids::{OrderId, PdfNumber, TrackingId};
 use packing_engine::orders::{Line, ReadOrder};
 use packing_engine::plan::Plan;
 use packing_engine::rules::load_rules;
+
+use super::sets::groupings_list_impl;
 use packing_engine::rules_edit::condition_to_tree;
 use packing_pdf::batch::Draft;
 

@@ -1,7 +1,8 @@
 use super::*;
+use packing_engine::day::{Duplicate, duplicates_warning};
 use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::label::courier_data;
-use packing_engine::orders::Order;
+use packing_engine::orders::{Line, LogoAnswer, Order, ReadOrder, UnseenLogo, Warning};
 use packing_engine::plan::{CategoryResult, REST_CODE, RunResult};
 
 fn line(name: &str, variation: &str, quantity: i64, display: &str) -> Line {

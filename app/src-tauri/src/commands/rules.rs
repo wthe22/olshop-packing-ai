@@ -17,8 +17,9 @@ use packing_engine::rules_edit::{self, RulesDocument, Tree};
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-use crate::commands::day::settings_load;
 use crate::{AppState, CATEGORIES_FILE, GROUPINGS_DIR};
+
+pub mod sets;
 
 /// One category entry as the file holds it (08 › *5. Categories*): its values and, for an entry
 /// the file holds, the index it has there (`origin`). The one catch-all entry of a folder
@@ -214,16 +215,6 @@ fn rules_check_impl(
     })
 }
 
-/// Check the whole file text (*Edit file as text*): nothing when it loads, the error otherwise.
-/// The check is the same for every grouping; `grouping` names the file the error comes from
-/// (04 › *Sets*).
-fn rules_check_text_impl(grouping: &Grouping, text: &str) -> Result<(), String> {
-    let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
-    load_rules_named(text, &file)
-        .map(|_| ())
-        .map_err(|error| error.to_string())
-}
-
 // -------------------------------------------------------------------------------- save
 
 /// Save the edited entries through `RulesDocument`: an entry that came from the file keeps its
@@ -353,9 +344,14 @@ pub fn rules_check(
 }
 
 /// Check the whole file text (*Edit file as text*): nothing when it loads, the error otherwise.
+/// The check is the same for every grouping; `grouping` names the file the error comes from
+/// (04 › *Sets*).
 #[tauri::command]
 pub fn rules_check_text(grouping: Grouping, text: String) -> Result<(), String> {
-    rules_check_text_impl(&grouping, &text)
+    let file = groupings::file_of(&grouping).map_err(|error| error.to_string())?;
+    load_rules_named(&text, &file)
+        .map(|_| ())
+        .map_err(|error| error.to_string())
 }
 
 /// *Save* the entries (08 › *5. Categories*): write the set's file and recount the open draft.
@@ -376,42 +372,6 @@ pub fn rules_save_text(
     text: String,
 ) -> Result<(), String> {
     rules_save_text_impl(&state, &grouping, &text)
-}
-
-/// One grouping of the data folder as the Categories screen lists it (04 › *Sets*;
-/// 08 › *5. Categories*): its name and the file it is kept in, relative to the data folder.
-#[derive(Serialize)]
-pub struct GroupingView {
-    name: Grouping,
-    file: String,
-}
-
-/// The groupings of a data folder (07 › *Commands between window and Rust*: `groupings_list`):
-/// every grouping with its file, and the grouping used last, which the next **New batch**
-/// preselects.
-#[derive(Serialize)]
-pub struct GroupingsList {
-    groupings: Vec<GroupingView>,
-    /// The grouping used last, from the data folder's `settings.json` (07 › *Settings*);
-    /// `default` when the file has none or cannot be read.
-    last_grouping: Grouping,
-}
-
-fn groupings_list_impl(folder: &Path) -> Result<GroupingsList, String> {
-    let groupings = groupings::list(folder).map_err(|error| error.to_string())?;
-    let last_grouping = settings_load(folder)
-        .map(|settings| settings.grouping)
-        .unwrap_or_else(|_| Grouping::default());
-    Ok(GroupingsList {
-        groupings: groupings
-            .into_iter()
-            .map(|entry| GroupingView {
-                name: entry.name,
-                file: entry.file,
-            })
-            .collect(),
-        last_grouping,
-    })
 }
 
 /// **+ New set** (08 › *5. Categories*; 04 › *Sets*): write `categories/<name>.toml`, empty or a
@@ -439,8 +399,8 @@ pub fn delete_grouping(state: State<'_, AppState>, name: Grouping) -> Result<(),
 /// The groupings of the data folder (07 › *Commands*: `groupings_list`): the grouping names, the
 /// file of each and the grouping used last.
 #[tauri::command]
-pub fn groupings_list(state: State<'_, AppState>) -> Result<GroupingsList, String> {
-    groupings_list_impl(&state.data_folder()?)
+pub fn groupings_list(state: State<'_, AppState>) -> Result<sets::GroupingsList, String> {
+    sets::groupings_list_impl(&state.data_folder()?)
 }
 
 /// A condition text → boxes tree, for the boxes editor (07 › *Commands*: the engine's parser).

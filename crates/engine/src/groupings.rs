@@ -9,7 +9,7 @@
 //! PDF set.
 
 use std::fmt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
@@ -128,11 +128,6 @@ pub fn file_of(grouping: &Grouping) -> Result<String, GroupingError> {
         return Ok(CATEGORIES_FILE.to_string());
     }
     Ok(format!("{GROUPINGS_DIR}/{name}{GROUPING_EXTENSION}"))
-}
-
-/// The path of a grouping's file inside `folder`.
-pub fn path_of(folder: &Path, grouping: &Grouping) -> Result<PathBuf, GroupingError> {
-    Ok(folder.join(file_of(grouping)?))
 }
 
 /// The grouping list of a data folder (04 › *Sets*): `default` always, then every `<name>.toml`

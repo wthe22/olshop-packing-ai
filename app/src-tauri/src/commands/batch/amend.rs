@@ -11,8 +11,8 @@ use packing_pdf::worker::Progress;
 
 use crate::{AmendState, AppState};
 
+use super::read::{ReadRequest, read_into_draft};
 use super::views::{AmendStart, ReadResult, file_check_view};
-use super::{ReadRequest, read_into_draft};
 
 /// Revert the last batch (07 › *Revert*): delete its folder **first**, so a file open in a PDF
 /// viewer stops with the 08 *file in use* message and changes nothing, then remove the batch and

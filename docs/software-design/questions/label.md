@@ -161,4 +161,4 @@ page there is no logo to agree with.
 | **1. The form names the courier when it carries the vendor's own marker** (**Default**) | A lettered form (`JY`, `TKP`, `SPXID`) that fits exactly one courier names it; a bare-number form (`00`, `57`) never does. Real labels are never affected, because they always have a header image; the test labels keep their couriers |
 | 2. Strict: no logo and no printed text clue, no name | The test labels need pictures added (`testdata/make_testdata.py`, `expected-labels.json`, the Python reference's test), then every page is named by two clues |
 
-**What the answer changes:** `deduce_courier_in` in `crates/engine/src/label.rs` and the test labels.
+**What the answer changes:** `deduce_courier_in` in `crates/engine/src/label/deduce.rs` and the test labels.

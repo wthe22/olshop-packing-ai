@@ -45,14 +45,7 @@ impl<'a> OpenedFile<'a> {
     /// The text (whole-page string and rebuilt runs) of one 0-based page, with the logos of the
     /// page's header band. `table` is the courier data the appearance decision uses.
     pub fn page_text(&self, index: usize, table: &CourierTable) -> Result<PageText, PdfError> {
-        let page = self
-            .doc
-            .pages()
-            .get(index as PdfPageIndex)
-            .map_err(|e| PdfError::Open {
-                path: self.path.clone(),
-                message: format!("page {}: {e}", index + 1),
-            })?;
+        let page = page_at(&self.doc, &self.path, index)?;
         let text = page.text()?;
         let all = text.all();
         let runs = build_runs(&page, &text)?;
@@ -69,14 +62,7 @@ impl<'a> OpenedFile<'a> {
     /// reads its own output back and needs the Order ID and the printed counts only, never a logo
     /// (07 › *Check before saving*).
     pub fn page_text_plain(&self, index: usize) -> Result<PageText, PdfError> {
-        let page = self
-            .doc
-            .pages()
-            .get(index as PdfPageIndex)
-            .map_err(|e| PdfError::Open {
-                path: self.path.clone(),
-                message: format!("page {}: {e}", index + 1),
-            })?;
+        let page = page_at(&self.doc, &self.path, index)?;
         let text = page.text()?;
         let all = text.all();
         let runs = build_runs(&page, &text)?;
@@ -92,13 +78,7 @@ impl<'a> OpenedFile<'a> {
     /// prompt shows the logo as printed). `None` when the page carries no such image.
     pub fn band_picture(&self, index: usize, hash: &str) -> Result<Option<Vec<u8>>, PdfError> {
         let scratch = self.scratch()?;
-        let page = scratch
-            .pages()
-            .get(index as PdfPageIndex)
-            .map_err(|e| PdfError::Open {
-                path: self.path.clone(),
-                message: format!("page {}: {e}", index + 1),
-            })?;
+        let page = page_at(&scratch, &self.path, index)?;
         page_picture(&page, &scratch, hash)
     }
 
@@ -129,14 +109,7 @@ impl<'a> OpenedFile<'a> {
             return Ok(logos);
         }
         let scratch = self.scratch()?;
-        let scratch_page =
-            scratch
-                .pages()
-                .get(index as PdfPageIndex)
-                .map_err(|e| PdfError::Open {
-                    path: self.path.clone(),
-                    message: format!("page {}: {e}", index + 1),
-                })?;
+        let scratch_page = page_at(&scratch, &self.path, index)?;
         page_logos(&scratch_page, &scratch, &|hash| table.knows_byte_hash(hash))
     }
 }
@@ -238,7 +211,17 @@ fn appearance_of(image: &PdfPageImageObject<'_>, document: &PdfDocument<'_>) -> 
     ))
 }
 
-fn file_name(path: &Path) -> String {
+/// One 0-based page of a document; the error names the file and the page (1-based).
+fn page_at<'a>(doc: &PdfDocument<'a>, path: &Path, index: usize) -> Result<PdfPage<'a>, PdfError> {
+    doc.pages()
+        .get(index as PdfPageIndex)
+        .map_err(|e| PdfError::Open {
+            path: path.to_path_buf(),
+            message: format!("page {}: {e}", index + 1),
+        })
+}
+
+pub(crate) fn file_name(path: &Path) -> String {
     path.file_name()
         .map(|name| name.to_string_lossy().into_owned())
         .unwrap_or_else(|| path.to_string_lossy().into_owned())

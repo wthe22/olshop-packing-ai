@@ -3,6 +3,9 @@ use packing_engine::day::{BatchEntry, FileEntry, PackingListChoice, PdfEntry};
 use packing_engine::groupings::Grouping;
 use packing_engine::ids::{BatchNumber, PdfNumber};
 
+use super::settings::Settings;
+use crate::SETTINGS_FILE;
+
 fn temp_dir(label: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("packing-app-test-{}-{label}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);

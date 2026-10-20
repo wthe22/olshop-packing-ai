@@ -15,8 +15,6 @@ pub const NAME_LIMIT: usize = 100;
 
 /// The batch's day state (07 › *`state.json`*).
 pub const STATE_FILE: &str = "state.json";
-/// The day folder with scope `whole` and one layout (07 › *Day folder*).
-pub const PACKING_LIST_FILE: &str = "packing-list.pdf";
 /// The batch summary text.
 pub const SUMMARY_FILE: &str = "summary.txt";
 /// The batch's copy of the label files read; amend reads them back (07 › *Day folder*).
