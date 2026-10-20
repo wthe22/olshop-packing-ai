@@ -1,6 +1,5 @@
 //! `day.rs`: `state.json` round trip and format, numbering, the duplicate guard, file
-//! fingerprints, revert, amend and the atomic save (07 › *Day folder*, *`state.json`*,
-//! *Revert and amend*; mirrors tools/analysis/tests/test_picks.py).
+//! fingerprints, revert, amend and the atomic save (mirrors tools/analysis/tests/test_picks.py).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -181,7 +180,7 @@ fn state_json_matches_the_07_format() {
     let batch = &value["batches"][0];
     assert_eq!(batch["batch"], 1);
     assert_eq!(batch["save_time"], "2026-10-07T07:40:12+07:00");
-    // The picks set the batch was packed with is stored with it (04 › *Sets*).
+    // The picks set the batch was packed with is stored with it.
     assert_eq!(batch["set"], "default");
     assert_eq!(batch["files"][0]["name"], "labels_1.pdf");
     assert_eq!(batch["files"][0]["size"], 10);
@@ -197,11 +196,11 @@ fn state_json_matches_the_07_format() {
     assert_eq!(batch["pdfs"][0]["runs"], 1);
     assert_eq!(batch["packing_list"]["scope"], "whole");
     assert_eq!(batch["packing_list"]["layouts"][0], "pick");
-    // The read warnings are stored per batch (07 › *`state.json`*), defaulted when absent.
+    // The read warnings are stored per batch, defaulted when absent.
     assert_eq!(batch["warnings"].as_array().map(Vec::len), Some(0));
     // The check before saving's errors are stored apart from the warnings, defaulted when absent.
     assert_eq!(batch["errors"].as_array().map(Vec::len), Some(0));
-    // The **Printed** ticks are stored per batch (07 › *`state.json`*), defaulted when absent.
+    // The **Printed** ticks are stored per batch, defaulted when absent.
     assert_eq!(batch["printed"].as_array().map(Vec::len), Some(0));
 
     let entry = &value["saved"][0];
@@ -212,7 +211,7 @@ fn state_json_matches_the_07_format() {
     assert_eq!(entry["run"], 5);
     // The 07 example keeps no per-order save_time (the batch carries it).
     assert!(entry.get("save_time").is_none());
-    // The searched fields are written at save (07 › *`state.json`*; 2.21).
+    // The searched fields are written at save.
     assert_eq!(entry["courier"], "J&T Express");
     assert_eq!(entry["total_quantity"], 2);
     assert_eq!(entry["distinct_items"], 1);
@@ -224,13 +223,13 @@ fn state_json_matches_the_07_format() {
 }
 
 /// An order saved before search existed keeps only its IDs: every searched field is absent in the
-/// older `state.json` and loads as its empty value (07 › *`state.json`*; 2.21, Q-UI-3).
+/// older `state.json` and loads as its empty value.
 #[test]
 fn a_saved_order_without_the_searched_fields_loads_with_them_empty() {
     let dir = TempDir::new("legacy-saved");
     let day = dir.path().join("2026-10-07");
     fs::create_dir_all(&day).expect("create day");
-    // A day written before 2.21: the saved entry has only the IDs, the batch and the pdf/run.
+    // A day written before search existed: the saved entry has only the IDs, the batch and the pdf/run.
     let json = r#"{
   "day": "2026-10-07",
   "batches": [],
@@ -296,8 +295,7 @@ fn the_check_findings_are_stored_with_the_batch() {
     })
     .expect("save batch");
 
-    // The check's errors are kept apart; its warnings join the read warnings (07 › *Check
-    // before saving*).
+    // The check's errors are kept apart; its warnings join the read warnings.
     assert_eq!(
         state.batches[0].errors,
         vec!["a page is missing".to_string()]
@@ -343,7 +341,7 @@ fn a_printed_tick_survives_a_write_and_reload() {
     )
     .expect("save");
 
-    // Ticking writes the day's `state.json` straight away, as the doc says (07 › *`state.json`*).
+    // Ticking writes the day's `state.json` straight away, as the doc says.
     state
         .set_printed(&day, batch(1), pdf(2), true)
         .expect("tick");
@@ -445,7 +443,7 @@ fn revert_removes_the_batch_with_its_ticks() {
         .set_printed(&day, batch(2), pdf(2), true)
         .expect("tick batch 2");
 
-    // The ticks belong to the batch: a revert removes them with it (07 › *`state.json`*).
+    // The ticks belong to the batch: a revert removes them with it.
     let removed = state.revert_last().expect("a batch");
     assert_eq!(removed.batch, batch(2));
     assert_eq!(removed.printed, vec![pdf(2)]);
@@ -471,8 +469,7 @@ fn an_amended_batch_is_written_without_ticks() {
         .expect("tick");
     assert_eq!(state.batches[0].printed, vec![pdf(1)]);
 
-    // An amend writes the batch afresh, so its new entry starts with no ticks
-    // (07 › *`state.json`*).
+    // An amend writes the batch afresh, so its new entry starts with no ticks.
     let amend = state.amend(&day).expect("amend");
     let mut amended = amend.state;
     save_batch(
@@ -932,7 +929,7 @@ fn now_save_time_is_iso_with_an_offset() {
 }
 
 /// The grouping a batch was packed with is written at save and read back; an older `state.json`
-/// without the key loads as `default` (07 › *`state.json`*; 04 › *Sets*).
+/// without the key loads as `default`.
 #[test]
 fn the_batch_grouping_round_trips_and_an_older_state_loads_as_default() {
     let dir = TempDir::new("batch-set");
@@ -961,7 +958,7 @@ fn the_batch_grouping_round_trips_and_an_older_state_loads_as_default() {
     assert_eq!(older.batches[0].grouping, Grouping::default());
 }
 
-/// An **Amend** reads the batch's own grouping again (07 › *Revert and amend*; 04 › *Sets*): the
+/// An **Amend** reads the batch's own grouping again: the
 /// amend carries the grouping the batch recorded.
 #[test]
 fn an_amend_carries_the_batchs_own_grouping() {

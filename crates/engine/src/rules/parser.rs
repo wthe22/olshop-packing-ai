@@ -9,8 +9,6 @@ use super::condition::{
 use super::error::RulesError;
 use super::tokenizer::{Token, TokenKind, tokenize};
 
-// -------------------------------------------------------------------- parser
-
 pub(super) fn valid_calendar_date(text: &str) -> bool {
     text.parse::<Date>().is_ok()
 }

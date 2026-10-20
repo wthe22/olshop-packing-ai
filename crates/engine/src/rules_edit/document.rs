@@ -1,4 +1,4 @@
-//! A `categories.toml` as an editable document (08 › 5, *Edit file as text* / *Save*): comments
+//! A `categories.toml` as an editable document: comments
 //! and the text of the entries that were not changed are kept byte-for-byte.
 
 use std::fmt;
@@ -14,7 +14,7 @@ use super::error;
 
 /// The TOML item for a condition text: a literal string (`'…'`) like the file format, so the
 /// double quotes inside the condition need no escaping; a basic string only when the text holds
-/// a `'` (04 › *File format*).
+/// a `'`.
 fn when_item(text: &str) -> Item {
     if !text.contains('\'')
         && let Ok(value) = format!("'{text}'").parse::<toml_edit::Value>()
@@ -24,7 +24,7 @@ fn when_item(text: &str) -> Item {
     toml_edit::value(text)
 }
 
-/// One category entry as written in the file (04 › *File format*: `code`, `name`, `when`; those
+/// One category entry as written in the file (`code`, `name`, `when`; those
 /// are the only per-entry keys).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Entry {
@@ -34,11 +34,10 @@ pub struct Entry {
     pub when: Option<String>,
 }
 
-/// A rules file as an editable document (08 › 5, *Edit file as text* / *Save*). Comments and
+/// A rules file as an editable document. Comments and
 /// the text of the entries that were not changed are kept byte-for-byte; a changed condition is
 /// written in the printer's one-line canonical form. `name` is the file's name — `categories.toml`
-/// or a set's `categories/<set name>.toml` — so every error names the file it came from (04 ›
-/// *Sets*).
+/// or a set's `categories/<set name>.toml` — so every error names the file it came from.
 pub struct RulesDocument {
     doc: DocumentMut,
     name: String,
@@ -55,7 +54,7 @@ impl FromStr for RulesDocument {
 }
 
 impl RulesDocument {
-    /// Parse the text of a set's file whose name is `name` (04 › *Sets*), keeping its comments and
+    /// Parse the text of a set's file whose name is `name`, keeping its comments and
     /// formatting.
     pub fn from_str_named(text: &str, name: &str) -> Result<Self, RulesError> {
         let doc = DocumentMut::from_str(text).map_err(|e| error(format!("{name}: {e}")))?;
@@ -77,12 +76,12 @@ impl fmt::Display for RulesDocument {
 
 impl RulesDocument {
     /// An empty document for the data folder's own `categories.toml` (the set `default`); *Save*
-    /// on the one catch-all entry then writes the file (07 › *Inputs*).
+    /// on the one catch-all entry then writes the file.
     pub fn empty() -> Self {
         Self::empty_named(RULES_FILE_NAME)
     }
 
-    /// An empty document for a set's file whose name is `name` (04 › *Sets*): a data folder
+    /// An empty document for a set's file whose name is `name`: a data folder
     /// without the file starts from the one catch-all entry and *Save* writes it.
     pub fn empty_named(name: &str) -> Self {
         Self {
@@ -157,7 +156,7 @@ impl RulesDocument {
 
     /// Set (or clear, with `None`) an entry's condition from its condition text. When the new
     /// condition's canonical form equals the old one the file text is left exactly as it was
-    /// (08 › 5: "a category not changed keeps its text exactly as in the file").
+    /// ("a category not changed keeps its text exactly as in the file").
     pub fn set_condition(
         &mut self,
         index: usize,
@@ -187,7 +186,7 @@ impl RulesDocument {
         Ok(())
     }
 
-    /// Add an entry at position `index` (08 › 5: *+ Add category* adds one above the rest entry,
+    /// Add an entry at position `index` (*+ Add category* adds one above the rest entry,
     /// i.e. at the last position when the last entry has no condition).
     pub fn add(
         &mut self,
@@ -220,7 +219,6 @@ impl RulesDocument {
         Ok(())
     }
 
-    /// Delete an entry.
     pub fn remove(&mut self, index: usize) -> Result<(), RulesError> {
         let name = self.name.clone();
         let array = self.array_mut()?;

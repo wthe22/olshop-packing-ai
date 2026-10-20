@@ -1,6 +1,5 @@
 //! The label fields read from a page's text: the Order ID, the tracking ID and the
-//! `In transit by` deadline (03 › *Order ID from the label*; port of
-//! `tools/analysis/packing/labels.py`).
+//! `In transit by` deadline.
 
 use std::sync::OnceLock;
 

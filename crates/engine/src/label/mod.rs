@@ -1,10 +1,9 @@
-//! The courier data (03 › *Courier deduction*; port of `tools/analysis/packing/labels.py`): the
-//! `couriers.toml` table, its loading and the names it holds. The fields a page is read for and
-//! the deduction are in the modules beside this file.
+//! The courier data: the `couriers.toml` table, its loading and the names it holds. The fields a
+//! page is read for and the deduction are in the modules beside this file.
 //!
 //! The courier data lives in the data folder's `couriers.toml` and is the owner's, like
 //! `categories.toml`; the bundled file is the default of a fresh data folder and of a folder
-//! without the file (07 › *Inputs*, D-LABEL-1).
+//! without the file.
 
 use std::fmt;
 use std::path::Path;
@@ -21,10 +20,10 @@ pub use self::deduce::{
 };
 pub use self::fields::{find_order_id, find_ship_by, find_tracking_id};
 
-/// The courier data built into the program, written into a new data folder (07 › *Inputs*).
+/// The courier data built into the program, written into a new data folder.
 pub const COURIERS_TOML: &str = include_str!("../../couriers.toml");
 
-/// The courier file in the data folder (07 › *Inputs*).
+/// The courier file in the data folder.
 pub const COURIERS_FILE_NAME: &str = "couriers.toml";
 
 /// Invalid courier file; the message names the place (`couriers.toml`, its line).
@@ -120,15 +119,15 @@ impl Courier {
 #[derive(Clone, Debug)]
 pub struct CourierTable {
     pub couriers: Vec<Courier>,
-    /// Hashes answered **Not a courier** — a buying channel's strip, Q-LABEL-5 — and so ignored
-    /// wherever a logo is looked up. Written back by the logo prompt (D-LABEL-4).
+    /// Hashes answered **Not a courier** — a buying channel's strip — and so ignored
+    /// wherever a logo is looked up. Written back by the logo prompt.
     pub not_courier: Vec<String>,
 }
 
 impl CourierTable {
     /// Whether `hash` is a **byte** hash the data already knows: in a courier's `logo` list or in
     /// `not_courier`. `packing-pdf` computes the appearance hash only for a band image whose byte
-    /// hash this does not know (courier.md item 3; Q-LABEL-1 option 1).
+    /// hash this does not know (courier.md item 3).
     pub fn knows_byte_hash(&self, hash: &str) -> bool {
         self.not_courier.iter().any(|known| known == hash)
             || self
@@ -137,7 +136,7 @@ impl CourierTable {
                 .any(|courier| courier.logo.iter().any(|known| known == hash))
     }
 
-    /// The courier names in file order: the logo prompt's buttons (D-LABEL-1).
+    /// The courier names in file order: the logo prompt's buttons.
     pub fn names(&self) -> Vec<String> {
         self.couriers
             .iter()
@@ -146,7 +145,7 @@ impl CourierTable {
     }
 }
 
-/// The courier data built into the program, parsed once (07 › *Inputs*): the default of a data
+/// The courier data built into the program, parsed once: the default of a data
 /// folder without a `couriers.toml`.
 pub fn courier_data() -> &'static CourierTable {
     static DATA: OnceLock<CourierTable> = OnceLock::new();
@@ -159,7 +158,7 @@ pub fn couriers() -> &'static [Courier] {
 }
 
 /// The courier data of the data folder's file: its text, or the bundled file when `path` does not
-/// exist (07 › *Inputs*, D-LABEL-1). A broken file is an error naming its line.
+/// exist. A broken file is an error naming its line.
 pub fn load_couriers_file(path: &Path) -> Result<CourierTable, CouriersError> {
     match std::fs::read_to_string(path) {
         Ok(text) => load_couriers(&text),
@@ -170,8 +169,6 @@ pub fn load_couriers_file(path: &Path) -> Result<CourierTable, CouriersError> {
         ))),
     }
 }
-
-// --------------------------------------------------------------- couriers file
 
 const COURIERS_KEYS: &[&str] = &["not_courier", "courier"];
 const COURIER_KEYS: &[&str] = &["name", "logo", "shape", "text", "tracking"];
@@ -295,7 +292,7 @@ fn courier_of(entry: &toml::Value, index: usize) -> Result<Courier, CouriersErro
 }
 
 /// Load the couriers from the text of `couriers.toml` (the app reads the file). A TOML error and
-/// every field error name the file and, where the TOML parser gives it, the line (07 › *Inputs*).
+/// every field error name the file and, where the TOML parser gives it, the line.
 pub fn load_couriers(text: &str) -> Result<CourierTable, CouriersError> {
     let table: toml::Table = toml::from_str(text)
         .map_err(|error| CouriersError::new(format!("{COURIERS_FILE_NAME}: {error}")))?;

@@ -1,9 +1,8 @@
-//! The arithmetic of the check before saving (07 › *Check before saving*): compare the plan with
+//! The arithmetic of the check before saving: compare the plan with
 //! a read-back description of the written files.
 //!
 //! Pure — no PDF code — so every rule is tested on hand-made descriptions. A save with an empty
-//! [`Check`] renames straight away; any finding, error or warning, stops it until *Save anyway*
-//! (Q-APP-1).
+//! [`Check`] renames straight away; any finding, error or warning, stops it until *Save anyway*.
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -116,8 +115,7 @@ pub enum Finding {
 }
 
 impl Finding {
-    /// Whether the finding is a warning; every other finding is an error
-    /// (07 › *Check before saving*).
+    /// Whether the finding is a warning; every other finding is an error.
     pub fn is_warning(&self) -> bool {
         matches!(self, Finding::PageOrderDiffers { .. })
     }
@@ -211,7 +209,7 @@ impl fmt::Display for Finding {
     }
 }
 
-/// The check's two lists, kept apart (07 › *Check before saving*).
+/// The check's two lists, kept apart.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Check {
     pub errors: Vec<Finding>,
@@ -236,7 +234,7 @@ impl Check {
 }
 
 /// The page sequence of every saved PDF: the pick's runs, their orders, each repeated once per
-/// page (07 › *Check before saving*).
+/// page.
 pub fn expected_pdfs(plan: &PlanResult, orders: &[ReadOrder]) -> Vec<ExpectedPdf> {
     let index: BTreeMap<&OrderId, &ReadOrder> = orders
         .iter()
@@ -263,7 +261,7 @@ pub fn expected_pdfs(plan: &PlanResult, orders: &[ReadOrder]) -> Vec<ExpectedPdf
         .collect()
 }
 
-/// Compare the plan with the read-back description (07 › *Check before saving*): every order
+/// Compare the plan with the read-back description: every order
 /// exactly once, in one saved PDF, page for page and in order; every packing list's counts equal
 /// the plan's.
 pub fn compare(expected: &Expected, written: &Written) -> Check {
@@ -284,7 +282,7 @@ pub fn compare(expected: &Expected, written: &Written) -> Check {
     Check { errors, warnings }
 }
 
-/// One saved PDF's page sequence against the plan (07 › *Check before saving*).
+/// One saved PDF's page sequence against the plan.
 fn compare_pdf(
     pdf: &ExpectedPdf,
     actual: &[Option<OrderId>],

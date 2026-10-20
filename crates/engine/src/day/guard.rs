@@ -1,5 +1,5 @@
 //! The duplicate guard: the orders already saved today, with the batch and time they were first
-//! saved (07 › *What happens in one batch* step 4).
+//! saved.
 
 use std::fmt;
 
@@ -17,7 +17,7 @@ impl DayState {
     }
 
     /// The duplicate guard: drop the orders already saved today and list them with the batch,
-    /// saved-PDF number and time they were first saved (07 › *What happens in one batch* step 4).
+    /// saved-PDF number and time they were first saved.
     pub fn drop_saved(&self, orders: &[ReadOrder]) -> (Vec<ReadOrder>, Vec<Duplicate>) {
         let mut kept = Vec::new();
         let mut duplicates = Vec::new();
@@ -42,7 +42,7 @@ impl DayState {
     }
 }
 
-/// An order already saved today (07 › *What happens in one batch* step 4).
+/// An order already saved today.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Duplicate {
     pub order_id: OrderId,
@@ -53,7 +53,7 @@ pub struct Duplicate {
 }
 
 impl fmt::Display for Duplicate {
-    // 08 › *Messages*: the warning lists `<tracking ID>` (batch `<b>`, PDF `<k>`, `<time>`).
+    // The warning lists `<tracking ID>` (batch `<b>`, PDF `<k>`, `<time>`).
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -66,7 +66,7 @@ impl fmt::Display for Duplicate {
     }
 }
 
-/// The warning for the orders left out by the duplicate guard (08 › *Messages*).
+/// The warning for the orders left out by the duplicate guard.
 pub fn duplicates_warning(duplicates: &[Duplicate]) -> String {
     let list: Vec<String> = duplicates.iter().map(|dup| dup.to_string()).collect();
     format!(

@@ -116,8 +116,6 @@ pub struct Category {
     pub when: Option<String>,
 }
 
-// --------------------------------------------------------------- field table
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum FieldType {
     Text,

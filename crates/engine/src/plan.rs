@@ -1,6 +1,4 @@
-//! The plan, the picks from what is left, the plan edits, the runs and the numbering
-//! (07 › *What happens in one batch* step 5-6, *Plan*; 03 › *Picks*, *A saved PDF*,
-//! *Numbering and file names*).
+//! The plan, the picks from what is left, the plan edits, the runs and the numbering.
 //!
 //! The plan starts as the `categories.toml` entries in file order. Each entry takes its matching
 //! orders from what is left, in order; the leftovers become the final rest pick
@@ -13,11 +11,11 @@ use crate::names::{self, NameError};
 use crate::orders::ReadOrder;
 use crate::rules::{self, Category, Condition, evaluate};
 
-/// The rest pick's code and name when the last entry still has a condition (07 › *Plan*).
+/// The rest pick's code and name when the last entry still has a condition.
 pub const REST_CODE: &str = "?";
 pub const REST_NAME: &str = "Uncategorised";
 
-/// The rest pick (the final `SavedPdf` of the reference implementation).
+/// The rest pick (the final `SavedPdf`).
 pub fn rest_category() -> Category {
     Category {
         code: REST_CODE.to_string(),
@@ -60,8 +58,7 @@ impl From<NameError> for PlanError {
     }
 }
 
-/// A plan row's saved-PDF name: the owner's chosen whole name, or the name the plan suggests
-/// (07 › *Plan*).
+/// A plan row's saved-PDF name: the owner's chosen whole name, or the name the plan suggests.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FileName {
     /// No name chosen: the suggested name is used.
@@ -74,9 +71,9 @@ pub enum FileName {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PlanEntry {
     pub category: Category,
-    /// Skipped for this batch only; its orders fall to the rows below (07 › *Plan*).
+    /// Skipped for this batch only; its orders fall to the rows below.
     pub skipped: bool,
-    /// The owner's whole saved-PDF name, or the suggested one (07 › *Plan*).
+    /// The owner's whole saved-PDF name, or the suggested one.
     pub file_name: FileName,
 }
 
@@ -97,7 +94,7 @@ pub struct Plan {
 }
 
 impl Plan {
-    /// The rules applied in order: one row per `categories.toml` entry (08 › *Plan*).
+    /// The rules applied in order: one row per `categories.toml` entry.
     pub fn from_categories(categories: &[Category]) -> Self {
         Self {
             entries: categories.iter().cloned().map(PlanEntry::new).collect(),
@@ -116,7 +113,7 @@ impl Plan {
         self.entries.is_empty()
     }
 
-    /// Whether the plan is the unconfigured one catch-all entry (Q-UI-4, 08 › *3. Plan*): the
+    /// Whether the plan is the unconfigured one catch-all entry: the
     /// Plan screen then says every order goes into one PDF set.
     pub fn unconfigured(&self) -> bool {
         rules::unconfigured(self.entries.iter().map(|entry| &entry.category))
@@ -133,7 +130,7 @@ impl Plan {
         }
     }
 
-    /// Skip a pick for this batch only (08 › *Plan*).
+    /// Skip a pick for this batch only.
     pub fn skip(&mut self, index: usize) -> Result<(), PlanError> {
         self.set_skipped(index, true)
     }
@@ -182,7 +179,7 @@ impl Plan {
         Ok(())
     }
 
-    /// Add a one-off pick at position `at` (08 › *Plan*: above the rest row).
+    /// Add a one-off pick at position `at` (above the rest row).
     pub fn add(&mut self, at: usize, category: Category) -> Result<(), PlanError> {
         if at > self.entries.len() {
             return Err(PlanError::Position {
@@ -211,7 +208,7 @@ impl Plan {
         Ok(())
     }
 
-    /// Set the whole saved-PDF name for a pick (07 › *Plan*; whole name editable).
+    /// Set the whole saved-PDF name for a pick (whole name editable).
     pub fn rename(&mut self, index: usize, name: &str) -> Result<(), PlanError> {
         self.check_index(index)?;
         self.entries[index].file_name = FileName::Chosen(names::normalize_saved_pdf_name(name)?);
@@ -220,7 +217,7 @@ impl Plan {
 
     /// The counts and runs of every pick: the rows in order, each taking its matching orders
     /// from what is left; the leftovers are the rest pick. Numbering starts at `first_number`
-    /// and only picks that take orders get a number (03 › *Picks*).
+    /// and only picks that take orders get a number.
     pub fn count(&self, orders: &[ReadOrder], first_number: PdfNumber) -> PlanResult {
         let mut remaining: Vec<&ReadOrder> = orders.iter().collect();
         let mut categories: Vec<CategoryResult> = Vec::new();
@@ -296,8 +293,7 @@ fn build_category(number: PdfNumber, entry: &PlanEntry, orders: &[&ReadOrder]) -
 type ContentsKey = Vec<(String, String, i64)>;
 
 /// Re-order a pick's orders into runs: identical contents together, runs sorted by (number of
-/// orders descending, contents text ascending); inside a run the download page order (03 ›
-/// *A saved PDF*).
+/// orders descending, contents text ascending); inside a run the download page order.
 fn runs(orders: &[&ReadOrder]) -> Vec<RunResult> {
     let mut groups: Vec<(ContentsKey, Vec<&ReadOrder>)> = Vec::new();
     for order in orders {
@@ -329,7 +325,7 @@ pub struct RunResult {
     pub orders: Vec<OrderId>,
 }
 
-/// One pick: the saved PDF it will become (07 › *Plan*).
+/// One pick: the saved PDF it will become.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CategoryResult {
     pub number: PdfNumber,
@@ -369,7 +365,7 @@ impl PlanResult {
             .collect()
     }
 
-    /// Refuse two saved PDFs of one batch with the same name (07 › *Plan*).
+    /// Refuse two saved PDFs of one batch with the same name.
     pub fn check_file_names(&self) -> Result<(), NameError> {
         names::check_unique_names(&self.file_names())
     }

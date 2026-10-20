@@ -1,6 +1,5 @@
 //! The courier data as an editable document: the logo prompt's answers are written into
-//! `couriers.toml`, keeping the file's comments and order (D-LABEL-4, Q-LABEL-7 default;
-//! 07 › *Inputs*).
+//! `couriers.toml`, keeping the file's comments and order.
 //!
 //! Like `RulesDocument` for `categories.toml`, the file is edited through `toml_edit`, so a
 //! comment and the entries the prompt did not change survive a write. The app writes the hash the
@@ -78,14 +77,14 @@ impl CouriersDocument {
         )))
     }
 
-    /// Remember a logo the owner named: its hash is appended to that courier's `logo` list
-    /// (Q-LABEL-7 default). An already-remembered hash changes nothing.
+    /// Remember a logo the owner named: its hash is appended to that courier's `logo` list. An
+    /// already-remembered hash changes nothing.
     pub fn add_courier_logo(&mut self, name: &str, hash: &str) -> Result<(), CouriersError> {
         let table = self.courier_table_mut(name)?;
         push_hash(table, "logo", hash)
     }
 
-    /// Remember an image answered **Not a courier** (a buying channel's strip, Q-LABEL-5): its
+    /// Remember an image answered **Not a courier** (a buying channel's strip): its
     /// hash is appended to the top-level `not_courier` list.
     pub fn add_not_courier(&mut self, hash: &str) -> Result<(), CouriersError> {
         // `not_courier` is a plain key of the root table; `toml_edit` writes the root table's

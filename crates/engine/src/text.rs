@@ -9,8 +9,8 @@ pub struct Run {
     pub text: String,
 }
 
-/// One candidate courier logo of a page: an image whose whole box lies in the page's top band
-/// (Q-LABEL-5). `packing-pdf` builds these; the courier rule looks the hashes up in
+/// One candidate courier logo of a page: an image whose whole box lies in the page's top band.
+/// `packing-pdf` builds these; the courier rule looks the hashes up in
 /// `couriers.toml` (courier.md items 1 and 3).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LogoImage {
@@ -19,7 +19,7 @@ pub struct LogoImage {
     pub hash: String,
     /// XXH3-64 (16 lowercase hex) of the image's **appearance**, computed by `packing-pdf` only
     /// when `hash` is not yet known to `couriers.toml` (`logo`/`not_courier`). `None` means the
-    /// table already knew the bytes, so nothing had to be decoded (Q-LABEL-1 option 1).
+    /// table already knew the bytes, so nothing had to be decoded.
     pub appearance: Option<String>,
 }
 
@@ -29,10 +29,10 @@ pub struct PageText {
     /// The page's whole text in reading order (PDFium `PdfPageText::all`), for the Order ID,
     /// tracking ID, `In transit by` and courier searches.
     pub text: String,
-    /// The runs rebuilt from the characters (07 › *Text runs from PDFium*), for the slip table.
+    /// The runs rebuilt from the characters, for the slip table.
     pub runs: Vec<Run>,
     /// Page width in points.
     pub width: f64,
-    /// The images whose whole box lies in the page's top band (Q-LABEL-5), in page order.
+    /// The images whose whole box lies in the page's top band, in page order.
     pub logos: Vec<LogoImage>,
 }

@@ -1,4 +1,4 @@
-//! File and folder names (07 › *Day folder*; 03 › *Numbering and file names*).
+//! File and folder names.
 //!
 //! The suggested saved-PDF name is `<n> <code> <name> ×<orders>.pdf`; the owner may replace the
 //! whole name (`normalize_saved_pdf_name`). Characters Windows forbids in a name become `-`,
@@ -13,11 +13,10 @@ use crate::ids::{BatchNumber, PdfNumber};
 /// `<name>` limit; keeps file names clear of the Windows path limit (03).
 pub const NAME_LIMIT: usize = 100;
 
-/// The batch's day state (07 › *`state.json`*).
+/// The batch's day state.
 pub const STATE_FILE: &str = "state.json";
-/// The batch summary text.
 pub const SUMMARY_FILE: &str = "summary.txt";
-/// The batch's copy of the label files read; amend reads them back (07 › *Day folder*).
+/// The batch's copy of the label files read; amend reads them back.
 pub const DOWNLOAD_DIR: &str = "download";
 
 /// A saved-PDF or batch name is invalid.
@@ -58,7 +57,7 @@ fn is_illegal(c: char) -> bool {
     matches!(c, '\\' | '/' | ':' | '*' | '?' | '"' | '<' | '>' | '|')
 }
 
-/// Characters Windows forbids in a file name (`\ / : * ? " < > |`) become `-` (07 › *Day folder*).
+/// Characters Windows forbids in a file name (`\ / : * ? " < > |`) become `-`.
 pub fn sanitize_file_name(name: &str) -> String {
     name.chars()
         .map(|c| if is_illegal(c) { '-' } else { c })
@@ -76,7 +75,7 @@ fn cut_name(name: &str) -> String {
     }
 }
 
-/// The suggested saved-PDF name `<n> <code> <name> ×<orders>.pdf` (07 › *Plan*): the `<name>`
+/// The suggested saved-PDF name `<n> <code> <name> ×<orders>.pdf`: the `<name>`
 /// part is cut at [`NAME_LIMIT`], then illegal characters in the whole name become `-` (the code
 /// `?` of the rest pick becomes `-`).
 pub fn suggested_saved_pdf_name(
@@ -105,12 +104,12 @@ pub fn normalize_saved_pdf_name(name: &str) -> Result<String, NameError> {
     Ok(format!("{stem}.pdf"))
 }
 
-/// A batch folder name `batch <b>` (07 › *Day folder*).
+/// A batch folder name `batch <b>`.
 pub fn batch_folder(batch: BatchNumber) -> String {
     format!("batch {batch}")
 }
 
-/// The temporary folder a save is written into before it is renamed (07 › *Save*).
+/// The temporary folder a save is written into before it is renamed.
 pub fn temp_batch_folder(batch: BatchNumber) -> String {
     format!("batch {batch}.partial")
 }
@@ -120,7 +119,7 @@ pub fn day_folder(date: Date) -> String {
     date.strftime("%Y-%m-%d").to_string()
 }
 
-/// A packing-list file name (07 › *Day folder*): `number` is the saved-PDF number for scope
+/// A packing-list file name: `number` is the saved-PDF number for scope
 /// `per-pdf` (`None` for `whole`); `layout` is added only when several layouts are written.
 pub fn packing_list_file_name(number: Option<PdfNumber>, layout: Option<&str>) -> String {
     let mut name = String::from("packing-list");
@@ -134,7 +133,7 @@ pub fn packing_list_file_name(number: Option<PdfNumber>, layout: Option<&str>) -
     name
 }
 
-/// Refuse two saved PDFs of one batch writing the same name (07 › *Plan*). The comparison is
+/// Refuse two saved PDFs of one batch writing the same name. The comparison is
 /// case-insensitive, as Windows file names are.
 pub fn check_unique_names(names: &[String]) -> Result<(), NameError> {
     for (second, name) in names.iter().enumerate() {

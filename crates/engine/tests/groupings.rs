@@ -1,5 +1,5 @@
 //! `groupings.rs`: the grouping list of a data folder, the file of a grouping, the grouping-name
-//! rules, a grouping with no file and create/delete (04 › *Sets*; 07 › *Rules file*).
+//! rules, a grouping with no file and create/delete.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -53,7 +53,7 @@ fn names(groupings: &[GroupingEntry]) -> Vec<String> {
         .collect()
 }
 
-/// The grouping list of a data folder (04 › *Sets*): `default` always, then a grouping per
+/// The grouping list of a data folder: `default` always, then a grouping per
 /// `<name>.toml` in its `categories/` folder. Read with only `categories.toml`, only
 /// `categories/*.toml`, with both and with neither; a file that is not `.toml`, and a folder, are
 /// not groupings.
@@ -100,7 +100,7 @@ fn the_grouping_list_is_default_and_the_categories_folder_files() {
 }
 
 /// A grouping writes to and loads from its own file, `categories/<grouping name>.toml`; a broken
-/// file gives its own line and column, naming the grouping's file (04 › *Sets*).
+/// file gives its own line and column, naming the grouping's file.
 #[test]
 fn a_grouping_reads_and_writes_its_own_file() {
     let dir = TempDir::new("read-write");
@@ -138,7 +138,7 @@ fn a_grouping_reads_and_writes_its_own_file() {
 }
 
 /// A grouping with no file — a fresh data folder, or a grouping named but not saved yet — reads
-/// as the one catch-all entry (04 › *Sets*).
+/// as the one catch-all entry.
 #[test]
 fn a_grouping_with_no_file_reads_as_the_one_catch_all_entry() {
     let dir = TempDir::new("no-file");
@@ -153,7 +153,7 @@ fn a_grouping_with_no_file_reads_as_the_one_catch_all_entry() {
 }
 
 /// The data folder's own `categories.toml` is never moved, renamed or rewritten by listing the
-/// groupings or by another grouping's save (04 › *Sets*).
+/// groupings or by another grouping's save.
 #[test]
 fn the_data_folders_own_categories_file_is_never_moved_or_rewritten() {
     let dir = TempDir::new("default-untouched");
@@ -177,7 +177,7 @@ fn the_data_folders_own_categories_file_is_never_moved_or_rewritten() {
     );
 }
 
-/// A file `categories/default.toml` is refused with both files named (04 › *Sets*).
+/// A file `categories/default.toml` is refused with both files named.
 #[test]
 fn a_categories_default_file_is_refused_with_both_files_named() {
     let dir = TempDir::new("default-file");
@@ -201,7 +201,7 @@ fn a_categories_default_file_is_refused_with_both_files_named() {
     );
 }
 
-/// The grouping-name rules (04 › *Sets*): the file name is the grouping name, characters Windows
+/// The grouping-name rules: the file name is the grouping name, characters Windows
 /// forbids become `-`, an empty name is refused, and the name `default` is the data folder's own
 /// `categories.toml` — not created, not deleted, not renamed.
 #[test]
@@ -242,7 +242,7 @@ fn the_grouping_name_rules_refuse_an_empty_name_and_default() {
     );
 }
 
-/// **Delete set** removes the grouping's file (04 › *Sets*): its name leaves the grouping list and
+/// **Delete set** removes the grouping's file: its name leaves the grouping list and
 /// its categories fall back to the one catch-all entry; a grouping with no file is already gone.
 #[test]
 fn deleting_a_grouping_removes_its_file_and_its_name_leaves_the_list() {
@@ -272,8 +272,8 @@ fn deleting_a_grouping_removes_its_file_and_its_name_leaves_the_list() {
         .expect("a grouping with no file is already gone");
 }
 
-/// A new grouping is empty (the one catch-all entry) or a copy of another grouping's file
-/// (04 › *Sets*); a file already there is never overwritten.
+/// A new grouping is empty (the one catch-all entry) or a copy of another grouping's file; a file
+/// already there is never overwritten.
 #[test]
 fn a_new_grouping_is_empty_or_a_copy_of_another_grouping() {
     let dir = TempDir::new("copy");

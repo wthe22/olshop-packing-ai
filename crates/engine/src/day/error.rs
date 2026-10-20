@@ -6,11 +6,11 @@ use std::path::{Path, PathBuf};
 /// A `state.json` could not be read or written, or a batch folder deleted.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DayError {
-    /// `state.json` cannot be read: `<message>` (the reference implementation's `PickError`).
+    /// `state.json` cannot be read: `<message>`.
     Read { path: PathBuf, message: String },
-    /// A folder cannot be written (08 › *Messages*: "Cannot write to `<folder>`: `<reason>`").
+    /// A folder cannot be written ("Cannot write to `<folder>`: `<reason>`").
     Write { folder: PathBuf, message: String },
-    /// A file is open in another program (08 › *Messages*: Windows refuses the delete/rename).
+    /// A file is open in another program (Windows refuses the delete/rename).
     FileInUse { path: PathBuf },
 }
 

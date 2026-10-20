@@ -1,5 +1,5 @@
 //! couriers_edit.rs: the hash the owner taught is written into `couriers.toml`, comments and
-//! order kept (D-LABEL-4, Q-LABEL-7 default).
+//! order kept.
 
 use std::str::FromStr;
 

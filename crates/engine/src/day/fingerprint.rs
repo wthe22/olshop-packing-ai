@@ -8,7 +8,7 @@ use xxhash_rust::xxh3::Xxh3;
 
 use super::error::DayError;
 
-/// A label file's identity: size and XXH3-64 of its bytes (07 › *New batch*).
+/// A label file's identity: size and XXH3-64 of its bytes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Fingerprint {
     pub size: u64,

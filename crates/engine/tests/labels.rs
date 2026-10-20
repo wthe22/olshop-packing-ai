@@ -1,10 +1,7 @@
-//! label.rs: Order ID search, ship_by and courier deduction, on plain text (cases ported from
-//! `tools/analysis/tests/test_labels.py`).
+//! label.rs: Order ID search, ship_by and courier deduction, on plain text.
 
 use packing_engine::ids::{OrderId, TrackingId};
 use packing_engine::label::{deduce_courier, find_order_id, find_ship_by, find_tracking_id};
-
-// --- find_order_id -------------------------------------------------------------------------
 
 #[test]
 fn jt_order_id_is_found_before_whitespace_is_removed() {
@@ -43,8 +40,6 @@ fn second_search_accepts_the_fullwidth_colon() {
     );
 }
 
-// --- find_tracking_id ----------------------------------------------------------------------
-
 #[test]
 fn tracking_id_is_never_the_order_id() {
     let order_id = OrderId::new("580000000000000001");
@@ -74,8 +69,6 @@ fn tracking_id_of_a_spaced_page_uses_the_collapsed_text() {
         Some("TKP0000000106")
     );
 }
-
-// --- deduce_courier: the two-clue rule (courier.md items 1, 2, 4, 5) -----------------------
 
 use packing_engine::label::{Courier, CourierTable, deduce_courier_in};
 use packing_engine::text::LogoImage;
@@ -323,7 +316,7 @@ fn the_built_in_table_names_the_measured_logos() {
 
 #[test]
 fn an_unseen_logo_is_not_a_name() {
-    // An unseen logo on a page blocks the fallbacks: the table must be asked (D-LABEL-4).
+    // An unseen logo on a page blocks the fallbacks: the table must be asked.
     assert_eq!(
         deduce_courier(
             "Shipping label",
@@ -374,8 +367,6 @@ fn the_shared_twelve_digit_form_alone_gives_an_empty_courier() {
 fn courier_is_empty_when_nothing_matches() {
     assert_eq!(deduce_courier("no text clue", None, &[]), None);
 }
-
-// --- find_ship_by --------------------------------------------------------------------------
 
 #[test]
 fn ship_by_is_read_from_the_label_and_from_a_spaced_page() {

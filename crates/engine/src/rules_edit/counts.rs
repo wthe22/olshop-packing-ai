@@ -1,11 +1,11 @@
 //! The live counts of the open batch: how many orders each category takes, for the Categories
-//! screen's *In batch `<n>`* (08 › 5).
+//! screen's *In batch `<n>`*.
 
 use crate::orders::Order;
 use crate::rules::{Category, evaluate};
 
-/// The orders each category takes in the open batch, in file order from what is left (08 › 5
-/// "In batch 3"). The same first-match, take-from-what-is-left rule as `plan.rs`: a category
+/// The orders each category takes in the open batch, in file order from what is left.
+/// The same first-match, take-from-what-is-left rule as `plan.rs`: a category
 /// without a condition takes every order still left (the rest).
 pub fn counts(categories: &[Category], orders: &[Order]) -> Vec<usize> {
     let mut remaining: Vec<&Order> = orders.iter().collect();

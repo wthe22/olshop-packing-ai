@@ -97,8 +97,6 @@ fn one_row() -> Vec<Row<'static>> {
     vec![("Spion Beat", "honda", "SELL-SPI-01", 1)]
 }
 
-// --- display_name --------------------------------------------------------------------------
-
 #[test]
 fn display_name_cuts_at_the_pipe_and_appends_the_variation() {
     assert_eq!(
@@ -111,8 +109,6 @@ fn display_name_cuts_at_the_pipe_and_appends_the_variation() {
     );
     assert_eq!(display_name("Sepatu", "Default"), "Sepatu");
 }
-
-// --- read_batch: multi-page order ----------------------------------------------------------
 
 #[test]
 fn second_page_without_order_id_continues_the_first() {
@@ -231,8 +227,6 @@ fn a_page_without_order_id_cannot_continue_across_a_file() {
     );
 }
 
-// --- read_batch: errors --------------------------------------------------------------------
-
 #[test]
 fn first_page_without_order_id_stops_with_file_and_page() {
     let p0 = plain_page("JY0000001234\nJumlah : 1pcs");
@@ -288,8 +282,6 @@ fn some_plain_pages_stop_naming_the_file_and_pages() {
         other => panic!("expected NoSlip, got {other:?}"),
     }
 }
-
-// --- read_batch: warnings ------------------------------------------------------------------
 
 #[test]
 fn qty_total_difference_is_warned() {
@@ -353,8 +345,6 @@ fn a_missing_tracking_id_is_warned() {
             .any(|w| matches!(w, Warning::TrackingIdMissing { order_ids } if order_ids == &vec![OrderId::new("580000000000000004")]))
     );
 }
-
-// --- unseen logos and the owner's answer (Q-LABEL-1, D-LABEL-4) ----------------------------
 
 #[test]
 fn a_known_logo_names_the_order_and_reports_no_unseen_logo() {

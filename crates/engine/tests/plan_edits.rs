@@ -1,5 +1,5 @@
 //! `plan.rs`: the plan edits (skip, move, add, rename), picks from what is left, runs and
-//! numbering (07 › *Plan*; mirrors the relevant cases of tools/analysis/tests/test_picks.py).
+//! numbering (mirrors the relevant cases of tools/analysis/tests/test_picks.py).
 
 use packing_engine::ids::{OrderId, PdfNumber, TrackingId};
 use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
@@ -146,7 +146,7 @@ fn the_last_entry_without_a_condition_takes_the_rest() {
 }
 
 /// A folder without `categories.toml` uses the one catch-all entry: every order goes into one
-/// PDF set, and the plan is the unconfigured state (07 › *Inputs*, Q-UI-4).
+/// PDF set, and the plan is the unconfigured state.
 #[test]
 fn the_catch_all_entry_takes_every_order_and_is_the_unconfigured_plan() {
     let orders = sample_orders();

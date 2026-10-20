@@ -1,4 +1,4 @@
-//! Undo and redo the day's last batch, reusing its numbers (07 › *Revert and amend*).
+//! Undo and redo the day's last batch, reusing its numbers.
 
 use std::path::{Path, PathBuf};
 
@@ -11,7 +11,7 @@ use super::state::{BatchEntry, DayState};
 impl DayState {
     /// Undo the last batch: remove it and its orders from the state. Returns the removed batch
     /// (the caller deletes its folder with [`delete_batch_folder`](super::delete_batch_folder));
-    /// the numbers are reused (07 › *Revert and amend*).
+    /// the numbers are reused.
     pub fn revert_last(&mut self) -> Option<BatchEntry> {
         let last = self.batches.iter().map(|batch| batch.batch).max()?;
         let index = self.batches.iter().position(|batch| batch.batch == last)?;
@@ -20,7 +20,7 @@ impl DayState {
         Some(removed)
     }
 
-    /// Start an amend of the last batch (07 › *Revert and amend*): the `download/` file paths in
+    /// Start an amend of the last batch: the `download/` file paths in
     /// their stored order, and the state with the last batch removed (the duplicate guard then
     /// ignores the batch's own orders, and the numbers are reused).
     pub fn amend(&self, day_dir: &Path) -> Option<Amend> {
@@ -53,7 +53,7 @@ impl DayState {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Amend {
     pub batch: BatchNumber,
-    /// The grouping the batch was packed with (04 › *Sets*): an amend reads it again, whatever
+    /// The grouping the batch was packed with: an amend reads it again, whatever
     /// grouping was used last.
     pub grouping: Grouping,
     pub files: Vec<PathBuf>,

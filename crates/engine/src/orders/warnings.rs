@@ -1,5 +1,5 @@
 //! What a read reports besides the orders: the non-fatal warnings, the stops, and the unseen-logo
-//! types and the owner's answers (08 › *4. Messages*; D-LABEL-4).
+//! types and the owner's answers.
 
 use std::fmt;
 
@@ -10,7 +10,7 @@ use crate::label::{self, CourierTable};
 
 use super::{Order, ReadOrder, Reading};
 
-/// A non-fatal problem found while reading; the texts are 08 › *4. Messages*.
+/// A non-fatal problem found while reading.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Warning {
     /// The slip's `Qty Total` differs from the sum of the order's `Qty`.
@@ -27,7 +27,7 @@ pub enum Warning {
 }
 
 /// How a read warning names an order: by the tracking ID that is printed big on the label, or by
-/// the Order ID when the label printed no tracking ID (08 › *Messages*).
+/// the Order ID when the label printed no tracking ID.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum OrderLabel {
     Tracking(TrackingId),
@@ -44,9 +44,9 @@ impl fmt::Display for OrderLabel {
 }
 
 impl Warning {
-    /// The unknown-courier warning for a set of orders (08 › *Messages*), `None` when every
+    /// The unknown-courier warning for a set of orders, `None` when every
     /// order's courier is named. Read builds it after the deduction; the logo prompt uses it
-    /// again to refresh the warning after an answer named some of those orders (D-LABEL-4).
+    /// again to refresh the warning after an answer named some of those orders.
     pub fn unknown_courier(orders: &[ReadOrder]) -> Option<Warning> {
         let unknown: Vec<&Order> = orders
             .iter()
@@ -119,8 +119,8 @@ impl fmt::Display for Warning {
     }
 }
 
-/// A header-band image the courier data does not know (Q-LABEL-1, D-LABEL-4). The logo prompt
-/// asks the owner about each one once; the answer is remembered in `couriers.toml` (D-LABEL-4).
+/// A header-band image the courier data does not know. The logo prompt
+/// asks the owner about each one once; the answer is remembered in `couriers.toml`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct UnseenLogo {
     /// XXH3-64 (16 hex) of the image's encoded bytes.
@@ -139,10 +139,10 @@ impl UnseenLogo {
         self.order_ids.len()
     }
 
-    /// Apply the owner's answer about this logo to a set of orders (the logo prompt, D-LABEL-4).
+    /// Apply the owner's answer about this logo to a set of orders (the logo prompt).
     /// A courier name fills the `courier` of the orders carrying the logo **only when the two
     /// clues agree**: the order's tracking-ID form must have that courier among its candidates
-    /// (`table`; D-LABEL-2), else the order stays unknown. *Not a courier* and *Skip* name
+    /// (`table`), else the order stays unknown. *Not a courier* and *Skip* name
     /// nothing. Returns how many orders the answer named.
     pub fn apply(
         &self,
@@ -186,7 +186,7 @@ pub enum LogoAnswer {
 }
 
 impl Reading {
-    /// Apply one answer to the unseen logo `hash` (the logo prompt, D-LABEL-4). A courier name
+    /// Apply one answer to the unseen logo `hash` (the logo prompt). A courier name
     /// fills the `courier` of the orders carrying the logo **only when the two clues agree**
     /// ([`UnseenLogo::apply`]); *Not a courier* and *Skip* name nothing. The answered logo leaves
     /// `unseen_logos`. Returns how many orders the answer named.
@@ -217,7 +217,7 @@ pub struct NoSlipFile {
     pub pages: Vec<usize>,
 }
 
-/// The no-slip stop (07 › *Every page must carry a packing slip*).
+/// The no-slip stop.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NoSlip {
     pub files: Vec<NoSlipFile>,
@@ -226,7 +226,7 @@ pub struct NoSlip {
 }
 
 impl fmt::Display for NoSlip {
-    // Texts of 08 › Messages: the file and page list only when some pages carry a slip.
+    // The warning texts: the file and page list only when some pages carry a slip.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

@@ -1,5 +1,4 @@
-//! The day: `state.json`, the duplicate guard, the file fingerprints, revert and amend
-//! (07 › *Day folder*, *`state.json`*, *Revert and amend*).
+//! The day: `state.json`, the duplicate guard, the file fingerprints, revert and amend.
 //!
 //! One `state.json` per day folder holds the batches, their saved PDFs and every saved order.
 //! The file is written whole (to `state.json.tmp`, then replaced) so a crash never leaves half

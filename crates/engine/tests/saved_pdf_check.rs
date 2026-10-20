@@ -1,9 +1,9 @@
 //! The check before saving's arithmetic on made-up plan and read-back descriptions
-//! (07 › *Check before saving*): a doubled page, a dropped page, an order in two picks and in
+//! a doubled page, a dropped page, an order in two picks and in
 //! none, a wrong label and a swapped page order — each reported, each in its own list.
 //!
 //! Every defect test also asks the same description with the check switched off: the result is
-//! empty, so removing the check makes these tests fail, exactly as the 2.15 display tests fail
+//! empty, so removing the check makes these tests fail, exactly as the display tests fail
 //! when their fix is reverted.
 
 use packing_engine::ids::{OrderId, PdfNumber};

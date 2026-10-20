@@ -1,5 +1,5 @@
 //! The `state.json` model and its atomic read/write: the batches, their saved PDFs, every saved
-//! order, and the numbers a new batch takes (07 › *`state.json`*, *Day folder*, *Save*).
+//! order, and the numbers a new batch takes.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -13,23 +13,23 @@ use crate::names;
 use super::error::{DayError, io_error};
 use super::fingerprint::Fingerprint;
 
-/// A label file read in a batch: name, size, XXH3-64 and page count (07 › *`state.json`*).
+/// A label file read in a batch: name, size, XXH3-64 and page count.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FileEntry {
     pub name: String,
     pub size: u64,
-    /// XXH3-64 of the whole file, 16 lowercase hex characters (07 › *`state.json`*).
+    /// XXH3-64 of the whole file, 16 lowercase hex characters.
     #[serde(default)]
     pub xxh3: String,
     pub pages: usize,
-    /// The SHA-256 a day written before 2.20 stored here. Such a day still opens; the value is
+    /// The SHA-256 an older version of the program stored here. Such a day still opens; the value is
     /// never matched, since the "used twice" hint only matters inside one day, and it is never
     /// written back: a saved `state.json` carries `xxh3` only.
     #[serde(rename = "sha256", default, skip_serializing)]
     pub legacy_sha256: Option<String>,
 }
 
-/// One saved PDF of a batch (07 › *`state.json`*).
+/// One saved PDF of a batch.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PdfEntry {
     pub number: PdfNumber,
@@ -40,7 +40,7 @@ pub struct PdfEntry {
     pub runs: usize,
 }
 
-/// Where the batch's packing list goes (07 › *Packing list*).
+/// Where the batch's packing list goes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Scope {
@@ -106,7 +106,7 @@ impl std::str::FromStr for Scope {
     }
 }
 
-/// The batch's packing-list choice (07 › *Packing list*).
+/// The batch's packing-list choice.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PackingListChoice {
     pub scope: Scope,
@@ -122,7 +122,7 @@ impl Default for PackingListChoice {
     }
 }
 
-/// One item line of a saved order, as the Search panel finds it (07 › *`state.json`*): the slip's
+/// One item line of a saved order, as the Search panel finds it: the slip's
 /// `name`, `variation`, `seller_sku` and `quantity`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SavedItem {
@@ -135,7 +135,7 @@ pub struct SavedItem {
 }
 
 /// One order saved by a batch; the duplicate guard reads these and the Search panel finds them by
-/// the fields kept here (07 › *`state.json`*).
+/// the fields kept here.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SavedOrder {
     pub order_id: OrderId,
@@ -151,7 +151,7 @@ pub struct SavedOrder {
     pub pdf: PdfNumber,
     pub run: usize,
     /// The order's lines, each with its `name`, `variation`, `seller_sku` and `quantity`. Written
-    /// at save (07 › *`state.json`*); empty on an order saved before search existed, which is
+    /// at save; empty on an order saved before search existed, which is
     /// found by Order ID or tracking ID only (*items not stored*, [Search](../ui/search.md)).
     #[serde(default)]
     pub items: Vec<SavedItem>,
@@ -211,12 +211,12 @@ where
     Ok((!text.is_empty()).then_some(text))
 }
 
-/// One saved batch (07 › *`state.json`*).
+/// One saved batch.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BatchEntry {
     pub batch: BatchNumber,
     pub save_time: String,
-    /// The grouping the batch was packed with (07 › *`state.json`*; 04 › *Sets*); written at
+    /// The grouping the batch was packed with; written at
     /// save and absent in an older file, which loads as `default`. An **Amend** reads the
     /// batch's own grouping again, whatever grouping was used last.
     #[serde(rename = "set", default)]
@@ -224,24 +224,23 @@ pub struct BatchEntry {
     pub files: Vec<FileEntry>,
     pub pdfs: Vec<PdfEntry>,
     pub packing_list: PackingListChoice,
-    /// The saved-PDF numbers of the batch whose **Printed** tick is set (07 › *`state.json`*);
+    /// The saved-PDF numbers of the batch whose **Printed** tick is set;
     /// written when a tick is clicked; absent loads as empty. A note only: nothing is enforced,
     /// and it belongs to the batch, so a revert takes it and an amend writes the batch afresh.
     #[serde(default)]
     pub printed: Vec<PdfNumber>,
-    /// The read warnings of the batch, as shown on the Plan screen (07 › *`state.json`*), plus
+    /// The read warnings of the batch, as shown on the Plan screen, plus
     /// the check before saving's warnings; the Day screen *Warnings ▸* reads them without
     /// re-reading the files. Defaulted so an older file still loads.
     #[serde(default)]
     pub warnings: Vec<String>,
-    /// The check before saving's errors, kept apart from the warnings (07 › *Check before
-    /// saving*); present only when the batch was saved anyway. Defaulted so an older file loads.
+    /// The check before saving's errors, kept apart from the warnings; present only when the batch
+    /// was saved anyway. Defaulted so an older file loads.
     #[serde(default)]
     pub errors: Vec<String>,
 }
 
 impl BatchEntry {
-    /// Whether saved-PDF row `pdf` of this batch is ticked (07 › *`state.json`*).
     pub fn is_printed(&self, pdf: PdfNumber) -> bool {
         self.printed.contains(&pdf)
     }
@@ -272,8 +271,7 @@ impl DayState {
         }
     }
 
-    /// Read the day's `state.json`; a missing file is an empty state for the folder's day
-    /// (the reference implementation's `load_state`).
+    /// Read the day's `state.json`; a missing file is an empty state for the folder's day.
     pub fn load(day_dir: &Path) -> Result<Self, DayError> {
         let path = state_path(day_dir);
         if !path.is_file() {
@@ -290,7 +288,7 @@ impl DayState {
     }
 
     /// Write the whole state: `state.json.tmp`, then replace, so a crash never leaves half a
-    /// file (07 › *`state.json`*).
+    /// file.
     pub fn save(&self, day_dir: &Path) -> Result<(), DayError> {
         fs::create_dir_all(day_dir).map_err(|error| io_error(day_dir, error))?;
         let mut text = serde_json::to_string_pretty(self).expect("state serializes");
@@ -310,7 +308,7 @@ impl DayState {
             .map_or(BatchNumber::new(1), BatchNumber::next)
     }
 
-    /// The day's next saved-PDF number, after the last batch's last number (07 › *Save* step 1).
+    /// The day's next saved-PDF number, after the last batch's last number.
     pub fn next_pdf_number(&self) -> PdfNumber {
         let from_batches = self
             .batches
@@ -323,7 +321,7 @@ impl DayState {
             .map_or(PdfNumber::new(1), PdfNumber::next)
     }
 
-    /// The batch that read this file (`used in batch n`, 07 › *New batch*), by XXH3-64 and size.
+    /// The batch that read this file (`used in batch n`), by XXH3-64 and size.
     pub fn used_in_batch(&self, fingerprint: &Fingerprint) -> Option<BatchNumber> {
         self.batches
             .iter()
@@ -337,7 +335,7 @@ impl DayState {
     }
 
     /// Tick or untick saved-PDF row `pdf` of batch `batch` and write the day's `state.json`
-    /// (07 › *`state.json`*; 08 › *1. Day*): the tick is a note only. Ticking twice leaves one
+    /// the tick is a note only. Ticking twice leaves one
     /// entry, unticking removes it, and a batch or saved-PDF number the day does not hold changes
     /// nothing (nothing is written then). The file is written whole, as [`save`](Self::save) does
     /// (to `state.json.tmp`, then replace).

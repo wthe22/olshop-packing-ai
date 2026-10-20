@@ -1,4 +1,4 @@
-//! Editing `categories.toml` through `RulesDocument` (08 › 5; task 2.12): comments and unchanged
+//! Editing `categories.toml` through `RulesDocument`: comments and unchanged
 //! condition texts survive a save, a changed condition is written canonically, add/move/delete
 //! give the expected order, and the result loads with `load_rules`.
 
@@ -140,7 +140,7 @@ fn add_move_delete_keep_the_order() {
     let mut edited = doc(SIMPLE);
     assert_eq!(codes(&edited), ["A", "B", "Z"].map(String::from));
 
-    // Add above the rest entry (08 › 5: the last entry has no condition).
+    // Add above the rest entry (the last entry has no condition).
     edited
         .add(2, "X", "Extra", Some("name contains \"z\""))
         .expect("add");
@@ -225,8 +225,7 @@ fn reorder_keeps_the_chosen_entries_in_order() {
 
 #[test]
 fn a_document_without_a_file_starts_from_the_catch_all_entry() {
-    // A data folder without `categories.toml`: *Save* on the one catch-all entry writes the file
-    // (07 › *Inputs*, 08 › *5. Categories*).
+    // A data folder without `categories.toml`: *Save* on the one catch-all entry writes the file.
     let mut edited = RulesDocument::empty();
     assert!(edited.entries().is_empty());
     let entry = catch_all_category();

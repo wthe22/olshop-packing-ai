@@ -1,12 +1,12 @@
-//! Search: find a saved order by the condition boxes of the Categories editor (2.21,
-//! [Search](../ui/search.md)). The engine takes an already-parsed condition and the day states to
+//! Search: find a saved order by the condition boxes of the Categories editor
+//! ([Search](../ui/search.md)). The engine takes an already-parsed condition and the day states to
 //! search; the app reads the day folders (no PDF code, no paths here).
 //!
 //! Only `saved[]` is searched: a batch's orders are there once it is saved, so an order of an
-//! open draft is never found (07 › *`state.json`*). An order saved before search existed keeps
+//! open draft is never found. An order saved before search existed keeps
 //! only its IDs; its row says *items not stored*, and only a condition on `order_id` or
 //! `tracking_id` can match it. Every other field is absent for such an order, so a condition on
-//! one cannot match (2.21; Q-UI-3).
+//! one cannot match.
 
 use crate::day::{DayState, SavedOrder};
 use crate::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
@@ -20,7 +20,7 @@ pub struct SearchItem {
     pub quantity: i64,
 }
 
-/// One matching saved order: what the Search panel's row shows (2.21).
+/// One matching saved order: what the Search panel's row shows.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SearchRow {
     /// The day folder the order was saved in (`YYYY-MM-DD`).
@@ -32,7 +32,7 @@ pub struct SearchRow {
     pub items: Vec<SearchItem>,
     pub batch: BatchNumber,
     pub pdf: PdfNumber,
-    /// The saved PDF's file name (07 › *Day folder*); the app prepends the folder path.
+    /// The saved PDF's file name; the app prepends the folder path.
     pub file: String,
     /// The order has no stored items: the row says *items not stored*.
     pub items_not_stored: bool,
@@ -48,7 +48,7 @@ pub struct SearchResults {
     pub batches: usize,
 }
 
-/// The fields every saved order keeps, whatever its age (07 › *`state.json`*): the only ones a
+/// The fields every saved order keeps, whatever its age: the only ones a
 /// condition can match an order saved before search existed on.
 const ID_FIELDS: &[&str] = &["order_id", "tracking_id"];
 
@@ -76,7 +76,7 @@ fn saved_order(saved: &SavedOrder) -> Order {
 }
 
 /// Whether a condition can match an order saved before search existed: every field it uses is one
-/// every saved order keeps (07 › *`state.json`*; [Search](../ui/search.md): *items not stored*,
+/// every saved order keeps ([Search](../ui/search.md): *items not stored*,
 /// found by IDs only).
 fn only_ids(condition: &Condition) -> bool {
     fields_used(condition)
@@ -84,7 +84,7 @@ fn only_ids(condition: &Condition) -> bool {
         .all(|field| ID_FIELDS.contains(&field.as_str()))
 }
 
-/// Search the saved orders of `days` for `condition` (2.21). `days` are `(day folder name, state)`
+/// Search the saved orders of `days` for `condition`. `days` are `(day folder name, state)`
 /// in the order the rows are wanted; only `state.saved` is read, so an order of an open draft is
 /// never found.
 pub fn search(condition: &Condition, days: &[(&str, &DayState)]) -> SearchResults {
@@ -132,7 +132,7 @@ pub fn search(condition: &Condition, days: &[(&str, &DayState)]) -> SearchResult
     }
 }
 
-/// The saved PDF's file name (07 › *Day folder*), from the batch the order was saved in.
+/// The saved PDF's file name, from the batch the order was saved in.
 fn saved_pdf_file(state: &DayState, saved: &SavedOrder) -> String {
     state
         .batches

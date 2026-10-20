@@ -1,5 +1,5 @@
 //! The pages → orders step: group each page's Order ID into one order, count the unseen logos and
-//! build the read warnings and the no-slip stop (07 › *What happens in one batch* steps 2-3).
+//! build the read warnings and the no-slip stop (steps 2-3).
 
 use jiff::civil::DateTime;
 
@@ -26,7 +26,7 @@ struct Group {
     tracking_id: Option<TrackingId>,
     /// The first page's whole text, for the label's courier clues.
     text: String,
-    /// The header-band images of the order's pages, deduplicated by byte hash (Q-LABEL-5).
+    /// The header-band images of the order's pages, deduplicated by byte hash.
     logos: Vec<LogoImage>,
 }
 
@@ -75,8 +75,7 @@ fn build_no_slip(no_slip: &[(usize, usize)], total_pages: usize, file_names: &[&
     }
 }
 
-/// Read a batch into orders (03 › *Order ID from the label*, *Multi-page orders*; 07 ›
-/// *What happens in one batch* steps 2-3). `pages` are the pages in download order; `file_names`
+/// Read a batch into orders (steps 2-3). `pages` are the pages in download order; `file_names`
 /// names the files for the messages; `table` is the data folder's courier data. Pages are
 /// consumed one at a time, so a 200-page file can be read with progress.
 pub fn read_batch<P>(
@@ -165,8 +164,7 @@ where
 }
 
 /// The page's order ID: the one its text prints, or the previous page's when a page prints none
-/// and continues a long label; a first page with no Order ID is an error (03 › *Order ID from the
-/// label*).
+/// and continues a long label; a first page with no Order ID is an error.
 fn page_order_id(
     found: &Option<OrderId>,
     previous: &Option<OrderId>,
@@ -189,8 +187,7 @@ fn page_order_id(
     Ok(id.clone())
 }
 
-/// The index of `order_id`'s group, started from this page when it is the order's first page
-/// (03 › *Multi-page orders*).
+/// The index of `order_id`'s group, started from this page when it is the order's first page.
 fn find_or_create_group(groups: &mut Vec<Group>, order_id: &OrderId, page: &PageText) -> usize {
     match groups.iter().position(|group| group.order_id == *order_id) {
         Some(index) => index,
@@ -212,8 +209,8 @@ fn find_or_create_group(groups: &mut Vec<Group>, order_id: &OrderId, page: &Page
     }
 }
 
-/// The page's header-band images (Q-LABEL-5): the order's logo clue, and the logos the prompt must
-/// ask the owner about (D-LABEL-4).
+/// The page's header-band images: the order's logo clue, and the logos the prompt must
+/// ask the owner about.
 fn collect_logos(
     group: &mut Group,
     page: &PageText,
@@ -236,8 +233,7 @@ fn collect_logos(
     }
 }
 
-/// Turn the merged groups into the batch's orders, with each order's quantity warning
-/// (07 › *What happens in one batch* step 3).
+/// Turn the merged groups into the batch's orders, with each order's quantity warning.
 fn build_orders(groups: Vec<Group>, table: &CourierTable) -> (Vec<ReadOrder>, Vec<Warning>) {
     let mut warnings = Vec::new();
     let mut orders = Vec::with_capacity(groups.len());
@@ -286,7 +282,7 @@ fn build_orders(groups: Vec<Group>, table: &CourierTable) -> (Vec<ReadOrder>, Ve
 }
 
 /// The batch-wide warnings: an order whose courier could not be deduced, and the orders with no
-/// tracking ID (07 › *What happens in one batch* step 3).
+/// tracking ID.
 fn order_warnings(orders: &[ReadOrder]) -> Vec<Warning> {
     let mut warnings = Vec::new();
     if let Some(unknown) = Warning::unknown_courier(orders) {

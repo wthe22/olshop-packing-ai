@@ -1,10 +1,9 @@
-//! `search.rs`: finding a saved order by a condition over its stored fields (2.21,
-//! [Search](../../docs/software-design/ui/search.md)).
+//! `search.rs`: finding a saved order by a condition over its stored fields
+//! ([Search](../../docs/software-design/ui/search.md)).
 //!
-//! Search reads `saved[]` only: an order of an open draft is never there, so it is never found
-//! (07 › *`state.json`*). An order saved before search existed keeps only its IDs, so only a
-//! condition on `order_id` or `tracking_id` can match it; its row says *items not stored*
-//! (Q-UI-3).
+//! Search reads `saved[]` only: an order of an open draft is never there, so it is never found. An
+//! order saved before search existed keeps only its IDs, so only a
+//! condition on `order_id` or `tracking_id` can match it; its row says *items not stored*.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -307,8 +306,8 @@ fn an_order_saved_before_search_is_found_by_its_ids_only() {
 
 #[test]
 fn a_stored_ship_by_is_searched_as_the_label_time() {
-    // The label's `In transit by` is stored as `state.json` writes it (a jiff ISO date-time,
-    // 07 › *`state.json`*); the condition language reads it as any date-time (conditions.md).
+    // The label's `In transit by` is stored as `state.json` writes it (a jiff ISO date-time); the
+    // condition language reads it as any date-time (conditions.md).
     let stored = jiff::civil::date(2026, 10, 7).at(17, 0, 0, 0);
     assert_eq!(stored.to_string(), "2026-10-07T17:00:00");
     let mut order = saved("580000000000000001", "JY0000001234", &[("Sepatu", 1)]);
@@ -338,7 +337,7 @@ fn the_searched_fields_round_trip_through_state_json() {
     );
     state.save(&day_dir).expect("save");
 
-    // The written `state.json` carries the order's searched fields (07 › *`state.json`*).
+    // The written `state.json` carries the order's searched fields.
     let text = fs::read_to_string(day_dir.join("state.json")).expect("read");
     let value: Value = serde_json::from_str(&text).expect("parse");
     let entry = &value["saved"][0];
@@ -371,7 +370,7 @@ fn the_searched_fields_round_trip_through_state_json() {
     fs::write(day_dir.join("state.json"), older).expect("write a day");
     let reloaded = DayState::load(&day_dir).expect("load the day");
     assert_eq!(reloaded.saved[1].tracking_id, None);
-    // The empty courier is unknown, and the empty tracking ID is none (07 › *`state.json`*).
+    // The empty courier is unknown, and the empty tracking ID is none.
     assert!(reloaded.saved[0].courier.is_none());
     assert_eq!(reloaded.batches[0].printed, vec![PdfNumber::new(7)]);
     reloaded.save(&day_dir).expect("save it again");

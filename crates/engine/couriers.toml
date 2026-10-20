@@ -1,10 +1,10 @@
-# Courier deduction data, loaded by packing::label with toml (07 › *Inputs*).
+# Courier deduction data, loaded by packing::label with toml.
 #
 # A hash is XXH3-64 (seed 0) of an image, as 16 lowercase hex characters.
 #
 # not_courier   hashes of images answered **Not a courier** in the logo prompt - a buying
-#               channel's strip (Q-LABEL-5). Such an image names nothing and is never asked
-#               about again. Written back by the prompt (D-LABEL-4).
+#               channel's strip. Such an image names nothing and is never asked
+#               about again. Written back by the prompt.
 #
 # Each [[courier]] entry has:
 #   name       the courier name the rule names an order with

@@ -1,4 +1,4 @@
-//! The groupings of a data folder (04 › *Sets*; 07 › *Rules file*): the grouping list, the file
+//! The groupings of a data folder: the grouping list, the file
 //! of a grouping and the grouping-name rules.
 //!
 //! The grouping `default` is the data folder's own `categories.toml` — the file the app already
@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use crate::names;
 use crate::rules::{Category, catch_all_category, load_rules_named};
 
-/// The data folder's own rules file: the grouping `default` (07 › *Rules file*).
+/// The data folder's own rules file: the grouping `default`.
 pub const CATEGORIES_FILE: &str = "categories.toml";
 /// The data folder subfolder holding every other grouping, one file each.
 pub const GROUPINGS_DIR: &str = "categories";
@@ -112,7 +112,7 @@ pub struct GroupingEntry {
 }
 
 /// A grouping name as a file name: characters Windows forbids in a name (`\ / : * ? " < > |`)
-/// become `-` (04 › *Sets*).
+/// become `-`.
 fn sanitize_name(name: &str) -> String {
     names::sanitize_file_name(name.trim())
 }
@@ -130,7 +130,7 @@ pub fn file_of(grouping: &Grouping) -> Result<String, GroupingError> {
     Ok(format!("{GROUPINGS_DIR}/{name}{GROUPING_EXTENSION}"))
 }
 
-/// The grouping list of a data folder (04 › *Sets*): `default` always, then every `<name>.toml`
+/// The grouping list of a data folder: `default` always, then every `<name>.toml`
 /// in its `categories/` folder, in file-name order. A file `categories/default.toml` — the name
 /// `default` again — is refused, naming both files.
 pub fn list(folder: &Path) -> Result<Vec<GroupingEntry>, GroupingError> {
@@ -171,7 +171,7 @@ pub fn list(folder: &Path) -> Result<Vec<GroupingEntry>, GroupingError> {
 }
 
 /// A grouping's categories: its file's entries, or the one catch-all entry when the grouping has
-/// no file (04 › *Sets*). A file that does not load gives [`GroupingError::Rules`] naming the
+/// no file. A file that does not load gives [`GroupingError::Rules`] naming the
 /// file.
 pub fn load(folder: &Path, grouping: &Grouping) -> Result<Vec<Category>, GroupingError> {
     let file = file_of(grouping)?;
@@ -194,8 +194,8 @@ pub fn load(folder: &Path, grouping: &Grouping) -> Result<Vec<Category>, Groupin
 }
 
 /// Write a new grouping's file: a copy of `copy_from`'s file when one is given, else the one
-/// catch-all entry, so the new grouping reads like a grouping whose categories are not set yet
-/// (04 › *Sets*). The name `default` is the data folder's own `categories.toml` and cannot be
+/// catch-all entry, so the new grouping reads like a grouping whose categories are not set yet. The
+/// name `default` is the data folder's own `categories.toml` and cannot be
 /// created, and a file already there is refused, so nothing the owner wrote is overwritten.
 pub fn create(
     folder: &Path,
@@ -226,7 +226,7 @@ pub fn create(
     })
 }
 
-/// Delete a grouping's file (04 › *Sets*), so its name leaves the grouping list; a grouping with
+/// Delete a grouping's file, so its name leaves the grouping list; a grouping with
 /// no file is already gone. The grouping `default` is the data folder's own `categories.toml`
 /// and cannot be deleted.
 pub fn delete(folder: &Path, grouping: &Grouping) -> Result<(), GroupingError> {
@@ -285,7 +285,7 @@ fn grouping_file(entry: &std::fs::DirEntry) -> Result<Option<String>, GroupingEr
     Ok(Some(name.to_string()))
 }
 
-/// The one catch-all entry as a rules file's text (04 › *Sets*): code `Z`, name `Lainnya`, no
+/// The one catch-all entry as a rules file's text: code `Z`, name `Lainnya`, no
 /// condition, so it takes every order. A new grouping — and the copy of a grouping with no file
 /// — starts from it.
 fn catch_all_text() -> String {

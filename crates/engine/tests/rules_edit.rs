@@ -1,5 +1,5 @@
 //! The boxes editor's condition text <-> tree round trip over `testdata/conditions.json`, the
-//! tree shape, and the live counts (08 › 5. Categories; task 2.12).
+//! tree shape, and the live counts.
 //!
 //! Mirrors the skip rules of `tests/rules_conditions.rs`: cases with `app_fields: true` are
 //! skipped and a case whose text uses a CSV-only field gives the "needs the orders CSV" error.

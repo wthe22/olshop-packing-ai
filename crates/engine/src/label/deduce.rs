@@ -1,4 +1,4 @@
-//! The courier deduction (03 › *Courier deduction*; courier.md): the tracking-ID form, the logo
+//! The courier deduction (courier.md): the tracking-ID form, the logo
 //! lookup and the two-clue rule that names a courier.
 
 use crate::ids::TrackingId;
@@ -18,7 +18,7 @@ pub fn candidates<'a>(table: &'a CourierTable, tracking_id: &TrackingId) -> Vec<
 }
 
 /// Whether the tracking-ID form names `name` among its candidates (the two-clue rule's second
-/// half; the order's `courier` is filled only where this holds — D-LABEL-2).
+/// half; the order's `courier` is filled only where this holds).
 pub fn form_names_courier_in(table: &CourierTable, tracking_id: &TrackingId, name: &str) -> bool {
     candidates(table, tracking_id)
         .iter()
@@ -58,7 +58,7 @@ pub fn logo_courier<'a>(table: &'a CourierTable, image: &LogoImage) -> Option<&'
         .find(|courier| courier.shape.iter().any(|known| known == appearance))
 }
 
-/// Whether the image is a band image the prompt must ask the owner about (D-LABEL-4): a byte
+/// Whether the image is a band image the prompt must ask the owner about: a byte
 /// hash not in `logo`/`not_courier` whose appearance is not in `shape` either.
 pub fn is_unseen_logo(table: &CourierTable, image: &LogoImage) -> bool {
     if is_not_courier(
@@ -90,13 +90,13 @@ fn is_not_courier(table: &CourierTable, hash: Option<&str>, appearance: Option<&
     })
 }
 
-/// The two-clue courier rule (D-LABEL-2; courier.md items 1, 2, 4, 5): the tracking-ID form gives
+/// The two-clue courier rule (courier.md items 1, 2, 4, 5): the tracking-ID form gives
 /// the **candidate** couriers, and the courier is named only when the page's **logo** names one
 /// of them (its byte hash, else its appearance hash). A logo whose courier and form disagree, a
 /// logo with no form, a form with no logo, or neither → no name.
 ///
 /// The printed text clue stands in for the logo only where the logo cannot be read at all — a
-/// page with no header-band image (Q-LABEL-5) — and must be a candidate too. On such a page a
+/// page with no header-band image — and must be a candidate too. On such a page a
 /// form that carries the vendor's **own marker** (a lettered prefix: `JY…`, `TKP…`, `SPXID…`)
 /// also names the courier on its own, when it names only one: that is the old `tracking_unique`
 /// behaviour derived from the table instead of a flag, and it keeps a label whose image is

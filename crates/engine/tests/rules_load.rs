@@ -252,8 +252,8 @@ fn categorize_first_match_and_none() {
     assert_eq!(categorize(&spion, &categories), Some(&categories[1]));
 }
 
-/// A data folder without `categories.toml` starts from the one catch-all entry (07 › *Inputs*):
-/// no condition, so every order goes into one PDF set (08 › *5. Categories*, Q-UI-4).
+/// A data folder without `categories.toml` starts from the one catch-all entry:
+/// no condition, so every order goes into one PDF set.
 #[test]
 fn the_catch_all_entry_is_one_entry_with_no_condition() {
     let category = catch_all_category();

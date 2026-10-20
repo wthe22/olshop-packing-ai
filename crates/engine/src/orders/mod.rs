@@ -1,6 +1,5 @@
 //! The order and line model and what a read produces: the contents key, display names and the
-//! types the pages → orders step fills (03 › *Order ID from the label*, *Multi-page orders*;
-//! 07 › *What happens in one batch*). The step itself is in the modules beside this file.
+//! types the pages → orders step fills. The step itself is in the modules beside this file.
 
 use jiff::civil::DateTime;
 
@@ -95,7 +94,7 @@ pub struct ReadOrder {
     pub order: Order,
     /// The order's pages, in download order.
     pub pages: Vec<PageRef>,
-    /// Download position, 1..n in first-seen order (07 › *Read*, step 2).
+    /// Download position, 1..n in first-seen order.
     pub position: usize,
     pub has_slip: bool,
     pub qty_total: Option<i64>,
@@ -108,7 +107,7 @@ pub struct Reading {
     pub orders: Vec<ReadOrder>,
     /// Pages without an Order ID that continue the previous page's order.
     pub continuation_pages: Vec<PageRef>,
-    /// The header-band images the courier data does not know, in first-seen order (D-LABEL-4).
+    /// The header-band images the courier data does not know, in first-seen order.
     pub unseen_logos: Vec<UnseenLogo>,
     pub warnings: Vec<Warning>,
 }

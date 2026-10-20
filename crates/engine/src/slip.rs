@@ -1,6 +1,5 @@
-//! The slip table read by position (03 › *Reading the packing slip*; port of
-//! `tools/analysis/packing/slip.py`, validated against Python in the spike on 600 sample and 23 testdata
-//! orders).
+//! The slip table read by position: the columns of a page's packing slip, and the rows between
+//! them.
 
 use std::cmp::Ordering;
 use std::sync::OnceLock;

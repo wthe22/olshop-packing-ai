@@ -1,5 +1,5 @@
 //! label.rs: the courier data of the data folder — loading `couriers.toml`, its errors with the
-//! line, and the bundled file as the default (07 › *Inputs*, D-LABEL-1).
+//! line, and the bundled file as the default.
 
 use std::path::PathBuf;
 

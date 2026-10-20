@@ -68,9 +68,9 @@ fn condition_pos_re() -> Regex {
     Regex::new(r"(?s)^line (\d+), col (\d+): (.*)$").expect("constant regex compiles")
 }
 
-/// The one entry a data folder without `categories.toml` uses (07 › *Inputs*): no condition, so
-/// it takes every order and a batch saves every order in one PDF set (03 › *Picks*; 08 ›
-/// *5. Categories*, which shows it as the one catch-all category).
+/// The one entry a data folder without `categories.toml` uses: no condition, so
+/// it takes every order and a batch saves every order in one PDF set (which shows it as the one
+/// catch-all category).
 pub fn catch_all_category() -> Category {
     Category {
         code: "Z".to_string(),
@@ -81,8 +81,8 @@ pub fn catch_all_category() -> Category {
 }
 
 /// Whether `categories` are the unconfigured picks: exactly one entry and it has no condition —
-/// the [`catch_all_category`] a folder without `categories.toml` starts with (07 › *Inputs*).
-/// The Categories and the Plan screen show the **No picks yet** line then (Q-UI-4).
+/// the [`catch_all_category`] a folder without `categories.toml` starts with.
+/// The Categories and the Plan screen show the **No picks yet** line then.
 pub fn unconfigured<'a>(categories: impl IntoIterator<Item = &'a Category>) -> bool {
     let mut entries = categories.into_iter();
     match (entries.next(), entries.next()) {
@@ -92,12 +92,12 @@ pub fn unconfigured<'a>(categories: impl IntoIterator<Item = &'a Category>) -> b
 }
 
 /// Load the categories from the text of `categories.toml` (the app reads the file). Errors
-/// carry the line/col inside the file, like the reference implementation.
+/// carry the line/col inside the file.
 pub fn load_rules(text: &str) -> Result<Vec<Category>, RulesError> {
     load_rules_named(text, RULES_FILE_NAME)
 }
 
-/// Load the categories from the text of a rules file whose name is `file` (04 › *Sets*): one set
+/// Load the categories from the text of a rules file whose name is `file`: one set
 /// each. [`load_rules`] uses the data folder's own `categories.toml`; a set's file is
 /// `categories/<set name>.toml`, so its errors name that file. The rules are the same.
 pub fn load_rules_named(text: &str, file: &str) -> Result<Vec<Category>, RulesError> {

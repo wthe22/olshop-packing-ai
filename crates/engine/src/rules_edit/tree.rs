@@ -1,4 +1,4 @@
-//! Condition text <-> boxes tree (08 › 5; 04 › *How the app edits conditions*): the group, row
+//! Condition text <-> boxes tree: the group, row
 //! and value shapes the window shows, built with the engine's parser and printer.
 
 use serde::{Deserialize, Serialize};
@@ -7,7 +7,7 @@ use crate::rules::{Condition, NumberOp, RulesError, TextOp, format_condition, pa
 
 use super::error;
 
-/// A group's kind: **All of these** (`and`) or **Any of these** (`or`) (08 › 5).
+/// A group's kind: **All of these** (`and`) or **Any of these** (`or`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupKind {
@@ -51,7 +51,7 @@ pub enum RowValue {
     Time(String),
 }
 
-/// The boxes of one condition: a root group (08 › 5: "Every condition starts as one *All of
+/// The boxes of one condition: a root group ("Every condition starts as one *All of
 /// these* group").
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Tree {
@@ -126,7 +126,7 @@ fn leaf_row(cond: &Condition) -> Row {
 }
 
 /// Condition -> node. `not` folds onto a comparison (a row's flag) or onto a group of the same
-/// kind; `not not …` cannot fold, so it wraps the inner node in a group (08 › 5: every valid
+/// kind; `not not …` cannot fold, so it wraps the inner node in a group (every valid
 /// text can be shown as boxes).
 fn to_node(cond: &Condition) -> Node {
     match cond {
@@ -168,7 +168,7 @@ fn to_node(cond: &Condition) -> Node {
     }
 }
 
-/// Parse a condition and show it as boxes (08 › 5; the parser of `rules`).
+/// Parse a condition and show it as boxes.
 pub fn condition_to_tree(text: &str) -> Result<Tree, RulesError> {
     let condition = parse_condition(text)?;
     let node = to_node(&condition);
@@ -183,7 +183,7 @@ pub fn condition_to_tree(text: &str) -> Result<Tree, RulesError> {
     Ok(Tree { root })
 }
 
-/// A group as a condition; an empty group is an error (08 › 5: "This group is empty"). A group
+/// A group as a condition; an empty group is an error ("This group is empty"). A group
 /// with a single child is that child, not a one-element `and`/`or`: the printer would wrap a
 /// one-element `and`/`or` in parentheses under a `not` (`not not a` must stay `not not a`, not
 /// `not (not a)`).
@@ -268,7 +268,7 @@ fn number_op(row: &Row, field: &str) -> Result<NumberOp, RulesError> {
     })
 }
 
-/// Show boxes as condition text (the printer of `rules`, so boxes and text agree — 08 › 5).
+/// Show boxes as condition text (the printer of `rules`, so boxes and text agree).
 /// The result is re-parsed so a hand-built tree with an unknown field or a bad date/time value
 /// gives the same error as the text view.
 pub fn tree_to_condition(tree: &Tree) -> Result<String, RulesError> {

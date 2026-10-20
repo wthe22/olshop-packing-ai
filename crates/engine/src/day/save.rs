@@ -1,5 +1,5 @@
 //! The batch save and the batch folder delete: the whole batch is written into a temporary folder
-//! and renamed into place, or not written at all (07 › *Save*, *Revert* step 1).
+//! and renamed into place, or not written at all.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -13,17 +13,17 @@ use crate::names;
 use super::error::{DayError, io_error};
 use super::state::{BatchEntry, DayState, FileEntry, PackingListChoice, PdfEntry, SavedOrder};
 
-/// Everything a finished batch adds to the day, except the files a closure writes (07 › *Save*).
+/// Everything a finished batch adds to the day, except the files a closure writes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BatchWrite {
     pub batch: BatchNumber,
     pub save_time: String,
-    /// The grouping the batch was packed with (04 › *Sets*).
+    /// The grouping the batch was packed with.
     pub grouping: Grouping,
     pub files: Vec<FileEntry>,
     pub pdfs: Vec<PdfEntry>,
     pub packing_list: PackingListChoice,
-    /// The read warnings of the batch, stored in `state.json` (07 › *`state.json`*).
+    /// The read warnings of the batch, stored in `state.json`.
     pub warnings: Vec<String>,
     pub saved: Vec<SavedOrder>,
 }
@@ -34,7 +34,7 @@ pub fn now_save_time() -> String {
     Zoned::now().strftime("%Y-%m-%dT%H:%M:%S%:z").to_string()
 }
 
-/// The check before saving's findings, stored with the batch (07 › *Check before saving*):
+/// The check before saving's findings, stored with the batch:
 /// errors and warnings, kept apart. Empty when the check found nothing.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Findings {
@@ -42,7 +42,7 @@ pub struct Findings {
     pub warnings: Vec<String>,
 }
 
-/// Write a batch completely or not at all (07 › *Save*): create `batch <b>.partial/`, let
+/// Write a batch completely or not at all: create `batch <b>.partial/`, let
 /// `fill` write the saved PDFs, the packing list, `summary.txt` and `download/` into it and
 /// return the check's [`Findings`], rename it to `batch <b>` (replacing an amended batch), then
 /// add the batch to `state.json`. On any error before the rename the temporary folder is deleted
@@ -89,7 +89,7 @@ where
         pdfs: write.pdfs.clone(),
         packing_list: write.packing_list.clone(),
         // A batch written by a save (or written again by an amend) starts with no ticks: the
-        // amend writes the batch afresh (07 › *`state.json`*).
+        // amend writes the batch afresh.
         printed: Vec::new(),
         warnings,
         errors: findings.errors,
@@ -99,7 +99,7 @@ where
     Ok(final_dir)
 }
 
-/// Delete a batch folder (07 › *Revert* step 1); a file open in another program is a
+/// Delete a batch folder; a file open in another program is a
 /// [`DayError::FileInUse`].
 pub fn delete_batch_folder(day_dir: &Path, batch: BatchNumber) -> Result<(), DayError> {
     let path = day_dir.join(names::batch_folder(batch));
