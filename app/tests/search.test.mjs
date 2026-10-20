@@ -1,6 +1,5 @@
-// The Search panel's window side: the line above the results, what a row
-// shows for its items, and the texts and field list the panel offers. Pure, so it is tested
-// without a window.
+// The Search panel's window side: the line above the results, what a row shows for its items, and
+// the texts and field list the panel offers. Pure, so it is tested without a window.
 //
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
@@ -21,7 +20,7 @@ test("the result line counts orders and batches", () => {
   assert.equal(texts.search.summary(576, 3), "576 orders in 3 batches");
 });
 
-test("a row shows its items as name × quantity", () => {
+test("a row shows its items as name × quantity, or says they were not stored", () => {
   const row = {
     items: [
       { name: "Sepatu", quantity: 2 },
@@ -30,9 +29,7 @@ test("a row shows its items as name × quantity", () => {
     items_not_stored: false,
   };
   assert.equal(rowItemsText(row), "Sepatu ×2, Spion Beat ×1");
-});
-
-test("a row of an order saved before search says items not stored", () => {
+  // An order saved before search existed kept no items.
   assert.equal(rowItemsText({ items: [], items_not_stored: true }), "items not stored");
   assert.equal(texts.search.itemsNotStored, "items not stored");
 });
@@ -51,7 +48,7 @@ test("the panel's fixed texts are the designed words", () => {
   assert.equal(texts.day.open, "Open");
 });
 
-test("Search offers the fields a saved order keeps", () => {
+test("Search offers only fields of the shared table, and not the ones it cannot search", () => {
   const values = searchFields.map((field) => field.value).sort();
   assert.deepEqual(values, [
     "courier",
@@ -67,12 +64,10 @@ test("Search offers the fields a saved order keeps", () => {
   // The display name and Ship by are not searched.
   assert.ok(!values.includes("display_name"));
   assert.ok(!values.includes("ship_by"));
-});
 
-test("the shared field table offers Order ID for both screens", () => {
+  // Categories keeps every field of the rules; Search is a subset of the same table.
   const order = conditionFields.find((field) => field.value === "order_id");
   assert.deepEqual(order, { value: "order_id", label: "Order ID", type: "text" });
-  // Categories keeps every field of the rules; Search is a subset of the same table.
   assert.equal(conditionFields.length, 11);
   assert.ok(searchFields.length < conditionFields.length);
   for (const field of searchFields) {

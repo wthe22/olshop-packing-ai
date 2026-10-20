@@ -81,188 +81,174 @@ fn make_slip(rows: &[Row], qty_total: Option<i64>, message: Option<&str>) -> Pag
     make_slip_with(COLS, rows, qty_total, message)
 }
 
-#[test]
-fn page_without_a_slip_header_returns_none() {
-    let page = PageText {
-        text: String::new(),
-        runs: vec![run(5.8, 40.0, "JY0000001234"), run(5.8, 60.0, ORDER_ID)],
-        width: WIDTH,
-        logos: Vec::new(),
-    };
-    assert_eq!(read_slip(&page), None);
+fn line(name: &str, variation: &str, seller_sku: &str, quantity: i64) -> SlipLine {
+    SlipLine {
+        name: name.to_string(),
+        variation: variation.to_string(),
+        seller_sku: seller_sku.to_string(),
+        quantity,
+    }
 }
 
 #[test]
-fn columns_come_from_the_header_positions_not_fixed_x() {
+fn the_slip_rows_come_from_the_header_columns_top_to_bottom() {
+    // The columns are read from where the header words sit, not from a fixed x.
     let shifted = [
         ("Product Name", 20.0),
         ("SKU", 140.0),
         ("Seller SKU", 185.0),
         ("Qty", 260.0),
     ];
-    let page = make_slip_with(
-        shifted,
-        &[(&["Spion Beat"], &["honda"], &["SELL-SPI-01"], 2)],
-        Some(2),
-        None,
-    );
-    assert_eq!(
-        read_slip(&page),
-        Some(Slip {
-            lines: vec![SlipLine {
-                name: "Spion Beat".into(),
-                variation: "honda".into(),
-                seller_sku: "SELL-SPI-01".into(),
-                quantity: 2,
-            }],
-            qty_total: Some(2),
-            customer_message: String::new(),
-        })
-    );
-}
-
-#[test]
-fn one_row_and_qty_total() {
-    let page = make_slip(
-        &[(&["Sepatu Standar"], &["honda"], &["SELL-SEP-01"], 1)],
-        Some(1),
-        None,
-    );
-    assert_eq!(
-        read_slip(&page),
-        Some(Slip {
-            lines: vec![SlipLine {
-                name: "Sepatu Standar".into(),
-                variation: "honda".into(),
-                seller_sku: "SELL-SEP-01".into(),
-                quantity: 1,
-            }],
-            qty_total: Some(1),
-            customer_message: String::new(),
-        })
-    );
-}
-
-#[test]
-fn default_variation_is_stored_empty() {
-    let page = make_slip(&[(&["Knalpot Beat"], &["Default"], &[], 3)], Some(3), None);
-    assert_eq!(
-        read_slip(&page).unwrap().lines,
-        vec![SlipLine {
-            name: "Knalpot Beat".into(),
-            variation: String::new(),
-            seller_sku: String::new(),
-            quantity: 3,
-        }]
-    );
-}
-
-#[test]
-fn two_rows_keep_the_top_to_bottom_order() {
-    let page = make_slip(
-        &[
-            (&["Spion Beat"], &["Standard"], &["SELL-SPI-01"], 1),
-            (&["Knalpot Beat"], &["Default"], &[], 2),
-        ],
-        Some(3),
-        None,
-    );
-    let slip = read_slip(&page).unwrap();
-    assert_eq!(
-        slip.lines,
-        vec![
-            SlipLine {
-                name: "Spion Beat".into(),
-                variation: "Standard".into(),
-                seller_sku: "SELL-SPI-01".into(),
-                quantity: 1,
+    let cases: Vec<(&str, PageText, Slip)> = vec![
+        (
+            "shifted header",
+            make_slip_with(
+                shifted,
+                &[(&["Spion Beat"], &["honda"], &["SELL-SPI-01"], 2)],
+                Some(2),
+                None,
+            ),
+            Slip {
+                lines: vec![line("Spion Beat", "honda", "SELL-SPI-01", 2)],
+                qty_total: Some(2),
+                customer_message: String::new(),
             },
-            SlipLine {
-                name: "Knalpot Beat".into(),
-                variation: String::new(),
-                seller_sku: String::new(),
-                quantity: 2,
+        ),
+        (
+            "one row",
+            make_slip(
+                &[(&["Sepatu Standar"], &["honda"], &["SELL-SEP-01"], 1)],
+                Some(1),
+                None,
+            ),
+            Slip {
+                lines: vec![line("Sepatu Standar", "honda", "SELL-SEP-01", 1)],
+                qty_total: Some(1),
+                customer_message: String::new(),
             },
-        ]
-    );
-    assert_eq!(slip.qty_total, Some(3));
+        ),
+        // Two rows keep the top-to-bottom order; `Default` is stored as no variation, and a
+        // missing Seller SKU as an empty one.
+        (
+            "two rows",
+            make_slip(
+                &[
+                    (&["Spion Beat"], &["Standard"], &["SELL-SPI-01"], 1),
+                    (&["Knalpot Beat"], &["Default"], &[], 2),
+                ],
+                Some(3),
+                None,
+            ),
+            Slip {
+                lines: vec![
+                    line("Spion Beat", "Standard", "SELL-SPI-01", 1),
+                    line("Knalpot Beat", "", "", 2),
+                ],
+                qty_total: Some(3),
+                customer_message: String::new(),
+            },
+        ),
+        // A quantity total that does not match the rows is still read raw.
+        (
+            "wrong total",
+            make_slip(&[(&["Spion Beat"], &["honda"], &[], 1)], Some(5), None),
+            Slip {
+                lines: vec![line("Spion Beat", "honda", "", 1)],
+                qty_total: Some(5),
+                customer_message: String::new(),
+            },
+        ),
+        // Wrapped cells join with a space.
+        (
+            "wrapped cell",
+            make_slip(
+                &[(
+                    &["Sepatu Standar Samping", "Motor | Pelindung Rantai"],
+                    &["Standard"],
+                    &["SELL-SEP-01"],
+                    1,
+                )],
+                Some(1),
+                None,
+            ),
+            Slip {
+                lines: vec![line(
+                    "Sepatu Standar Samping Motor | Pelindung Rantai",
+                    "Standard",
+                    "SELL-SEP-01",
+                    1,
+                )],
+                qty_total: Some(1),
+                customer_message: String::new(),
+            },
+        ),
+        // A wrap right after a dash joins without a space, in every column.
+        (
+            "wrap after a dash",
+            make_slip(
+                &[(
+                    &["Cover Knalpot Beat", "FI 2012-", "2015 Full Set"],
+                    &["Yamaha-", "Mio"],
+                    &["SPION-SCOL-DH-", "CY"],
+                    1,
+                )],
+                Some(1),
+                None,
+            ),
+            Slip {
+                lines: vec![line(
+                    "Cover Knalpot Beat FI 2012-2015 Full Set",
+                    "Yamaha-Mio",
+                    "SPION-SCOL-DH-CY",
+                    1,
+                )],
+                qty_total: Some(1),
+                customer_message: String::new(),
+            },
+        ),
+    ];
+
+    for (label, page, expected) in cases {
+        assert_eq!(read_slip(&page), Some(expected), "{label}");
+    }
 }
 
 #[test]
-fn a_qty_total_that_does_not_match_is_still_read_raw() {
-    let page = make_slip(&[(&["Spion Beat"], &["honda"], &[], 1)], Some(5), None);
-    assert_eq!(read_slip(&page).unwrap().qty_total, Some(5));
-}
+fn a_page_without_the_header_or_without_rows_reads_as_no_slip_or_an_empty_one() {
+    // No slip table on the page at all.
+    let plain = PageText {
+        text: String::new(),
+        runs: vec![run(5.8, 40.0, "JY0000001234"), run(5.8, 60.0, ORDER_ID)],
+        width: WIDTH,
+        logos: Vec::new(),
+    };
+    assert_eq!(read_slip(&plain), None);
 
-#[test]
-fn seller_sku_may_be_absent() {
-    let page = make_slip(&[(&["Cover Body"], &["Default"], &[], 1)], Some(1), None);
-    assert_eq!(read_slip(&page).unwrap().lines[0].seller_sku, "");
-}
-
-#[test]
-fn wrapped_cells_join_with_a_space() {
-    let page = make_slip(
-        &[(
-            &["Sepatu Standar Samping", "Motor | Pelindung Rantai"],
-            &["Standard"],
-            &["SELL-SEP-01"],
-            1,
-        )],
-        Some(1),
-        None,
-    );
+    // The header alone.
     assert_eq!(
-        read_slip(&page).unwrap().lines[0].name,
-        "Sepatu Standar Samping Motor | Pelindung Rantai"
-    );
-}
-
-#[test]
-fn a_wrap_right_after_a_dash_joins_without_a_space() {
-    let page = make_slip(
-        &[(
-            &["Cover Knalpot Beat", "FI 2012-", "2015 Full Set"],
-            &["Yamaha-", "Mio"],
-            &["SPION-SCOL-DH-", "CY"],
-            1,
-        )],
-        Some(1),
-        None,
-    );
-    let line = &read_slip(&page).unwrap().lines[0];
-    assert_eq!(line.name, "Cover Knalpot Beat FI 2012-2015 Full Set");
-    assert_eq!(line.variation, "Yamaha-Mio");
-    assert_eq!(line.seller_sku, "SPION-SCOL-DH-CY");
-}
-
-#[test]
-fn continuation_page_has_the_header_but_no_rows() {
-    let page = make_slip(&[], None, Some("Tolong bubble wrap, jangan dilipat"));
-    let slip = read_slip(&page).unwrap();
-    assert!(slip.lines.is_empty());
-    assert_eq!(slip.qty_total, None);
-    assert_eq!(slip.customer_message, "Tolong bubble wrap, jangan dilipat");
-}
-
-#[test]
-fn customer_message_accepts_the_fullwidth_colon() {
-    let mut page = make_slip(&[], None, None);
-    page.runs.push(run(10.5, 100.0, "Customer Message"));
-    page.runs.push(run(78.0, 100.0, "\u{FF1A}"));
-    page.runs.push(run(86.6, 100.0, "Halo"));
-    assert_eq!(read_slip(&page).unwrap().customer_message, "Halo");
-}
-
-#[test]
-fn header_only_page_reads_as_an_empty_slip() {
-    let page = make_slip(&[], None, None);
-    assert_eq!(
-        read_slip(&page),
+        read_slip(&make_slip(&[], None, None)),
         Some(Slip {
             lines: Vec::new(),
             qty_total: None,
             customer_message: String::new(),
         })
     );
+
+    // A continuation page has the header and the message, but no rows and no total.
+    let slip = read_slip(&make_slip(
+        &[],
+        None,
+        Some("Tolong bubble wrap, jangan dilipat"),
+    ))
+    .unwrap();
+    assert!(slip.lines.is_empty());
+    assert_eq!(slip.qty_total, None);
+    assert_eq!(slip.customer_message, "Tolong bubble wrap, jangan dilipat");
+
+    // The message is read after a fullwidth colon too.
+    let mut page = make_slip(&[], None, None);
+    page.runs.push(run(10.5, 100.0, "Customer Message"));
+    page.runs.push(run(78.0, 100.0, "\u{FF1A}"));
+    page.runs.push(run(86.6, 100.0, "Halo"));
+    assert_eq!(read_slip(&page).unwrap().customer_message, "Halo");
 }

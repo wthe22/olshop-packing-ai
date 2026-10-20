@@ -98,26 +98,28 @@ fn one_row() -> Vec<Row<'static>> {
 }
 
 #[test]
-fn display_name_cuts_at_the_pipe_and_appends_the_variation() {
-    assert_eq!(
-        display_name("Spion Beat | Kaca Spion Motor", ""),
-        "Spion Beat"
-    );
-    assert_eq!(
-        display_name("Spion Beat | Kaca Spion Motor", "honda"),
-        "Spion Beat — honda"
-    );
-    assert_eq!(display_name("Sepatu", "Default"), "Sepatu");
+fn a_display_name_cuts_at_the_pipe_and_appends_a_variation() {
+    let cases = [
+        ("Spion Beat | Kaca Spion Motor", "", "Spion Beat"),
+        (
+            "Spion Beat | Kaca Spion Motor",
+            "honda",
+            "Spion Beat — honda",
+        ),
+        ("Sepatu", "Default", "Sepatu"),
+    ];
+    for (name, variation, expected) in cases {
+        assert_eq!(display_name(name, variation), expected);
+    }
 }
 
 #[test]
-fn second_page_without_order_id_continues_the_first() {
-    let p0 = slip_page(
-        "JY0000001234\n580000000000000001\nIn transit by: 07/10/2026 15:30",
-        &one_row(),
-        Some(1),
-        None,
-    );
+fn a_batch_reads_into_orders_whose_pages_follow_the_download_order() {
+    let slip = "JY0000001234\n580000000000000001\nIn transit by: 07/10/2026 15:30";
+
+    // A plain page after the slip continues the order before it; the tracking ID, the courier
+    // and the ship-by time come from the slip's text.
+    let p0 = slip_page(slip, &one_row(), Some(1), None);
     let p1 = plain_page("Jumlah : 3pcs");
     let reading = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap();
 
@@ -136,17 +138,15 @@ fn second_page_without_order_id_continues_the_first() {
     assert_eq!(order.position, 1);
     assert_eq!(
         order.pages,
-        vec![PageRef { file: 0, page: 0 }, PageRef { file: 0, page: 1 },]
+        vec![PageRef { file: 0, page: 0 }, PageRef { file: 0, page: 1 }]
     );
     assert_eq!(
         reading.continuation_pages,
         vec![PageRef { file: 0, page: 1 }]
     );
     assert!(reading.warnings.is_empty());
-}
 
-#[test]
-fn a_slip_continuation_page_merges_the_message_and_keeps_the_lines() {
+    // A slip continuation page keeps the lines and merges its message.
     let p0 = slip_page(
         "JY0000001234\n580000000000000001",
         &one_row(),
@@ -160,7 +160,6 @@ fn a_slip_continuation_page_merges_the_message_and_keeps_the_lines() {
         Some("Tolong bubble wrap, jangan dilipat"),
     );
     let reading = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap();
-
     let order = &reading.orders[0];
     assert_eq!(order.order.lines.len(), 1);
     assert_eq!(
@@ -170,10 +169,8 @@ fn a_slip_continuation_page_merges_the_message_and_keeps_the_lines() {
     assert!(order.has_slip);
     assert_eq!(order.qty_total, Some(1));
     assert_eq!(order.pages.len(), 2);
-}
 
-#[test]
-fn two_files_keep_the_download_order() {
+    // Two files keep the download order, numbered by position.
     let p0 = slip_page(
         "JY0000001234\n580000000000000001",
         &one_row(),
@@ -192,7 +189,6 @@ fn two_files_keep_the_download_order() {
         table(),
     )
     .unwrap();
-
     let ids: Vec<&str> = reading
         .orders
         .iter()
@@ -204,16 +200,29 @@ fn two_files_keep_the_download_order() {
 }
 
 #[test]
-fn a_page_without_order_id_cannot_continue_across_a_file() {
+fn reading_stops_when_a_page_has_no_order_id_or_when_the_labels_have_no_slip() {
+    // The first page without an Order ID stops before anything is read.
+    let err = read_batch(
+        vec![(0usize, 0usize, plain_page("JY0000001234\nJumlah : 1pcs"))],
+        &["noid.pdf"],
+        table(),
+    )
+    .unwrap_err();
+    assert_eq!(
+        err.to_string(),
+        "Page 1 of noid.pdf has no Order ID. This does not look like a TikTok Shop label \
+         download. Check the file."
+    );
+
+    // A page without an Order ID cannot continue an order from another file.
     let p0 = slip_page(
         "JY0000001234\n580000000000000001",
         &one_row(),
         Some(1),
         None,
     );
-    let p1 = plain_page("Jumlah : 1pcs");
     let err = read_batch(
-        vec![(0usize, 0usize, p0), (1, 0, p1)],
+        vec![(0usize, 0usize, p0), (1, 0, plain_page("Jumlah : 1pcs"))],
         &["a.pdf", "b.pdf"],
         table(),
     )
@@ -225,41 +234,24 @@ fn a_page_without_order_id_cannot_continue_across_a_file() {
             page: 0
         }
     );
-}
 
-#[test]
-fn first_page_without_order_id_stops_with_file_and_page() {
-    let p0 = plain_page("JY0000001234\nJumlah : 1pcs");
-    let err = read_batch(vec![(0usize, 0usize, p0)], &["noid.pdf"], table()).unwrap_err();
-    assert_eq!(
-        err.to_string(),
-        "Page 1 of noid.pdf has no Order ID. This does not look like a TikTok Shop label \
-         download. Check the file."
-    );
-}
-
-#[test]
-fn all_plain_pages_stop_with_the_all_pages_message() {
+    // Every page plain: the labels were downloaded without a packing slip.
     let p0 = plain_page("JY0000001234\n580000000000000001");
     let p1 = plain_page("JY0000009999\n580000000000000002");
     let err = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap_err();
-    match err {
-        ReadError::NoSlip(no_slip) => {
-            assert_eq!(no_slip.plain_pages, 2);
-            assert_eq!(no_slip.total_pages, 2);
-            assert_eq!(
-                no_slip.to_string(),
-                "These labels have no packing slip. 2 of 2 pages are plain shipping labels. \
-                 In the seller centre, download the labels again with Shipping label + Packing \
-                 slip."
-            );
-        }
-        other => panic!("expected NoSlip, got {other:?}"),
-    }
-}
+    let ReadError::NoSlip(no_slip) = err else {
+        panic!("expected NoSlip, got {err:?}");
+    };
+    assert_eq!(no_slip.plain_pages, 2);
+    assert_eq!(no_slip.total_pages, 2);
+    assert_eq!(
+        no_slip.to_string(),
+        "These labels have no packing slip. 2 of 2 pages are plain shipping labels. \
+         In the seller centre, download the labels again with Shipping label + Packing \
+         slip."
+    );
 
-#[test]
-fn some_plain_pages_stop_naming_the_file_and_pages() {
+    // Some pages plain: the stop names the file and the pages, counting them.
     let p0 = slip_page(
         "JY0000001234\n580000000000000001",
         &one_row(),
@@ -268,23 +260,22 @@ fn some_plain_pages_stop_naming_the_file_and_pages() {
     );
     let p1 = plain_page("JY0000009999\n580000000000000002");
     let err = read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap_err();
-    match err {
-        ReadError::NoSlip(no_slip) => {
-            assert_eq!(no_slip.plain_pages, 1);
-            assert_eq!(no_slip.total_pages, 2);
-            assert_eq!(
-                no_slip.to_string(),
-                "These labels have no packing slip. 1 of 2 pages are plain shipping labels \
-                 (a.pdf, pages 2). In the seller centre, download the labels again with \
-                 Shipping label + Packing slip."
-            );
-        }
-        other => panic!("expected NoSlip, got {other:?}"),
-    }
+    let ReadError::NoSlip(no_slip) = err else {
+        panic!("expected NoSlip, got {err:?}");
+    };
+    assert_eq!(no_slip.plain_pages, 1);
+    assert_eq!(no_slip.total_pages, 2);
+    assert_eq!(
+        no_slip.to_string(),
+        "These labels have no packing slip. 1 of 2 pages are plain shipping labels \
+         (a.pdf, pages 2). In the seller centre, download the labels again with \
+         Shipping label + Packing slip."
+    );
 }
 
 #[test]
-fn qty_total_difference_is_warned() {
+fn the_reading_warns_about_a_quantity_difference_a_missing_tracking_id_and_an_unknown_courier() {
+    // The slip's `Qty Total` disagrees with the quantity sum.
     let p0 = slip_page(
         "JY0000001234\n580000000000000001",
         &one_row(),
@@ -301,10 +292,8 @@ fn qty_total_difference_is_warned() {
             sum: 1,
         }]
     );
-}
 
-#[test]
-fn unknown_courier_is_warned() {
+    // The shared 00 form names no courier on its own.
     let p0 = slip_page(
         "580000000000000003\n000000000202",
         &one_row(),
@@ -324,14 +313,11 @@ fn unknown_courier_is_warned() {
         "Courier unknown for 1 order: 000000000202. They are sorted normally; only a \
          condition on courier cannot see them."
     );
-}
 
-#[test]
-fn a_missing_tracking_id_is_warned() {
+    // Without a tracking ID the order is named by its Order ID, and the miss is its own warning.
     let p0 = slip_page("580000000000000004", &one_row(), Some(1), None);
     let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
     assert!(reading.orders[0].order.tracking_id.is_none());
-    // The unknown-courier line names that order by its Order ID, as it has no tracking ID.
     let unknown = reading
         .warnings
         .iter()
@@ -347,8 +333,8 @@ fn a_missing_tracking_id_is_warned() {
 }
 
 #[test]
-fn a_known_logo_names_the_order_and_reports_no_unseen_logo() {
-    // The measured J&T Express logo hash (courier.md item 1) with its own JY form.
+fn an_unseen_logo_is_reported_and_an_answer_names_the_orders_whose_form_agrees() {
+    // The measured J&T Express logo names its order and reports nothing unseen.
     let p0 = page_with(
         "JY0000001234\n580000000000000001",
         &one_row(),
@@ -362,33 +348,38 @@ fn a_known_logo_names_the_order_and_reports_no_unseen_logo() {
         Some("J&T Express")
     );
     assert!(reading.unseen_logos.is_empty());
-}
 
-#[test]
-fn an_unseen_logo_is_reported_with_its_pages_and_orders() {
-    // Two orders carry the same unknown strip.
-    let p0 = page_with(
-        "JY0000001234\n580000000000000001",
-        &one_row(),
-        Some(1),
-        None,
-        vec![logo("ffff")],
-    );
-    let p1 = plain_page("Jumlah : 1pcs");
-    let p2 = page_with(
-        "JY0000001235\n580000000000000002",
-        &one_row(),
-        Some(1),
-        None,
-        vec![logo("ffff")],
-    );
-    let reading = read_batch(
-        vec![(0usize, 0usize, p0), (0, 1, p1), (0, 2, p2)],
+    // One unknown strip on two orders is reported once, with its pages and orders.
+    let mut reading = read_batch(
+        vec![
+            (
+                0usize,
+                0usize,
+                page_with(
+                    "JY0000001234\n580000000000000001",
+                    &one_row(),
+                    Some(1),
+                    None,
+                    vec![logo("ffff")],
+                ),
+            ),
+            (0, 1, plain_page("Jumlah : 1pcs")),
+            (
+                0,
+                2,
+                page_with(
+                    "000000000205\n580000000000000002",
+                    &one_row(),
+                    Some(1),
+                    None,
+                    vec![logo("ffff")],
+                ),
+            ),
+        ],
         &["a.pdf"],
         table(),
     )
     .unwrap();
-
     assert_eq!(reading.unseen_logos.len(), 1);
     let entry = &reading.unseen_logos[0];
     assert_eq!(entry.hash, "ffff");
@@ -405,10 +396,8 @@ fn an_unseen_logo_is_reported_with_its_pages_and_orders() {
     // The unknown logo names neither order: the table has to be asked.
     assert_eq!(reading.orders[0].order.courier, None);
     assert_eq!(reading.orders[1].order.courier, None);
-}
 
-#[test]
-fn an_appearance_hash_is_carried_on_the_unseen_logo() {
+    // The appearance hash is carried on the report, for the appearance table.
     let p0 = page_with(
         "570000000202\n580000000000000001",
         &one_row(),
@@ -419,36 +408,14 @@ fn an_appearance_hash_is_carried_on_the_unseen_logo() {
             appearance: Some("2a36acec58f5ab12".to_string()),
         }],
     );
-    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
+    let with_appearance = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], table()).unwrap();
     assert_eq!(
-        reading.unseen_logos[0].appearance.as_deref(),
+        with_appearance.unseen_logos[0].appearance.as_deref(),
         Some("2a36acec58f5ab12")
     );
-    assert_eq!(reading.orders[0].order.courier, None);
-}
+    assert_eq!(with_appearance.orders[0].order.courier, None);
 
-#[test]
-fn an_answered_logo_names_the_orders_only_where_the_form_agrees() {
-    // One order with the JY form, one with the shared 00 form; both carry the unknown strip.
-    let p0 = page_with(
-        "JY0000001234\n580000000000000001",
-        &one_row(),
-        Some(1),
-        None,
-        vec![logo("ffff")],
-    );
-    let p1 = page_with(
-        "000000000205\n580000000000000002",
-        &one_row(),
-        Some(1),
-        None,
-        vec![logo("ffff")],
-    );
-    let mut reading =
-        read_batch(vec![(0usize, 0usize, p0), (0, 1, p1)], &["a.pdf"], table()).unwrap();
-    assert_eq!(reading.orders[0].order.courier, None);
-    assert_eq!(reading.orders[1].order.courier, None);
-
+    // The answer names only the orders whose form agrees with the courier, and is spent once.
     let named = reading.apply_logo_answer(
         "ffff",
         &LogoAnswer::Courier {
@@ -463,7 +430,6 @@ fn an_answered_logo_names_the_orders_only_where_the_form_agrees() {
     );
     assert_eq!(reading.orders[1].order.courier, None);
     assert!(reading.unseen_logos.is_empty());
-    // The answer is spent: a second one changes nothing.
     assert_eq!(
         reading.apply_logo_answer(
             "ffff",
@@ -474,10 +440,8 @@ fn an_answered_logo_names_the_orders_only_where_the_form_agrees() {
         ),
         0
     );
-}
 
-#[test]
-fn a_not_courier_answer_names_nothing() {
+    // *Not a courier* and *Skip* name nothing, and both spend the question.
     let p0 = page_with(
         "JY0000001234\n580000000000000001",
         &one_row(),

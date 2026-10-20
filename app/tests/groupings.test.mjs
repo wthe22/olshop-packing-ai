@@ -1,6 +1,6 @@
-// The grouping control's rules: which grouping the New batch and Categories controls start on, the fallback when
-// the grouping used last is gone, and a new grouping's name. Pure logic; no window opens and
-// nothing is read or written.
+// The grouping control's rules: which grouping the New batch and Categories controls start on, the
+// fallback when the grouping used last is gone, a new grouping's name and the file line. Pure
+// logic; no window opens and nothing is read or written.
 //
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
@@ -24,9 +24,8 @@ const groupings = [
 ];
 
 test("the grouping control's words are the designed words", () => {
-  // *Set: [default ▾]* before *Read labels*.
+  // *Set: [default ▾]* before *Read labels*, and *Set: default (fixed)* on the amend's selection page.
   assert.equal(texts.newBatch.grouping, "Grouping");
-  // The amend's selection page: *Set: default (fixed)*.
   assert.equal(texts.newBatch.groupingFixed("default"), "default (fixed)");
   // The grouping row's two buttons and the file line.
   assert.equal(texts.categories.newGrouping, "+ New grouping");
@@ -35,25 +34,20 @@ test("the grouping control's words are the designed words", () => {
     texts.categories.groupingFile("categories.toml"),
     "file: categories.toml",
   );
-});
 
-test("the choice the batch was packed with names the grouping in the Plan header", () => {
-  // "Batch 3 · set default · 2 files · 257 pages · 256 orders · 0 already saved".
+  // The Plan header names the grouping the batch was packed with.
   assert.equal(
     texts.plan.header(3, "default", 2, 257, 256, 0),
     "Batch 3 · grouping default · 2 files · 257 pages · 256 orders · 0 already saved",
   );
 });
 
-test("the Amend confirmation names the batch's grouping", () => {
-  // Verbatim: the literal must not drift from `texts.ts`.
+test("the Amend confirmation names the batch's grouping, in the words the guide quotes", () => {
+  const amend = texts.day.confirmAmend(2, "default", "09:12");
   assert.equal(
-    texts.day.confirmAmend(2, "default", "09:12"),
+    amend,
     "Redo batch 2 with its grouping (default)? Batch 2 was saved at 09:12. If you already printed it, print it again after saving.",
   );
-});
-
-test("the guide's quoted Amend confirmation is the app's own text", () => {
   // 03-changes.md quotes the Amend confirmation, so the two must not drift. The quote is wrapped
   // over two lines in the Markdown, so its whitespace is collapsed first.
   const doc = readFileSync(
@@ -61,21 +55,18 @@ test("the guide's quoted Amend confirmation is the app's own text", () => {
     "utf8",
   ).replace(/\s+/g, " ");
   assert.ok(
-    doc.includes(texts.day.confirmAmend(2, "default", "09:12")),
+    doc.includes(amend),
     "03-changes.md must quote the Amend confirmation as texts.ts writes it",
   );
 });
 
-test("the grouping used last is preselected", () => {
+test("the grouping used last is preselected, and a grouping that is gone falls back to default", () => {
   assert.equal(preselectGrouping(groupings, "ramadhan"), "ramadhan");
   assert.equal(preselectGrouping(groupings, "default"), "default");
   assert.equal(preselectGrouping(groupings, "shoes"), "shoes");
-});
-
-test("a grouping used last whose file is gone falls back to `default`", () => {
   // The grouping was deleted (or renamed) since it was used: its name is no longer in the list.
-  assert.equal(preselectGrouping(groupings, "gone"), "default");
   // `default` is always in the list, so the fallback is always a real grouping.
+  assert.equal(preselectGrouping(groupings, "gone"), "default");
   assert.equal(
     preselectGrouping([{ name: "default", file: "categories.toml" }], "gone"),
     "default",
@@ -97,6 +88,10 @@ test("a new grouping's name is a file name: trimmed, forbidden characters become
     normalizeGroupingName("a/b:c*d?e\"f<g>h|i\\j"),
     "a-b-c-d-e-f-g-h-i-j",
   );
+  // A fresh name is accepted, and the file it will get is its name.
+  assert.equal(groupingProblem("ramadhan baru", groupings), null);
+  assert.equal(groupingProblem("a/b", groupings), null); // written as `categories/a-b.toml`
+  assert.equal(normalizeGroupingName("a/b"), "a-b");
 });
 
 test("a new grouping's name is refused when blank, reserved or already there", () => {
@@ -107,12 +102,6 @@ test("a new grouping's name is refused when blank, reserved or already there", (
   assert.equal(groupingProblem("ramadhan", groupings), "exists");
   // The check sees the normalised name: surrounding spaces are trimmed first.
   assert.equal(groupingProblem("shoes ", groupings), "exists");
-});
-
-test("a fresh name is accepted; the file it will get is its name", () => {
-  assert.equal(groupingProblem("ramadhan baru", groupings), null);
-  assert.equal(groupingProblem("a/b", groupings), null); // written as `categories/a-b.toml`
-  assert.equal(normalizeGroupingName("a/b"), "a-b");
 });
 
 test("the file line comes from the list, and is empty for a grouping that is not there", () => {

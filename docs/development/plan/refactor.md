@@ -6,7 +6,6 @@ code rules; every report states **size gate passed, no new lint suppression, cov
 
 | Step | Scope | Effort | File |
 |---|---|---|---|
-| R7 | Shared test fixtures, tiny tests merged into scenarios and tables; then the **full review** | L | [refactor-r7.md](refactor-r7.md) |
 
 The work starts at commit `91de98a` (the base of the final review's diff). A step edits only the files its file names; the steps run one after another, so no two edit the same file.
 

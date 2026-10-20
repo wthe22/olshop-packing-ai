@@ -1,6 +1,6 @@
-// The logo prompt's flow and the counts it
-// shows. No window is opened and nothing is written: the back end is a small fake that behaves
-// like `answer_logo` (the answered logo leaves the list) and records what it was sent.
+// The logo prompt's flow and the words and counts it shows. No window is opened and nothing is
+// written: the back end is a small fake that behaves like `answer_logo` (the answered logo leaves
+// the list) and records what it was sent.
 //
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
@@ -10,8 +10,8 @@ import assert from "node:assert/strict";
 import { LogoPrompt, needsLogoPrompt } from "../src/lib/logoPrompt.ts";
 import { texts } from "../src/texts.ts";
 
-/// One read result with `count` unseen logos (`hash-1` …), 4 pages and 4 orders each, as the
-/// window receives it from `read_labels`.
+// One read result with `count` unseen logos (`hash-1` …), 4 pages and 4 orders each, as the
+// window receives it from `read_labels`.
 function read(count) {
   return {
     files: 1,
@@ -32,8 +32,8 @@ function read(count) {
   };
 }
 
-/// A fake `api.answerLogo`: records every call and returns the result with the answered logo gone,
-/// exactly as the back end does (the answered logo is spent).
+// A fake `api.answerLogo`: records every call and returns the result with the answered logo gone,
+// exactly as the back end does (the answered logo is spent).
 function backend(initial) {
   const calls = [];
   let result = initial;
@@ -45,14 +45,12 @@ function backend(initial) {
   return { calls, answerLogo };
 }
 
-test("the prompt's texts are the designed words", () => {
+test("the prompt's words are the designed words, and its counts read singular where they should", () => {
   assert.equal(texts.logo.title, "Which courier is this logo?");
   assert.equal(texts.logo.notCourier, "Not a courier");
   assert.equal(texts.logo.dontKnow, "I don't know");
   assert.equal(texts.logo.skipAll, "Skip all");
-});
 
-test("the counts line is '<n> pages · <m> orders', singular where it should be", () => {
   assert.equal(texts.logo.counts(4, 4), "4 pages · 4 orders");
   assert.equal(texts.logo.counts(1, 4), "1 page · 4 orders");
   assert.equal(texts.logo.counts(4, 1), "4 pages · 1 order");
@@ -68,11 +66,11 @@ test("a read with no unseen logo opens the Plan directly", () => {
   assert.equal(prompt.needed, false);
 });
 
-test("a courier answer asks the next logo and applies the answer", async () => {
+test("an answer is sent as given, and the next unseen logo asks", async () => {
+  // A courier answer names the order and moves on.
   const first = read(2);
   const { calls, answerLogo } = backend(first);
   const prompt = new LogoPrompt(first, answerLogo);
-
   assert.equal(prompt.current.hash, "hash-1");
   await prompt.answer({ kind: "courier", name: "SiCepat" });
   assert.deepEqual(calls, [
@@ -84,82 +82,73 @@ test("a courier answer asks the next logo and applies the answer", async () => {
   assert.equal(calls.length, 2);
   assert.equal(prompt.current, null);
   assert.deepEqual(prompt.latest.logos, []);
-});
 
-test("Not a courier is sent as not_courier and asks the next logo", async () => {
-  const first = read(2);
-  const { calls, answerLogo } = backend(first);
-  const prompt = new LogoPrompt(first, answerLogo);
+  // *Not a courier* is sent as `not_courier` and asks the next logo.
+  const notCourier = backend(read(2));
+  const other = new LogoPrompt(read(2), notCourier.answerLogo);
+  await other.answer({ kind: "not_courier" });
+  assert.deepEqual(notCourier.calls[0], {
+    hash: "hash-1",
+    answer: { kind: "not_courier" },
+  });
+  assert.equal(other.current.hash, "hash-2");
 
-  await prompt.answer({ kind: "not_courier" });
-  assert.deepEqual(calls[0], { hash: "hash-1", answer: { kind: "not_courier" } });
-  assert.equal(prompt.current.hash, "hash-2");
-});
-
-test("I don't know sends skip, changes nothing, and asks the next logo", async () => {
-  const first = read(2);
-  first.warnings = ["Courier unknown for 4 orders: JY0000001234"];
-  const { calls, answerLogo } = backend(first);
-  const prompt = new LogoPrompt(first, answerLogo);
-
-  await prompt.answer({ kind: "skip" });
-  assert.deepEqual(calls[0], { hash: "hash-1", answer: { kind: "skip" } });
+  // *I don't know* sends `skip`, changes nothing, and asks the next logo.
+  const unknown = read(2);
+  unknown.warnings = ["Courier unknown for 4 orders: JY0000001234"];
+  const skipping = backend(unknown);
+  const third = new LogoPrompt(unknown, skipping.answerLogo);
+  await third.answer({ kind: "skip" });
+  assert.deepEqual(skipping.calls[0], { hash: "hash-1", answer: { kind: "skip" } });
   // Nothing was applied: the counts and warnings are the read's own.
-  assert.deepEqual(prompt.latest.warnings, ["Courier unknown for 4 orders: JY0000001234"]);
-  assert.equal(prompt.latest.orders, 4);
-  assert.equal(prompt.current.hash, "hash-2");
+  assert.deepEqual(third.latest.warnings, [
+    "Courier unknown for 4 orders: JY0000001234",
+  ]);
+  assert.equal(third.latest.orders, 4);
+  assert.equal(third.current.hash, "hash-2");
+
+  // Esc is the same answer as *I don't know*, and skips only the one logo shown.
+  const two = backend(read(3));
+  const esc = new LogoPrompt(read(3), two.answerLogo);
+  await esc.answer({ kind: "skip" });
+  assert.equal(esc.current.hash, "hash-2");
+  await esc.answer({ kind: "skip" });
+  assert.equal(esc.current.hash, "hash-3");
+  assert.equal(two.calls.length, 2);
+  assert.ok(two.calls.every((call) => call.answer.kind === "skip"));
 });
 
-test("Esc skips only the one logo shown: the next one still asks", async () => {
+test("Skip all stops the prompts, sending nothing and keeping what was answered", async () => {
+  // On the first logo nothing at all is sent and the draft is untouched.
   const first = read(3);
-  const { calls, answerLogo } = backend(first);
-  const prompt = new LogoPrompt(first, answerLogo);
-
-  // Esc and *I don't know* are the same answer.
-  await prompt.answer({ kind: "skip" });
-  assert.equal(prompt.current.hash, "hash-2");
-  await prompt.answer({ kind: "skip" });
-  assert.equal(prompt.current.hash, "hash-3");
-  assert.equal(calls.length, 2);
-  assert.ok(calls.every((call) => call.answer.kind === "skip"));
-});
-
-test("Skip all on the first logo stops the prompts and sends nothing", async () => {
-  const first = read(3);
-  const { calls, answerLogo } = backend(first);
-  const prompt = new LogoPrompt(first, answerLogo);
-
+  const untouched = backend(first);
+  const prompt = new LogoPrompt(first, untouched.answerLogo);
   prompt.skipAll();
   assert.equal(prompt.current, null);
-  assert.equal(calls.length, 0, "nothing is sent for *Skip all*");
+  assert.equal(untouched.calls.length, 0, "nothing is sent for *Skip all*");
   assert.equal(prompt.latest, first, "the draft is untouched");
-});
 
-test("Skip all after one answer keeps that answer and stops the rest", async () => {
-  const first = read(3);
-  const { calls, answerLogo } = backend(first);
-  const prompt = new LogoPrompt(first, answerLogo);
-
-  await prompt.answer({ kind: "not_courier" });
-  prompt.skipAll();
-  assert.equal(calls.length, 1, "the rest of the batch is not asked");
-  assert.equal(prompt.current, null);
+  // After one answer that answer stays, and the rest of the batch is not asked.
+  const answered = backend(read(3));
+  const second = new LogoPrompt(read(3), answered.answerLogo);
+  await second.answer({ kind: "not_courier" });
+  second.skipAll();
+  assert.equal(answered.calls.length, 1, "the rest of the batch is not asked");
+  assert.equal(second.current, null);
   // The rest stay in the list of the last result, unanswered.
   assert.deepEqual(
-    prompt.latest.logos.map((logo) => logo.hash),
+    second.latest.logos.map((logo) => logo.hash),
     ["hash-2", "hash-3"],
   );
-});
 
-test("a logo left in the list by the back end is not asked twice", async () => {
-  const first = read(1);
-  const calls = [];
-  const prompt = new LogoPrompt(first, async (hash) => {
-    calls.push(hash);
-    return first; // the logo stays: a guard against asking it again
+  // A logo the back end leaves in the list is not asked twice.
+  const one = read(1);
+  const looping = [];
+  const guarded = new LogoPrompt(one, async (hash) => {
+    looping.push(hash);
+    return one;
   });
-
-  await prompt.answer({ kind: "skip" });
-  assert.equal(calls.length, 1);
-  assert.equal(prompt.current, null);
+  await guarded.answer({ kind: "skip" });
+  assert.equal(looping.length, 1);
+  assert.equal(guarded.current, null);
 });

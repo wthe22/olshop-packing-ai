@@ -58,12 +58,11 @@ fn base_categories() -> Vec<Category> {
 }
 
 #[test]
-fn count_takes_from_what_is_left_then_the_rest() {
+fn counting_a_batch_numbers_only_the_pdfs_that_get_orders() {
     let orders = sample_orders();
-    let plan = Plan::from_categories(&base_categories());
-    let result = plan.count(&orders, PdfNumber::new(1));
+    let result = Plan::from_categories(&base_categories()).count(&orders, PdfNumber::new(1));
 
-    assert_eq!(result.categories.len(), 3);
+    // The entries in order, then the rest; each entry takes what the ones above left it.
     assert_eq!(
         result
             .categories
@@ -84,18 +83,25 @@ fn count_takes_from_what_is_left_then_the_rest() {
         [OrderId::new("580000000000000003")]
     );
     assert_eq!(result.total_orders(), orders.len());
-}
 
-#[test]
-fn a_zero_order_entry_is_skipped_and_gets_no_number() {
-    let orders = sample_orders();
+    // The numbering continues from the first number given.
+    let numbered = Plan::from_categories(&base_categories()).count(&orders, PdfNumber::new(7));
+    assert_eq!(
+        numbered
+            .categories
+            .iter()
+            .map(|p| p.number)
+            .collect::<Vec<_>>(),
+        [PdfNumber::new(7), PdfNumber::new(8), PdfNumber::new(9)]
+    );
+
+    // An entry that takes no order is left out, so the entry below it gets its number.
     let categories = vec![
         category("B", "Spion", Some("name contains \"spion\"")),
         category("N", "Never", Some("name contains \"absent\"")),
         category("Z", "Rest", None),
     ];
     let result = Plan::from_categories(&categories).count(&orders, PdfNumber::new(4));
-
     assert_eq!(
         result
             .categories
@@ -112,11 +118,8 @@ fn a_zero_order_entry_is_skipped_and_gets_no_number() {
             .collect::<Vec<_>>(),
         [PdfNumber::new(4), PdfNumber::new(5)]
     );
-}
 
-#[test]
-fn the_last_entry_without_a_condition_takes_the_rest() {
-    let orders = sample_orders();
+    // The last entry without a condition takes the rest.
     let categories = vec![
         category("A", "Sepatu", Some("name contains \"sepatu\"")),
         category("Z", "Lainnya", None),
@@ -149,54 +152,47 @@ fn the_catch_all_entry_takes_every_order_and_is_the_unconfigured_plan() {
     );
     assert!(!Plan::from_categories(&base_categories()).unconfigured());
     assert!(Plan::from_categories(&[category("Z", "Lainnya", None)]).unconfigured());
+
+    // The rest entry carries the documented code and name, and takes whatever is left.
+    let rest = packing_engine::plan::rest_category();
+    assert_eq!(rest.code, REST_CODE);
+    assert_eq!(rest.name, REST_NAME);
+    assert!(rest.condition.is_none());
 }
 
 #[test]
-fn numbering_continues_from_the_first_number() {
+fn skipping_moving_and_adding_change_which_entry_takes_first() {
     let orders = sample_orders();
-    let result = Plan::from_categories(&base_categories()).count(&orders, PdfNumber::new(7));
-    assert_eq!(result.categories[0].number, PdfNumber::new(7));
-    assert_eq!(result.categories[1].number, PdfNumber::new(8));
-    assert_eq!(result.categories[2].number, PdfNumber::new(9));
-}
 
-#[test]
-fn skip_lets_the_orders_fall_to_the_rows_below() {
-    let orders = sample_orders();
+    // A skipped entry takes nothing, so its orders fall to the rows below.
     let mut plan = Plan::from_categories(&base_categories());
     plan.skip(0).unwrap();
     let result = plan.count(&orders, PdfNumber::new(1));
-
-    // A's sepatu are not taken by A (skipped); B still needs spion, so sepatu fall to the rest.
     assert_eq!(result.categories.len(), 2);
     assert_eq!(result.categories[0].code, "B");
     assert_eq!(result.categories[1].code, REST_CODE);
     assert_eq!(result.categories[1].orders.len(), 3);
-
     // Unskip restores the first result.
     plan.unskip(0).unwrap();
-    let restored = plan.count(&orders, PdfNumber::new(1));
-    assert_eq!(restored.categories[0].orders.len(), 2);
-}
+    assert_eq!(
+        plan.count(&orders, PdfNumber::new(1)).categories[0]
+            .orders
+            .len(),
+        2
+    );
 
-#[test]
-fn move_changes_which_entry_takes_first() {
-    let orders = sample_orders();
+    // Moving a row up gives it the first pick.
     let categories = vec![
         category("A", "Sepatu", Some("name contains \"sepatu\"")),
         category("J", "J&T", Some("courier starts_with \"J&T\"")),
     ];
     let mut plan = Plan::from_categories(&categories);
-    // A is first: 2 sepatu, then J&T takes Lainnya D (spion C is not J&T).
     assert_eq!(
         plan.count(&orders, PdfNumber::new(1)).categories[0].code,
         "A"
     );
-
     plan.move_up(1).unwrap();
     let result = plan.count(&orders, PdfNumber::new(1));
-    // J&T is first now and takes all three J&T orders (both sepatu included), so A is empty and
-    // the SiCepat spion falls to the rest.
     assert_eq!(result.categories[0].code, "J");
     assert_eq!(result.categories[0].orders.len(), 3);
     assert_eq!(result.categories[1].code, REST_CODE);
@@ -204,10 +200,8 @@ fn move_changes_which_entry_takes_first() {
         result.categories[1].orders,
         [OrderId::new("580000000000000003")]
     );
-}
 
-#[test]
-fn move_to_places_a_row_at_a_position() {
+    // Moving to a position is bounded by the row count.
     let mut plan = Plan::from_categories(&base_categories());
     plan.move_to(0, 1).unwrap();
     assert_eq!(
@@ -221,18 +215,13 @@ fn move_to_places_a_row_at_a_position() {
         plan.move_to(0, 5),
         Err(PlanError::Position { .. })
     ));
-}
 
-#[test]
-fn add_inserts_a_one_off_category() {
-    let orders = sample_orders();
+    // An added entry takes its place above the rest row and takes what is left for it.
     let categories = vec![category("A", "Sepatu", Some("name contains \"sepatu\""))];
     let mut plan = Plan::from_categories(&categories);
-    // Added above the rest row (at the end).
     plan.add(1, category("X", "Spion", Some("name contains \"spion\"")))
         .unwrap();
     let result = plan.count(&orders, PdfNumber::new(1));
-
     assert_eq!(
         result
             .categories
@@ -248,34 +237,48 @@ fn add_inserts_a_one_off_category() {
 }
 
 #[test]
-fn rename_replaces_the_whole_file_name() {
+fn renaming_and_a_condition_change_this_batch_and_not_the_stored_rules() {
     let orders = sample_orders();
+
+    // The suggested file names follow the spec, the rest code `?` becoming `-`.
+    let result = Plan::from_categories(&base_categories()).count(&orders, PdfNumber::new(3));
+    assert_eq!(result.categories[0].file_name, "3 A Sepatu ×2.pdf");
+    assert_eq!(result.categories[2].file_name, "5 - Uncategorised ×1.pdf");
+
+    // A rename replaces the whole file name, and an empty one is refused.
     let mut plan = Plan::from_categories(&base_categories());
     plan.rename(0, "1 A Sepatu sendiri").unwrap();
     let result = plan.count(&orders, PdfNumber::new(1));
     assert_eq!(result.categories[0].file_name, "1 A Sepatu sendiri.pdf");
-
-    // An invalid (empty) name is refused.
     assert!(plan.rename(0, "   ").is_err());
-}
 
-#[test]
-fn duplicate_file_names_are_refused() {
-    let orders = sample_orders();
+    // Two names that differ only in case are refused: Windows treats them as one file.
     let mut plan = Plan::from_categories(&base_categories());
     plan.rename(0, "same").unwrap();
-    plan.rename(1, "SAME.pdf").unwrap(); // case-insensitive, as Windows names are
-    let result = plan.count(&orders, PdfNumber::new(1));
-    assert!(result.check_file_names().is_err());
-}
+    plan.rename(1, "SAME.pdf").unwrap();
+    assert!(
+        plan.count(&orders, PdfNumber::new(1))
+            .check_file_names()
+            .is_err()
+    );
 
-#[test]
-fn suggested_file_name_follows_the_spec() {
-    let orders = sample_orders();
-    let result = Plan::from_categories(&base_categories()).count(&orders, PdfNumber::new(3));
-    assert_eq!(result.categories[0].file_name, "3 A Sepatu ×2.pdf");
-    // The rest pick's code `?` becomes `-`.
-    assert_eq!(result.categories[2].file_name, "5 - Uncategorised ×1.pdf");
+    // A condition set for this batch takes the order it names, and leaves the stored rules alone.
+    let categories = vec![category("A", "Sepatu", Some("name contains \"sepatu\""))];
+    let mut plan = Plan::from_categories(&categories);
+    plan.set_condition(
+        0,
+        Some(parse_condition("courier starts_with \"SiCepat\"").unwrap()),
+    )
+    .unwrap();
+    let result = plan.count(&orders, PdfNumber::new(1));
+    assert_eq!(
+        result.categories[0].orders,
+        [OrderId::new("580000000000000003")]
+    );
+    assert_eq!(
+        plan.entries()[0].category.when.as_deref(),
+        Some("name contains \"sepatu\"")
+    );
 }
 
 #[test]
@@ -301,52 +304,19 @@ fn runs_group_by_contents_sorted_by_count_then_contents() {
 }
 
 #[test]
-fn a_category_reports_its_page_count() {
+fn the_plan_counts_pages_and_an_empty_batch_has_no_categories() {
     let mut first = order(
         "580000000000000001",
         vec![line_with_variation("Sepatu", "", 1)],
         Some("J&T"),
     );
     first.pages = vec![PageRef { file: 0, page: 0 }, PageRef { file: 0, page: 1 }];
-    let orders = vec![first];
-    let result = Plan::from_categories(&base_categories()).count(&orders, PdfNumber::new(1));
+    let result = Plan::from_categories(&base_categories()).count(&[first], PdfNumber::new(1));
     assert_eq!(result.categories[0].pages, 2);
     assert_eq!(result.total_pages(), 2);
-}
 
-#[test]
-fn no_orders_gives_no_categories() {
+    // No order at all: no entry gets a PDF.
     let result = Plan::from_categories(&base_categories()).count(&[], PdfNumber::new(1));
     assert!(result.categories.is_empty());
     assert_eq!(result.total_orders(), 0);
-}
-
-#[test]
-fn set_condition_changes_a_category_for_this_batch_only() {
-    let orders = sample_orders();
-    let categories = vec![category("A", "Sepatu", Some("name contains \"sepatu\""))];
-    let mut plan = Plan::from_categories(&categories);
-    plan.set_condition(
-        0,
-        Some(parse_condition("courier starts_with \"SiCepat\"").unwrap()),
-    )
-    .unwrap();
-    let result = plan.count(&orders, PdfNumber::new(1));
-    assert_eq!(
-        result.categories[0].orders,
-        [OrderId::new("580000000000000003")]
-    );
-    // The stored rules entry is untouched.
-    assert_eq!(
-        plan.entries()[0].category.when.as_deref(),
-        Some("name contains \"sepatu\"")
-    );
-}
-
-#[test]
-fn rest_category_uses_the_documented_code_and_name() {
-    let rest = packing_engine::plan::rest_category();
-    assert_eq!(rest.code, REST_CODE);
-    assert_eq!(rest.name, REST_NAME);
-    assert!(rest.condition.is_none());
 }

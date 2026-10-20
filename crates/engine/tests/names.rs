@@ -9,36 +9,26 @@ use packing_engine::names::{
 };
 
 #[test]
-fn suggested_name_matches_the_spec_example() {
-    assert_eq!(
-        suggested_saved_pdf_name(PdfNumber::new(3), "Z", "Lainnya", 2),
-        "3 Z Lainnya ×2.pdf"
-    );
-    assert_eq!(
-        suggested_saved_pdf_name(PdfNumber::new(1), "A", "Sepatu", 172),
-        "1 A Sepatu ×172.pdf"
-    );
-}
+fn a_suggested_saved_pdf_name_follows_the_01_format() {
+    let cases = [
+        ((3, "Z", "Lainnya", 2), "3 Z Lainnya ×2.pdf"),
+        ((1, "A", "Sepatu", 172), "1 A Sepatu ×172.pdf"),
+        // The rest code `?` becomes a dash.
+        ((5, "?", "Uncategorised", 2), "5 - Uncategorised ×2.pdf"),
+        // Every Windows-forbidden character becomes a dash.
+        (
+            (1, "A", "A\\B/C:D*E?F\"G<H>I|J", 1),
+            "1 A A-B-C-D-E-F-G-H-I-J ×1.pdf",
+        ),
+    ];
+    for ((number, code, name, count), expected) in cases {
+        assert_eq!(
+            suggested_saved_pdf_name(PdfNumber::new(number), code, name, count),
+            expected
+        );
+    }
 
-#[test]
-fn the_rest_code_becomes_a_dash() {
-    assert_eq!(
-        suggested_saved_pdf_name(PdfNumber::new(5), "?", "Uncategorised", 2),
-        "5 - Uncategorised ×2.pdf"
-    );
-}
-
-#[test]
-fn illegal_characters_become_a_dash() {
-    let name = "A\\B/C:D*E?F\"G<H>I|J";
-    assert_eq!(
-        suggested_saved_pdf_name(PdfNumber::new(1), "A", name, 1),
-        "1 A A-B-C-D-E-F-G-H-I-J ×1.pdf"
-    );
-}
-
-#[test]
-fn the_name_part_is_cut_at_100_characters() {
+    // A long name part is cut at the limit, ending with an ellipsis.
     let long_name = "Produk ".repeat(40);
     let file_name = suggested_saved_pdf_name(PdfNumber::new(1), "A", &long_name, 3);
     assert!(file_name.starts_with("1 A "));
@@ -49,27 +39,34 @@ fn the_name_part_is_cut_at_100_characters() {
 }
 
 #[test]
-fn a_user_name_gets_its_pdf_extension() {
-    assert_eq!(
-        normalize_saved_pdf_name("1 A Sepatu sendiri").unwrap(),
-        "1 A Sepatu sendiri.pdf"
-    );
-    assert_eq!(
-        normalize_saved_pdf_name("1 A Sepatu sendiri.pdf").unwrap(),
-        "1 A Sepatu sendiri.pdf"
-    );
-    assert_eq!(normalize_saved_pdf_name("  x.PDF  ").unwrap(), "x.pdf");
+fn a_name_is_made_safe_for_windows_only_where_it_must_be() {
+    let typed: Vec<(&str, Result<&str, NameError>)> = vec![
+        ("1 A Sepatu sendiri", Ok("1 A Sepatu sendiri.pdf")),
+        ("1 A Sepatu sendiri.pdf", Ok("1 A Sepatu sendiri.pdf")),
+        ("  x.PDF  ", Ok("x.pdf")),
+        ("a/b:c.pdf", Ok("a-b-c.pdf")),
+        (".pdf", Err(NameError::Empty)),
+        ("   ", Err(NameError::Empty)),
+    ];
+    for (name, expected) in typed {
+        match expected {
+            Ok(want) => assert_eq!(normalize_saved_pdf_name(name).unwrap(), want, "{name}"),
+            Err(want) => assert_eq!(normalize_saved_pdf_name(name).unwrap_err(), want, "{name}"),
+        }
+    }
+
+    // Only the forbidden characters are touched; the rest of the name stays as it is.
+    let built = [
+        ("3 Z Lainnya ×393.pdf", "3 Z Lainnya ×393.pdf"),
+        ("a<b>c", "a-b-c"),
+    ];
+    for (name, expected) in built {
+        assert_eq!(sanitize_file_name(name), expected);
+    }
 }
 
 #[test]
-fn a_user_name_is_sanitized_and_an_empty_one_refused() {
-    assert_eq!(normalize_saved_pdf_name("a/b:c.pdf").unwrap(), "a-b-c.pdf");
-    assert_eq!(normalize_saved_pdf_name(".pdf"), Err(NameError::Empty));
-    assert_eq!(normalize_saved_pdf_name("   "), Err(NameError::Empty));
-}
-
-#[test]
-fn duplicate_names_are_refused() {
+fn two_file_names_that_differ_only_in_case_are_a_duplicate() {
     let names = vec!["1 A.pdf".to_string(), "2 B.pdf".to_string()];
     assert_eq!(check_unique_names(&names), Ok(()));
 
@@ -85,39 +82,24 @@ fn duplicate_names_are_refused() {
 }
 
 #[test]
-fn sanitize_only_touches_the_forbidden_characters() {
-    assert_eq!(
-        sanitize_file_name("3 Z Lainnya ×393.pdf"),
-        "3 Z Lainnya ×393.pdf"
-    );
-    assert_eq!(sanitize_file_name("a<b>c"), "a-b-c");
-}
-
-#[test]
-fn folder_and_file_names() {
+fn the_folder_and_packing_list_file_names_are_fixed() {
     assert_eq!(batch_folder(BatchNumber::new(1)), "batch 1");
     assert_eq!(temp_batch_folder(BatchNumber::new(2)), "batch 2.partial");
     let date: jiff::civil::Date = "2026-10-07".parse().expect("date");
     assert_eq!(day_folder(date), "2026-10-07");
-}
 
-#[test]
-fn packing_list_file_names() {
-    // Scope whole, one layout: the plain name.
-    assert_eq!(packing_list_file_name(None, None), "packing-list.pdf");
-    // Scope whole, several layouts: the layout is added.
-    assert_eq!(
-        packing_list_file_name(None, Some("full")),
-        "packing-list-full.pdf"
-    );
-    // Scope per-pdf, several layouts: number and layout.
-    assert_eq!(
-        packing_list_file_name(Some(PdfNumber::new(3)), Some("pick")),
-        "packing-list-3-pick.pdf"
-    );
-    // Scope per-pdf, one layout: the number only.
-    assert_eq!(
-        packing_list_file_name(Some(PdfNumber::new(1)), None),
-        "packing-list-1.pdf"
-    );
+    // Scope whole with one layout is the plain name; a second layout is added; a per-PDF scope
+    // puts the number, and the layout only where one layout is not enough.
+    let names = [
+        ((None, None), "packing-list.pdf"),
+        ((None, Some("full")), "packing-list-full.pdf"),
+        (
+            (Some(PdfNumber::new(3)), Some("pick")),
+            "packing-list-3-pick.pdf",
+        ),
+        ((Some(PdfNumber::new(1)), None), "packing-list-1.pdf"),
+    ];
+    for ((pdf, layout), expected) in names {
+        assert_eq!(packing_list_file_name(pdf, layout), expected);
+    }
 }
