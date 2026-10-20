@@ -1,5 +1,4 @@
-// The Plan screen's ways out (08 › *3. Plan*, 08 › *2. New batch* → *The amend's selection
-// page*): the top button is *Back* on a new batch and on an amend, and it goes to the PDF
+// The Plan screen's ways out: the top button is *Back* on a new batch and on an amend, and it goes to the PDF
 // selection page — the new batch's file list, or the amend's selection page — with the files still
 // listed. The bottom row's discard button depends on which it is: none on a new batch (only
 // *Save batch*), *Cancel amend* beside *Save batch `<b>` again* on an amend — and *Cancel amend*
@@ -49,7 +48,7 @@ test("the top button is *Back* on both kinds of batch, and neither leaves for th
 });
 
 test("Amend opens the Plan screen (the categories), not the PDF selection page", () => {
-  // 08 › *1. Day* → *3. Plan*: the batch's own files are read again and the Plan screen opens at
+  // The batch's own files are read again and the Plan screen opens at
   // once; the selection page comes only from that Plan screen's *Back*.
   assert.equal(amendOpens(), "plan");
   assert.notEqual(amendOpens(), "new-batch");
@@ -67,7 +66,7 @@ test("a new batch's Plan screen has neither: no *Cancel amend* and no Day target
 });
 
 test("the amendment's selection page reads *Redo batch `<b>`*, the file list *New batch `<b>`*", () => {
-  // 08 › *2. New batch* → *The amend's selection page*.
+  //*2. New batch* → *The amend's selection page*.
   assert.equal(texts.newBatch.amendTitle(2), "Redo batch 2");
   assert.equal(texts.newBatch.title(3), "New batch 3");
   assert.notEqual(texts.newBatch.amendTitle(2), texts.newBatch.title(2));

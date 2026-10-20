@@ -4,7 +4,7 @@ use super::*;
 use packing_engine::ids::PdfNumber;
 
 /// The plan-entry index a row's kind carries — the index its edits name — or `None` for the
-/// generated row (08 › *3. Plan*).
+/// generated row.
 fn entry_index(kind: &PlanRowKind) -> Option<usize> {
     match kind {
         PlanRowKind::Entry { index } | PlanRowKind::Rest { index } => Some(*index),
@@ -113,7 +113,7 @@ fn plan_view_flags_duplicate_file_names() {
 
 #[test]
 fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
-    // No `categories.toml`: one catch-all entry, every order in one PDF set (Q-UI-4).
+    // No `categories.toml`: one catch-all entry, every order in one PDF set.
     let plan = Plan::from_categories(&[catch_all_category()]);
     let view = plan_view(&plan, &orders(), PdfNumber::new(1), &Grouping::default());
     assert!(view.no_categories);
@@ -144,7 +144,7 @@ fn plan_view_flags_the_unconfigured_one_catch_all_entry() {
     assert_eq!(view.rows[0].orders, 6);
 }
 
-/// The plan view names the picks set the plan was built from (04 › *Sets*; 08 › *3. Plan*):
+/// The plan view names the picks set the plan was built from:
 /// the header shows it, and **Edit categories** opens it.
 #[test]
 fn plan_view_names_the_grouping() {
@@ -170,8 +170,8 @@ fn plan_view_names_the_grouping() {
     );
 }
 
-/// A set with no file is the one catch-all entry (04 › *Sets*), so the plan is a single row
-/// taking every order and the screen shows the *No picks yet* line (Q-UI-4).
+/// A set with no file is the one catch-all entry, so the plan is a single row
+/// taking every order and the screen shows the *No picks yet* line.
 #[test]
 fn a_grouping_with_no_file_is_the_one_catch_all_entry() {
     let dir = temp_dir("grouping-no-file");
@@ -280,7 +280,7 @@ fn save_progress_names_the_two_stages() {
 }
 
 /// The window reads a row's kind from the `kind` tag, and only a plan entry carries the index its
-/// edits name (08 › *3. Plan*).
+/// edits name.
 #[test]
 fn a_plan_row_serialises_its_kind_and_an_entry_only_index() {
     let view = plan_view(

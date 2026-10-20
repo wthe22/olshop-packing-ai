@@ -129,8 +129,7 @@ fn category_pages_and_saved_follow_the_runs() {
     assert_eq!(saved[0].pdf, PdfNumber::new(1));
     assert_eq!(saved[0].run, 1);
     assert_eq!(saved[1].order_id.as_str(), "580000000000000002");
-    // The searched fields are written at save (07 › *`state.json`*; 2.21): the order's lines
-    // and the order-level fields.
+    // The searched fields are written at save: the order's lines and the order-level fields.
     assert_eq!(saved[0].courier.as_deref(), Some("J&T Express"));
     assert_eq!(saved[0].total_quantity, 1);
     assert_eq!(saved[0].distinct_items, 1);
@@ -216,8 +215,6 @@ fn quiet_summary_hides_the_id_detail_lines() {
 fn printed_time_slices_the_clock() {
     assert_eq!(printed_time("2026-10-07T07:40:12+07:00"), "07:40");
 }
-
-// --------------------------------------------------- the logo prompt's answer (D-LABEL-4)
 
 /// Two orders of the batch with no courier: one `JY…` (J&T Express alone) and one `00…`
 /// (shared with SiCepat), both carrying one unseen logo.

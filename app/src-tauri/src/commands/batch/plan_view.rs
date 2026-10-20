@@ -11,7 +11,7 @@ use packing_engine::rules::{Category, Condition, evaluate, parse_condition};
 
 use super::views::{PlanEdit, PlanRow, PlanRowKind, PlanView, RunView};
 
-/// Map the plan and the draft's orders into the Plan screen's rows (08 › *3. Plan*). Every entry
+/// Map the plan and the draft's orders into the Plan screen's rows. Every entry
 /// becomes a row (skipped and 0-order rows included); the leftovers, if any, become the final
 /// `? Uncategorised` row. The numbers, runs and names come from [`Plan::count`] so the screen and
 /// the saved PDFs agree. `set` is the picks set the plan was built from; the screen's header
@@ -26,7 +26,7 @@ pub(super) fn plan_view(
     let entries = plan.entries();
     let index = order_index(orders);
 
-    // The last entry when it has no condition is the rest row and stays last (08 › *3. Plan*).
+    // The last entry when it has no condition is the rest row and stays last.
     let rest_entry = match entries.last() {
         Some(last) if last.category.condition.is_none() => Some(entries.len() - 1),
         _ => None,
@@ -37,13 +37,13 @@ pub(super) fn plan_view(
     let mut categories = result.categories.iter();
     let mut rows = entry_rows(entries, rest_entry, &mut remaining, &mut categories, &index);
 
-    // The leftovers when no entry took them become `? Uncategorised` (08 › *3. Plan*).
+    // The leftovers when no entry took them become `? Uncategorised`.
     if !remaining.is_empty() {
         let category = categories.next().expect("the rest pick");
         rows.push(rest_row(category, &index));
     }
 
-    // Duplicate saved-PDF names, case-insensitive as Windows is (08 › *3. Plan*).
+    // Duplicate saved-PDF names, case-insensitive as Windows is.
     let has_duplicate_names = duplicate_names(&mut rows);
 
     PlanView {
@@ -129,8 +129,8 @@ fn rest_row(category: &CategoryResult, index: &HashMap<&str, &ReadOrder>) -> Pla
     }
 }
 
-/// Mark every row whose saved-PDF name repeats an earlier one, and report whether any does
-/// (08 › *3. Plan*).
+/// Mark every row whose saved-PDF name repeats an earlier one, and report whether any does.
+///
 fn duplicate_names(rows: &mut [PlanRow]) -> bool {
     let mut seen: Vec<(String, PdfNumber)> = Vec::new();
     let mut has_duplicate_names = false;
@@ -212,7 +212,7 @@ fn run_contents(order: &Order) -> String {
         .join(", ")
 }
 
-/// Apply the window's edits to the open plan in order (08 › *3. Plan*). A bad condition text or a
+/// Apply the window's edits to the open plan in order. A bad condition text or a
 /// bad file name stops with the engine's message (line/col for a condition).
 pub(super) fn apply_edits(plan: &mut Plan, edits: &[PlanEdit]) -> Result<(), String> {
     for edit in edits {

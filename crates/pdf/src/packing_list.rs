@@ -1,9 +1,8 @@
-//! The page builder for the three layouts (port of `tools/analysis/packing/packing_list.py`,
-//! layouts `full`, `summary`, `pick`; 03 › *Packing list (A4)*, 07 › *Packing list*): the page
-//! geometry in millimetres, the drawing operations a page is made of, and the rows the full and
-//! summary layouts print.
+//! The page builder for the three layouts (`full`, `summary`, `pick`): the page geometry in
+//! millimetres, the drawing operations a page is made of, and the rows the full and summary
+//! layouts print.
 //!
-//! Geometry is ported in millimetres from fpdf2: a cell's text baseline sits at
+//! The geometry follows fpdf2, in millimetres: a cell's text baseline sits at
 //! `top + 0.5*h + 0.3*font_size` and a left-aligned cell indents its text by the 1 mm cell
 //! margin (`fpdf.c_margin`). Wrapping width is the column width minus twice that margin.
 
@@ -22,7 +21,7 @@ use self::emit::grouped;
 use self::fonts::Font;
 use self::measure::{Measure, PT_PER_MM};
 
-/// The message shown when a list has orders with no item lines (03 › *Packing list (A4)*).
+/// The message shown when a list has orders with no item lines.
 const NO_ITEM_DATA: &str =
     "no item data: the packing list needs labels with packing slip or the orders CSV";
 

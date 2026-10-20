@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The window frame (08 › *Window frame*): title, the day switch and the navigation. *Search*,
-  // *Categories* and *Settings* open over the current screen (08 › *Window frame*); *Day* returns
+  // The window frame: title, the day switch and the navigation. *Search*,
+  // *Categories* and *Settings* open over the current screen; *Day* returns
   // to it.
   import { texts, formatDay, brandText } from "../texts";
 
@@ -13,7 +13,7 @@
     day,
     screen,
     overlay,
-    // The program's shown version (08 › *Window frame*): the title bar's brand text is the
+    // The program's shown version: the title bar's brand text is the
     // program's name and this, the same line as the OS window title (from `StartInfo.version`).
     version,
     onStep,

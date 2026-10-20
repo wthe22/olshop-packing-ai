@@ -90,7 +90,7 @@ shared test module, not once per file.
 
 `bash tools/check.sh` runs, in this order: `cargo fmt --all --check`, `cargo clippy --workspace
 --all-targets -- -D warnings`, `cargo test --workspace`, `node tools/check-size.mjs`, `node
-tools/check-lint.mjs`, `cd app && npm run check`, `cd app && npm test`. `bash tools/check.sh --coverage` adds
+tools/check-lint.mjs`, `node tools/check-comments.mjs` (zero: no ID, task number, numbered design pointer or banner in a comment), `cd app && npm run check`, `cd app && npm test`. `bash tools/check.sh --coverage` adds
 `node tools/check-coverage.mjs`. All must be green before a commit.
 
 ## Process rules for a refactor

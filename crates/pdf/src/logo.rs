@@ -1,4 +1,4 @@
-//! The courier-logo fingerprints of a page (Q-LABEL-5; [courier deduction]).
+//! The courier-logo fingerprints of a page ([courier deduction]).
 //!
 //! A label's logo is an embedded image. Two hashes are taken of it, both **XXH3-64** (seed 0) of
 //! 16 lowercase hex characters:
@@ -7,7 +7,7 @@
 //!   decoded pixels). One stable value per courier asset; the first clue (courier.md item 1).
 //! - [`appearance_hash`] — the image's **appearance**, for a *masked* logo whose encoded bytes
 //!   name nothing and which the platform re-rastered between exports (J&T Cargo; item 3). It is
-//!   computed only where the byte hash names nothing (Q-LABEL-1 option 1), so a page whose logo
+//!   computed only where the byte hash names nothing, so a page whose logo
 //!   the table knows pays no decode.
 //!
 //! # The appearance hash, exactly

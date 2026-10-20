@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The check before saving's findings dialog (08 › *3. Plan*; 07 › *Check before saving*): what
+  // The check before saving's findings dialog: what
   // the check caught, the errors and the warnings in plain words and kept apart, with *Save
   // anyway* and *Cancel — nothing is saved*. Only the view lives here; the flow is in the Plan
   // screen and nothing is written by this component.

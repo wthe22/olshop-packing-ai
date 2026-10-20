@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Search (08 › *Search*, 2.21): find a saved order by the same condition boxes as Categories,
+  // Search: find a saved order by the same condition boxes as Categories,
   // over *This day* (the day in the title bar, the default) or *All days*. It only reads
   // `state.json`: nothing is changed or saved, and an order of an open draft is never found.
   // A row's *Open* goes through the app shell (`open_path`), as on the Day screen.
@@ -17,10 +17,10 @@
 
   // The condition boxes: the same component as Categories, with the fields Search offers.
   let tree = $state<UiTree>(newTree());
-  // The scope (08 › *Search*; Q-UI-3): *This day* is the default.
+  // The scope: *This day* is the default.
   let scope = $state<search.SearchScope>("day");
   let busy = $state(false);
-  // A bad condition, or a read error, in plain text (08 › *Search*).
+  // A bad condition, or a read error, in plain text.
   let error = $state("");
   // The last search's rows; `null` before the first *Search*, and after an error or any change,
   // so the rows on screen always match the boxes and the scope shown.

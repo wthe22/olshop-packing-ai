@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The screens that open over the current one (08 › *Window frame*): Categories, Search and
+  // The screens that open over the current one: Categories, Search and
   // Settings, each in the shared frame with its title. An open draft is kept; which one shows and
   // the set it opened on are the shell's own state, and the screens do their own work.
   import type { Shell } from "./shell.svelte";

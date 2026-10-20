@@ -1,5 +1,5 @@
 <script lang="ts">
-  // One category of the list (08 › *5. Categories*): its code and name, its condition built in the
+  // One category of the list: its code and name, its condition built in the
   // boxes editor or typed in a text view, the count it takes in the open batch, and the buttons to
   // move, delete and mark it as the one that takes the rest. Every change recounts through
   // `onChange`; the entry itself is the entry the screen holds.
@@ -20,17 +20,17 @@
     onHelp,
   }: {
     entry: CatEntry;
-    /// The batch being prepared, for *In batch `<b>`: n*; `null` when no draft is open.
+    // The batch being prepared, for *In batch `<b>`: n*; `null` when no draft is open.
     draftBatch: number | null;
     canUp: boolean;
     canDown: boolean;
-    /// The last entry of the list: the one that can take the rest.
+    // The last entry of the list: the one that can take the rest.
     last: boolean;
-    /// A change landed: recount and re-check every entry (the screen does that).
+    // A change landed: recount and re-check every entry (the screen does that).
     onChange: () => void;
     onMove: (delta: number) => void;
     onRemove: () => void;
-    /// *Examples*: show the help box at the foot of the screen.
+    // *Examples*: show the help box at the foot of the screen.
     onHelp: () => void;
   } = $props();
 

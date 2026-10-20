@@ -1,4 +1,4 @@
-// The *No picks yet* line's rule (Q-UI-4, 08 › *5. Categories*): the line is shown while the
+// The *No picks yet* line's rule: the line is shown while the
 // picks are the one catch-all entry a data folder without `categories.toml` starts with, and the
 // Categories screen applies it to the entries it is editing. Pure logic; no window opens and
 // nothing is read.

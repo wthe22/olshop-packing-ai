@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The shown set's file as text (08 › *5. Categories*: *Edit file as text*): the whole
+  // The shown set's file as text: the whole
   // `categories.toml`, checked as it is typed and saved as it stands, comments and all.
   import { texts } from "../texts";
 
@@ -12,7 +12,7 @@
     onSave,
   }: {
     text: string;
-    /// What the last check of the text said, in plain words; empty when the file reads.
+    // What the last check of the text said, in plain words; empty when the file reads.
     error: string;
     busy: boolean;
     onText: (text: string) => void;

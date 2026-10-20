@@ -10,10 +10,10 @@
 // test loads as uncovered; the `.svelte` files are listed separately, as no test renders them.
 //
 // Compare mode (default) fails when a compared number dropped by more than 0.1 point. The compared
-// numbers are the Rust totals and per-crate figures and the TypeScript totals: the per-file
-// TypeScript detail is recorded for reading, because a file that is split in a later step changes it
-// without changing the coverage. `--record` writes the baseline (the first step only; later steps
-// never record) and keeps an existing entry when the new number is not higher.
+// numbers are the Rust totals and per-crate figures and the TypeScript totals; the per-file
+// TypeScript detail is recorded for reading only, since splitting a file changes it without
+// changing the coverage. `--record` writes the baseline and keeps an existing entry when the new
+// number is not higher.
 
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
@@ -27,7 +27,7 @@ const TOLERANCE = 0.1;
 
 const RECORD = process.argv.includes("--record");
 
-/** A percentage with two decimals, from a covered/count pair. */
+/** A percentage with two decimals, from a covered/count pair.*/
 function percent(covered, count) {
   if (count === 0) return 0;
   return Math.round((covered / count) * 10000) / 100;
@@ -39,7 +39,7 @@ function repoPath(fileName) {
   return relative(ROOT, fileName).split("\\").join("/");
 }
 
-/** `crates/engine/src/rules.rs` → `crates/engine`; `app/src-tauri/src/lib.rs` → `app/src-tauri`. */
+/** `crates/engine/src/rules.rs` → `crates/engine`; `app/src-tauri/src/lib.rs` → `app/src-tauri`.*/
 function crateOf(repoPathName) {
   const parts = repoPathName.split("/");
   if (parts[0] === "crates") return `crates/${parts[1]}`;
@@ -95,7 +95,7 @@ function rustCoverage() {
   }
 }
 
-/** The `app/src` source files a rendered test never loads: the `.svelte` components. */
+/** The `app/src` source files a rendered test never loads: the `.svelte` components.*/
 function svelteFiles(dirRel = "app/src", out = []) {
   for (const entry of readdirSync(join(ROOT, dirRel), { withFileTypes: true })) {
     const rel = `${dirRel}/${entry.name}`;

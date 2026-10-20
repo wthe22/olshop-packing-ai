@@ -1,6 +1,5 @@
 <script lang="ts">
-  // The app shell's view (08 › *Window frame*, *Start*, *1. Day*, *2. New batch*, *3. Plan*,
-  // *5. Categories*, *6. Settings*, *Search*): the state and the Tauri commands live in
+  // The app shell's view: the state and the Tauri commands live in
   // `shell.svelte.ts` and the overlay dialogs in `Overlays.svelte`; here it only picks the screen
   // and wires the pieces. The batch flow is Day → New batch → Plan → Day; an amend is Day → Plan
   // (the batch's own files read again) → *Back* → the amend's selection page → Plan → Day. The

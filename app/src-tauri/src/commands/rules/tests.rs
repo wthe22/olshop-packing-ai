@@ -139,8 +139,8 @@ fn load_reports_entries_and_the_file_error() {
 }
 
 /// A folder without `categories.toml` is not an error: the Categories screen loads the one
-/// catch-all entry, which takes every order of the open batch and writes the file on *Save*
-/// (08 › *Start* step 3, 08 › *5. Categories*).
+/// catch-all entry, which takes every order of the open batch and writes the file on *Save*.
+///
 #[test]
 fn load_without_a_file_gives_the_one_catch_all_entry() {
     let dir = temp_dir("load-no-file");
@@ -378,8 +378,8 @@ fn save_rebuilds_the_open_draft_plan() {
 
 /// A save writes the chosen grouping's file — `categories.toml` for the grouping `default`,
 /// else `categories/<grouping name>.toml` — and never touches the data folder's own
-/// `categories.toml`
-/// (04 › *Sets*; 08 › *5. Categories*).
+/// `categories.toml`.
+///
 #[test]
 fn a_save_writes_the_chosen_groupings_file_and_leaves_the_default_alone() {
     let dir = temp_dir("save-grouping");
@@ -425,7 +425,7 @@ fn a_save_writes_the_chosen_groupings_file_and_leaves_the_default_alone() {
 
 /// `groupings_list` names the groupings of the data folder with the file of each and the grouping
 /// used last, which the next New batch preselects; an older `settings.json` without the key
-/// loads as `default` (04 › *Sets*; 07 › *Settings*).
+/// loads as `default`.
 #[test]
 fn groupings_list_reports_the_groupings_their_files_and_the_grouping_used_last() {
     let dir = temp_dir("groupings-list");
@@ -469,8 +469,8 @@ fn groupings_list_reports_the_groupings_their_files_and_the_grouping_used_last()
 }
 
 /// The grouping-name rules at the command surface: an empty name is refused, and the check
-/// names the file of the grouping it is checking, forbidden characters turned into `-`
-/// (04 › *Sets*).
+/// names the file of the grouping it is checking, forbidden characters turned into `-`.
+///
 #[test]
 fn a_bad_grouping_name_is_refused() {
     let dir = temp_dir("bad-name");
@@ -484,7 +484,7 @@ fn a_bad_grouping_name_is_refused() {
     assert_eq!(check.file, "categories/a-b.toml");
 }
 
-/// The Categories screen opens the set it is asked for (08 › *5. Categories*): the batch's own
+/// The Categories screen opens the set it is asked for: the batch's own
 /// set when it is opened from the Plan screen's **Edit categories**, so the entries and the
 /// counts *In batch `<b>`* are that set's, not the data folder's own `categories.toml`.
 #[test]

@@ -1,4 +1,4 @@
-// One category entry as the Categories screen edits it (04 › *File format*; 08 › *5. Categories*):
+// One category entry as the Categories screen edits it:
 // the values `categories.toml` holds plus the state of the row that shows it, and the conversion of
 // the entry's condition between the boxes editor's tree and the printer's text.
 
@@ -36,7 +36,7 @@ export async function boxesToCondition(entry: CatEntry): Promise<boolean> {
 }
 
 // The entry's typed condition read as boxes; on success the two views agree, so the row shows the
-// boxes from now on.
+// boxes.
 export async function textToTree(entry: CatEntry): Promise<boolean> {
   try {
     entry.tree = fromRustTree(await api.conditionToTree(entry.text));

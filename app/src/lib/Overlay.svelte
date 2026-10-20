@@ -1,6 +1,5 @@
 <script lang="ts">
-  // A screen that opens over the current one and closes back to it (08 › *Window frame*:
-  // Categories and Settings). The body is the screen's own content.
+  // A screen that opens over the current one and closes back to it. The body is the screen's own content.
   import type { Snippet } from "svelte";
   import { texts } from "../texts";
 

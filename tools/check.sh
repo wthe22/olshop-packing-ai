@@ -37,6 +37,9 @@ node tools/check-size.mjs
 step "node tools/check-lint.mjs"
 node tools/check-lint.mjs
 
+step "node tools/check-comments.mjs"
+node tools/check-comments.mjs
+
 step "cd app && npm run check"
 (cd app && npm run check)
 

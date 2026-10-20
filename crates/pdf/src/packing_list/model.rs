@@ -39,7 +39,7 @@ pub struct SavedPdfSection {
     pub runs: Vec<RunRows>,
 }
 
-/// The whole packing list: the day, the batch number (07 › *Packing list*) and the sections
+/// The whole packing list: the day, the batch number and the sections
 /// (one for scope `per-pdf`, all for scope `whole`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PackingList {

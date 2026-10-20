@@ -1,8 +1,7 @@
-//! New batch and Plan/Save commands (08 › *2. New batch*, *3. Plan*, *4. Messages*): the
+//! New batch and Plan/Save commands: the
 //! `#[tauri::command]` functions the window calls and the read that opens a batch, over the
 //! modules in the folder beside this file. The open draft lives in [`AppState`]; its label
-//! documents stay open on the PDFium worker until the batch is saved or discarded (07 ›
-//! *Commands between window and Rust*).
+//! documents stay open on the PDFium worker until the batch is saved or discarded.
 
 use std::path::PathBuf;
 
@@ -33,8 +32,8 @@ use self::views::*;
 
 use self::views::ReadResult;
 
-/// *Add files…* / a drop: the page count, size, time and `used in batch n` of each chosen file
-/// (08 › *2. New batch*). Needs only the page count, so it is quick.
+/// *Add files…* / a drop: the page count, size, time and `used in batch n` of each chosen file.
+/// Needs only the page count, so it is quick.
 #[tauri::command]
 pub fn check_files(
     state: State<'_, AppState>,
@@ -48,14 +47,14 @@ pub fn check_files(
     Ok(checks.into_iter().map(file_check_view).collect())
 }
 
-/// *Read labels* (08 › *Reading*): read on a blocking thread, emitting `read-progress {page,
+/// *Read labels*: read on a blocking thread, emitting `read-progress {page,
 /// pages}`; returns the draft summary and the plan, or the stop error text. A read replaces any
 /// open draft, so the Plan screen's *Back* and a new *Read labels* start again from the files and
-/// no plan edit survives (08 › *3. Plan*). `grouping` is the grouping the new batch uses, chosen
-/// on the selection page (04 › *Sets*). `redo` is the batch being redone when the read comes from
-/// the amend's selection page (08 › *2. New batch* → *The amend's selection page*); `None` for a
+/// no plan edit survives. `grouping` is the grouping the new batch uses, chosen
+/// on the selection page. `redo` is the batch being redone when the read comes from
+/// the amend's selection page; `None` for a
 /// new batch's file list. An amend reads with the grouping that batch recorded, whatever
-/// `grouping` says (04 › *Sets*).
+/// `grouping` says.
 #[tauri::command]
 pub async fn read_labels(
     app: AppHandle,
@@ -85,13 +84,13 @@ pub async fn read_labels(
     .map_err(|error| format!("the reading task stopped: {error}"))?
 }
 
-/// *Cancel* (08 › *Reading*): stop the running read; nothing is written.
+/// *Cancel*: stop the running read; nothing is written.
 #[tauri::command]
 pub fn cancel_read(state: State<'_, AppState>) {
     state.request_cancel();
 }
 
-/// Answer the logo prompt about one unseen logo (08 › *The logo prompt*; D-LABEL-4): applies the
+/// Answer the logo prompt about one unseen logo: applies the
 /// answer to the open draft and returns the refreshed read result, so the screen shows the new
 /// counts, warnings and remaining logos. *Skip all* is the screen's alone and calls nothing.
 #[tauri::command]
@@ -103,7 +102,7 @@ pub fn answer_logo(
     answer_logo_impl(&state, &hash, &answer)
 }
 
-/// The live check of the *Add a pick* condition text (08 › *3. Plan*; the boxes editor is 2.12):
+/// The live check of the *Add a pick* condition text:
 /// the engine's parser message with line/col, or nothing when it is valid.
 #[tauri::command]
 pub fn check_condition(condition: String) -> Result<(), String> {
@@ -112,7 +111,7 @@ pub fn check_condition(condition: String) -> Result<(), String> {
         .map_err(|error| error.to_string())
 }
 
-/// Apply the plan edits and recount (08 › *3. Plan*: every change recounts all rows at once).
+/// Apply the plan edits and recount.
 #[tauri::command]
 pub fn plan(state: State<'_, AppState>, edits: Vec<PlanEdit>) -> Result<PlanView, String> {
     state.with_draft(|open| {
@@ -127,11 +126,11 @@ pub fn plan(state: State<'_, AppState>, edits: Vec<PlanEdit>) -> Result<PlanView
     })?
 }
 
-/// *Save batch* (08 › *3. Plan* → *1. Day*): write the batch and forget the draft. Runs on its own
+/// *Save batch*: write the batch and forget the draft. Runs on its own
 /// thread, emitting `save-progress {stage, page, pages}` (the check before saving reports
 /// *Writing* and *Checking*); the window shows the stage and a progress bar while it runs. The
 /// check before saving runs on every save; `save_anyway` (the dialog's *Save anyway*) lets a batch
-/// with findings be written and stores the two lists with it (07 › *Check before saving*).
+/// with findings be written and stores the two lists with it.
 #[tauri::command]
 pub async fn save_batch(
     app: AppHandle,
@@ -151,25 +150,25 @@ pub async fn save_batch(
 }
 
 /// *Cancel* on the PDF selection page (a new batch's file list and the amend's selection page) and
-/// an amend's *Cancel amend* (08 › *2. New batch*, *3. Plan*): discard the open batch; nothing was
+/// an amend's *Cancel amend*: discard the open batch; nothing was
 /// saved and nothing is written. The Plan screen's top *Back* does not come here — it keeps the
 /// draft and shows the selection page again. For an amend this leaves the original batch
-/// untouched (07 › *Amend*).
+/// untouched.
 #[tauri::command]
 pub fn discard_draft(state: State<'_, AppState>) {
     state.clear_draft();
 }
 
-/// *Revert* the last batch (08 › *1. Day*): delete its folder and forget it. A file open in a PDF
+/// *Revert* the last batch: delete its folder and forget it. A file open in a PDF
 /// viewer stops with the 08 *file in use* message and changes nothing.
 #[tauri::command]
 pub fn revert_last(state: State<'_, AppState>, day: String) -> Result<(), String> {
     revert_last_impl(&state, &day)
 }
 
-/// *Amend* the last batch (08 › *1. Day* → *3. Plan*): read the batch's own `download/` files and
+/// *Amend* the last batch: read the batch's own `download/` files and
 /// open the *Redo batch `<b>`* Plan screen with them, the draft open; the batch's file list comes
-/// back for the *Back* selection page (08 › *2. New batch* → *The amend's selection page*). Runs
+/// back for the *Back* selection page. Runs
 /// on a blocking thread, emitting `read-progress {page, pages}` as a new batch's read does.
 #[tauri::command]
 pub async fn start_amend(app: AppHandle, day: String) -> Result<AmendStart, String> {

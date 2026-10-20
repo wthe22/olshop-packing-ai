@@ -1,4 +1,4 @@
-//! The page logos: which images are candidates (Q-LABEL-5), their byte hash and the appearance
+//! The page logos: which images are candidates, their byte hash and the appearance
 //! hash of a masked logo (courier.md items 1 and 3). The pictures are built in the test.
 
 mod common;

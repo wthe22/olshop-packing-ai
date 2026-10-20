@@ -1,4 +1,4 @@
-// The check before saving's window side (07 › *Check before saving*): what *Save batch* returns
+// The check before saving's window side: what *Save batch* returns
 // decides whether the findings dialog opens and what it lists. Pure, so the flow is tested
 // without a window (the stage text lives with the other texts, in `texts.ts`).
 //

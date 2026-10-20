@@ -1,4 +1,4 @@
-//! The check before saving's read-back (07 › *Check before saving*): read the written saved PDFs
+//! The check before saving's read-back: read the written saved PDFs
 //! and packing lists back and build the description the check compares with the plan.
 //!
 //! The pages come from the same page reader as the reading step ([`crate::worker`]'s
@@ -17,8 +17,8 @@ use packing_engine::verify::{Expected, Written, WrittenList, WrittenPdf};
 use crate::PdfError;
 use crate::worker::{PdfWorker, SaveProgress};
 
-/// Read every written saved PDF page by page and every packing list's printed counts back
-/// (07 › *Check before saving*). `expected.pdfs` come first, then `expected.lists`.
+/// Read every written saved PDF page by page and every packing list's printed counts back.
+/// `expected.pdfs` come first, then `expected.lists`.
 pub fn read_back(
     worker: &PdfWorker,
     folder: &Path,

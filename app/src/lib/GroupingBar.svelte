@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The set row of the Categories screen (08 › *5. Categories*; 04 › *Sets*): the chooser, **+ New
+  // The set row of the Categories screen: the chooser, **+ New
   // set** with its name form, **Delete set** and the file the shown set is kept in. The set
   // `default` is the data folder's own `categories.toml` and cannot be deleted. The screen does the
   // writing: a refusal of its call is caught here and shown under the row.
@@ -78,7 +78,7 @@
   }
 </script>
 
-<!-- 08 › *5. Categories*: the set row — the chooser, **+ New set** and **Delete set** — and the
+<!-- The set row — the chooser, **+ New set** and **Delete set** — and the
      file the chosen set is kept in. The set `default` is the data folder's own
      `categories.toml` and cannot be deleted. -->
 <div class="grouping-row">
@@ -119,7 +119,7 @@
 {/if}
 
 <style>
-  /* 08 › *5. Categories*: the set row at the top of the screen. */
+  /* The set row at the top of the screen. */
   .grouping-row {
     display: flex;
     align-items: center;

@@ -1,5 +1,5 @@
 //! Developer CLI: the batch steps of the PC app from the command line, for tests and sample
-//! runs (07 › *Architecture*: `packing-cli` is the same engine, not for daily use).
+//! runs (`packing-cli` is the same engine, not for daily use).
 //!
 //! ```text
 //! packing-cli prepare --labels <file>... [--rules <categories.toml>] [--couriers <couriers.toml>]
@@ -49,7 +49,7 @@ OPTIONS (revert, amend):
   --day YYYY-MM-DD --data <dir> [--rules <categories.toml>] [--couriers <couriers.toml>]
   [--pdfium <dir>] [--quiet-ids]
 
-The batch is written to <data>/labels/<day>/batch <b>/ (07 › *What happens in one batch*).
+The batch is written to <data>/labels/<day>/batch <b>/.
 ";
 
 fn main() {
@@ -76,7 +76,7 @@ fn finish(result: Result<(), CliError>) {
     }
 }
 
-/// A failure that ends the command with exit code 1 and one message (03 › *Errors and warnings*).
+/// A failure that ends the command with exit code 1 and one message.
 #[derive(Debug)]
 enum CliError {
     Usage(String),
@@ -103,8 +103,6 @@ impl From<BatchError> for CliError {
         CliError::Batch(error)
     }
 }
-
-// --------------------------------------------------------------------------- arguments
 
 /// The parsed options shared by the three commands.
 struct Args {
@@ -170,7 +168,7 @@ impl Args {
             .unwrap_or_else(|| jiff::Zoned::now().strftime("%Y-%m-%d").to_string())
     }
 
-    /// The day folder `<data>/labels/<day>/` (07 › *Day folder*).
+    /// The day folder `<data>/labels/<day>/`.
     fn day_dir(&self, day: &str) -> PathBuf {
         self.data.join("labels").join(day)
     }
@@ -182,7 +180,7 @@ impl Args {
     }
 
     /// The courier file: `--couriers`, else `<data>/couriers.toml`, else (no file) the built-in
-    /// list (07 › *Inputs*).
+    /// list.
     fn couriers_path(&self) -> PathBuf {
         self.couriers
             .clone()
@@ -237,8 +235,6 @@ fn parse_layouts(
     Ok(())
 }
 
-// --------------------------------------------------------------------------- commands
-
 fn run_prepare(args: &[String]) -> Result<(), CliError> {
     let args = Args::parse(args)?;
     if args.labels.is_empty() {
@@ -253,7 +249,7 @@ fn run_prepare(args: &[String]) -> Result<(), CliError> {
     let mut state = DayState::load(&day_dir).map_err(|e| CliError::Batch(e.into()))?;
 
     let worker = spawn_worker(&args)?;
-    // Files are read in file-name order (= download order, 07 › *Read*).
+    // Files are read in file-name order (= download order).
     let mut labels = args.labels.clone();
     labels.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
     let (draft, plan) = read_and_plan(&worker, &categories, &couriers, &state, &labels)?;
@@ -310,12 +306,12 @@ fn run_amend(args: &[String]) -> Result<(), CliError> {
     };
 
     let worker = spawn_worker(&args)?;
-    // The duplicate guard ignores the amended batch's own orders (07 › *Amend*).
+    // The duplicate guard ignores the amended batch's own orders.
     let (draft, plan) = read_and_plan(&worker, &categories, &couriers, &amend.state, &amend.files)?;
     let packing = args.packing();
     let mut amend_state = amend.state;
     let (progress, _progress_rx) = mpsc::channel();
-    // The amend keeps the batch's own grouping, as the app's amend does (04 › *Sets*).
+    // The amend keeps the batch's own grouping, as the app's amend does.
     save_and_report(
         &SaveRequest {
             worker: &worker,
@@ -334,10 +330,8 @@ fn run_amend(args: &[String]) -> Result<(), CliError> {
     Ok(())
 }
 
-// ---------------------------------------------------------------------------- shared
-
 /// The picks: `--rules`, else `<data>/categories.toml`, else (no file) the one catch-all entry,
-/// so every order goes into one PDF set (07 › *Inputs*).
+/// so every order goes into one PDF set.
 fn load_categories(args: &Args) -> Result<Vec<Category>, CliError> {
     let path = args.rules_path();
     let text = match fs::read_to_string(&path) {
@@ -355,8 +349,7 @@ fn load_categories(args: &Args) -> Result<Vec<Category>, CliError> {
     load_rules(&text).map_err(|e| CliError::Rules(e.to_string()))
 }
 
-/// The couriers of `<data>/couriers.toml`, or the built-in list when that file does not exist
-/// (07 › *Inputs*).
+/// The couriers of `<data>/couriers.toml`, or the built-in list when that file does not exist.
 fn load_couriers(args: &Args) -> Result<CourierTable, CliError> {
     let path = args.couriers_path();
     load_couriers_file(&path).map_err(|e| CliError::Couriers(e.to_string()))
@@ -367,7 +360,7 @@ fn spawn_worker(args: &Args) -> Result<PdfWorker, CliError> {
 }
 
 /// `check_files`, then `read` (progress on a private channel), then apply the rules
-/// (07 › *What happens in one batch* steps 1-5).
+/// (steps 1-5).
 fn read_and_plan(
     worker: &PdfWorker,
     categories: &[Category],
@@ -389,7 +382,7 @@ fn read_and_plan(
     Ok((draft, plan))
 }
 
-/// Save the batch and print its summary (07 › *Save*, *Check before saving*). The check runs on
+/// Save the batch and print its summary. The check runs on
 /// every save; a finding stops the batch and the command ends with the findings, because the
 /// command line has no *Save anyway*.
 fn save_and_report(

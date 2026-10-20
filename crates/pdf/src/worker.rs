@@ -1,4 +1,4 @@
-//! The one thread that owns PDFium (07 › *Commands between window and Rust*).
+//! The one thread that owns PDFium.
 //!
 //! PDFium is not thread-safe, so no PDFium object may leave this thread. The worker binds the
 //! library once, keeps the opened label documents of the current draft until it is replaced or
@@ -30,7 +30,7 @@ pub struct Progress {
     pub pages: usize,
 }
 
-/// Which part of a save is running (07 › *Check before saving*). The names are the window's
+/// Which part of a save is running. The names are the window's
 /// `save-progress` stage names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "PascalCase")]
@@ -60,7 +60,7 @@ pub enum Job {
     Read {
         cancel: Arc<AtomicBool>,
         progress: Sender<Progress>,
-        /// The data folder's courier data (the band images' appearance decision; 07 › *Inputs*).
+        /// The data folder's courier data (the band images' appearance decision).
         couriers: CourierTable,
         reply: Sender<Result<Vec<PageItem>, PdfError>>,
     },

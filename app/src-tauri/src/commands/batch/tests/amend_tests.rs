@@ -152,12 +152,11 @@ fn amend_reads_the_download_copy_and_replaces_the_batch() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
-/// 2.24 (corrected): **Amend** on the newest batch reads the batch's own `download/` files in
+/// **Amend** on the newest batch reads the batch's own `download/` files in
 /// the `state.json` order and opens the Plan screen at once — the picks first, not the PDF
 /// selection page — with the draft open, leaving `state.json` byte-identical until **Save
 /// batch 1 again**. The batch's file list comes back for the *Back* selection page, listed
-/// already selected in that order (08 › *1. Day* → *3. Plan*,
-/// 08 › *2. New batch* → *The amend's selection page*).
+/// already selected in that order.
 #[test]
 fn amend_starts_on_the_plan_reads_the_batchs_files_and_writes_nothing() {
     let Some(_vendor) = vendor_dir() else {
@@ -247,7 +246,7 @@ fn amend_starts_on_the_plan_reads_the_batchs_files_and_writes_nothing() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
-/// 2.24, Q-APP-2 and Q-APP-3 defaults: **Read labels** on the selection page reads the
+/// **Read labels** on the selection page reads the
 /// selection as it stands — a file taken off the list leaves its orders out of the plan (they
 /// stay unsaved and the next batch reads them again), and an added file joins with its orders.
 #[test]
@@ -289,7 +288,7 @@ fn the_amend_read_takes_the_selection_as_it_is() {
     assert_eq!(whole.already_saved, 0);
     assert_eq!(plan_orders(&whole.plan), 2);
 
-    // **×** on the second file (Q-APP-3 default): its order is out of the plan and is not
+    // **×** on the second file: its order is out of the plan and is not
     // saved by the amendment.
     let kept = read_amend_draft(
         &state,
@@ -302,7 +301,7 @@ fn the_amend_read_takes_the_selection_as_it_is() {
     assert_eq!(kept.orders, 1, "the taken-off file's order is gone");
     assert_eq!(plan_orders(&kept.plan), 1);
 
-    // **Add files…** (Q-APP-2 default: any PDF on the PC): the added file joins with its
+    // **Add files…** (: any PDF on the PC): the added file joins with its
     // orders.
     let added = read_amend_draft(
         &state,
@@ -322,9 +321,9 @@ fn the_amend_read_takes_the_selection_as_it_is() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
-/// *Cancel* on the selection page and *Cancel amend* (2.23, 2.24) discard the amendment and
+/// *Cancel* on the selection page and *Cancel amend* discard the amendment and
 /// nothing else: the batch folder and `state.json` are left exactly as they were, byte for
-/// byte, and neither asks (08 › *2. New batch*, *3. Plan*, 07 › *Amend*).
+/// byte, and neither asks.
 #[test]
 fn cancel_amend_leaves_the_batch_and_the_state_untouched() {
     let Some(_vendor) = vendor_dir() else {
@@ -394,8 +393,6 @@ fn cancel_amend_leaves_the_batch_and_the_state_untouched() {
 
     std::fs::remove_dir_all(&dir).ok();
 }
-
-// ------------------------------------------------- the logo prompt on real (testdata) pages
 
 #[test]
 fn the_testdata_labels_show_no_logo_prompt_and_list_the_couriers() {

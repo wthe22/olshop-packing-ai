@@ -1,5 +1,5 @@
-//! The data folder's `settings.json`: the packing-list default and the grouping used last
-//! (07 › *Settings*).
+//! The data folder's `settings.json`: the packing-list default and the grouping used last.
+//!
 
 use std::path::Path;
 
@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::SETTINGS_FILE;
 
-/// The data folder's `settings.json` (07 › *Settings*): the packing-list default and the grouping
+/// The data folder's `settings.json`: the packing-list default and the grouping
 /// used last. A missing key takes its default, so an older file still loads.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
@@ -17,7 +17,7 @@ pub struct Settings {
     pub scope: Scope,
     #[serde(default = "default_layouts")]
     pub layouts: Vec<Layout>,
-    /// The grouping used last (07 › *Settings*; 04 › *Sets*): the
+    /// The grouping used last: the
     /// [New batch](../ui/new-batch.md) screen preselects it, and each batch records its own.
     /// Absent in an older file, which loads as `default`.
     #[serde(rename = "set", default)]
@@ -35,7 +35,7 @@ impl Default for Settings {
 }
 
 impl Settings {
-    /// The packing-list choice a batch starts with (08 › *3. Plan*: defaults from Settings).
+    /// The packing-list choice a batch starts with.
     pub(crate) fn packing_choice(&self) -> PackingListChoice {
         PackingListChoice {
             scope: self.scope,
@@ -53,7 +53,7 @@ fn default_layouts() -> Vec<Layout> {
 }
 
 /// The settings as the Settings screen sends and receives them: the stored values with the
-/// grouping under its own name, so no screen carries the stored key `set` (07 › *Settings*).
+/// grouping under its own name, so no screen carries the stored key `set`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SettingsView {
     pub(super) scope: Scope,
@@ -97,8 +97,7 @@ pub(crate) fn settings_save(data_folder: &Path, settings: &Settings) -> Result<(
         .map_err(|error| format!("Cannot write to {}: {error}.", path.display()))
 }
 
-/// Remember the grouping used last in the data folder's `settings.json` (07 › *Settings*; 04 ›
-/// *Sets*), so the next **New batch** preselects it. Best-effort: a read is never stopped by a
+/// Remember the grouping used last in the data folder's `settings.json`, so the next **New batch** preselects it. Best-effort: a read is never stopped by a
 /// settings problem, and a save of the same grouping writes nothing.
 pub(crate) fn remember_last_grouping(data_folder: &Path, grouping: &Grouping) {
     let Ok(mut settings) = settings_load(data_folder) else {

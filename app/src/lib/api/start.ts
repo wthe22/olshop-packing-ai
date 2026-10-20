@@ -1,5 +1,5 @@
 // Typed wrappers around the Tauri commands for the start prompt, the shell's file opens and the
-// Settings screen (07 › *Commands between window and Rust*). The Rust side sends snake_case
+// Settings screen. The Rust side sends snake_case
 // fields; the interfaces here match it.
 
 import { invoke } from "@tauri-apps/api/core";
@@ -11,7 +11,7 @@ export interface StartInfo {
   pdfium_ready: boolean;
   today: string;
   // The program's shown version (`v` + major.minor); the title bar's brand text is the program's
-  // name and this (08 › *Window frame*).
+  // name and this.
   version: string;
 }
 
@@ -21,12 +21,12 @@ export type Layout = "full" | "summary" | "pick";
 export interface Settings {
   scope: Scope;
   layouts: Layout[];
-  // The grouping used last (07 › *Settings*; 04 › *Sets*): the New batch screen preselects it.
+  // The grouping used last: the New batch screen preselects it.
   // An older `settings.json` without it reads as `default`.
   grouping: string;
 }
 
-// Settings › *About* (08 › *6. Settings*).
+// Settings › *About*.
 export interface About {
   version: string;
   pdfium: string;

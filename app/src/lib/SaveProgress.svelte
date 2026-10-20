@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The save in flight (08 › *3. Plan*; 07 › *Check before saving*): the stage and a progress bar
+  // The save in flight: the stage and a progress bar
   // while *Save batch* runs, and the findings dialog the check before saving ends with. The dialog's
   // *Save anyway* is handed back to the screen, which runs the save again. Nothing is written here.
   import type { SaveProgress } from "./api/batch";
@@ -24,7 +24,7 @@
   } = $props();
 
   // The save's stage and progress line: the event's stage in plain words, or *Saving …* before
-  // the first `save-progress` arrives (07 › *Check before saving*: *Shown while it runs*).
+  // the first `save-progress` arrives.
   const savingText = $derived(
     progress ? saveStageText(progress.stage, progress.page, progress.pages) : texts.plan.saving,
   );
@@ -42,7 +42,7 @@
 {/if}
 
 <style>
-  /* 08 › *3. Plan*: the check before saving's stage and progress bar. */
+  /* The check before saving's stage and progress bar. */
   .saving {
     display: flex;
     flex-direction: column;

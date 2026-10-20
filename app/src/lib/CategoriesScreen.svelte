@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Categories (08 › *5. Categories*): edit `categories.toml` without typing the condition language.
+  // Categories: edit `categories.toml` without typing the condition language.
   // Each category is a code, a name and a condition built from boxes (or typed in a text view),
   // with the count it takes in the open batch. *Save* writes the file through `RulesDocument`,
   // keeping comments and unchanged condition texts.
@@ -25,7 +25,7 @@
   }: {
     // The batch number being prepared, for *In batch `<b>`: n*; `null` when no draft is open.
     draftBatch: number | null;
-    // The set to open on (08 › *5. Categories*): the batch's own set when the screen is opened
+    // The set to open on: the batch's own set when the screen is opened
     // from the Plan screen's *Edit categories*, so its entries and its counts *In batch `<b>`*
     // are that set's; `null` from the top bar, where the set used last is shown.
     openGrouping: string | null;
@@ -39,20 +39,20 @@
   let busy = $state(false);
   let showHelp = $state(false);
 
-  // The set row (08 › *5. Categories*): the sets of the data folder, the set being edited (and
-  // its file), and the **+ New set** form. A batch is packed with one set, chosen on *New batch*
-  // (04 › *Sets*).
+  // The set row: the sets of the data folder, the set being edited (and
+  // its file), and the **+ New set** form. A batch is packed with one set, chosen on *New batch*.
+  //
   let groupings = $state<api.GroupingView[]>([]);
   let currentGrouping = $state(api.DEFAULT_GROUPING);
 
   const currentFile = $derived(groupingFile(groupings, currentGrouping));
   const canDeleteGrouping = $derived(currentGrouping !== api.DEFAULT_GROUPING);
 
-  // Q-UI-4: the one catch-all entry a folder without `categories.toml` starts with, and nothing
+  // The one catch-all entry a folder without `categories.toml` starts with, and nothing
   // else, is the unconfigured state; the line says what that means for a batch.
   const noCategories = $derived(unconfigured(entries));
 
-  // *Edit file as text* (08 › *5. Categories*).
+  // *Edit file as text*.
   let fileMode = $state(false);
   let fileText = $state("");
   let fileError = $state("");
@@ -64,8 +64,8 @@
   onMount(load);
 
   // Open the screen: the sets of the data folder, then the set to open on — the batch's own set
-  // when the screen came from the Plan screen's *Edit categories*, else the set used last
-  // (08 › *5. Categories*).
+  // when the screen came from the Plan screen's *Edit categories*, else the set used last.
+  //
   async function load() {
     busy = true;
     try {
@@ -79,8 +79,8 @@
     busy = false;
   }
 
-  // Load the set being shown: its file's entries, or the one catch-all entry when it has no file
-  // (04 › *Sets*), then the live check and counts.
+  // Load the set being shown: its file's entries, or the one catch-all entry when it has no file,
+  // then the live check and counts.
   async function loadGrouping() {
     const data = await api.rulesLoad(currentGrouping);
     fileText = data.text;
@@ -93,7 +93,7 @@
         name: view.name,
         when: view.when,
         // `null` for the one catch-all entry of a set that has no file: *Save* adds it, so the
-        // file is written (08 › *5. Categories*).
+        // file is written.
         origin: view.origin,
         mode: "boxes",
         tree: newTree(),
@@ -116,7 +116,7 @@
     await refresh();
   }
 
-  // The set chooser: show another set (08 › *5. Categories*).
+  // The set chooser: show another set.
   async function changeGrouping(name: string) {
     if (name === currentGrouping) return;
     currentGrouping = name;
@@ -129,7 +129,7 @@
     }
   }
 
-  // **+ New set** (08 › *5. Categories*): **Create** writes `categories/<name>.toml` (the set's
+  // **+ New set**: **Create** writes `categories/<name>.toml` (the set's
   // file) and shows it. The caller shows the refusal.
   async function createGrouping(name: string) {
     busy = true;
@@ -146,7 +146,7 @@
     }
   }
 
-  // **Delete set** (08 › *5. Categories*): asks first, then deletes that set's file, whose
+  // **Delete set**: asks first, then deletes that set's file, whose
   // categories fall back to the one catch-all entry. The set `default` is the data folder's own
   // `categories.toml` and cannot be deleted.
   async function removeGrouping() {
@@ -175,7 +175,7 @@
     }));
   }
 
-  // Recount and re-check every entry (08 › *5. Categories*: "every change recounts all rows").
+  // Recount and re-check every entry.
   async function refresh() {
     if (entries.length === 0) {
       generalError = "";
@@ -229,7 +229,7 @@
     refresh();
   }
 
-  // The last entry with no condition must stay last (04 › *File format*).
+  // The last entry with no condition must stay last.
   function canMoveUp(index: number): boolean {
     if (index === 0) return false;
     return !(index === entries.length - 1 && entries[index].when === null);
@@ -365,7 +365,7 @@
     color: #4a4a4a;
   }
 
-  /* Q-UI-4: the picks are unconfigured (the one catch-all entry, which takes every order). */
+  /*: the picks are unconfigured (the one catch-all entry, which takes every order). */
   .no-categories {
     margin: 0 0 0.75rem;
     color: #4a4a4a;

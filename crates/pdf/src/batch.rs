@@ -1,5 +1,5 @@
 //! The batch's own steps: read the chosen label files into a draft, map the plan into the packing
-//! jobs, and save the batch atomically (07 › *What happens in one batch*). The checks that
+//! jobs, and save the batch atomically. The checks that
 //! surround them are in the modules beside this file.
 //!
 //! Everything PDF-related happens on the [`PdfWorker`] thread (PDFium is not thread-safe); the
@@ -42,11 +42,11 @@ use self::mapping::{
     order_index, packing_jobs, printed_time,
 };
 
-/// What a save produced (07 › *Save*, *Check before saving*).
+/// What a save produced.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SaveResult {
     pub batch: BatchNumber,
-    /// The batch folder once the save was renamed (07 › *Day folder*); the path the batch would
+    /// The batch folder once the save was renamed; the path the batch would
     /// have taken when the check stopped the save.
     pub folder: PathBuf,
     /// The written saved-PDF file names, in printing order.
@@ -56,7 +56,7 @@ pub struct SaveResult {
     /// The batch summary text, also written to `summary.txt`.
     pub summary: String,
     /// Whether the batch was renamed into place and written into `state.json`; false when the
-    /// check found something and *Save anyway* was not chosen (07 › *Check before saving*).
+    /// check found something and *Save anyway* was not chosen.
     pub saved: bool,
     /// The check's errors, as text; empty on a clean save.
     pub errors: Vec<String>,
@@ -75,19 +75,18 @@ pub struct SaveRequest<'a> {
     pub day: &'a str,
     pub day_dir: &'a Path,
     /// *Save anyway* was chosen: a finding then renames the batch and stores the two lists with
-    /// it (07 › *Check before saving*).
+    /// it.
     pub save_anyway: bool,
     /// The writing and the checking progress (the app turns it into a `save-progress` event).
     pub progress: Sender<SaveProgress>,
 }
 
-/// Write a batch into `batch <b>.partial/`, check it, then rename it and add it to the state
-/// (07 › *Save* step 6, *Check before saving*). The saved PDFs are the picks' pages in run order
-/// (03 › *A saved PDF*), the packing lists follow the scope and layouts, `summary.txt` is
-/// written and the label files are copied into `download/`. `grouping` is the grouping the batch
-/// was packed with, stored with it (04 › *Sets*).
+/// Write a batch into `batch <b>.partial/`, check it, then rename it and add it to the state.
+/// The saved PDFs are the picks' pages in run order, the packing lists follow the scope and
+/// layouts, `summary.txt` is written and the label files are copied into `download/`.
+/// `grouping` is the grouping the batch was packed with, stored with it.
 ///
-/// The check before saving runs on every save (D-APP-2): the written files are read back and
+/// The check before saving runs on every save: the written files are read back and
 /// compared with the plan. A finding stops the save — nothing is renamed, the temporary folder
 /// is deleted, `state.json` is untouched and the findings are returned — unless `save_anyway` is
 /// set, which renames the batch and stores the two lists with it.
@@ -306,8 +305,7 @@ fn write_batch_files(
     Ok(())
 }
 
-/// Read the written files of `temp` back and compare them with the plan
-/// (07 › *Check before saving*).
+/// Read the written files of `temp` back and compare them with the plan.
 fn check_written(
     request: &SaveRequest<'_>,
     temp: &Path,

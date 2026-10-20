@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Plan (08 › *3. Plan*): the picks in order with their counts and runs, the per-batch changes
+  // Plan: the picks in order with their counts and runs, the per-batch changes
   // (*Use*, move, add, rename) and the packing-list options; *Save batch* writes the batch. An
   // amend uses the same screen, titled *Redo batch `<b>`*, with *Save batch `<b>` again* and a
   // bottom *Cancel amend*. The top button is *Back* on both and it never asks or discards: it
@@ -30,7 +30,7 @@
     batchNumber: number;
     read: batch.ReadResult;
     settings: Settings | null;
-    // Bumped when the Categories screen saves, so the plan is recounted (08 › *Window frame*).
+    // Bumped when the Categories screen saves, so the plan is recounted.
     refresh: number;
     onSaved: (result: batch.SaveResult) => void;
     // *Back* (top): return to the PDF selection page — a new batch's file list, or the amend's
@@ -43,36 +43,35 @@
     onEditCategories: () => void;
   } = $props();
 
-  // The batch number for the header and the amend's title: the amended batch for an amend
-  // (08 › *3. Plan*: *Redo batch 2*), else the next batch number.
+  // The batch number for the header and the amend's title: the amended batch for an amend,
+  // else the next batch number.
   const batchNo = $derived(read.amend ?? batchNumber);
   const amending = $derived(read.amend !== null);
-  // The top button (*Back* on both) and the amend's bottom *Cancel amend*, from the pure helper
-  // (08 › *3. Plan*).
+  // The top button (*Back* on both) and the amend's bottom *Cancel amend*, from the pure helper.
+  //
   const buttons = $derived(planButtons(read.amend));
 
-  // The read result is fixed for the life of the screen; the view is then updated by `plan()`.
+  // The read result is fixed for the life of the screen; the view is then updated by `plan`.
   // (`untrack`: the screen starts from it once; it is not a value the read keeps in step.)
   let view = $state<batch.PlanView>(untrack(() => read.plan));
   let showWarnings = $state(false);
   let expanded = $state<string[]>([]);
   let error = $state("");
 
-  // The packing-list choice, starting from the Settings default (08 › *6. Settings*).
+  // The packing-list choice, starting from the Settings default.
   let scope = $state<Scope>(untrack(() => settings?.scope ?? "whole"));
   let layouts = $state<Layout[]>(untrack(() => settings?.layouts ?? ["pick"]));
 
   let saving = $state(false);
   let saveError = $state("");
   // The check before saving's progress (the `save-progress` event: the stage and a progress bar)
-  // and the findings dialog it shows when the save stopped (07 › *Check before saving*).
+  // and the findings dialog it shows when the save stopped.
   let saveProgress = $state<batch.SaveProgress | null>(null);
   let findings = $state<Findings | null>(null);
 
   let showAdd = $state(false);
 
-  // Recount after the Categories screen saves (08 › *Window frame*: the draft is kept and the plan
-  // recounted with the new categories).
+  // Recount after the Categories screen saves.
   let lastRefresh = $state(untrack(() => refresh));
   $effect(() => {
     if (refresh !== lastRefresh) {
@@ -144,10 +143,10 @@
     showAdd = !showAdd;
   }
 
-  // *Save batch* (08 › *3. Plan*): write the batch and go to the Day screen. While it runs the
+  // *Save batch*: write the batch and go to the Day screen. While it runs the
   // stage and a progress bar are shown (the `save-progress` event). When the check before saving
   // finds something and this is not the dialog's *Save anyway*, the findings dialog opens and the
-  // draft is kept (07 › *Check before saving*).
+  // draft is kept.
   async function save(saveAnyway = false) {
     saving = true;
     saveError = "";
@@ -168,9 +167,9 @@
     saveProgress = null;
   }
 
-  // *Back* (top, 08 › *3. Plan*): return to the PDF selection page with the files still listed —
+  // *Back*: return to the PDF selection page with the files still listed —
   // the draft is kept and a new *Read labels* replaces it, so the per-batch changes are lost.
-  // It is not a discard and it never asks (08 › *2. New batch* → *The amend's selection page*).
+  // It is not a discard and it never asks.
   function back() {
     onBack();
   }
@@ -331,7 +330,7 @@
     padding-left: 1.2rem;
   }
 
-  /* Q-UI-4: the plan is the one catch-all entry, so every order goes into one PDF set. */
+  /*: the plan is the one catch-all entry, so every order goes into one PDF set. */
   .no-categories {
     margin: 0 0 0.75rem;
     color: #4a4a4a;

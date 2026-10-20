@@ -37,7 +37,7 @@ fn batch_entry(batch: BatchNumber, pdf_file: &str) -> BatchEntry {
     }
 }
 
-/// One saved order with the searched fields written (as a save does, 07 › *`state.json`*).
+/// One saved order with the searched fields written.
 fn saved_order(order_id: &str, tracking_id: &str, name: &str, quantity: i64) -> SavedOrder {
     SavedOrder {
         order_id: OrderId::new(order_id),
@@ -295,7 +295,7 @@ fn an_order_saved_before_search_is_found_by_its_ids_only() {
 fn a_bad_condition_is_a_message() {
     let dir = temp_dir("bad");
     let state = app_state(&dir, "2026-10-07");
-    // An empty root group is an error (08 › *5. Categories*): the panel shows it.
+    // An empty root group is an error: the panel shows it.
     let empty = Tree {
         root: packing_engine::rules_edit::Group {
             kind: packing_engine::rules_edit::GroupKind::All,

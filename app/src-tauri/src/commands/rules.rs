@@ -1,10 +1,10 @@
-//! Categories commands (08 › *5. Categories*, 07 › *Commands between window and Rust*): load
+//! Categories commands: load
 //! `categories.toml`, check the entries with their condition errors (line/col) and the count each
 //! takes in the open batch, convert a condition to and from the boxes tree, and save through
 //! `RulesDocument` so comments and the text of unchanged conditions survive.
 //!
 //! The window keeps the entries (boxes or text); the file is only touched on *Save*. A save
-//! rebuilds the open draft's plan from the new categories (08 › *5. Categories*).
+//! rebuilds the open draft's plan from the new categories.
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -21,7 +21,7 @@ use crate::{AppState, CATEGORIES_FILE, GROUPINGS_DIR};
 
 pub mod sets;
 
-/// One category entry as the file holds it (08 › *5. Categories*): its values and, for an entry
+/// One category entry as the file holds it: its values and, for an entry
 /// the file holds, the index it has there (`origin`). The one catch-all entry of a folder
 /// without `categories.toml` has `origin: None`, so a *Save* adds it as a new entry.
 #[derive(Serialize)]
@@ -33,9 +33,8 @@ pub struct EntryView {
 }
 
 /// The Categories screen's first load: the whole file text (for *Edit file as text*), the entries
-/// as written, and the file-level error when the file does not load (08 › *Start*: a broken
-/// `categories.toml` opens Categories first with the errors). A folder without the file is not an
-/// error: the entries are the one catch-all entry then (08 › *Start* step 3).
+/// as written, and the file-level error when the file does not load. A folder without the file is not an
+/// error: the entries are the one catch-all entry then.
 #[derive(Serialize)]
 pub struct RulesLoad {
     text: String,
@@ -55,7 +54,7 @@ pub struct EntryInput {
     origin: Option<usize>,
 }
 
-/// The live check (08 › *5. Categories*): each entry's condition error (with line/col), a
+/// The live check: each entry's condition error (with line/col), a
 /// file-level error (a bad or duplicate code, a missing name, a `when` missing on an entry that is
 /// not last), and the count each entry takes in the open batch, in order from what is left
 /// (`None` when no batch is open or a condition is invalid).
@@ -65,25 +64,23 @@ pub struct RulesCheck {
     general: Option<String>,
     counts: Option<Vec<usize>>,
     /// The file the checked grouping is kept in, relative to the data folder: `categories.toml`
-    /// for the grouping `default`, else `categories/<grouping name>.toml` (04 › *Sets*).
+    /// for the grouping `default`, else `categories/<grouping name>.toml`.
     file: String,
 }
 
-/// A code is 1-3 letters or digits (04 › *File format*); mirrors `rules.rs`'s private check.
+/// A code is 1-3 letters or digits; mirrors `rules.rs`'s private check.
 fn valid_code(code: &str) -> bool {
     let chars: Vec<char> = code.chars().collect();
     (1..=3).contains(&chars.len()) && chars.iter().all(|c| c.is_ascii_alphanumeric())
 }
-
-// ------------------------------------------------------------------------------- load
 
 fn rules_load_impl(folder: &Path, grouping: &Grouping) -> Result<RulesLoad, String> {
     let file = groupings::file_of(grouping).map_err(|error| error.to_string())?;
     let path = folder.join(&file);
     let text = match std::fs::read_to_string(&path) {
         Ok(text) => text,
-        // A set with no file is not an error: its picks are the one catch-all entry
-        // (04 › *Sets*, 08 › *Start* step 3, 07 › *Inputs*).
+        // A set with no file is not an error: its picks are the one catch-all entry.
+        //
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             let category = catch_all_category();
             return Ok(RulesLoad {
@@ -123,8 +120,6 @@ fn rules_load_impl(folder: &Path, grouping: &Grouping) -> Result<RulesLoad, Stri
     })
 }
 
-// ------------------------------------------------------------------------------- check
-
 fn rules_check_impl(
     state: &AppState,
     grouping: &Grouping,
@@ -144,8 +139,8 @@ fn rules_check_impl(
         ..
     } = check;
 
-    // The counts in the open batch: the same first-match, take-from-what-is-left rule as the plan
-    // (08 › *5. Categories*: "In batch 3").
+    // The counts in the open batch: the same first-match, take-from-what-is-left rule as the plan.
+    //
     let counts = if conditions_ok {
         state
             .with_draft(|open| {
@@ -247,12 +242,10 @@ impl EntryCheck {
     }
 }
 
-// -------------------------------------------------------------------------------- save
-
 /// Save the edited entries through `RulesDocument`: an entry that came from the file keeps its
 /// comment and unchanged condition text (its `origin`), a new one is appended (the one catch-all
 /// entry of a folder without `categories.toml` included, which writes the file), a missing one is
-/// dropped, and the order is applied in one `reorder` (08 › *5. Categories*: "comments kept").
+/// dropped, and the order is applied in one `reorder`.
 fn rules_save_impl(
     state: &AppState,
     grouping: &Grouping,
@@ -276,7 +269,7 @@ fn rules_save_impl(
 }
 
 /// A set's file lives in `<data>/categories/`; the folder is created here, so the first save of a
-/// new set (04 › *Sets*) can write the file.
+/// new set can write the file.
 fn ensure_grouping_dir(folder: &Path, file: &str) -> Result<(), String> {
     if file == CATEGORIES_FILE {
         return Ok(());
@@ -363,25 +356,22 @@ fn rules_save_text_impl(state: &AppState, grouping: &Grouping, text: &str) -> Re
     Ok(())
 }
 
-/// Rebuild the open draft's plan from the new categories, so the Plan screen recounts with them
-/// (08 › *Window frame*: an open draft is kept and recounted). No draft open: nothing to do.
+/// Rebuild the open draft's plan from the new categories, so the Plan screen recounts with them.
+/// No draft open: nothing to do.
 fn rebuild_plan(state: &AppState, categories: Vec<Category>) {
     let _ = state.with_draft(|open| {
         open.plan = Plan::from_categories(&categories);
     });
 }
 
-// ---------------------------------------------------------------------------- commands
-
-/// The set's file: its text, its entries and any file-level error (08 › *5. Categories*; 04 ›
-/// *Sets*).
+/// The set's file: its text, its entries and any file-level error.
 #[tauri::command]
 pub fn rules_load(state: State<'_, AppState>, grouping: Grouping) -> Result<RulesLoad, String> {
     rules_load_impl(&state.data_folder()?, &grouping)
 }
 
 /// Check the entries while the screen is edited: condition errors with line/col, a file-level
-/// error, and the live counts in the open batch (08 › *5. Categories*). `set` names the file the
+/// error, and the live counts in the open batch. `set` names the file the
 /// entries belong to.
 #[tauri::command]
 pub fn rules_check(
@@ -393,8 +383,8 @@ pub fn rules_check(
 }
 
 /// Check the whole file text (*Edit file as text*): nothing when it loads, the error otherwise.
-/// The check is the same for every grouping; `grouping` names the file the error comes from
-/// (04 › *Sets*).
+/// The check is the same for every grouping; `grouping` names the file the error comes from.
+///
 #[tauri::command]
 pub fn rules_check_text(grouping: Grouping, text: String) -> Result<(), String> {
     let file = groupings::file_of(&grouping).map_err(|error| error.to_string())?;
@@ -403,7 +393,7 @@ pub fn rules_check_text(grouping: Grouping, text: String) -> Result<(), String> 
         .map_err(|error| error.to_string())
 }
 
-/// *Save* the entries (08 › *5. Categories*): write the set's file and recount the open draft.
+/// *Save* the entries: write the set's file and recount the open draft.
 #[tauri::command]
 pub fn rules_save(
     state: State<'_, AppState>,
@@ -423,7 +413,7 @@ pub fn rules_save_text(
     rules_save_text_impl(&state, &grouping, &text)
 }
 
-/// **+ New set** (08 › *5. Categories*; 04 › *Sets*): write `categories/<name>.toml`, empty or a
+/// **+ New set**: write `categories/<name>.toml`, empty or a
 /// copy of `copy_from`'s file. The name `default` is the data folder's own `categories.toml` and
 /// cannot be created, and an existing file is never overwritten.
 #[tauri::command]
@@ -436,7 +426,7 @@ pub fn new_grouping(
     groupings::create(&folder, &name, copy_from.as_ref()).map_err(|error| error.to_string())
 }
 
-/// **Delete set** (08 › *5. Categories*; 04 › *Sets*): delete that grouping's file, whose
+/// **Delete set**: delete that grouping's file, whose
 /// categories then fall back to the one catch-all entry. The grouping `default` cannot be
 /// deleted.
 #[tauri::command]
@@ -445,20 +435,20 @@ pub fn delete_grouping(state: State<'_, AppState>, name: Grouping) -> Result<(),
     groupings::delete(&folder, &name).map_err(|error| error.to_string())
 }
 
-/// The groupings of the data folder (07 › *Commands*: `groupings_list`): the grouping names, the
+/// The groupings of the data folder: the grouping names, the
 /// file of each and the grouping used last.
 #[tauri::command]
 pub fn groupings_list(state: State<'_, AppState>) -> Result<sets::GroupingsList, String> {
     sets::groupings_list_impl(&state.data_folder()?)
 }
 
-/// A condition text → boxes tree, for the boxes editor (07 › *Commands*: the engine's parser).
+/// A condition text → boxes tree, for the boxes editor.
 #[tauri::command]
 pub fn condition_to_tree(text: String) -> Result<Tree, String> {
     rules_edit::condition_to_tree(&text).map_err(|error| error.to_string())
 }
 
-/// A boxes tree → the printer's canonical condition text (07 › *Commands*: the engine's printer).
+/// A boxes tree → the printer's canonical condition text.
 #[tauri::command]
 pub fn tree_to_condition(tree: Tree) -> Result<String, String> {
     rules_edit::tree_to_condition(&tree).map_err(|error| error.to_string())

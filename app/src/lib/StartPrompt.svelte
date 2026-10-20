@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The Start prompt (08 › *Start*): shown at every start until `couriers.toml` is found next
+  // The Start prompt: shown at every start until `couriers.toml` is found next
   // to the program.
   import { texts } from "../texts";
 

@@ -1,4 +1,4 @@
-// The Search panel's window side (08 › *Search*, 2.21): the line above the results, what a row
+// The Search panel's window side: the line above the results, what a row
 // shows for its items, and the texts and field list the panel offers. Pure, so it is tested
 // without a window.
 //
@@ -41,7 +41,7 @@ test("the panel's fixed texts are the designed words", () => {
   assert.equal(texts.nav.search, "Search");
   assert.equal(texts.search.title, "Search");
   assert.equal(texts.search.scope, "Scope");
-  // *This day* (the day in the title bar) is the default (Q-UI-3).
+  // *This day* (the day in the title bar) is the default.
   assert.equal(texts.search.scopeDay, "This day");
   assert.equal(texts.search.scopeAll, "All days");
   assert.equal(texts.search.search, "Search");
@@ -64,7 +64,7 @@ test("Search offers the fields a saved order keeps", () => {
     "tracking_id",
     "variation",
   ]);
-  // The display name and Ship by are not searched (2.21).
+  // The display name and Ship by are not searched.
   assert.ok(!values.includes("display_name"));
   assert.ok(!values.includes("ship_by"));
 });

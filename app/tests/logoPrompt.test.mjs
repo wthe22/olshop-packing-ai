@@ -1,4 +1,4 @@
-// The logo prompt's flow (08 › *2. New batch* → *The logo prompt*, D-LABEL-4) and the counts it
+// The logo prompt's flow and the counts it
 // shows. No window is opened and nothing is written: the back end is a small fake that behaves
 // like `answer_logo` (the answered logo leaves the list) and records what it was sent.
 //

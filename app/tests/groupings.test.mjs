@@ -1,5 +1,4 @@
-// The grouping control's rules (04 › *Sets*; 08 › *2. New batch* → *The set*, 08 › *5.
-// Categories*): which grouping the New batch and Categories controls start on, the fallback when
+// The grouping control's rules: which grouping the New batch and Categories controls start on, the fallback when
 // the grouping used last is gone, and a new grouping's name. Pure logic; no window opens and
 // nothing is read or written.
 //
@@ -25,11 +24,11 @@ const groupings = [
 ];
 
 test("the grouping control's words are the designed words", () => {
-  // 08 › *2. New batch* → *The set*: *Set: [default ▾]* before *Read labels*.
+  // *Set: [default ▾]* before *Read labels*.
   assert.equal(texts.newBatch.grouping, "Grouping");
   // The amend's selection page: *Set: default (fixed)*.
   assert.equal(texts.newBatch.groupingFixed("default"), "default (fixed)");
-  // 08 › *5. Categories*: the grouping row's two buttons and the file line.
+  // The grouping row's two buttons and the file line.
   assert.equal(texts.categories.newGrouping, "+ New grouping");
   assert.equal(texts.categories.deleteGrouping, "Delete grouping");
   assert.equal(
@@ -39,7 +38,7 @@ test("the grouping control's words are the designed words", () => {
 });
 
 test("the choice the batch was packed with names the grouping in the Plan header", () => {
-  // 08 › *3. Plan*: "Batch 3 · set default · 2 files · 257 pages · 256 orders · 0 already saved".
+  // "Batch 3 · set default · 2 files · 257 pages · 256 orders · 0 already saved".
   assert.equal(
     texts.plan.header(3, "default", 2, 257, 256, 0),
     "Batch 3 · grouping default · 2 files · 257 pages · 256 orders · 0 already saved",
@@ -47,7 +46,7 @@ test("the choice the batch was packed with names the grouping in the Plan header
 });
 
 test("the Amend confirmation names the batch's grouping", () => {
-  // 08 › *1. Day*, verbatim.
+  // Verbatim: the literal must not drift from `texts.ts`.
   assert.equal(
     texts.day.confirmAmend(2, "default", "09:12"),
     "Redo batch 2 with its grouping (default)? Batch 2 was saved at 09:12. If you already printed it, print it again after saving.",

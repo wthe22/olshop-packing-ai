@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The boxes editor (08 › *5. Categories*): a group is *All of these* (`and`) or *Any of these*
+  // The boxes editor: a group is *All of these* (`and`) or *Any of these*
   // (`or`) and holds rows (field · operator · value) and other groups; **not** sits on rows and
   // groups. `onEdit` is called after every change so the caller can recount and re-check.
   import { conditionFields, numberOperators, textOperators, texts } from "../texts";
@@ -19,8 +19,8 @@
     onEdit,
   }: {
     tree: UiTree;
-    /// The field list to offer: every field of the rules (08 › *5. Categories*), or a subset
-    /// (08 › *Search* offers only the fields a saved order keeps).
+    // The field list to offer: every field of the rules, or a subset.
+    //
     fields?: { value: string; label: string; type: FieldType }[];
     onEdit: () => void;
   } = $props();

@@ -13,15 +13,14 @@ use crate::commands::day::settings_load;
 
 use super::views::SaveResultView;
 
-/// Apply the plan and save the batch (07 › *What happens in one batch* step 6, *Check before
-/// saving*), then forget the draft. A failed save keeps the draft so *Save batch* can be pressed
+/// Apply the plan and save the batch, then forget the draft. A failed save keeps the draft so *Save batch* can be pressed
 /// again. The check before saving runs on every save; when it finds something and `save_anyway`
 /// is not set, nothing is renamed, `state.json` is untouched, the draft stays and the findings
 /// come back in the view (`saved: false`) — the Plan screen then shows the dialog with *Save
 /// anyway* and *Cancel*.
 ///
 /// `on_progress` is called for every step of the write and of the check; the window turns it into
-/// a `save-progress` event (07 › *Check before saving*: *Shown while it runs*).
+/// a `save-progress` event.
 pub(super) fn save_batch_impl(
     state: &AppState,
     packing: Option<PackingListChoice>,
@@ -39,7 +38,7 @@ pub(super) fn save_batch_impl(
         .take_draft()
         .ok_or_else(|| "No batch is open.".to_string())?;
     // An amend saves into the state without its batch, so the numbers are reused and the batch is
-    // replaced; a new batch reads the day's state from disk (07 › *Amend*).
+    // replaced; a new batch reads the day's state from disk.
     let mut day_state = match &open.amend {
         Some(amend) => amend.state.clone(),
         None => DayState::load(&day_dir).map_err(|error| error.to_string())?,
@@ -55,7 +54,7 @@ pub(super) fn save_batch_impl(
         }
     });
 
-    // The batch records the grouping it was packed with, so an amend reads it again (04 › *Sets*).
+    // The batch records the grouping it was packed with, so an amend reads it again.
     let grouping = open.grouping.clone();
     let result = state.with_worker(|worker| {
         batch::save(

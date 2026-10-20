@@ -57,8 +57,8 @@ fn settings_default_and_round_trip() {
     assert_eq!(settings_load(&dir).expect("load"), custom);
     assert_eq!(custom.packing_choice().scope, Scope::PerPdf);
 
-    // A missing key takes its default: an older file without the grouping loads as `default`
-    // (07 › *Settings*; 04 › *Sets*).
+    // A missing key takes its default: an older file without the grouping loads as `default`.
+    //
     std::fs::write(dir.join(SETTINGS_FILE), "{\n  \"scope\": \"none\"\n}\n").expect("write");
     let partial = settings_load(&dir).expect("partial");
     assert_eq!(partial.scope, Scope::None);
@@ -69,7 +69,7 @@ fn settings_default_and_round_trip() {
 }
 
 /// A `state.json` and a `settings.json` written before the grouping had a type still load, and a
-/// save writes the same stored key `set` back (07 › *`state.json`*, *Settings*; 04 › *Sets*).
+/// save writes the same stored key `set` back.
 #[test]
 fn an_old_state_and_settings_keep_the_stored_set_key() {
     let dir = temp_dir("stored-set-key");
@@ -130,7 +130,7 @@ fn an_old_state_and_settings_keep_the_stored_set_key() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
-/// The grouping used last is remembered in `settings.json` (07 › *Settings*; 04 › *Sets*), so
+/// The grouping used last is remembered in `settings.json`, so
 /// the next New batch preselects it; a read with the same grouping writes nothing, and a folder
 /// whose settings cannot be read is left alone.
 #[test]
@@ -232,7 +232,7 @@ fn overview_reads_state_newest_first_totals_and_warnings() {
 }
 
 /// The Day card lists the packing lists a per-PDF batch wrote, one per saved PDF and layout, the
-/// layout in the name because several were written (07 › *Day folder*).
+/// layout in the name because several were written.
 #[test]
 fn overview_lists_the_packing_lists_of_a_per_pdf_batch() {
     let dir = temp_dir("overview-packing-lists");
@@ -273,7 +273,7 @@ fn overview_lists_the_packing_lists_of_a_per_pdf_batch() {
 
 /// The Day screen's **Printed** tick: the write is read back by a second `day_overview` (the
 /// tick survives closing and reopening), and an unknown batch or saved-PDF number changes
-/// nothing (08 › *1. Day*; 07 › *`state.json`*).
+/// nothing.
 #[test]
 fn set_printed_writes_the_tick_and_the_overview_reports_it() {
     let dir = temp_dir("printed");
@@ -346,7 +346,7 @@ fn set_printed_writes_the_tick_and_the_overview_reports_it() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
-/// The Day screen's view carries each batch's own grouping (04 › *Sets*), so **Amend**'s
+/// The Day screen's view carries each batch's own grouping, so **Amend**'s
 /// confirmation can name it and an amend reads that grouping again; an older `state.json`
 /// without the key reads as `default`.
 #[test]
@@ -409,7 +409,7 @@ fn days_lists_folders_newest_first() {
 
 /// A first start writes `couriers.toml` and no `categories.toml`; the folder is a data folder
 /// from then on, and the owner's own `couriers.toml` (or one the logo prompt wrote to) is
-/// never overwritten (08 › *Start*, 08 › *6. Settings*).
+/// never overwritten.
 #[test]
 fn a_first_start_writes_couriers_only_and_marks_the_folder_with_it() {
     let dir = temp_dir("first-start");
@@ -418,8 +418,8 @@ fn a_first_start_writes_couriers_only_and_marks_the_folder_with_it() {
         "an empty folder is not a data folder"
     );
 
-    // The picks file is not a marker: a folder with only `categories.toml` still asks
-    // (08 › *Start* step 1).
+    // The picks file is not a marker: a folder with only `categories.toml` still asks.
+    //
     std::fs::write(
         dir.join(crate::CATEGORIES_FILE),
         "[[category]]\ncode = \"Z\"\nname = \"Rest\"\n",
@@ -454,8 +454,7 @@ fn a_first_start_writes_couriers_only_and_marks_the_folder_with_it() {
 }
 
 /// *Choose a folder…* / Settings *Change…*: a folder without a `couriers.toml` gets the
-/// built-in one and no picks; a folder with its own files is used as it is (08 › *Start*,
-/// 08 › *6. Settings*).
+/// built-in one and no picks; a folder with its own files is used as it is.
 #[test]
 fn choosing_a_folder_writes_only_a_missing_couriers() {
     let state = AppState::new();
@@ -495,11 +494,11 @@ fn about_reports_the_app_and_pdfium_versions() {
     assert_eq!(about.pdfium, PDFIUM_VERSION);
 }
 
-/// The shown version is `v` + the first two numbers of the workspace `version`, the one place
-/// (08 › *6. Settings* › *The version*). The expected text is derived from the same
+/// The shown version is `v` + the first two numbers of the workspace `version`, the one place.
+/// The expected text is derived from the same
 /// `CARGO_PKG_VERSION` here, so a hard-coded `v0.1` in the app would pass today and fail as
-/// soon as the workspace `version` changes — which is exactly the property the owner asked
-/// for: changing the number in `Cargo.toml` moves every spot.
+/// soon as the workspace `version` changes — changing the number in `Cargo.toml` moves
+/// every spot.
 #[test]
 fn version_text_is_v_and_the_first_two_numbers_of_the_workspace_version() {
     let expected = {
@@ -514,7 +513,7 @@ fn version_text_is_v_and_the_first_two_numbers_of_the_workspace_version() {
 }
 
 /// The window title and *About* both take the version from [`version_text`], the one place, so
-/// they cannot differ (08 › *Window frame*, 08 › *6. Settings*). A literal in either spot
+/// they cannot differ. A literal in either spot
 /// passes today but fails as soon as the workspace `version` changes.
 #[test]
 fn the_window_title_and_about_take_the_version_from_that_one_function() {
@@ -523,8 +522,7 @@ fn the_window_title_and_about_take_the_version_from_that_one_function() {
     assert_eq!(about().version, shown);
 }
 
-/// `app/src-tauri/tauri.conf.json` carries no second copy of the version (08 › *6. Settings* ›
-/// *The version*): no `version` key — Tauri then takes it from `app/src-tauri/Cargo.toml`,
+/// `app/src-tauri/tauri.conf.json` carries no second copy of the version: no `version` key — Tauri then takes it from `app/src-tauri/Cargo.toml`,
 /// which the app inherits from the workspace — and the window `title` holds no number, because
 /// [`crate::run`] sets the real title at start.
 #[test]
@@ -546,7 +544,7 @@ fn tauri_conf_has_no_version_key_and_no_number_in_the_window_title() {
 
 /// The shell calls hand Explorer the path and nothing else. `/select,<path>` is not parsed by
 /// Explorer when the path holds a space — it opened *Documents* (or *Home*) instead of the
-/// folder — and the batch folder always has a space in its path (review round 1).
+/// folder — and the batch folder always has a space in its path.
 #[test]
 fn explorer_gets_the_path_as_its_only_argument() {
     let path = r"C:\packing data\labels\2026-10-11\batch 1";

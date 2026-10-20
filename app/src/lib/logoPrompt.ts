@@ -1,4 +1,4 @@
-// The logo prompt's flow (08 › *2. New batch* → *The logo prompt*, D-LABEL-4): after a read and
+// The logo prompt's flow: after a read and
 // before the Plan screen, each unseen logo of the batch is asked about once. The screen renders
 // `current`; this class decides what happens next, so the flow is tested without a window.
 //

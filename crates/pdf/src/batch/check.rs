@@ -16,8 +16,8 @@ use super::error::BatchError;
 use super::mapping::{ListRequest, PackingJob, category_section, order_index, packing_jobs};
 use super::read::Draft;
 
-/// One chosen label file: what 07 › *New batch* shows before reading (page count, fingerprint,
-/// `used in batch n`).
+/// One chosen label file: what the *New batch* screen shows before reading (page count,
+/// fingerprint, `used in batch n`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FileCheck {
     pub name: String,
@@ -30,7 +30,7 @@ pub struct FileCheck {
 }
 
 /// Read each chosen file's page count and fingerprint and check it against the day's state
-/// (07 › *New batch*; 08 › *Messages*: a file that cannot be opened stops the batch).
+/// (a file that cannot be opened stops the batch).
 pub fn check_files(
     worker: &PdfWorker,
     paths: &[PathBuf],
@@ -53,7 +53,7 @@ pub fn check_files(
     Ok(checks)
 }
 
-/// The check's plan side (07 › *Check before saving*): every saved PDF's page sequence and every
+/// The check's plan side: every saved PDF's page sequence and every
 /// packing list's counts.
 pub(super) fn expected_lists(jobs: &[PackingJob]) -> Vec<ExpectedList> {
     jobs.iter()
@@ -69,8 +69,8 @@ pub(super) fn expected_lists(jobs: &[PackingJob]) -> Vec<ExpectedList> {
         .collect()
 }
 
-/// Read the files written in `folder` back and compare them with the plan (07 › *Check before
-/// saving*), saving nothing. Public so the check can be run on its own.
+/// Read the files written in `folder` back and compare them with the plan, saving nothing.
+/// Public so the check can be run on its own.
 pub fn check_saved(
     worker: &PdfWorker,
     folder: &Path,

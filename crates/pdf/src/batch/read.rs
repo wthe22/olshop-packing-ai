@@ -1,5 +1,5 @@
 //! Reading the chosen label files into a draft: open the files, read every page, group the pages
-//! into orders, then apply the duplicate guard (07 › *What happens in one batch* steps 2-4).
+//! into orders, then apply the duplicate guard (steps 2-4).
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -15,7 +15,7 @@ use crate::worker::{PdfWorker, Progress};
 use super::check::FileCheck;
 use super::error::BatchError;
 
-/// A batch that has been read but not saved (07 › *Words used in this document*): the files,
+/// A batch that has been read but not saved: the files,
 /// the orders left after the duplicate guard, the duplicates and the warnings.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Draft {
@@ -29,18 +29,18 @@ pub struct Draft {
     pub total_orders: usize,
     /// Pages that carry a packing slip.
     pub slip_pages: usize,
-    /// The header-band images the courier data does not know, for the logo prompt (D-LABEL-4).
+    /// The header-band images the courier data does not know, for the logo prompt.
     /// Each is asked about once per batch and then leaves the list.
     pub unseen_logos: Vec<UnseenLogo>,
     /// The read warnings, kept structured so the logo prompt can recompute the ones that depend
-    /// on the courier (D-LABEL-4); [`Draft::warnings`] is their display text plus the duplicate
+    /// on the courier; [`Draft::warnings`] is their display text plus the duplicate
     /// warning.
     pub read_warnings: Vec<Warning>,
 }
 
 impl Draft {
-    /// Apply the owner's answer about one unseen logo (08 › *New batch* → *The logo prompt*,
-    /// D-LABEL-4): the orders carrying the logo are named where the two clues agree
+    /// Apply the owner's answer about one unseen logo (the logo prompt of the New batch
+    /// screen): the orders carrying the logo are named where the two clues agree
     /// ([`UnseenLogo::apply`] on `table`), the logo leaves `unseen_logos`, and the warnings that
     /// depend on the courier are recomputed (the unknown-courier line shrinks or goes). Returns
     /// how many orders the answer named; an unknown `hash` changes nothing.
@@ -59,7 +59,7 @@ impl Draft {
     }
 
     /// Rebuild the warnings after the couriers changed: the unknown-courier line is recomputed
-    /// from the orders (08 › *Messages* names them by tracking ID) and keeps its place among the
+    /// from the orders (the message names them by tracking ID) and keeps its place among the
     /// read warnings; the `Qty Total` and tracking-ID lines do not depend on the courier.
     fn refresh_courier_warning(&mut self) {
         let mut warnings: Vec<Warning> = self
@@ -101,8 +101,8 @@ pub struct ReadRequest<'a> {
 }
 
 /// Open the files on the worker, read every page with progress and a cancel flag, group the
-/// pages into orders, then apply the duplicate guard (07 › *What happens in one batch* steps
-/// 2-4). `state` supplies the duplicate guard (amend passes its state without the batch);
+/// pages into orders, then apply the duplicate guard (steps 2-4). `state` supplies the
+/// duplicate guard (amend passes its state without the batch);
 /// `couriers` is the data folder's courier data.
 pub fn read(request: &ReadRequest<'_>) -> Result<Draft, BatchError> {
     let paths: Vec<PathBuf> = request.files.iter().map(|file| file.path.clone()).collect();

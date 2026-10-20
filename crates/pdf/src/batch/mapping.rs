@@ -1,6 +1,6 @@
 //! Mapping a plan into the packing jobs and the state entries of a batch: the saved PDF's pages
-//! in run order, the packing-list sections and the orders as Search finds them (03 › *A saved
-//! PDF*, 03 › *Packing list (A4)*). Plain functions, so they are tested without a PDF library.
+//! in run order, the packing-list sections and the orders as Search finds them. Plain functions,
+//! so they are tested without a PDF library.
 
 use std::collections::HashMap;
 
@@ -66,7 +66,7 @@ pub(super) fn packing_jobs(
     jobs
 }
 
-/// A saved PDF's pages in run order (03 › *A saved PDF*).
+/// A saved PDF's pages in run order.
 pub(super) type OrderIndex<'a> = HashMap<&'a OrderId, &'a ReadOrder>;
 
 pub(super) fn order_index(draft: &Draft) -> OrderIndex<'_> {
@@ -103,7 +103,7 @@ fn packing_line(line: &Line) -> PackingLine {
 }
 
 /// Map a pick and its orders into a packing-list section; the run structure is the pick's, so
-/// the printed runs and the saved Pages match (03 › *Packing list (A4)*).
+/// the printed runs and the saved Pages match.
 pub(super) fn category_section(
     category: &CategoryResult,
     index: &OrderIndex<'_>,
@@ -146,8 +146,8 @@ pub(super) fn category_saved(
                 batch,
                 pdf: category.number,
                 run: run.number,
-                // The fields the Search panel finds the order by, written at save (07 ›
-                // *`state.json`*): its lines and the order-level fields.
+                // The fields the Search panel finds the order by, written at save: its lines
+                // and the order-level fields.
                 items: order
                     .order
                     .lines

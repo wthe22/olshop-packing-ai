@@ -1,4 +1,4 @@
-// The **Printed** tick's rule (07 › *`state.json`*; 08 › *1. Day*): what a tick or an untick does
+// The **Printed** tick's rule: what a tick or an untick does
 // to a batch's ticked saved-PDF numbers, and the tick's accessible label. Pure logic; no window
 // opens and nothing is read or written.
 //

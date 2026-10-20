@@ -1,5 +1,5 @@
 <script lang="ts">
-  // A batch's file list (08 › *2. New batch*): the drop hint with *Add files…*, the chosen label
+  // A batch's file list: the drop hint with *Add files…*, the chosen label
   // PDFs with their pages, download time and used-in-batch lines and *Remove*, and the foot with
   // the selection summary and *Read labels*. The screen keeps the list and runs the commands;
   // nothing is read or written here.

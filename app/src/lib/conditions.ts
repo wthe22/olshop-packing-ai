@@ -1,22 +1,22 @@
-// The boxes model of a condition (08 › *5. Categories*) and its conversion to and from the Rust
-// `Tree` (07 › *Commands*: `condition_to_tree` / `tree_to_condition`). Rust serialises a `Node` as
+// The boxes model of a condition and its conversion to and from the Rust
+// `Tree`. Rust serialises a `Node` as
 // `{"Group": …}` or `{"Row": …}` (serde's external tagging); the window uses a friendlier shape.
 
 import { conditionFields, type FieldType } from "../texts";
 
 export type GroupKind = "all" | "any";
 
-/// A row: one comparison `field · operator · value` with a **not** flag.
+// A row: one comparison `field · operator · value` with a **not** flag.
 export interface UiRow {
   kind: "row";
   not: boolean;
   field: string;
   operator: string;
-  /// The value as typed, without quotes; turned into the field's type when sent to Rust.
+  // The value as typed, without quotes; turned into the field's type when sent to Rust.
   value: string;
 }
 
-/// A group: **All of these** (`and`) or **Any of these** (`or`), holding rows and other groups.
+// A group: **All of these** (`and`) or **Any of these** (`or`), holding rows and other groups.
 export interface UiGroup {
   kind: "group";
   groupKind: GroupKind;
@@ -26,7 +26,7 @@ export interface UiGroup {
 
 export type UiNode = UiRow | UiGroup;
 
-/// One condition: a root group (08 › *5. Categories*: every condition starts as one *All* group).
+// One condition: a root group.
 export interface UiTree {
   root: UiGroup;
 }
@@ -49,12 +49,11 @@ export function newRow(field = "name"): UiRow {
   };
 }
 
-/// The field's type (07 › *Fields the conditions can use*); an unknown field reads as text.
+// The field's type; an unknown field reads as text.
 export function fieldType(field: string): FieldType {
   return conditionFields.find((entry) => entry.value === field)?.type ?? "text";
 }
 
-// --------------------------------------------------------------------- Rust <-> window
 
 interface RustGroup {
   kind: GroupKind;

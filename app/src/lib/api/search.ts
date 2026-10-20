@@ -1,15 +1,14 @@
-// Typed wrappers around the Tauri commands for the Search screen (07 › *Commands between window
-// and Rust*). The Rust side sends snake_case fields; the interfaces here match it.
+// Typed wrappers around the Tauri commands for the Search screen. The Rust side sends snake_case fields; the interfaces here match it.
 
 import { invoke } from "@tauri-apps/api/core";
 
-// One line of a Search row (08 › *Search*): the product name and its quantity.
+// One line of a Search row: the product name and its quantity.
 export interface SearchItem {
   name: string;
   quantity: number;
 }
 
-// One matching saved order as the Search panel shows it (08 › *Search*): its IDs, courier, items,
+// One matching saved order as the Search panel shows it: its IDs, courier, items,
 // the batch it was saved in, its saved PDF (name, and the full `path` *Open* uses) and whether its
 // items were stored at all (an order saved before search existed).
 export interface SearchRow {
@@ -27,7 +26,7 @@ export interface SearchRow {
   items_not_stored: boolean;
 }
 
-// What a search returns (08 › *Search*): the counts shown above the rows, then one row per
+// What a search returns: the counts shown above the rows, then one row per
 // matching saved order.
 export interface SearchResults {
   rows: SearchRow[];
@@ -35,11 +34,11 @@ export interface SearchResults {
   batches: number;
 }
 
-// Which day folders *search_orders* reads (Q-UI-3): `day` is *This day* (the day in the title
+// Which day folders *search_orders* reads: `day` is *This day* (the day in the title
 // bar, the default), `all` is *All days*.
 export type SearchScope = "day" | "all";
 
-// Search the saved orders for the condition boxes (08 › *Search*): the same tree as Categories
+// Search the saved orders for the condition boxes: the same tree as Categories
 // (`toRustTree`), with the scope. Reads `state.json` only; *Open* then uses `openPath`.
 export const searchOrders = (
   conditions: unknown,

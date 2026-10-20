@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Settings (08 › *6. Settings*): the data folder and the packing-list default.
+  // Settings: the data folder and the packing-list default.
   import { texts } from "../texts";
   import type { About, Layout, Scope, Settings } from "./api/start";
 

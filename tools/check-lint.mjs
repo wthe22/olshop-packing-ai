@@ -67,7 +67,7 @@ function walk(dirRel, out = []) {
   return out;
 }
 
-/** The repository-relative POSIX path of a clippy span file name. */
+/** The repository-relative POSIX path of a clippy span file name.*/
 function repoPath(fileName) {
   if (!isAbsolute(fileName)) return fileName.split("\\").join("/");
   return relative(ROOT, fileName).split("\\").join("/");

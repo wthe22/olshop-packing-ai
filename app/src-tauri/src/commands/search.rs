@@ -1,10 +1,10 @@
-//! Search commands (08 › *Search*, 2.21): find a saved order of the day, or of every day, by the
+//! Search commands: find a saved order of the day, or of every day, by the
 //! condition boxes of the Categories editor. The matching is the engine's (`packing_engine::
 //! search`); this module reads the day folders and turns a row's saved PDF into a path the window
 //! can open.
 //!
 //! Search only reads `state.json`: nothing is changed or saved, and an order of an open draft
-//! (not yet saved) is never found (07 › *`state.json`*).
+//! (not yet saved) is never found.
 
 use std::path::Path;
 
@@ -20,7 +20,7 @@ use tauri::State;
 use crate::commands::day::days_in;
 use crate::{AppState, LABELS_DIR};
 
-/// Which day folders to search ([Q-UI-3]): the day in the title bar (*this day*, the default), or
+/// Which day folders to search: the day in the title bar (*this day*, the default), or
 /// every day folder of the data folder (*all days*).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -36,7 +36,7 @@ pub struct SearchItemView {
     quantity: i64,
 }
 
-/// One matching saved order as the Search panel's row shows it (08 › *Search*): its IDs, courier,
+/// One matching saved order as the Search panel's row shows it: its IDs, courier,
 /// items, the batch it was saved in and its saved PDF (name, and the full path *Open* uses).
 #[derive(Debug, Serialize)]
 pub struct SearchRowView {
@@ -55,11 +55,11 @@ pub struct SearchRowView {
     /// The saved PDF's full path, for *Open* (`open_path`).
     path: String,
     /// The order has no stored items: the row says *items not stored*, and only an ID condition
-    /// found it (2.21).
+    /// found it.
     items_not_stored: bool,
 }
 
-/// The Search panel's result (08 › *Search*): the counts shown above the rows, then one row per
+/// The Search panel's result: the counts shown above the rows, then one row per
 /// matching saved order.
 #[derive(Debug, Serialize)]
 pub struct SearchResultsView {
@@ -82,7 +82,7 @@ fn search_orders_impl(
     conditions: &Tree,
     scope: SearchScope,
 ) -> Result<SearchResultsView, String> {
-    // The boxes are made by the engine's own parser/printer (08 › *5. Categories*), so the
+    // The boxes are made by the engine's own parser/printer, so the
     // condition language has one home.
     let text = rules_edit::tree_to_condition(conditions).map_err(|error| error.to_string())?;
     let condition = parse_condition(&text).map_err(|error| error.to_string())?;
@@ -138,8 +138,7 @@ fn search_results_view(results: &SearchResults, labels: &Path) -> SearchResultsV
     }
 }
 
-/// Search the saved orders of the day (or of every day) for the given condition boxes (08 ›
-/// *Search*). Reads `state.json` only; *Open* on a row uses `open_path` with the row's `path`.
+/// Search the saved orders of the day (or of every day) for the given condition boxes. Reads `state.json` only; *Open* on a row uses `open_path` with the row's `path`.
 #[tauri::command]
 pub fn search_orders(
     state: State<'_, AppState>,

@@ -1,6 +1,6 @@
 //! End-to-end test of `packing-cli prepare/revert/amend` on the made-up testdata: the batch
 //! folder, its saved PDFs, packing list, summary, download copy and `state.json`, the
-//! duplicate guard, revert, amend and the no-slip stop (07 › *What happens in one batch*).
+//! duplicate guard, revert, amend and the no-slip stop.
 //!
 //! Skipped with a message when `pdfium.dll` has not been downloaded (tools/get-pdfium.sh).
 
@@ -68,7 +68,7 @@ fn stderr(output: &Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
 }
 
-/// The expected saved-PDF file names from `expected-picks.json` (07 › *Plan*).
+/// The expected saved-PDF file names from `expected-picks.json`.
 fn expected_file_names() -> Vec<String> {
     let text = fs::read_to_string(testdata("expected-picks.json")).expect("expected-picks");
     let categories: Vec<Value> = serde_json::from_str(&text).expect("parse expected-picks");

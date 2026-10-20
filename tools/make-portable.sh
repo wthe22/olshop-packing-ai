@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the portable program folder (07 › *Program folder*, task 2.13): one folder with
+# Build the portable program folder: one folder with
 # Packing.exe and pdfium.dll, no installer. The owner copies the folder to e.g. D:\Packing\
 # and starts Packing.exe from a shortcut; the data (categories.toml, settings.json, labels/)
 # lives in the same folder.
@@ -22,7 +22,7 @@ release="$target/release"
 portable="$target/portable"
 out="$portable/Packing"
 
-# pdfium.dll is git-ignored; fetch it once with get-pdfium.sh (01-setup).
+# pdfium.dll is git-ignored; fetch it once with get-pdfium.sh (docs/development/setup.md).
 if [ ! -f "$vendor/pdfium.dll" ]; then
   echo "error: $vendor/pdfium.dll is missing." >&2
   echo "Run 'bash tools/get-pdfium.sh' first: it downloads the pinned PDFium (chromium/7881)." >&2

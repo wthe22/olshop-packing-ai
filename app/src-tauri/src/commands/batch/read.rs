@@ -1,4 +1,4 @@
-//! Reading a new batch or an amendment into an open draft (08 › *2. New batch* → *3. Plan*): the
+//! Reading a new batch or an amendment into an open draft: the
 //! files read in order, the categories and couriers loaded, and the draft stored in
 //! [`AppState`].
 
@@ -22,12 +22,12 @@ use crate::{AmendState, AppState, COURIERS_FILE, OpenDraft};
 use super::logo::{read_pictures, read_result};
 use super::views::ReadResult;
 
-/// Read the chosen files into a draft and store it (08 › *2. New batch* → *3. Plan*). Runs on a
+/// Read the chosen files into a draft and store it. Runs on a
 /// blocking thread; `on_progress` is called for every page (the window turns it into a
 /// `read-progress` event). A stop (no packing slip, every order already saved, a rules error,
 /// cancelled) returns its message and writes nothing. `grouping` is the grouping of categories the
-/// batch uses (04 › *Sets*), chosen on the New batch screen; it becomes the grouping used last
-/// (07 › *Settings*), which the next New batch preselects.
+/// batch uses, chosen on the New batch screen; it becomes the grouping used last,
+/// which the next New batch preselects.
 pub(super) fn read_draft(
     state: &AppState,
     paths: Vec<PathBuf>,
@@ -58,11 +58,11 @@ pub(super) struct ReadRequest {
     pub(super) paths: Vec<PathBuf>,
     /// Supplies the duplicate guard and the day's next number.
     pub(super) base_state: DayState,
-    /// Marks the draft as redoing a batch (07 › *Amend*).
+    /// Marks the draft as redoing a batch.
     pub(super) amend: Option<AmendState>,
-    /// The grouping to read with (04 › *Sets*).
+    /// The grouping to read with.
     pub(super) grouping: Grouping,
-    /// Read a new batch in file-name order (= download order, 08 › *2. New batch*) and an amend in
+    /// Read a new batch in file-name order and an amend in
     /// the given order (its `download/` copy in the order stored in `state.json`).
     pub(super) sort_by_name: bool,
 }
@@ -114,7 +114,7 @@ pub(super) fn read_into_draft(
         .map_err(|error| error.to_string())?
         .map_err(|error| error.to_string())?;
     // The prompt's pictures are read back while the label documents are still open on the
-    // worker (08 › *The logo prompt*); an empty list costs nothing.
+    // worker; an empty list costs nothing.
     let logo_pictures = state
         .with_worker(|worker| read_pictures(worker, &draft))
         .unwrap_or_default();
@@ -135,16 +135,16 @@ pub(super) fn read_into_draft(
 }
 
 /// Load the chosen grouping's categories — `<data>/categories.toml` for the grouping `default`,
-/// else `<data>/categories/<grouping name>.toml` — or the one catch-all entry when it has no file
-/// (04 › *Sets*, 07 › *Inputs*, 08 › *5. Categories*): every order then goes into one PDF set. A
-/// file that does not load stops the batch with its line/col (08 › *Messages*).
+/// else `<data>/categories/<grouping name>.toml` — or the one catch-all entry when it has no file:
+/// every order then goes into one PDF set. A
+/// file that does not load stops the batch with its line/col.
 pub(super) fn load_categories(folder: &Path, grouping: &Grouping) -> Result<Vec<Category>, String> {
     groupings::load(folder, grouping)
         .map_err(|error| format!("The categories have an error: {error}. Fix it in Categories."))
 }
 
-/// Load `<data>/couriers.toml`, or the built-in list when the data folder has none
-/// (07 › *Inputs*, D-LABEL-1). A broken file stops the read with its line (08 › *Messages*).
+/// Load `<data>/couriers.toml`, or the built-in list when the data folder has none.
+/// A broken file stops the read with its line.
 pub(super) fn load_couriers(folder: &Path) -> Result<CourierTable, String> {
     label::load_couriers_file(&folder.join(COURIERS_FILE)).map_err(|error| {
         format!("The couriers have an error: {error}. Fix {COURIERS_FILE} in the data folder.")

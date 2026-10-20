@@ -1,5 +1,5 @@
 <script lang="ts">
-  // *+ Add a pick for this batch* (08 › *3. Plan*): the condition is built in the boxes editor
+  // *+ Add a pick for this batch*: the condition is built in the boxes editor
   // (the same as Categories) with a text view toggle.
   import { onMount } from "svelte";
   import { checkCondition as validateCondition } from "./api/batch";

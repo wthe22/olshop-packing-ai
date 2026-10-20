@@ -8,7 +8,7 @@ use packing_engine::orders::ReadError;
 
 use crate::PdfError;
 
-/// A batch step failed. The stop texts are those of 08 › *Messages*.
+/// A batch step failed.
 #[derive(Debug)]
 pub enum BatchError {
     /// A PDF job failed (a file cannot be opened, a write failed).
@@ -17,7 +17,7 @@ pub enum BatchError {
     Day(DayError),
     /// Reading stopped the batch (no Order ID on a first page, a page with no packing slip).
     Read(ReadError),
-    /// Every order was already saved today (08 › *Messages*).
+    /// Every order was already saved today.
     AllSaved { orders: usize, batch: BatchNumber },
     /// A plain message.
     Message(String),

@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The packing-list options (08 › *3. Plan*): what a list covers (*Scope*) and which layouts are
-  // written, both sent with *Save batch* (07 › *Packing list*).
+  // The packing-list options: what a list covers (*Scope*) and which layouts are
+  // written, both sent with *Save batch*.
   import type { Layout, Scope } from "./api/start";
   import { texts } from "../texts";
 

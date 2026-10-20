@@ -10,7 +10,7 @@ use packing_pdf::batch::FileCheck;
 use packing_pdf::worker::{SaveProgress, SaveStage};
 use serde::{Deserialize, Serialize};
 
-/// One chosen label file as the New batch screen shows it (08 › *2. New batch*): page count,
+/// One chosen label file as the New batch screen shows it: page count,
 /// size, download time and `used in batch n`.
 #[derive(Serialize)]
 pub struct FileCheckView {
@@ -23,14 +23,14 @@ pub struct FileCheckView {
     pub(super) used_in_batch: Option<BatchNumber>,
 }
 
-/// The `read-progress` event payload (07 › *Commands between window and Rust*).
+/// The `read-progress` event payload.
 #[derive(Clone, Serialize)]
 pub struct ReadProgress {
     pub(super) page: usize,
     pub(super) pages: usize,
 }
 
-/// The `save-progress` event payload (07 › *Check before saving*: *Shown while it runs*). `stage`
+/// The `save-progress` event payload. `stage`
 /// is *Writing* or *Checking*; the window shows it with a progress bar on the Plan screen.
 #[derive(Clone, Serialize)]
 pub struct SaveProgressEvent {
@@ -49,7 +49,7 @@ impl SaveProgressEvent {
     }
 }
 
-/// What the New batch screen needs when reading ends (08 › *Reading*): the counts and warnings,
+/// What the New batch screen needs when reading ends: the counts and warnings,
 /// the logo prompt's data and the initial plan view for the Plan screen.
 #[derive(Serialize)]
 pub struct ReadResult {
@@ -60,35 +60,35 @@ pub struct ReadResult {
     pub(super) total_orders: usize,
     pub(super) already_saved: usize,
     pub(super) warnings: Vec<String>,
-    /// The batch being redone when this read is an amend (07 › *Amend*): the Plan screen is then
+    /// The batch being redone when this read is an amend: the Plan screen is then
     /// titled *Redo batch `<b>`*; `None` for a normal new batch.
     pub(super) amend: Option<BatchNumber>,
-    /// The courier names the prompt's buttons show, in `couriers.toml` order (D-LABEL-1).
+    /// The courier names the prompt's buttons show, in `couriers.toml` order.
     pub(super) couriers: Vec<String>,
-    /// The header-band images the courier data does not know (D-LABEL-4): the prompt asks about
+    /// The header-band images the courier data does not know: the prompt asks about
     /// each one once, before the Plan screen. Empty when every logo is known.
     pub(super) logos: Vec<LogoView>,
     pub(super) plan: PlanView,
 }
 
-/// What *Amend* opens with (08 › *1. Day* → *3. Plan*): the batch being redone, its `download/`
+/// What *Amend* opens with: the batch being redone, its `download/`
 /// files listed already selected in the order stored in `state.json`, and the read of those files
 /// as an amendment — the Plan screen opens with it at once, the draft open. **Back** on that Plan
 /// screen shows the selection page from `files`; only **Save batch `<b>` again** writes, so nothing
-/// here touches `state.json` (07 › *Amend*).
+/// here touches `state.json`.
 #[derive(Serialize)]
 pub struct AmendStart {
     /// The batch being redone: titles the Plan screen and the selection page *Redo batch `<b>`*.
     pub(super) batch: BatchNumber,
-    /// The batch's `download/` files, already selected — the selection page's starting list
-    /// (08 › *2. New batch* → *The amend's selection page*, Q-APP-2).
+    /// The batch's `download/` files, already selected — the selection page's starting list.
+    ///
     pub(super) files: Vec<FileCheckView>,
     /// The read of the batch's own files, shaped as `read_labels` returns for an amend: the Plan
     /// screen shows it at once ([`ReadResult`]).
     pub(super) read: ReadResult,
 }
 
-/// One unseen logo as the logo prompt shows it (08 › *2. New batch* → *The logo prompt*): the
+/// One unseen logo as the logo prompt shows it: the
 /// image's hash, carried by how many pages and how many orders, and the logo **as printed** —
 /// a PNG data URL read back from the PDF, `None` when no page could be read (the screen then
 /// shows `hash`).
@@ -100,24 +100,24 @@ pub struct LogoView {
     pub(super) picture: Option<String>,
 }
 
-/// The Plan screen's data (08 › *3. Plan*).
+/// The Plan screen's data.
 #[derive(Serialize)]
 pub struct PlanView {
     pub(super) rows: Vec<PlanRow>,
-    /// Two saved PDFs of the batch share a name: *Save batch* waits (08 › *3. Plan*).
+    /// Two saved PDFs of the batch share a name: *Save batch* waits.
     pub(super) has_duplicate_names: bool,
-    /// Where *+ Add a pick for this batch* inserts, above the rest row (08 › *3. Plan*).
+    /// Where *+ Add a pick for this batch* inserts, above the rest row.
     pub(super) add_at: usize,
     /// The plan is the one catch-all entry, so the picks are unconfigured: the screen says every
-    /// order goes into one PDF set (Q-UI-4, 08 › *3. Plan*).
+    /// order goes into one PDF set.
     pub(super) no_categories: bool,
-    /// The grouping the plan belongs to (04 › *Sets*): the grouping the batch is packed with, the
+    /// The grouping the plan belongs to: the grouping the batch is packed with, the
     /// one chosen on the New batch screen or, for an amend, the batch's own recorded grouping. The
-    /// header names it and **Edit categories** opens it (08 › *3. Plan*).
+    /// header names it and **Edit categories** opens it.
     pub(super) grouping: Grouping,
 }
 
-/// One row of the Plan screen (08 › *3. Plan*): a plan entry, the plan's rest entry, or the
+/// One row of the Plan screen: a plan entry, the plan's rest entry, or the
 /// generated `? Uncategorised` row. Which one it is lives in [`PlanRowKind`]; the flags the kind
 /// or another field already tells (whether *Use* is offered, whether the row takes no orders)
 /// are derived in the screen.
@@ -135,7 +135,7 @@ pub struct PlanRow {
     pub(super) runs: Vec<RunView>,
     pub(super) pages: usize,
     pub(super) file_name: String,
-    /// Skipped for this batch only (08 › *3. Plan*: *Use* unticked).
+    /// Skipped for this batch only.
     pub(super) skipped: bool,
     /// The `#` of the earlier row with the same file name (*Same name as PDF 6*).
     pub(super) duplicate_of: Option<PdfNumber>,
@@ -143,7 +143,7 @@ pub struct PlanRow {
     pub(super) can_move_down: bool,
 }
 
-/// What a Plan row is (08 › *3. Plan*), serialised under the `kind` tag. The window edits only the
+/// What a Plan row is, serialised under the `kind` tag. The window edits only the
 /// rows that are plan entries, so only those carry the [`index`](PlanRowKind::Entry) the edits name.
 #[derive(Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -158,7 +158,7 @@ pub enum PlanRowKind {
     Generated,
 }
 
-/// One run inside a saved PDF, as the expanded row shows it (08 › *3. Plan*):
+/// One run inside a saved PDF, as the expanded row shows it:
 /// `6-01  Sepatu Standar Samping Motor ×1   96 orders`.
 #[derive(Serialize)]
 pub struct RunView {
@@ -167,7 +167,7 @@ pub struct RunView {
     pub(super) orders: usize,
 }
 
-/// One plan change from the window (08 › *3. Plan*). Applied to the open plan in order.
+/// One plan change from the window. Applied to the open plan in order.
 #[derive(Deserialize, Debug)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum PlanEdit {
@@ -189,16 +189,15 @@ pub enum PlanEdit {
         name: String,
         condition: String,
     },
-    /// The whole saved-PDF name (07 › *Plan*: number included).
+    /// The whole saved-PDF name.
     Rename {
         index: usize,
         name: String,
     },
 }
 
-/// What *Save batch* wrote, for the green line on the Day screen (08 › *1. Day*), and the check
-/// before saving's findings when it stopped or the owner chose *Save anyway* (07 › *Check
-/// before saving*).
+/// What *Save batch* wrote, for the green line on the Day screen, and the check
+/// before saving's findings when it stopped or the owner chose *Save anyway*.
 #[derive(Serialize)]
 pub struct SaveResultView {
     pub(super) batch: BatchNumber,

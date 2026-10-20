@@ -25,6 +25,7 @@ From the repository root, Git Bash:
 | Front-end tests | `cd app && npm test` |
 | File size ratchet | `node tools/check-size.mjs` |
 | Lint ratchet | `node tools/check-lint.mjs` |
+| Comment gate | `node tools/check-comments.mjs` |
 | Coverage compare | `node tools/check-coverage.mjs` |
 
 Every change also meets the [code rules](code-rules.md): its checks, run together by `bash tools/check.sh`,

@@ -4,7 +4,7 @@ use std::path::Path;
 
 use packing_engine::plan::{CategoryResult, REST_CODE};
 
-/// The pieces the batch summary is built from (03 › *Screen summary*).
+/// The pieces the batch summary is built from.
 pub struct SummaryInput<'a> {
     pub day: &'a str,
     pub files: usize,
@@ -14,7 +14,7 @@ pub struct SummaryInput<'a> {
     pub categories: &'a [CategoryResult],
     pub duplicates: usize,
     pub warnings: &'a [String],
-    /// The check before saving's errors (07 › *Check before saving*), printed when the batch was
+    /// The check before saving's errors, printed when the batch was
     /// saved anyway.
     pub check_errors: &'a [String],
     /// The check before saving's warnings.
@@ -26,7 +26,7 @@ pub struct SummaryInput<'a> {
     pub quiet_ids: bool,
 }
 
-/// The batch summary (03 › *Screen summary*), the text printed and written to `summary.txt`.
+/// The batch summary, the text printed and written to `summary.txt`.
 pub fn summary_text(input: &SummaryInput<'_>) -> String {
     let file_word = if input.files == 1 {
         "label file"
@@ -73,7 +73,7 @@ pub fn summary_text(input: &SummaryInput<'_>) -> String {
             }
         }
     }
-    // The check before saving's two lists, kept apart (07 › *Check before saving*).
+    // The check before saving's two lists, kept apart.
     if !input.check_errors.is_empty() {
         lines.push(format!("  Check errors: {}", input.check_errors.len()));
         if !input.quiet_ids {

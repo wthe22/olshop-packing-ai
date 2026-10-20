@@ -155,8 +155,6 @@ fn an_unknown_hash_changes_nothing() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
-// ---------------------------------------- the taught hash in couriers.toml (D-LABEL-4)
-
 #[test]
 fn a_courier_answer_remembers_the_logo_in_the_data_folders_file() {
     let dir = temp_dir("logo-remember");

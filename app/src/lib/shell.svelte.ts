@@ -1,5 +1,4 @@
-// The app shell's state and commands (08 › *Window frame*, *Start*, *1. Day*, *2. New batch*,
-// *3. Plan*, *5. Categories*, *6. Settings*, *Search*): it finds the data folder, keeps the current
+// The app shell's state and commands: it finds the data folder, keeps the current
 // day and screen, routes the Tauri commands, and decides which overlay opens over the current
 // screen (an open draft is kept). The markup is `+page.svelte` and the overlay dialogs are
 // `Overlays.svelte`; nothing is decided there.
@@ -17,8 +16,7 @@ import * as categories from "./api/categories";
 import { togglePrinted } from "./printed";
 import { texts, amendOpens } from "../texts";
 
-// The screens the shell routes between; the batch flow's screens are not in the nav (08 › *Window
-// frame*).
+// The screens the shell routes between; the batch flow's screens are not in the nav.
 export type Screen = "day" | "new-batch" | "plan";
 export type OverlayId = "search" | "categories" | "settings";
 export type NavId = "day" | "search" | "categories" | "settings";
@@ -33,7 +31,7 @@ export class Shell {
   day = $state("");
   exeDir = $state("");
   dataFolder = $state<string | null>(null);
-  // The program's shown version, for the title bar's brand text (08 › *Window frame*); the OS
+  // The program's shown version, for the title bar's brand text; the OS
   // window title is set from the same one-place text on the Rust side at start.
   version = $state("");
   overview = $state<dayData.DayOverview | null>(null);
@@ -41,31 +39,30 @@ export class Shell {
   about = $state<start.About | null>(null);
   dayList = $state<string[]>([]);
   screen = $state<Screen>("day");
-  // Categories/Settings/Search open over the current screen and close back to it (08 › *Window
-  // frame*).
+  // Categories/Settings/Search open over the current screen and close back to it.
   overlay = $state<OverlayId | null>(null);
-  // The set the Categories overlay opens on (08 › *5. Categories*): the batch's own set when the
+  // The set the Categories overlay opens on: the batch's own set when the
   // screen comes from the Plan screen's *Edit categories*; `null` from the top bar, where the
   // set used last is shown.
   categoriesGrouping = $state<string | null>(null);
 
   // The batch being prepared: the chosen label files (kept here, so *Back* on the Plan screen
   // shows the file list again with the files still there), the read result and whether the
-  // backend has an open draft (08 › *2. New batch*, *3. Plan*). `amendBatch` is the batch being
-  // redone, from **Amend** until the flow ends (08 › *The amend's selection page*); `null` for a
+  // backend has an open draft. `amendBatch` is the batch being
+  // redone, from **Amend** until the flow ends; `null` for a
   // new batch.
   files = $state<batch.FileCheck[]>([]);
   amendBatch = $state<number | null>(null);
   readResult = $state<batch.ReadResult | null>(null);
   draftOpen = $state(false);
   // The progress of *Amend*'s read of the batch's own files (the `read-progress` event), shown on
-  // the Day screen until the Plan screen opens (08 › *1. Day* → *3. Plan*); `null` when nothing
+  // the Day screen until the Plan screen opens; `null` when nothing
   // reads.
   amendReading = $state<batch.ReadProgress | null>(null);
-  // The green *Batch n saved* line on the Day screen, shown for a few seconds (08 › *1. Day*).
+  // The green *Batch n saved* line on the Day screen, shown for a few seconds.
   savedMessage = $state<string | null>(null);
   private savedTimer: ReturnType<typeof setTimeout> | undefined;
-  // Bumped after Categories saves, so the open Plan screen recounts (08 › *Window frame*).
+  // Bumped after Categories saves, so the open Plan screen recounts.
   planRefresh = $state(0);
 
   // The batch number the next save will get (continuing the day).
@@ -73,13 +70,13 @@ export class Shell {
   // The batch number being prepared, for the Categories *In batch `<b>`: n* column; `null` when no
   // draft is open.
   draftBatch = $derived(this.draftOpen ? (this.readResult?.amend ?? this.nextBatch) : null);
-  // The batch's own picks set, for the amend's selection page's fixed *Set* line (04 › *Sets*);
+  // The batch's own picks set, for the amend's selection page's fixed *Set* line;
   // `null` for a new batch's file list.
   amendGrouping = $derived(
     this.amendBatch !== null && this.readResult !== null ? this.readResult.plan.grouping : null,
   );
 
-  // Start the shell: the data folder, the day, the settings and About (08 › *Start*).
+  // Start the shell: the data folder, the day, the settings and About.
   load = async () => {
     try {
       const info = await start.startInfo();
@@ -126,7 +123,7 @@ export class Shell {
     }
   };
 
-  // 08 › *Start* step 3: a `categories.toml` with errors opens Categories first.
+  // A `categories.toml` with errors opens Categories first.
   private openCategoriesIfBroken = async () => {
     try {
       const rules = await categories.rulesLoad();
@@ -182,8 +179,7 @@ export class Shell {
     return typeof picked === "string" ? picked : null;
   };
 
-  // Ask to discard the open batch before leaving it (08 › *Window frame*: changing the day while
-  // a draft is open asks first; Categories and Settings keep it).
+  // Ask to discard the open batch before leaving it.
   private leaveBatch = async (): Promise<boolean> => {
     if (this.draftOpen) {
       if (!(await confirm(texts.day.confirmDiscardDraft))) return false;
@@ -204,7 +200,7 @@ export class Shell {
     this.screen = "new-batch";
   };
 
-  // *Back* on a Plan screen (08 › *3. Plan*): show the PDF selection page again — the batch's own
+  // *Back* on a Plan screen: show the PDF selection page again — the batch's own
   // file list, or the amend's selection page — with the files still listed and the draft kept; a
   // new *Read labels* replaces it, so the plan changes are lost. Nothing is written and nothing
   // is asked.
@@ -244,7 +240,7 @@ export class Shell {
     this.screen = "day";
   };
 
-  // The day switch (08 › *Window frame*). `dayList` is newest first.
+  // The day switch. `dayList` is newest first.
   stepDay = async (delta: number) => {
     if (!(await this.leaveBatch())) return;
     const next = this.dayList[this.dayList.indexOf(this.day) - delta];
@@ -262,15 +258,15 @@ export class Shell {
     this.refreshOverview();
   };
 
-  // *Day* returns to the day screen; *Categories* and *Settings* open over the current screen
-  // (08 › *Window frame*: an open draft is kept).
+  // *Day* returns to the day screen; *Categories* and *Settings* open over the current screen.
+  //
   navigate = async (id: NavId) => {
     if (id === "day") {
       if (!(await this.leaveBatch())) return;
       this.overlay = null;
       this.screen = "day";
     } else {
-      // From the top bar: the Categories screen shows the set used last (08 › *5. Categories*).
+      // From the top bar: the Categories screen shows the set used last.
       if (id === "categories") this.categoriesGrouping = null;
       this.overlay = id;
     }
@@ -280,7 +276,7 @@ export class Shell {
     this.overlay = null;
   };
 
-  // The Plan screen's *Edit categories* (08 › *3. Plan*): open Categories on the set the batch
+  // The Plan screen's *Edit categories*: open Categories on the set the batch
   // uses, so a change is written into that set's file.
   openCategoriesFromPlan = () => {
     this.categoriesGrouping = this.readResult?.plan.grouping ?? null;
@@ -292,7 +288,7 @@ export class Shell {
     this.planRefresh += 1; // the open Plan screen recounts with the new categories
   };
 
-  // *Revert* the newest batch (08 › *1. Day*): confirm, then delete it.
+  // *Revert* the newest batch: confirm, then delete it.
   revert = async (row: dayData.BatchView) => {
     const asked = await confirm(texts.day.confirmRevert(row.batch, row.pdfs.length, row.orders), {
       title: texts.title,
@@ -307,10 +303,10 @@ export class Shell {
     }
   };
 
-  // *Amend* the newest batch (08 › *1. Day* → *3. Plan*): confirm, then read the batch's own
+  // *Amend* the newest batch: confirm, then read the batch's own
   // `download/` files again and open the *Redo batch `<b>`* Plan screen at once, the draft open.
   // The batch's file list is kept, so the Plan screen's *Back* shows the selection page with the
-  // current selection listed (08 › *2. New batch* → *The amend's selection page*). The read's
+  // current selection listed. The read's
   // `read-progress` events show on the Day screen until the Plan screen opens.
   amend = async (row: dayData.BatchView) => {
     const asked = await confirm(texts.day.confirmAmend(row.batch, row.grouping, row.time), {
@@ -365,7 +361,7 @@ export class Shell {
     }
   };
 
-  // The **Printed** tick of one saved-PDF row (08 › *1. Day*; 07 › *`state.json`*): write it and
+  // The **Printed** tick of one saved-PDF row: write it and
   // update the batch's rows in place, without reloading the whole overview. The tick rule is the
   // pure [`togglePrinted`]; a failed save shows the usual error.
   setPrinted = async (row: dayData.BatchView, pdf: dayData.PdfView, printed: boolean) => {

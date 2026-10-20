@@ -15,7 +15,7 @@ use crate::{AppState, BUILTIN_COURIERS, COURIERS_FILE, OpenDraft};
 use super::plan_view::plan_view;
 use super::views::{LogoView, ReadResult};
 
-/// The screen's read result (08 › *2. New batch*, *The logo prompt*, *3. Plan*): the draft's
+/// The screen's read result: the draft's
 /// counts and warnings, the couriers the prompt's buttons show, the unseen logos still to ask
 /// about, and the plan view. Used both when a read finishes and after every logo answer, so the
 /// screen always shows the current counts and warnings.
@@ -29,7 +29,6 @@ pub(super) fn read_result(open: &OpenDraft) -> ReadResult {
         warnings: open.draft.warnings.clone(),
         amend: open.amend.as_ref().map(|amend| amend.batch),
         // The prompt's buttons: the names of the data folder's `couriers.toml`, in file order
-        // (D-LABEL-1, D-LABEL-4).
         couriers: open.couriers.names(),
         logos: logo_views(&open.draft, &open.logo_pictures),
         plan: plan_view(
@@ -41,7 +40,7 @@ pub(super) fn read_result(open: &OpenDraft) -> ReadResult {
     }
 }
 
-/// The unseen logos as the prompt shows them, in first-seen order (D-LABEL-4).
+/// The unseen logos as the prompt shows them, in first-seen order.
 fn logo_views(draft: &Draft, pictures: &HashMap<String, Option<String>>) -> Vec<LogoView> {
     draft
         .unseen_logos
@@ -55,8 +54,8 @@ fn logo_views(draft: &Draft, pictures: &HashMap<String, Option<String>>) -> Vec<
         .collect()
 }
 
-/// Read each unseen logo back from the first page carrying it, as a PNG data URL for the prompt
-/// (08 › *The logo prompt*). Runs on the PDFium worker, so the label documents stay on their
+/// Read each unseen logo back from the first page carrying it, as a PNG data URL for the prompt.
+/// Runs on the PDFium worker, so the label documents stay on their
 /// thread. A logo whose page cannot be found or rendered gets `None`: the screen shows its hash.
 pub(super) fn read_pictures(worker: &PdfWorker, draft: &Draft) -> HashMap<String, Option<String>> {
     let mut pictures = HashMap::with_capacity(draft.unseen_logos.len());
@@ -115,11 +114,10 @@ pub(super) fn base64(bytes: &[u8]) -> String {
     out
 }
 
-/// Answer the logo prompt about one unseen logo (08 › *2. New batch* → *The logo prompt*;
-/// D-LABEL-4): the order's courier is filled where the logo's courier and the tracking-ID form
+/// Answer the logo prompt about one unseen logo: the order's courier is filled where the logo's courier and the tracking-ID form
 /// agree, the draft's warnings and the plan view are recounted, and the refreshed result goes
 /// back to the screen. The taught hash is then written into the data folder's `couriers.toml`
-/// (Q-LABEL-7 default) so the logo is never asked about again. An unknown hash changes nothing.
+/// so the logo is never asked about again. An unknown hash changes nothing.
 /// *Skip all* never comes here: it only stops the screen asking.
 pub(super) fn answer_logo_impl(
     state: &AppState,
@@ -147,7 +145,7 @@ pub(super) fn answer_logo_impl(
 }
 
 /// Write the hash the owner taught into the data folder's `couriers.toml`, comments and order
-/// kept (D-LABEL-4, Q-LABEL-7 default): a courier name appends it to that courier's `logo` list,
+/// kept: a courier name appends it to that courier's `logo` list,
 /// *Not a courier* appends it to `not_courier`, *I don't know* (`Skip`) writes nothing. A file
 /// the data folder does not have yet starts as the built-in list.
 fn remember_logo(folder: &Path, hash: &str, answer: &LogoAnswer) -> Result<(), String> {

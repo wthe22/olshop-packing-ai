@@ -1,10 +1,10 @@
-//! The packing app window back end (tasks 2.8-2.10): app state and setup. The window commands
+//! The packing app window back end: app state and setup. The window commands
 //! live in [`commands::day`] (start, day, settings) and [`commands::batch`] (new batch, plan,
 //! save); the logic is in plain functions that are unit-tested.
 //!
-//! The command functions stay thin. The data folder is app state, never a stored setting
-//! (07 › *Settings*): at start the app looks for `couriers.toml` in its own folder and asks
-//! the owner when it is missing (08 › *Start*). The open draft (07 › *Words*) is app state too;
+//! The command functions stay thin. The data folder is app state, never a stored setting:
+//! at start the app looks for `couriers.toml` in its own folder and asks
+//! the owner when it is missing. The open draft is app state too;
 //! its orders stay on the PDFium worker thread that opened the label documents.
 
 use std::collections::HashMap;
@@ -23,61 +23,58 @@ use tauri::Manager;
 
 pub mod commands;
 
-/// The built-in `couriers.toml` written into a data folder that has none (08 › *Start*,
-/// 08 › *6. Settings*; 07 › *Inputs*). The engine's bundled courier list, so there is one home
+/// The built-in `couriers.toml` written into a data folder that has none. The engine's bundled courier list, so there is one home
 /// for it.
 pub(crate) const BUILTIN_COURIERS: &str = packing_engine::label::COURIERS_TOML;
 
-/// The picks file in the data folder (07 › *Rules file*): the grouping `default`. The app writes
-/// it only when the owner saves picks (08 › *5. Categories*), so it is not what marks a folder as
-/// a data folder ([`COURIERS_FILE`], 07 › *Program folder*). The other groupings are one file
-/// each in [`GROUPINGS_DIR`] (04 › *Sets*).
+/// The picks file in the data folder: the grouping `default`. The app writes
+/// it only when the owner saves picks, so it is not what marks a folder as
+/// a data folder. The other groupings are one file
+/// each in [`GROUPINGS_DIR`].
 pub(crate) const CATEGORIES_FILE: &str = packing_engine::groupings::CATEGORIES_FILE;
 /// The data folder subfolder holding every grouping but `default`, one file each, the file name
-/// being the grouping name (04 › *Sets*).
+/// being the grouping name.
 pub(crate) const GROUPINGS_DIR: &str = packing_engine::groupings::GROUPINGS_DIR;
-/// The courier file in the data folder (07 › *Inputs*).
+/// The courier file in the data folder.
 pub(crate) const COURIERS_FILE: &str = packing_engine::label::COURIERS_FILE_NAME;
-/// The settings file in the data folder (07 › *Settings*).
+/// The settings file in the data folder.
 pub(crate) const SETTINGS_FILE: &str = "settings.json";
-/// The day folders inside the data folder (07 › *Day folder*).
+/// The day folders inside the data folder.
 pub(crate) const LABELS_DIR: &str = "labels";
 
-// --------------------------------------------------------------------------- app state
-
-/// A batch that has been read but not saved (07 › *Words*): the orders, the plan being edited and
+/// A batch that has been read but not saved: the orders, the plan being edited and
 /// the day's first saved-PDF number. It lives in [`AppState`] until it is saved or discarded.
 pub(crate) struct OpenDraft {
     pub draft: Draft,
     pub plan: Plan,
-    /// The day's next saved-PDF number at the time of reading (08 › *3. Plan*: the numbers `#`).
+    /// The day's next saved-PDF number at the time of reading.
     pub first_number: PdfNumber,
     /// The courier data the batch was read with: the data folder's `couriers.toml`, or the
-    /// bundled list when it has none (07 › *Inputs*). The logo prompt's buttons and the answers
+    /// bundled list when it has none. The logo prompt's buttons and the answers
     /// use this table.
     pub couriers: packing_engine::label::CourierTable,
-    /// The grouping this batch is packed with (04 › *Sets*; 08 › *2. New batch* → *The set*), the
+    /// The grouping this batch is packed with, the
     /// one chosen on the New batch screen or, for an amend, the batch's own recorded grouping. It
     /// is written into the day's `state.json` at save.
     pub grouping: Grouping,
-    /// Set when this draft amends the last batch (07 › *Amend*): Save replaces that batch and the
+    /// Set when this draft amends the last batch: Save replaces that batch and the
     /// plan screen is titled *Redo batch `<b>`*. `None` for a normal new batch.
     pub amend: Option<AmendState>,
-    /// The logo prompt's pictures (08 › *2. New batch* → *The logo prompt*): each unseen logo's
+    /// The logo prompt's pictures: each unseen logo's
     /// hash and the logo as printed, a PNG data URL read back on the PDFium worker when the batch
     /// was read. `None` when no page could be read, and the screen shows the hash text then.
     pub logo_pictures: HashMap<String, Option<String>>,
 }
 
 /// An amend in progress: the batch being redone and the day state without it, so Save reuses the
-/// same batch and saved-PDF numbers and the duplicate guard ignores the batch's own orders
-/// (07 › *Revert and amend*).
+/// same batch and saved-PDF numbers and the duplicate guard ignores the batch's own orders.
+///
 pub(crate) struct AmendState {
     pub batch: BatchNumber,
     pub state: DayState,
 }
 
-/// What the window back end keeps between commands (07 › *Commands between window and Rust*): the
+/// What the window back end keeps between commands: the
 /// data folder, the day being shown, the PDFium worker thread, the open draft and the read cancel
 /// flag. None of it is persisted.
 pub struct AppState {
@@ -112,7 +109,7 @@ impl AppState {
         *self.data_folder.lock().unwrap() = Some(folder);
     }
 
-    /// The day being shown (07 › *Day folder*); the batch commands save into it.
+    /// The day being shown; the batch commands save into it.
     pub(crate) fn day(&self) -> String {
         self.day.lock().unwrap().clone()
     }
@@ -121,7 +118,7 @@ impl AppState {
         *self.day.lock().unwrap() = day.to_string();
     }
 
-    /// The day folder `<data>/labels/<day>/` (07 › *Day folder*).
+    /// The day folder `<data>/labels/<day>/`.
     pub(crate) fn day_dir(&self) -> Result<PathBuf, String> {
         Ok(self.data_folder()?.join(LABELS_DIR).join(self.day()))
     }
@@ -142,8 +139,7 @@ impl AppState {
         }
     }
 
-    /// Run `f` with the PDFium worker while holding its lock (every PDFium call must be on the
-    /// worker thread; 07 › *Commands between window and Rust*).
+    /// Run `f` with the PDFium worker while holding its lock.
     pub(crate) fn with_worker<R>(&self, f: impl FnOnce(&PdfWorker) -> R) -> Result<R, String> {
         let guard = self.worker.lock().unwrap();
         let worker = guard
@@ -180,7 +176,7 @@ impl AppState {
         *self.draft.lock().unwrap() = None;
     }
 
-    /// Remember the cancel flag of the running read (08 › *Reading*: *Cancel*).
+    /// Remember the cancel flag of the running read.
     pub(crate) fn set_cancel(&self, flag: Arc<AtomicBool>) {
         *self.cancel.lock().unwrap() = Some(flag);
     }
@@ -189,7 +185,7 @@ impl AppState {
         *self.cancel.lock().unwrap() = None;
     }
 
-    /// Stop the running read (08 › *Reading*: *Cancel*); nothing is written.
+    /// Stop the running read; nothing is written.
     pub(crate) fn request_cancel(&self) {
         if let Some(flag) = self.cancel.lock().unwrap().as_ref() {
             flag.store(true, Ordering::Relaxed);
@@ -197,7 +193,7 @@ impl AppState {
     }
 }
 
-/// The folder the program runs from (07 › *Program folder*).
+/// The folder the program runs from.
 pub(crate) fn program_folder() -> PathBuf {
     std::env::current_exe()
         .ok()
@@ -206,7 +202,7 @@ pub(crate) fn program_folder() -> PathBuf {
 }
 
 /// The folder with `pdfium.dll`: the program's own folder, else (in development builds)
-/// `vendor`, so both `npm run tauri dev` and the portable build work (07 › *Program folder*).
+/// `vendor`, so both `npm run tauri dev` and the portable build work.
 pub(crate) fn pdfium_dir() -> PathBuf {
     let exe_dir = std::env::current_exe()
         .ok()
@@ -226,7 +222,7 @@ pub(crate) fn pdfium_dir() -> PathBuf {
     exe_dir.unwrap_or_default()
 }
 
-/// Today's date on the PC (`YYYY-MM-DD`); the Day screen opens here (07 › *Day folder*).
+/// Today's date on the PC (`YYYY-MM-DD`); the Day screen opens here.
 pub(crate) fn today() -> String {
     jiff::Zoned::now().strftime("%Y-%m-%d").to_string()
 }
@@ -241,8 +237,8 @@ pub fn run() {
             // ([`commands::day::window_title`]). It is set here, on the Rust side: setting it from
             // the window would need the `core:window:allow-set-title` permission, which no screen
             // needs (`app/src-tauri/capabilities/default.json`). The window `title` in
-            // `tauri.conf.json` is the bare name, so there is no second copy of the number
-            // (08 › *Window frame*).
+            // `tauri.conf.json` is the bare name, so there is no second copy of the number.
+            //
             if let Some(window) = app.get_webview_window("main") {
                 window.set_title(&commands::day::window_title())?;
             }

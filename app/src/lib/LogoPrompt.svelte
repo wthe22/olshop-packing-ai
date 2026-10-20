@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The logo prompt (08 › *2. New batch* → *The logo prompt*): one unseen logo of the batch, the
+  // The logo prompt: one unseen logo of the batch, the
   // logo as printed, how many pages and orders carry it, and the answers. Only the view lives
   // here; the flow is in `logoPrompt.ts` and nothing is written by this component.
   import type { LogoAnswer, LogoView } from "./api/batch";
@@ -13,7 +13,7 @@
     onSkipAll,
   }: {
     logo: LogoView;
-    // The courier names of `couriers.toml`, in file order: one button each (D-LABEL-1).
+    // The courier names of `couriers.toml`, in file order: one button each.
     couriers: string[];
     // An answer is on its way; the buttons wait.
     busy?: boolean;

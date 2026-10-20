@@ -207,7 +207,7 @@ fn a_list_needs_item_data() {
         eprintln!("skipped: Arial font not installed");
         return;
     }
-    // An order with no slip lines cannot be listed (03 › *Packing list (A4)*).
+    // An order with no slip lines cannot be listed.
     let mut list = sample_list();
     list.sections[0].runs[0].orders[0].lines.clear();
     let out = common::temp_path("nodata");

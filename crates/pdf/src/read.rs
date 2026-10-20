@@ -1,7 +1,7 @@
 //! Open files, read a page's text with positions, the page count and progress.
 //!
-//! The text runs are rebuilt from PDFium characters exactly as the spike did (07 › *Text runs
-//! from PDFium*, validated against pypdf on 600/600 sample and 23/23 testdata orders). Do not
+//! The text runs are rebuilt from PDFium characters, validated against pypdf on 600 sample
+//! pages and 23 testdata orders. Do not
 //! "simplify" the two strategies: the downloaded labels (wkhtmltopdf) hold one character per
 //! text object and need the geometry rebuild, while fpdf2 files (the testdata) hold one whole
 //! run per text object and must not be sorted by position.
@@ -18,7 +18,7 @@ use packing_engine::text::{LogoImage, PageText, Run};
 use crate::PdfError;
 use crate::logo;
 
-/// How far down from the top of the page a logo may reach, in points (Q-LABEL-5 Default).
+/// How far down from the top of the page a logo may reach, in points.
 pub const BAND_POINTS: f64 = 40.0;
 
 /// A rounding tolerance for the band test: coordinates that meet the band to under half a point
@@ -59,8 +59,8 @@ impl<'a> OpenedFile<'a> {
     }
 
     /// The text and runs of one 0-based page with no header-band images: the check before saving
-    /// reads its own output back and needs the Order ID and the printed counts only, never a logo
-    /// (07 › *Check before saving*).
+    /// reads its own output back and needs the Order ID and the printed counts only, never a
+    /// logo.
     pub fn page_text_plain(&self, index: usize) -> Result<PageText, PdfError> {
         let page = page_at(&self.doc, &self.path, index)?;
         let text = page.text()?;
@@ -114,7 +114,7 @@ impl<'a> OpenedFile<'a> {
     }
 }
 
-/// Whether an object's box lies wholly in the page's top band (Q-LABEL-5 Default). `height` is
+/// Whether an object's box lies wholly in the page's top band. `height` is
 /// the page height in points; the coordinates count from the page bottom.
 fn in_band(bounds: &PdfQuadPoints, height: f64) -> bool {
     let band = height - BAND_POINTS;
@@ -156,13 +156,13 @@ pub fn page_picture(
     Ok(None)
 }
 
-/// The images whose **whole box** lies in the page's top band (Q-LABEL-5 Default: the top
+/// The images whose **whole box** lies in the page's top band (the top
 /// [`BAND_POINTS`] points, `y` counted from the page bottom) — on every sample style exactly the
 /// courier's logo and the buying channel's strip.
 ///
 /// Each image is hashed by its **encoded bytes**. Its **appearance** is computed only where
 /// `known` does not already know that byte hash (the courier data's `logo` and `not_courier`
-/// lists), so a page whose logo the table knows pays no image decode (Q-LABEL-1 option 1).
+/// lists), so a page whose logo the table knows pays no image decode.
 pub fn page_logos(
     page: &PdfPage<'_>,
     document: &PdfDocument<'_>,

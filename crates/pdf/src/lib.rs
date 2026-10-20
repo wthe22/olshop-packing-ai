@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use pdfium_render::prelude::{Pdfium, PdfiumError};
 
 /// The pinned PDFium release the program binds (`tools/get-pdfium.sh` downloads the same tag);
-/// shown in Settings › *About* (08 › *6. Settings*; D14: version + PDFium version only).
+/// shown in Settings › *About* (version + PDFium version only).
 pub const PDFIUM_VERSION: &str = "chromium/7881";
 
 pub mod batch;

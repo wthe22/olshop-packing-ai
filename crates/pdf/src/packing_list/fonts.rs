@@ -7,7 +7,7 @@ use pdfium_render::prelude::*;
 
 use crate::PdfError;
 
-/// The font files, from `C:\Windows\Fonts` (03 › *Packing list (A4)*).
+/// The font files, from `C:\Windows\Fonts`.
 pub(super) const FONT_DIR: &str = r"C:\Windows\Fonts";
 
 /// Which of the three packed fonts a piece of text uses.
@@ -106,7 +106,7 @@ impl FontSet {
     }
 
     /// Load the CID flavour of `font` on first use, so a page that needs none does not carry the
-    /// second copy of the font in the file (D2).
+    /// second copy of the font in the file.
     pub(super) fn load_cid(
         &mut self,
         doc: &mut PdfDocument<'_>,

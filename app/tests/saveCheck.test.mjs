@@ -1,4 +1,4 @@
-// The check before saving's window side (07 › *Check before saving*): what the save result decides
+// The check before saving's window side: what the save result decides
 // the findings dialog shows, and the stage text of a `save-progress` event. No window opens and
 // nothing is written.
 //

@@ -8,8 +8,8 @@ use crate::PdfError;
 use crate::read::OpenedFile;
 
 /// Copy the given `(file index, page index)` pages from already-opened source documents, in
-/// order, into a new PDF saved at `out`. The pages are copied unchanged (the spike measured
-/// them pixel-identical at 150 DPI).
+/// order, into a new PDF saved at `out`. The pages are copied unchanged (pixel-identical at
+/// 150 DPI).
 ///
 /// PDFium shares a page's resources (fonts) only within one import call: copying page by page
 /// put a font copy on every page (564 label pages became 51 MB instead of 5 MB). So the source

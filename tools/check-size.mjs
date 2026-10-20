@@ -47,7 +47,7 @@ function isSkippedDir(parentRel, name) {
   return SKIP_PATHS.some((p) => rel === p || rel.startsWith(`${p}/`));
 }
 
-/** Every measured source file under `dir`, as repository-relative POSIX paths. */
+/** Every measured source file under `dir`, as repository-relative POSIX paths.*/
 function walk(dirRel, out = []) {
   for (const entry of readdirSync(join(ROOT, dirRel), { withFileTypes: true })) {
     const rel = dirRel === "" ? entry.name : `${dirRel}/${entry.name}`;
@@ -60,14 +60,14 @@ function walk(dirRel, out = []) {
   return out;
 }
 
-/** Line count without the empty element a trailing newline produces. */
+/** Line count without the empty element a trailing newline produces.*/
 function lineCount(text) {
   const lines = text.split(/\r?\n/);
   if (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
   return lines.length;
 }
 
-/** The ceiling and the count for one file, or null when the file is not measured. */
+/** The ceiling and the count for one file, or null when the file is not measured.*/
 function measure(rel) {
   const underAppSource = rel.startsWith("app/src/") || rel.startsWith("app/tests/");
   if (/\.(svelte|ts|mjs)$/.test(rel)) {

@@ -1,4 +1,4 @@
-//! Start, Day and Settings commands (08 › *Start*, *1. Day*, *6. Settings*): finding the data
+//! Start, Day and Settings commands: finding the data
 //! folder, the day overview from `state.json`, the settings and *About*.
 
 use std::path::{Path, PathBuf};
@@ -20,12 +20,10 @@ pub(crate) use self::settings::{
     SettingsView, remember_last_grouping, settings_load, settings_save,
 };
 
-// ----------------------------------------------------------------------------- version
-
-/// The program's name as the window title and the title bar show it (08 › *Window frame*).
+/// The program's name as the window title and the title bar show it.
 pub(crate) const PROGRAM_NAME: &str = "Packing";
 
-/// The shown form of the program's version (08 › *6. Settings* › *The version*): `v` + the first
+/// The shown form of the program's version: `v` + the first
 /// two numbers of the workspace `version` (`0.1.0` → `v0.1`). `CARGO_PKG_VERSION` carries the
 /// workspace version, because the app inherits it (`version.workspace = true` in
 /// `app/src-tauri/Cargo.toml`), so the root `Cargo.toml` is the one place. The window title, the
@@ -38,16 +36,14 @@ pub(crate) fn version_text() -> String {
     format!("v{major}.{minor}")
 }
 
-/// The OS window title and the title bar's brand text (08 › *Window frame*): the program's name
+/// The OS window title and the title bar's brand text: the program's name
 /// and [`version_text`]. [`crate::run`] sets the window title with it at start; the title bar
 /// shows the same line, from `StartInfo.version`.
 pub(crate) fn window_title() -> String {
     format!("{PROGRAM_NAME} {}", version_text())
 }
 
-// ------------------------------------------------------------------------------- start
-
-/// What the window needs to open the Start prompt or the Day screen (08 › *Start*).
+/// What the window needs to open the Start prompt or the Day screen.
 #[derive(Serialize)]
 pub struct StartInfo {
     /// Where the program's exe is.
@@ -61,13 +57,12 @@ pub struct StartInfo {
     /// Today's date on the PC (`YYYY-MM-DD`); the Day screen opens here.
     today: String,
     /// The shown version ([`version_text`]); the title bar's brand text is the program's name and
-    /// this (08 › *Window frame*).
+    /// this.
     version: String,
 }
 
-/// Whether `folder` is a data folder: it holds `couriers.toml` (07 › *Program folder*, 08 ›
-/// *Start* step 1). `categories.toml` is not a marker: the app writes it only when the owner
-/// saves picks (08 › *5. Categories*).
+/// Whether `folder` is a data folder: it holds `couriers.toml`. `categories.toml` is not a marker: the app writes it only when the owner
+/// saves picks.
 fn is_data_folder(folder: &Path) -> bool {
     folder.join(COURIERS_FILE).is_file()
 }
@@ -76,7 +71,7 @@ fn start_information(state: &AppState) -> StartInfo {
     let exe_dir = program_folder();
     let program_couriers = is_data_folder(&exe_dir);
     if program_couriers && state.data_folder().is_err() {
-        // Found → that folder is the data folder (08 › *Start* step 1).
+        // Found → that folder is the data folder.
         state.set_data_folder(exe_dir.clone());
     }
     let day = today();
@@ -94,7 +89,7 @@ fn start_information(state: &AppState) -> StartInfo {
     }
 }
 
-/// Put the built-in `couriers.toml` into `folder` when it has none (08 › *Start*, *6. Settings*).
+/// Put the built-in `couriers.toml` into `folder` when it has none.
 /// An existing file — the owner's, or one the logo prompt wrote to — is never overwritten.
 fn ensure_builtin_couriers(folder: &Path) -> Result<(), String> {
     let path = folder.join(COURIERS_FILE);
@@ -106,7 +101,7 @@ fn ensure_builtin_couriers(folder: &Path) -> Result<(), String> {
 }
 
 /// *Use this folder*: write the built-in `couriers.toml` next to the program and make that
-/// folder the data folder (08 › *Start*). No picks are written: a folder without
+/// folder the data folder. No picks are written: a folder without
 /// `categories.toml` uses the one catch-all entry. Returns the folder.
 fn activate_program_folder(state: &AppState) -> Result<String, String> {
     let folder = program_folder();
@@ -117,7 +112,7 @@ fn activate_program_folder(state: &AppState) -> Result<String, String> {
 
 /// *Choose a folder…* / Settings *Change…*: use `path` until the app closes; a folder without a
 /// `couriers.toml` gets the built-in one, and its own `categories.toml`, if any, is kept as it
-/// is (08 › *Start*, 08 › *6. Settings*). Returns the folder.
+/// is. Returns the folder.
 fn use_chosen_folder(state: &AppState, path: &str) -> Result<String, String> {
     let folder = PathBuf::from(path);
     ensure_builtin_couriers(&folder)?;
@@ -125,9 +120,7 @@ fn use_chosen_folder(state: &AppState, path: &str) -> Result<String, String> {
     Ok(folder.display().to_string())
 }
 
-// -------------------------------------------------------------------------------- day
-
-/// The Day screen's view of one saved PDF (08 › *1. Day*).
+/// The Day screen's view of one saved PDF.
 #[derive(Serialize)]
 pub struct PdfView {
     number: PdfNumber,
@@ -136,36 +129,34 @@ pub struct PdfView {
     file: String,
     orders: usize,
     runs: usize,
-    /// The row's **Printed** tick, from the batch's `printed` list (07 › *`state.json`*;
-    /// 08 › *1. Day*): a note only.
+    /// The row's **Printed** tick, from the batch's `printed` list: a note only.
     printed: bool,
 }
 
-/// The Day screen's view of one batch (08 › *1. Day*).
+/// The Day screen's view of one batch.
 #[derive(Serialize)]
 pub struct BatchView {
     batch: BatchNumber,
     save_time: String,
     /// `HH:MM` of `save_time`.
     time: String,
-    /// The grouping the batch was packed with, from its `state.json` entry (04 › *Sets*; 07 ›
-    /// *`state.json`*). **Amend** names it in its confirmation and reads that grouping again.
+    /// The grouping the batch was packed with, from its `state.json` entry. **Amend** names it in its confirmation and reads that grouping again.
     grouping: Grouping,
     files: usize,
     orders: usize,
     pdfs: Vec<PdfView>,
     /// The batch's packing-list files, for *Open* (usually one).
     packing_lists: Vec<String>,
-    /// The read warnings of the batch, for *Warnings ▸* (08 › *1. Day*).
+    /// The read warnings of the batch, for *Warnings ▸*.
     warnings: Vec<String>,
-    /// The check before saving's errors, for *Saved with `<n>` errors ▸* (08 › *1. Day*); empty
-    /// unless the batch was saved anyway (07 › *Check before saving*).
+    /// The check before saving's errors, for *Saved with `<n>` errors ▸*; empty
+    /// unless the batch was saved anyway.
     errors: Vec<String>,
     /// The batch folder, for *Open folder*.
     folder: String,
 }
 
-/// The day's totals (08 › *1. Day* header).
+/// The day's totals.
 #[derive(Serialize)]
 pub struct Totals {
     batches: usize,
@@ -173,7 +164,7 @@ pub struct Totals {
     pdfs: usize,
 }
 
-/// The Day screen's data: the day's batches, newest first (08 › *1. Day*).
+/// The Day screen's data: the day's batches, newest first.
 #[derive(Serialize)]
 pub struct DayOverview {
     day: String,
@@ -181,16 +172,15 @@ pub struct DayOverview {
     totals: Totals,
 }
 
-/// Read `<data>/labels/<day>/state.json` (07 › *Day folder*). A missing day folder is an empty
-/// overview (08 › *1. Day*: "Nothing saved on this day yet.").
+/// Read `<data>/labels/<day>/state.json`. A missing day folder is an empty
+/// overview.
 fn day_overview_at(data_folder: &Path, day: &str) -> Result<DayOverview, String> {
     let day_dir = data_folder.join(LABELS_DIR).join(day);
     let state = DayState::load(&day_dir).map_err(|error| error.to_string())?;
     Ok(overview_of(&state, &day_dir))
 }
 
-/// Write one saved-PDF row's **Printed** tick into the day's `state.json` (07 › *`state.json`*;
-/// 08 › *1. Day*); a batch or saved-PDF number the day does not hold changes nothing.
+/// Write one saved-PDF row's **Printed** tick into the day's `state.json`; a batch or saved-PDF number the day does not hold changes nothing.
 fn set_printed_time(
     data_folder: &Path,
     day: &str,
@@ -238,7 +228,7 @@ fn overview_of(state: &DayState, day_dir: &Path) -> DayOverview {
                 .to_string(),
         })
         .collect();
-    batches.reverse(); // newest on top (08 › *1. Day*)
+    batches.reverse(); // newest on top
     let totals = Totals {
         batches: batches.len(),
         orders: batches.iter().map(|batch| batch.orders).sum(),
@@ -251,8 +241,8 @@ fn overview_of(state: &DayState, day_dir: &Path) -> DayOverview {
     }
 }
 
-/// The day folders to switch between, newest first (08 › *Window frame*). Search's *All days*
-/// reads the same list (2.21).
+/// The day folders to switch between, newest first. Search's *All days*
+/// reads the same list.
 pub(crate) fn days_in(data_folder: &Path) -> Vec<String> {
     let Ok(entries) = std::fs::read_dir(data_folder.join(LABELS_DIR)) else {
         return Vec::new();
@@ -272,7 +262,7 @@ fn clock(save_time: &str) -> String {
     save_time.chars().skip(11).take(5).collect()
 }
 
-/// The packing-list files a batch wrote, by its scope and layouts (07 › *Day folder*). The
+/// The packing-list files a batch wrote, by its scope and layouts. The
 /// layout is part of the name only when several layouts were written.
 fn packing_list_files(choice: &PackingListChoice, pdfs: &[PdfEntry]) -> Vec<String> {
     let several = choice.layouts.len() > 1;
@@ -298,17 +288,12 @@ fn packing_list_files(choice: &PackingListChoice, pdfs: &[PdfEntry]) -> Vec<Stri
     }
 }
 
-// ----------------------------------------------------------------------------- about
-
-/// Settings › *About* (08 › *6. Settings*; D14: no log file, so the version and the PDFium
-/// version only).
+/// Settings › *About*.
 #[derive(Serialize)]
 pub struct About {
     version: String,
     pdfium: String,
 }
-
-// ----------------------------------------------------------------------------- shell
 
 /// The Explorer command for `path` (separate so a test can read its arguments back).
 fn explorer_command(path: &str) -> Command {
@@ -317,12 +302,11 @@ fn explorer_command(path: &str) -> Command {
     command
 }
 
-/// Open a file with the PC's default program, or a folder as a folder in Explorer (08 › *1. Day*:
-/// *Open* and *Open folder*; 08 › *6. Settings*).
+/// Open a file with the PC's default program, or a folder as a folder in Explorer.
 ///
 /// The path is Explorer's **only** argument. Explorer parses `/select,<path>` itself and does not
 /// understand the quotes Rust puts around an argument that holds a space, so it opened *Documents*
-/// (or *Home*) instead of the folder (review round 1: the batch folder always has a space in its
+/// (or *Home*) instead of the folder (the batch folder always has a space in its
 /// path, e.g. `…\labels\2026-10-11\batch 1`). A bare path works for both: a folder opens as a
 /// folder, a file opens in its default program.
 fn open_with_explorer(path: &str) -> Result<(), String> {
@@ -332,35 +316,33 @@ fn open_with_explorer(path: &str) -> Result<(), String> {
         .map_err(|error| format!("Cannot open {path}: {error}."))
 }
 
-// -------------------------------------------------------------------------- commands
-
 /// Where the program is, whether `categories.toml` was found next to it, the data folder in
-/// use and today's date (08 › *Start*).
+/// use and today's date.
 #[tauri::command]
 pub fn start_info(state: State<'_, AppState>) -> StartInfo {
     start_information(&state)
 }
 
-/// *Use this folder* (08 › *Start*): write the built-in `categories.toml` next to the program.
+/// *Use this folder*: write the built-in `categories.toml` next to the program.
 #[tauri::command]
 pub fn use_program_folder(state: State<'_, AppState>) -> Result<String, String> {
     activate_program_folder(&state)
 }
 
-/// *Choose a folder…* / Settings *Change…*: use the folder until the app closes (08 › *Start*).
+/// *Choose a folder…* / Settings *Change…*: use the folder until the app closes.
 #[tauri::command]
 pub fn choose_data_folder(state: State<'_, AppState>, path: String) -> Result<String, String> {
     use_chosen_folder(&state, &path)
 }
 
-/// The day's batches, saved PDFs, warnings and totals, from `state.json` (08 › *1. Day*).
+/// The day's batches, saved PDFs, warnings and totals, from `state.json`.
 #[tauri::command]
 pub fn day_overview(state: State<'_, AppState>, day: String) -> Result<DayOverview, String> {
     state.set_day(&day); // a new batch saves into the day being shown
     day_overview_at(&state.data_folder()?, &day)
 }
 
-/// The **Printed** tick of one saved-PDF row of a batch (08 › *1. Day*; 07 › *`state.json`*):
+/// The **Printed** tick of one saved-PDF row of a batch:
 /// writes the day's `state.json`; it changes nothing else.
 #[tauri::command]
 pub fn set_printed(
@@ -374,25 +356,25 @@ pub fn set_printed(
     set_printed_time(&state.data_folder()?, &day, batch, pdf, printed)
 }
 
-/// The day folders to switch between (08 › *Window frame*).
+/// The day folders to switch between.
 #[tauri::command]
 pub fn days(state: State<'_, AppState>) -> Result<Vec<String>, String> {
     Ok(days_in(&state.data_folder()?))
 }
 
-/// The settings (08 › *6. Settings*).
+/// The settings.
 #[tauri::command]
 pub fn settings_get(state: State<'_, AppState>) -> Result<SettingsView, String> {
     Ok(SettingsView::of(settings_load(&state.data_folder()?)?))
 }
 
-/// Save the settings (08 › *6. Settings*).
+/// Save the settings.
 #[tauri::command]
 pub fn settings_set(state: State<'_, AppState>, settings: SettingsView) -> Result<(), String> {
     settings_save(&state.data_folder()?, &settings.into_settings())
 }
 
-/// Settings › *About*: the app version and the PDFium version (08 › *6. Settings*). The version
+/// Settings › *About*: the app version and the PDFium version. The version
 /// is the shown form from [`version_text`], the one place.
 #[tauri::command]
 pub fn about() -> About {
@@ -402,13 +384,13 @@ pub fn about() -> About {
     }
 }
 
-/// Open a file in the default viewer (08 › *1. Day*: *Open*).
+/// Open a file in the default viewer.
 #[tauri::command]
 pub fn open_path(path: String) -> Result<(), String> {
     open_with_explorer(&path)
 }
 
-/// Open a folder in Explorer (08 › *1. Day*: *Open folder*; 08 › *6. Settings*).
+/// Open a folder in Explorer.
 #[tauri::command]
 pub fn show_in_folder(path: String) -> Result<(), String> {
     open_with_explorer(&path)

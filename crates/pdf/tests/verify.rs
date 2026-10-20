@@ -1,10 +1,10 @@
-//! The check before saving on real files (07 › *Check before saving*): a saved batch reads back
+//! The check before saving on real files: a saved batch reads back
 //! clean, and a tampered written file is caught — a doubled page, a dropped page, an order in
 //! two saved PDFs and in none, a swapped page order (a warning) and the smaller seams of a page
 //! count and a packing-list count.
 //!
 //! Each defect test asserts the finding the check produces, so removing the check makes the test
-//! fail, exactly as the 2.15 display tests fail when their fix is reverted.
+//! fail.
 
 mod common;
 

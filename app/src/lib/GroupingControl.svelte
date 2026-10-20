@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The set a batch is packed with (08 › *2. New batch* → *The set*; 04 › *Sets*): the *Set* control
+  // The set a batch is packed with: the *Set* control
   // of a new batch's file list, with the set used last preselected, or the amend's selection page's
   // fixed set line (an amend reads the batch's own set again). The screen keeps the chosen set and
   // passes it to `read_labels`; nothing is written here.
@@ -24,7 +24,7 @@
 </script>
 
 {#if amend === null}
-  <!-- 08 › *2. New batch* → *The set*: chosen before *Read labels*. -->
+  <!-- Chosen before *Read labels*. -->
   <label class="grouping">
     {texts.newBatch.grouping}:
     <select value={chosen} onchange={(event) => onChosen(event.currentTarget.value)}>
@@ -41,7 +41,7 @@
 {/if}
 
 <style>
-  /* 08 › *2. New batch* → *The set*: the Set control before *Read labels*, and the amend's
+  /* The Set control before *Read labels*, and the amend's
      selection page's fixed set line. */
   .grouping,
   .grouping-fixed {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  // One plan row (08 › *3. Plan*): the *Use* tick, the category's number, code, name, counts and
+  // One plan row: the *Use* tick, the category's number, code, name, counts and
   // file name with its move buttons, and the runs of its saved PDF when the row is expanded.
   import type { PlanRow } from "./api/batch";
   import { texts } from "../texts";

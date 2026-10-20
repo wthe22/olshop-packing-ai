@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The Day screen (08 › *1. Day*): what has been saved today. Batches come from state.json,
+  // The Day screen: what has been saved today. Batches come from state.json,
   // each with its stored warnings and each saved-PDF row with its **Printed** tick (a note);
   // *New batch* starts the batch flow.
   import { texts } from "../texts";
@@ -19,11 +19,11 @@
     overview: DayOverview | null;
     saved: string | null;
     // *Amend*'s read of the batch's own files (`read-progress`): its page progress is shown until
-    // the Plan screen opens (08 › *1. Day* → *3. Plan*); `null` when nothing reads.
+    // the Plan screen opens; `null` when nothing reads.
     reading: { page: number; pages: number } | null;
     onOpen: (path: string) => void;
     onOpenFolder: (path: string) => void;
-    // The **Printed** tick of one saved-PDF row (08 › *1. Day*): the owner ticks it to note that
+    // The **Printed** tick of one saved-PDF row: the owner ticks it to note that
     // this saved PDF has been printed; it is written to the day's `state.json` the moment it is
     // clicked.
     onSetPrinted: (batch: BatchView, pdf: PdfView, printed: boolean) => void;
@@ -33,7 +33,7 @@
   } = $props();
 
   // The batch numbers whose *Warnings ▸* is expanded, and those whose *Saved with `<n>` errors ▸*
-  // is (07 › *Check before saving*; 08 › *1. Day*).
+  // is.
   let openWarnings = $state<number[]>([]);
   let openErrors = $state<number[]>([]);
 
@@ -188,7 +188,7 @@
     color: #1f6f2f;
   }
 
-  /* 08 › *1. Day* → *3. Plan*: *Amend*'s read of the batch's own files, shown with a progress bar
+  /* *Amend*'s read of the batch's own files, shown with a progress bar
      until the Plan screen opens. */
   .reading {
     display: flex;
@@ -221,7 +221,7 @@
     font-size: 0.9rem;
   }
 
-  /* The check before saving's errors, kept apart from the warnings (07 › *Check before saving*). */
+  /* The check before saving's errors, kept apart from the warnings. */
   .link.errors,
   .warnings.errors {
     color: #8a1f1f;
@@ -253,7 +253,7 @@
     gap: 0.75rem;
     padding: 0.35rem 0.75rem;
     /* The row's *Open* button and the **Printed** tick share this height, so the tick is as large
-       as the button beside it (08 › *1. Day*). The value is the button's own box: its text line,
+       as the button beside it. The value is the button's own box: its text line,
        its padding and its border. */
     --control-height: calc(1.45rem + 0.7rem + 2px);
   }
@@ -283,7 +283,7 @@
     color: #4a4a4a;
   }
 
-  /* The **Printed** tick beside *Open* (08 › *1. Day*): a note only. It carries no word — the tick
+  /* The **Printed** tick beside *Open*: a note only. It carries no word — the tick
      alone says the saved PDF is printed — and it is as large as the button beside it. */
   .printed {
     display: flex;

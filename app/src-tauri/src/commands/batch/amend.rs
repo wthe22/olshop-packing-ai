@@ -14,7 +14,7 @@ use crate::{AmendState, AppState};
 use super::read::{ReadRequest, read_into_draft};
 use super::views::{AmendStart, ReadResult, file_check_view};
 
-/// Revert the last batch (07 › *Revert*): delete its folder **first**, so a file open in a PDF
+/// Revert the last batch: delete its folder **first**, so a file open in a PDF
 /// viewer stops with the 08 *file in use* message and changes nothing, then remove the batch and
 /// its orders from `state.json`; the numbers are reused.
 pub(super) fn revert_last_impl(state: &AppState, day: &str) -> Result<(), String> {
@@ -25,7 +25,7 @@ pub(super) fn revert_last_impl(state: &AppState, day: &str) -> Result<(), String
         return Err("No batch to undo on this day.".to_string());
     };
     let folder = day_dir.join(names::batch_folder(last));
-    // Name the open file (07 › *Revert*: "the app says which file to close") and delete nothing
+    // Name the open file and delete nothing
     // when one is found, so the day is left exactly as it was.
     if let Some(file) = locked_file(&folder) {
         return Err(file_in_use(&file));
@@ -66,12 +66,12 @@ fn locked_file(folder: &Path) -> Option<PathBuf> {
     None
 }
 
-/// Amend the last batch (08 › *1. Day* → *3. Plan*): read the batch's own `download/` files again
+/// Amend the last batch: read the batch's own `download/` files again
 /// — the order stored in `state.json`, the batch's orders ignored by the duplicate guard and its
 /// numbers reused ([`read_amend_draft`]) — and open the *Redo batch `<b>`* Plan screen with them,
 /// the draft open. The batch's file list comes back too, so the Plan screen's *Back* shows the
-/// selection page listing the current selection
-/// (08 › *2. New batch* → *The amend's selection page*). Nothing is written.
+/// selection page listing the current selection.
+/// Nothing is written.
 pub(super) fn start_amend_impl(
     state: &AppState,
     day: &str,
@@ -84,7 +84,7 @@ pub(super) fn start_amend_impl(
         .amend(&day_dir)
         .ok_or_else(|| "No batch to redo on this day.".to_string())?;
     // The selection page's starting list: the batch's own `download/` files, checked against the
-    // day state without the batch, so none is marked *used in batch `<b>`* (Q-APP-2).
+    // day state without the batch, so none is marked *used in batch `<b>`*.
     let checks = state
         .with_worker(|worker| batch::check_files(worker, &amend.files, &amend.state))?
         .map_err(|error| error.to_string())?;
@@ -96,7 +96,7 @@ pub(super) fn start_amend_impl(
     Ok(AmendStart { batch, files, read })
 }
 
-/// The amend's **Read labels** (07 › *Amend*): read the selection with the batch removed from
+/// The amend's **Read labels**: read the selection with the batch removed from
 /// the day state, so the duplicate guard ignores the batch's own orders and the numbers are
 /// reused, and in the selection's order (the batch's `download/` copy in `state.json` order, an
 /// added file where the owner put it). `redoing` is the batch the selection page was opened for;
@@ -114,8 +114,7 @@ pub(super) fn read_amend_draft(
         .filter(|amend| amend.batch == redoing)
         .ok_or_else(|| "No batch to redo on this day.".to_string())?;
     let base_state = amend.state.clone();
-    // The amend reads with the grouping the batch recorded, whatever was used last (04 › *Sets*;
-    // 07 › *Amend*).
+    // The amend reads with the grouping the batch recorded, whatever was used last.
     let grouping = amend.grouping.clone();
     let amend_state = AmendState {
         batch: amend.batch,

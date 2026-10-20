@@ -50,8 +50,8 @@ pub fn write(
     emit(pdfium, path, &pages, font_dir, &measure)
 }
 
-/// Line 1 of the header: one saved PDF is named, several cover a number range
-/// (03 › *Packing list (A4)*); the batch is added between (07 › *Packing list*).
+/// Line 1 of the header: one saved PDF is named, several cover a number range, and the batch
+/// is printed between them.
 fn title(list: &PackingList) -> String {
     let mut title = format!("Packing list · {}", list.day);
     if let Some(batch) = list.batch {
@@ -167,7 +167,7 @@ pub(super) fn emit(
 }
 
 /// The CID flavour is embedded only for the fonts a page really needs, so a list whose text has no
-/// such character keeps the smaller file (D2).
+/// such character keeps the smaller file.
 fn load_cid_fonts(
     doc: &mut PdfDocument<'_>,
     fonts: &mut FontSet,

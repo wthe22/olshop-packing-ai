@@ -1,12 +1,11 @@
 # Refactor to the code rules
 
 Brings the code to [../code-rules.md](../code-rules.md) without changing what the program does. Run as
-steps R6–R7 (R0 to R5 are done; the minimal review after R2 found nothing to fix), in order, each delegated to a subagent and checked by the parent. Every step file below names the
+step R7 (R0 to R6 are done; the minimal review after R2 found nothing to fix), in order, each delegated to a subagent and checked by the parent. Every step file below names the
 code rules; every report states **size gate passed, no new lint suppression, coverage not lower**.
 
 | Step | Scope | Effort | File |
 |---|---|---|---|
-| R6 | Comments: no IDs, no stale pointers, no banners, nothing that repeats the code | M | [refactor-r6.md](refactor-r6.md) |
 | R7 | Shared test fixtures, tiny tests merged into scenarios and tables; then the **full review** | L | [refactor-r7.md](refactor-r7.md) |
 
 The work starts at commit `91de98a` (the base of the final review's diff). A step edits only the files its file names; the steps run one after another, so no two edit the same file.

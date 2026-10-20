@@ -1,10 +1,10 @@
 <script lang="ts">
-  // New batch (08 › *2. New batch*, *Reading*, *4. Messages*): choose the label PDFs — the shell
+  // New batch: choose the label PDFs — the shell
   // keeps the list, so the Plan screen's *Back* shows it again with the files still there — read
   // them with a progress bar and Cancel, and open the Plan screen; the top *Cancel* discards the
   // draft. Or show a stop message.
   //
-  // The same screen is the amend's selection page (08 › *The amend's selection page*), reached
+  // The same screen is the amend's selection page, reached
   // from the amend's Plan screen's *Back*: titled *Redo batch `<b>`*, with the current selection
   // listed — the batch's own `download/` files in their `state.json` order at first, then what the
   // owner chose — and *Read labels* reading that selection as an amend (`amend`).
@@ -31,16 +31,16 @@
     onCancel,
   }: {
     batchNumber: number;
-    // The batch being redone on an amend's selection page (08 › *The amend's selection page*),
+    // The batch being redone on an amend's selection page,
     // or `null` for a new batch's file list. Decides the title, the order the files are listed
     // and read in, and that *Read labels* reads an amend.
     amend: number | null;
-    // The batch's own picks set on the amend's selection page (04 › *Sets*), shown fixed — an
+    // The batch's own picks set on the amend's selection page, shown fixed — an
     // amend reads that set again, whatever set was used last; `null` for a new batch's file
     // list (the *Set* control is shown there instead).
     amendGrouping: string | null;
     // The chosen files. The shell keeps them, so *Back* on the Plan screen shows this list again
-    // with the files still there (08 › *3. Plan*).
+    // with the files still there.
     files: batch.FileCheck[];
     onFiles: (files: batch.FileCheck[]) => void;
     onPlan: (result: batch.ReadResult) => void;
@@ -55,13 +55,13 @@
   // Set while *Cancel* is pressed: the read then returns to the file list, not to a stop message.
   let cancelling = false;
 
-  // The *Set* control (08 › *2. New batch* → *The set*): the sets of the data folder, with the
+  // The *Set* control: the sets of the data folder, with the
   // set used last preselected, so a shop that always uses one set never touches it. The chosen
   // set is passed to `read_labels` and remembered as the last used there.
   let groupings = $state<GroupingView[]>([]);
   let chosenGrouping = $state(DEFAULT_GROUPING);
 
-  // The logo prompt (08 › *The logo prompt*): after a read, before the Plan screen, each unseen
+  // The logo prompt: after a read, before the Plan screen, each unseen
   // logo is asked about once. `asking` is the logo shown now; the flow itself is in logoPrompt.ts.
   let prompt = $state<LogoPrompt | null>(null);
   let asking = $state<batch.LogoView | null>(null);
@@ -70,8 +70,8 @@
 
   const totalPages = $derived(files.reduce((sum, file) => sum + file.pages, 0));
   // A new batch lists (and reads) its files by name = download time and part number; an amend
-  // keeps the list's order, which is the batch's `download/` copy in the `state.json` order
-  // (08 › *2. New batch*).
+  // keeps the list's order, which is the batch's `download/` copy in the `state.json` order.
+  //
   const listed = $derived(
     amend === null ? [...files].sort((a, b) => a.name.localeCompare(b.name)) : [...files],
   );
@@ -137,8 +137,7 @@
     });
     let result: batch.ReadResult | null = null;
     try {
-      // The batch's picks come from the set chosen above (the amend's selection page reads the
-      // batch's own set, so its `set` is ignored by the back end; 04 › *Sets*).
+      // The batch's picks come from the set chosen above.
       result = await batch.readLabels(
         listed.map((file) => file.path),
         chosenGrouping,
@@ -187,7 +186,7 @@
   }
 
   // *Skip all*: stop the prompts for the rest of this batch; nothing is sent, the last result
-  // opens the Plan screen (08 › *The logo prompt*).
+  // opens the Plan screen.
   function skipAll() {
     if (!prompt) return;
     prompt.skipAll();
@@ -207,8 +206,7 @@
   }
 
   onMount(() => {
-    // The *Set* control's sets, with the set used last preselected (08 › *2. New batch* →
-    // *The set*). Only a new batch's file list has the control; the amend's selection page shows
+    // The *Set* control's sets, with the set used last preselected. Only a new batch's file list has the control; the amend's selection page shows
     // the batch's own set. A data folder whose sets cannot be listed keeps the set `default`.
     if (amend === null) {
       groupingsList()
@@ -218,7 +216,7 @@
         })
         .catch((e) => (error = String(e)));
     }
-    // Dropping PDFs on the window does the same as *Add files…* (08 › *2. New batch*).
+    // Dropping PDFs on the window does the same as *Add files…*.
     let unlisten: (() => void) | undefined;
     getCurrentWebview()
       .onDragDropEvent((event) => {
@@ -227,7 +225,7 @@
         }
       })
       .then((fn) => (unlisten = fn));
-    // Esc skips only the logo shown: the next unseen logo still asks (08 › *The logo prompt*).
+    // Esc skips only the logo shown: the next unseen logo still asks.
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || !asking) return;
       event.preventDefault();

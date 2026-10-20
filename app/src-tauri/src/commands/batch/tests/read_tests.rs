@@ -104,7 +104,7 @@ fn read_plain_labels_stops_with_no_slip() {
 }
 
 /// A data folder without `categories.toml`: the picks are the one catch-all entry, so the
-/// batch saves every order in one PDF set (07 › *Inputs*, Q-UI-4).
+/// batch saves every order in one PDF set.
 #[test]
 fn a_read_without_a_categories_file_saves_every_order_in_one_pdf() {
     let Some(_vendor) = vendor_dir() else {
@@ -149,10 +149,10 @@ fn a_read_without_a_categories_file_saves_every_order_in_one_pdf() {
 /// *Uncategorised* row).
 const RAMADHAN: &str = "# the ramadhan set\n[[category]]\ncode = \"A\"\nname = \"Sepatu\"\nwhen = 'name contains \"sepatu\"'\n\n[[category]]\ncode = \"Z\"\nname = \"Lainnya\"\n";
 
-/// A batch reads with the set chosen on the New batch screen (04 › *Sets*): that set's own
+/// A batch reads with the set chosen on the New batch screen: that set's own
 /// picks, the data folder's `categories.toml` left alone; the set is remembered as the one used
-/// last (07 › *Settings*) and recorded in the draft, so **Save batch** writes it into
-/// `state.json` (07 › *`state.json`*).
+/// last and recorded in the draft, so **Save batch** writes it into
+/// `state.json`.
 #[test]
 fn a_batch_read_uses_the_chosen_set_and_records_it() {
     let Some(_vendor) = vendor_dir() else {
@@ -216,8 +216,7 @@ fn a_batch_read_uses_the_chosen_set_and_records_it() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
-/// An **Amend** reads the batch's recorded set again, whatever set was used last (04 › *Sets*;
-/// 07 › *Amend*): the amend's plan is the recorded set's picks, not the last-used ones.
+/// An **Amend** reads the batch's recorded set again, whatever set was used last: the amend's plan is the recorded set's picks, not the last-used ones.
 #[test]
 fn an_amend_reads_the_batchs_own_set_whatever_was_used_last() {
     let Some(_vendor) = vendor_dir() else {
@@ -278,10 +277,8 @@ fn an_amend_reads_the_batchs_own_set_whatever_was_used_last() {
     std::fs::remove_dir_all(&dir).ok();
 }
 
-// -------------------------------------------------- *Back* and a new read (2.23, 08 › *3. Plan*)
-
 /// The Plan screen's *Back* is a window move: the back end keeps the draft and its files, and
-/// a new *Read labels* replaces the draft from the files, so no plan edit survives (2.23).
+/// a new *Read labels* replaces the draft from the files, so no plan edit survives.
 #[test]
 fn back_keeps_the_draft_and_a_new_read_replaces_its_plan_edits() {
     let Some(_vendor) = vendor_dir() else {

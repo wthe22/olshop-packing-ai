@@ -1,4 +1,4 @@
-//! Copying pages (07 › *Testing*: copied pages keep their page count and text).
+//! Copying pages: copied pages keep their page count and text.
 
 mod common;
 
