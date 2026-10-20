@@ -7,17 +7,19 @@ use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 
 use packing_pdf::worker::{PdfWorker, Progress};
+use testkit::{testdata, vendor_dir};
 
 #[test]
 fn worker_reads_with_progress_and_stops_on_cancel() {
-    let Some(vendor) = common::vendor_dir() else {
+    let Some(vendor) = vendor_dir() else {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
+    let _guard = testkit::pdfium_lock();
     let worker = PdfWorker::spawn(vendor).expect("spawn worker");
 
     let counts = worker
-        .open(&[common::testdata("labels-slip.pdf")])
+        .open(&[testdata("labels-slip.pdf")])
         .expect("open labels");
     assert_eq!(counts, vec![24]);
 

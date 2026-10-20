@@ -22,3 +22,6 @@ serde_json = "1"
 jiff.workspace = true
 packing-engine.workspace = true
 packing-pdf.workspace = true
+
+[dev-dependencies]
+testkit = { path = "../../crates/testkit" }

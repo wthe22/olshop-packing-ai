@@ -2,19 +2,10 @@
 //! numbering (mirrors the relevant cases of tools/analysis/tests/test_picks.py).
 
 use packing_engine::ids::{OrderId, PdfNumber, TrackingId};
-use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
+use packing_engine::orders::{Line, Order, PageRef, ReadOrder};
 use packing_engine::plan::{Plan, PlanError, REST_CODE, REST_NAME};
 use packing_engine::rules::{Category, catch_all_category, parse_condition};
-
-fn line(name: &str, quantity: i64, variation: &str) -> Line {
-    Line {
-        display_name: display_name(name, variation),
-        name: name.to_string(),
-        variation: variation.to_string(),
-        seller_sku: String::new(),
-        quantity,
-    }
-}
+use testkit::{category, line_with_variation};
 
 fn order(id: &str, lines: Vec<Line>, courier: Option<&str>) -> ReadOrder {
     ReadOrder {
@@ -33,36 +24,27 @@ fn order(id: &str, lines: Vec<Line>, courier: Option<&str>) -> ReadOrder {
     }
 }
 
-fn category(code: &str, name: &str, when: Option<&str>) -> Category {
-    Category {
-        code: code.to_string(),
-        name: name.to_string(),
-        condition: when.map(|text| parse_condition(text).expect("parse")),
-        when: when.map(str::to_string),
-    }
-}
-
 /// Two sepatu, one spion, one other (courier J&T) — enough to tell the entries apart.
 fn sample_orders() -> Vec<ReadOrder> {
     vec![
         order(
             "580000000000000001",
-            vec![line("Sepatu A", 1, "")],
+            vec![line_with_variation("Sepatu A", "", 1)],
             Some("J&T Express"),
         ),
         order(
             "580000000000000002",
-            vec![line("Sepatu B", 1, "")],
+            vec![line_with_variation("Sepatu B", "", 1)],
             Some("J&T Express"),
         ),
         order(
             "580000000000000003",
-            vec![line("Spion C", 1, "")],
+            vec![line_with_variation("Spion C", "", 1)],
             Some("SiCepat"),
         ),
         order(
             "580000000000000004",
-            vec![line("Lainnya D", 1, "")],
+            vec![line_with_variation("Lainnya D", "", 1)],
             Some("J&T Express"),
         ),
     ]
@@ -298,13 +280,13 @@ fn suggested_file_name_follows_the_spec() {
 
 #[test]
 fn runs_group_by_contents_sorted_by_count_then_contents() {
-    let same = line("Spion Beat", 1, "honda");
+    let same = line_with_variation("Spion Beat", "honda", 1);
     let orders = vec![
         order("580000000000000001", vec![same.clone()], Some("J&T")),
         order("580000000000000002", vec![same.clone()], Some("J&T")),
         order(
             "580000000000000003",
-            vec![line("Alpha", 1, "")],
+            vec![line_with_variation("Alpha", "", 1)],
             Some("J&T"),
         ),
     ];
@@ -322,7 +304,7 @@ fn runs_group_by_contents_sorted_by_count_then_contents() {
 fn a_category_reports_its_page_count() {
     let mut first = order(
         "580000000000000001",
-        vec![line("Sepatu", 1, "")],
+        vec![line_with_variation("Sepatu", "", 1)],
         Some("J&T"),
     );
     first.pages = vec![PageRef { file: 0, page: 0 }, PageRef { file: 0, page: 1 }];

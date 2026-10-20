@@ -40,18 +40,15 @@ adds `--test-coverage-include-all` for that).
 
 | Scope | Lines % | Branches % | Functions % |
 |---|---|---|---|
-| Total | 54.72 | 98.88 | 66.67 |
+| Total | 97.04 | 94.42 | 75.17 |
 
 The first baseline (72.43 lines) was taken while the screens' logic sat inside `.svelte` files, which no
-run measures. Splitting the shell out of `+page.svelte` (`app/src/lib/shell.svelte.ts`, 381 lines) and the
-API wrapper into `app/src/lib/api/` moved about 600 lines of untested code into `.ts` files, which are
-measured: the lines went from unmeasured to uncovered, and no tested line was lost. The figures above are
-the production code as it is now and are the baseline for the later steps. Raising them is the job of the
-scenario tests (the shell store with a faked `invoke`).
-
-Per file, lines %: `app/src/lib/groupings.ts`, `logoPrompt.ts`, `printed.ts`, `saveCheck.ts` and
-`unconfigured.ts` 100; `app/src/texts.ts` 99.56; `app/src/lib/api/` 32 to 59; `categoryEntry.ts` 28.85;
-`conditions.ts` 22.07; `shell.svelte.ts` 0.79; `app/src/routes/+layout.ts` 0.
+run measures; splitting the shell out of `+page.svelte` moved it into `.ts` files, which are measured, and
+the scenario tests of the shell store (a faked `invoke`) then covered it (97.04 lines). Branches went from
+98.88 to 94.42 because the earlier figure counted a file no test loads as having no branches; the branches
+left uncovered are `$derived` initialisers that only the Svelte compiler evaluates. Per file, lines %: all
+`.ts` modules are at 91 to 100 except `app/src/lib/api/search.ts` (52) and `app/src/routes/+layout.ts` (0, the
+five-line layout load).
 
 ## What no test reaches
 

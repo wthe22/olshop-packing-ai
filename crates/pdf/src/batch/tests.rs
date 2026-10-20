@@ -2,35 +2,9 @@ use super::*;
 use packing_engine::day::{Duplicate, duplicates_warning};
 use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::label::courier_data;
-use packing_engine::orders::{Line, LogoAnswer, Order, ReadOrder, UnseenLogo, Warning};
+use packing_engine::orders::{LogoAnswer, ReadOrder, UnseenLogo, Warning};
 use packing_engine::plan::{CategoryResult, REST_CODE, RunResult};
-
-fn line(name: &str, variation: &str, quantity: i64, display: &str) -> Line {
-    Line {
-        name: name.to_string(),
-        variation: variation.to_string(),
-        seller_sku: String::new(),
-        quantity,
-        display_name: display.to_string(),
-    }
-}
-
-fn read_order(id: &str, tracking: &str, lines: Vec<Line>) -> ReadOrder {
-    ReadOrder {
-        order: Order {
-            order_id: OrderId::new(id),
-            tracking_id: (!tracking.is_empty()).then(|| TrackingId::new(tracking)),
-            courier: Some("J&T Express".to_string()),
-            ship_by: None,
-            lines,
-            customer_message: String::new(),
-        },
-        pages: vec![packing_engine::orders::PageRef { file: 0, page: 0 }],
-        position: 1,
-        has_slip: true,
-        qty_total: None,
-    }
-}
+use testkit::{line_with_variation, read_order};
 
 fn order_ids() -> Vec<OrderId> {
     vec![
@@ -44,12 +18,12 @@ fn category() -> (CategoryResult, Vec<ReadOrder>) {
         read_order(
             "580000000000000001",
             "JY0000000101",
-            vec![line("Sepatu", "honda", 1, "Sepatu — honda")],
+            vec![line_with_variation("Sepatu", "honda", 1)],
         ),
         read_order(
             "580000000000000002",
             "JY0000000102",
-            vec![line("Sepatu", "honda", 1, "Sepatu — honda")],
+            vec![line_with_variation("Sepatu", "honda", 1)],
         ),
     ];
     let category = CategoryResult {
@@ -222,13 +196,13 @@ fn draft_with_unseen_logo(order_ids: Vec<&str>) -> Draft {
     let mut first = read_order(
         "580000000000000001",
         "JY0000001234",
-        vec![line("Sepatu", "", 1, "Sepatu")],
+        vec![line_with_variation("Sepatu", "", 1)],
     );
     first.order.courier = None;
     let mut second = read_order(
         "580000000000000002",
         "000000000202",
-        vec![line("Sepatu", "", 1, "Sepatu")],
+        vec![line_with_variation("Sepatu", "", 1)],
     );
     second.order.courier = None;
     let mut draft = Draft {

@@ -7,14 +7,7 @@ use packing_engine::rules_edit::condition_to_tree;
 use packing_pdf::batch::Draft;
 
 use crate::OpenDraft;
-
-fn temp_dir(label: &str) -> std::path::PathBuf {
-    let dir =
-        std::env::temp_dir().join(format!("packing-app-search-{}-{label}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
-    std::fs::create_dir_all(&dir).expect("temp dir");
-    dir
-}
+use testkit::temp_dir;
 
 fn batch_entry(batch: BatchNumber, pdf_file: &str) -> BatchEntry {
     BatchEntry {

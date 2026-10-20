@@ -25,6 +25,9 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const BASELINE_PATH = join(ROOT, "tools", "baselines", "coverage.json");
 const TOLERANCE = 0.1;
 
+// Crates holding test fixtures rather than product code: left out of the report and the totals.
+const IGNORED_CRATES = new Set(["crates/testkit"]);
+
 const RECORD = process.argv.includes("--record");
 
 /** A percentage with two decimals, from a covered/count pair.*/
@@ -67,6 +70,7 @@ function rustCoverage() {
     const crates = {};
     for (const file of data.files) {
       const crate = crateOf(repoPath(file.filename));
+      if (IGNORED_CRATES.has(crate)) continue;
       const into = (crates[crate] ??= { lines: { c: 0, n: 0 }, regions: { c: 0, n: 0 }, functions: { c: 0, n: 0 } });
       for (const key of ["lines", "regions", "functions"]) {
         into[key].c += file.summary[key].covered;
@@ -74,8 +78,13 @@ function rustCoverage() {
       }
     }
     const cratesOut = {};
+    const totals = { lines: { c: 0, n: 0 }, regions: { c: 0, n: 0 }, functions: { c: 0, n: 0 } };
     for (const crate of Object.keys(crates).sort()) {
       const v = crates[crate];
+      for (const key of ["lines", "regions", "functions"]) {
+        totals[key].c += v[key].c;
+        totals[key].n += v[key].n;
+      }
       cratesOut[crate] = {
         lines: percent(v.lines.c, v.lines.n),
         regions: percent(v.regions.c, v.regions.n),
@@ -84,9 +93,9 @@ function rustCoverage() {
     }
     return {
       totals: {
-        lines: percent(data.totals.lines.covered, data.totals.lines.count),
-        regions: percent(data.totals.regions.covered, data.totals.regions.count),
-        functions: percent(data.totals.functions.covered, data.totals.functions.count),
+        lines: percent(totals.lines.c, totals.lines.n),
+        regions: percent(totals.regions.c, totals.regions.n),
+        functions: percent(totals.functions.c, totals.functions.n),
       },
       crates: cratesOut,
     };

@@ -11,7 +11,7 @@ fn read_and_save_testdata_labels_slip() {
     };
     let dir = temp_dir("slip");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     let read = read_draft(
         &state,
@@ -88,7 +88,7 @@ fn read_plain_labels_stops_with_no_slip() {
     };
     let dir = temp_dir("plain");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     let error = read_draft(
         &state,
@@ -112,7 +112,7 @@ fn a_read_without_a_categories_file_saves_every_order_in_one_pdf() {
         return;
     };
     let dir = temp_dir("no-categories");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     let read = read_draft(
         &state,
@@ -163,7 +163,7 @@ fn a_batch_read_uses_the_chosen_set_and_records_it() {
     let groupings_folder = dir.join(crate::GROUPINGS_DIR);
     std::fs::create_dir_all(&groupings_folder).expect("groupings folder");
     std::fs::write(groupings_folder.join("ramadhan.toml"), RAMADHAN).expect("write set");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     let read = read_draft(
         &state,
@@ -231,7 +231,7 @@ fn an_amend_reads_the_batchs_own_set_whatever_was_used_last() {
     )
     .expect("write set");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     // A batch packed with `ramadhan` ...
     read_draft(
@@ -287,7 +287,7 @@ fn back_keeps_the_draft_and_a_new_read_replaces_its_plan_edits() {
     };
     let dir = temp_dir("plan-back");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     let read = read_draft(
         &state,

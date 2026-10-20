@@ -2,8 +2,6 @@
 //! fingerprints, revert, amend and the atomic save (mirrors tools/analysis/tests/test_picks.py).
 
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use packing_engine::day::{
     BatchWrite, DayError, DayState, FileEntry, Findings, PackingListChoice, PdfEntry, SavedItem,
@@ -12,34 +10,9 @@ use packing_engine::day::{
 use packing_engine::groupings::Grouping;
 use packing_engine::ids::{BatchNumber, OrderId, PdfNumber, TrackingId};
 use packing_engine::names::DOWNLOAD_DIR;
-use packing_engine::orders::{Order, ReadOrder};
+use packing_engine::orders::ReadOrder;
 use serde_json::Value;
-
-/// A unique folder under the system temp dir, removed when the test ends.
-struct TempDir(PathBuf);
-
-impl TempDir {
-    fn new(tag: &str) -> Self {
-        let nanos = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock")
-            .as_nanos();
-        let name = format!("packing-engine-{tag}-{}-{nanos}", std::process::id());
-        let path = std::env::temp_dir().join(name);
-        fs::create_dir_all(&path).expect("create temp dir");
-        TempDir(path)
-    }
-
-    fn path(&self) -> &Path {
-        &self.0
-    }
-}
-
-impl Drop for TempDir {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
-    }
-}
+use testkit::TempDir;
 
 fn batch(number: i64) -> BatchNumber {
     BatchNumber::new(number)
@@ -51,18 +24,8 @@ fn pdf(number: i64) -> PdfNumber {
 
 fn read_order(id: &str) -> ReadOrder {
     ReadOrder {
-        order: Order {
-            order_id: OrderId::new(id),
-            tracking_id: Some(TrackingId::new(format!("JY{id}"))),
-            courier: Some("J&T Express".to_string()),
-            ship_by: None,
-            lines: Vec::new(),
-            customer_message: String::new(),
-        },
         pages: Vec::new(),
-        position: 1,
-        has_slip: true,
-        qty_total: None,
+        ..testkit::read_order(id, &format!("JY{id}"), Vec::new())
     }
 }
 

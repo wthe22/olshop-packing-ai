@@ -1,22 +1,16 @@
 use super::*;
-use packing_engine::ids::{OrderId, PdfNumber, TrackingId};
-use packing_engine::orders::{Line, ReadOrder};
+use packing_engine::ids::PdfNumber;
+use packing_engine::orders::ReadOrder;
 use packing_engine::plan::Plan;
 use packing_engine::rules::load_rules;
 
 use super::sets::groupings_list_impl;
 use packing_engine::rules_edit::condition_to_tree;
 use packing_pdf::batch::Draft;
+use testkit::order;
 
 use crate::OpenDraft;
-
-fn temp_dir(label: &str) -> std::path::PathBuf {
-    let dir =
-        std::env::temp_dir().join(format!("packing-app-rules-{}-{label}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&dir);
-    std::fs::create_dir_all(&dir).expect("temp dir");
-    dir
-}
+use testkit::temp_dir;
 
 const FILE: &str = "\
 # Picks. Order matters.
@@ -48,30 +42,10 @@ fn entry(code: &str, name: &str, when: Option<&str>, origin: Option<usize>) -> E
     }
 }
 
-fn line(name: &str, quantity: i64) -> Line {
-    Line {
-        name: name.to_string(),
-        variation: String::new(),
-        seller_sku: String::new(),
-        quantity,
-        display_name: name.to_string(),
-    }
-}
-
-fn order(name: &str, quantity: i64) -> Order {
-    Order {
-        order_id: OrderId::new("580000000000000999"),
-        tracking_id: Some(TrackingId::new("JY0000009999")),
-        courier: Some("JNE".to_string()),
-        ship_by: None,
-        lines: vec![line(name, quantity)],
-        customer_message: String::new(),
-    }
-}
-
+/// One read order of that line in an open draft, on the made-up order and tracking IDs.
 fn read_order(name: &str, quantity: i64) -> ReadOrder {
     ReadOrder {
-        order: order(name, quantity),
+        order: order(name, quantity, Some("JNE")),
         pages: vec![packing_engine::orders::PageRef { file: 0, page: 0 }],
         position: 1,
         has_slip: true,

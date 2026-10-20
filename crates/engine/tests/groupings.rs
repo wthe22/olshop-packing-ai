@@ -2,41 +2,12 @@
 //! rules, a grouping with no file and create/delete.
 
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use packing_engine::groupings::{
     self, CATEGORIES_FILE, DEFAULT_GROUPING, GROUPINGS_DIR, Grouping, GroupingEntry, GroupingError,
 };
 use packing_engine::rules::catch_all_category;
-
-/// A unique folder under the system temp dir, removed when the test ends.
-struct TempDir(PathBuf);
-
-impl TempDir {
-    fn new(tag: &str) -> Self {
-        let nanos = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock")
-            .as_nanos();
-        let path = std::env::temp_dir().join(format!(
-            "packing-engine-groupings-{tag}-{}-{nanos}",
-            std::process::id()
-        ));
-        fs::create_dir_all(&path).expect("create temp dir");
-        TempDir(path)
-    }
-
-    fn path(&self) -> &Path {
-        &self.0
-    }
-}
-
-impl Drop for TempDir {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
-    }
-}
+use testkit::TempDir;
 
 const SEPATU: &str =
     "[[category]]\ncode = \"A\"\nname = \"Sepatu\"\nwhen = 'name contains \"sepatu\"'\n";

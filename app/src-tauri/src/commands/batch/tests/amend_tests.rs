@@ -55,7 +55,7 @@ fn revert_last_deletes_the_folder_and_the_state() {
     };
     let dir = temp_dir("revert");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     read_draft(
         &state,
@@ -100,7 +100,7 @@ fn amend_reads_the_download_copy_and_replaces_the_batch() {
     };
     let dir = temp_dir("amend");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     read_draft(
         &state,
@@ -165,7 +165,7 @@ fn amend_starts_on_the_plan_reads_the_batchs_files_and_writes_nothing() {
     };
     let dir = temp_dir("amend-start");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
     let parts = state
         .with_worker(|worker| split_testdata_labels(worker, &dir))
         .expect("worker");
@@ -257,7 +257,7 @@ fn the_amend_read_takes_the_selection_as_it_is() {
     };
     let dir = temp_dir("amend-selection-read");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
     let parts = state
         .with_worker(|worker| split_testdata_labels(worker, &dir))
         .expect("worker");
@@ -332,7 +332,7 @@ fn cancel_amend_leaves_the_batch_and_the_state_untouched() {
     };
     let dir = temp_dir("cancel-amend");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     read_draft(
         &state,
@@ -402,7 +402,7 @@ fn the_testdata_labels_show_no_logo_prompt_and_list_the_couriers() {
     };
     let dir = temp_dir("logo-prompt");
     std::fs::copy(testdata("categories.toml"), dir.join(CATEGORIES_FILE)).expect("copy rules");
-    let state = app_state(&dir);
+    let (state, _guard) = app_state(&dir);
 
     // The testdata labels carry no images, so every logo is unknown-and-absent: the prompt
     // never opens, and the buttons still carry `couriers.toml`'s names in file order.

@@ -9,7 +9,7 @@ use packing_engine::ids::{OrderId, PdfNumber};
 /// plan whose first pick takes the courier `J&T Express`.
 fn state_with_logo_draft(folder: &Path) -> AppState {
     let unknown = |id: &str, tracking: &str, name: &str| {
-        let mut order = read_order(id, tracking, vec![line(name, "", 1)]);
+        let mut order = read_order(id, tracking, vec![line_with_variation(name, "", 1)]);
         order.order.courier = None;
         order
     };

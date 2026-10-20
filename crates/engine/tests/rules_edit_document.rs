@@ -3,15 +3,11 @@
 //! give the expected order, and the result loads with `load_rules`.
 
 use std::fs;
-use std::path::PathBuf;
 use std::str::FromStr;
 
 use packing_engine::rules::{catch_all_category, format_condition};
 use packing_engine::rules_edit::RulesDocument;
-
-fn testdata_categories() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../testdata/categories.toml")
-}
+use testkit::testdata;
 
 fn doc(text: &str) -> RulesDocument {
     RulesDocument::from_str(text).expect("parse document")
@@ -49,7 +45,7 @@ name = \"Rest\"
 
 #[test]
 fn comments_and_unchanged_texts_survive() {
-    let text = fs::read_to_string(testdata_categories()).expect("read testdata");
+    let text = fs::read_to_string(testdata("categories.toml")).expect("read testdata");
     let before = doc(&text);
     assert_eq!(
         before
@@ -91,7 +87,7 @@ fn comments_and_unchanged_texts_survive() {
 
 #[test]
 fn unchanged_condition_keeps_original_text() {
-    let text = fs::read_to_string(testdata_categories()).expect("read testdata");
+    let text = fs::read_to_string(testdata("categories.toml")).expect("read testdata");
     let mut edited = doc(&text);
     let original = edited.entries()[1].when.clone().expect("B when");
 
@@ -254,7 +250,7 @@ fn a_document_without_a_file_starts_from_the_catch_all_entry() {
 
 #[test]
 fn reorder_keeps_a_comment_on_a_moved_entry() {
-    let text = fs::read_to_string(testdata_categories()).expect("read testdata");
+    let text = fs::read_to_string(testdata("categories.toml")).expect("read testdata");
     let mut edited = doc(&text); // A, B, C, Z; a comment sits above Z
     // Move C to the top; Z stays last, so the file still loads.
     edited.reorder(&[2, 0, 1, 3]).expect("move C to the top");

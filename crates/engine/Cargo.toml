@@ -13,3 +13,6 @@ serde_json.workspace = true
 toml.workspace = true
 toml_edit.workspace = true
 xxhash-rust.workspace = true
+
+[dev-dependencies]
+testkit = { path = "../testkit" }

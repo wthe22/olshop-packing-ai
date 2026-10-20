@@ -7,11 +7,9 @@
 use std::fs;
 use std::path::PathBuf;
 
-use packing_engine::ids::{OrderId, TrackingId};
-use packing_engine::orders::{Line, Order};
-use packing_engine::rules::{Category, parse_condition};
 use packing_engine::rules_edit::{GroupKind, Node, condition_to_tree, counts, tree_to_condition};
 use serde_json::Value;
+use testkit::{category, order};
 
 const CSV_FIELDS: &[&str] = &[
     "sku_id",
@@ -217,42 +215,12 @@ fn empty_group_and_bad_row_are_errors() {
     );
 }
 
-fn line(name: &str, quantity: i64) -> Line {
-    Line {
-        name: name.to_string(),
-        variation: String::new(),
-        seller_sku: String::new(),
-        quantity,
-        display_name: name.to_string(),
-    }
-}
-
-fn order(name: &str, quantity: i64, courier: Option<&str>) -> Order {
-    Order {
-        order_id: OrderId::new("580000000000000999"),
-        tracking_id: Some(TrackingId::new("JY0000009999")),
-        courier: courier.map(str::to_string),
-        ship_by: None,
-        lines: vec![line(name, quantity)],
-        customer_message: String::new(),
-    }
-}
-
-fn category(code: &str, when: Option<&str>) -> Category {
-    Category {
-        code: code.to_string(),
-        name: code.to_string(),
-        condition: when.map(|t| parse_condition(t).expect("parse category")),
-        when: when.map(str::to_string),
-    }
-}
-
 #[test]
 fn counts_take_from_what_is_left() {
     let categories = vec![
-        category("A", Some("name contains \"sepatu\"")),
-        category("B", Some("name contains \"spion\"")),
-        category("Z", None), // the rest: no condition
+        category("A", "A", Some("name contains \"sepatu\"")),
+        category("B", "B", Some("name contains \"spion\"")),
+        category("Z", "Z", None), // the rest: no condition
     ];
     let orders = vec![
         order("Sepatu Standar", 1, Some("JNE")), // A
@@ -265,8 +233,8 @@ fn counts_take_from_what_is_left() {
 
     // Without a rest entry, the leftovers are counted nowhere.
     let no_rest = vec![
-        category("A", Some("name contains \"sepatu\"")),
-        category("B", Some("name contains \"spion\"")),
+        category("A", "A", Some("name contains \"sepatu\"")),
+        category("B", "B", Some("name contains \"spion\"")),
     ];
     assert_eq!(counts(&no_rest, &orders), vec![2, 1]);
 }

@@ -15,3 +15,19 @@
 All Rust levels run from the repository root; the Python tests need the virtual environment
 ([setup.md](setup.md)). Setup, run and build commands are in [app.md](app.md); what each level covers
 in percent, and where no test reaches, is in [coverage.md](coverage.md).
+
+## Shared fixtures
+
+`crates/testkit` holds the fixtures three or more test files declare today — a product line, an
+order, a read order and a category, a fresh temp folder, and the `testdata/` and `vendor/` locators.
+It is a `[dev-dependencies]` entry of the crates whose tests use it and is never built into the app;
+its own coverage is left out of the report, since a fixture is not product code.
+
+PDFium is not thread-safe, and the test harness runs the tests of one binary on several threads.
+`testkit::pdfium_lock()` returns a guard that a test holds for its whole run whenever it binds
+PDFium or starts a `PdfWorker` (the app's `app_state` helper hands the state and the guard back
+together, the PDF tests wrap it in their `Bound`), so no two binds run beside each other.
+
+The front-end tests load an `app/src` module through `app/tests/tsModule.mjs`: a resolver hook
+completes the extensionless imports the bundler allows, and a fake replaces the Tauri bridge, so a
+screen's own state and commands run with no window.

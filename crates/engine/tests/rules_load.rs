@@ -2,38 +2,11 @@
 //! mapping for condition errors (mirrors the relevant cases of tools/analysis/tests/test_rules.py).
 
 use std::fs;
-use std::path::PathBuf;
 
-use packing_engine::ids::{OrderId, TrackingId};
-use packing_engine::orders::{Line, Order};
 use packing_engine::rules::{
     Category, catch_all_category, categorize, format_condition, load_rules, unconfigured,
 };
-
-fn testdata_categories() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../testdata/categories.toml")
-}
-
-fn line(name: &str, quantity: i64) -> Line {
-    Line {
-        name: name.to_string(),
-        variation: String::new(),
-        seller_sku: String::new(),
-        quantity,
-        display_name: name.to_string(),
-    }
-}
-
-fn order(name: &str, quantity: i64, courier: Option<&str>) -> Order {
-    Order {
-        order_id: OrderId::new("580000000000000999"),
-        tracking_id: Some(TrackingId::new("JY0000009999")),
-        courier: courier.map(str::to_string),
-        ship_by: None,
-        lines: vec![line(name, quantity)],
-        customer_message: String::new(),
-    }
-}
+use testkit::{order, testdata};
 
 const VALID_WHEN: &str = "when = 'name contains \"x\"'\n";
 
@@ -174,7 +147,7 @@ fn load_rules_last_category_may_omit_when() {
 
 #[test]
 fn load_testdata_categories() {
-    let text = fs::read_to_string(testdata_categories()).expect("read testdata categories");
+    let text = fs::read_to_string(testdata("categories.toml")).expect("read testdata categories");
     let categories = load_rules(&text).expect("load");
     assert_eq!(
         categories
@@ -209,7 +182,7 @@ fn load_testdata_categories() {
 
 #[test]
 fn categorize_first_match_and_none() {
-    let text = fs::read_to_string(testdata_categories()).expect("read testdata categories");
+    let text = fs::read_to_string(testdata("categories.toml")).expect("read testdata categories");
     let categories = load_rules(&text).expect("load");
 
     let sepatu = order("Sepatu Standar", 1, Some("JNE"));

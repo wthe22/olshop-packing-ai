@@ -3,7 +3,6 @@
 //! name, orders and runs — the same result as the Python script.
 
 use std::fs;
-use std::path::PathBuf;
 
 use packing_engine::ids::{OrderId, PdfNumber, TrackingId};
 use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
@@ -12,12 +11,7 @@ use packing_engine::rules::load_rules;
 use serde::Deserialize;
 use serde::de::{MapAccess, Visitor};
 use serde_json::Value;
-
-fn testdata(name: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../testdata")
-        .join(name)
-}
+use testkit::testdata;
 
 /// The top-level JSON object as ordered `(key, value)` pairs, so the download order is the
 /// order the keys appear in the file (`serde_json` sorts keys by default).

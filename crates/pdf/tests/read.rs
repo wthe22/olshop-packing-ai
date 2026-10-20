@@ -12,6 +12,7 @@ use packing_engine::orders::{ReadError, ReadOrder, read_batch};
 use packing_pdf::read;
 
 use serde_json::Value;
+use testkit::testdata;
 
 fn file_names(paths: &[PathBuf]) -> Vec<String> {
     paths
@@ -87,7 +88,7 @@ fn reads_labels_slip_and_matches_the_fixture() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    let path = common::testdata("labels-slip.pdf");
+    let path = testdata("labels-slip.pdf");
     let cancel = AtomicBool::new(false);
     let mut progress = Vec::new();
     let start = std::time::Instant::now();
@@ -116,7 +117,7 @@ fn reads_labels_slip_and_matches_the_fixture() {
     let reading = read_batch(pages, &name_refs, courier_data()).expect("read the batch");
 
     let expected: Value = serde_json::from_str(
-        &std::fs::read_to_string(common::testdata("expected-labels.json")).expect("fixture"),
+        &std::fs::read_to_string(testdata("expected-labels.json")).expect("fixture"),
     )
     .expect("parse fixture");
 
@@ -144,7 +145,7 @@ fn plain_labels_stop_with_the_no_slip_error() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    let path = common::testdata("labels-plain.pdf");
+    let path = testdata("labels-plain.pdf");
     let cancel = AtomicBool::new(false);
     let pages = read::read_all(
         &pdfium,

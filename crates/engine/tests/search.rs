@@ -6,8 +6,6 @@
 //! condition on `order_id` or `tracking_id` can match it; its row says *items not stored*.
 
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use packing_engine::day::{
     BatchEntry, DayState, FileEntry, PackingListChoice, PdfEntry, SavedItem, SavedOrder,
@@ -18,33 +16,7 @@ use packing_engine::orders::{Line, Order};
 use packing_engine::rules::{evaluate, parse_condition};
 use packing_engine::search::search;
 use serde_json::Value;
-
-struct TempDir(PathBuf);
-
-impl TempDir {
-    fn new(tag: &str) -> Self {
-        let nanos = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("clock")
-            .as_nanos();
-        let path = std::env::temp_dir().join(format!(
-            "packing-engine-search-{tag}-{}-{nanos}",
-            std::process::id()
-        ));
-        fs::create_dir_all(&path).expect("temp dir");
-        TempDir(path)
-    }
-
-    fn path(&self) -> &Path {
-        &self.0
-    }
-}
-
-impl Drop for TempDir {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
-    }
-}
+use testkit::TempDir;
 
 /// A saved order with the searched fields written, as a save does; `lines` are `(name, quantity)`.
 fn saved(order_id: &str, tracking_id: &str, lines: &[(&str, i64)]) -> SavedOrder {

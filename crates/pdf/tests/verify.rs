@@ -26,8 +26,10 @@ use packing_pdf::packing_list::{
     Layout, PackingLine, PackingList, RunOrder, RunRows, SavedPdfSection,
 };
 use packing_pdf::worker::PdfWorker;
+use testkit::{testdata, vendor_dir};
 
-/// A batch read from `testdata/labels-slip.pdf`, saved into a fresh day folder.
+/// A batch read from `testdata/labels-slip.pdf`, saved into a fresh day folder. The lock is held
+/// for the value's life, so no other test binds PDFium beside this one's worker.
 struct Saved {
     dir: PathBuf,
     worker: PdfWorker,
@@ -35,11 +37,13 @@ struct Saved {
     plan: PlanResult,
     packing: PackingListChoice,
     folder: PathBuf,
+    _lock: testkit::PdfiumGuard,
 }
 
 /// Read and save the testdata labels; `None` when pdfium or the Arial font is missing.
 fn saved(tag: &str) -> Option<Saved> {
-    let vendor = common::vendor_dir()?;
+    let vendor = vendor_dir()?;
+    let lock = testkit::pdfium_lock();
     if !common::fonts_available() {
         eprintln!("skipped: Arial font not installed");
         return None;
@@ -49,7 +53,7 @@ fn saved(tag: &str) -> Option<Saved> {
 
     let state = DayState::new("2026-10-07");
     let worker = PdfWorker::spawn(vendor).expect("spawn worker");
-    let labels = common::testdata("labels-slip.pdf");
+    let labels = testdata("labels-slip.pdf");
     let checks =
         batch::check_files(&worker, std::slice::from_ref(&labels), &state).expect("check files");
     let (progress, _rx) = mpsc::channel();
@@ -63,10 +67,9 @@ fn saved(tag: &str) -> Option<Saved> {
     })
     .expect("read the labels");
 
-    let categories = load_rules(
-        &std::fs::read_to_string(common::testdata("categories.toml")).expect("rules file"),
-    )
-    .expect("parse the rules");
+    let categories =
+        load_rules(&std::fs::read_to_string(testdata("categories.toml")).expect("rules file"))
+            .expect("parse the rules");
     let plan = Plan::from_categories(&categories).count(&draft.orders, PdfNumber::new(1));
     let packing = PackingListChoice::default();
 
@@ -104,6 +107,7 @@ fn saved(tag: &str) -> Option<Saved> {
         plan,
         packing,
         folder: result.folder,
+        _lock: lock,
     })
 }
 

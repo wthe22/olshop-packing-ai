@@ -33,9 +33,9 @@
   },
   "typescript": {
     "totals": {
-      "lines": 54.72,
-      "branches": 98.88,
-      "functions": 66.67
+      "lines": 97.04,
+      "branches": 94.42,
+      "functions": 75.17
     },
     "files": {
       "app/src/lib/api/batch.ts": 55.67,

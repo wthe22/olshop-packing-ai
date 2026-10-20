@@ -6,6 +6,7 @@ mod common;
 use image::{DynamicImage, Rgba, RgbaImage};
 use packing_pdf::{logo, read};
 use pdfium_render::prelude::*;
+use testkit::testdata;
 
 /// The 3 x 2 DeviceRGB stream the in-band image carries, bytes 0..=17, uncompressed.
 fn in_band_bytes() -> Vec<u8> {
@@ -118,7 +119,7 @@ fn a_page_without_images_has_no_logos() {
         return;
     };
     // The fpdf2 fixtures carry text only.
-    let path = common::testdata("labels-slip.pdf");
+    let path = testdata("labels-slip.pdf");
     let document = pdfium.load_pdf_from_file(&path, None).expect("load");
     let page = document.pages().get(0).expect("page");
     let logos = read::page_logos(&page, &document, &|_| false).expect("read the logos");

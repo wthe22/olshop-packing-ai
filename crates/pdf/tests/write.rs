@@ -3,6 +3,7 @@
 mod common;
 
 use packing_pdf::{read, write};
+use testkit::testdata;
 
 #[test]
 fn copies_pages_unchanged() {
@@ -10,7 +11,7 @@ fn copies_pages_unchanged() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    let source = common::testdata("labels-slip.pdf");
+    let source = testdata("labels-slip.pdf");
     let files = read::open_all(&pdfium, std::slice::from_ref(&source)).expect("open source");
     assert_eq!(files[0].pages, 24);
 
@@ -42,7 +43,7 @@ fn keeps_any_page_order_and_shares_resources() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    let source = common::testdata("labels-slip.pdf");
+    let source = testdata("labels-slip.pdf");
     let files =
         read::open_all(&pdfium, &[source.clone(), source.clone()]).expect("open sources twice");
     // Every page of both files, interleaved and backwards.

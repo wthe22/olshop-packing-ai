@@ -1,0 +1,9 @@
+[package]
+name = "testkit"
+description = "Test-only fixtures the crates' tests share: made-up orders and categories, the temp and testdata folders, and the PDFium lock."
+edition.workspace = true
+version.workspace = true
+publish = false
+
+[dependencies]
+packing-engine.workspace = true

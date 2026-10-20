@@ -7,52 +7,14 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use packing_engine::day::DayState;
 use packing_engine::ids::{BatchNumber, PdfNumber};
 use packing_engine::names;
 use serde_json::Value;
+use testkit::{TempDir, testdata, vendor_dir};
 
 const DAY: &str = "2026-10-07";
-
-/// The pinned `pdfium.dll` directory, or `None` when it has not been downloaded.
-fn vendor_dir() -> Option<PathBuf> {
-    let vendor = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor");
-    vendor.join("pdfium.dll").exists().then_some(vendor)
-}
-
-fn testdata(name: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../testdata")
-        .join(name)
-}
-
-/// A unique folder under the system temp dir, removed when the test ends.
-struct TempDir(PathBuf);
-
-impl TempDir {
-    fn new(tag: &str) -> Self {
-        let nanos = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
-        let path =
-            std::env::temp_dir().join(format!("packing-cli-{tag}-{}-{nanos}", std::process::id()));
-        fs::create_dir_all(&path).expect("create temp dir");
-        TempDir(path)
-    }
-
-    fn path(&self) -> &Path {
-        &self.0
-    }
-}
-
-impl Drop for TempDir {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.0);
-    }
-}
 
 /// Run the built binary; `argv` is everything after the binary path.
 fn run(argv: &[&str], vendor: &Path) -> Output {

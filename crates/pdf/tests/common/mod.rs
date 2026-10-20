@@ -4,24 +4,15 @@
 
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
-use std::sync::{Mutex, MutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use pdfium_render::prelude::Pdfium;
+use testkit::vendor_dir;
 
-/// The pinned `pdfium.dll` directory, or `None` when it has not been downloaded.
-pub fn vendor_dir() -> Option<PathBuf> {
-    let vendor = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor");
-    vendor.join("pdfium.dll").exists().then_some(vendor)
-}
-
-/// PDFium is not thread-safe and the test harness runs tests on several threads.
-static PDFIUM_LOCK: Mutex<()> = Mutex::new(());
-
-/// PDFium for one test; holds the lock so no other test uses PDFium meanwhile.
+/// PDFium for one test; holds the process-wide lock so no other test uses PDFium meanwhile.
 pub struct Bound {
     pdfium: Pdfium,
-    _lock: MutexGuard<'static, ()>,
+    _lock: testkit::PdfiumGuard,
 }
 
 impl Deref for Bound {
@@ -34,20 +25,11 @@ impl Deref for Bound {
 /// Bind PDFium, or `None` when the DLL is missing (the tests then skip).
 pub fn bind() -> Option<Bound> {
     let dir = vendor_dir()?;
-    let lock = PDFIUM_LOCK
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let lock = testkit::pdfium_lock();
     Some(Bound {
         pdfium: packing_pdf::bind(&dir).expect("bind pdfium"),
         _lock: lock,
     })
-}
-
-/// A file in the shared `testdata/` folder.
-pub fn testdata(name: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../testdata")
-        .join(name)
 }
 
 /// Whether the packed Arial/Consola fonts are installed.
