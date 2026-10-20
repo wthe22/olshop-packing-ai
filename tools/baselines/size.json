@@ -1,9 +1,7 @@
 {
   "note": "Files over their ceiling (Rust production 800, Rust test 800, Svelte/TypeScript 500), measured by tools/check-size.mjs. Only shrinks: a new entry is never added.",
   "files": {
-    "app/src/lib/CategoriesScreen.svelte": 732,
     "app/src/lib/NewBatchScreen.svelte": 509,
-    "app/src/lib/PlanScreen.svelte": 804,
     "crates/engine/tests/day_state.rs": 978
   }
 }

@@ -4,9 +4,6 @@
     "crates/engine/tests/day_state.rs": {
       "cognitive_complexity": 1
     },
-    "app/src/lib/PlanScreen.svelte": {
-      "svelte_ignore": 4
-    },
     "app/vite.config.js": {
       "ts_ignore": 1
     },

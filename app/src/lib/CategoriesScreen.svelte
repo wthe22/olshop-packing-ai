@@ -8,16 +8,13 @@
   // no longer exists) and it must be awaited.
   import { confirm } from "@tauri-apps/plugin-dialog";
   import * as api from "../lib/api";
-  import {
-    categoriesGrouping,
-    normalizeGroupingName,
-    groupingFile,
-    groupingProblem,
-    type GroupingNameProblem,
-  } from "../lib/groupings";
+  import { categoriesGrouping, groupingFile } from "../lib/groupings";
   import { texts } from "../texts";
-  import BoxesEditor from "./BoxesEditor.svelte";
-  import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
+  import CategoryRow from "./CategoryRow.svelte";
+  import CategoryText from "./CategoryText.svelte";
+  import GroupingBar from "./GroupingBar.svelte";
+  import { boxesToCondition, type CatEntry } from "./categoryEntry";
+  import { fromRustTree, newTree } from "./conditions";
   import { unconfigured } from "./unconfigured";
 
   let {
@@ -36,22 +33,6 @@
     onSaved: () => void;
   } = $props();
 
-  interface CatEntry {
-    code: string;
-    name: string;
-    /// The condition text; `null` for the last entry with no condition (it takes the rest).
-    when: string | null;
-    /// The index the entry had in the loaded file, so the save keeps its comment and text.
-    origin: number | null;
-    mode: "boxes" | "text";
-    tree: UiTree;
-    text: string;
-    error: string;
-    /// The boxes editor's own error (e.g. an empty group), which a recount must not clear.
-    boxesError: string;
-    count: number | null;
-  }
-
   let entries = $state<CatEntry[]>([]);
   let generalError = $state("");
   let loadError = $state("");
@@ -63,9 +44,6 @@
   // (04 › *Sets*).
   let groupings = $state<api.GroupingView[]>([]);
   let currentGrouping = $state(api.DEFAULT_GROUPING);
-  let newGroupingOpen = $state(false);
-  let newGroupingName = $state("");
-  let groupingError = $state("");
 
   const currentFile = $derived(groupingFile(groupings, currentGrouping));
   const canDeleteGrouping = $derived(currentGrouping !== api.DEFAULT_GROUPING);
@@ -142,8 +120,6 @@
   async function changeGrouping(name: string) {
     if (name === currentGrouping) return;
     currentGrouping = name;
-    groupingError = "";
-    newGroupingOpen = false;
     loadError = "";
     fileMode = false;
     try {
@@ -153,41 +129,21 @@
     }
   }
 
-  /// **+ New set** (08 › *5. Categories*): ask for a name; **Create** writes
-  /// `categories/<name>.toml` (the set's file) and shows it.
-  function openNewSet() {
-    newGroupingOpen = true;
-    newGroupingName = "";
-    groupingError = "";
-  }
-
-  function newGroupingProblemText(problem: GroupingNameProblem): string {
-    if (problem === "empty") return texts.categories.groupingNeedsName;
-    if (problem === "reserved") return texts.categories.groupingNameReserved;
-    return texts.categories.groupingNameTaken;
-  }
-
-  async function createGrouping() {
-    const problem = groupingProblem(newGroupingName, groupings);
-    if (problem !== null) {
-      groupingError = newGroupingProblemText(problem);
-      return;
-    }
-    const name = normalizeGroupingName(newGroupingName);
+  /// **+ New set** (08 › *5. Categories*): **Create** writes `categories/<name>.toml` (the set's
+  /// file) and shows it. The caller shows the refusal.
+  async function createGrouping(name: string) {
     busy = true;
     try {
       await api.newGrouping(name, null);
       const list = await api.groupingsList();
       groupings = list.groupings;
       currentGrouping = name;
-      newGroupingOpen = false;
       loadError = "";
       fileMode = false;
       await loadGrouping();
-    } catch (err) {
-      groupingError = String(err);
+    } finally {
+      busy = false;
     }
-    busy = false;
   }
 
   /// **Delete set** (08 › *5. Categories*): asks first, then deletes that set's file, whose
@@ -202,14 +158,12 @@
       const list = await api.groupingsList();
       groupings = list.groupings;
       currentGrouping = api.DEFAULT_GROUPING;
-      groupingError = "";
       loadError = "";
       fileMode = false;
       await loadGrouping();
-    } catch (err) {
-      groupingError = String(err);
+    } finally {
+      busy = false;
     }
-    busy = false;
   }
 
   function payload(): api.EntryInput[] {
@@ -239,60 +193,6 @@
     }
   }
 
-  async function onBoxes(entry: CatEntry) {
-    try {
-      entry.when = await api.treeToCondition(toRustTree(entry.tree));
-      entry.boxesError = "";
-    } catch (err) {
-      entry.boxesError = String(err);
-      entry.error = entry.boxesError;
-      return;
-    }
-    await refresh();
-  }
-
-  function onText(entry: CatEntry) {
-    entry.when = entry.text;
-    entry.boxesError = "";
-    refresh();
-  }
-
-  async function toText(entry: CatEntry) {
-    entry.text = entry.when ?? "";
-    entry.mode = "text";
-    entry.boxesError = "";
-    await refresh();
-  }
-
-  async function toBoxes(entry: CatEntry) {
-    try {
-      entry.tree = fromRustTree(await api.conditionToTree(entry.text));
-      entry.when = entry.text;
-      entry.mode = "boxes";
-      entry.boxesError = "";
-      await refresh();
-    } catch (err) {
-      entry.boxesError = String(err);
-      entry.error = entry.boxesError;
-    }
-  }
-
-  function setRest(entry: CatEntry, checked: boolean) {
-    if (checked) {
-      entry.when = null;
-      entry.boxesError = "";
-      entry.error = "";
-      refresh();
-    } else {
-      entry.when = "";
-      entry.text = "";
-      entry.tree = newTree();
-      entry.mode = "boxes";
-      entry.boxesError = "";
-      onBoxes(entry);
-    }
-  }
-
   function addCategory() {
     const at = Math.max(0, entries.length - 1); // above the last (rest) entry
     const entry: CatEntry = {
@@ -309,6 +209,10 @@
     };
     entries.splice(at, 0, entry);
     onBoxes(entry); // an empty group is an error ("This group is empty") until a row is added
+  }
+
+  async function onBoxes(entry: CatEntry) {
+    if (await boxesToCondition(entry)) await refresh();
   }
 
   async function removeCategory(index: number) {
@@ -376,45 +280,16 @@
 </script>
 
 <div class="categories">
-  <!-- 08 › *5. Categories*: the set row — the chooser, **+ New set** and **Delete set** — and the
-       file the chosen set is kept in. The set `default` is the data folder's own
-       `categories.toml` and cannot be deleted. -->
-  <div class="grouping-row">
-    <label class="grouping">
-      {texts.categories.grouping}:
-      <select value={currentGrouping} onchange={(event) => changeGrouping(event.currentTarget.value)}>
-        {#each groupings as option (option.name)}
-          <option value={option.name}>{option.name}</option>
-        {/each}
-      </select>
-    </label>
-    <button disabled={busy} onclick={openNewSet}>{texts.categories.newGrouping}</button>
-    <button disabled={!canDeleteGrouping || busy} onclick={removeGrouping}>
-      {texts.categories.deleteGrouping}
-    </button>
-    {#if newGroupingOpen}
-      <input
-        class="grouping-name"
-        placeholder={texts.categories.name}
-        bind:value={newGroupingName}
-        onkeydown={(event) => event.key === "Enter" && createGrouping()}
-      />
-      <button class="primary" disabled={busy} onclick={createGrouping}>
-        {texts.categories.createGrouping}
-      </button>
-      <button disabled={busy} onclick={() => (newGroupingOpen = false)}>
-        {texts.categories.cancel}
-      </button>
-    {/if}
-    <span class="grow"></span>
-    {#if currentFile}
-      <span class="file-line">{texts.categories.groupingFile(currentFile)}</span>
-    {/if}
-  </div>
-
-  {#if groupingError}
-    <p class="error">{groupingError}</p>
-  {/if}
+  <GroupingBar
+    {groupings}
+    current={currentGrouping}
+    file={currentFile}
+    canDelete={canDeleteGrouping}
+    {busy}
+    onSelect={changeGrouping}
+    onCreate={createGrouping}
+    onDelete={removeGrouping}
+  />
 
   <p class="hint">{texts.categories.hint}</p>
 
@@ -423,25 +298,17 @@
   {/if}
 
   {#if fileMode}
-    <div class="file">
-      <label for="file-text">{texts.categories.fileText}</label>
-      <textarea
-        id="file-text"
-        rows="18"
-        bind:value={fileText}
-        oninput={() => checkFile()}
-      ></textarea>
-      {#if fileError}
-        <p class="error">{fileError}</p>
-      {/if}
-      <div class="actions">
-        <span class="grow"></span>
-        <button onclick={() => (fileMode = false)}>{texts.categories.cancel}</button>
-        <button class="primary" disabled={!!fileError || busy} onclick={saveFile}
-          >{texts.categories.save}</button
-        >
-      </div>
-    </div>
+    <CategoryText
+      text={fileText}
+      error={fileError}
+      {busy}
+      onText={(value) => {
+        fileText = value;
+        checkFile();
+      }}
+      onCancel={() => (fileMode = false)}
+      onSave={saveFile}
+    />
   {:else}
     {#if noCategories}
       <p class="no-categories">{texts.noCategories}</p>
@@ -452,81 +319,17 @@
     {/if}
 
     {#each entries as entry, index (entry)}
-      <section class="category">
-        <div class="cat-head">
-          <input
-            class="code"
-            aria-label={texts.categories.code}
-            bind:value={entry.code}
-            oninput={() => refresh()}
-          />
-          <input
-            class="name"
-            aria-label={texts.categories.name}
-            bind:value={entry.name}
-            oninput={() => refresh()}
-          />
-          <span class="grow"></span>
-          {#if entry.error}
-            <span class="count mark">✗</span>
-          {:else if draftBatch !== null && entry.count !== null}
-            <span class="count">{texts.categories.inBatch(draftBatch, entry.count)}</span>
-          {/if}
-          <button
-            title={texts.categories.moveUp}
-            disabled={!canMoveUp(index)}
-            onclick={() => move(index, -1)}>↑</button
-          >
-          <button
-            title={texts.categories.moveDown}
-            disabled={!canMoveDown(index)}
-            onclick={() => move(index, 1)}>↓</button
-          >
-          <button title={texts.categories.delete} onclick={() => removeCategory(index)}>🗑</button>
-        </div>
-
-        {#if entry.when === null}
-          <p class="rest">{texts.categories.takesRest}</p>
-        {:else if entry.mode === "boxes"}
-          <BoxesEditor tree={entry.tree} onEdit={() => onBoxes(entry)} />
-        {:else}
-          <textarea
-            class="condition-text"
-            rows="3"
-            bind:value={entry.text}
-            oninput={() => onText(entry)}
-          ></textarea>
-        {/if}
-
-        {#if entry.error}
-          <p class="error">{entry.error}</p>
-        {/if}
-
-        <div class="cat-foot">
-          {#if index === entries.length - 1}
-            <label class="rest-toggle">
-              <input
-                type="checkbox"
-                checked={entry.when === null}
-                onchange={(event) => setRest(entry, event.currentTarget.checked)}
-              />
-              {texts.categories.takesRest}
-            </label>
-          {/if}
-          {#if entry.when !== null}
-            {#if entry.mode === "boxes"}
-              <button onclick={() => toText(entry)}>{texts.categories.textView}</button>
-            {:else}
-              <button disabled={!!entry.error} onclick={() => toBoxes(entry)}
-                >{texts.categories.boxes}</button
-              >
-              <button class="link" onclick={() => (showHelp = !showHelp)}
-                >{texts.categories.helpExamples}</button
-              >
-            {/if}
-          {/if}
-        </div>
-      </section>
+      <CategoryRow
+        {entry}
+        {draftBatch}
+        canUp={canMoveUp(index)}
+        canDown={canMoveDown(index)}
+        last={index === entries.length - 1}
+        onChange={refresh}
+        onMove={(delta) => move(index, delta)}
+        onRemove={() => removeCategory(index)}
+        onHelp={() => (showHelp = !showHelp)}
+      />
     {/each}
 
     <div class="actions">
@@ -557,35 +360,6 @@
     max-width: 60rem;
   }
 
-  /* 08 › *5. Categories*: the set row at the top of the screen. */
-  .grouping-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.6rem;
-    flex-wrap: wrap;
-  }
-
-  .grouping {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: #4a4a4a;
-  }
-
-  .grouping select {
-    max-width: 14rem;
-  }
-
-  .grouping-row .grouping-name {
-    width: 12rem;
-  }
-
-  .grouping-row .file-line {
-    color: #6a6a6a;
-    font-variant-numeric: tabular-nums;
-  }
-
   .hint {
     margin: 0 0 0.75rem;
     color: #4a4a4a;
@@ -598,68 +372,6 @@
     font-weight: 600;
   }
 
-  .category {
-    border: 1px solid #d5d5d5;
-    border-radius: 6px;
-    padding: 0.5rem 0.75rem;
-    margin-bottom: 0.75rem;
-    background: #ffffff;
-  }
-
-  .cat-head {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .cat-head .code {
-    width: 3.5rem;
-  }
-
-  .cat-head .name {
-    width: 14rem;
-  }
-
-  .grow {
-    flex: 1;
-  }
-
-  .count {
-    color: #4a4a4a;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .count.mark {
-    color: #8a1f1f;
-    font-weight: 600;
-  }
-
-  .rest {
-    margin: 0.3rem 0;
-    color: #6a6a6a;
-    font-style: italic;
-  }
-
-  .condition-text {
-    width: 100%;
-    font-family: Consolas, monospace;
-  }
-
-  .cat-foot {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.35rem;
-  }
-
-  .rest-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: 0.9rem;
-    color: #4a4a4a;
-  }
-
   .actions {
     display: flex;
     align-items: center;
@@ -668,16 +380,8 @@
     border-top: 1px solid #d5d5d5;
   }
 
-  .file label {
-    display: block;
-    margin-bottom: 0.3rem;
-    font-weight: 600;
-  }
-
-  .file textarea {
-    width: 100%;
-    font-family: Consolas, monospace;
-    font-size: 0.9rem;
+  .grow {
+    flex: 1;
   }
 
   .help {
@@ -697,26 +401,8 @@
     font-family: Consolas, monospace;
   }
 
-  .link {
-    padding: 0;
-    border: none;
-    background: none;
-    color: #1f6feb;
-    cursor: pointer;
-  }
-
   @media (prefers-color-scheme: dark) {
-    .category {
-      background: #2b2b2b;
-      border-color: #444444;
-    }
-
-    .hint,
-    .count,
-    .rest,
-    .rest-toggle,
-    .grouping,
-    .grouping-row .file-line {
+    .hint {
       color: #b0b0b0;
     }
 
