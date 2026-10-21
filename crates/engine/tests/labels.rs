@@ -2,8 +2,8 @@
 
 use packing_engine::ids::{OrderId, TrackingId};
 use packing_engine::label::{
-    Courier, CourierTable, deduce_courier, deduce_courier_in, find_order_id, find_ship_by,
-    find_tracking_id,
+    Courier, CourierTable, courier_data, deduce_courier, deduce_courier_in, find_order_id,
+    find_ship_by, find_tracking_id,
 };
 use packing_engine::text::LogoImage;
 
@@ -89,10 +89,11 @@ fn an_order_id_is_the_eighteen_digits_between_boundaries() {
 
 #[test]
 fn a_tracking_id_is_the_most_frequent_token_and_never_the_order_id() {
+    let table = courier_data();
     let order_id = OrderId::new("580000000000000001");
     // The Order ID printed twice is not a tracking ID.
     assert_eq!(
-        find_tracking_id(&format!("{order_id} {order_id}"), &order_id),
+        find_tracking_id(&format!("{order_id} {order_id}"), &order_id, table),
         None
     );
 
@@ -102,11 +103,15 @@ fn a_tracking_id_is_the_most_frequent_token_and_never_the_order_id() {
             "JY0000001234 junk JY0000001234 JY0000001234 JY0000009999",
             Some("JY0000001234"),
         ),
+        (
+            "JX0000001234 junk JX0000001234 JX0000001234",
+            Some("JX0000001234"),
+        ),
         ("T K P 0 0 0 0 0 0 0 1 0 6 a b c", Some("TKP0000000106")),
     ];
     for (text, expected) in cases {
         assert_eq!(
-            find_tracking_id(text, &OrderId::new(""))
+            find_tracking_id(text, &OrderId::new(""), table)
                 .as_ref()
                 .map(TrackingId::as_str),
             expected,

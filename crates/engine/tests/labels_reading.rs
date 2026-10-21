@@ -2,6 +2,7 @@
 //! (03, 07). Hand-built pages only.
 
 use packing_engine::ids::{OrderId, TrackingId};
+use packing_engine::label::{Courier, CourierTable};
 use packing_engine::orders::{
     LogoAnswer, OrderLabel, PageRef, ReadError, Warning, display_name, read_batch,
 };
@@ -330,6 +331,42 @@ fn the_reading_warns_about_a_quantity_difference_a_missing_tracking_id_and_an_un
             .iter()
             .any(|w| matches!(w, Warning::TrackingIdMissing { order_ids } if order_ids == &vec![OrderId::new("580000000000000004")]))
     );
+}
+
+#[test]
+fn the_courier_file_decides_which_tracking_forms_are_read() {
+    // The owner's `couriers.toml`: a form the built-in list does not carry.
+    let file = CourierTable {
+        couriers: vec![Courier::new("Alpha", &[], &[], Some("AC\\d{10}"), &[])],
+        not_courier: Vec::new(),
+    };
+
+    // The form the file carries is read.
+    let p0 = slip_page(
+        "AC0000001234\n580000000000000001",
+        &one_row(),
+        Some(1),
+        None,
+    );
+    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], &file).unwrap();
+    assert_eq!(
+        reading.orders[0]
+            .order
+            .tracking_id
+            .as_ref()
+            .map(TrackingId::as_str),
+        Some("AC0000001234")
+    );
+
+    // A form only the built-in list carries is not: the file is the authority.
+    let p0 = slip_page(
+        "JY0000001234\n580000000000000002",
+        &one_row(),
+        Some(1),
+        None,
+    );
+    let reading = read_batch(vec![(0usize, 0usize, p0)], &["a.pdf"], &file).unwrap();
+    assert!(reading.orders[0].order.tracking_id.is_none());
 }
 
 #[test]

@@ -118,7 +118,7 @@ where
             no_slip.push((file, page));
         }
 
-        let index = find_or_create_group(&mut groups, &order_id, &page_text);
+        let index = find_or_create_group(&mut groups, &order_id, &page_text, table);
         collect_logos(
             &mut groups[index],
             &page_text,
@@ -188,7 +188,12 @@ fn page_order_id(
 }
 
 /// The index of `order_id`'s group, started from this page when it is the order's first page.
-fn find_or_create_group(groups: &mut Vec<Group>, order_id: &OrderId, page: &PageText) -> usize {
+fn find_or_create_group(
+    groups: &mut Vec<Group>,
+    order_id: &OrderId,
+    page: &PageText,
+    table: &CourierTable,
+) -> usize {
     match groups.iter().position(|group| group.order_id == *order_id) {
         Some(index) => index,
         None => {
@@ -200,7 +205,7 @@ fn find_or_create_group(groups: &mut Vec<Group>, order_id: &OrderId, page: &Page
                 qty_total: None,
                 customer_message: String::new(),
                 ship_by: None,
-                tracking_id: label::find_tracking_id(&page.text, order_id),
+                tracking_id: label::find_tracking_id(&page.text, order_id, table),
                 text: page.text.clone(),
                 logos: Vec::new(),
             });

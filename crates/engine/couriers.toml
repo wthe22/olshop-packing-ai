@@ -18,7 +18,8 @@
 #              only where no `logo` entry matched. A list like `logo`
 #   tracking   the tracking-ID form: a token (or a match in the whitespace-collapsed text) must
 #              match it fully, and it need not be repeated. The form gives the *candidate*
-#              couriers; the courier is named when the logo names one of them
+#              couriers; the courier is named when the logo names one of them. The owner's file
+#              in the data folder is what decides the read, so a new form is a line here
 #   text       a brand line or web address printed on the label, used only where the page has
 #              no image in the header band at all (the logo's stand-in)
 
@@ -28,7 +29,7 @@ not_courier = []
 name = "J&T Express"
 logo = ["39b9b7b9f61d0e7f"]   # 975x377 px, 14,351 bytes, the same asset in every sample file
 shape = []
-tracking = "JY\\d{10}"
+tracking = "J[XY]\\d{10}"     # JY on every sample file, JX on the 2026-10-21 one (page 46)
 text = ["jet.co.id"]
 
 [[courier]]

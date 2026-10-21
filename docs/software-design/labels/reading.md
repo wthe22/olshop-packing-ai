@@ -5,7 +5,7 @@
 | Value | Comes from |
 |---|---|
 | `Order ID` | The label text (two-step search below) |
-| `tracking_id` | The label text |
+| `tracking_id` | The label text, in one of the forms of the data folder's `couriers.toml` ([courier.md](courier.md)) |
 | `courier` | Deduced from the label ([courier.md](courier.md)). An instant-service label names none — its courier comes from the order export |
 | `ship_by` | The label `In transit by: dd/mm/yyyy hh:mm` |
 | item lines | The slip table (product name, variation, quantity) |

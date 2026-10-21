@@ -28,12 +28,14 @@ the same way.
    once**, the prompt gaining a **Not a courier** answer for a channel strip
    ([the logo prompt](../ui/new-batch.md)).
 2. **The tracking-ID form** ([business-process 02](../../business-process/02-data-sources.md)):
-   `JY` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo;
+   `JY` or `JX` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo;
    `TKP` + 10 digits → iD Express (IDX); `SPXID` + 11 digits → SPX Express (the Shopee-style
    label, which prints a check letter around the number: `Resi:` without it, `SPXID…A` eight times
    on the page with it). The form must match a token (or a match in the whitespace-collapsed text)
    **fully**; it does not have to be repeated — on the boxed layouts the tracking ID is printed
-   once ([business-process 02](../../business-process/02-data-sources.md)).
+   once ([business-process 02](../../business-process/02-data-sources.md)). The forms are the
+   owner's data, in the data folder's `couriers.toml`, and the reader takes them from that file:
+   a form the platform adds is a line there, not a program change.
 3. **A masked logo is hashed by appearance.** A courier can print its logo as an image whose
    shape is a `/SMask` and whose base is one flat colour (J&T Cargo: 331 bytes for 680×156): the
    base's bytes name no courier, and the platform re-rastered the same wordmark at two sizes

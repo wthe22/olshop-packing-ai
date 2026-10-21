@@ -8,7 +8,7 @@ use regex::Regex;
 
 use crate::ids::{OrderId, TrackingId};
 
-use super::couriers;
+use super::CourierTable;
 
 /// The characters `str.strip` removes around a tracking token (Python `_TOKEN_TRIM`).
 const TOKEN_TRIM: &str = " \t.,;:";
@@ -99,15 +99,20 @@ fn most_frequent(counts: &[(String, usize)]) -> Option<&str> {
 }
 
 /// `labels.find_tracking_id`: the most frequent tracking token of the text, `None` when none
-/// matches a courier form.
-pub fn find_tracking_id(text: &str, order_id: &OrderId) -> Option<TrackingId> {
+/// matches a courier form. `table` is the data folder's courier data: the owner's file decides
+/// which forms name a courier, so a form added there is read without a program change.
+pub fn find_tracking_id(
+    text: &str,
+    order_id: &OrderId,
+    table: &CourierTable,
+) -> Option<TrackingId> {
     let mut counts: Vec<(String, usize)> = Vec::new();
     for raw in text.split_whitespace() {
         let token = raw.trim_matches(|c| TOKEN_TRIM.contains(c));
         if token.is_empty() || token == order_id.as_str() {
             continue;
         }
-        for courier in couriers() {
+        for courier in &table.couriers {
             if courier
                 .tracking_full
                 .as_ref()
@@ -121,7 +126,7 @@ pub fn find_tracking_id(text: &str, order_id: &OrderId) -> Option<TrackingId> {
     if counts.is_empty() {
         // Spaced-out IDX/Tokopedia pages: the tracking ID is only whole in the collapsed text.
         let collapsed = whitespace_re().replace_all(text, "");
-        for courier in couriers() {
+        for courier in &table.couriers {
             let (Some(pattern), Some(re)) = (&courier.tracking, &courier.tracking_re) else {
                 continue;
             };

@@ -35,7 +35,7 @@
 | Column | Use |
 |---|---|
 | `Order ID` | 18 digits, printed as text on the TikTok and Tokopedia labels. **The Shopee-style label prints none** (below): it keys the order by its own `No.Pesanan` value |
-| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` + 10 digits; SiCepat 12 digits starting `00`; iD Express (the platform's name: IDX) `TKP` + 10 digits; J&T Cargo 12 digits starting `57`; SPX Express `SPXID` + 11 digits (the Shopee-style label; this export has no row for it). Both sample CSVs agree row for row: `Shipping Provider Name` J&T Express on all 2,086 `JY` rows, SiCepat on all 291 `00` rows, IDX on all 14 `TK…` rows, J&T Cargo on both `57` rows (their `Delivery Option` is `Kargo`) |
+| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` or `JX` + 10 digits; SiCepat 12 digits starting `00`; iD Express (the platform's name: IDX) `TKP` + 10 digits; J&T Cargo 12 digits starting `57`; SPX Express `SPXID` + 11 digits (the Shopee-style label; this export has no row for it). Both sample CSVs agree row for row: `Shipping Provider Name` J&T Express on all 2,086 `JY` rows, SiCepat on all 291 `00` rows, IDX on all 14 `TK…` rows, J&T Cargo on both `57` rows (their `Delivery Option` is `Kargo`). A J&T Express page of the 2026-10-21 file prints `JX` + 10 digits instead, under the same logo and beside the same `www.jet.co.id` line; the 2026-10-06 exports hold no `JX` row (they are four days older) |
 | `Package ID` | 19 digits. Exactly one per order in the samples |
 | `SKU ID` | 19 digits, always filled. The only stable item identifier |
 | `Product Name` | Long (up to ~80 characters). The part before the first `\|` is the short product name, e.g. `Spion Beat \| Kaca Spion Motor …` → `Spion Beat` |
@@ -240,11 +240,13 @@ are usually a day apart (a download in the small hours or at 08:41 is the day be
 | `2026-10-13 jt-cargo.pdf` | 2026-10-13 08:46:21 | 201 | 14/10/2026 | J&T Express 182 · SiCepat 17 · J&T Cargo 1 · 1 slip continuation |
 | `2026-10-15 spx.pdf` | — * | 3 | `Batas Kirim` 15/10/2026 | **SPX Express 3** — the Shopee-style label, one order a page |
 | `2026-10-15 tp-instant.pdf` | — * | 1 | `In transit by` 15/10/2026 10:00 | **instant-service 1** — a Tokopedia order |
+| `2026-10-21 JX.pdf` | — * | 63 | `Estimated Date` 22/10/2026 | J&T Express 59 (one page printing `JX` + 10 digits, the rest `JY`) · SiCepat 4 |
 | `2026-10-06_14-26-17_orders-export_1of2.csv` | — | 957 rows | orders created 02–06/10/2026 | — |
 | `2026-10-06_16-29-15_orders-export_2of2.csv` | — | 1,436 rows | orders created 02–06/10/2026 | — |
 
-\* the two 2026-10-15 files are the owner's own names and carry no platform stamp; the file's own
-timestamp stands in (2026-10-15 12:20 and 08:35).
+\* the three files the owner named by hand (`2026-10-15 spx.pdf`, `2026-10-15 tp-instant.pdf`,
+`2026-10-21 JX.pdf`) carry no platform stamp; the file's own timestamp stands in (2026-10-15 12:20
+and 08:35, 2026-10-21 08:02).
 
 "Labels' own date" is what the pages print — the day the parcels were to go out, from
 `Estimated Date`, or from the deadline (`In transit by`, `Batas Kirim`) on the styles that print no
@@ -252,7 +254,7 @@ estimate. The two `00:03` files are the **plain label export**: no slip, no `In 
 their `Estimated Date:` caption is printed with no value, so those pages carry no date of their own.
 Every other file is the *Shipping label + Packing slip* export.
 
-The ten PDFs are **1,226 pages** in all. The counts the sections above quote as "12 files, 1,873
+The eleven PDFs are **1,289 pages** in all. The counts the sections above quote as "12 files, 1,873
 pages" were measured while the folder also held four files it no longer has: the plain-label
 `2026-10-07_00-03-00_labels_1of3.pdf` (200 pages), the slip export's
 `2026-10-07_07-16-41_labels+slips_1of3.pdf` and `2026-10-07_07-17-04_labels+slips_3of3.pdf` (200 and
