@@ -27,7 +27,10 @@ the owner checks the counts and presses **Save batch**.
 - **Rows** are the picks of the grouping this batch uses ([New batch › The grouping](new-batch.md#the-grouping)), in
   order; each takes its orders from what the rows above left. The header names that grouping
   (*Batch 3 · grouping default · 2 files · 257 pages · 256 orders · 0 already saved*); the
-  numbers `#` are the saved-PDF numbers this batch will get (continuing the day).
+  numbers `#` are the saved-PDF numbers this batch will get (continuing the session).
+  When the batch held repeats, the header also says `· 14 copies left out ▸`: the list of the copies
+  left out and the copy that stays, and **Change…** back to [Repeated orders](duplicates.md)
+  (plan edits made so far are lost).
 - **Use** unticked = skip this pick for this batch only (its orders fall to the rows below).
   The rules file is not changed. Unticking the rest row itself is an open question
   ([Q-UI-1](../questions/ui.md)).
@@ -52,7 +55,7 @@ the owner checks the counts and presses **Save batch**.
   │  6-03  Sepatu Standar Samping Motor ×3                                      8 orders │
   ```
 - **Warnings ▸** lists the read warnings in plain words (see *Messages*), e.g. couriers not
-  recognised and orders already saved for the day with their batch and time.
+  recognised and orders already saved in the session with their batch and time.
 - Every change (tick, move, add, edit categories) recounts all rows immediately.
 - **Save batch** writes the batch ([one batch](../app/batch.md)) and returns to the Day screen;
   the write and the check before saving run on their own thread

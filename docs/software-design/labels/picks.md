@@ -6,7 +6,7 @@
   folder, or a folder that has none — has one catch-all entry that takes every order
   ([inputs](../app/inputs.md)).
 - **Leftovers**: orders matching no pick stay in "the rest" and are saved as a final PDF.
-- **Duplicate guard**: an order already saved earlier the same day (the day's `state.json`,
+- **Duplicate guard**: an order already saved earlier in the same session (the session's `state.json`,
   [data-folder](../app/data-folder.md)) is left out of the saved PDFs and listed in a warning
   with its Order ID, tracking ID and the time of its first save.
 
@@ -20,8 +20,8 @@
 
 ## Numbering and file names
 
-- **Saved PDFs** are numbered through the day `1`, `2`, `3`, …; a later batch the same day
-  continues the numbering from the day's `state.json`.
+- **Saved PDFs** are numbered through the session `1`, `2`, `3`, …; a later batch of the same session
+  continues the numbering from the session's `state.json`.
 - **Runs** inside a saved PDF are numbered `01`, `02`, … in printed order. A run is written
   `<pdf>-<run>`, e.g. `3-05` (saved PDF 3, run 05), in the packing list.
 - **Saved-PDF file name**: `<n> <code> <name> ×<orders>.pdf`, e.g. `3 Z Lainnya ×393.pdf`.

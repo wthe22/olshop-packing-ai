@@ -16,5 +16,7 @@ owner sees, what the owner wants. A resolved item is deleted; its answer is writ
 [../development/plan/](../development/plan/README.md). Numbers are never reused. A scope file stays in
 place when it holds no item, so the next finding of that scope has a home.
 
-Open item: `rules.md` (R-RULES-2), from the latest dev review; it waits for the owner's answer to
-[Q-RULES-2](../software-design/questions/rules.md).
+Open items: `rules.md` (R-RULES-2), which waits for the owner's answer to
+[Q-RULES-2](../software-design/questions/rules.md); `ui.md` (R-UI-4, R-UI-5), `label.md` (R-LABEL-1) and
+`app.md` (R-APP-1, R-APP-2), the feature round of sessions, repeated orders and the page check
+([questions](../software-design/questions/README.md)).

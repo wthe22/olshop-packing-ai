@@ -6,13 +6,15 @@ made-up IDs and counts.
 
 | Screen | Content |
 |---|---|
-| [Day](day.md) | The start screen: the batches saved for the day, the way to the next batch, revert and amend |
+| [Sessions panel](sessions.md) | The side panel listing every session of every day, shown or hidden, and the new-session form |
+| [Day](day.md) | The start screen: the batches saved in the open session, the way to the next batch, revert and amend |
 | [New batch](new-batch.md) | Choosing the label files and the grouping of the batch, reading them and the logo prompt |
+| [Repeated orders](duplicates.md) | The orders that appear more than once in a batch: the files that hold them, the groups and the choice of the copy that stays |
 | [Plan](plan.md) | The picks, the per-batch changes, the packing list and Save |
 | [Messages](messages.md) | Every stop message and warning, and what to do |
 | [Categories](categories.md) | The boxes editor for a grouping (the data folder's `categories.toml` or a file in `categories/`) |
 | [Settings](settings.md) | The settings and the data folder |
-| [Search](search.md) | Finding saved orders of the day |
+| [Search](search.md) | Finding saved orders of the session, or of all sessions |
 | [Start](start.md) | Finding the data folder at every start |
 
 ## Daily use in one picture
@@ -22,7 +24,8 @@ made-up IDs and counts.
      ▲                         choose files                               adjust picks       │
      └────────────────────────────── back to the Day screen, new batch shown ◄────────────────┘
  From the Day screen: [Open] a saved PDF to print it · [Amend] / [Revert] the last batch ·
- [Search] · [Categories] · [Settings]
+ [Search] · [Categories] · [Settings] · the side panel: another session
+ Between (reading…) and Plan: the logo prompt, and Repeated orders when an order appears twice.
 ```
 
 A normal batch: **New batch** → **Add files…** (choose the new downloads) → **Read labels** →
@@ -33,7 +36,7 @@ packing list to print.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ Packing v0.1  ·  ◀  Wed 7 Oct 2026  ▶  [Today]      [Search]  [Categories]  [Settings] │
+│ Packing v0.1  ·  [☰]  Wed 7 Oct 2026 · Main         [Search]  [Categories]  [Settings] │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                        │
 │                               (the current screen)                                     │
@@ -43,8 +46,8 @@ packing list to print.
 
 - **Packing v0.1** is the window title and the title bar of every screen: the program's name and its
   version, from the one place ([Settings › the version](settings.md#the-version)).
-- **Day** in the title bar: the day folder everything is saved to. ◀ ▶ step a day; **Today**
-  goes back. Changing the day while a draft is open asks first ("Discard the batch being
-  prepared?").
+- **The day and the session** in the title bar: the session folder everything is saved to. **[☰]**
+  shows or hides the [Sessions panel](sessions.md), which opens another session; changing the
+  session while a draft is open asks first ("Discard the batch being prepared?").
 - **Search**, **Categories** and **Settings** open over the current screen; closing them returns to it
   (an open draft is kept and recounted).

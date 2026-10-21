@@ -11,12 +11,12 @@ The rules and the files that hold them:
 
 - [Reading the labels](../labels/reading.md) — the Order ID of a page (three-step search), multi-page orders, reading the packing slip by text position (columns, rows, wrapped cells, the `Qty Total` check)
 - [Courier deduction](../labels/courier.md) — the courier from the label text and the tracking-ID form (`couriers.toml`)
-- [Picks](../labels/picks.md) — picks taken in order from what is left, the rest, runs inside a saved PDF, saved-PDF numbers through the day and run numbers `3-05`, the duplicate guard
+- [Picks](../labels/picks.md) — picks taken in order from what is left, the rest, runs inside a saved PDF, saved-PDF numbers through the session and run numbers `3-05`, the duplicate guard
 - [Packing list](../labels/packing-list.md) — the three layouts `full`, `summary`, `pick` and their look
 - [Rules file](../rules-file/README.md) — the groupings of categories (`categories.toml` and `categories/`)
 - [Conditions](../rules-file/conditions.md) — the condition language
 - [Screens](../ui/README.md) — daily use and the window frame
-- The files of this folder: [inputs.md](inputs.md), [batch.md](batch.md), [saved-pdf-check.md](saved-pdf-check.md), [data-folder.md](data-folder.md), [architecture.md](architecture.md), [program.md](program.md)
+- The files of this folder: [inputs.md](inputs.md), [batch.md](batch.md), [sessions.md](sessions.md), [duplicates.md](duplicates.md), [saved-pdf-check.md](saved-pdf-check.md), [data-folder.md](data-folder.md), [architecture.md](architecture.md), [program.md](program.md)
 
 Owner decisions about how the app works:
 
@@ -27,7 +27,7 @@ Owner decisions about how the app works:
 | Plain labels (no packing slip) | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
 | Rules file vs interactive menu | One screen: the categories of the batch's grouping are applied in order as a proposal; the owner can skip, move or add a pick for this batch before saving ([Plan screen](../ui/plan.md)) |
 | Undo | **Revert** (undo the last batch) and **Amend** (redo the last batch in place), like git |
-| Output folder | `labels/<day>/batch <b>/` inside the data folder, one subfolder per batch, with a copy of the batch's label downloads |
+| Output folder | `labels/<session>/batch <b>/` inside the data folder, one subfolder per batch, with a copy of the batch's label downloads; a session is a day plus an optional name ([sessions](sessions.md)) |
 | Saved-PDF name | Suggested as `<n> <code> <name> ×<orders>.pdf` ([Numbering and file names](../labels/picks.md)); the owner can change the whole name before saving |
 | Packing-list default | One per batch (`whole`), layout `pick` (changeable per batch) |
 | Fields in conditions | Only fields the label/slip carry ([the fields the conditions can use](inputs.md#fields-the-conditions-can-use)) |
@@ -46,7 +46,9 @@ Owner decisions about how the app works:
 
 - [inputs.md](inputs.md) — the inputs, `couriers.toml`, the packing-slip requirement, the fields the conditions can use
 - [batch.md](batch.md) — one batch step by step, revert and amend, the packing list in a batch
-- [saved-pdf-check.md](saved-pdf-check.md) — the check before saving
-- [data-folder.md](data-folder.md) — the day folder and `state.json`
+- [sessions.md](sessions.md) — a day's sessions: the folder, what each holds, listing and creating
+- [duplicates.md](duplicates.md) — an order that appears more than once in a batch: copies, repeats, groups, the choice
+- [saved-pdf-check.md](saved-pdf-check.md) — the check before saving, every input page exactly once
+- [data-folder.md](data-folder.md) — the session folder and `state.json`
 - [architecture.md](architecture.md) — diagram, stack, code layout, text runs from PDFium
 - [program.md](program.md) — commands between the window and Rust, settings, the portable program folder

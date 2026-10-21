@@ -66,8 +66,10 @@ still cite old IDs (`D2`, `D24`, …); `archive/id-map.md` maps them to the new 
 | **Item line** | One product with a variation and a quantity inside an order, read from the packing slip |
 | **Packing list** | The set of item lines of one order; also the A4 sheet that lists the runs. Two orders with the same set are packed the same way |
 | **Pick** | One rule in a grouping; the app writes the orders it matches as one saved label PDF |
-| **Saved PDF** | The label PDF of one pick, numbered through the day (1, 2, 3, …) |
+| **Saved PDF** | The label PDF of one pick, numbered through the session (1, 2, 3, …) |
 | **Run** | Inside a saved PDF, consecutive orders with identical contents; numbered 01, 02, … and written `3-05` |
 | **Category** | An owner-defined rule ("name contains sepatu"): a pick, shown as a section heading in the app; one entry of a grouping |
 | **Grouping** | A named collection of categories; a batch is packed with the grouping chosen for it ([rules file](software-design/rules-file/README.md)) |
-| **Batch** | One round of arrange shipment → download → prepare, numbered 1, 2, 3, … within the day: one label download prepared and saved together (`labels/<day>/batch 2/`) |
+| **Batch** | One round of arrange shipment → download → prepare, numbered 1, 2, 3, … within the session: one label download prepared and saved together (`labels/<session>/batch 2/`) |
+| **Session** | A day plus an optional name (the one with no name is Main): one folder of batches and numbers. A day can hold several, e.g. one per shop |
+| **Copy** | One appearance of an order's label in the files. An order with two or more copies in a batch is a repeat |

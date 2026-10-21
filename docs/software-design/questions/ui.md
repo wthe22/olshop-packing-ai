@@ -34,7 +34,7 @@ writes one; every batch already has its `summary.txt`.
 
 **What the answer changes:** the *About* row of Settings and one small writer in the app.
 
-## Q-UI-3 — Search: which days, and what an order saved before search can show
+## Q-UI-3 — Search: which sessions, and what an order saved before search can show
 
 **Words.** The [Search panel](../ui/search.md) finds saved orders by the fields the rules can use
 (tracking ID, item name, quantity, courier, …). Each saved order keeps those fields in `state.json`
@@ -43,11 +43,11 @@ its items can be read again only from its `download/` copy.
 
 | Option | What the owner sees |
 |---|---|
-| **1. *This day* by default, *All days* as the other choice; an older order shows its IDs only** (**Default**) | Scope *This day* (the day in the title bar) or *All days* (every day folder's `state.json`). An order saved before search is found by Order ID or tracking ID only, and its row says *items not stored* |
-| 2. *This day* only | No scope control. Cheapest; an order from an earlier day cannot be found in the app |
-| 3. *All days*, older orders read again from their `download/` copy | Every order is searchable, old ones included. Each search over old days re-reads label files (about 4 MB per 600-order day), so searching many days is slow |
+| **1. *This session* by default, *All sessions* as the other choice; an older order shows its IDs only** (**Default**) | Scope *This session* (the session in the title bar, [sessions](../app/sessions.md)) or *All sessions* (every session folder's `state.json`). An order saved before search is found by Order ID or tracking ID only, and its row says *items not stored* |
+| 2. *This session* only | No scope control. Cheapest; an order from another session cannot be found in the app |
+| 3. *All sessions*, older orders read again from their `download/` copy | Every order is searchable, old ones included. Each search over old days re-reads label files (about 4 MB per 600-order day), so searching many sessions is slow |
 
-Recommended: **1** — the day on screen covers daily use, and the all-days search reads only small
+Recommended: **1** — the session on screen covers daily use, and the all-sessions search reads only small
 JSON files; the IDs of an older order are still found.
 
 **What the answer changes:** the scope control and the *items not stored* row of the Search panel,

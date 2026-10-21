@@ -13,5 +13,6 @@ Where a design file disagrees with the business process, the business process wi
 | [rules-file/](rules-file/README.md) | Scope RULES: the picks groupings (`categories.toml` and `categories/`) and the condition language |
 | [app/](app/README.md) | Scope APP: one batch, the data folder, `state.json`, revert and amend, the check before saving, architecture, the portable program folder |
 | [ui/](ui/README.md) | Scope UI: the window and every screen |
+| [workflow/](workflow/README.md) | The whole program in order, from opening a session to the saved batch: every step, rule and algorithm, to read and check |
 | [decisions/](decisions/README.md) | Settled choices of the owner, one record each (`D-<SCOPE>-n`) |
 | [questions/](questions/README.md) | Open choices of the owner, each with options and a default (`Q-<SCOPE>-n`) |

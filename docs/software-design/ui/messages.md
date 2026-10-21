@@ -10,8 +10,9 @@ written; warnings are listed and the batch can still be saved.
 | Stop | A file cannot be opened | **`<file>` cannot be read as a PDF.** It may be damaged or still downloading. Download it again. |
 | Stop | Rules file error | **The categories have an error:** `<line, col: message>`. Fix it in Categories. [Open Categories] |
 | Stop | Courier file error | **The couriers have an error:** `<line, col: message>`. Fix `couriers.toml` in the data folder. |
-| Stop | Every order already saved for the day | **All `<n>` orders were already saved today** (batch `<b>`). These labels were prepared before; nothing to do. |
-| Warning | Orders already saved for the day | **`<n>` orders were already saved today** and are left out: `<tracking ID>` (batch `<b>`, PDF `<k>`, `<time>`), … |
+| Stop | Every order already saved in the session | **All `<n>` orders were already saved today** (batch `<b>`). These labels were prepared before; nothing to do. |
+| Warning | Orders already saved in the session | **`<n>` orders were already saved today** and are left out: `<tracking ID>` (batch `<b>`, PDF `<k>`, `<time>`), … |
+| Warning | Orders that appear more than once, left out ([Repeated orders](duplicates.md)) | **`<n>` orders appear more than once in this batch:** `<m>` copies are left out (`<file>` page `<p>`, kept: `<file>` page `<p>`), … |
 | Warning | Courier not recognised | **Courier unknown for `<n>` orders:** `<tracking IDs>`. They are sorted normally; only a condition on `courier` cannot see them. |
 | Warning | `Qty Total` differs from the lines | **Slip total differs** for `<tracking ID>`: printed `<a>`, lines add up to `<b>`. Check that order's slip when packing. |
 | Warning | Tracking ID not found on a page | **No tracking ID read** for Order `<order ID>`. Its label is saved as usual; only a condition on `tracking_id` cannot see it. |

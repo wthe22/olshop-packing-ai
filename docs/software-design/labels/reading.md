@@ -27,12 +27,25 @@ style's. The step runs on the raw text before the collapsed one: dropping the wh
 the number to the word printed below the caption, and the guard that rejects a longer token
 would then reject every page.
 
-## Multi-page orders
+## Multi-page orders and copies
 
-A page with no Order ID belongs to the previous page's order; a first page with no Order ID is
-an error (file and page). Consecutive pages with the same Order ID are one order (a slip's
-continuation page repeats the Order ID, the table header and `Customer Message`). Label pages
-are copied unchanged, so an order's pages stay together and in their original order.
+A page with no Order ID belongs to the previous page's copy; a first page with no Order ID is an
+error (file and page). A page with an Order ID **and** a label part — a tracking ID, or an image in
+the header band — starts a **copy** of that order; a page with the Order ID and no label part
+continues the order's copy (a slip's continuation page repeats the Order ID, the table header and
+`Customer Message`, and carries no tracking ID and no courier logo). Two copies of one Order ID are a
+**repeat**, never one longer order ([duplicates](../app/duplicates.md), [Q-LABEL-9](../questions/duplicates.md)).
+Label pages are copied unchanged, so a copy's pages stay together and in their original order.
+
+## Page identity
+
+The **page fingerprint** names one page by what it prints: XXH3-64 of the page's text runs in page
+order — each run's text with its x and y rounded to 0.1 pt — followed by the byte hashes of the
+page's header-band images ([courier.md](courier.md)). A page copied into a saved PDF keeps its
+fingerprint, so the same function recognises a page in the downloads and in the saved PDFs. It is
+used to compare the copies of a repeated order ([duplicates](../app/duplicates.md)) and to match
+saved pages to input pages ([saved-pdf-check.md](../app/saved-pdf-check.md)). The way a page is
+fingerprinted is [Q-LABEL-10](../questions/duplicates.md).
 
 ## Reading the packing slip
 

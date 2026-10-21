@@ -8,7 +8,7 @@
   couriers.toml
   settings.json
   labels/
-    2026-10-07/
+    2026-10-07/                  ← the session Main of that day
       state.json
       batch 1/
         1 A Sepatu ×172.pdf
@@ -29,9 +29,9 @@
           …
 ```
 
-- Saved-PDF numbers run through the day (batch 2 starts at 4), so with the suggested names
+- Saved-PDF numbers run through the session (batch 2 starts at 4), so with the suggested names
   "sort by name" inside a batch folder is printing order, and a number on the packing list is
-  unique for the whole day.
+  unique for the whole session.
 - Batch folders are `batch 1`, `batch 2`, …. Saved-PDF names are the owner's: suggested
   `<n> <code> <name> ×<orders>`, the whole name can be changed
   ([Plan screen](../ui/plan.md)); two saved PDFs of one batch cannot have the same name.
@@ -42,12 +42,14 @@
   (`packing-list-full.pdf`, `packing-list-3-pick.pdf`).
 - `download/` holds the label files exactly as read (about 1.3 MB per 200 pages, ~4 MB for a
   day of 600 orders), so amend works even when the originals in Downloads are gone.
-- **The day** is the PC's date when the app is opened; the Day screen can switch to another day
-  (e.g. a download just after midnight that belongs to the evening before).
+- **A session** is one folder of `labels/`: `<date>` for Main, `<date> <name>` for a named session
+  ([sessions](sessions.md)); every file above lives inside it, so each session has its own numbers.
+  The app opens on the PC's date, Main, and the [Sessions panel](../ui/sessions.md) opens any other
+  session (e.g. a download just after midnight that belongs to the evening before).
 
 ## `state.json`
 
-One per day folder. Everything needed to continue the day, revert or amend a batch.
+One per session folder. Everything needed to continue the session, revert or amend a batch.
 
 ```json
 {
@@ -89,10 +91,11 @@ One per day folder. Everything needed to continue the day, revert or amend a bat
 | `batches[].set` | The name of the grouping the batch was packed with ([rules file](../rules-file/README.md)); absent loads as `default` | An **Amend** reads the batch's own grouping again, whatever grouping was used last; the [Plan screen](../ui/plan.md) header and **Amend**'s confirmation ([Day screen](../ui/day.md)) name it |
 | `batches[].printed` | The saved-PDF numbers of the batch whose **Printed** tick is set ([Day screen](../ui/day.md)); written when a tick is clicked; absent loads as empty | The tick is a note only, and it belongs to the batch: a revert removes it with the batch, and a batch written again by an amend starts unticked |
 | `batches[].warnings` | The read warnings of the batch, as shown on the Plan screen, plus the check before saving's warnings ([saved-pdf-check.md](saved-pdf-check.md)); absent loads as empty | Day screen *Warnings ▸* without re-reading the files |
+| `batches[].left_out` | The copies read but not written, each with its order, file, page, reason (`repeat`, `saved_earlier`) and the copy that stays ([duplicates](duplicates.md#what-is-stored)); absent loads as empty | Day screen *Left out ▸*; the page ledger of the check ([saved-pdf-check.md](saved-pdf-check.md)); an amend preselects the kept copies |
 | `batches[].errors` | The check before saving's errors, kept apart from the warnings; written only when the batch was saved anyway (*Save anyway*), absent loads as empty | Day screen *Saved with `<n>` errors ▸* without re-reading the files |
 | `saved[]` | Each saved order: IDs, batch, saved PDF, run, and the fields the Search panel finds it by (`courier`, `total_quantity`, `distinct_items`, `ship_by`, `items` with each line's `name`, `variation`, `seller_sku`, `quantity`) | Duplicate guard; Search ([Search screen](../ui/search.md)). Older orders keep only their IDs ([Q-UI-3](../questions/ui.md)) |
 
 The file is written whole each time (write to `state.json.tmp`, then replace), so a crash
 never leaves half a file. A file entry may instead carry `sha256` (64 hex characters): it
-loads and is never matched — the *used in batch n* hint only matters inside one day — and a save
+loads and is never matched — the *used in batch n* hint only matters inside one session — and a save
 writes `xxh3` only. The app does not read the analysis helpers' `work/<day>/state.json`.

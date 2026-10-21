@@ -2,17 +2,21 @@
 
 1. **Choose the files** with **Add files…** or by dropping them on the window
    ([New batch](../ui/new-batch.md)). Each file's fingerprint (size + XXH3-64)
-   is checked against `state.json`: a file already used in an earlier batch the same day is marked
+   is checked against `state.json`: a file already used in an earlier batch of the same session is marked
    *used in batch 1* (it can still be read; its orders are then left out as already saved).
 2. **Read** the files in the order shown (default: by file name, which is download order),
    page by page, with a progress bar and a Cancel button. Per page: the Order ID, the
-   label-level fields, the slip lines. Pages are grouped into orders ([reading rules](../labels/reading.md)).
+   label-level fields, the slip lines. Pages are grouped into copies and orders ([reading rules](../labels/reading.md#multi-page-orders-and-copies)).
    Every order gets its **download position** (1, 2, 3, … over all files of the batch); runs
    keep this order inside a run.
 3. **Check**: no-slip pages stop the batch ([Inputs](inputs.md)); `Qty Total` differences, unknown
    couriers and missing tracking IDs are warnings.
-4. **Duplicate guard**: the orders already saved the same day are taken out and listed (Order ID,
-   tracking ID, batch, saved-PDF number, time; the time is the batch's `save_time`).
+4. **Duplicate guard and repeats**: the orders already saved in the same session are taken out and
+   listed (Order ID, tracking ID, batch, saved-PDF number, time; the time is the batch's `save_time`).
+   Then an order with more than one copy in the batch is a **repeat**: the owner sees the
+   [Repeated orders](../ui/duplicates.md) screen and chooses which copy stays (the first, by default),
+   and each order reaches the plan with one copy ([duplicates](duplicates.md)). Every copy left out
+   is recorded with its reason.
 5. **Plan**: the categories of the grouping this batch uses ([New batch](../ui/new-batch.md#the-grouping)) in
    file order, each taking its orders from what is
    left; the leftovers form the last pick, the rest. The owner may change the plan for this
@@ -20,16 +24,17 @@
    rename the file. Every change recounts the whole plan at once (all in memory, no file
    written).
 6. **Save** (one button):
-   1. Number the saved PDFs from the day's next number (after the last batch's last number).
+   1. Number the saved PDFs from the session's next number (after the last batch's last number).
    2. Re-order each pick's orders into runs.
-   3. Write everything into a temporary folder `labels/<day>/batch <b>.partial/`: the saved
+   3. Write everything into a temporary folder `labels/<session>/batch <b>.partial/`: the saved
       PDFs (pages copied unchanged), the packing lists, `summary.txt`, and a copy of the label
       files read, in `download/` (amend reads them back).
    4. Check before saving: the saved PDFs and packing lists are read back and compared with the
-      plan; see [saved-pdf-check.md](saved-pdf-check.md).
+      input pages, the copies left out and the plan — every input page exactly once; see
+      [saved-pdf-check.md](saved-pdf-check.md).
    5. Rename the folder to `batch <b>` and add the batch to `state.json`.
 
-   If anything fails before step 5, the temporary folder is deleted and the day is as before
+   If anything fails before step 5, the temporary folder is deleted and the session is as before
    — there is never a half-written batch.
 
 ## Revert and amend (only the last batch)

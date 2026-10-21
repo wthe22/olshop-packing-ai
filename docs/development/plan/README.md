@@ -72,6 +72,22 @@ with a pointer to a design file. Nothing else on screen, in a saved PDF or in a 
 for this batch*, the *Pick* layout, the summary's *Pick* lines) while the code and the glossary say *category*;
 the stored layout name `pick` would then be a migration. Default until the owner decides: keep the words.
 
+## Next step, also — the owner's review of the feature design (written 2026-10-21, no code yet)
+
+The owner asked for sessions in a side panel, repeated orders found and grouped, a page-for-page
+check, and a full workflow to verify ([R-UI-4, R-UI-5, R-LABEL-1, R-APP-1, R-APP-2](../../reviews/README.md)).
+Only documents were written; **no code was changed**.
+
+- **Read first:** [the workflow](../../software-design/workflow/README.md) (every step, the claims
+  I1–I7 and the *Check* questions), then [Sessions panel](../../software-design/ui/sessions.md) and
+  [Repeated orders](../../software-design/ui/duplicates.md).
+- **Answer** the ten questions in [sessions](../../software-design/questions/sessions.md) and
+  [duplicates](../../software-design/questions/duplicates.md) (each has a default the design already
+  follows), and write what is wrong in the workflow as items in [reviews/](../../reviews/README.md).
+- **Then** a session writes the answers into `software-design/`, records them in `decisions/`, deletes
+  the answered questions and writes the tasks. Where the code differs from the workflow:
+  [workflow-audit](workflow-audit.md) (W-1 to W-8; W-5 and W-7 can lose files and are worth a test first).
+
 ## Phase 2 — PC app (Rust + Tauri)
 
 A Windows program for the daily work: label downloads in, picks adjusted on screen, saved PDFs and packing
@@ -91,7 +107,8 @@ Every task of the phase (2.1–2.31) is finished; the only task file here is
 Open choices of the owner, each with a default the app follows until the owner decides:
 [Q-LABEL-1 to Q-LABEL-3, Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md),
 [Q-UI-1 to Q-UI-4](../../software-design/questions/ui.md),
-[Q-APP-1 to Q-APP-3](../../software-design/questions/app.md) and
+[Q-APP-1 to Q-APP-3](../../software-design/questions/app.md),
+[Q-APP-4 to Q-APP-7, Q-LABEL-9, Q-LABEL-10, Q-UI-5 to Q-UI-8](../../software-design/questions/README.md) (the feature round above) and
 [Q-RULES-1](../../software-design/questions/rules.md) (the sets of categories; task 2.27 builds its default).
 
 ## Status

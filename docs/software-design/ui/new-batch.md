@@ -21,12 +21,17 @@ Choose the label files of this batch and the grouping of picks it uses, then rea
 - **Add files…** opens the Windows file dialog (several files at once; it opens in the folder
   used last time). Dropping files onto the window does the same.
 - Each listed file shows its page count (quick: only the page count is read). A file read in an
-  earlier batch of the day shows *used in batch n* in orange: it can still be read, its orders are
+  earlier batch of the session shows *used in batch n* in orange: it can still be read, its orders are
   then found as already saved and left out. **×** takes a file off the list; a file added twice
   is listed once.
 - Files are read in the order of the list, sorted by file name (= download time and part
   number). **Read labels** needs at least one file.
-- **Read labels** opens the Plan screen ([Plan](plan.md)). The top **Cancel** leaves the batch
+- A file whose bytes equal another listed file shows **same file as `n`** at once, before any read
+  (the file fingerprint, [data-folder](../app/data-folder.md)); **×** takes it off. After a read, a
+  file that holds an order which appears more than once in the batch is marked with its group chip
+  (▌G1) and a **Review the repeats** button opens [Repeated orders](duplicates.md#the-file-list-marks-the-files).
+- **Read labels** opens the Plan screen ([Plan](plan.md)), or [Repeated orders](duplicates.md) first
+  when the batch holds a repeat. The top **Cancel** leaves the batch
   and returns to the Day screen, discarding the draft; **Back** on the Plan screen returns here
   with these files still listed, and **Read labels** then reads them again from the start (the
   Plan changes are lost).
