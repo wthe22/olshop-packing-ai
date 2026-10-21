@@ -65,9 +65,9 @@ The date is written year-month-day; the time is `HH:MM` without seconds.
 |---|---|---|---|---|
 | `name` | text | item | slip, CSV | Full product name (the slip prints it in full; CSV `Product Name`) |
 | `display_name` | text | item | — | Display name (name before `\|` + variation) |
-| `variation` | text | item | slip, CSV | Variation; the slip's `SKU` column (`Default` reads as empty) |
+| `variation` | text | item | slip, CSV | Variation; the slip's `SKU` column (its `Variasi` column on the Shopee-style slip; `Default` reads as empty) |
 | `sku_id` | text | item | CSV | `SKU ID`. CSV-only |
-| `seller_sku` | text | item | slip, CSV | `Seller SKU` (often empty) |
+| `seller_sku` | text | item | slip, CSV | `Seller SKU` (the Shopee-style slip's `SKU` column; often empty) |
 | `product_category` | text | item | CSV | `Product Category`. CSV-only |
 | `line_quantity` | number | item | slip, CSV | Quantity of one line |
 | `total_quantity` | number | order | — | Sum of the order's quantities |

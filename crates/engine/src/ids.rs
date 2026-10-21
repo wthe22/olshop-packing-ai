@@ -8,7 +8,8 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-/// A platform order's 18-digit Order ID, as the label prints it.
+/// A platform order's number as its label prints it: 18 digits on the TikTok and Tokopedia
+/// labels, 14 characters on the Shopee-style one.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct OrderId(String);

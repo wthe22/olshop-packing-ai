@@ -33,3 +33,19 @@ is [Q-LABEL-7](../questions/label.md).
 
 **Applies to.** [courier.md](../labels/courier.md), [inputs.md](../app/inputs.md),
 [new-batch.md](../ui/new-batch.md).
+
+## D-LABEL-5 — The Shopee-style label is packed, keyed by its own order number
+
+**Decision.** A Shopee-style label download packs like any other batch. The style prints no 18-digit
+Order ID, so its order is keyed by the number its own `No.Pesanan` caption prints — 14 characters,
+six digits then eight letters and digits — and everything that shows an Order ID shows that number.
+Its slip's Indonesian header names the same three cells as the English one in the other order
+(`SKU` holds the seller SKU, `Variasi` the variation), and its `Batas Kirim: dd-mm-yyyy` deadline is
+that day's start.
+
+**Why.** The label carries everything a pick and a packing list need — the slip lines, the tracking
+ID, and a courier its two clues agree on — so the only new thing is where the order's number comes
+from. The owner asked for the file to be read, not for the batch to stop.
+
+**Applies to.** [reading.md](../labels/reading.md), [courier.md](../labels/courier.md),
+[requirements.md](../requirements.md).

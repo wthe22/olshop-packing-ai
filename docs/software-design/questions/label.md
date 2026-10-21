@@ -1,6 +1,6 @@
 # Open questions: labels
 
-Questions: Q-LABEL-1, Q-LABEL-2, Q-LABEL-3, Q-LABEL-4, Q-LABEL-5, Q-LABEL-7, Q-LABEL-8.
+Questions: Q-LABEL-1, Q-LABEL-2, Q-LABEL-3, Q-LABEL-5, Q-LABEL-7, Q-LABEL-8.
 
 ## Q-LABEL-1 — Reading a courier logo the encoded bytes cannot name (J&T Cargo)
 
@@ -72,32 +72,6 @@ question is whether it prints it.
 | 3. Nowhere | The code is read from the label page itself |
 
 **What the answer changes:** one field of the packing-list line and the day's data file.
-
-## Q-LABEL-4 — The Shopee-style label: pack it, or leave it alone
-
-**Words.** A 3-page sample download of the Shopee-style label (one order a page) is a label style the
-app cannot pack. It is neither a TikTok nor a Tokopedia page: its header carries the `Shopee`
-wordmark, its order number is **not** the 18-digit Order ID but its own `No.Pesanan` (14 characters:
-six digits then eight letters and digits), its slip's columns are named in Indonesian (`# Nama
-Produk SKU Variasi Qty`, where `SKU` holds the seller SKU and `Variasi` the variation — the two
-tokens are swapped against the Tokopedia slip), it prints no `Qty Total:` and no `Customer Message`,
-and its deadline is `Batas Kirim: dd-mm-yyyy` (a date, with no time). Its courier is deducible like
-any other ([courier deduction](../labels/courier.md), item 9: the `SPX` wordmark as the logo plus an
-`SPXID` + 11-digit tracking ID). The batch stops on its first page (*page 1 has no Order ID*),
-because the pack flow keys every order by the 18-digit Order ID and reads item lines from the slip's
-`Product Name` · `SKU` · `Seller SKU` · `Qty` header.
-
-| Option | What the owner sees |
-|---|---|
-| **1. Pack it, keyed by its own `No.Pesanan`** (**Default**: the batch stops with *page 1 has no Order ID*) | An SPX batch packs like any other: the label reader accepts the 14-character number as that style's key, the slip reader accepts the Indonesian header and reads `Variasi` as the variation, and everything that shows an Order ID shows the 14-character number instead. Cost: a second key and a second slip header in the readers; a download mixing the styles still packs as one batch |
-| 2. Leave the style alone, but say so | The batch still stops, with a message that names the style (*These are a Shopee download; this app packs TikTok and Tokopedia labels*), so a mixed download is understood at once and its pages can be printed from the seller centre. Cost: one message |
-
-Recommended: **1** if these orders are packed here too — the label carries everything a pick and a
-packing list need (slip lines, tracking ID, courier), and the only new thing is where the order
-number comes from.
-
-**What the answer changes:** the label reader's key rule, the slip reader's header rule and the day's
-data file; or one error message.
 
 ## Q-LABEL-5 — Which image on a page is the courier's logo
 

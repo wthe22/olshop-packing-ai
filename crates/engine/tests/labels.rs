@@ -88,6 +88,36 @@ fn an_order_id_is_the_eighteen_digits_between_boundaries() {
 }
 
 #[test]
+fn the_shopee_style_label_is_keyed_by_its_own_order_number() {
+    let cases = [
+        // The caption's number: six digits then eight letters or digits.
+        ("No.Pesanan: 261014ABCD1234", Some("261014ABCD1234")),
+        // Whole only in the collapsed text on a spaced-out page.
+        (
+            "N o . P e s a n a n : 2 6 1 0 1 4 A B C D 1 2 3 4",
+            Some("261014ABCD1234"),
+        ),
+        // A longer token is not cut down to its first fourteen characters.
+        ("No.Pesanan: 261014ABCD1234X", None),
+    ];
+    for (text, expected) in cases {
+        assert_eq!(
+            find_order_id(text).as_ref().map(OrderId::as_str),
+            expected,
+            "{text}"
+        );
+    }
+
+    // A TikTok-style page is still keyed by its 18-digit Order ID.
+    assert_eq!(
+        find_order_id("JY0000001234\n580000000000000001")
+            .as_ref()
+            .map(OrderId::as_str),
+        Some("580000000000000001")
+    );
+}
+
+#[test]
 fn a_tracking_id_is_the_most_frequent_token_and_never_the_order_id() {
     let table = courier_data();
     let order_id = OrderId::new("580000000000000001");
@@ -285,4 +315,19 @@ fn ship_by_is_read_from_the_label_and_from_a_spaced_page() {
         .join(" ");
     let spaced = find_ship_by(&spaced_line).unwrap();
     assert_eq!(spaced.hour(), 15);
+
+    // The Shopee-style label's deadline is a bare date: that day at 00:00, raw and spaced out.
+    assert_eq!(
+        find_ship_by("Batas Kirim: 15-10-2026").unwrap().to_string(),
+        "2026-10-15T00:00:00"
+    );
+    let spaced_day = "Batas Kirim: 15-10-2026"
+        .chars()
+        .map(|c| c.to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+    assert_eq!(
+        find_ship_by(&spaced_day).unwrap().to_string(),
+        "2026-10-15T00:00:00"
+    );
 }

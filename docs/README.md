@@ -61,7 +61,7 @@ still cite old IDs (`D2`, `D24`, …); `archive/id-map.md` maps them to the new 
 
 | Word | Meaning |
 |---|---|
-| **Order** | One platform order, identified by its 18-digit `Order ID`. Has one tracking ID and one or more item lines |
+| **Order** | One platform order, identified by its `Order ID` — the number its label prints. Has one tracking ID and one or more item lines |
 | **Tracking ID** | The courier's parcel number, e.g. `JY0000001234`. Printed on the label as text, 1D barcode and QR code |
 | **Item line** | One product with a variation and a quantity inside an order, read from the packing slip |
 | **Packing list** | The set of item lines of one order; also the A4 sheet that lists the runs. Two orders with the same set are packed the same way |

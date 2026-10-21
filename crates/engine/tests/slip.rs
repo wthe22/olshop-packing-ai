@@ -90,6 +90,108 @@ fn line(name: &str, variation: &str, seller_sku: &str, quantity: i64) -> SlipLin
     }
 }
 
+/// The Shopee-style slip's header: its `Variasi` comes as two runs because a font change inside
+/// the word ends the run.
+fn shopee_header() -> Vec<Run> {
+    vec![
+        run(9.2, HEADER_Y, "#"),
+        run(23.4, HEADER_Y, "Nama Produk"),
+        run(162.6, HEADER_Y, "SKU"),
+        run(212.0, HEADER_Y, "V"),
+        run(216.5, HEADER_Y, "ariasi"),
+        run(269.6, HEADER_Y, "Qty"),
+    ]
+}
+
+/// The English header at the Shopee-style label's x positions: the same cells, the other role
+/// for each of the two middle columns.
+fn english_header_at_shopee_positions() -> Vec<Run> {
+    vec![
+        run(23.4, HEADER_Y, "Product Name"),
+        run(162.6, HEADER_Y, "SKU"),
+        run(212.0, HEADER_Y, "Seller SKU"),
+        run(269.6, HEADER_Y, "Qty"),
+    ]
+}
+
+/// A page of the Shopee-style slip: the given header above the rows, no `Qty Total`, the
+/// `Pesan:` line under the table and the footer's tracking IDs below it. The rows are (Product
+/// Name, variation, Seller SKU, quantity) lines, placed where the style prints them: its `SKU`
+/// column (the seller SKU) left of its `Variasi` column.
+fn shopee_page(header: Vec<Run>, rows: &[Row]) -> PageText {
+    let (name_x, sku_x, variation_x, qty_x) = (23.4, 162.6, 212.0, 269.6);
+    let mut runs = header;
+    let mut y = HEADER_Y - STEP;
+    for (name, variation, seller_sku, quantity) in rows {
+        let lines = name.len().max(variation.len()).max(seller_sku.len()).max(1);
+        for (i, text) in name.iter().enumerate() {
+            runs.push(run(name_x, y - i as f64 * STEP, text));
+        }
+        for (i, text) in seller_sku.iter().enumerate() {
+            runs.push(run(sku_x, y - i as f64 * STEP, text));
+        }
+        for (i, text) in variation.iter().enumerate() {
+            runs.push(run(variation_x, y - i as f64 * STEP, text));
+        }
+        runs.push(run(qty_x, y, &quantity.to_string()));
+        y -= STEP * lines as f64;
+    }
+    y -= STEP;
+    runs.push(run(8.5, y, "Pesan:"));
+    runs.push(run(35.1, y, "261014ABCD1234"));
+    y -= STEP;
+    for x in [16.9, 111.7, 206.4] {
+        runs.push(run(x, y, "SPXID00000000002A"));
+    }
+    PageText {
+        text: String::new(),
+        runs,
+        width: 297.12,
+        logos: Vec::new(),
+    }
+}
+
+#[test]
+fn the_shopee_style_slip_reads_its_cells_by_column_role() {
+    let rows: [Row; 1] = [(
+        &["Sepatu Standar Samping", "Motor | Pelindung Rantai"],
+        &["Carbon,", "yamaha"],
+        &["SPION-SCOL-DH-", "CY-BLACK", "MATTE"],
+        2,
+    )];
+
+    // The Indonesian header names the same cells, so the wrapped seller-SKU cell and the
+    // variation cell land in the fields the style prints them in.
+    assert_eq!(
+        read_slip(&shopee_page(shopee_header(), &rows)),
+        Some(Slip {
+            lines: vec![line(
+                "Sepatu Standar Samping Motor | Pelindung Rantai",
+                "Carbon, yamaha",
+                "SPION-SCOL-DH-CY-BLACK MATTE",
+                2,
+            )],
+            qty_total: None,
+            customer_message: String::new(),
+        })
+    );
+
+    // The same cells under the English header: the two middle columns swap.
+    assert_eq!(
+        read_slip(&shopee_page(english_header_at_shopee_positions(), &rows)),
+        Some(Slip {
+            lines: vec![line(
+                "Sepatu Standar Samping Motor | Pelindung Rantai",
+                "SPION-SCOL-DH-CY-BLACK MATTE",
+                "Carbon, yamaha",
+                2,
+            )],
+            qty_total: None,
+            customer_message: String::new(),
+        })
+    );
+}
+
 #[test]
 fn the_slip_rows_come_from_the_header_columns_top_to_bottom() {
     // The columns are read from where the header words sit, not from a fixed x.

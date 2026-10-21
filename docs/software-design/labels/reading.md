@@ -4,24 +4,28 @@
 
 | Value | Comes from |
 |---|---|
-| `Order ID` | The label text (two-step search below) |
+| `Order ID` | The label text (three-step search below) |
 | `tracking_id` | The label text, in one of the forms of the data folder's `couriers.toml` ([courier.md](courier.md)) |
 | `courier` | Deduced from the label ([courier.md](courier.md)). An instant-service label names none — its courier comes from the order export |
-| `ship_by` | The label `In transit by: dd/mm/yyyy hh:mm` |
+| `ship_by` | The label `In transit by: dd/mm/yyyy hh:mm`, or the Shopee-style label's `Batas Kirim: dd-mm-yyyy` (that day at 00:00) |
 | item lines | The slip table (product name, variation, quantity) |
 | buyer message | The slip's `Customer Message` (continuation page) |
 
 ## Order ID from the label
 
 On the page text, first search `(?<!\d)(5\d{17})(?!\d)`; if nothing is found, drop all
-whitespace and search `OrderI[dD][:：](\d{18})` (the second colon is fullwidth U+FF1A). The raw
-search must come first: on J&T labels the Order ID sits on its own line under the tracking ID,
-and dropping whitespace first would glue the two into one number.
+whitespace and search `OrderI[dD][:：](\d{18})` (the second colon is fullwidth U+FF1A); if
+nothing is found again, search `No\.Pesanan:\s*(\d{6}[0-9A-Z]{8})` (the third step, with a guard
+against a longer token). The raw search must come first: on J&T labels the Order ID sits on its
+own line under the tracking ID, and dropping whitespace first would glue the two into one
+number.
 
 The **Shopee-style label** ([business-process 02](../../business-process/02-data-sources.md))
-prints no 18-digit Order ID at all — its order number is 14 characters (`No.Pesanan`) — so this
-search finds nothing on its pages and the batch would stop at the first one. How the app handles
-that style is [Q-LABEL-4](../questions/label.md).
+prints no 18-digit Order ID at all: it keys the order by its own `No.Pesanan` number, 14
+characters. That caption is the search's third step, so its pages are read like any other
+style's. The step runs on the raw text before the collapsed one: dropping the whitespace glues
+the number to the word printed below the caption, and the guard that rejects a longer token
+would then reject every page.
 
 ## Multi-page orders
 
@@ -35,12 +39,23 @@ are copied unchanged, so an order's pages stay together and in their original or
 The slip is read by text position, not by reading order: each text run of the page comes with
 its x and y ([text runs from PDFium](../app/architecture.md)).
 
-- **Columns** from the header words `Product Name`, `SKU`, `Seller SKU`, `Qty`: each word's x is
-  a column's left edge; a column ends at the next header word's x (the last at the page's right
-  edge). The `SKU` column holds the **variation**.
+- **Headers.** A slip prints one of two headers, each naming the **role** of its four columns
+  left to right: `Product Name` · `SKU` · `Seller SKU` · `Qty` on the TikTok and Tokopedia
+  slips, whose `SKU` column holds the **variation**; `Nama Produk` · `SKU` · `Variasi` · `Qty` on
+  the Shopee-style slip, whose `SKU` column holds the **seller SKU** and `Variasi` the variation.
+  A cell fills the field its column's role names, so the two middle columns swap between the two
+  slips. A header word is looked for in the **line's joined text** — the line's runs joined with
+  no separator — because a font change inside a word ends the run (`Variasi` comes as `V` +
+  `ariasi`), so no single run holds the whole word.
+- **Columns**: each header word's first character gives its column's left edge (less a
+  tolerance); a column ends at the next header word's x (the last at the page's right edge).
 - **Rows**: sorted by y, a row starts at each `Qty` value. The runs inside a column's x-range at
   or after the row's y (and before the next row) are that cell. A wrapped cell joins its lines
   with a space, except a wrap directly after `-`, which joins without a space
   (`FI 2012-` + `2015` → `FI 2012-2015`).
+- **The table's end** is the caption under it — `Qty Total:` on the TikTok and Tokopedia slips,
+  `Pesan:` on the Shopee-style slip, which prints no total — so the caption's value and the
+  footer's tracking IDs are not read into the last row.
 - **Cross-check**: the slip prints `Qty Total:`; if it differs from the sum of the order's `Qty`,
-  a warning is shown (Order ID, printed total, sum).
+  a warning is shown (Order ID, printed total, sum). The Shopee-style slip prints no total, so
+  nothing is cross-checked on it and no warning is raised.

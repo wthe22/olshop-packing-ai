@@ -87,10 +87,9 @@ the same way.
    app asks the owner once about the logo (the prompt) and remembers the name for the logo
    ([D-LABEL-4](../decisions/label.md)); the name stored is the owner's — the wordmark reads `SPX`. The page's four other
    images (the `Shopee` channel strip, two barcodes and a QR, all different per order) belong to
-   the rule for picking the logo ([Q-LABEL-5](../questions/label.md)), not to this one. **The rest
-   of that page cannot be packed as it stands** — no 18-digit Order ID, no `Qty Total`, no
-   `Customer Message`, and its slip's columns are named in Indonesian
-   (`Nama Produk` · `SKU` · `Variasi` · `Qty`) — which is [Q-LABEL-4](../questions/label.md).
+   the rule for picking the logo ([Q-LABEL-5](../questions/label.md)), not to this one. The
+   style packs like any other: its pages are keyed by their own `No.Pesanan` number and its
+   slip's Indonesian header is read like the English one ([reading.md](reading.md)).
 
 The courier list is `couriers.toml` (in the data folder in the app); its fields and an example are
 in [inputs.md](../app/inputs.md). The app writes the logos the owner names in the prompt into it,

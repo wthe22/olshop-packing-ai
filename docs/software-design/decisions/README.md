@@ -8,7 +8,7 @@ never reused. A decision that changes gets a new record that names the one it re
 
 | File | Scope | Records |
 |---|---|---|
-| [label.md](label.md) | LABEL | D-LABEL-1, D-LABEL-2, D-LABEL-4: courier data file, the two-clue rule, remembered logos |
+| [label.md](label.md) | LABEL | D-LABEL-1, D-LABEL-2, D-LABEL-4, D-LABEL-5: courier data file, the two-clue rule, remembered logos, the Shopee-style label |
 | [app.md](app.md) | APP | D-APP-1 to D-APP-2: the PDF library, the check before saving |
 
 Open choices are in [../questions/](../questions/README.md).

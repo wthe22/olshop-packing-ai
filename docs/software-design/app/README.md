@@ -9,7 +9,7 @@ and sorting rules it uses are in [labels/README.md](../labels/README.md).
 
 The rules and the files that hold them:
 
-- [Reading the labels](../labels/reading.md) — the Order ID of a page (two-step search), multi-page orders, reading the packing slip by text position (columns, rows, wrapped cells, the `Qty Total` check)
+- [Reading the labels](../labels/reading.md) — the Order ID of a page (three-step search), multi-page orders, reading the packing slip by text position (columns, rows, wrapped cells, the `Qty Total` check)
 - [Courier deduction](../labels/courier.md) — the courier from the label text and the tracking-ID form (`couriers.toml`)
 - [Picks](../labels/picks.md) — picks taken in order from what is left, the rest, runs inside a saved PDF, saved-PDF numbers through the day and run numbers `3-05`, the duplicate guard
 - [Packing list](../labels/packing-list.md) — the three layouts `full`, `summary`, `pick` and their look

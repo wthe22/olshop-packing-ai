@@ -3,22 +3,39 @@
 Only the unfinished work. A finished task is deleted from this folder in the commit that finishes it; a
 finished phase moves to `archive/`. Phase and task numbers live only here.
 
-## Next step — the owner's regression test of the refactor
+## Next step — the owner's test of the built program
 
-The code refactor (steps R0 to R7) is done and committed; the program does what it did. The portable folder
-`target/portable/Packing/` is built from it. **Test it with the list below, then write findings into
-[reviews/](../../reviews/README.md), one item each; a new session turns each into a task.** Until then no
-feature work starts. The code rules apply to every task file in this folder: a task report states *size gate
-passed, no new lint suppression, coverage not lower*.
+The code refactor (steps R0 to R7) and the two changes of 2026-10-21 (2.30, 2.31) are done and
+committed; the program does what it did. The portable folder `target/portable/Packing/` is built from
+them. **Test it with the list below, then write findings into
+[reviews/](../../reviews/README.md), one item each; a new session turns each into a task.** Until then
+no feature work starts. The code rules apply to every task file in this folder: a task report states
+*size gate passed, no new lint suppression, coverage not lower*.
+
+**What is new since the last handoff** (the two commits of 2026-10-21):
+
+- **The tracking-ID form comes from the data folder's `couriers.toml`** (2.30). It used to be read
+  from the list built into the program, so an edit to the owner's own file changed nothing; J&T
+  Express now names `JY` **and** `JX` + 10 digits, the second measured on
+  `samples/2026-10-21 JX.pdf`. **An existing data folder keeps its own `couriers.toml`**: for the same
+  there, its J&T Express `tracking` line must become `J[XY]\\d{10}`.
+- **The Shopee-style label packs** (2.31, from the owner's *add support* for
+  `samples/2026-10-15 spx.pdf`): an order of that style is keyed by its own 14-character `No.Pesanan`,
+  its slip's `SKU` column holds the seller SKU and `Variasi` the variation, and its `Batas Kirim:
+  dd-mm-yyyy` is the order's deadline. Its answer is [D-LABEL-5](../../software-design/decisions/label.md),
+  the **Default** of Q-LABEL-4; **if the app should rather name the style and refuse it, say so** and
+  the reader goes back to that option.
+- **Open, not built: [2.32](2.32-text-object-split-word.md)** — a word the page's text objects break
+  at a font change (the Shopee-style label's `Variasi`, `Yamaha`) is read with a space in it. It shows
+  in the stored full product name only; the packing list prints the short display name, unaffected.
 
 **What was done.** Complexity 3 of 5 before, 2 after. Rust files over the 800-line ceiling: 4 to 0; UI files
-over 500: 3 to 0 (largest now `commands`-level production file 524 lines, largest test file 749). Types: `Grouping`,
-`OrderId`, `TrackingId`, `BatchNumber`, `PdfNumber`, `FileName`, one layout/scope enum, a plan-row kind; no
-function has more than five parameters; no function nests deeper than four levels; about 100 comments with IDs, 720 with numbered design pointers and 30 banners are gone, with a zero gate
-(`tools/check-comments.mjs`); `crates/testkit` holds the shared test fixtures and the PDFium lock (the app tests no longer crash about 1 run in 20). Tests:
-Rust 273 to 191, TypeScript 53 to 33, merged into scenarios and tables. Coverage before and after ([coverage.md](../coverage.md)), on production code only, which is the like-for-like
-measure (the first figures, 86.29 Rust and 72.43 TypeScript, also counted test code and left unmeasured the
-logic inside `.svelte` files): Rust lines 82.70 to 84.22, TypeScript lines 54.72 to 97.04.
+over 500: 3 to 0. Types: `Grouping`, `OrderId`, `TrackingId`, `BatchNumber`, `PdfNumber`, `FileName`, one
+layout/scope enum, a plan-row kind; no function takes more than five parameters or nests deeper than four
+levels; every ID comment, numbered design pointer and banner is gone (`tools/check-comments.mjs`, zero);
+`crates/testkit` holds the shared test fixtures and the PDFium lock. Tests: Rust 273 to 191, TypeScript 53
+to 33. Coverage on production code only ([coverage.md](../coverage.md)): Rust lines 82.70 to 84.22,
+TypeScript lines 54.72 to 97.04.
 
 **Findings of the reviews** (the minimal one after R2 and the full one at the end): none needed a fix. Left as
 they are, each with its reason:
@@ -66,33 +83,30 @@ Reference for the reading and sorting rules: the Python package `tools/analysis/
 first implementation of the same rules, tested). Port it module by module when a rule is missing
 (`rules.py` → `rules.rs`, `slip.py` → `slip.rs`, …).
 
-Every task of the phase (2.1–2.29) is finished, so this folder holds no task file. What the tasks built
-is in [software-design/](../../software-design/README.md); how to run, build and test it is in
+Every task of the phase (2.1–2.31) is finished; the only task file here is
+[2.32](2.32-text-object-split-word.md). What the tasks built is in
+[software-design/](../../software-design/README.md); how to run, build and test it is in
 [../README.md](../README.md).
 
 Open choices of the owner, each with a default the app follows until the owner decides:
-[Q-LABEL-1 to Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md),
+[Q-LABEL-1 to Q-LABEL-3, Q-LABEL-5, Q-LABEL-7 and Q-LABEL-8](../../software-design/questions/label.md),
 [Q-UI-1 to Q-UI-4](../../software-design/questions/ui.md),
 [Q-APP-1 to Q-APP-3](../../software-design/questions/app.md) and
 [Q-RULES-1](../../software-design/questions/rules.md) (the sets of categories; task 2.27 builds its default).
 
 ## Status
 
-Phase 2 is finished: tasks 2.1–2.29 are done and the portable program folder `target/portable/Packing/`
-is built from them. The owner's three findings are built, and wait for the owner's test of the running
-program (the checklist below):
+Phase 2 is finished (2.1–2.31) and the portable program folder `target/portable/Packing/` is built from
+it. The owner's findings are built and wait for the test above:
 
 - **R-UI-1** — the version *v0.1* in the window title, the title bar and *About*, from one place (2.25).
 - **R-UI-2** — a saved **Printed** tick beside each saved-PDF row of the Day screen (2.26).
 - **R-RULES-1** — several named sets of categories (2.27), built to the default of
   [Q-RULES-1](../../software-design/questions/rules.md).
-
-**Dev review of the built program (done):** the Printed tick is as large as *Open* with no word (2.28), and a set of
-categories is called a *Grouping* everywhere the owner reads it (2.29). Open: [R-RULES-2](../../reviews/rules.md)
-(a grouping can be renamed) waits for the owner's answer to [Q-RULES-2](../../software-design/questions/rules.md); build
-it after the answer is written into `software-design/`. **Next step — the owner's:** test the program folder with the
-checklist below; findings go into [reviews/](../../reviews/README.md), one item each. A new session turns each into a
-task (2.30 onward) or a question.
+- **R-UI-3** — the Printed tick as large as *Open* with no word (2.28); the owner-visible word for a set
+  of categories is *Grouping* everywhere (2.29). Open: [R-RULES-2](../../reviews/rules.md) (a grouping can be
+  renamed) waits for the owner's answer to [Q-RULES-2](../../software-design/questions/rules.md); build
+  it after the answer is written into `software-design/`.
 
 **Not checked on a running window** (only by tests): the Printed tick (click, close, reopen), the *Grouping*
 control on New batch, the Categories grouping row (**+ New grouping**, **Delete grouping**), and the Plan header naming
@@ -105,7 +119,7 @@ lack the grouping parts. They are retaken from the built program.
 
 ## Owner review at the end of the phase
 
-What the owner checks, after 2.15–2.27 (the last three items are 2.25–2.27):
+What the owner checks, after 2.15–2.31 (the last items are 2.25–2.31):
 
 - Open the same day's packing list: the header must stand clear of the body; a `summary` or `full` list must
   print `×`, not `ÿ`.
@@ -137,6 +151,11 @@ What the owner checks, after 2.15–2.27 (the last three items are 2.25–2.27):
   file in the data folder's `categories/` can be chosen and its categories make the plan; the Day
   screen's **Amend** redoes a batch with its own set; the data folder's `categories.toml` is still
   where it was.
+- After 2.30: a J&T Express page printing `JX` + 10 digits is named *J&T Express* with its tracking ID
+  read and no warning; editing the data folder's `couriers.toml` changes which forms are read.
+- After 2.31: a Shopee-style download packs — its orders show their own 14-character number, the
+  courier name and the deadline; its items show the seller SKU and the variation in the right fields
+  (`samples/2026-10-15 spx.pdf`).
 
 The owner writes findings in [`../../reviews/`](../../reviews/README.md), one file per scope.
 
@@ -147,25 +166,26 @@ In this order.
 1. [../../../AGENTS.md](../../../AGENTS.md) and [../README.md](../README.md): rules, commit and push, repository layout.
 2. [../../reviews/README.md](../../reviews/README.md) and the items open there: the owner's findings on the
    built program, to turn into tasks or questions. The items open there are the latest dev review.
-3. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
+3. The task file here, [2.32](2.32-text-object-split-word.md) at present, and the checklist above.
+4. [../../software-design/app/inputs.md](../../software-design/app/inputs.md) (inputs and `couriers.toml`),
    [batch.md](../../software-design/app/batch.md), [saved-pdf-check.md](../../software-design/app/saved-pdf-check.md),
    [data-folder.md](../../software-design/app/data-folder.md) (day folder and `state.json`),
    [architecture.md](../../software-design/app/architecture.md) and [program.md](../../software-design/app/program.md).
-4. The screens: [../../software-design/ui/README.md](../../software-design/ui/README.md), then
+5. The screens: [../../software-design/ui/README.md](../../software-design/ui/README.md), then
    [day](../../software-design/ui/day.md), [new batch](../../software-design/ui/new-batch.md) (the logo prompt),
    [plan](../../software-design/ui/plan.md), [search](../../software-design/ui/search.md),
    [start](../../software-design/ui/start.md).
-5. The label rules: [../../software-design/labels/README.md](../../software-design/labels/README.md) (per-order data,
+6. The label rules: [../../software-design/labels/README.md](../../software-design/labels/README.md) (per-order data,
    multi-page orders, packing slip, courier deduction, picks, packing list).
-6. [../../software-design/questions/](../../software-design/questions/README.md): the open choices.
-7. [../../software-design/requirements.md](../../software-design/requirements.md) for concepts and words.
-8. [../../software-design/rules-file/conditions.md](../../software-design/rules-file/conditions.md): the condition
+7. [../../software-design/questions/](../../software-design/questions/README.md): the open choices.
+8. [../../software-design/requirements.md](../../software-design/requirements.md) for concepts and words.
+9. [../../software-design/rules-file/conditions.md](../../software-design/rules-file/conditions.md): the condition
    language (fields, operators, the item-field "some line" rule).
-9. [../../business-process/02-data-sources.md](../../business-process/02-data-sources.md): read before touching any CSV
-   or PDF code; [01-packing-workflow.md](../../business-process/01-packing-workflow.md) for the daily steps.
-10. [../setup.md](../setup.md), [../app.md](../app.md), [../cli.md](../cli.md), [../testing.md](../testing.md).
-11. [../../user-guide/README.md](../../user-guide/README.md): update it in the commit that changes what the owner sees.
-12. Code, after the documents: `crates/` (`engine`, `pdf`, `cli`), `app/` (Svelte in `src/`, Rust in `src-tauri/`),
+10. [../../business-process/02-data-sources.md](../../business-process/02-data-sources.md): read before touching any CSV
+    or PDF code; [01-packing-workflow.md](../../business-process/01-packing-workflow.md) for the daily steps.
+11. [../setup.md](../setup.md), [../app.md](../app.md), [../cli.md](../cli.md), [../testing.md](../testing.md).
+12. [../../user-guide/README.md](../../user-guide/README.md): update it in the commit that changes what the owner sees.
+13. Code, after the documents: `crates/` (`engine`, `pdf`, `cli`), `app/` (Svelte in `src/`, Rust in `src-tauri/`),
     `testdata/` (made-up fixtures, `make_testdata.py`), `crates/engine/couriers.toml` (the bundled courier list);
     then `git status` and `git log --oneline -5`.
 

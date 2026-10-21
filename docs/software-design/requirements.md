@@ -21,7 +21,7 @@ pick files ([rules file](rules-file/README.md)). The analysis helpers in
 | **Category** | One entry of a grouping: the word the screens use for a pick |
 | **Grouping** | A named collection of categories, one file each in the data folder; a batch is packed with one grouping ([rules file](rules-file/README.md)) |
 | **Condition** | A rule in the condition language (free AND / OR / NOT), e.g. `name contains "sepatu" and total_quantity = 1`. Used by picks |
-| **Order** | Key: `Order ID`. Has one tracking ID and one or more item lines |
+| **Order** | Key: the order's number as its label prints it (`Order ID`) — 18 digits on the TikTok and Tokopedia labels, 14 characters on the Shopee-style one. Has one tracking ID and one or more item lines |
 | **Item line** | Product, variation and quantity, from the label's packing slip. |
 | **Display name** | Product name up to the first `\|`, trimmed; then ` — ` and the variation. A variation of `Default` or empty is left out. Examples: `Spion Beat — Standard, honda`; `Sepatu Standar Samping Motor` |
 
@@ -37,7 +37,7 @@ in [PC app](app/README.md).
 - **F-LABEL-1** Read the label PDFs (*Shipping label + Packing slip*); per order take each value from the
   label and its slip.
 - **F-LABEL-2** Find each order's pages and its item lines; an order can span several pages. A page's
-  Order ID comes from the label text (two-step search); a page without one continues the previous
+  Order ID comes from the label text (three-step search); a page without one continues the previous
   order's pages.
 - **F-LABEL-3** Build the picks from the categories of the grouping the batch uses (each entry = one pick):
   each entry in file order

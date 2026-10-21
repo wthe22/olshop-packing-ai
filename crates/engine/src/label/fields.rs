@@ -33,6 +33,16 @@ fn labelled_order_id_re() -> &'static Regex {
     })
 }
 
+fn shopee_order_id_re() -> &'static Regex {
+    static R: OnceLock<Regex> = OnceLock::new();
+    // The Shopee-style label's own order number: six digits then eight letters or digits. The
+    // `regex` crate has no lookaround, so `find_order_id` checks by hand that a longer token is
+    // not cut down to its first fourteen characters.
+    R.get_or_init(|| {
+        Regex::new(r"No\.Pesanan:\s*(\d{6}[0-9A-Z]{8})").expect("built-in Shopee Order ID regex")
+    })
+}
+
 fn ship_by_raw_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
     R.get_or_init(|| {
@@ -46,6 +56,15 @@ fn ship_by_collapsed_re() -> &'static Regex {
     R.get_or_init(|| {
         Regex::new(r"Intransitby:(\d{2})/(\d{2})/(\d{4})(\d{2}):(\d{2})")
             .expect("built-in collapsed ship_by regex")
+    })
+}
+
+fn ship_by_day_re() -> &'static Regex {
+    static R: OnceLock<Regex> = OnceLock::new();
+    // The Shopee-style label's deadline: a date with no time. The `\s*` lets the one pattern read
+    // both the raw text and a spaced-out page's collapsed text.
+    R.get_or_init(|| {
+        Regex::new(r"Batas\s*Kirim:\s*(\d{2})-(\d{2})-(\d{4})").expect("built-in ship_by day regex")
     })
 }
 
@@ -75,9 +94,29 @@ pub fn find_order_id(text: &str) -> Option<OrderId> {
     // line right under the tracking ID, and removing whitespace first would glue the two into
     // one number. So the raw search must come first.
     let collapsed = whitespace_re().replace_all(text, "");
-    labelled_order_id_re()
-        .captures(&collapsed)
-        .map(|c| OrderId::new(&c[1]))
+    if let Some(caps) = labelled_order_id_re().captures(&collapsed) {
+        return Some(OrderId::new(&caps[1]));
+    }
+    // The Shopee-style label prints no 18-digit Order ID; it keys the order by this caption.
+    // Last, so no other style's read changes. The raw text is searched first: dropping the
+    // whitespace would glue the caption's number to the word printed below it, and the guard
+    // that rejects a longer token would then reject every page.
+    shopee_order_id(text).or_else(|| shopee_order_id(&collapsed))
+}
+
+/// The number of the Shopee-style label's `No.Pesanan:` caption in `text`, or `None` when the
+/// caption is absent or the token is longer than its fourteen characters.
+fn shopee_order_id(text: &str) -> Option<OrderId> {
+    let caps = shopee_order_id_re().captures(text)?;
+    let end = caps.get(1).expect("the Shopee caption's number").end();
+    let longer = text[end..]
+        .chars()
+        .next()
+        .is_some_and(|c| c.is_ascii_digit() || c.is_ascii_uppercase());
+    if longer {
+        return None;
+    }
+    Some(OrderId::new(&caps[1]))
 }
 
 fn bump(counts: &mut Vec<(String, usize)>, token: &str) {
@@ -147,9 +186,8 @@ pub fn find_tracking_id(
     most_frequent(&counts).map(TrackingId::new)
 }
 
-fn build_datetime(caps: &regex::Captures<'_>) -> Option<DateTime> {
-    let part = |i: usize| caps[i].parse::<i64>().ok();
-    let (day, month, year, hour, minute) = (part(1)?, part(2)?, part(3)?, part(4)?, part(5)?);
+/// A label deadline from its parts; an impossible date or time is `None`.
+fn datetime(year: i64, month: i64, day: i64, hour: i64, minute: i64) -> Option<DateTime> {
     DateTime::new(
         i16::try_from(year).ok()?,
         i8::try_from(month).ok()?,
@@ -162,14 +200,29 @@ fn build_datetime(caps: &regex::Captures<'_>) -> Option<DateTime> {
     .ok()
 }
 
-/// `labels.find_ship_by`: the label's `In transit by: dd/mm/yyyy hh:mm` deadline, `None` when
-/// absent.
+fn build_datetime(caps: &regex::Captures<'_>) -> Option<DateTime> {
+    let part = |i: usize| caps[i].parse::<i64>().ok();
+    datetime(part(3)?, part(2)?, part(1)?, part(4)?, part(5)?)
+}
+
+/// The deadline a bare date gives: that day at 00:00.
+fn build_day(caps: &regex::Captures<'_>) -> Option<DateTime> {
+    let part = |i: usize| caps[i].parse::<i64>().ok();
+    datetime(part(3)?, part(2)?, part(1)?, 0, 0)
+}
+
+/// `labels.find_ship_by`: the label's `In transit by: dd/mm/yyyy hh:mm` deadline, or the
+/// Shopee-style label's `Batas Kirim: dd-mm-yyyy` day; `None` when absent.
 pub fn find_ship_by(text: &str) -> Option<DateTime> {
     if let Some(caps) = ship_by_raw_re().captures(text) {
         return build_datetime(&caps);
     }
     let collapsed = whitespace_re().replace_all(text, "");
-    ship_by_collapsed_re()
-        .captures(&collapsed)
-        .and_then(|caps| build_datetime(&caps))
+    if let Some(caps) = ship_by_collapsed_re().captures(&collapsed) {
+        return build_datetime(&caps);
+    }
+    ship_by_day_re()
+        .captures(text)
+        .or_else(|| ship_by_day_re().captures(&collapsed))
+        .and_then(|caps| build_day(&caps))
 }

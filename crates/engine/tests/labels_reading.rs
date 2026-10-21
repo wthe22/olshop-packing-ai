@@ -98,6 +98,36 @@ fn one_row() -> Vec<Row<'static>> {
     vec![("Spion Beat", "honda", "SELL-SPI-01", 1)]
 }
 
+/// A page of the Shopee-style label: its own order number and the SPX clues in the text, and
+/// the slip's Indonesian header above the given rows.
+fn shopee_page(rows: &[Row]) -> PageText {
+    let mut runs = vec![
+        run(9.2, 300.0, "#"),
+        run(23.4, 300.0, "Nama Produk"),
+        run(162.6, 300.0, "SKU"),
+        run(212.0, 300.0, "V"),
+        run(216.5, 300.0, "ariasi"),
+        run(269.6, 300.0, "Qty"),
+    ];
+    let mut y = 300.0 - 8.2;
+    for (name, variation, seller_sku, quantity) in rows {
+        runs.push(run(23.4, y, name));
+        runs.push(run(162.6, y, seller_sku));
+        runs.push(run(212.0, y, variation));
+        runs.push(run(269.6, y, &quantity.to_string()));
+        y -= 8.2;
+    }
+    y -= 8.2;
+    runs.push(run(8.5, y, "Pesan:"));
+    runs.push(run(35.1, y, "261014ABCD1234"));
+    PageText {
+        text: "No.Pesanan: 261014ABCD1234\nSPXID00000000002A\nBatas Kirim: 15-10-2026".to_string(),
+        runs,
+        width: 297.12,
+        logos: vec![logo("4583097ef370a670")],
+    }
+}
+
 #[test]
 fn a_display_name_cuts_at_the_pipe_and_appends_a_variation() {
     let cases = [
@@ -112,6 +142,33 @@ fn a_display_name_cuts_at_the_pipe_and_appends_a_variation() {
     for (name, variation, expected) in cases {
         assert_eq!(display_name(name, variation), expected);
     }
+}
+
+#[test]
+fn the_shopee_style_page_reads_into_one_order_keyed_by_its_own_number() {
+    let page = shopee_page(&[("Sepatu Standar Samping", "Biru,Honda", "SPION-MPX-ALEVO", 2)]);
+    let reading = read_batch(vec![(0usize, 0usize, page)], &["spx.pdf"], table()).unwrap();
+
+    assert_eq!(reading.orders.len(), 1);
+    let order = &reading.orders[0];
+    assert_eq!(order.order.order_id.as_str(), "261014ABCD1234");
+    assert_eq!(
+        order.order.tracking_id.as_ref().map(TrackingId::as_str),
+        Some("SPXID00000000002")
+    );
+    assert_eq!(order.order.courier.as_deref(), Some("SPX"));
+    assert_eq!(
+        order.order.ship_by.unwrap().to_string(),
+        "2026-10-15T00:00:00"
+    );
+    assert_eq!(order.order.lines.len(), 1);
+    assert_eq!(order.order.lines[0].variation, "Biru,Honda");
+    assert_eq!(order.order.lines[0].seller_sku, "SPION-MPX-ALEVO");
+    assert_eq!(order.order.lines[0].quantity, 2);
+    assert_eq!(order.qty_total, None);
+    assert!(order.order.customer_message.is_empty());
+    assert!(reading.warnings.is_empty());
+    assert!(reading.unseen_logos.is_empty());
 }
 
 #[test]
