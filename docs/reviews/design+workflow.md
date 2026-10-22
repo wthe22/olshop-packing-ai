@@ -34,26 +34,34 @@ This app will be used as a portable app.
 - 
 
 
-## Data Schemas
-- app.exe
-
 
 ### Data folder
 
 Namespace represents an owner.
 
-
+Beside app.exe:
 ```
-{namespace}/{date}/
-{namespace}/{date}/
+packing-settings.toml
+packing-workflows.toml
 ```
 
-### `packing-app.toml`
-Scope: user preferences
+
+Inside data directory:
+```
+{namespace}/{date}/session.toml
+{namespace}/{date}/orders.toml
+{namespace}/{date}/batch-{n}/batch.toml
+```
+
+
+## Data Schemas
+
+### `packing-settings.toml`
+Scope: settings / preferences
 
 Schema:
 ```
-AppPreferences {
+AppSettings {
   schema: String // Version
   data_dir: Path // Path to the data directory
   workflow_file: Path // Path to the workflow file
@@ -62,14 +70,14 @@ AppPreferences {
 - Relative and absolute paths must be supported
 
 ### `packing-workflows.toml`
-Scope: workflows
+Scope: PDF processing
 
 Schema:
 ```
 PackingWorkflows {
   schema: String // version
   couriers: List<Courier>
-  courier_detection: List<CourierDetection>
+  courier_deduction: List<CourierDeduction>
   workflows: List<Workflow>
 }
 
@@ -78,7 +86,7 @@ Courier {
   name: String // Display name
 }
 
-CourierDetection {
+CourierDeduction {
   courier_code: String // Courier code, unique
   logos: List<String> // Logo hash (XXH3-64)
   shapes: List<String> // Shape hash (XXH3-64)
@@ -98,6 +106,56 @@ SortGroup {
 }
 ```
 
+### `session.toml`
+Scope: session state
+
+```
+SessionInfo {
+  date: String
+}
+```
+
+### `batch.toml`
+Scope: batch info
+
+```
+BatchInfo {
+  create_time: Datetime
+  modified_time: Option<Datetime>
+  pdfs: List<PdfInfo>
+}
+
+PdfInfo {
+  filename: String
+  size: u64 // Size in bytes
+  hash_sha256: String // SHA-256 hash of the PDF
+  orders: u16 // Number of orders in the PDF
+  pages: u16 // Number of pages in the PDF
+}
+```
+
+
+### `orders.toml`
+Scope: order info
+
+```
+Order { 
+  pdf: u16 // PDF number (day wide)
+  order_id: String // Order ID
+  tracking_id: String
+  courier_code: String
+  items: List<Item>
+  total_quantity: u16
+  ship_by: Option<Datetime>
+}
+
+Item {
+  name: String
+  variant: String
+  sku: String
+  quantity: u16
+}
+```
 
 
 ## First time setup
