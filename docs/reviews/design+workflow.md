@@ -126,6 +126,8 @@ PdfID: u16
 
 PrintBatch {
   batch_number: u16
+  create_time: Datetime
+  modified_time: Datetime
   pdfs: List<PdfID>
   workflow: Option<String> // Workflow name, if custom then none
 }
@@ -174,6 +176,10 @@ ItemPick {
 
 ### `batch-summary.toml`
 Scope: batch summary, packing list info
+
+Summary of the batch. Everything here is computed from top-level data.
+If this file ever contains info that is not derivable from top-level data,
+it should be considered a schema design error.
 
 This file alone can be used to generate the batch packing list PDF.
 
