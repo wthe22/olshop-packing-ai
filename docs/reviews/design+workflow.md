@@ -30,12 +30,7 @@ This warehouse handles orders from multiple owners
 # Software Workflow
 This app will be used as a portable app.
 
-- At config 
-- 
-
-
-
-### Data folder
+## Data folder
 
 Namespace represents an owner.
 
@@ -49,8 +44,9 @@ packing-workflows.toml
 Inside data directory:
 ```
 {namespace}/{date}/session.toml
-{namespace}/{date}/orders.toml
-{namespace}/{date}/batch-{n}/batch.toml
+{namespace}/{date}/order-content.toml
+{namespace}/{date}/orders.csv
+{namespace}/{date}/batch-{n}/batch-summary.toml
 ```
 
 
@@ -110,9 +106,10 @@ SortGroup {
 Scope: session state
 
 ```
-SessionInfo {
+Session {
   date: String
-  pdfs: List<PdfInfo>
+  pdfs: Map<PdfID, PdfInfo>
+  pdf_auto_increment: PdfID
 }
 
 PdfInfo {
@@ -124,62 +121,83 @@ PdfInfo {
   earliest_ship_by: Datetime
   latest_ship_by: Datetime
 }
+
+PdfID: u16
 ```
 
-### `orders.toml`
+### `orders.csv`
 Scope: order info
 
 ```
 Order { 
-  pdf: u16 // PDF number (day wide)
-  order_id: String // Order ID
+  pdf_num: u16 // PDF number (day wide)
+  page_start: u16 // Starting page number
+  page_end: u16 // Ending page number
+  order_id: String
   tracking_id: String
   courier_code: String
-  profile_id: String
+  content_id: u16
+  ship_by: Datetime
+}
+
+```
+
+### `order-content.toml`
+Scope: order content
+
+```
+Root {
+  auto_increment: ContentID
+  order_content: Map<ContentID, OrderContent>
+}
+
+ContentID: u16
+
+OrderContent {
+  items: List<ItemPick>
   total_quantity: u16
-  ship_by: Option<Datetime>
-}
-```
-
-### `order-profiles.toml`
-Scope: order info
-
-```
-OrderProfile { 
-  id: String // Profile ID
-  items: List<Item>
 }
 
-Item {
+ItemPick {
   name: String
   variant: String
-  sku: String
+  sku: Option<String>
   quantity: u16
 }
 ```
 
-### `batch.toml`
-Scope: batch info
+### `batch-summary.toml`
+Scope: batch summary, packing list info
+
+This file alone can be used to generate the batch packing list PDF.
 
 ```
-BatchInfo {
+Root {
+  batch_no: u16 // Batch number
   create_time: Datetime
-  modified_time: Option<Datetime>
+  modified_time: Option<Datetime> // For amends
+  pdf_list: List<PdfInfo>
+  print_groups: List<PrintGroup>
+  picking_list: List<ItemPick>
+  warnings: List<String>
+  order_count: u16
 }
 
+PrintGroup {
+  number: GroupNumber
+  name: String
+  contents: List<OrderContentSummary>
+}
+
+OrderContentSummary {
+  items: List<ItemPick>
+  order_count: u16
+}
+
+GroupNumber: u16
 ```
 
 
 
 ## First time setup
 - Configure a folder to store the data
-- For 
-couriers: 
-
-```
-
-
-
-## First time setup
-- Configure a folder to store the data
-- For
