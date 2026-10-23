@@ -39,7 +39,7 @@ This app will be used as a portable app.
 
 Namespace represents an owner.
 
-Beside app.exe:
+Beside <app>.exe:
 ```
 packing-settings.toml
 packing-workflows.toml
@@ -112,16 +112,6 @@ Scope: session state
 ```
 SessionInfo {
   date: String
-}
-```
-
-### `batch.toml`
-Scope: batch info
-
-```
-BatchInfo {
-  create_time: Datetime
-  modified_time: Option<Datetime>
   pdfs: List<PdfInfo>
 }
 
@@ -131,9 +121,10 @@ PdfInfo {
   hash_sha256: String // SHA-256 hash of the PDF
   orders: u16 // Number of orders in the PDF
   pages: u16 // Number of pages in the PDF
+  earliest_ship_by: Datetime
+  latest_ship_by: Datetime
 }
 ```
-
 
 ### `orders.toml`
 Scope: order info
@@ -144,9 +135,19 @@ Order {
   order_id: String // Order ID
   tracking_id: String
   courier_code: String
-  items: List<Item>
+  profile_id: String
   total_quantity: u16
   ship_by: Option<Datetime>
+}
+```
+
+### `order-profiles.toml`
+Scope: order info
+
+```
+OrderProfile { 
+  id: String // Profile ID
+  items: List<Item>
 }
 
 Item {
@@ -156,6 +157,18 @@ Item {
   quantity: u16
 }
 ```
+
+### `batch.toml`
+Scope: batch info
+
+```
+BatchInfo {
+  create_time: Datetime
+  modified_time: Option<Datetime>
+}
+
+```
+
 
 
 ## First time setup
