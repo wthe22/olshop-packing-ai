@@ -1,6 +1,6 @@
 # Open questions: app
 
-Questions: Q-APP-1, Q-APP-2, Q-APP-3.
+Questions: Q-APP-1, Q-APP-2, Q-APP-3, Q-APP-8 to Q-APP-11.
 
 ## Q-APP-1 — A warning alone in the check before saving
 
@@ -59,3 +59,51 @@ next batch finds those orders unsaved and reads them again.
 **What the answer changes:** the plan for an amend and the save check (`crates/engine/`), the **×** on
 the selection page, and the wording in [batch.md](../app/batch.md) and
 [new-batch.md](../ui/new-batch.md).
+
+## Q-APP-8 — Which field identifies an item
+
+**Words.** An item is one product line of an order. The platform's `SKU ID` is not on the label PDFs, so the
+app has only the name, the variation and the Seller SKU (the Shopee-style slip's `SKU` column, often empty).
+
+**Example.** Two orders each have *Sepatu, 42, Seller SKU SP-0001*; a third has *Sepatu, 42* with no Seller SKU.
+
+| Option | What the owner sees |
+|---|---|
+| **1. Name and variation** (**Default**) | The three lines are one item: the packing key of the runs and of the saved items |
+| 2. Name, variation and Seller SKU | The third line is a different item, so its order sits in another run |
+
+**What the answer changes:** the contents key ([picks.md](../labels/picks.md)), the runs, the item fields of `saved[]`, and [conventions.md](../conventions.md).
+
+## Q-APP-9 — A deadline with a date only
+
+**Words.** The TikTok label prints `In transit by: dd/mm/yyyy hh:mm` (a `Datetime`). The Shopee-style label prints `Batas Kirim: dd-mm-yyyy`, a date with no time.
+
+| Option | What the owner sees |
+|---|---|
+| **1. One field, optional time** (**Default**) | `ship_by_time` is a `Datetime`, empty for a date-only label; the date is still shown |
+| 2. A separate date field | `ship_by_date` (a `Date`) for date-only labels, `ship_by_time` for the rest |
+
+**What the answer changes:** the `ship_by` condition field ([conditions.md](../rules-file/conditions.md)), `orders.csv` and `saved[]`.
+
+## Q-APP-10 — One namespace per owner, or one per shop
+
+**Words.** The owner's draft says an owner may have several shops. A namespace is the owner; a shop's orders on the same day would share its numbers and its already-saved guard.
+
+| Option | What the owner sees |
+|---|---|
+| **1. One namespace per owner** (**Default**) | All shops of an owner on one date share one numbering; the already-saved guard covers the whole namespace and date |
+| 2. One namespace per shop | Each shop has its own numbers and guard, as the sessions had |
+
+**What the answer changes:** the namespace folders, the numbering and the guard ([D-APP-5](../decisions/app.md)).
+
+## Q-APP-11 — Where packing-workflows.toml lives
+
+**Words.** The owner's draft places `packing-settings.toml` and `packing-workflows.toml` beside the program. Today the groupings and `couriers.toml` are in the data folder ([data folder](../app/data-folder.md)).
+
+| Option | What the owner sees |
+|---|---|
+| **1. Beside the program** (**Default**) | One portable file with the couriers and the groupings; the data folder holds only the days |
+| 2. In the data folder | The file travels with the owner's data; the program folder has no state |
+
+**What the answer changes:** the file's location in the app ([architecture](../app/architecture.md)) and [D-APP-6](../decisions/app.md).
+

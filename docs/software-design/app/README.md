@@ -23,7 +23,7 @@ Owner decisions about how the app works:
 | Topic | Decision |
 |---|---|
 | How it is used | Windows program, buttons ([Screens](../ui/README.md)) |
-| Orders CSV | **Not read at all.** All order data comes from the label and its packing slip |
+| Order data | All of it comes from the label and its packing slip ([D-APP-4](../decisions/app.md)) |
 | Plain labels (no packing slip) | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
 | Rules file vs interactive menu | One screen: the categories of the batch's grouping are applied in order as a proposal; the owner can skip, move or add a pick for this batch before saving ([Plan screen](../ui/plan.md)) |
 | Undo | **Revert** (undo the last batch) and **Amend** (redo the last batch in place), like git |

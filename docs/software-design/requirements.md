@@ -60,7 +60,7 @@ in [PC app](app/README.md).
 
 - **F-APP-1** Write `summary.txt`; stop with a clear message on any problem.
 - **F-APP-2** Input: one or more *Shipping label + Packing slip* PDFs per batch; plain labels stop
-  the batch with instructions. No orders CSV.
+  the batch with instructions.
 - **F-APP-3** One **Save** writes the batch completely or not at all, into
   `labels/<session>/batch <b>/`; numbering continues through the session.
 - **F-APP-4** The last batch can be reverted (undone) or amended (redone in place).

@@ -63,33 +63,23 @@ The date is written year-month-day; the time is `HH:MM` without seconds.
 
 | Field | Type | Level | Source | Value |
 |---|---|---|---|---|
-| `name` | text | item | slip, CSV | Full product name (the slip prints it in full; CSV `Product Name`) |
+| `name` | text | item | slip | Full product name (the slip prints it in full) |
 | `display_name` | text | item | — | Display name (name before `\|` + variation) |
-| `variation` | text | item | slip, CSV | Variation; the slip's `SKU` column (its `Variasi` column on the Shopee-style slip; `Default` reads as empty) |
-| `sku_id` | text | item | CSV | `SKU ID`. CSV-only |
-| `seller_sku` | text | item | slip, CSV | `Seller SKU` (the Shopee-style slip's `SKU` column; often empty) |
-| `product_category` | text | item | CSV | `Product Category`. CSV-only |
-| `line_quantity` | number | item | slip, CSV | Quantity of one line |
-| `total_quantity` | number | order | — | Sum of the order's quantities |
+| `variation` | text | item | slip | Variation; the slip's `SKU` column (its `Variasi` column on the Shopee-style slip; `Default` reads as empty) |
+| `seller_sku` | text | item | slip | `Seller SKU` (the Shopee-style slip's `SKU` column; often empty) |
+| `line_quantity` | number | item | slip | Quantity of one line |
+| `total_quantity` | number | order | slip | The `Qty Total` printed on the slip; none on the Shopee-style slip, so a condition on it finds no value |
 | `distinct_items` | number | order | — | Number of lines (different products) of the order |
-| `courier` | text | order | label or CSV | `Shipping Provider Name`, or deduced from the label ([courier.md](../labels/courier.md)) |
+| `courier` | text | order | label | Deduced from the label ([courier.md](../labels/courier.md)) |
 | `order_id` | text | order | label | The order's Order ID; the Search panel finds an order by it ([Search](../ui/search.md)) |
-| `channel` | text | order | CSV | `Purchase Channel` (TikTok / Tokopedia). CSV-only |
-| `tracking_id` | text | order | label, CSV | The tracking ID printed on the label (also the barcode and QR value) |
+| `tracking_id` | text | order | label | The tracking ID printed on the label (also the barcode and QR value) |
 | `ship_by` | date/time | order | label | `In transit by: dd/mm/yyyy hh:mm` |
-| `paid_time` | date/time | order | CSV | `Paid Time`. CSV-only |
-| `rts_time` | date/time | order | CSV | `RTS Time`. CSV-only |
-| `created_time` | date/time | order | CSV | `Created Time`. CSV-only |
 | `category` | text | order | — | Category `code`. **App scan filters only** |
 | `batch` | number | order | — | **App scan filters only**; meaning revised with the app |
 | `group` | number | order | — | **App scan filters only**; meaning revised with the app |
 
-- `sku_id`, `product_category`, `channel`, `paid_time`, `rts_time` and `created_time` need a
-  CSV; a pick using one without a CSV stops the run ([picks.md](../labels/picks.md)). The
-  PC app reads no CSV, so in its rules these fields are always an error
-  ([inputs.md](../app/inputs.md)).
-- `product_category` is the platform's category, not the shop's: do not use it in a grouping.
-- Item fields need item data (a slip or a CSV); a pick using one with neither stops the run.
+- Item fields need item data (the slip); a pick using one on an order without a slip stops the run
+  ([picks.md](../labels/picks.md)).
 - Categories may use only the fields without "app scan filters only" (a category cannot depend
   on itself or on numbering that is computed after the categories).
 

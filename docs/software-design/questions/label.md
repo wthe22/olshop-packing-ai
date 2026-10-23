@@ -48,15 +48,12 @@ caption `Kode Pengambilan` only, so a differently drawn instant label is missed.
 
 | Option | What the owner sees |
 |---|---|
-| **1. The name comes from the order export** (**Default**) | An instant order is named from its CSV row's `Shipping Provider Name` (Gojek) and marked *instant*, so its packing-list line reads `Gojek (instant) ×1`. With no CSV row the order shows `Gojek (instant)` from the tag `GKS` and also appears in the unknown-courier warning |
-| 2. A tag → courier table in `couriers.toml` | `GKS` = Gojek; a later `GRB`/`BLZ` is a file edit, not a program change; the label alone always names the courier, and an unseen tag is asked about once like an unseen logo |
-| 3. Ask the owner once per unseen tag, like the logo prompt | Nothing to maintain; the same question returns whenever the platform changes a code |
+| **1. A tag → courier table in `couriers.toml`** (**Default**) | `GKS` = Gojek; a later `GRB`/`BLZ` is a file edit, not a program change; the label alone names the courier, and an unseen tag is asked about once like an unseen logo |
+| 2. Ask the owner once per unseen tag, like the logo prompt | Nothing to maintain; the same question returns whenever the platform changes a code |
 
-Recommended: **1**, with 2's table as the fallback for the export-less case (the tag is the only
-label-side key, so it may as well be recorded).
+The first option is the only one that names the instant order from its label alone: its packing-list line reads `Gojek (instant) ×1`.
 
-**What the answer changes:** `couriers.toml` (a `tag` table or nothing), the courier part of a
-packing-list line, and whether an instant order can be named at all.
+**What the answer changes:** `couriers.toml` (a `tag` table or nothing), the courier part of a packing-list line, and whether an instant order is named at all.
 
 ## Q-LABEL-3 — Where the pickup code shows during packing
 

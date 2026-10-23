@@ -88,6 +88,26 @@ Only documents were written; **no code was changed**.
   the answered questions and writes the tasks. Where the code differs from the workflow:
   [workflow-audit](workflow-audit.md) (W-1 to W-8; W-5 and W-7 can lose files and are worth a test first).
 
+## Next step — the v0.2 data draft (the owner's review, 2026-10-23)
+
+The owner's draft [reviews/design+workflow.md](../../reviews/design+workflow.md) is the v0.2 data schema. Its
+decisions are settled in [decisions/app.md](../../software-design/decisions/app.md) (D-APP-3 to D-APP-6): an
+`X.Y` schema version with no migration, the platform export not read, the session replaced by the namespace,
+and the courier list merged into `packing-workflows.toml`. Open for the owner: [Q-APP-8 to Q-APP-11](../../software-design/questions/app.md)
+and the **Printed** tick in the draft (the owner revises its schema).
+
+Still to do in `software-design/`, before any v0.2 task:
+
+- **Session → namespace** (D-APP-5): `app/` (sessions, data folder, batch, duplicates, program, README),
+  `ui/` (sessions, day, plan, messages, new batch, README), `workflow/` (steps 1 to 3 and the README),
+  `labels/picks.md`, `requirements.md` (concepts, F-APP-6), and the session questions in `questions/sessions.md`
+  and `questions/ui.md` (answered by D-APP-5, then removed). The list is `grep -rl -i session software-design`.
+- **`couriers.toml` → `packing-workflows.toml`** (D-APP-6), after Q-APP-11: the files are listed by
+  `grep -rl couriers.toml software-design`.
+- The owner confirms the draft's file names (`session.toml`, `batch-{n}`); the app code follows only then.
+- The platform export is still described in `business-process/` (the shop's work today, kept) and in
+  `development/cli.md` (the analysis helpers). Removing it there waits for the owner's word.
+
 ## Phase 2 — PC app (Rust + Tauri)
 
 A Windows program for the daily work: label downloads in, picks adjusted on screen, saved PDFs and packing

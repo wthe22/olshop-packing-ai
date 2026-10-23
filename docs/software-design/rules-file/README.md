@@ -55,8 +55,6 @@ name = "Lainnya"
 - Validation: unknown key, missing
   `code`/`name`, duplicate `code`, `when` missing on an entry that is not last, condition errors
   ([conditions.md](conditions.md)).
-- In the PC app, a pick whose condition uses a field with no value (a CSV-only field) is an error
-  ([inputs.md](../app/inputs.md)).
 
 ## Groupings
 

@@ -79,13 +79,12 @@ Only fields with a source on the label or slip:
 | Field | Level | Source |
 |---|---|---|
 | `name`, `display_name`, `variation`, `seller_sku`, `line_quantity` | item | slip |
-| `total_quantity`, `distinct_items` | order | computed from the slip |
+| `total_quantity` | order | the slip's `Qty Total` |
+| `distinct_items` | order | computed from the lines |
 | `order_id`, `tracking_id`, `courier`, `ship_by` | order | label |
 
-A condition that uses a CSV field (`sku_id`, `product_category`, `channel`, `paid_time`,
-`rts_time`, `created_time`) is an error in the rules check, with line and column:
-
-> `line 18, col 8: field "product_category" needs the orders CSV, which the PC app does not read`
+A condition that names no field of the [conditions](../rules-file/conditions.md) table is an error in the
+rules check, with line and column.
 
 The app scan-filter fields (`category`, `batch`, `group`) stay errors as in
 [conditions](../rules-file/conditions.md).

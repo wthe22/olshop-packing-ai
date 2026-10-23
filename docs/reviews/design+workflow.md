@@ -32,7 +32,15 @@ This app will be used as a portable app.
 
 ## Data folder
 
-A namespace represents an owner.
+A namespace represents an owner. It is the top folder of the data: one folder per date sits inside it, and
+the saved-PDF and batch numbers run through that date of that namespace. There is no session name.
+
+Types: `Date` is `2026-10-07`, `Time` is `14:26`, `Datetime` is ISO 8601 with the UTC offset
+(`2026-10-07T14:26:00+07:00`).
+
+Versions: every file carries `schema` as an `X.Y` version (this schema is `0.2`). A schema change raises
+the app version (this schema ships as app `v0.2`). There is no migration: data written by an older version
+is thrown away.
 
 Beside `<app>.exe`:
 ```
@@ -58,19 +66,19 @@ Scope: settings / preferences
 Schema:
 ```
 AppSettings {
-  schema: String // Version
+  schema: String // X.Y version, e.g. 0.2
   data_dir: Path // Path to the data directory
 }
 ```
 - Relative and absolute paths must be supported
 
 ### `packing-workflows.toml`
-Scope: PDF processing
+Scope: PDF processing. Holds the courier list (merged from the former `couriers.toml`) and the groupings.
 
 Schema:
 ```
 PackingWorkflows {
-  schema: String // version
+  schema: String // X.Y version, e.g. 0.2
   couriers: List<Courier>
   courier_deduction: List<CourierDeduction>
   workflows: List<Workflow>
@@ -106,7 +114,8 @@ Scope: session state
 
 ```
 Session {
-  date: String
+  schema: String // X.Y version, e.g. 0.2
+  date: Date
   pdfs: Map<PdfID, PdfInfo>
   pdf_auto_increment: PdfID
   batch: List<PrintBatch>
@@ -118,8 +127,8 @@ PdfInfo {
   hash_sha256: String
   order_count: u16
   page_count: u16
-  earliest_ship_by: Datetime
-  latest_ship_by: Datetime
+  earliest_ship_by_time: Datetime
+  latest_ship_by_time: Datetime
 }
 
 PdfID: u16
@@ -134,7 +143,7 @@ PrintBatch {
 ```
 
 ### `orders.csv`
-Scope: order info
+Scope: order info. Written by the app from the label PDFs; it is not an input.
 
 ```
 Order { 
@@ -145,7 +154,7 @@ Order {
   tracking_id: String
   courier_code: String
   content_id: u16
-  ship_by: Datetime
+  ship_by_time: Datetime
 }
 
 ```
@@ -155,6 +164,7 @@ Scope: order content
 
 ```
 Root {
+  schema: String // X.Y version, e.g. 0.2
   auto_increment: ContentID
   order_content: Map<ContentID, OrderContent>
 }
@@ -163,13 +173,13 @@ ContentID: u16
 
 OrderContent {
   items: List<ItemPick>
-  total_quantity: u16
+  total_quantity: Option<u16> // Qty Total printed on the slip; none on the Shopee-style slip. A check against the lines, not a sum
 }
 
 ItemPick {
   name: String
   variant: String
-  sku: Option<String>
+  sku: Option<String> // Seller SKU; the platform SKU ID is never on the PDFs
   quantity: u16
 }
 ```
@@ -177,17 +187,17 @@ ItemPick {
 ### `batch-summary.toml`
 Scope: batch summary, packing list info
 
-Summary of the batch. Everything here is computed from top-level data.
-If this file ever contains info that is not derivable from top-level data,
-it should be considered a schema design error.
+A cache. Every field is reproduced from the top-level files; the app may rewrite it at any time and
+rebuilds it when it is missing.
 
 This file alone can be used to generate the batch packing list PDF.
 
 ```
 Root {
+  schema: String // X.Y version, e.g. 0.2
   batch_number: u16 // Batch number
   create_time: Datetime
-  modified_time: Option<Datetime> // For amends
+  modified_time: Datetime // Same as the batch's modified_time in session.toml
   pdf_list: List<PdfInfo>
   print_groups: List<PrintGroup>
   picking_list: List<ItemPick>
