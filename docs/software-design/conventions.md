@@ -9,8 +9,8 @@ Apply to every design, document and code line of the PC app.
 - Orders are identified by `Order ID`.
 - Date and time fields use the types `Date` (`2026-10-07`), `Time` (`14:26`) and `Datetime` (with the UTC offset).
   A `*_time` field is a `Datetime`.
-- Every data file carries `schema` as an `X.Y` version. A schema change is a new app version; there is no
-  migration, so older data is thrown away ([D-APP-3](decisions/app.md)).
+- Every data file carries `schema` as an `X.Y` version, starting at `1.0`. The schema version is separate from the
+  app version; a schema change raises the app version, and there is no migration, so older data is thrown away ([D-APP-3](decisions/app.md)).
 - Requirement IDs (`F-LABEL-3`) are stable references for documents; code, comments and tests do not cite them
   (`tools/check-comments.mjs`).
 - Requirements, decisions, questions and review items carry scoped IDs (`F-UI-1`, `D-APP-2`, `Q-UI-1`, `R-UI-8`); a number is

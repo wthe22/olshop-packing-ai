@@ -24,9 +24,9 @@ costs 1–2 s on a large day.
 
 ## D-APP-3 — Data carries an X.Y schema version; no migration
 
-**Decision.** Every data file carries `schema` as an `X.Y` version (the v0.2 schema is `0.2`). A change of
-schema is a new app version (this schema ships as app `v0.2`). Data written by an older version is thrown
-away; the app does not migrate it.
+**Decision.** Every data file carries `schema` as an `X.Y` version, starting at `1.0`. The schema version is
+not the app version: the build that writes this schema is app `v0.2`, and a schema change raises the app
+version. Data written by an older version is thrown away; the app does not migrate it.
 
 **Why.** The owner's choice: the data is a working set, and the labels can be read again.
 

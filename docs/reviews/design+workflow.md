@@ -38,9 +38,9 @@ the saved-PDF and batch numbers run through that date of that namespace. There i
 Types: `Date` is `2026-10-07`, `Time` is `14:26`, `Datetime` is ISO 8601 with the UTC offset
 (`2026-10-07T14:26:00+07:00`).
 
-Versions: every file carries `schema` as an `X.Y` version (this schema is `0.2`). A schema change raises
-the app version (this schema ships as app `v0.2`). There is no migration: data written by an older version
-is thrown away.
+Versions: every file carries `schema` as an `X.Y` version, starting at `1.0`. The schema version is not the
+app version. The app version of this build is `v0.2`, and a schema change raises it. There is no migration:
+data written by an older version is thrown away.
 
 Beside `<app>.exe`:
 ```
@@ -66,7 +66,7 @@ Scope: settings / preferences
 Schema:
 ```
 AppSettings {
-  schema: String // X.Y version, e.g. 0.2
+  schema: String // X.Y version, starts at 1.0
   data_dir: Path // Path to the data directory
 }
 ```
@@ -78,7 +78,7 @@ Scope: PDF processing. Holds the courier list (merged from the former `couriers.
 Schema:
 ```
 PackingWorkflows {
-  schema: String // X.Y version, e.g. 0.2
+  schema: String // X.Y version, starts at 1.0
   couriers: List<Courier>
   courier_deduction: List<CourierDeduction>
   workflows: List<Workflow>
@@ -114,7 +114,7 @@ Scope: session state
 
 ```
 Session {
-  schema: String // X.Y version, e.g. 0.2
+  schema: String // X.Y version, starts at 1.0
   date: Date
   pdfs: Map<PdfID, PdfInfo>
   pdf_auto_increment: PdfID
@@ -164,7 +164,7 @@ Scope: order content
 
 ```
 Root {
-  schema: String // X.Y version, e.g. 0.2
+  schema: String // X.Y version, starts at 1.0
   auto_increment: ContentID
   order_content: Map<ContentID, OrderContent>
 }
@@ -194,7 +194,7 @@ This file alone can be used to generate the batch packing list PDF.
 
 ```
 Root {
-  schema: String // X.Y version, e.g. 0.2
+  schema: String // X.Y version, starts at 1.0
   batch_number: u16 // Batch number
   create_time: Datetime
   modified_time: Datetime // Same as the batch's modified_time in session.toml

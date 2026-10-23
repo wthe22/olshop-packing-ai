@@ -90,7 +90,7 @@ Only documents were written; **no code was changed**.
 
 ## Next step — the v0.2 data draft (the owner's review, 2026-10-23)
 
-The owner's draft [reviews/design+workflow.md](../../reviews/design+workflow.md) is the v0.2 data schema. Its
+The owner's draft [reviews/design+workflow.md](../../reviews/design+workflow.md) is the data schema (`1.0`) of app v0.2. Its
 decisions are settled in [decisions/app.md](../../software-design/decisions/app.md) (D-APP-3 to D-APP-6): an
 `X.Y` schema version with no migration, the platform export not read, the session replaced by the namespace,
 and the courier list merged into `packing-workflows.toml`. Open for the owner: [Q-APP-8 to Q-APP-11](../../software-design/questions/app.md)
