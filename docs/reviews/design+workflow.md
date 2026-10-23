@@ -32,9 +32,9 @@ This app will be used as a portable app.
 
 ## Data folder
 
-Namespace represents an owner.
+A namespace represents an owner.
 
-Beside <app>.exe:
+Beside `<app>.exe`:
 ```
 packing-settings.toml
 packing-workflows.toml
@@ -60,7 +60,6 @@ Schema:
 AppSettings {
   schema: String // Version
   data_dir: Path // Path to the data directory
-  workflow_file: Path // Path to the workflow file
 }
 ```
 - Relative and absolute paths must be supported
@@ -110,19 +109,26 @@ Session {
   date: String
   pdfs: Map<PdfID, PdfInfo>
   pdf_auto_increment: PdfID
+  batch: List<PrintBatch>
 }
 
 PdfInfo {
   filename: String
   size: u64 // Size in bytes
-  hash_sha256: String // SHA-256 hash of the PDF
-  orders: u16 // Number of orders in the PDF
-  pages: u16 // Number of pages in the PDF
+  hash_sha256: String
+  order_count: u16
+  page_count: u16
   earliest_ship_by: Datetime
   latest_ship_by: Datetime
 }
 
 PdfID: u16
+
+PrintBatch {
+  batch_number: u16
+  pdfs: List<PdfID>
+  workflow: Option<String> // Workflow name, if custom then none
+}
 ```
 
 ### `orders.csv`
@@ -173,7 +179,7 @@ This file alone can be used to generate the batch packing list PDF.
 
 ```
 Root {
-  batch_no: u16 // Batch number
+  batch_number: u16 // Batch number
   create_time: Datetime
   modified_time: Option<Datetime> // For amends
   pdf_list: List<PdfInfo>
