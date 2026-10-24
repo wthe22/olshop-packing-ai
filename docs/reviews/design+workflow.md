@@ -6,7 +6,7 @@ This warehouse handles orders from multiple owners
 1. Shop owners send their shipping labels to the admin
 2. The admin will handle the work for them
 
-- An owner MAY have multiple shops.
+- An owner MAY have multiple shops (and multiple platforms).
 
 ## Label Preparation Workflow
 
@@ -51,10 +51,12 @@ packing-workflows.toml
 
 Inside data directory:
 ```
-{namespace}/{date}/session.toml
+{namespace}/{date}/session-replay.toml
 {namespace}/{date}/order-content.toml
 {namespace}/{date}/orders.csv
-{namespace}/{date}/batch-{n}/batch-summary.toml
+{namespace}/{date}/session.toml
+{namespace}/{date}/input/{some-random}.pdf
+{namespace}/{date}/output/{batch_number}-{code} {name} x{count}.pdf
 ```
 
 
@@ -65,7 +67,7 @@ Scope: settings / preferences
 
 Schema:
 ```
-AppSettings {
+Root {
   schema: String // X.Y version, starts at 1.0
   data_dir: Path // Path to the data directory
 }
@@ -73,15 +75,18 @@ AppSettings {
 - Relative and absolute paths must be supported
 
 ### `packing-workflows.toml`
-Scope: PDF processing. Holds the courier list (merged from the former `couriers.toml`) and the groupings.
+Scope: global PDF processing infos
+Type: Input
+
+Holds the courier list (merged from the former `couriers.toml`) and the groupings.
 
 Schema:
 ```
-PackingWorkflows {
+Root {
   schema: String // X.Y version, starts at 1.0
   couriers: List<Courier>
-  courier_deduction: List<CourierDeduction>
-  workflows: List<Workflow>
+  courier_classifier: List<CourierClassifier>
+  pdf_sort_rules: List<PdfSortRules>
 }
 
 Courier {
@@ -89,7 +94,7 @@ Courier {
   name: String // Display name
 }
 
-CourierDeduction {
+CourierClassifier {
   courier_code: String // Courier code, unique
   logos: List<String> // Logo hash (XXH3-64)
   shapes: List<String> // Shape hash (XXH3-64)
@@ -97,53 +102,130 @@ CourierDeduction {
   text: List<String> // Any matching text
 }
 
-Workflow {
-  name: String
-  sort_groups: List<SortGroup>
+PdfSortRules {
+  name: String // Unique
+  groups: List<PdfGrouping>
 }
 
-SortGroup {
-  code: String // unique
-  name: String
-  match: String // Condition for matching
+PdfGroupRule {
+  code: String // unique per workflow
+  name: String // unique per workflow
+  filter: Option<String>
 }
 ```
 
-### `session.toml`
-Scope: session state
+### `session-replay.toml`
+Scope: session inputs
+
+E2E input. All outputs can be derived from this.
 
 ```
 Session {
   schema: String // X.Y version, starts at 1.0
+  input_pdfs: Map<PdfID, PdfFile>
+  sort_workflows: Map<WorkflowID, SortWorkflow>
+  sort_batches: List<SortBatch>
+}
+
+PdfID: u16 // day-wide, auto-incrementing
+WorkflowID: u16 // day-wide, auto-incrementing
+
+PdfFile {
+  file_path: String
+  size: u64 // Size in bytes
+  hash_sha256: String // Hexadecimal encoded
+}
+
+SortBatch {
+  batch_number: u16 // day-wide
+  create_time: Datetime
+  modified_time: Datetime
+  input_pdfs: List<PdfID>
+  workflow_used: WorkflowID
+  sort_group: List<SortGroup>
+}
+
+SortGroup {
+  code: String // PrintGrouping.code
+  output_filename: String
+  is_marked_as_printed: bool
+}
+```
+
+### `session.toml`
+Scope: main working data
+
+```
+Root {
+  schema: String // X.Y version, starts at 1.0
+  namespace: String
   date: Date
   pdfs: Map<PdfID, PdfInfo>
-  pdf_auto_increment: PdfID
-  batch: List<PrintBatch>
+  batch_info: List<BatchInfo>
+  day_info: BatchInfo
 }
+
+Courier: Courier.code
 
 PdfInfo {
   filename: String
   size: u64 // Size in bytes
-  hash_sha256: String
+  hash_sha256: String // Hexadecimal encoded
+  create_time: Datetime // File creation time
+  modify_time: Datetime // File modification time
   order_count: u16
   page_count: u16
-  earliest_ship_by_time: Datetime
-  latest_ship_by_time: Datetime
+  earliest_ship_by_date: Date
+  earliest_ship_by_time: Option<Time>
+  latest_ship_by_date: Date
+  latest_ship_by_time: Option<Time>
+  couriers: List<Courier>
 }
 
-PdfID: u16
-
-PrintBatch {
-  batch_number: u16
+BatchInfo {
   create_time: Datetime
-  modified_time: Datetime
-  pdfs: List<PdfID>
-  workflow: Option<String> // Workflow name, if custom then none
+  modify_time: Datetime
+  input_pdfs: List<PdfID>
+  sort_groups: List<SortGroupSummary>
+  picking_list: List<ItemPick>
+  earliest_ship_by_date: Date
+  earliest_ship_by_time: Option<Time>
+  latest_ship_by_date: Date
+  latest_ship_by_time: Option<Time>
+  couriers: List<Courier>
+  warnings: List<String>
+  order_count: u16
 }
+
+PickSummary {
+  print_groups: List<PrintGroupSummary>
+  picking_list: List<ItemPick>
+  earliest_ship_by_date: Date
+  earliest_ship_by_time: Option<Time>
+  latest_ship_by_date: Date
+  latest_ship_by_time: Option<Time>
+  couriers: List<Courier>
+  warnings: List<String>
+  order_count: u16
+}
+
+OrderGroupSummary {
+  code: String // PrintGrouping.code
+  name: String // PrintGrouping.name
+  contents: List<OrderContentSummary>
+}
+
+OrderContentSummary {
+  items: List<ItemPick>
+  order_count: u16
+}
+
+GroupNumber: u16
 ```
 
 ### `orders.csv`
-Scope: order info. Written by the app from the label PDFs; it is not an input.
+Scope: order info
+Type: cache (from parsing PDFs)
 
 ```
 Order { 
@@ -159,8 +241,9 @@ Order {
 
 ```
 
-### `order-content.toml`
+### `order-contents.toml`
 Scope: order content
+Type: cache (from parsing PDFs)
 
 ```
 Root {
@@ -183,43 +266,6 @@ ItemPick {
   quantity: u16
 }
 ```
-
-### `batch-summary.toml`
-Scope: batch summary, packing list info
-
-A cache. Every field is reproduced from the top-level files; the app may rewrite it at any time and
-rebuilds it when it is missing.
-
-This file alone can be used to generate the batch packing list PDF.
-
-```
-Root {
-  schema: String // X.Y version, starts at 1.0
-  batch_number: u16 // Batch number
-  create_time: Datetime
-  modified_time: Datetime // Same as the batch's modified_time in session.toml
-  pdf_list: List<PdfInfo>
-  print_groups: List<PrintGroup>
-  picking_list: List<ItemPick>
-  warnings: List<String>
-  order_count: u16
-}
-
-PrintGroup {
-  number: GroupNumber
-  name: String
-  contents: List<OrderContentSummary>
-}
-
-OrderContentSummary {
-  items: List<ItemPick>
-  order_count: u16
-}
-
-GroupNumber: u16
-```
-
-
 
 ## First time setup
 - Configure a folder to store the data
