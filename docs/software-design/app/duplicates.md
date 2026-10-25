@@ -54,7 +54,7 @@ be solved one by one.
 |---|---|
 | **Keep the first copies** (default) | For every order of the group, every copy but the first in reading order |
 | **Keep the last copies** | Every copy but the last |
-| **Take input *f* out** | Every copy in input *f*. Offered only when each repeated order of *f* has a copy in another input of the group |
+| **Take input *f* out** | Every copy of the group's repeated orders that lies in input *f*; an order whose only copy is in *f* stays. Offered only when each repeated order of *f* has a copy in another input of the group |
 | **By hand** (an order's radio) | For that order, every copy but the chosen one |
 
 Exactly one copy of each repeated order stays; the app never writes two and never merges them
