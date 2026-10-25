@@ -75,10 +75,35 @@ pub(super) fn normalise_time_value(text: &str) -> Option<String> {
 const TIME_ERROR: &str =
     "expected a date \"YYYY-MM-DD\", a time \"HH:MM\" or a date and time \"YYYY-MM-DD HH:MM\"";
 const CSV_ERROR: &str = "needs the orders CSV, which the PC app does not read";
+const DATE_ERROR: &str = "expected a date \"YYYY-MM-DD\"";
+
+/// The fields of a v0.2 filter (conditions.md): `ship_by` compares a date only.
+const FILTER_FIELDS: &[&str] = &[
+    "name",
+    "display_name",
+    "variation",
+    "seller_sku",
+    "line_quantity",
+    "total_quantity",
+    "distinct_items",
+    "courier",
+    "order_id",
+    "tracking_id",
+    "ship_by",
+];
+
+/// Which language a text is parsed as: `categories.toml`'s conditions, or the filters of
+/// `packing-workflows.toml`, a one-off group and a search.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Grammar {
+    Categories,
+    Filter,
+}
 
 struct Parser {
     tokens: Vec<Token>,
     pos: usize,
+    grammar: Grammar,
 }
 
 impl Parser {
@@ -162,7 +187,11 @@ impl Parser {
 
     fn parse_comparison(&mut self) -> Result<Condition, RulesError> {
         let token = self.peek().clone();
-        let Some((ftype, level)) = field_type(&token.text.to_lowercase()) else {
+        let known = field_type(&token.text.to_lowercase()).filter(|_| {
+            self.grammar == Grammar::Categories
+                || FILTER_FIELDS.contains(&token.text.to_lowercase().as_str())
+        });
+        let Some((ftype, level)) = known else {
             return Err(RulesError::new(format!(
                 "line {}, col {}: unknown field \"{}\"",
                 token.line, token.col, token.text
@@ -241,9 +270,15 @@ impl Parser {
         } else {
             None
         };
+        let value =
+            value.filter(|value| self.grammar == Grammar::Categories || is_date_form(value));
         let Some(value) = value else {
+            let expected = match self.grammar {
+                Grammar::Categories => TIME_ERROR,
+                Grammar::Filter => DATE_ERROR,
+            };
             return Err(RulesError::new(format!(
-                "line {}, col {}: {TIME_ERROR}",
+                "line {}, col {}: {expected}",
                 value_token.line, value_token.col
             )));
         };
@@ -296,13 +331,26 @@ impl Parser {
     }
 }
 
-/// Parse a condition; on a bad text the error is `line L, col C: expected …`.
+/// Parse a condition of `categories.toml`; on a bad text the error is `line L, col C: expected …`.
 pub fn parse_condition(text: &str) -> Result<Condition, RulesError> {
+    parse(text, Grammar::Categories)
+}
+
+/// Parse a filter of `packing-workflows.toml`, a one-off group or a search (conditions.md).
+pub fn parse_filter(text: &str) -> Result<Condition, RulesError> {
+    parse(text, Grammar::Filter)
+}
+
+fn parse(text: &str, grammar: Grammar) -> Result<Condition, RulesError> {
     let tokens = tokenize(text)?;
     if tokens.first().map(|t| t.kind) == Some(TokenKind::Eof) {
         return Err(RulesError::new("line 1, col 1: expected a condition"));
     }
-    let mut parser = Parser { tokens, pos: 0 };
+    let mut parser = Parser {
+        tokens,
+        pos: 0,
+        grammar,
+    };
     let node = parser.parse_or()?;
     let trailing = parser.peek();
     if trailing.kind != TokenKind::Eof {

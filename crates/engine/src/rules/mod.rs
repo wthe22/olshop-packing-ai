@@ -18,5 +18,5 @@ pub use evaluate::{evaluate, fields_used};
 pub use file::{
     RULES_FILE_NAME, catch_all_category, categorize, load_rules, load_rules_named, unconfigured,
 };
-pub use parser::parse_condition;
+pub use parser::{parse_condition, parse_filter};
 pub use printer::format_condition;

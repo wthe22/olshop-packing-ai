@@ -16,6 +16,7 @@ pub mod search;
 pub mod slip;
 pub mod text;
 pub mod verify;
+pub mod workflows;
 
 #[cfg(test)]
 mod tests {

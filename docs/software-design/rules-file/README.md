@@ -123,8 +123,10 @@ facts, not the owner's choices: a new platform needs new reading code and tests 
 
 ## Checks
 
-Unknown key; a missing required field; a duplicate courier code, classifier, rule name, or group code or
-name within a rule; a classifier, a `courier` filter value or a logo answer naming no courier; a hash that
-is not 16 hex characters; a tracking-ID regex that does not compile; a group with no `filter` that is not
-last; a filter error. Each names its line and column of this file. A file that does not parse stops the
+Unknown key; a missing required field; another schema than `1.0`; a courier code that is not lower-case
+letters, digits and `-`; a duplicate courier code, classifier, rule name, or group code or name within a
+rule; a group code that is not 1–3 letters or digits; a classifier, a `courier equals` value or a logo
+answer naming no courier; a hash that is not 16 lower-case hex characters; a tracking-ID regex that does
+not compile; no sort rule, or a rule with no group; a group with no `filter` that is not last; a filter
+error. Each names its line and column of this file. A file that does not parse stops the
 start; a check that fails names the rule and opens the Sort rules screen on it.

@@ -1,0 +1,79 @@
+# The owner's rules: couriers, the clues that name them, and the sort rules.
+# Written beside the program when missing; from then on it is the owner's.
+#
+# A hash is XXH3-64 (seed 0) of an image, 16 lower-case hex characters:
+#   logos   of the image's encoded bytes (one stable value per courier asset)
+#   shapes  of its 64 x 64 appearance, for a masked logo whose bytes name nothing
+# tracking_id is the tracking-ID form, matched fully against a token of the label.
+# A courier is named only when its logo (or shape) and its tracking-ID form agree.
+
+schema = "1.0"
+
+[[couriers]]
+code = "jnt"
+name = "J&T Express"
+
+[[couriers]]
+code = "sicepat"
+name = "SiCepat"
+
+[[couriers]]
+code = "jnt-cargo"
+name = "J&T Cargo"
+
+[[couriers]]
+code = "idx"
+name = "IDX"
+
+[[couriers]]
+code = "spx"
+name = "SPX"
+
+[[couriers]]
+code = "gojek"
+name = "Gojek"
+
+[[courier_classifier]]
+courier_code = "jnt"
+logos = ["39b9b7b9f61d0e7f"]     # 975x377 px, the same asset in every sample file
+tracking_id = 'J[XY]\d{10}'
+text = ["jet.co.id"]
+
+[[courier_classifier]]
+courier_code = "sicepat"
+logos = ["cf33ed60daa291b1"]     # 184x60 px
+tracking_id = '00\d{10}'
+
+[[courier_classifier]]
+courier_code = "jnt-cargo"
+shapes = ["753ccbd14749befa"]    # masked wordmark: its bytes name nothing
+tracking_id = '57\d{10}'
+text = ["FastTrack"]
+
+[[courier_classifier]]
+courier_code = "idx"
+logos = ["9131c1f94ad363d4"]     # 1200x859 px
+tracking_id = 'TKP\d{10}'
+
+[[courier_classifier]]
+courier_code = "spx"
+logos = ["4583097ef370a670"]     # 68x27 px, masked: the small red SPX wordmark
+tracking_id = 'SPXID\d{11}'
+
+[[courier_classifier]]
+courier_code = "gojek"
+instant_tags = ["GKS"]
+
+[not_courier]
+logos = []
+
+# Sort rules: a batch is sorted by the rule chosen for it. Its label groups apply in order; an
+# order goes to the FIRST group whose filter matches. A group without a filter takes every order
+# left and must be last.
+
+[[label_sort_rules]]
+name = "default"
+
+[[label_sort_rules.label_groups]]
+code = "Z"
+name = "Lainnya"
