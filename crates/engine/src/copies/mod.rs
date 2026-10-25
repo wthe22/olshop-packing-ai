@@ -14,6 +14,7 @@ use crate::ids::{CourierCode, OrderId, TrackingId};
 use crate::label::{Form, find_order_id, find_ship_by, find_tracking_id_in};
 use crate::orders::{NoSlip, NoSlipFile, PageItem, UnseenLogo};
 use crate::record::CourierClue;
+use crate::rules::{FilterFields, FilterLine};
 use crate::slip::{SlipLine, read_slip};
 use crate::workflows::Workflows;
 
@@ -257,5 +258,39 @@ fn no_slip_stop(pages: &[(usize, usize)], total: usize, name: &dyn Fn(usize) -> 
         files,
         plain_pages: pages.len(),
         total_pages: total,
+    }
+}
+
+impl FilterFields for Copy {
+    fn lines(&self) -> Vec<FilterLine<'_>> {
+        self.lines
+            .iter()
+            .map(|line| FilterLine {
+                name: &line.name,
+                variation: &line.variation,
+                seller_sku: &line.seller_sku,
+                quantity: line.quantity,
+            })
+            .collect()
+    }
+
+    fn courier(&self) -> &str {
+        self.courier.as_ref().map_or("", CourierCode::as_str)
+    }
+
+    fn order_id(&self) -> &str {
+        self.order_id.as_str()
+    }
+
+    fn tracking_id(&self) -> &str {
+        self.tracking_id.as_ref().map_or("", TrackingId::as_str)
+    }
+
+    fn total_quantity(&self) -> Option<i64> {
+        self.total_quantity
+    }
+
+    fn ship_by(&self) -> Option<Date> {
+        self.ship_by_date
     }
 }

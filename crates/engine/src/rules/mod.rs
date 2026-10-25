@@ -14,7 +14,7 @@ mod tokenizer;
 
 pub use condition::{Category, Condition, NumberOp, TextOp};
 pub use error::RulesError;
-pub use evaluate::{evaluate, fields_used};
+pub use evaluate::{FilterFields, FilterLine, evaluate, evaluate_filter, fields_used};
 pub use file::{
     RULES_FILE_NAME, catch_all_category, categorize, load_rules, load_rules_named, unconfigured,
 };

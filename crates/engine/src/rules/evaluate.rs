@@ -156,3 +156,72 @@ fn collect_fields(cond: &Condition, used: &mut BTreeSet<String>) {
         }
     }
 }
+
+/// What a filter reads from an order (conditions.md, *Fields*).
+pub trait FilterFields {
+    fn lines(&self) -> Vec<FilterLine<'_>>;
+    /// The courier's code; empty when no courier is named.
+    fn courier(&self) -> &str;
+    fn order_id(&self) -> &str;
+    /// Empty when the label printed none.
+    fn tracking_id(&self) -> &str;
+    /// The printed `Qty Total`; none on the Shopee-style slip.
+    fn total_quantity(&self) -> Option<i64>;
+    fn ship_by(&self) -> Option<Date>;
+}
+
+/// One item line as a filter reads it.
+pub struct FilterLine<'a> {
+    pub name: &'a str,
+    pub variation: &'a str,
+    pub seller_sku: &'a str,
+    pub quantity: i64,
+}
+
+/// Evaluate a filter of `packing-workflows.toml`, a one-off group or a search: an item field is
+/// true when one line matches; a field with no value matches no comparison.
+pub fn evaluate_filter(cond: &Condition, order: &dyn FilterFields) -> bool {
+    match cond {
+        Condition::Not(operand) => !evaluate_filter(operand, order),
+        Condition::And(operands) => operands.iter().all(|o| evaluate_filter(o, order)),
+        Condition::Or(operands) => operands.iter().any(|o| evaluate_filter(o, order)),
+        Condition::Text { field, op, value } => {
+            let single = match field.as_str() {
+                "courier" => Some(order.courier()),
+                "order_id" => Some(order.order_id()),
+                "tracking_id" => Some(order.tracking_id()),
+                _ => None,
+            };
+            if let Some(text) = single {
+                return text_match(text, *op, value);
+            }
+            order.lines().iter().any(|line| {
+                let text = match field.as_str() {
+                    "name" => line.name.to_string(),
+                    "display_name" => crate::orders::display_name(line.name, line.variation),
+                    "variation" => line.variation.to_string(),
+                    "seller_sku" => line.seller_sku.to_string(),
+                    _ => return false,
+                };
+                text_match(&text, *op, value)
+            })
+        }
+        Condition::Number { field, op, value } => match field.as_str() {
+            "line_quantity" => order
+                .lines()
+                .iter()
+                .any(|line| number_match(line.quantity, *op, *value)),
+            "total_quantity" => order
+                .total_quantity()
+                .is_some_and(|total| number_match(total, *op, *value)),
+            "distinct_items" => number_match(order.lines().len() as i64, *op, *value),
+            _ => false,
+        },
+        Condition::Time { field, op, value } => match (field.as_str(), order.ship_by()) {
+            ("ship_by", Some(date)) => value
+                .parse::<Date>()
+                .is_ok_and(|literal| ord_match(&date, *op, &literal)),
+            _ => false,
+        },
+    }
+}

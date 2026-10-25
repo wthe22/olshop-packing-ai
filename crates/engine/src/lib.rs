@@ -16,6 +16,7 @@ pub mod rules;
 pub mod rules_edit;
 pub mod search;
 pub mod slip;
+pub mod sorting;
 pub mod text;
 pub mod verify;
 pub mod workflows;
