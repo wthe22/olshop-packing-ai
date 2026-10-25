@@ -14,19 +14,16 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   [the workflow](../../software-design/workflow/README.md) (each step against one page) and the points below;
   a finding goes into [reviews/app.md](../../reviews/app.md) under R-APP-2 and changes the design before the
   task that builds it.
-- **Points of R1 for the owner to check** (each follows the owner's draft or an accepted default; say if one
-  is wrong):
-  1. The ship-by deadline is a **date only**, as the draft's `ship_by_date` says, not Q-APP-9's default of an
-     optional time ([D-APP-21](../../software-design/decisions/app-features.md)).
-  2. Runs group orders by name, variation and quantity (Q-APP-8's default); the draft's stored content also
-     holds the Seller SKU and the printed total, so `session.toml` gains a `run` per content
-     ([views](../../software-design/data/views.md)).
-  3. A run is written `2-A-05` (batch, group, run), following the draft's file name `{batch}-{code} …`.
-  4. A filter on `courier` compares the courier's **code** (`jnt`), picked by name on screen.
-  5. An amend uses the sort rule of the batch's name as it is now, or the batch's snapshot when the name is
-     gone ([D-RULES-2](../../software-design/decisions/rules.md)).
-  6. A continuation page must follow its label page; anywhere else it stops the batch
-     ([D-LABEL-12](../../software-design/decisions/label.md)).
+- **The owner confirmed** (2026-10-25) the points R1 had to settle: the ship-by deadline is a date only
+  (D-APP-21); orders are grouped by name, variation and quantity, the Seller SKU kept only for reference —
+  names and SKUs can change during the day, and the order inside a group matters less than the grouping
+  (D-APP-20); a `courier` filter compares the code; an amend uses the rule of the batch's name, else its
+  snapshot (D-RULES-2); a continuation page must follow its label page (D-LABEL-12).
+- **Open for the owner: [Q-LABEL-11](../../software-design/questions/label.md)**, what to call the orders with
+  the same items inside a group PDF (now *run*). Answer in chat or in that file; then write the chosen word
+  into the design (a decision record, the question removed) before R4 builds it. R2 and R3 do not wait for it.
+- **Before R2: Node.** The coverage compare needs Node 26.7 (`setup.md`); the PC now has Node 24.20 in
+  `C:\Program Files\nodejs`, which rejects `--test-coverage-include-all`. Install Node 26.7 again.
 - **Kept for the rework**: [workflow-audit.md](workflow-audit.md) (where the built program differs from the
   design; R4 to R6 close it) and [2.32](2.32-text-object-split-word.md) (part of R4).
 - The v0.1 program folder `target/portable/Packing/` is unchanged. Its regression list, in
