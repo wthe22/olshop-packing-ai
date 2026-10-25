@@ -51,7 +51,7 @@ no session name and no *Main*.
 **Why.** The owner's choice: the session concept does not suit this workflow.
 
 **Applies to.** The owner's draft ([reviews](../../reviews/design+workflow.md)). The design files that still
-say session are listed in [plan/README.md](../../development/plan/README.md) until they are updated.
+say session are rewritten by task R1 of the [v0.2 rework](../../development/plan/v0.2-rework.md).
 
 ## D-APP-6 — The courier list is part of packing-workflows.toml
 
@@ -60,5 +60,5 @@ Where that file lives is [Q-APP-11](../questions/app.md). This replaces the file
 
 **Why.** The owner's choice: a separate courier file has no purpose once the workflows file exists.
 
-**Applies to.** The owner's draft; the design files that name `couriers.toml` are listed in [plan/README.md](../../development/plan/README.md).
+**Applies to.** The owner's draft; the design files that name `couriers.toml` are rewritten by task R1 of the [v0.2 rework](../../development/plan/v0.2-rework.md).
 
