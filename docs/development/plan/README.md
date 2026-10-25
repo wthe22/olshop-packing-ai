@@ -8,7 +8,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 - **The work is the v0.2 rework**: [v0.2-rework.md](v0.2-rework.md) holds the decisions agreed with the owner
   and the order of work. **R1 is done**: [software-design/](../../software-design/README.md) describes v0.2,
-  every open question is answered by a decision record, and the questions folder is empty. **Next: R2.** A
+  and every question open before it is answered by a decision record. **Next: R2.** A
   task gets its own file in this folder when it starts; until then its row in the order of work is the task.
 - **Not blocked on the owner.** The owner may read the design at any time, starting with
   [the workflow](../../software-design/workflow/README.md) (each step against one page) and the points below;
