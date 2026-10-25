@@ -75,12 +75,12 @@ read again.
 
 ## D-APP-20 — An item is its product name and variation
 
-**Decision.** Name and variation identify an item (Q-APP-8): the packing key of the runs and the units of the
-pick pages. The Seller SKU is stored with the line but is not part of the key.
+**Decision.** Name and variation identify an item (Q-APP-8): the order content of a group PDF and the units of
+the pick pages. The Seller SKU is stored with the order's line but is not part of its order content.
 
 **Why.** The platform's `SKU ID` is not on the label PDFs, and one item can come with or without a Seller SKU.
 
-**Applies to.** [groups](../labels/groups.md#a-group-pdf), [03 Plan](../workflow/03-plan.md#10-runs-and-file-names), [conventions](../conventions.md).
+**Applies to.** [groups](../labels/groups.md#a-group-pdf), [03 Plan](../workflow/03-plan.md#10-order-contents-and-file-names), [conventions](../conventions.md).
 
 ## D-APP-21 — The ship-by deadline is a date
 

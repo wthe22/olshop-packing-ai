@@ -10,7 +10,7 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
   ([journal](../data/journal.md#the-fold)); after each commit the new record is added. A year of dates
   folds in about a second; Search shows *Loading…* until it is ready.
 - One entry per order of a live batch: the fields a filter can use
-  ([conditions](../rules-file/conditions.md#fields)), its date, batch, label group and run, the output file,
+  ([conditions](../rules-file/conditions.md#fields)), its date, batch and label group, the output file,
   and its **trace**: the input's file name and pages, and the courier's clue.
 - The index is only read. A date whose journal is damaged is left out and named in the panel.
 
@@ -22,7 +22,7 @@ scope: *This day* (the open date, the default) or *All days* of the open namespa
 file, a tick, and a trace line when opened:
 
 ```
-from 10-07_07-00-00_Shipping label+Packing slip_1.pdf p. 12–13 · courier jnt by logo 39b9b7b9f61d0e7f + form J[XY]\d{10} · batch 2 · 2-A · run 2-A-03
+from 10-07_07-00-00_Shipping label+Packing slip_1.pdf p. 12–13 · courier jnt by logo 39b9b7b9f61d0e7f + form J[XY]\d{10} · batch 2 · 2-A
 ```
 
 Orders of an open draft are not searched: they are not saved.

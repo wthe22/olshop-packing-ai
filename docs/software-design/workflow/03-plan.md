@@ -43,7 +43,7 @@ The batch's **sort rule** gives the label group rules in file order ([groups](..
 3. What `remaining` holds at the end goes to the **rest**: the last rule when it has no filter (it has taken
    them already); else, or when that rule is skipped, a group `?` *Uncategorised*
    ([D-UI-1](../decisions/ui.md)).
-4. A group that took **no** order is dropped: no file, no runs.
+4. A group that took **no** order is dropped: no file.
 5. The owner changes the plan for this batch only: skip, move, add a one-off group, rename a file. Every
    change repeats 1–4 on the whole plan; `packing-workflows.toml` is not touched.
 
@@ -52,16 +52,17 @@ rest takes: no order is in two groups and none is in none.
 
 **Check:** the order of the groups decides where an order lands (first match wins).
 
-## 10. Runs and file names
+## 10. Order contents and file names
 
-- **Packing key** of an order: its lines as (product name, variation, quantity), sorted. Orders with the
-  same packing key are packed the same way ([D-APP-20](../decisions/app-features.md)). The Seller SKU and the printed
-  `Qty Total` are stored with the order's content but are not part of the key.
-- **Runs**: inside a group, orders with the same packing key are one run. Runs are sorted by number of
-  orders (most first), then by packing key as text, name first; inside a run the orders keep their reading
-  position. Runs are numbered `01`, `02`, … and written `<batch>-<code>-<run>` (`2-A-05`).
-- **Printing order** of the batch: group by group in plan order, run by run, order by order; an order's pages
-  in their own order. This is the order of `orders` in the record ([records](../data/records.md)).
+- **Order content** of an order: its lines as (product name, variation, quantity), sorted. Orders with the
+  same order content are packed the same way ([D-APP-20](../decisions/app-features.md)). The Seller SKU and
+  the printed `Qty Total` are stored with the order, not with its content ([D-LABEL-15](../decisions/label.md)).
+- **Inside a group**, orders with the same order content are consecutive. Order contents are sorted by
+  number of orders (most first), then as text, name first; inside one order content the orders keep their
+  reading position. They carry no number.
+- **Printing order** of the batch: group by group in plan order, order content by order content, order by
+  order; an order's pages in their own order. This is the order of `orders` in the record
+  ([records](../data/records.md)).
 - **File names**: `{batch}-{code} {name} x{count}.pdf` by the default file-name rule; the owner may change
   one; two outputs of a batch cannot share a name.
 
@@ -69,6 +70,6 @@ rest takes: no order is in two groups and none is in none.
 
 **Check:**
 
-- Two orders with the same name and variation but a different Seller SKU fall into one run.
-- Runs of equal size are sorted as text, so a name in capitals sorts before one in lower case; a quantity
-  compares as a number.
+- Two orders with the same name and variation but a different Seller SKU share one order content.
+- Order contents of equal size are sorted as text, so a name in capitals sorts before one in lower case; a
+  quantity compares as a number.

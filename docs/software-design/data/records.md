@@ -17,7 +17,7 @@ BatchSaved {                    // type "batch_saved"
   inputs: List<InputPdf>        // in reading order
   sort_rule: LabelSortRule      // the rule used, as it was (rules-file/README.md)
   contents: List<OrderContent>  // the distinct contents of this batch; an order names one by index
-  orders: List<SavedOrder>      // in printing order: group by group, run by run, page order in a run
+  orders: List<SavedOrder>      // in printing order: group by group, content by content, then reading position
   left_out: List<LeftOutCopy>
   outputs: List<OutputFile>     // the group PDFs in group order, then the summary PDF
   warnings: List<Finding>
@@ -34,15 +34,13 @@ InputPdf {
   modify_time: Datetime
 }
 
-OrderContent {
+OrderContent {                  // what an order is packed with (D-LABEL-15)
   items: List<ItemPick>         // sorted by name, variant, quantity
-  total_quantity: Option<u16>   // Qty Total printed on the slip; none on the Shopee-style slip
 }
 
 ItemPick {
   name: String
   variant: String               // empty for `Default` or none
-  sku: Option<String>           // Seller SKU
   quantity: u16
 }
 
@@ -52,13 +50,14 @@ SavedOrder {
   courier: Option<CourierCode>
   courier_clue: CourierClue
   content: u16                  // index into contents
+  skus: List<Option<String>>    // the Seller SKU of each of its content's items, in their order
+  total_quantity: Option<u16>   // Qty Total printed on the slip; none on the Shopee-style slip
   ship_by_date: Option<Date>
   pickup_code: Option<String>   // the instant-service label's Kode Pengambilan
   pdf: PdfID                    // the copy that is written
   page_start: u16
   page_end: u16
   group: String                 // LabelGroupRule.code
-  run: u16                      // 1, 2, … within the group
 }
 
 CourierClue {
@@ -125,7 +124,8 @@ Recovered {                     // type "recovered"
 - A `batch_saved` is complete on its own: the verifier reads that one record (and the earlier live batches,
   for the already-saved guard) into its own types ([verification](../app/verification.md)).
 - `inputs` repeats the facts of an input a batch reuses; the fold checks they agree.
-- `contents` stores each distinct content once per batch: most orders share a few contents.
+- `contents` stores each distinct content once per batch: most orders share a few contents. What can differ
+  between orders of one content (the Seller SKU, the printed total) is on the order.
 - The ledger (pages read, written, left out) is not stored: it follows from `inputs`, `orders` and
   `left_out`, and the verifier computes it.
 - `courier_clue` and the page range make every order traceable to the page and the clue it came from.

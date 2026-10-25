@@ -18,11 +18,9 @@ The owner of the app prepares the labels of one or more shop owners; each is a *
 | **Input PDF** | A label download, stored once by its content: `input/{sha256}.pdf` |
 | **Sort rule** | A named list of label group rules in `packing-workflows.toml`; a batch is sorted by one ([rules file](rules-file/README.md)) |
 | **Label group** | One entry of a sort rule: code, name and **filter**. Its filter takes orders from what is left; its orders are written as one **group PDF** |
-| **Group PDF** | The output of one label group: `{batch}-{code} {name} x{count}.pdf`, its orders' label pages re-ordered into **runs** ([groups](labels/groups.md)) |
+| **Group PDF** | The output of one label group: `{batch}-{code} {name} x{count}.pdf`, its orders' label pages re-ordered by **order content** ([groups](labels/groups.md)) |
 | **Summary PDF** | One per batch: the units to take from stock and a page of facts ([summary PDF](labels/summary-pdf.md)) |
-| **Run** | Inside a group PDF, consecutive orders with the same **packing key**; numbered `01`, `02`, … and written `2-A-05` |
-| **Packing key** | An order's lines as (product name, variation, quantity), sorted. Two orders with the same key are packed the same way |
-| **Content** | An order's item lines with their Seller SKU, and its printed `Qty Total`, as stored ([records](data/records.md)) |
+| **Order content** | An order's lines as (product name, variation, quantity), sorted. Orders with the same order content are packed the same way and are consecutive in their group PDF |
 | **Copy** | One appearance of an order's label in the inputs: its label page and the continuation pages right after it. An order with two or more copies is a **repeat** ([repeated orders](app/duplicates.md)) |
 | **Filter** | A condition in the filter language (free AND / OR / NOT), e.g. `name contains "sepatu" and total_quantity = 1` |
 | **Order** | Key: the number its label prints (`Order ID`) — 18 digits on the TikTok and Tokopedia labels, 14 characters on the Shopee-style one. One tracking ID and one or more item lines |
@@ -42,9 +40,9 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
   comes from the label text (three-step search); a page without a label part continues the copy right before it.
 - **F-LABEL-3** Build the label groups from the batch's sort rule: each group, in order, takes the matching
   orders from what is left; the last may have no filter and takes the rest; leftovers are a final group.
-- **F-LABEL-4** Write one PDF per label group (pages unchanged), its orders re-ordered into runs, sorted by
-  (orders descending, packing key ascending), inside a run in reading order. An order already saved on the same
-  date of the same owner is left out and warned.
+- **F-LABEL-4** Write one PDF per label group (pages unchanged), its orders re-ordered by order content, sorted
+  by (orders descending, order content ascending), inside one order content in reading order. An order already
+  saved on the same date of the same owner is left out and warned.
 - **F-LABEL-5** Write one A4 summary PDF per batch: the units to take from stock and the facts of the batch.
 - **F-LABEL-6** Find the orders that appear more than once in a batch, count them, and let the owner choose
   which copy stays; every order is written once.
@@ -72,8 +70,9 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
 ### Screens (UI)
 
 - **F-UI-1** A Windows program; daily use needs no terminal ([Screens](ui/README.md)).
-- **F-UI-2** A batch is shown as a plan (the label groups of its sort rule, with counts and runs) that can be
-  changed for this batch only — skip, move, add a one-off group, rename a file — before anything is written.
+- **F-UI-2** A batch is shown as a plan (the label groups of its sort rule, with counts and order contents) that
+  can be changed for this batch only — skip, move, add a one-off group, rename a file — before anything is
+  written.
 - **F-UI-3** The Day screen lists every batch of the open date with its group PDFs and summary PDF, each with
   an **Open** button for printing and a printed tick.
 - **F-UI-4** The sort rules are edited in the app with live checks and counts.

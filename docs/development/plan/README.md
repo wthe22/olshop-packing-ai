@@ -19,9 +19,10 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   names and SKUs can change during the day, and the order inside a group matters less than the grouping
   (D-APP-20); a `courier` filter compares the code; an amend uses the rule of the batch's name, else its
   snapshot (D-RULES-2); a continuation page must follow its label page (D-LABEL-12).
-- **Open for the owner: [Q-LABEL-11](../../software-design/questions/label.md)**, what to call the orders with
-  the same items inside a group PDF (now *run*). Answer in chat or in that file; then write the chosen word
-  into the design (a decision record, the question removed) before R4 builds it. R2 and R3 do not wait for it.
+- **The owner chose *order content*** (2026-10-25) for the orders with the same items inside a group PDF
+  ([D-LABEL-15](../../software-design/decisions/label.md)): the Seller SKU and the printed `Qty Total` moved
+  from the content to the order, and the block number (`2-A-05`) is gone. The owner judges on the running
+  screens (R8) whether the word fits; a finding goes into [reviews/ui.md](../../reviews/ui.md).
 - **Before R2: Node.** The coverage compare needs Node 26.7 (`setup.md`); the PC now has Node 24.20 in
   `C:\Program Files\nodejs`, which rejects `--test-coverage-include-all`. Install Node 26.7 again.
 - **Kept for the rework**: [workflow-audit.md](workflow-audit.md) (where the built program differs from the

@@ -13,15 +13,15 @@
 
 ## A group PDF
 
-- **Runs**: inside a group PDF, orders with the same **packing key** — their lines as (product name,
-  variation, quantity), sorted — are consecutive ([D-APP-20](../decisions/app-features.md)). The Seller SKU and the
-  printed `Qty Total` are kept with the order's content ([records](../data/records.md)) but do not split a
-  run. Runs are sorted by number of orders (most first), then by packing key as text in line order, name
-  first (upper case before lower case; a quantity compares as a number). Inside a run the orders keep their
-  **reading position**: the input's place in the batch, then the page.
+- **Order contents**: inside a group PDF, orders with the same **order content** — their lines as
+  (product name, variation, quantity), sorted — are consecutive ([D-APP-20](../decisions/app-features.md),
+  [D-LABEL-15](../decisions/label.md)). The Seller SKU and the printed `Qty Total` are kept with the order
+  ([records](../data/records.md)), so they never split an order content. Order contents are sorted by number
+  of orders (most first), then as text in line order, name first (upper case before lower case; a quantity
+  compares as a number). Inside one order content the orders keep their **reading position**: the input's
+  place in the batch, then the page.
 - **Pages**: every page of each order's written copy, unchanged and in its order.
-- **Run numbers** count `01`, `02`, … in printing order within the group PDF and are written
-  `<batch>-<code>-<run>`: `2-A-05` is batch 2, group A, run 05.
+- An order content has no number: the screens list a group's order contents in printing order.
 
 ## File names
 

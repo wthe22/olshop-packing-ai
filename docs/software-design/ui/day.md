@@ -9,21 +9,21 @@ The start screen: what has been saved on the open date of the open owner, and th
 │  This day: 2 batches · 729 orders · 5 group PDFs · 1 reprint             [ + New batch ]│
 │                                                                                        │
 │  ┌ Batch 2 · saved 09:12 · 2 files · 129 orders · rule default ── [Amend] [Revert] ──┐ │
-│  │  2-A  Sepatu              88 orders   3 runs     [✓]  [Open]                      │ │
-│  │  2-Z  Lainnya             41 orders  12 runs     [ ]  [Open]                      │ │
+│  │  2-A  Sepatu           88 orders   3 order contents   [✓]  [Open]                 │ │
+│  │  2-Z  Lainnya          41 orders  12 order contents   [ ]  [Open]                 │ │
 │  │  Summary [Open]   Saved with 2 errors ▸   Warnings: 1 ▸        [Open folder]      │ │
 │  └───────────────────────────────────────────────────────────────────────────────────┘ │
 │  ┌ Batch 1 · saved 07:40 · 3 files · 600 orders · rule default ──────────────────────┐ │
-│  │  1-A  Sepatu             172 orders   4 runs     [ ]  [Open]                      │ │
-│  │  1-B  Spion & Knalpot     35 orders   4 runs     [ ]  ⚠ missing  [Restore]        │ │
-│  │  1-Z  Lainnya            393 orders  38 runs     [ ]  [Open]                      │ │
+│  │  1-A  Sepatu          172 orders   4 order contents   [ ]  [Open]                 │ │
+│  │  1-B  Spion & Knalpot  35 orders   4 order contents   [ ]  ⚠ missing  [Restore]   │ │
+│  │  1-Z  Lainnya         393 orders  38 order contents   [ ]  [Open]                 │ │
 │  │  Summary [Open]   Warnings: none   Left out: 3 ▸                [Open folder]     │ │
 │  └───────────────────────────────────────────────────────────────────────────────────┘ │
 │  Reprints: reprint 1 x3 (09:40) [Open]                                                 │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- Newest batch on top. Each group PDF: `<batch>-<code>`, the group's name, orders, runs.
+- Newest batch on top. Each group PDF: `<batch>-<code>`, the group's name, orders, order contents.
 - **The printed tick** beside each group PDF, as large as **Open**, says it has been printed. It carries no
   word; its tooltip and screen-reader name say *Printed* and name the file. A click is saved at once as a
   journal record ([05 After the save](../workflow/05-after-save.md#16-printed)), so it survives a restart. It

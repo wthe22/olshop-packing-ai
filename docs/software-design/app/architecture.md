@@ -9,7 +9,7 @@
 │        ▼                                                                            │
 │  packing-app (Tauri 2): commands, the open draft, the worker thread                  │
 │        ├──► packing-engine  rules, filters, pages → copies → orders, repeats, plan,  │
-│        │                    runs, the record of a batch. No PDF, no file            │
+│        │                    order contents, the record of a batch. No PDF, no file   │
 │        ├──► packing-pdf     PDFium: page text and images, copy pages, summary PDF   │
 │        ├──► packing-store   lock, journal, fold, input/ and output/, views, index   │
 │        └──► packing-verify  lopdf: page digests and the checks of a record          │

@@ -8,12 +8,12 @@ on a normal day the owner checks the counts and presses **Save batch**.
 │  Batch 3 · rule default · 2 files · 257 pages · 256 orders · 0 already saved   [Back]  │
 │  Warnings: 2 ▸                                                                         │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  Use  Group                           Orders  Runs   File name                         │
-│  [✓]  3-A  Sepatu                        130     3   [3-A Sepatu x130            ]  ↑ ↓ ▸│
+│  Use  Group                    Orders  Order contents  File name                       │
+│  [✓]  3-A  Sepatu                 130               3  [3-A Sepatu x130          ]  ↑ ↓ ▸│
 │            name contains "sepatu"                                                      │
-│  [✓]  3-B  Spion & Knalpot                20     4   [3-B Spion Knalpot x20      ]  ↑ ↓ ▸│
+│  [✓]  3-B  Spion & Knalpot         20               4  [3-B Spion Knalpot x20    ]  ↑ ↓ ▸│
 │            not name contains "sepatu" and (name contains "spion" or name …)           │
-│  [✓]  3-Z  Lainnya (the rest)            106    31   [3-Z Lainnya x106           ]      ▸│
+│  [✓]  3-Z  Lainnya (the rest)     106              31  [3-Z Lainnya x106         ]      ▸│
 │                                                                                        │
 │  [+ Add a group for this batch]                      [Edit sort rule]                  │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
@@ -38,7 +38,8 @@ on a normal day the owner checks the counts and presses **Save batch**.
 - **File name**: suggested `{batch}-{code} {name} x{count}` ([groups](../labels/groups.md#file-names)); the
   owner may change it. A name Windows does not allow, or one equal to another file of the batch (upper and
   lower case count as the same), shows why beside it and **Save batch** waits.
-- **▸** expands a group to its runs: `3-A-01  Sepatu Standar Samping Motor ×1    96 orders`.
+- **▸** expands a group to its order contents in printing order:
+  `Sepatu Standar Samping Motor ×1 · 96 orders`.
 - **Warnings ▸** lists the read warnings in plain words ([Messages](messages.md)).
 - When the sort rule is one group with no filter, a line above the rows reads **No groups yet: all orders go
   into one PDF** ([D-UI-4](../decisions/ui.md)).
@@ -67,7 +68,7 @@ and asks, the errors and the warnings in two lists, never one ([verification](..
 │  Errors: 1                                                                             │
 │  · page 13 of labels_1.pdf (order 580000000000000001) is in no output.                 │
 │  Warnings: 1                                                                           │
-│  · 3-A Sepatu x130.pdf: every page is there, but not in the run order.                 │
+│  · 3-A Sepatu x130.pdf: every page is there, but not in the printing order.            │
 │  [ Save anyway ]   [ Cancel — nothing is saved ]                                       │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```

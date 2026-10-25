@@ -67,7 +67,7 @@ uses a v0.1 word takes the new one when it is rewritten.
 | One entry of a sort rule | `LabelGroupRule`; its result in a batch `LabelGroup` | category, pick |
 | The output PDF of one label group | `GroupPdf` | saved PDF, output |
 | The one A4 file of a batch | `SummaryPdf` | packing list, picking list |
-| Consecutive orders with one packing key | `Run` | block |
+| An order's lines as (name, variation, quantity) | `OrderContent` | run, block, packing key |
 | One round of download and save | `Batch`, `BatchId` | job, round |
 | A label download, stored by content | `InputPdf`, `PdfId` | file, download |
 | A batch read but not yet saved | `Draft` | pending |
@@ -90,8 +90,8 @@ shared test module, not once per file.
 the code inside is rearranged.*
 
 - **The backbone: known-answer fixtures** through read → plan → save → verify. A fixture PDF and its expected
-  answer (orders, groups, runs, the record) are written together by the fixture writer, as the real downloads
-  are made (one character per text object). One fixture covers many branches.
+  answer (orders, groups, order contents, the record) are written together by the fixture writer, as the real
+  downloads are made (one character per text object). One fixture covers many branches.
 - **Tables for fixed truths**: a pure function with a checkable answer (a regex, a sort order, a file name),
   written as one table, not one test per row.
 - **Broken outputs the verifier must catch**: a few saved sets with a doubled, a missing, a swapped and a

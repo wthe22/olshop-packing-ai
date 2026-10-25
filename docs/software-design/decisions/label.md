@@ -114,3 +114,16 @@ repeat (Q-LABEL-10). Whether an output page is its source page is the verifier's
 **Why.** A wrong courier can then be traced to the clue that named it.
 
 **Applies to.** [courier deduction](../labels/courier.md#the-clue-that-named-it), [records](../data/records.md).
+
+## D-LABEL-15 — Orders with the same items are one order content
+
+**Decision.** Inside a group PDF, the orders with the same **order content** — their item lines as (product
+name, variation, quantity) — are printed next to each other, and the screens call such a block an *order
+content* (Q-LABEL-11). The Seller SKU and the printed `Qty Total` are stored with the order, not with its
+content, so one order content is exactly one block. A block has no number: the order contents are listed in
+printing order under their group.
+
+**Why.** It is the owner's own word and the data already names it (`order_contents`, `order-contents.toml`);
+nothing printed needs a block number.
+
+**Applies to.** [groups](../labels/groups.md#a-group-pdf), [03 Plan](../workflow/03-plan.md#10-order-contents-and-file-names), [records](../data/records.md), [views](../data/views.md), [Plan](../ui/plan.md).

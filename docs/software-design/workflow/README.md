@@ -10,7 +10,7 @@ each step against what the shop needs; a step that is wrong is a review item
                                                                                                    │
  ┌─────────────────────────────────────────────────────────────────────────────────────────────────┘
  ▼
- 7 Already saved ─► 8 Repeats ─► 9 Plan ─► 10 Runs and names ─► 11 Store inputs ─► 12 Write ─► 13 Verify
+ 7 Already saved ─► 8 Repeats ─► 9 Plan ─► 10 Order contents ─► 11 Store inputs ─► 12 Write ─► 13 Verify
                                                                                                    │
  ┌─────────────────────────────────────────────────────────────────────────────────────────────────┘
  ▼
@@ -21,7 +21,7 @@ each step against what the shop needs; a step that is wrong is a review item
 |---|---|---|
 | 1–2 | [01 Start and open](01-start-and-open.md) | Program folder → data folder, rules, lock → a folded date |
 | 3–6 | [02 Read](02-read.md) | Chosen files → pages → copies → orders, warnings, courier names |
-| 7–10 | [03 Plan](03-plan.md) | Orders → one copy each → label groups → runs and file names |
+| 7–10 | [03 Plan](03-plan.md) | Orders → one copy each → label groups → order contents and file names |
 | 11–15 | [04 Save](04-save.md) | Plan → inputs stored, outputs written and verified, the record committed |
 | 16–20 | [05 After the save](05-after-save.md) | Printed marks, revert, amend, search and reprint, restore |
 

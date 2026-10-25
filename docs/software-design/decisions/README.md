@@ -10,7 +10,7 @@ reused. A decision that changes gets a new record that names the one it replaces
 |---|---|
 | [app.md](app.md) | D-APP-1, D-APP-3 to D-APP-12: PDFium, the schema version, order data from the labels, the namespace, the courier list, the journal, views, one writer, inputs by content, outputs, the verifier |
 | [app-features.md](app-features.md) | D-APP-13 to D-APP-23: the rules file's place, reprint, the search index, the summary PDF, one namespace per owner, findings stop the save, amend, item identity, ship-by date, repeats |
-| [label.md](label.md) | D-LABEL-2, D-LABEL-4 to D-LABEL-14: two clues, remembered images, the Shopee-style label, appearance hash, instant labels, pickup code, the header band, copies, page identities, the courier clue |
+| [label.md](label.md) | D-LABEL-2, D-LABEL-4 to D-LABEL-15: two clues, remembered images, the Shopee-style label, appearance hash, instant labels, pickup code, the header band, copies, page identities, the courier clue, order contents |
 | [rules.md](rules.md) | D-RULES-1, D-RULES-2: choosing and renaming a sort rule |
 | [ui.md](ui.md) | D-UI-1 to D-UI-6: the rest row, no log file, search scope, *No groups yet*, the panel, where repeats are looked for |
 

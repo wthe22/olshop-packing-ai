@@ -14,7 +14,7 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 │  3 orders in 2 batches                                       [ ] Select all results  │
 │  [✓] 580000000000000042  JY0000001234  jnt  Sepatu ×1         7 Oct · 2-A  [Open] ▸   │
 │  [ ] 580000000000000057  JY0000001235  jnt  Spion Beat ×2     7 Oct · 2-B  [Open] ▸   │
-│        from 10-07_09-05-49_…_2.pdf p. 14 · courier jnt by logo 39b9… + form J[XY]\d{10} · run 2-B-01 │
+│      from 10-07_09-05-49_…_2.pdf p. 14 · courier jnt by logo 39b9… + form J[XY]\d{10} │
 │  [✓] 580000000000000061  JY0000001240  jnt  Sepatu ×2         7 Oct · 1-A  [Open] ▸   │
 │                                                            [ Reprint 2 orders ]      │
 └───────────────────────────────────────────────────────────────────────────────────────┘
@@ -28,7 +28,7 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
   until it is built the screen says *Loading…*.
 - **Results**: the number of orders and batches, then one row per order: Order ID · tracking ID · courier ·
   items (name × quantity) · date · group file. **Open** opens that group PDF. **▸** opens the row's trace
-  line: its input and pages, the clue that named its courier, its run.
+  line: its input and pages, the clue that named its courier.
 - **Saved orders only**: an open draft's orders have no file yet and are not searched.
 - **No match**: "No saved order matches."
 

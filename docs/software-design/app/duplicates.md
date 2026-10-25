@@ -64,7 +64,8 @@ at once ([D-APP-22](../decisions/app-features.md)).
 ## What the plan receives, and what is stored
 
 Each order with **one** copy's pages and **one** copy's item lines; the `Qty Total` check runs on that
-copy. The plan, the runs and the numbers see the orders as if the repeats had never been in the inputs.
+copy. The plan, the order contents and the numbers see the orders as if the repeats had never been in the
+inputs.
 
 Every copy left out is a `LeftOutCopy` of the batch's record ([records](../data/records.md)): the order,
 where the copy is, the reason, and the copy kept (`repeat`) or the batch that saved it (`saved_earlier`).

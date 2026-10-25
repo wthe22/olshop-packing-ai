@@ -67,7 +67,6 @@ LabelGroup {
 OrderContentSummary {
   content_id: OrderContentID
   order_count: u16
-  run: u16                      // its run; one run can hold contents that differ only in Seller SKU or printed total
 }
 
 Reprint {
@@ -92,6 +91,8 @@ Order {
   courier_code: CourierCode
   courier_clue: String          // logo, shape, text, form, tag or empty
   content_id: OrderContentID
+  skus: String                  // its Seller SKUs in its content's item order, joined by "; "
+  total_quantity: u16           // the printed Qty Total
   ship_by_date: Date
   pickup_code: String
   batch_id: BatchID
@@ -110,5 +111,5 @@ Root {
 ```
 
 `OrderContent` and `ItemPick` are those of the journal ([records](records.md)). Two orders with the same
-content share one ID. A run groups orders by packing key, which leaves out the Seller SKU and the printed
-total ([groups](../labels/groups.md)), so a run can span more than one content ID.
+content share one ID, and the orders of one content ID in a group PDF are consecutive
+([groups](../labels/groups.md#a-group-pdf)).

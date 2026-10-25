@@ -16,7 +16,7 @@
 **Stops:** a file that cannot be opened as a PDF.
 
 **Check:** is name order always the order the owner wants? (A file renamed by hand moves its orders inside
-their runs.)
+their order contents.)
 
 ## 4. Read the pages
 
