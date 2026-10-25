@@ -1,72 +1,130 @@
-# The rules file
+# The rules file: `packing-workflows.toml`
 
-The categories of one **grouping**: a named collection of categories that a batch is packed with. One
-file per grouping, in the data folder:
-
-| Grouping | File |
-|---|---|
-| `default` | `<data folder>/categories.toml` — the file the app already writes; it is not moved |
-| any other name | `<data folder>/categories/<grouping name>.toml` — the file name is the grouping name |
-
-The grouping a batch uses is chosen when the batch is prepared
-([New batch](../ui/new-batch.md#the-grouping)); the groupings are edited in [Categories](../ui/categories.md).
-Every entry of a grouping is one **pick** (one saved label PDF, [picks.md](../labels/picks.md)) and the
-entries are applied in file order. The **condition language** of the entries is described in
+One file beside the program holds the owner's rules: the couriers, the clues that name them, the images
+that are not couriers, and the **sort rules** ([D-APP-13](../decisions/app-features.md)). It is written from the copy
+bundled in the program when it is missing, and from then on it is the owner's. The app edits it from the
+Sort rules screen and the logo prompt, keeping comments and order. The filter language is in
 [conditions.md](conditions.md).
 
-Which grouping a batch uses, and where the groupings are kept, are open with the owner
-([Q-RULES-1](../questions/rules.md)); the table above and [Groupings](#groupings) are the default the app
-follows until the owner decides.
+## Schema
 
-## File format (TOML)
+```
+Root {
+  schema: String // X.Y version, starts at 1.0
+  couriers: List<Courier>
+  courier_classifier: List<CourierClassifier>
+  not_courier: NotCourier
+  label_sort_rules: List<LabelSortRule>
+}
+
+Courier {
+  code: String // unique: lower-case letters, digits and -
+  name: String // display name
+}
+
+CourierClassifier {
+  courier_code: CourierCode // unique
+  logos: List<String> // logo hash (XXH3-64 of the image's encoded bytes, 16 hex)
+  shapes: List<String> // shape hash (XXH3-64 of the 64 x 64 appearance)
+  tracking_id: Option<String> // tracking-ID regex, matched fully; none for a courier without one
+  text: List<String> // printed text that stands in for the logo
+  instant_tags: List<String> // service tags of an instant-service label (GKS)
+}
+
+NotCourier {
+  logos: List<String> // hashes of header images that are not a courier, e.g. a channel strip
+}
+
+LabelSortRule {
+  name: String // unique
+  label_groups: List<LabelGroupRule>
+}
+
+LabelGroupRule {
+  code: String // 1-3 letters or digits, unique in the rule
+  name: String // unique in the rule
+  filter: Option<String> // none: takes every order left; only the last group
+}
+```
+
+## Couriers
 
 ```toml
-# Picks. Order matters: an order is taken by the FIRST entry whose condition matches.
-# An entry is one pick = one saved label PDF (picks.md). The last entry may have no
-# condition and takes the rest.
+schema = "1.0"
 
-[[category]]
+[[couriers]]
+code = "jnt"
+name = "J&T Express"
+
+[[courier_classifier]]
+courier_code = "jnt"
+logos = ["39b9b7b9f61d0e7f"]     # 975x377 px, the same asset in every sample file
+tracking_id = 'J[XY]\d{10}'
+text = ["jet.co.id"]
+
+[[courier_classifier]]
+courier_code = "jnt-cargo"
+shapes = ["753ccbd14749befa"]    # masked wordmark: its bytes name nothing
+tracking_id = '57\d{10}'
+text = ["FastTrack"]
+
+[[courier_classifier]]
+courier_code = "gojek"
+instant_tags = ["GKS"]
+
+[not_courier]
+logos = []
+```
+
+The bundled copy holds J&T Express (`jnt`), SiCepat (`sicepat`), J&T Cargo (`jnt-cargo`), IDX (`idx`), SPX
+(`spx`) and Gojek (`gojek`) with the hashes and forms of [courier deduction](../labels/courier.md). A list
+field left out is empty.
+
+## Sort rules
+
+```toml
+[[label_sort_rules]]
+name = "default"
+
+[[label_sort_rules.label_groups]]
 code = "A"
 name = "Sepatu"
-when = 'name contains "sepatu"'
+filter = 'name contains "sepatu"'
 
-[[category]]
+[[label_sort_rules.label_groups]]
 code = "B"
 name = "Spion & Knalpot"
-when = '''
+filter = '''
 not name contains "sepatu"
 and (name contains "spion" or name contains "knalpot")
 '''
 
-[[category]]
+[[label_sort_rules.label_groups]]
 code = "Z"
 name = "Lainnya"
 ```
 
-| Key | Required | Meaning |
-|---|---|---|
-| `code` | yes | 1–3 letters or digits, unique. Shown in front of the pick heading and in the saved-PDF file name |
-| `name` | yes | Heading text |
-| `when` | yes, except on the last entry | Condition text. An entry without `when` matches every order, so it must be last |
+- A sort rule's groups apply in file order; an order goes to the **first** group whose filter matches
+  ([groups](../labels/groups.md)). `'…'` is a TOML literal string and `'''…'''` spans lines, so the
+  filter's double quotes need no escaping.
+- The bundled copy holds one rule, `default`, with one group `Z Lainnya` and no filter.
+- **Which rule a batch uses** is chosen on [New batch](../ui/new-batch.md#the-sort-rule); the rule of the
+  namespace's newest batch is preselected ([D-RULES-1](../decisions/rules.md)).
+- **A saved batch keeps a snapshot** of its rule in its journal record, so its outputs stay traceable
+  whatever the file says later. An **amend** uses the rule of the same name as it is now, so a corrected
+  filter applies; when no rule has that name any more, it uses the snapshot ([D-RULES-2](../decisions/rules.md)).
+- **Rename** changes the name here only; old batches keep theirs in the journal.
 
-- `'…'` is a TOML literal string (no escapes); `'''…'''` spans several lines. Use these so the
-  double quotes inside the condition need no escaping.
-- File encoding UTF-8. Comments (`#`) are allowed; the app keeps them when it saves.
-- Validation: unknown key, missing
-  `code`/`name`, duplicate `code`, `when` missing on an entry that is not last, condition errors
-  ([conditions.md](conditions.md)).
+## What is in code, not in this file
 
-## Groupings
+The label formats — the Order ID captions, the slip's column headers, the page parts — are the platforms'
+facts, not the owner's choices: a new platform needs new reading code and tests anyway. They stay in
+`packing-engine` ([reading](../labels/reading.md)).
 
-- **The grouping list** of a data folder: `default` always, plus every `<grouping name>.toml` in its
-  `categories/` folder. The names are the file names without `.toml`; characters that are not
-  allowed in Windows file names (`\ / : * ? " < > |`) become `-`. A file
-  `categories/default.toml` is refused with both files named: the name `default` belongs to the
-  data folder's own `categories.toml`, so it is neither created nor deleted nor renamed.
-- **A grouping with no file** (a fresh data folder, or a grouping the owner has not saved yet) has one
-  catch-all entry — code `Z`, name `Lainnya`, no condition — which takes every order, so a batch
-  packed with it saves every order in one PDF set ([inputs](../app/inputs.md)).
-- Every grouping is one file, so the owner may copy, rename or edit a grouping by hand. The grouping used last —
-  the one a [New batch](../ui/new-batch.md#the-grouping) was last read with —
-  is remembered and preselected for the next batch; each batch records its own
-  ([day folder](../app/data-folder.md)).
+## Checks
+
+Unknown key; a missing required field; a duplicate courier code, classifier, rule name, or group code or
+name within a rule; a classifier, a `courier` filter value or a logo answer naming no courier; a hash that
+is not 16 hex characters; a tracking-ID regex that does not compile; a group with no `filter` that is not
+last; a filter error. Each names its line and column of this file. A file that does not parse stops the
+start; a check that fails names the rule and opens the Sort rules screen on it.

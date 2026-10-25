@@ -1,54 +1,42 @@
 # PC app
 
-The PC app is a Windows desktop program with windows and buttons: the owner adds the day's label
-downloads, sees the picks with their counts, adjusts them if needed, and saves the label PDFs and
-packing lists without a terminal. The screens are in [ui/README.md](../ui/README.md); the reading
-and sorting rules it uses are in [labels/README.md](../labels/README.md).
+The PC app is a Windows program with windows and buttons: the owner adds a shop owner's label downloads,
+sees the label groups with their counts, adjusts them if needed, and saves one label PDF per group and a
+summary PDF, without a terminal. The screens are in [ui/](../ui/README.md); the reading and sorting rules
+are in [labels/](../labels/README.md); the files are in [data/](../data/README.md); every step in order is
+in [workflow/](../workflow/README.md).
 
 ## What the app decides
-
-The rules and the files that hold them:
-
-- [Reading the labels](../labels/reading.md) — the Order ID of a page (three-step search), multi-page orders, reading the packing slip by text position (columns, rows, wrapped cells, the `Qty Total` check)
-- [Courier deduction](../labels/courier.md) — the courier from the label text and the tracking-ID form (`couriers.toml`)
-- [Picks](../labels/picks.md) — picks taken in order from what is left, the rest, runs inside a saved PDF, saved-PDF numbers through the session and run numbers `3-05`, the duplicate guard
-- [Packing list](../labels/packing-list.md) — the three layouts `full`, `summary`, `pick` and their look
-- [Rules file](../rules-file/README.md) — the groupings of categories (`categories.toml` and `categories/`)
-- [Conditions](../rules-file/conditions.md) — the condition language
-- [Screens](../ui/README.md) — daily use and the window frame
-- The files of this folder: [inputs.md](inputs.md), [batch.md](batch.md), [sessions.md](sessions.md), [duplicates.md](duplicates.md), [saved-pdf-check.md](saved-pdf-check.md), [data-folder.md](data-folder.md), [architecture.md](architecture.md), [program.md](program.md)
-
-Owner decisions about how the app works:
 
 | Topic | Decision |
 |---|---|
 | How it is used | Windows program, buttons ([Screens](../ui/README.md)) |
+| Whose labels | One namespace per shop owner, one folder per date inside it ([namespaces](namespaces.md)) |
+| The truth | One journal per namespace and date; every other file is an input, an output or a view of it ([data](../data/README.md)) |
 | Order data | All of it comes from the label and its packing slip ([D-APP-4](../decisions/app.md)) |
 | Plain labels (no packing slip) | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
-| Rules file vs interactive menu | One screen: the categories of the batch's grouping are applied in order as a proposal; the owner can skip, move or add a pick for this batch before saving ([Plan screen](../ui/plan.md)) |
-| Undo | **Revert** (undo the last batch) and **Amend** (redo the last batch in place), like git |
-| Output folder | `labels/<session>/batch <b>/` inside the data folder, one subfolder per batch, with a copy of the batch's label downloads; a session is a day plus an optional name ([sessions](sessions.md)) |
-| Saved-PDF name | Suggested as `<n> <code> <name> ×<orders>.pdf` ([Numbering and file names](../labels/picks.md)); the owner can change the whole name before saving |
-| Packing-list default | One per batch (`whole`), layout `pick` (changeable per batch) |
-| Fields in conditions | Only fields the label/slip carry ([the fields the conditions can use](inputs.md#fields-the-conditions-can-use)) |
+| Sorting | A sort rule from `packing-workflows.toml`, chosen per batch, applied as a proposal; the owner can skip, move or add a group for this batch before saving ([Plan](../ui/plan.md)) |
+| Outputs | One PDF per label group, `{batch}-{code} {name} x{count}.pdf`, and one summary PDF per batch ([groups](../labels/groups.md), [summary PDF](../labels/summary-pdf.md)) |
+| Correctness | An independent verifier checks every output before it is committed ([verification](verification.md)) |
+| Undo | **Revert** (undo the newest batch of a date) and **Amend** (redo it in place) |
+| Printing again | Search, tick, **Reprint**; a lost output is restored from the stored inputs ([reprint](reprint.md)) |
 
-## Words used in this document
+## Words used in this folder
 
 | Word | Meaning |
 |---|---|
-| **Batch** | One round of the daily steps ([the packing workflow](../../business-process/01-packing-workflow.md)): arrange shipment, download the labels (one or more files of up to 200 pages), prepare them in the app. Numbered 1, 2, 3, … within the day. In the app, one **Save** = one batch |
-| **Draft** | A batch that has been read but not saved yet. It lives only in the app's memory; closing the app forgets it and nothing is written |
-| **Plan** | The list of picks of a draft, in order, with their counts. Starts as the categories of the batch's grouping in file order |
-| **Data folder** | The folder where the app keeps the picks groupings (`categories.toml` and the `categories/` folder, [rules file](../rules-file/README.md)), `couriers.toml` and the `labels/` folder with every day's output. By default the program's own folder ([Program folder](program.md#program-folder-portable)) |
-| **Pick**, **saved PDF**, **run**, **contents** | As in [Concepts](../requirements.md#concepts) |
+| **Batch** | One round of the daily steps ([the packing workflow](../../business-process/01-packing-workflow.md)): arrange shipment, download the labels (one or more files of up to 200 pages), prepare them in the app. Numbered 1, 2, 3, … within a namespace and date. One **Save** = one batch |
+| **Draft** | A batch read but not saved yet. It lives only in the app's memory; closing the app forgets it and nothing is written |
+| **Plan** | The label groups of a draft, in order, with their counts. Starts as the groups of the batch's sort rule |
+| **Live batch** | A saved batch that has not been reverted |
+| **Data folder** | The folder `packing-settings.toml` names: one folder per namespace ([data](../data/README.md)) |
+| Others | As in [Concepts](../requirements.md#concepts) |
 
 ## Files in this folder
 
-- [inputs.md](inputs.md) — the inputs, `couriers.toml`, the packing-slip requirement, the fields the conditions can use
-- [batch.md](batch.md) — one batch step by step, revert and amend, the packing list in a batch
-- [sessions.md](sessions.md) — a day's sessions: the folder, what each holds, listing and creating
-- [duplicates.md](duplicates.md) — an order that appears more than once in a batch: copies, repeats, groups, the choice
-- [saved-pdf-check.md](saved-pdf-check.md) — the check before saving, every input page exactly once
-- [data-folder.md](data-folder.md) — the session folder and `state.json`
-- [architecture.md](architecture.md) — diagram, stack, code layout, text runs from PDFium
-- [program.md](program.md) — commands between the window and Rust, settings, the portable program folder
+- [architecture.md](architecture.md) — diagram, the crates and who may use whom, stack, threads, text runs
+- [program.md](program.md) — commands between the window and Rust, the program folder, start
+- [namespaces.md](namespaces.md) — shop owners and dates: names, listing, creating, a v0.1 data folder
+- [duplicates.md](duplicates.md) — an order that appears more than once in a batch: copies, repeats, the choice
+- [verification.md](verification.md) — the verifier: the page digest, its checks, the two severities
+- [reprint.md](reprint.md) — the search index, search, reprint and restore

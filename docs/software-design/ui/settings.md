@@ -1,28 +1,27 @@
 # Settings
 
-| Setting | Control | Default |
-|---|---|---|
-| Data folder | Folder + [Change…] + [Open] | The program's folder ([Start](start.md)) |
-| Packing list default | Scope radio + layout ticks | one for the batch · pick |
-| About | Version v0.1, PDFium version, [Open log file] ([Q-UI-2](../questions/ui.md)) | — |
+| Setting | Control |
+|---|---|
+| Data folder | The folder of `packing-settings.toml` + [Change…] + [Open] |
+| About | Version v0.2, the PDFium version, and the schema version `1.0` |
 
-**Change…** switches the data folder until the app closes; it does not move existing files.
-The app asks "Use `<folder>` until the app closes? Existing days stay in `<old folder>`." The
-new folder's groupings ([rules file](../rules-file/README.md)) and its `couriers.toml` are used; a
-`couriers.toml` it does not have is written from the bundled file. The next start looks in the
-program folder again.
+There are no other settings: every other choice has one fixed default, shown where it acts
+([D-APP-16](../decisions/app-features.md)). There is no log file: the journal of each date is the record of what was
+done ([D-UI-2](../decisions/ui.md)).
+
+**Change…** chooses another folder and asks "Use `<folder>` for the data from now on? The data in
+`<old folder>` stays where it is." It writes `packing-settings.toml` (a path inside the program's folder is
+written relative to it), releases the old folder's lock, takes the new one's, and opens it as at start
+([program › Start](../app/program.md#start)). A draft being prepared asks first. Nothing is moved.
 
 ## The version
 
-The version of the program is the workspace `version` in the root `Cargo.toml` — `0.1.0` today — and
-that is its **one place**. The shown form is `v` + the first two numbers (`0.1.0` → `v0.1`), the
-owner's form. It appears in three spots, all fed from that one place: the window title, the title bar
-of every screen (the same line, [the window frame](README.md#window-frame)) and *About*.
+The version of the program is the workspace `version` in the root `Cargo.toml`, and that is its **one
+place**. The shown form is `v` + the first two numbers (`0.2.0` → `v0.2`). It appears in the window title,
+the title bar of every screen and *About*, all fed from that one place.
 
-- `app/src-tauri/tauri.conf.json` carries no `version` and no number in its window `title`. Tauri then
-  takes the version from `app/src-tauri/Cargo.toml`, which the app inherits from the workspace, so no
-  second copy exists that could disagree. `app/package.json`'s own `version` is npm's field: nothing
-  in the app shows it, and it is kept equal to the workspace `version`.
-- The `v` + major.minor text is made in one place in the app crate, so the three spots can never
-  differ. Changing the workspace `version` (e.g. to `0.2.0` for the next release) changes all three
-  on the next build.
+- `app/src-tauri/tauri.conf.json` carries no `version` and no number in its window `title`; Tauri takes the
+  version from `app/src-tauri/Cargo.toml`, which inherits the workspace's. `app/package.json`'s own
+  `version` is npm's field: nothing shows it, and it is kept equal to the workspace's.
+- The `v` + major.minor text is made in one place in the app crate. The journal's `app` field is the full
+  workspace version (`0.2.0`).

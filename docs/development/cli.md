@@ -28,7 +28,7 @@ From the repository root, Git Bash:
 
 `cargo run -p packing-cli -- --help` prints the same usage. `prepare` writes the batch to
 `<data>/labels/<day>/batch <b>/` — the saved PDFs, the packing lists, `summary.txt` and a copy of
-the label files read ([data-folder.md](../software-design/app/data-folder.md)); the run's counts go
+the label files read (the v0.1 day folder; the target layout is [data/](../software-design/data/README.md)); the run's counts go
 to the console.
 
 ## Python analysis helpers

@@ -10,7 +10,7 @@
 | Front-end flow tests | The logo prompt's flow (a courier name, *Not a courier*, *I don't know*, *Skip all*, Esc) and the counts it shows, against a small fake of the back end; the check before saving's window side (the findings dialog for errors and for warnings alone, the two stage texts of `save-progress`); and the *No picks yet* line's rule (the one catch-all entry, Q-UI-4). No window opens and nothing is written | `cd app && npm test` |
 | Analysis tools | `tools/analysis` on `testdata/` and, when present, `samples/` | `python -m pytest tools/analysis/tests` ([setup.md](setup.md)) |
 | Local sample test (skipped without `samples/`) | The three *Shipping label + Packing slip* sample files. Expected: 601 pages, 600 orders, one order on 2 pages, J&T 517 pages; the picks, runs and page counts equal what the Python tools (`tools/analysis`) give on the same files and rules | `cargo test --workspace` |
-| By eye | Saved PDFs and packing lists from a sample run | a sample run ([cli.md](cli.md)), then compare the pages with the download (rendered side by side); the layout is as in [packing-list.md](../software-design/labels/packing-list.md) |
+| By eye | Saved PDFs and packing lists from a sample run | a sample run ([cli.md](cli.md)), then compare the pages with the download (rendered side by side); the layouts are those of `crates/pdf/src/packing_list.rs` (the target is the [summary PDF](../software-design/labels/summary-pdf.md)) |
 
 All Rust levels run from the repository root; the Python tests need the virtual environment
 ([setup.md](setup.md)). Setup, run and build commands are in [app.md](app.md); what each level covers

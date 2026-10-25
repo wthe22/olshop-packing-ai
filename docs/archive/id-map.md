@@ -61,3 +61,38 @@ Old IDs map to the scoped IDs of the live documents. Code comments and old commi
 
 Code comments in `tools/analysis/` cite the first-generation design files (`03-pc-script`); their rules now
 live in `software-design/labels/` and `software-design/rules-file/`.
+
+## v0.2 design (2026-10-25)
+
+The open questions were answered with their defaults and written as decisions; sessions gave way to
+namespaces.
+
+| Old | New |
+|---|---|
+| Q-LABEL-1, Q-LABEL-2, Q-LABEL-3 | D-LABEL-6, D-LABEL-7, D-LABEL-8 |
+| Q-LABEL-5, Q-LABEL-7, Q-LABEL-8 | D-LABEL-9, D-LABEL-10, D-LABEL-11 |
+| Q-LABEL-9, Q-LABEL-10 | D-LABEL-12, D-LABEL-13 |
+| Q-APP-1 | D-APP-18 |
+| Q-APP-2, Q-APP-3 | D-APP-19 |
+| Q-APP-4, Q-APP-5, Q-APP-10 | D-APP-17 (Q-APP-4 has no subject: sessions are gone) |
+| Q-APP-6, Q-APP-7 | D-APP-22, D-APP-23 |
+| Q-APP-8, Q-APP-9, Q-APP-11 | D-APP-20, D-APP-21 (the owner's draft: a date only), D-APP-13 |
+| Q-UI-1, Q-UI-2, Q-UI-3, Q-UI-4 | D-UI-1, D-UI-2, D-UI-3, D-UI-4 |
+| Q-UI-5, Q-UI-6, Q-UI-7 | D-UI-5 |
+| Q-UI-8 | D-UI-6 |
+| Q-RULES-1, Q-RULES-2 | D-RULES-1, D-RULES-2 |
+| D-APP-2 (the read-back with the app's own reader) | replaced by D-APP-12 (the independent verifier) |
+| D-LABEL-1 (one courier file in the data folder) | replaced by D-APP-6 |
+| F-APP-6 (several sessions a day), F-UI-5 (the sessions panel) | F-APP-8 (namespaces), F-UI-7 (the panel) |
+| R-APP-1, R-LABEL-1, R-UI-4, R-UI-5, R-RULES-2 | resolved by the v0.2 design |
+| grouping, category, pick, saved PDF, packing list, condition | sort rule, label group, label group, group PDF, summary PDF, filter |
+
+| Old file | New file |
+|---|---|
+| `app/batch.md`, `app/saved-pdf-check.md` | `workflow/04-save.md`, `workflow/05-after-save.md`, `app/verification.md` |
+| `app/data-folder.md`, `app/inputs.md` | `data/`, `rules-file/README.md`, `labels/reading.md` |
+| `app/sessions.md`, `ui/sessions.md` | `app/namespaces.md`, `ui/panel.md` |
+| `labels/picks.md`, `labels/packing-list.md` | `labels/groups.md`, `labels/summary-pdf.md` |
+| `ui/categories.md` | `ui/sort-rules.md` |
+| `workflow/01-session-to-orders.md`, `02-orders-to-plan.md`, `03-save-and-check.md` | `workflow/01-start-and-open.md` … `05-after-save.md` |
+| `reviews/design+workflow.md` | `archive/v0.2-draft.md` |

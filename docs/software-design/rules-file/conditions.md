@@ -1,4 +1,6 @@
-# Condition language
+# Filter language
+
+A label group's `filter`, a one-off group of the Plan screen and a search are written in this language.
 
 ## Examples
 
@@ -6,10 +8,8 @@
 name contains "sepatu"
 total_quantity = 1
 tracking_id starts_with "JY"
-courier starts_with "J&T"
-rts_time = "2026-10-06"
-paid_time < "14:00"
-ship_by < "2026-10-07 17:00"
+courier equals "jnt"
+ship_by < "2026-10-08"
 not name contains "sepatu" and (name contains "spion" or name contains "knalpot")
 display_name equals "Spion Beat — Standard, honda" and line_quantity >= 2
 ```
@@ -17,86 +17,60 @@ display_name equals "Spion Beat — Standard, honda" and line_quantity >= 2
 ## Grammar
 
 ```
-condition  = or_expr
+filter     = or_expr
 or_expr    = and_expr { "or" and_expr }
 and_expr   = not_expr { "and" not_expr }
 not_expr   = "not" not_expr | primary
 primary    = "(" or_expr ")" | comparison
 comparison = text_field text_op string
            | number_field number_op integer
-           | time_field number_op time
+           | date_field number_op date
 text_op    = "contains" | "equals" | "starts_with"
 number_op  = "=" | "!=" | "<" | "<=" | ">" | ">="
 string     = '"' { any character except '"' and '\' | '\"' | '\\' } '"'
 integer    = digit { digit }
-time       = '"' ( date | clock | date " " clock ) '"'
-date       = digit digit digit digit "-" digit digit "-" digit digit
-clock      = digit digit ":" digit digit
+date       = '"' digit digit digit digit "-" digit digit "-" digit digit '"'
 ```
 
 - Keywords, field names and operators are case-insensitive. Spaces and line breaks are free.
-- `not` binds tighter than `and`, `and` tighter than `or`:
-  `not a and b or c` = `((not a) and b) or c`. Use parentheses when in doubt.
-- Text comparison ignores upper/lower case (`honda` = `HONDA`) and trims spaces of the field
-  value. It does not ignore accents or other differences.
+- `not` binds tighter than `and`, `and` tighter than `or`: `not a and b or c` = `((not a) and b) or c`.
+- Text comparison ignores upper and lower case (`honda` = `HONDA`) and trims spaces of the field value. It
+  does not ignore accents.
+- A date is written year-month-day ([D-APP-21](../decisions/app-features.md)).
 - Errors give line and column and say what is expected, e.g.
-  `line 2, col 18: expected a text operator (contains, equals, starts_with) after "name"`.
-  Inside a grouping's file ([the rules file](README.md)) the line and column are those of the file
-  itself, not of the condition text.
-
-## Date and time values
-
-A date/time field is compared with `=`, `!=`, `<`, `<=`, `>`, `>=` and a quoted value. The
-value's form decides what is compared:
-
-| Value form | Compares | Example |
-|---|---|---|
-| `"YYYY-MM-DD"` | The date part (that day) | `rts_time = "2026-10-06"`, `ship_by < "2026-10-07"` |
-| `"HH:MM"` | The time of day, any date; seconds ignored | `paid_time < "14:00"` |
-| `"YYYY-MM-DD HH:MM"` | That exact moment | `paid_time < "2026-10-06 14:00"` |
-
-A malformed value stops the run with a clear error, e.g.
-`line 3, col 22: expected a date "YYYY-MM-DD", a time "HH:MM" or a date and time "YYYY-MM-DD HH:MM"`.
-The date is written year-month-day; the time is `HH:MM` without seconds.
+  `line 2, col 18: expected a text operator (contains, equals, starts_with) after "name"`. Inside
+  `packing-workflows.toml` the line and column are those of the file, not of the filter text.
 
 ## Fields
 
 | Field | Type | Level | Source | Value |
 |---|---|---|---|---|
-| `name` | text | item | slip | Full product name (the slip prints it in full) |
-| `display_name` | text | item | — | Display name (name before `\|` + variation) |
-| `variation` | text | item | slip | Variation; the slip's `SKU` column (its `Variasi` column on the Shopee-style slip; `Default` reads as empty) |
-| `seller_sku` | text | item | slip | `Seller SKU` (the Shopee-style slip's `SKU` column; often empty) |
+| `name` | text | item | slip | Full product name |
+| `display_name` | text | item | — | Product name up to the first `\|`, trimmed; then ` — ` and the variation, which is left out when empty |
+| `variation` | text | item | slip | The variation (empty for `Default`) |
+| `seller_sku` | text | item | slip | The Seller SKU; often empty |
 | `line_quantity` | number | item | slip | Quantity of one line |
-| `total_quantity` | number | order | slip | The `Qty Total` printed on the slip; none on the Shopee-style slip, so a condition on it finds no value |
-| `distinct_items` | number | order | — | Number of lines (different products) of the order |
-| `courier` | text | order | label | Deduced from the label ([courier.md](../labels/courier.md)) |
-| `order_id` | text | order | label | The order's Order ID; the Search panel finds an order by it ([Search](../ui/search.md)) |
-| `tracking_id` | text | order | label | The tracking ID printed on the label (also the barcode and QR value) |
-| `ship_by` | date/time | order | label | `In transit by: dd/mm/yyyy hh:mm` |
-| `category` | text | order | — | Category `code`. **App scan filters only** |
-| `batch` | number | order | — | **App scan filters only**; meaning revised with the app |
-| `group` | number | order | — | **App scan filters only**; meaning revised with the app |
+| `total_quantity` | number | order | slip | The printed `Qty Total`; none on the Shopee-style slip, so a comparison on it is false there |
+| `distinct_items` | number | order | — | Number of lines of the order |
+| `courier` | text | order | label | The courier's **code** in `packing-workflows.toml` (`jnt`); empty when no courier is named ([courier](../labels/courier.md)) |
+| `order_id` | text | order | label | The Order ID |
+| `tracking_id` | text | order | label | The tracking ID (also the barcode and QR value) |
+| `ship_by` | date | order | label | `ship_by_date` ([reading](../labels/reading.md)) |
 
-- Item fields need item data (the slip); a pick using one on an order without a slip stops the run
-  ([picks.md](../labels/picks.md)).
-- Categories may use only the fields without "app scan filters only" (a category cannot depend
-  on itself or on numbering that is computed after the categories).
+A field not in this table is an error with line and column.
 
 ## Item-level fields
 
-An order has several lines. A comparison on an **item** field is true when **at least one line**
-matches. So:
+An order has several lines. A comparison on an **item** field is true when **at least one line** matches:
 
 - `name contains "spion"` → some line is a spion;
 - `not name contains "sepatu"` → no line is a sepatu;
-- `name contains "spion" and line_quantity = 2` → some line is a spion **and** some line (maybe
-  another one) has quantity 2. Each comparison looks at the lines on its own.
+- `name contains "spion" and line_quantity = 2` → some line is a spion **and** some line (maybe another
+  one) has quantity 2. Each comparison looks at the lines on its own.
 
-## How the app edits conditions
+## How the app edits filters
 
-The app shows a condition as rows of `field · operator · value` inside AND / OR boxes, picked
-from lists, so the owner rarely types. It converts that view to and from the text above;
-the text is what is stored and exported. A text view is available for long conditions.
-Printing a condition always uses lowercase keywords, one space around operators, and
-parentheses only where needed, so the same condition always gives the same text.
+The app shows a filter as rows of `field · operator · value` inside AND / OR boxes, picked from lists, so
+the owner rarely types ([Sort rules](../ui/sort-rules.md)); a courier is picked by name and stored by code.
+The text above is what is stored. Printing a filter always uses lowercase keywords, one space around
+operators and parentheses only where needed, so the same filter always gives the same text.

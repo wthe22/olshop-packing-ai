@@ -5,9 +5,9 @@ round:
 
 | File | Scope |
 |---|---|
-| `label.md` | LABEL: reading labels and slips, couriers, picks, the packing list |
-| `rules.md` | RULES: the picks sets and the condition language |
-| `app.md` | APP: batches, the data folder, revert and amend, the program folder |
+| `label.md` | LABEL: reading labels and slips, couriers, label groups, the summary PDF |
+| `rules.md` | RULES: the sort rules and the filter language |
+| `app.md` | APP: batches, namespaces, the data and the journal, revert and amend, reprint, the program folder |
 | `ui.md` | UI: the window and every screen |
 
 An item is `R-<SCOPE>-n` (for example `R-UI-8`), written as the present state and the target: what the
@@ -16,7 +16,4 @@ owner sees, what the owner wants. A resolved item is deleted; its answer is writ
 [../development/plan/](../development/plan/README.md). Numbers are never reused. A scope file stays in
 place when it holds no item, so the next finding of that scope has a home.
 
-Open items: `rules.md` (R-RULES-2), which waits for the owner's answer to
-[Q-RULES-2](../software-design/questions/rules.md); `ui.md` (R-UI-4, R-UI-5), `label.md` (R-LABEL-1) and
-`app.md` (R-APP-1, R-APP-2), the feature round of sessions, repeated orders and the page check
-([questions](../software-design/questions/README.md)).
+Open item: `app.md` (R-APP-2), the owner's reading of [the workflow](../software-design/workflow/README.md).

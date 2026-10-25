@@ -4,76 +4,62 @@
 
 | Command | Does | Returns |
 |---|---|---|
-| `sessions_list()` | Every session folder of `labels/` plus today's Main ([sessions](sessions.md)) | Day, name, folder, and its order count once its month is opened |
-| `session_new(day, name)` / `session_rename(session, name)` | **+ New session** / **Rename…** of the [Sessions panel](../ui/sessions.md): make or move the folder, with the rules of [sessions](sessions.md) | The session list; or *Save or cancel the batch first.* / the *file in use* message |
-| `day_overview(session)` | Read `state.json` of the session | Batches, saved PDFs, totals |
-| `check_files(paths)` | Page count and fingerprint of each chosen file | Name, size, time, page count, "used in batch n" |
-| `read_labels(paths, set, redo)` | Start reading on a worker thread with the chosen grouping of categories ([New batch › The grouping](../ui/new-batch.md#the-grouping)); `redo` is the batch being redone when the read is the amendment's ([New batch](../ui/new-batch.md#the-amends-selection-page)), nothing for a new batch (whose grouping is the one chosen on the screen); emits `read-progress {page, pages}` | Orders count, duplicates, warnings, the plan, or the stop error |
+| `owners_list()` | The namespaces of the data folder, and the open one's dates from the search index ([namespaces](namespaces.md)) | Names; per date its batches and orders |
+| `owner_new(name)` | **+ New owner**: make the namespace's folder | The list, or why the name is refused |
+| `day_open(namespace, date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, printed marks, reprints, findings; or the damage message |
+| `check_files(paths)` | SHA-256 and page count of each chosen file; *used in batch n*; one file chosen twice is listed once | The file list |
+| `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, repeats, the plan; or the stop |
 | `cancel_read()` | Stop reading | — |
-| `resolve_repeats(draft, choices)` | Apply the owner's choice per group or per order of [Repeated orders](../ui/duplicates.md): leave out the other copies and record them ([duplicates](duplicates.md)) | The draft with one copy per order, the copies left out, the recount |
-| `plan(draft, edits)` | Apply the plan edits (skip, move, add condition, rename) and recount | Picks with counts, runs (contents × orders), suggested names |
-| `save_batch(draft, plan, packing, save_anyway)` | Steps of [Save](batch.md) and the [check before saving](saved-pdf-check.md); emits `save-progress {stage, page, pages}` | Written files and summary, or the check's findings (nothing written until *Save anyway*) |
-| `revert_last(session)` / `start_amend(session)` | Revert / read the last batch's own label files again for an amend ([New batch](../ui/new-batch.md#the-amends-selection-page)) | New overview / the batch being redone, its file list (the selection page's starting list) and the read, so the Plan screen opens at once ([Plan](../ui/plan.md)); emits `read-progress {page, pages}` |
-| `rules_load(set)` / `rules_check(set, text or entries, draft?)` / `rules_save(set, …)` | Categories editor, acting on one grouping ([rules file](../rules-file/README.md)) | Entries, errors with line/col, live counts on the open draft |
-| `sets_list()` | The groupings of the data folder ([rules file › Groupings](../rules-file/README.md)) | The grouping names, the file each one has, and the grouping used last |
-| `new_set(name, copy_from)` / `delete_set(name)` | **+ New grouping** / **Delete grouping** on [Categories](../ui/categories.md): write `categories/<name>.toml`, empty (the one catch-all entry) or a copy of `copy_from`'s file, or delete that grouping's file | — |
-| `set_printed(session, batch, pdf, printed)` | The **Printed** tick of one saved-PDF row of a batch ([Day screen](../ui/day.md)): writes the session's `state.json`; it changes nothing else | — |
-| `condition_to_tree(text)` / `tree_to_condition(tree)` | Boxes editor: condition text → boxes, boxes → text (the engine's parser and printer, so the window has no second parser) | Tree of groups and rows, or an error with line/col / the text |
-| `search_orders(conditions, scope)` | Search the saved orders matching the condition boxes; `scope` is `session` (*This session*, the session in the title bar) or `all` (*All sessions*) | One row per order (Order ID, tracking ID, courier, items, batch, saved PDF name and path) and the order and batch counts |
-| `open_path(path)` / `show_in_folder(path)` | Open a PDF in the default viewer / a folder in Explorer — one call, `explorer.exe "<path>"` with the path as the only argument | — |
-| `settings_get()` / `settings_set(…)` | Settings | — |
-| `about()` | Settings › *About*: the app version and the PDFium version (the version's one place: [Settings › The version](../ui/settings.md#the-version)) | — |
+| `name_logo(hash, answer)` | The logo prompt's answer: a courier, *Not a courier*, *I don't know* ([New batch](../ui/new-batch.md#the-logo-prompt)) | The recount |
+| `resolve_repeats(choices)` | Apply the choice per group or per order ([duplicates](duplicates.md)) | One copy per order, the copies left out, the recount |
+| `plan(edits)` | Skip, move, add a one-off group, rename a file; recount | Groups with counts, runs, file names |
+| `save_batch(save_anyway)` | Write, verify, commit, move ([04 Save](../workflow/04-save.md)). Emits `save-progress {stage, page, pages}` | The saved batch, or the verifier's findings (nothing saved until *Save anyway*) |
+| `revert_last(day)` / `start_amend(day)` | Revert the newest batch / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)) | The date / the amend's file list and read |
+| `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
+| `restore_output(day, batch, file)` | Write a missing output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
+| `rules_list()` / `rules_load(rule)` / `rules_check(rule, …)` / `rules_save(rule, …)` | The Sort rules screen ([rules file](../rules-file/README.md)) | Rules; groups; errors with line and column; live counts on the open draft |
+| `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_delete(rule)` | **+ New rule**, **Rename…**, **Delete rule** | — |
+| `filter_to_tree(text)` / `tree_to_filter(tree)` | The boxes editor: the engine's parser and printer, so the window has no second parser | Tree, or an error with line and column / the text |
+| `search_orders(filter, scope)` | Search the index ([reprint](reprint.md#search)); scope *This day* or *All days* | One row per order with its trace |
+| `reprint(orders)` | One PDF of the chosen orders' pages, verified, recorded ([reprint](reprint.md#reprint)) | The file, or the verifier's findings |
+| `open_path(path)` / `show_in_folder(path)` | `explorer.exe "<path>"`, the path the only argument | — |
+| `settings_get()` / `settings_set(data_dir)` | Settings ([settings](../ui/settings.md)) | — |
+| `about()` | The app version and the PDFium version | — |
 
-Both shell commands hand Explorer the path as its **only** argument. `explorer.exe /select,<path>` is
-not usable: Explorer parses `/select,` itself and does not understand the quotes Rust puts around an
-argument that holds a space, so it reads no target and opens *Documents* (or *Home* when the target is
-empty) — and the batch folder path always holds a space (`…\labels\2026-10-11\batch 1`). A bare path
-opens a folder as a folder and a file in its default program, which is all the two buttons need.
+`explorer.exe /select,<path>` is not used: Explorer parses `/select,` itself and does not understand the
+quotes Rust puts around an argument with a space, so it opens *Documents*. A bare path opens a folder as a
+folder and a file in its default program, which is all the two buttons need.
 
-PDFium is not thread-safe: all PDF work runs on one worker thread that owns the PDFium
-library; commands send it jobs. The open draft (orders, the opened label documents) is kept
-by that thread until it is saved, cancelled, or the app closes.
+## Program folder
 
-## Settings
-
-`settings.json` in the data folder:
-
-| Setting | Default |
-|---|---|
-| Packing-list scope / layouts | `whole batch` / `pick` |
-| Grouping used last ([the groupings](../rules-file/README.md)) | `default` |
-| Sessions panel ([Sessions panel](../ui/sessions.md)) | shown |
-
-The last-used grouping is only what the [New batch](../ui/new-batch.md#the-grouping) screen preselects: which
-grouping a batch uses is chosen there, and each batch records its own ([session folder](data-folder.md)).
-Where the data folder is, is not a stored setting (next section). The app is in English; every
-screen text is in one file (`app/src/texts.ts`) so another language can be added later.
-
-## Program folder (portable)
-
-There is no installer. The program is one folder, put anywhere the owner can write (e.g.
-`D:\Packing\`, not `Program Files`) and started from a shortcut:
+There is no installer. The program is one folder, put anywhere the owner can write (e.g. `D:\Packing\`,
+not `Program Files`) and started from a shortcut:
 
 ```
 Packing\
   Packing.exe
   pdfium.dll
-  categories.toml   ┐
-  categories\       ├ the data folder (default: the program folder itself)
-  couriers.toml     │
-  settings.json     │
-  labels\           ┘
+  packing-settings.toml     data_dir = "data"
+  packing-workflows.toml
+  data\                     the data folder (the default)
 ```
 
-- Copying the folder to another PC moves the program and all its data along.
-- **New version**: replace `Packing.exe` and `pdfium.dll`; the data files stay.
-- **Finding the data folder at start**: the app looks for `couriers.toml` in its own folder.
-  Found → that folder is the data folder. Not found → the app asks, at every start until it is
-  found: **Use this folder** (writes the bundled `couriers.toml` next to the program; no
-  `categories.toml` is written, so the picks start as one catch-all entry — the grouping `default`,
-  [rules file](../rules-file/README.md)) or
-  **Choose a folder…** (used until the app closes; the next start asks again). See
-  [Start](../ui/start.md).
-- Settings › Data folder › **Change…** switches to another folder until the app closes.
-- WebView2 keeps its browser cache under `%LOCALAPPDATA%\com.wthe22.olshop-packing\`; it holds
-  no data of the app and is not needed on another PC.
+- Copying the folder moves the program and, with a relative `data_dir`, all its data along.
+- **New version**: replace `Packing.exe` and `pdfium.dll`; the two TOML files and the data stay. A version
+  that writes another schema is a new major data version: older data is not read ([D-APP-3](../decisions/app.md)).
+- WebView2 keeps its browser cache under `%LOCALAPPDATA%\com.wthe22.olshop-packing\`; it holds no data of
+  the app.
+- The app is in English; every screen text is in one file (`app/src/texts.ts`).
+
+## Start
+
+1. **The data folder.** Read `packing-settings.toml` beside the program. Missing, or its `data_dir`
+   missing: the [Start](../ui/start.md) screen asks once and writes the file.
+2. **The rules.** Read `packing-workflows.toml` beside the program; missing: write the bundled copy. A file
+   that does not parse stops the app with its line and column; a filter error opens the Sort rules screen
+   on that rule.
+3. **The lock** on the data folder ([data](../data/README.md#one-writer)). Held by another copy: say which
+   one, and offer **Try again**.
+4. **The namespace** whose journal was written last; none yet: ask for the first owner's name
+   ([namespaces](namespaces.md)).
+5. **Today's date** of that namespace, opened as in `day_open`; the search index is built beside it.

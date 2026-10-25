@@ -1,7 +1,7 @@
 # Business Process
 
-How the daily packing work is done today. Anything about the future app is in
-[`../desktop/design/`](../desktop/design/README.md) and [`../mobile/design/`](../mobile/design/README.md).
+How the daily packing work is done today. Anything about the app is in
+[`../software-design/`](../software-design/README.md).
 
 Sources: the files in `samples/` (orders of 2026-10-06, labels of 2026-10-07) and statements
 from the owner. Facts that come only from the owner are marked *(owner)*.

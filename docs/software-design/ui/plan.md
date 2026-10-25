@@ -1,110 +1,76 @@
 # Plan
 
-The heart of the app: which orders go into which saved PDF. It opens with the rules file
-applied in order (a proposal). For a normal day
-the owner checks the counts and presses **Save batch**.
+Which orders go into which group PDF. It opens with the batch's sort rule applied in order (a proposal);
+on a normal day the owner checks the counts and presses **Save batch**.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Batch 3 · grouping default · 2 files · 257 pages · 256 orders · 0 already saved [Back]│
+│  Batch 3 · rule default · 2 files · 257 pages · 256 orders · 0 already saved   [Back]  │
 │  Warnings: 2 ▸                                                                         │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  Use  #  Pick                         Orders  Runs   File name                         │
-│  [✓]  6  A  Sepatu                       130     3   [6 A Sepatu ×130            ]  ↑ ↓ ▸│
-│          name contains "sepatu"                                                        │
-│  [✓]  7  B  Spion & Knalpot               20     4   [7 B Spion & Knalpot ×20    ]  ↑ ↓ ▸│
-│          not name contains "sepatu" and (name contains "spion" or name …)             │
-│  [✓]  8  Z  Lainnya (the rest)           106    31   [8 Z Lainnya ×106           ]      ▸│
+│  Use  Group                           Orders  Runs   File name                         │
+│  [✓]  3-A  Sepatu                        130     3   [3-A Sepatu x130            ]  ↑ ↓ ▸│
+│            name contains "sepatu"                                                      │
+│  [✓]  3-B  Spion & Knalpot                20     4   [3-B Spion Knalpot x20      ]  ↑ ↓ ▸│
+│            not name contains "sepatu" and (name contains "spion" or name …)           │
+│  [✓]  3-Z  Lainnya (the rest)            106    31   [3-Z Lainnya x106           ]      ▸│
 │                                                                                        │
-│  [+ Add a pick for this batch]                       [Edit categories]                 │
+│  [+ Add a group for this batch]                      [Edit sort rule]                  │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  Packing list:  ( ) one per PDF  (•) one for the batch  ( ) none                       │
-│                 [ ] full   [ ] summary   [✓] pick                                      │
-│                                                                    [ Save batch ]      │
+│  Summary PDF: 3 summary.pdf                                        [ Save batch ]      │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Rows** are the picks of the grouping this batch uses ([New batch › The grouping](new-batch.md#the-grouping)), in
-  order; each takes its orders from what the rows above left. The header names that grouping
-  (*Batch 3 · grouping default · 2 files · 257 pages · 256 orders · 0 already saved*); the
-  numbers `#` are the saved-PDF numbers this batch will get (continuing the session).
-  When the batch held repeats, the header also says `· 14 copies left out ▸`: the list of the copies
-  left out and the copy that stays, and **Change…** back to [Repeated orders](duplicates.md)
-  (plan edits made so far are lost).
-- **Use** unticked = skip this pick for this batch only (its orders fall to the rows below).
-  The rules file is not changed. Unticking the rest row itself is an open question
-  ([Q-UI-1](../questions/ui.md)).
-- **↑ ↓** move a pick for this batch only. The rest row is always last: the last
-  entry of the batch's grouping when it has no condition (here *Z Lainnya*), else `? Uncategorised`.
-- **+ Add a pick for this batch** opens a small form: code (default `X`), name, condition (the
-  boxes editor of [Categories](categories.md), with the count it would take at that position).
-  It is added above the rest row and can be moved. Not saved to the rules file; the form has a
-  **Also add to categories** tick for that.
-- **Edit categories** opens [Categories](categories.md) on the grouping this batch uses, so a change is
-  written into that grouping's file and the open draft's plan is rebuilt from it.
-- A pick that takes 0 orders is shown grey with "0 orders — no PDF" and gets no number.
-- **File name**: suggested `<n> <code> <name> ×<orders>`; the owner may change the whole name,
-  number included (keeping the number in front keeps the files in printing order). The packing
-  list shows the number `#` whatever the name. Two saved PDFs of the batch cannot get the same
-  name (upper and lower case count as the same, as in Windows): the second shows "Same name as PDF 6" and **Save batch** waits until one is changed.
-- **▸** expands a pick to its runs — what the packing list will show:
-
-  ```
-  │  6-01  Sepatu Standar Samping Motor ×1                                     96 orders │
-  │  6-02  Sepatu Standar Samping Motor ×2                                     26 orders │
-  │  6-03  Sepatu Standar Samping Motor ×3                                      8 orders │
-  ```
-- **Warnings ▸** lists the read warnings in plain words (see *Messages*), e.g. couriers not
-  recognised and orders already saved in the session with their batch and time.
-- Every change (tick, move, add, edit categories) recounts all rows immediately.
-- **Save batch** writes the batch ([one batch](../app/batch.md)) and returns to the Day screen;
-  the write and the check before saving run on their own thread
-  ([saved-pdf-check.md](../app/saved-pdf-check.md)) — see *Saving*. A new batch's bottom row
-  holds **Save batch** only; there is no discard button there.
-- **Back** (top right) returns to the PDF selection page ([New batch](new-batch.md)) with the
-  files still listed, without asking, and writes nothing. The per-batch changes (ticked, moved
-  or added picks, file names) are lost when **Read labels** is pressed again: reading starts
-  again from the files ([New batch › Reading](new-batch.md#reading)). Only **Cancel** on the
-  selection page discards the draft.
-- Amend uses the same screen, titled "Redo batch 2": **Amend** reads the batch's own label PDFs
-  again and this screen opens at once, with **Save batch 2 again** and a bottom
-  **Cancel amend**. **Back** (top right) returns to the amend's selection page with the files still
-  listed ([New batch › The amend's selection page](new-batch.md#the-amends-selection-page));
-  **Cancel amend** leaves the batch as it was and returns to the Day screen. Neither asks, because
-  an amend writes nothing before **Save batch 2 again**.
-- When the plan is the one catch-all entry (no picks configured), a line above the rows reads
-  **No picks yet: all orders go into one PDF set** ([Q-UI-4](../questions/ui.md)).
+- **Rows** are the groups of the batch's sort rule ([New batch › The sort rule](new-batch.md#the-sort-rule)),
+  in order; each takes its orders from what the rows above left ([03 Plan](../workflow/03-plan.md#9-the-plan)).
+  The header names the rule. When the batch held repeats it also says `· 14 copies left out ▸`, with
+  **Change…** back to [Repeated orders](duplicates.md).
+- **Use** unticked skips the group for this batch only: its orders fall to the rows below. Unticking the
+  rest row sends its orders to a new last row `? Uncategorised`, so every order is still saved
+  ([D-UI-1](../decisions/ui.md)).
+- **↑ ↓** move a group for this batch only. The rest row is always last: the rule's last group when it has
+  no filter (here *Z Lainnya*), else `? Uncategorised`.
+- **+ Add a group for this batch** opens a small form: code (default `X`), name, filter (the boxes editor of
+  [Sort rules](sort-rules.md), with the count it would take at that position). It is added above the rest
+  row and can be moved. **Also add to the sort rule** writes it into `packing-workflows.toml` too.
+- **Edit sort rule** opens [Sort rules](sort-rules.md) on this batch's rule; a saved change rebuilds the plan.
+- A group that takes 0 orders is grey with "0 orders — no file".
+- **File name**: suggested `{batch}-{code} {name} x{count}` ([groups](../labels/groups.md#file-names)); the
+  owner may change it. A name Windows does not allow, or one equal to another file of the batch (upper and
+  lower case count as the same), shows why beside it and **Save batch** waits.
+- **▸** expands a group to its runs: `3-A-01  Sepatu Standar Samping Motor ×1    96 orders`.
+- **Warnings ▸** lists the read warnings in plain words ([Messages](messages.md)).
+- When the sort rule is one group with no filter, a line above the rows reads **No groups yet: all orders go
+  into one PDF** ([D-UI-4](../decisions/ui.md)).
+- Every change (tick, move, add, edit the sort rule) recounts all rows at once.
+- **Back** returns to the file list ([New batch](new-batch.md)) without asking and writes nothing; only
+  **Cancel** there discards the draft.
+- An amend uses the same screen, titled *Redo batch 2*, with **Save batch 2 again** and a bottom **Cancel
+  amend**; **Back** opens the amend's file list. Neither asks: an amend writes nothing before it is saved.
 
 ## Saving
 
-While *Save batch* runs, the stage and a progress bar stand above the packing-list options
-([saved-pdf-check.md](../app/saved-pdf-check.md): *Shown while it runs*):
+**Save batch** writes, verifies and commits on its own thread ([04 Save](../workflow/04-save.md)); the stage
+and a progress bar stand above the button:
 
 ```
-│  Writing the saved PDFs …  page 143 of 257                                             │
+│  Verifying the outputs …  page 143 of 257                                              │
 │  ██████████████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░            │
 ```
 
-The check before saving names what it caught in plain words — the errors and the warnings in two
-lists, never one — and offers **Save anyway** and **Cancel — nothing is saved**:
+The stages are *Copying inputs*, *Writing*, *Verifying*, *Saving*. A finding of the verifier stops the save
+and asks, the errors and the warnings in two lists, never one ([verification](../app/verification.md#two-severities-never-one-list)):
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │  The saved files do not match the plan.                                                │
-│                                                                                        │
-│  Errors: 2                                                                             │
-│  · PDF 2 (2 B Spion & Knalpot ×35.pdf): the page of order 580000000000000001 is        │
-│    missing (0 of 1 written).                                                           │
-│  · order 580000000000000042 is in two saved PDFs (2, 3); it must be in one.            │
-│                                                                                        │
+│  Errors: 1                                                                             │
+│  · page 13 of labels_1.pdf (order 580000000000000001) is in no output.                 │
 │  Warnings: 1                                                                           │
-│  · PDF 1 (1 A Sepatu ×130.pdf): every page is there, but not in the run order.         │
-│                                                                                        │
+│  · 3-A Sepatu x130.pdf: every page is there, but not in the run order.                 │
 │  [ Save anyway ]   [ Cancel — nothing is saved ]                                       │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Save anyway** saves the batch and keeps the two lists on its card and in `state.json`
-  ([saved-pdf-check.md](../app/saved-pdf-check.md)); **Cancel — nothing is saved** closes the
-  dialog and keeps the draft, so the Plan screen with the read labels is still there.
-- The check runs on every save, whatever the size of the batch ([D-APP-2](../decisions/app.md)).
+**Save anyway** saves the batch with the findings on its Day card; **Cancel — nothing is saved** keeps the
+draft on this screen.

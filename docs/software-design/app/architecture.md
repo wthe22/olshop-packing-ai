@@ -1,95 +1,73 @@
 # Architecture
 
-The PDF library is **PDFium** for all three PDF jobs: read the text with its positions, copy
-pages unchanged, write the packing list. Its packing lists are about 1.4 MB per batch, because
-PDFium writes the whole of each font into the file (about 2.0 MB for the `full`/`summary` layouts,
-which add a CID copy of Arial for the `×` — [Packing list](../labels/packing-list.md)) — accepted;
-they print the same. Only the packing-list writer could be replaced by one that embeds only the
-letters used if the size becomes a problem; nothing else would change.
-
 ## Diagram
 
 ```
-┌──────────────────────── PC app (one .exe + pdfium.dll) ────────────────────────┐
-│  Window: Svelte + TypeScript (screens of ui)                                   │
-│        │  invoke("read_labels", …) / events ("read-progress", "save-progress") │
-│        ▼                                                                       │
-│  packing-app (Tauri 2, Rust): commands, the open draft, settings               │
-│        │                                                                       │
-│        ├──► packing-engine (Rust, no PDF code): rules + conditions, slip and   │
-│        │    label text → orders, couriers, plan, runs, numbering, state.json   │
-│        │                                                                       │
-│        └──► packing-pdf (Rust): page text with positions, copy pages,          │
-│             write packing lists  ──►  PDFium (pdfium.dll)                      │
-└────────────────────────────────────────────────────────────────────────────────┘
-packing-cli (Rust, developer tool): the same engine and the shared batch steps
-(`packing-pdf` `batch.rs`) from the command line, for tests and sample runs
+┌───────────────────────── PC app (Packing.exe + pdfium.dll) ─────────────────────────┐
+│  Window: Svelte + TypeScript (the screens of ui/)                                   │
+│        │  invoke("read_labels", …) / events ("read-progress", "save-progress")      │
+│        ▼                                                                            │
+│  packing-app (Tauri 2): commands, the open draft, the worker thread                  │
+│        ├──► packing-engine  rules, filters, pages → copies → orders, repeats, plan,  │
+│        │                    runs, the record of a batch. No PDF, no file            │
+│        ├──► packing-pdf     PDFium: page text and images, copy pages, summary PDF   │
+│        ├──► packing-store   lock, journal, fold, input/ and output/, views, index   │
+│        └──► packing-verify  lopdf: page digests and the checks of a record          │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+packing-cli (developer tool): the same crates from the command line, for tests and sample runs
 ```
+
+## Who may use whom
+
+What checks an output is never the code that made it: `packing-verify` shares no code and no PDF library
+with the crates that read and write ([verification](verification.md)).
+
+| Crate | Uses | Never uses |
+|---|---|---|
+| `packing-engine` | `regex`, `jiff`, `serde`, `toml` | PDFium, files, the other crates |
+| `packing-pdf` | `packing-engine` (its types), `pdfium-render` | `packing-store`, `packing-verify` |
+| `packing-store` | `packing-engine` (its types), `serde_json`, `sha2`, `xxhash-rust` | PDFium, `packing-pdf`, `packing-verify` |
+| `packing-verify` | `lopdf`, `serde_json`, `sha2`, `xxhash-rust` | `packing-engine`, `packing-pdf`, `packing-store`, PDFium |
+| `packing-app`, `packing-cli` | all of the above | — |
+
+`packing-verify` reads the journal record as JSON into types of its own, so a field the writer gets wrong
+is read as written, not as meant.
 
 ## Stack
 
 | Need | Choice | Note |
 |---|---|---|
-| Language | Rust (stable, edition 2024; tested with 1.98) | One language for engine and window back end |
-| Window | Tauri 2 (`tauri` 2.12) | Uses the Edge WebView2 that comes with Windows 11 |
-| Screens | Svelte 5 + SvelteKit (static adapter, one page app) + TypeScript + Vite (`create-tauri-app`, template `svelte-ts`) | Plain CSS, no component library. Node 26, tested. Front-end build output `app/build/` (ignored by `app/.gitignore`) |
-| PDF: read text with x/y, copy pages unchanged, write the packing list | `pdfium-render` 0.9.4 + `pdfium.dll` (Chrome's PDF engine; prebuilt by bblanchon/pdfium-binaries, tag `chromium/7881` = the crate's `pdfium_latest`) | `PdfPageText` gives each character with its box (runs are rebuilt, see [Text runs from PDFium](#text-runs-from-pdfium)); `copy_page_range_from_document` copies pages; `PdfFonts::load_true_type_from_file` + text objects write the packing list (whole fonts embedded, so the file is about 1.5 MB — accepted). Licences MIT/Apache (wrapper), BSD-3/Apache (PDFium) |
-| TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `categories.toml`, `couriers.toml` |
-| JSON | `serde`, `serde_json` | `state.json`, test fixtures |
-| Dates | `jiff` | `ship_by`, `save_time`, day folder |
-| Hashes | `xxhash-rust` 0.8, feature `xxh3` | XXH3-64 for every hash the program makes: the fingerprint of a label file (the whole file; "used twice") and the logo fingerprints in `couriers.toml` (the logo image's encoded bytes; 0.44 µs for a 14 KB logo, measured, release build). One crate, no dependencies of its own. Not cryptographic, which does not matter here — the files are the platform's and the owner's own, not an attacker's; a file counts as the same when size and hash both match |
-| Tests | `cargo test`; `svelte-check` for the screens | Fixtures in `testdata/`, also used by the tests of the Python tools; app-only cases go into separate fixture files |
-| Build | `tools/make-portable.sh`: `npm run tauri build -- --no-bundle`, then the program folder | No installer; `Packing.exe` + `pdfium.dll` in `target/portable/Packing/` ([Program folder](program.md#program-folder-portable)) |
+| Language | Rust (stable, edition 2024) | One language for every crate and the window's back end |
+| Window | Tauri 2 | Uses the Edge WebView2 that comes with Windows 11 |
+| Screens | Svelte 5 + SvelteKit (static adapter) + TypeScript + Vite | Plain CSS, no component library |
+| Read, copy, write PDFs | `pdfium-render` 0.9.4 + `pdfium.dll` (bblanchon/pdfium-binaries, `chromium/7881`) | Text with positions, image bytes, page copy, the summary PDF ([D-APP-1](../decisions/app.md)) |
+| Verify PDFs | `lopdf` | The verifier's only PDF library: page objects, content streams, the summary's text |
+| TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `packing-workflows.toml`, `packing-settings.toml`, the views |
+| JSON | `serde`, `serde_json` | The journal |
+| Dates | `jiff` | Dates of the labels, `*_time` |
+| Hashes | `xxhash-rust` (XXH3-64), `sha2` (SHA-256) | XXH3-64: logo and shape hashes, page fingerprints and digests, the journal's seals. SHA-256: input and output files, so a file's name is its content |
+| Tests | `cargo test`; `svelte-check` and `node --test` for the screens | Fixtures written by the Rust fixture writer ([testing](../../development/testing.md)) |
+| Build | `tools/make-portable.sh` | No installer; the program folder ([program](program.md#program-folder)) |
 
-## Code layout
+## Threads
 
-```
-Cargo.toml                 workspace: crates/* and app/src-tauri
-crates/
-  engine/                  package packing-engine
-    src/rules.rs           a grouping's file, condition parser/evaluator/printer (rules file)
-    src/rules_edit/        boxes tree, live counts, a category written back into a grouping's file, comments kept
-    src/text.rs            a page's text runs with x, y (input from packing-pdf)
-    src/label/             Order ID search, label fields, the courier data (couriers.toml)
-    src/couriers_edit.rs   a taught logo hash written back into couriers.toml, comments kept
-    src/slip.rs            slip table by position
-    src/orders/            pages → orders, contents key, display names
-    src/plan.rs            plan, picks from what is left, plan edits, runs, numbering
-    src/day/               state.json, duplicate guard, revert, amend
-    src/search.rs          saved orders found by a condition (Search)
-    src/names.rs           file and folder names
-    couriers.toml          bundled with include_str!
-  pdf/                     package packing-pdf
-    src/read.rs            open files, page text with positions, page count, progress
-    src/write.rs           copy pages into a saved PDF
-    src/packing_list.rs    the three layouts
-    src/batch.rs           the batch steps shared by CLI and app: check files, read, duplicate guard, save
-  cli/                     package packing-cli (developer tool, not for daily use)
-app/
-  package.json, vite.config.js, src/routes/   Svelte screens
-  src/texts.ts                                every screen text (English)
-  src-tauri/                                  package packing-app: commands, settings
-tools/get-pdfium.sh        downloads the pinned pdfium.dll into vendor/ (git-ignored)
-tools/make-portable.sh     builds the program folder target/portable/Packing/
-```
-
-`packing-engine` has no PDF dependency: it takes text runs and returns decisions, so all
-reading and sorting rules are tested without PDF files. `packing-pdf` is the only code that
-touches PDFium.
+PDFium is not thread-safe: all PDFium work runs on one worker thread that owns the library, and the
+commands send it jobs. The open draft (orders, the opened input documents) stays on that thread until it
+is saved or cancelled. The verifier and the search index run on their own threads; the journal is written
+only by the command that holds the draft, one commit at a time.
 
 ## Text runs from PDFium
 
-The slip rules work on *runs* (a piece of text with its x, y). PDFium gives characters, so
-`read.rs` rebuilds the runs:
+The slip rules work on *runs* (a piece of text with its x, y). PDFium gives characters and text objects,
+so `packing-pdf` rebuilds the runs:
 
-- **Two kinds of file.** The downloaded labels (made by wkhtmltopdf) hold one character per
-  text object; files made by fpdf2 (`testdata/`) hold one whole run per text object. A page
-  whose text objects hold several characters is read one run per text object, characters in
-  their order. Otherwise runs are rebuilt by position: drop the space and line-break
-  characters PDFium adds (their boxes are empty), sort by line then x, start a new run on a new
-  line, a change of font name, or a gap over 5 pt; put a space for a gap over 1 pt. The font
-  name matters: `Qty Total:` (bold) and its value are as close as two words.
-- **Hyphen at a line end.** PDFium reports it as character U+0002; it is read as `-`, so the
-  wrap rule (no space after a trailing `-`) applies.
-- In fpdf2 files runs can overlap in x (a colon drawn over the label text), so those must not
-  be sorted by position.
+- **One character per text object** (the downloaded labels, made by wkhtmltopdf, and the test fixtures):
+  drop the space and line-break characters PDFium adds (their boxes are empty), sort by line then x, start
+  a new run on a new line, a change of font name, or a gap over 5 pt; put a space for a gap over 1 pt. The
+  font name matters: `Qty Total:` (bold) and its value are as close as two words.
+- **Several characters per text object** (the Shopee-style label's edge texts make its page one of
+  these): one run per text object, characters in their order; two objects on one line whose gap is not a
+  space (the next starts left of, or within 1 pt of, the previous one's right edge) are one run, so a word
+  the label splits at a font change (`V` + `ariasi`) is read whole.
+- **Hyphen at a line end**: PDFium reports it as U+0002; it is read as `-`, so the wrap rule (no space
+  after a trailing `-`) applies.

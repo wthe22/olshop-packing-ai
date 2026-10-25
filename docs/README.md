@@ -1,13 +1,13 @@
 # Packing Checker (PC app) — Documentation
 
-The PC app turns the shipping-label PDFs with packing slip of the shop's daily orders (TikTok Shop +
-Tokopedia, shipped by J&T, SiCepat, IDX) into picks — one saved label PDF per pick — and A4 packing
-lists. It is a Windows program (Rust + Tauri).
+The PC app turns the shipping-label PDFs with packing slip of one or more shop owners' daily orders (TikTok
+Shop, Tokopedia, Shopee-style; shipped by J&T, SiCepat, IDX, SPX, …) into label groups — one PDF per group —
+and an A4 summary per batch, each verified before it is saved. It is a Windows program (Rust + Tauri).
 
 | Folder | Contains | Read when |
 |---|---|---|
 | [`business-process/`](business-process/README.md) | How the packing work is done today and the files it uses. True even without the software | You need to know *why*, or what the real data looks like |
-| [`software-design/`](software-design/README.md) | The target system only: requirements, label and pick rules, rules file, the app, its screens, `decisions/`, `questions/` | You build or change the app |
+| [`software-design/`](software-design/README.md) | The target system only: the workflow and its invariants, requirements, data and journal, label and sort rules, the rules file, the app, its screens, `decisions/`, `questions/` | You build, change or check the app |
 | [`development/`](development/README.md) | How to set up, build, run and test (`setup.md`, `cli.md`, `app.md`, `testing.md`) and `plan/`: only the unfinished work | You start or continue development |
 | [`reviews/`](reviews/README.md) | The owner's feedback on the running app and ideas, one file per scope | You plan the next round of changes |
 | [`user-guide/`](user-guide/README.md) | How the owner uses the finished app, step by step with pictures | You use the app or change what the owner sees |
@@ -29,9 +29,9 @@ A scope groups the documents of one part of the system. IDs carry it.
 
 | Scope | Part | Design folder |
 |---|---|---|
-| LABEL | Reading labels and packing slips, courier deduction, picks, saved PDFs, the packing list | `software-design/labels/` |
-| RULES | The picks groupings (`categories.toml` and the data folder's `categories/`) and the condition language | `software-design/rules-file/` |
-| APP | One batch, the data folder, `state.json`, revert and amend, architecture, the program folder | `software-design/app/` |
+| LABEL | Reading labels and packing slips, courier deduction, label groups and runs, the summary PDF | `software-design/labels/` |
+| RULES | `packing-workflows.toml` (couriers, sort rules) and the filter language | `software-design/rules-file/` |
+| APP | Architecture, namespaces, the data folder and the journal, save, revert and amend, the verifier, reprint, the program folder | `software-design/app/`, `software-design/data/`, `software-design/workflow/` |
 | UI | The window and every screen | `software-design/ui/` |
 
 | ID | Meaning | Lives in |
@@ -63,13 +63,13 @@ still cite old IDs (`D2`, `D24`, …); `archive/id-map.md` maps them to the new 
 |---|---|
 | **Order** | One platform order, identified by its `Order ID` — the number its label prints. Has one tracking ID and one or more item lines |
 | **Tracking ID** | The courier's parcel number, e.g. `JY0000001234`. Printed on the label as text, 1D barcode and QR code |
-| **Item line** | One product with a variation and a quantity inside an order, read from the packing slip |
-| **Packing list** | The set of item lines of one order; also the A4 sheet that lists the runs. Two orders with the same set are packed the same way |
-| **Pick** | One rule in a grouping; the app writes the orders it matches as one saved label PDF |
-| **Saved PDF** | The label PDF of one pick, numbered through the session (1, 2, 3, …) |
-| **Run** | Inside a saved PDF, consecutive orders with identical contents; numbered 01, 02, … and written `3-05` |
-| **Category** | An owner-defined rule ("name contains sepatu"): a pick, shown as a section heading in the app; one entry of a grouping |
-| **Grouping** | A named collection of categories; a batch is packed with the grouping chosen for it ([rules file](software-design/rules-file/README.md)) |
-| **Batch** | One round of arrange shipment → download → prepare, numbered 1, 2, 3, … within the session: one label download prepared and saved together (`labels/<session>/batch 2/`) |
-| **Session** | A day plus an optional name (the one with no name is Main): one folder of batches and numbers. A day can hold several, e.g. one per shop |
+| **Item line** | One product with a variation, a Seller SKU and a quantity inside an order, read from the packing slip. An item is its name and variation |
+| **Packing key** | The item lines of one order as (name, variation, quantity). Two orders with the same key are packed the same way |
+| **Namespace** | One shop owner whose labels the app prepares (an **owner** on screen): a folder with one folder per date |
+| **Sort rule** | A named list of label groups in `packing-workflows.toml`; a batch is sorted by the rule chosen for it ([rules file](software-design/rules-file/README.md)) |
+| **Label group** | One entry of a sort rule: a code, a name and a filter (`name contains "sepatu"`); the orders it takes are written as one **group PDF**, `2-A Sepatu x88.pdf` |
+| **Summary PDF** | The one A4 sheet set of a batch: the units to take from stock and the batch's facts |
+| **Run** | Inside a group PDF, consecutive orders with the same packing key; numbered 01, 02, … and written `2-A-05` |
+| **Batch** | One round of arrange shipment → download → prepare, numbered 1, 2, 3, … within a namespace and date: one label download prepared and saved together |
+| **Journal** | The one file of a namespace and date that holds every saved fact; every other data file is an input, an output or a view of it |
 | **Copy** | One appearance of an order's label in the files. An order with two or more copies in a batch is a repeat |

@@ -1,17 +1,15 @@
-# Reading labels and making picks
+# Reading labels and sorting them
 
-The rules by which the PC app ([app](../app/README.md)) reads a label download and turns it into
-picks, saved PDFs and packing lists: the Order ID of a page, the packing slip, the courier, the
-picks and their runs, the numbering and file names, and the look of the packing list. All order
-data comes from the label and its packing slip. Requirements: `F-LABEL-1` to `F-LABEL-6` in
-[requirements.md](../requirements.md); a **pick** selects orders from what is left and each
-pick's orders are written as one **saved PDF** of label pages (the *Concepts* table in
-[requirements.md](../requirements.md)).
+The rules by which the app reads a label download and turns it into label groups, group PDFs and the
+summary PDF: the Order ID of a page, the packing slip, the courier, the groups and their runs, the file
+names. All order data comes from the label and its packing slip ([D-APP-4](../decisions/app.md)).
+Requirements: `F-LABEL-1` to `F-LABEL-6` in [requirements.md](../requirements.md).
 
 ## In this folder
 
-- [reading.md](reading.md) — the per-order data, the Order ID from the label, multi-page orders
-  and copies, the page fingerprint and reading the packing slip.
-- [courier.md](courier.md) — the courier deduced from the label.
-- [picks.md](picks.md) — picks, a saved PDF, the numbering and the file names.
-- [packing-list.md](packing-list.md) — the A4 packing list and its three layouts.
+- [reading.md](reading.md) — the per-order data, the Order ID, copies and multi-page orders, the page
+  fingerprint, the packing slip.
+- [courier.md](courier.md) — the courier from the logo and the tracking-ID form, the logo prompt, the clue
+  each order records.
+- [groups.md](groups.md) — label groups, runs, file names and the already-saved guard.
+- [summary-pdf.md](summary-pdf.md) — the one A4 summary PDF of a batch.

@@ -1,20 +1,46 @@
 # Start
 
-At every start the app looks for `couriers.toml` in its own folder
-([the program folder](../app/program.md)):
+What the app asks before the Day screen, in the order of [program › Start](../app/program.md#start).
 
-1. **Found** → that folder is the data folder; the Day screen opens for the current day.
-2. **Not found** (a first start, or a program copied without its data) → "No packing data
-   next to the program (`D:\Packing\`)." [Use this folder] [Choose a folder…]
-   - **Use this folder** writes the bundled `couriers.toml` (the repository's) there; every
-     later start finds it. No picks are written: the picks start as one catch-all
-     entry that takes every order — the grouping `default`
-     ([rules file](../rules-file/README.md), [picks](../labels/picks.md), [Q-UI-4](../questions/ui.md)).
-     If the folder cannot be written (e.g. under `Program Files`), the
-     message says so and only **Choose a folder…** is left.
-   - **Choose a folder…**: the folder is used as it is; a `couriers.toml`
-     it does not have is written from the bundled file, and its own groupings (`categories.toml` and
-     `categories/`) are kept. It
-     is used until the app closes, so the next start asks again.
-3. If a grouping has an error, Categories opens before the Day screen, on that grouping; a data folder
-   without a grouping file is not an error.
+## The data folder (first start)
+
+When `packing-settings.toml` is missing beside the program, or names no data folder:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  Where should Packing keep its data?                                                   │
+│  Each owner's labels and outputs are kept there, one folder per owner and date.        │
+│                                                                                        │
+│  [ Use D:\Packing\data ]                 [ Choose a folder… ]                          │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Use `…\data`** writes `data_dir = "data"` (beside the program, so the folder can be copied whole).
+- **Choose a folder…** writes the chosen path, relative when it is inside the program's folder.
+- A folder that cannot be written (e.g. under `Program Files`) is refused with the reason.
+- `packing-workflows.toml` is written from the bundled copy when it is missing: the couriers, their clues
+  and one sort rule `default` whose only group takes every order ([rules file](../rules-file/README.md)).
+
+## Another copy is open
+
+```
+│  Packing is already open on PC-GUDANG (since 08:12).                                   │
+│  Close it there, then try again.                                    [ Try again ]      │
+```
+
+## The first owner
+
+When the data folder holds no owner yet:
+
+```
+│  Whose labels are these?   Owner [ Toko Contoh            ]             [ Create ]     │
+```
+
+The name follows [namespaces › Names](../app/namespaces.md#names); **Create** makes the owner's folder and
+opens today's date. More owners are added in the [panel](panel.md).
+
+## The rules file
+
+A `packing-workflows.toml` that does not parse stops here with its line and column and **Open folder**. A
+sort rule whose filter has an error opens the [Sort rules](sort-rules.md) screen on that rule before the Day
+screen.

@@ -1,97 +1,65 @@
 # Courier deduction
 
-The label is read for two clues and the courier is named **only when the two agree** (the
-owner's rule): one clue alone can be wrong, so a wrong name would need two labels to be wrong in
-the same way.
+The label is read for two clues and the courier is named **only when the two agree** (the owner's rule,
+[D-LABEL-2](../decisions/label.md)): one clue alone can be wrong, so a wrong name would need two marks of
+the label to be wrong in the same way. The clues are the owner's data: `courier_classifier` and
+`not_courier` of `packing-workflows.toml` ([rules file](../rules-file/README.md#couriers)).
 
-1. **The logo** — the main clue. Every label prints the courier's logo as an embedded image; the
-   image's **encoded bytes** are hashed (pdfium's `FPDFImageObj_GetImageDataRaw`, *not* the
-   decoded pixels) with **XXH3-64** and looked up in the courier data's logo table. One hash per
-   courier, measured stable across every sample export — J&T Express `39b9b7b9f61d0e7f`, SiCepat
-   `cf33ed60daa291b1`, iD Express (IDX) `9131c1f94ad363d4`, SPX Express `4583097ef370a670` (the
-   Shopee-style label; identical on all 3 of its pages, one file so far). The cost is about 0.5 µs
-   a page (the bytes are 1.5–15 KB; measured 0.44 µs for a 14 KB logo). Python's `xxhash` (in
-   `tools/analysis`) and Rust's `xxhash-rust` compute the same value, so a hash taken there can be
-   checked against the app's. A hash not in the table is **asked of the owner once** ("which
-   courier is this logo?") and the answer is written into the data file, so later labels are named
-   without asking. **Which** of a page's images is the logo needs a rule of its own
-   ([Q-LABEL-5](../questions/label.md)): a page can carry, besides the courier's logo, its buying
-   channel's brand strip, a page-wide frame, the slip's footer strip and — on the Shopee-style
-   label — its barcode and QR as images too, and none of those is the courier's. The logo is not
-   always the smallest image (on the Shopee-style label the channel strip is larger, on the boxed
-   layouts the `tokopedia | Shop` strip is smaller) and not always the unmasked one (J&T Cargo's
-   and SPX's logos both carry a mask). **Default** ([Q-LABEL-5](../questions/label.md)): the
-   candidates are the images drawn in the page's **top 40 pt** — on all six sample styles those
-   are exactly the courier's logo and the channel strip, and the frame (134–418 pt), the slip's
-   footer strip (39–62, or 104–124 on an instant label) and the barcode and QR (173–224, 330–373)
-   all fall outside — and a candidate whose hash the table does not know is **asked of the owner
-   once**, the prompt gaining a **Not a courier** answer for a channel strip
-   ([the logo prompt](../ui/new-batch.md)).
-2. **The tracking-ID form** ([business-process 02](../../business-process/02-data-sources.md)):
-   `JY` or `JX` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo;
-   `TKP` + 10 digits → iD Express (IDX); `SPXID` + 11 digits → SPX Express (the Shopee-style
-   label, which prints a check letter around the number: `Resi:` without it, `SPXID…A` eight times
-   on the page with it). The form must match a token (or a match in the whitespace-collapsed text)
-   **fully**; it does not have to be repeated — on the boxed layouts the tracking ID is printed
-   once ([business-process 02](../../business-process/02-data-sources.md)). The forms are the
-   owner's data, in the data folder's `couriers.toml`, and the reader takes them from that file:
-   a form the platform adds is a line there, not a program change.
-3. **A masked logo is hashed by appearance.** A courier can print its logo as an image whose
-   shape is a `/SMask` and whose base is one flat colour (J&T Cargo: 331 bytes for 680×156): the
-   base's bytes name no courier, and the platform re-rastered the same wordmark at two sizes
-   (680×156, 683×157), so the encoded bytes differ between exports. For an image with no hash in
-   the table, the app hashes its **appearance** instead: composite the image with its `/SMask` (if
-   any), fit it into a fixed **64 × 64** canvas on white, threshold at **200/255**, and hash that
-   1-bit canvas with XXH3-64. The pipeline is fixed so the value is reproducible: the image as
-   PDFium renders it (straight RGBA, the `/SMask` being the alpha) is composited onto white;
-   scaled to fit 64 × 64 with a Lanczos (a = 3) filter in `f64` and pasted centred on a white
-   canvas; a pixel is ink when its luma (`(r·19595 + g·38470 + b·7471 + 32768) >> 16`) is below
-   200; the 64 × 64 bits are packed 8 to a byte, most significant first (512 bytes), and
-   hashed. Measured over the samples with the program's own reader: J&T Cargo's two rasters
-   both give `753ccbd14749befa`, so the appearance table needs one entry per courier and a
-   re-raster is not asked about again. The appearance is computed only for a header-band image
-   whose encoded bytes the table does not know; the encoded bytes are cheaper and tried first.
-4. **Named only when the two clues agree**: the tracking form gives the *candidate* couriers, and
-   the courier is named when the logo's courier (by its bytes, else by its appearance) is among
-   them. A logo whose courier and form disagree, a logo with no form, a form with no logo, or
-   neither → no name. Unknown → `courier` empty, and a warning lists those orders. The one
-   exception is a page with **no header image at all** (only the made-up test labels): there a
-   lettered form (`JY`, `TKP`, `SPXID`) that fits one courier names it ([Q-LABEL-8](../questions/label.md)).
-5. **A printed text clue** (`www.jet.co.id`, `FastTrack`) stands in for the logo only where the
-   logo cannot be read at all. J&T Cargo's label prints `FastTrack` in its header strip and
-   `TT Order ID` as the caption of its order ID, and SiCepat and iD Express print no courier name.
-6. **The service tag is not used** (the owner: it is weak for some couriers). The measured tag
-   lists stay in [business-process 02](../../business-process/02-data-sources.md) for when a case
-   needs them.
-7. **An instant-service label names no courier.** The platform's *Instant / Same Day* label
-   ([business-process 02](../../business-process/02-data-sources.md)) is the only style with **no
-   courier logo at all** (its images are platform strips) **and no tracking ID**, so both clues
-   that name every other courier are absent and nothing on the page can name one. It is recognised
-   by the tag `GKS` with the caption `Kode Pengambilan`, no tracking ID and no courier logo, and an
-   `In transit by` that is a clock time rather than `23:59`. Two marks that look like marks and are
-   not: the **pickup code** beside that caption is two letters + 4 digits (`WX` on one page, `CJ`
-   on the other) and the **header strip** is the buying channel's brand (`TikTok Shop` on a TikTok
-   Shop order, `tokopedia PLUS` on a Tokopedia one). The service is served by **Gojek, Grab or
-   Blitz** and the page never says which, so the name comes from the order export's
-   `Shipping Provider Name`; the **Default** ([Q-LABEL-2](../questions/label.md)) shows
-   `Gojek (instant)` from the tag `GKS` when the export has no row, and lists the order in the
-   unknown-courier warning when neither is at hand.
-8. **An instant label is still keyed by its Order ID**, printed on its `Nomor Order` line and in
-   its barcode, so it is read like any other page; it prints no tracking ID, so that order's
-   `tracking_id` stays empty and its slip is read normally.
-9. **The Shopee-style label carries both clues, both new.** It is the fourth label style
-   ([business-process 02](../../business-process/02-data-sources.md)): its logo is the small red
-   `SPX` wordmark (68×27, masked, its encoded bytes `4583097ef370a670`, identical on all 3 of its
-   pages), and its tracking ID has the form `SPXID` + 11 digits, which no other courier uses — so
-   the two clues agree on every page of it, as the owner's rule requires. On the first batch the
-   app asks the owner once about the logo (the prompt) and remembers the name for the logo
-   ([D-LABEL-4](../decisions/label.md)); the name stored is the owner's — the wordmark reads `SPX`. The page's four other
-   images (the `Shopee` channel strip, two barcodes and a QR, all different per order) belong to
-   the rule for picking the logo ([Q-LABEL-5](../questions/label.md)), not to this one. The
-   style packs like any other: its pages are keyed by their own `No.Pesanan` number and its
-   slip's Indonesian header is read like the English one ([reading.md](reading.md)).
+1. **The logo** — the main clue. Every label prints the courier's logo as an embedded image. The
+   **candidates** are the images whose whole box lies in the page's **top 40 pt**
+   ([D-LABEL-9](../decisions/label.md)): on all six sample styles those are exactly the courier's logo and
+   the buying channel's strip, while the page-wide frame (134–418 pt), the slip's footer strip (39–62, or
+   104–124 on an instant label) and the barcodes and the QR (173–224, 330–373) fall outside. A candidate's
+   **encoded bytes** (PDFium's `FPDFImageObj_GetImageDataRaw`, not the decoded pixels) are hashed with
+   XXH3-64 (seed 0) and looked up in `logos`; a hash in `not_courier.logos` is not a logo. Measured stable
+   across every sample export: J&T Express `39b9b7b9f61d0e7f`, SiCepat `cf33ed60daa291b1`, iD Express (IDX)
+   `9131c1f94ad363d4`, SPX `4583097ef370a670`. About 0.5 µs a page.
+2. **A masked logo by its appearance** ([D-LABEL-6](../decisions/label.md)). A courier can print its logo as
+   an image whose shape is a `/SMask` over one flat colour (J&T Cargo: 331 bytes for 680×156), re-rastered
+   between exports (680×156, 683×157), so its bytes name nothing. For a candidate whose bytes are in
+   neither list, the app hashes its **appearance**: the image as PDFium renders it (straight RGBA, the
+   `/SMask` as alpha) composited onto white; scaled to fit 64 × 64 with a Lanczos (a = 3) filter in `f64`
+   and pasted centred on a white canvas; a pixel is ink when its luma
+   (`(r·19595 + g·38470 + b·7471 + 32768) >> 16`) is below 200; the 64 × 64 bits packed 8 to a byte, most
+   significant first (512 bytes), hashed with XXH3-64 and looked up in `shapes`. J&T Cargo's two rasters
+   both give `753ccbd14749befa`. The decode is paid only where the bytes matched nothing (about 1 page in 600).
+3. **The tracking-ID form** ([business-process 02](../../business-process/02-data-sources.md)): `JY` or
+   `JX` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo; `TKP` + 10
+   digits → IDX; `SPXID` + 11 digits → SPX (the Shopee-style label prints a check letter around the number:
+   `Resi:` without it, `SPXID…A` with it). The form must match a token, or a match in the
+   whitespace-collapsed text, **fully**; it need not be repeated (the boxed layouts print it once). A form
+   the platform adds is a line of `packing-workflows.toml`, not a program change.
+4. **Named only when the two agree.** The form gives the *candidate* couriers; the courier is named when the
+   logo's courier (by its bytes, else by its appearance) is among them. A logo whose courier and form
+   disagree, a logo with no form, a form with no logo, or neither → no name: `courier` stays empty and a
+   warning lists the orders. A page with **no header image at all** (only made-up test labels) is named by
+   a lettered form that fits one courier (`JY`, `TKP`, `SPXID`), never by a bare-number form (`00`, `57`)
+   ([D-LABEL-11](../decisions/label.md)).
+5. **A printed text clue** (`text`: `jet.co.id`, `FastTrack`) stands in for the logo only where no candidate
+   image can be read at all. J&T Cargo prints `FastTrack` in its header strip; SiCepat and IDX print no name.
+6. **The service tag is not used** on a normal label (the owner: it is weak for some couriers). The
+   measured tags stay in [business-process 02](../../business-process/02-data-sources.md).
+7. **An instant-service label is named by its tag** ([D-LABEL-7](../decisions/label.md)). The platform's
+   *Instant / Same Day* label ([business-process 02](../../business-process/02-data-sources.md)) is the only
+   style with no courier logo and no tracking ID. It is recognised by the caption `Kode Pengambilan` with no
+   tracking ID and no courier logo; its tag (`GKS`) is looked up in `instant_tags`, so `GKS` names Gojek. A
+   tag in no list is asked about once in the logo prompt, like an unseen logo, and the answer is added to
+   that courier's `instant_tags`. The style is known from one page only: each of these marks is re-checked
+   on the next instant label before it is relied on.
+8. **The Shopee-style label carries both clues**: the small red `SPX` wordmark (68×27, masked, bytes
+   `4583097ef370a670`) and `SPXID` + 11 digits, which no other courier uses
+   ([D-LABEL-5](../decisions/label.md)).
 
-The courier list is `couriers.toml` (in the data folder in the app); its fields and an example are
-in [inputs.md](../app/inputs.md). The app writes the logos the owner names in the prompt into it,
-so a taught logo is recognised in every later batch ([D-LABEL-4](../decisions/label.md),
-[Q-LABEL-7](../questions/label.md)).
+## The logo prompt, and what is remembered
+
+A candidate whose hash is in no list is asked of the owner once, before the plan: a courier, **Not a
+courier** (a channel strip), or **I don't know** ([New batch › The logo prompt](../ui/new-batch.md#the-logo-prompt)).
+A courier's answer appends the hash to that courier's `logos`; *Not a courier* appends it to
+`not_courier.logos`; comments and order of the file are kept ([D-LABEL-4](../decisions/label.md),
+[D-LABEL-10](../decisions/label.md)). The same image is never asked about again.
+
+## The clue that named it
+
+Each saved order records its `courier_clue`: the kind (`logo`, `shape`, `text`, `form` for a page with no
+header image, `tag`, or `none`), the hash, text or tag, and the tracking-ID form that agreed
+([records](../data/records.md), [D-LABEL-14](../decisions/label.md)). Search shows it in the order's trace.

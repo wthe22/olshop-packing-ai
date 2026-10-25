@@ -1,10 +1,43 @@
 # Search
 
-Finds saved orders of the day by the fields the rules can use ([inputs](../app/inputs.md)): Order ID, tracking ID, courier, product name, variation, Seller SKU, line quantity, total quantity and different items. **Search** in the window frame opens it over the current screen, as Categories does; **Close** returns to it. It only reads: nothing is changed or saved.
+Finds saved orders of the open owner and prints their labels again. **Search** in the title bar opens it over
+the current screen; **Close** returns to it. Searching changes nothing; **Reprint** writes one file
+([reprint](../app/reprint.md)).
 
-- **The conditions** are made with the same boxes as [Categories](categories.md): a group *All of these* / *Any of these*, rows of [field ▾] [operator ▾] [value] [not] [×] and [+ condition] [+ group]. The field list is the one above; the operators are the ones [Categories](categories.md) offers, *contains* first for a text field. Matching ignores case. An item field matches an order when one of its lines matches, as in the rules file ([the condition language](../rules-file/conditions.md)).
-- **Scope**: *This day* (the day in the title bar; the default) or *All days* ([Q-UI-3](../questions/ui.md)).
-- **Results** show the number of orders and batches, then one row per order: Order ID · tracking ID · courier · items (name × quantity) · batch · saved PDF. In *All days* each row also shows its day. **Open** opens that saved PDF in the PC's PDF viewer, as on the Day screen.
-- **Saved orders only.** Orders of an open draft are not searched: they have no saved PDF yet.
-- **Orders saved before search existed** keep only their IDs ([Q-UI-3](../questions/ui.md)). Their row says *items not stored*, and they are found by Order ID or tracking ID only.
+```
+┌ Search ────────────────────────────────────────────────────────────────────── [Close] ┐
+│  ┌ All of these ▾ ───────────────────────────────────────────────────────────────┐   │
+│  │ [Tracking ID ▾] [starts with ▾] [JY00000012     ]  [ ] not  [×]              │   │
+│  │ [+ condition] [+ group]                                                       │   │
+│  └───────────────────────────────────────────────────────────────────────────────┘   │
+│  Scope: (•) This day  ( ) All days                                                    │
+│  3 orders in 2 batches                                       [ ] Select all results  │
+│  [✓] 580000000000000042  JY0000001234  jnt  Sepatu ×1         7 Oct · 2-A  [Open] ▸   │
+│  [ ] 580000000000000057  JY0000001235  jnt  Spion Beat ×2     7 Oct · 2-B  [Open] ▸   │
+│        from 10-07_09-05-49_…_2.pdf p. 14 · courier jnt by logo 39b9… + form J[XY]\d{10} · run 2-B-01 │
+│  [✓] 580000000000000061  JY0000001240  jnt  Sepatu ×2         7 Oct · 1-A  [Open] ▸   │
+│                                                            [ Reprint 2 orders ]      │
+└───────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **The filter** is made with the boxes of [Sort rules](sort-rules.md); the fields are those of the filter
+  language ([fields](../rules-file/conditions.md#fields)). Matching ignores case; an item field matches when one
+  line matches.
+- **Scope**: *This day* (the open date, the default) or *All days* of the open owner
+  ([D-UI-3](../decisions/ui.md)). Results come from the search index ([reprint](../app/reprint.md#the-search-index));
+  until it is built the screen says *Loading…*.
+- **Results**: the number of orders and batches, then one row per order: Order ID · tracking ID · courier ·
+  items (name × quantity) · date · group file. **Open** opens that group PDF. **▸** opens the row's trace
+  line: its input and pages, the clue that named its courier, its run.
+- **Saved orders only**: an open draft's orders have no file yet and are not searched.
 - **No match**: "No saved order matches."
+
+## Reprint
+
+- A tick on each row, and **Select all results** for every row the filter found.
+- **Reprint `<n>` orders** writes one PDF of their label pages, unchanged, in their original printing order,
+  into today's date: `reprint 1 x2.pdf` ([reprint](../app/reprint.md#reprint)). It is verified before it is
+  kept; a finding stops it and nothing is kept.
+- When it is written, a line says "Reprint 1 written: 2 orders, 2 pages." with **Open**, and the Day screen
+  of today lists it under **Reprints**.
+- A reprint changes nothing else: the orders stay saved in their batches and their printed ticks stay.

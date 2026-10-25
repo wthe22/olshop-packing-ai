@@ -7,6 +7,17 @@
 - All orders are `Fulfillment by seller`, shipped from the shop's own location.
 - Couriers on 2026-10-06 (orders): J&T Express 1,252 · SiCepat 174 · IDX 9 · J&T Cargo 1.
 
+## Owners and the admin *(owner)*
+
+- The warehouse handles the orders of several shop owners. Each owner sends the shipping labels to the
+  admin, who does the label work for them. An owner may have several shops on several platforms.
+- The admin downloads the label PDFs, prints them, sorts them by packing list and gives the sorted labels to
+  the packing teams. Labels can come from several owners.
+- The admin keeps track of which labels are already printed, to prevent printing one twice. A label
+  sometimes needs printing again: it was damaged, or labelled by mistake.
+- Each packing team handles the items of one category. Packing lists that appear often are packed ahead.
+  A team packs the items, sticks the label on the package and puts it in the sorting bin of its courier.
+
 ## Daily steps
 
 1. **Arrange shipment** in the seller centre. Each order gets a tracking ID. The `RTS Time`
