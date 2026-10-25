@@ -22,6 +22,7 @@ xxhash-rust = { version = "0.8", features = ["xxh3"] }
 packing-engine = { path = "crates/engine" }
 packing-pdf = { path = "crates/pdf" }
 packing-store = { path = "crates/store" }
+packing-verify = { path = "crates/verify" }
 
 # Profiles must live at the workspace root (a member's [profile] is ignored).
 [profile.release]

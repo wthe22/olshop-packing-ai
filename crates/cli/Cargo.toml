@@ -16,4 +16,8 @@ packing-engine.workspace = true
 packing-pdf.workspace = true
 
 [dev-dependencies]
+lopdf.workspace = true
+pdfium-render.workspace = true
+packing-store.workspace = true
+packing-verify.workspace = true
 testkit = { path = "../testkit" }

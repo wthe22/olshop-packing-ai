@@ -55,6 +55,7 @@ crates/engine/             rules, labels and slips → orders, plan, runs, day s
 crates/pdf/                PDFium: read text, copy pages, packing lists, the batch steps
 crates/cli/                developer command line (tests, sample runs, the samples baseline)
 crates/store/              the data folder: lock, journal and fold, input/ and output/, views
+crates/verify/             the independent verifier: lopdf only, page digests, the checks of a batch
 crates/fixtures/           writes the made-up label PDFs of testdata/ and their answer (lopdf only)
 crates/testkit/            fixtures the tests share (never built into the app)
 app/                       Tauri app: Svelte screens (src/), Rust commands (src-tauri/)

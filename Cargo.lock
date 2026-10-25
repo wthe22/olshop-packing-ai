@@ -2794,8 +2794,12 @@ name = "packing-cli"
 version = "0.1.0"
 dependencies = [
  "jiff",
+ "lopdf",
  "packing-engine",
  "packing-pdf",
+ "packing-store",
+ "packing-verify",
+ "pdfium-render",
  "serde_json",
  "testkit",
 ]
@@ -2846,6 +2850,18 @@ dependencies = [
  "sha2 0.10.9",
  "testkit",
  "toml 1.1.8+spec-1.1.0",
+ "xxhash-rust",
+]
+
+[[package]]
+name = "packing-verify"
+version = "0.1.0"
+dependencies = [
+ "lopdf",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
  "xxhash-rust",
 ]
 

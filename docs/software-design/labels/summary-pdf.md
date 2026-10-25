@@ -27,13 +27,18 @@ The last page says what the batch is, so the paper alone can be traced:
 
 | Section | Holds |
 |---|---|
-| Groups | Each group PDF: file name, orders, pages, order contents |
+| Groups | Each group PDF on a line of its own: *2-A Sepatu x88.pdf · 88 orders · 90 pages · 3 order contents* |
 | Inputs | Each input: the name it had, pages, the first 12 characters of its SHA-256 |
 | Ledger | *1000 pages read = 986 written + 14 left out (14 repeats, 0 saved earlier)* |
 | Instant orders | Each instant-service order: Order ID, its group, its **pickup code** ([D-LABEL-8](../decisions/label.md)) |
 | Warnings | The read warnings. The verifier's findings come after this file is written, so they are on the Day card and in the journal, not here |
 | Sort rule | Its name and each group's code, name and filter, as used |
 | Versions | `schema 1.0 · Packing v0.2 · PDFium <version>` |
+
+The verifier reads three things back as text and compares them with the record (V6 of
+[verification](../app/verification.md)): the header's `<orders> orders · <units> units · <groups> groups`,
+the ledger's `<read> pages read = <written> written + <left> left out`, and each group's line, its file
+name followed by `<orders> orders`. Their words and order are fixed for that reason.
 
 ## Fonts
 

@@ -21,8 +21,10 @@ A page's **digest** is XXH3-64 of the page as drawn, in a fixed form:
    page tree where the page has none.
 2. Its content: every stream of `/Contents`, decoded, in order.
 3. Its effective `Resources`, with every reference resolved and every stream decoded; dictionary keys in
-   sorted order; `/Length`, `/Filter`, `/DecodeParms` and `/Parent` left out; a reference already being
-   written is written as a back-mark, so a loop ends.
+   sorted order; `/Length`, `/Filter`, `/DecodeParms` and `/Parent` left out; a number written as its
+   value to four decimals (PDFium writes a `1.0` as `1`); a reference already being written is written as
+   a back-mark, so a loop ends. A stream `lopdf` cannot decode (an image's DCT) is taken as stored, with
+   its filter.
 
 A shared object (a font, an image) is digested once per file and the result reused. The form ignores how
 a writer stores a page — compression, object numbers, the order of objects — and keeps what it draws: on
