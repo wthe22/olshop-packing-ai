@@ -100,11 +100,17 @@ pub fn expected_repeat(inputs: &[Vec<Label>], names: &[&str]) -> String {
         for label in labels {
             let index = copies.len();
             let pages = label.pages();
+            let lines: Vec<Value> = label
+                .slip
+                .as_ref()
+                .map(|slip| slip.rows.iter().map(line).collect())
+                .unwrap_or_default();
             copies.push(json!({
                 "order_id": label.order_id,
                 "input": input,
                 "page_start": page,
                 "page_end": page + pages - 1,
+                "lines": lines,
             }));
             page += pages;
             match first.iter().find(|(id, _)| *id == label.order_id) {

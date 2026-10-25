@@ -19,6 +19,9 @@ pub struct Row {
     pub name_lines: Option<&'static [&'static str]>,
     pub variation_lines: Option<&'static [&'static str]>,
     pub seller_sku_lines: Option<&'static [&'static str]>,
+    /// The end of the name's last line printed in bold right after the rest, as a label that
+    /// switches font inside a word prints it.
+    pub bold_tail: Option<&'static str>,
 }
 
 /// The packing slip printed under a label.
@@ -75,6 +78,10 @@ const KNALPOT: Product = Product {
 };
 const COVER: Product = Product {
     name: "Cover Body Mio | Plastik Body Motor",
+    seller_sku: "",
+};
+const SPLIT: Product = Product {
+    name: "Kaca Spion Motor Variasi",
     seller_sku: "",
 };
 const JOK: Product = Product {
@@ -239,6 +246,7 @@ fn row(product: &Product, quantity: u32, variation: &'static str) -> Row {
         name_lines: None,
         variation_lines: None,
         seller_sku_lines: None,
+        bold_tail: None,
     }
 }
 
@@ -291,6 +299,7 @@ pub fn slip_labels() -> Vec<Label> {
                     name_lines: Some(&["Cover Knalpot Beat", "FI 2012-", "2015 Full Set"]),
                     variation_lines: Some(&["Yamaha-", "Mio"]),
                     seller_sku_lines: Some(&["SPION-SCOL-DH-", "CY"]),
+                    bold_tail: None,
                 },
                 row(
                     &Product {
@@ -364,7 +373,8 @@ pub fn plain_labels() -> Vec<Label> {
 
 /// The two inputs of `labels-repeat-1.pdf` and `labels-repeat-2.pdf`: order 102 printed twice in a
 /// row, each copy a label page and a continuation page; order 103 at the end of the first input
-/// and again at the start of the second.
+/// and again at the start of the second. Order 104 is drawn in whole strings, its product name
+/// switching font inside a word, as the Shopee-style label prints it.
 pub fn repeat_inputs() -> [Vec<Label>; 2] {
     let label = |suffix: &str, tracking_id, courier, product: &Product, quantity, message| Label {
         order_id: order_id(suffix),
@@ -391,6 +401,11 @@ pub fn repeat_inputs() -> [Vec<Label>; 2] {
         )
     };
     let last = || label("103", "000000000203", "", &JOK, 1, None);
+    let mut split = label("104", "TKP0000000204", "IDX", &SPLIT, 2, None);
+    split.style = Style::Words;
+    if let Some(slip) = split.slip.as_mut() {
+        slip.rows[0].bold_tail = Some("ariasi");
+    }
     [
         vec![
             label("101", "JY0000000201", "J&T Express", &SEPATU, 1, None),
@@ -398,9 +413,6 @@ pub fn repeat_inputs() -> [Vec<Label>; 2] {
             second(),
             last(),
         ],
-        vec![
-            last(),
-            label("104", "TKP0000000204", "IDX", &KNALPOT, 2, None),
-        ],
+        vec![last(), split],
     ]
 }

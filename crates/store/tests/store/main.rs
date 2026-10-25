@@ -4,5 +4,6 @@
 mod common;
 mod journal;
 mod lock_and_files;
+mod namespaces;
 mod partial;
 mod views;

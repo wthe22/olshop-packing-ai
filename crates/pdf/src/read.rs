@@ -332,9 +332,14 @@ fn build_runs(page: &PdfPage, text: &PdfPageText) -> Result<Vec<Run>, PdfError> 
 }
 
 /// Whole strings per text object (the Shopee-style label): one run per text object, characters
-/// in PDFium index order, origin from the first glyph.
+/// in PDFium index order, origin from the first glyph. A label that switches font inside a word
+/// prints it as two objects that touch: an object on the same line that starts left of, or within
+/// `SPACE_POINTS` of, the previous one's right edge continues its run.
 fn build_runs_objects(page: &PdfPage, text: &PdfPageText) -> Result<Vec<Run>, PdfError> {
+    const SPACE_POINTS: f64 = 1.0;
+    const LINE_TOLERANCE: f64 = 0.7;
     let mut runs: Vec<Run> = Vec::new();
+    let mut last_right: Option<f64> = None;
     for object in page.objects().iter() {
         let Some(text_object) = object.as_text_object() else {
             continue;
@@ -342,17 +347,24 @@ fn build_runs_objects(page: &PdfPage, text: &PdfPageText) -> Result<Vec<Run>, Pd
         let chars = text_object.chars(text)?;
         let mut string = String::new();
         let mut origin: Option<(f64, f64)> = None;
+        let mut bounds: Option<(f64, f64)> = None;
         for character in chars.iter() {
             let raw = character.unicode_string().unwrap_or_default();
             for ch in raw.chars() {
                 // PDFium reports a hyphen at a line end as U+0002; the PDF text is a real '-'.
                 string.push(if ch == '\u{0002}' { '-' } else { ch });
             }
+            if raw.trim().is_empty() {
+                continue;
+            }
             if origin.is_none()
-                && !raw.trim().is_empty()
                 && let Ok((x, y)) = character.origin()
             {
                 origin = Some((x.value as f64, y.value as f64));
+            }
+            if let Ok(rect) = character.loose_bounds() {
+                let (left, right) = (rect.left().value as f64, rect.right().value as f64);
+                bounds = Some(bounds.map_or((left, right), |(l, r)| (l.min(left), r.max(right))));
             }
         }
         let trimmed = string.trim();
@@ -360,11 +372,27 @@ fn build_runs_objects(page: &PdfPage, text: &PdfPageText) -> Result<Vec<Run>, Pd
             continue;
         }
         let (x, y) = origin.unwrap_or((0.0, 0.0));
-        runs.push(Run {
-            x,
-            y,
-            text: trimmed.to_string(),
-        });
+        let touches = match (runs.last(), last_right, bounds) {
+            (Some(previous), Some(right), Some((left, _))) => {
+                (previous.y - y).abs() <= LINE_TOLERANCE
+                    && left > previous.x
+                    && left - right <= SPACE_POINTS
+            }
+            _ => false,
+        };
+        if touches {
+            runs.last_mut()
+                .expect("a previous run")
+                .text
+                .push_str(trimmed);
+        } else {
+            runs.push(Run {
+                x,
+                y,
+                text: trimmed.to_string(),
+            });
+        }
+        last_right = bounds.map(|(_, right)| right);
     }
     Ok(runs)
 }

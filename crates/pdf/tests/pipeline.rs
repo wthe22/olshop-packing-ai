@@ -68,6 +68,7 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
                 "input": copy.input,
                 "page_start": copy.page_start,
                 "page_end": copy.page_end,
+                "lines": copy.lines.iter().map(|l| serde_json::json!([l.name, l.variation, l.seller_sku, l.quantity])).collect::<Vec<_>>(),
             })
         })
         .collect();

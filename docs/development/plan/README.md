@@ -4,16 +4,19 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-10-25)
+## Status (2026-10-26)
 
 - **The work is the v0.2 rework**: [v0.2-rework.md](v0.2-rework.md) holds the decisions agreed with the owner
-  and the order of work. **R1 to R3 are done**: [software-design/](../../software-design/README.md)
+  and the order of work. **R1 to R4 are done**: [software-design/](../../software-design/README.md)
   describes v0.2; the project has no Python; the label fixtures are written by `crates/fixtures` one
   character per text object, as the downloads are; today's reading of the owner's eleven sample files is
-  pinned in `work/baseline/` on this PC ([testing.md](../testing.md), *Local baseline*); and
-  `crates/store` holds the journal, the lock, the inputs, the views and the open-time checks, with the
-  records as `packing-engine` types — nothing calls it yet. **Next: R4.** A task gets its own file in this
-  folder when it starts; until then its row in the order of work is the task.
+  pinned in `work/baseline/` on this PC ([testing.md](../testing.md), *Local baseline*); `crates/store`
+  holds the journal, the lock, the inputs, the views, the open-time checks and the namespaces; and
+  `packing-engine` holds the v0.2 chain — `packing-workflows.toml`, copies with the courier clue,
+  repeats and the copies left out, the plan with order contents, the `batch_saved` record — and the 2.32
+  fix. **Nothing calls the v0.2 crates yet: the program the owner runs is still v0.1** until R6 moves the
+  app onto them. **Next: R5.** A task gets its own file in this folder when it starts; until then its
+  row in the order of work is the task.
 - **Not blocked on the owner.** The owner may read the design at any time, starting with
   [the workflow](../../software-design/workflow/README.md) (each step against one page) and the points below;
   a finding goes into [reviews/app.md](../../reviews/app.md) under R-APP-2 and changes the design before the
@@ -27,10 +30,11 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   ([D-LABEL-15](../../software-design/decisions/label.md)): the Seller SKU and the printed `Qty Total` moved
   from the content to the order, and the block number (`2-A-05`) is gone. The owner judges on the running
   screens (R8) whether the word fits; a finding goes into [reviews/ui.md](../../reviews/ui.md).
-- **Kept for the rework**: [workflow-audit.md](workflow-audit.md) (where the built program differs from the
-  design; R4 to R6 close it) and [2.32](2.32-text-object-split-word.md) (part of R4).
-- The v0.1 program folder `target/portable/Packing/` is unchanged. Its regression list, in
-  [the phase 2 plan](../../archive/handoff-2026-10-23.md), is where R8's checklist starts.
+- **Kept for the rework**: [workflow-audit.md](workflow-audit.md), where the built program differs from the
+  design; the v0.2 crates close its rows, and the program follows when R5 and R6 put them to use.
+- The program folder `target/portable/Packing/` is rebuilt after each task and still runs v0.1. Its
+  regression list, in [the phase 2 plan](../../archive/handoff-2026-10-23.md), is where R8's checklist
+  starts.
 
 ## Where to work
 

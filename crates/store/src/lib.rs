@@ -10,6 +10,7 @@ mod inputs;
 mod journal;
 mod line;
 mod lock;
+mod namespaces;
 mod outputs;
 mod views;
 
@@ -21,6 +22,10 @@ pub use inputs::{InputProblem, InputState, StoredInput, check_inputs, input_path
 pub use journal::Journal;
 pub use line::{encode_line, seal};
 pub use lock::DataLock;
+pub use namespaces::{
+    NAMESPACE_LIMIT, NamespaceNameError, check_namespace_name, create_namespace, dates,
+    last_written, namespaces,
+};
 pub use outputs::{
     OutputProblem, OutputState, Settled, check_outputs, move_aside, move_forward, partial_dir,
     replaced_dir, settle_partial,

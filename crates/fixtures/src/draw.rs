@@ -5,7 +5,7 @@
 //! 5 pt between them, or change font, as on the downloads, where the reader's run rule depends
 //! on it.
 
-use crate::metrics::Font;
+use crate::metrics::{Font, text_width};
 use crate::orders::{Label, Slip, Style};
 
 pub const PAGE_WIDTH: f64 = 298.0;
@@ -143,9 +143,21 @@ fn slip_table(slip: &Slip, order_id: &str) -> Vec<Text> {
                 cell_lines(row.seller_sku, row.seller_sku_lines, SELLER_SKU_WRAP),
             ),
         ];
-        for (x, lines) in &cells {
+        for (column, (x, lines)) in cells.iter().enumerate() {
             for (index, line) in lines.iter().enumerate() {
-                texts.push(regular(*x, top + index as f64 * LINE_STEP, line.clone()));
+                let at = top + index as f64 * LINE_STEP;
+                let last_name_line = column == 0 && index + 1 == lines.len();
+                match row
+                    .bold_tail
+                    .filter(|tail| last_name_line && line.len() > tail.len())
+                {
+                    Some(tail) if line.ends_with(tail) => {
+                        let head = &line[..line.len() - tail.len()];
+                        texts.push(regular(*x, at, head));
+                        texts.push(bold(*x + text_width(Font::Regular, head), at, tail));
+                    }
+                    _ => texts.push(regular(*x, at, line.clone())),
+                }
             }
         }
         texts.push(regular(QTY_X, top, row.quantity.to_string()));

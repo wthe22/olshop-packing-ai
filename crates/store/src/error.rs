@@ -17,6 +17,8 @@ pub enum StoreError {
     LockHeld { holder: String },
     /// The copy of an input does not hash to what was read: the input is not stored.
     InputChanged { path: PathBuf },
+    /// A name the data folder cannot take, and why.
+    BadName { name: String, reason: String },
     /// Windows refused to move a file, most often because a viewer has it open.
     FileInUse { path: PathBuf },
 }
@@ -40,6 +42,7 @@ impl fmt::Display for StoreError {
             StoreError::InputChanged { path } => {
                 write!(f, "{} changed while it was copied", path.display())
             }
+            StoreError::BadName { name, reason } => write!(f, "\"{name}\": {reason}"),
             StoreError::FileInUse { path } => {
                 write!(f, "{} is open in another program", path.display())
             }

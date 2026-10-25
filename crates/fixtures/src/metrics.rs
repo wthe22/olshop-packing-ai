@@ -64,3 +64,10 @@ impl Font {
         self.widths()[(code - FIRST_CHAR as u32) as usize] as f64 * size / 1000.0
     }
 }
+
+/// The advance of a whole string at the fixtures' font size.
+pub fn text_width(font: Font, text: &str) -> f64 {
+    text.chars()
+        .map(|ch| font.advance(ch, crate::draw::FONT_SIZE))
+        .sum()
+}
