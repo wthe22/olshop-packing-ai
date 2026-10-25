@@ -7,11 +7,13 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 ## Status (2026-10-25)
 
 - **The work is the v0.2 rework**: [v0.2-rework.md](v0.2-rework.md) holds the decisions agreed with the owner
-  and the order of work. **R1 and R2 are done**: [software-design/](../../software-design/README.md)
+  and the order of work. **R1 to R3 are done**: [software-design/](../../software-design/README.md)
   describes v0.2; the project has no Python; the label fixtures are written by `crates/fixtures` one
-  character per text object, as the downloads are; and today's reading of the owner's eleven sample files is
-  pinned in `work/baseline/` on this PC ([testing.md](../testing.md), *Local baseline*). **Next: R3.** A task
-  gets its own file in this folder when it starts; until then its row in the order of work is the task.
+  character per text object, as the downloads are; today's reading of the owner's eleven sample files is
+  pinned in `work/baseline/` on this PC ([testing.md](../testing.md), *Local baseline*); and
+  `crates/store` holds the journal, the lock, the inputs, the views and the open-time checks, with the
+  records as `packing-engine` types — nothing calls it yet. **Next: R4.** A task gets its own file in this
+  folder when it starts; until then its row in the order of work is the task.
 - **Not blocked on the owner.** The owner may read the design at any time, starting with
   [the workflow](../../software-design/workflow/README.md) (each step against one page) and the points below;
   a finding goes into [reviews/app.md](../../reviews/app.md) under R-APP-2 and changes the design before the

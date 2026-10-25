@@ -9,17 +9,19 @@ publish = false
 
 [workspace.dependencies]
 image = "0.25"
-jiff = "0.2"
+jiff = { version = "0.2", features = ["serde"] }
 lopdf = { version = "0.46", default-features = false }
 pdfium-render = "=0.9.4"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+sha2 = "0.10"
 toml = "1"
 toml_edit = "0.25"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 packing-engine = { path = "crates/engine" }
 packing-pdf = { path = "crates/pdf" }
+packing-store = { path = "crates/store" }
 
 # Profiles must live at the workspace root (a member's [profile] is ignored).
 [profile.release]

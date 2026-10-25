@@ -99,3 +99,80 @@ impl fmt::Display for PdfNumber {
         write!(f, "{}", self.0)
     }
 }
+
+/// A batch's number within its namespace and date: `1, 2, 3, …` (records.md `BatchID`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct BatchId(u8);
+
+impl BatchId {
+    pub const FIRST: BatchId = BatchId(1);
+
+    pub fn new(number: u8) -> Self {
+        Self(number)
+    }
+
+    pub fn get(self) -> u8 {
+        self.0
+    }
+
+    /// The number after this one.
+    pub fn next(self) -> Self {
+        Self(self.0 + 1)
+    }
+}
+
+impl fmt::Display for BatchId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+/// An input PDF of a date, numbered by the fold: `1, 2, 3, …`; one number names one SHA-256.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct PdfId(u8);
+
+impl PdfId {
+    pub const FIRST: PdfId = PdfId(1);
+
+    pub fn new(number: u8) -> Self {
+        Self(number)
+    }
+
+    pub fn get(self) -> u8 {
+        self.0
+    }
+
+    /// The number after this one.
+    pub fn next(self) -> Self {
+        Self(self.0 + 1)
+    }
+}
+
+impl fmt::Display for PdfId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+/// A courier's `code` in `packing-workflows.toml` (`jnt`, `sicepat`).
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct CourierCode(String);
+
+impl CourierCode {
+    pub fn new(code: impl Into<String>) -> Self {
+        Self(code.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl fmt::Display for CourierCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}

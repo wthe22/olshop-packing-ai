@@ -62,10 +62,11 @@ In this order, before the date is shown:
    One that is missing or changed is reported ([Messages](../ui/messages.md)) and never used: an amend,
    reprint or restore that needs it stops with its name.
 3. **`output/.partial/`**, if present, is settled by the journal's last record:
-   - **forward** when that record is a `batch_saved`, `output_restored` or `reprint_made` and every file it
-     writes is in `.partial/` or in `output/` with the `sha256` it names — or a `batch_reverted` and
-     `.partial/replaced/` holds that batch's files: the new files are moved into `output/` and `replaced/`
-     is deleted;
+   - **forward** when that record is a `batch_saved`, `output_restored` or `reprint_made`, every file it
+     writes is in `.partial/` or in `output/` with the `sha256` it names, and `.partial/` holds no other
+     file — or a `batch_reverted`, `.partial/replaced/` holds that batch's files and `.partial/` nothing
+     else: the new files are moved into `output/` and `replaced/` is deleted. (A file the record does not
+     name is a later operation's that did not commit);
    - **back** otherwise: the files of `replaced/` are moved back into `output/`, the rest is deleted.
 4. **Outputs**: every output of a live batch must exist in `output/` with the size the newest record that
    wrote it names (`batch_saved` or `output_restored`). A missing one is shown on its batch card with

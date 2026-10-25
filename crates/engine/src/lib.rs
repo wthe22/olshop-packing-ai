@@ -9,6 +9,7 @@ pub mod label;
 pub mod names;
 pub mod orders;
 pub mod plan;
+pub mod record;
 pub mod rules;
 pub mod rules_edit;
 pub mod search;

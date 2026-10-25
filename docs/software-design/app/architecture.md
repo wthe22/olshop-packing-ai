@@ -26,7 +26,7 @@ with the crates that read and write ([verification](verification.md)).
 |---|---|---|
 | `packing-engine` | `regex`, `jiff`, `serde`, `toml` | PDFium, files, the other crates |
 | `packing-pdf` | `packing-engine` (its types), `pdfium-render` | `packing-store`, `packing-verify` |
-| `packing-store` | `packing-engine` (its types), `serde_json`, `sha2`, `xxhash-rust` | PDFium, `packing-pdf`, `packing-verify` |
+| `packing-store` | `packing-engine` (its types), `serde_json`, `toml`, `jiff`, `sha2`, `xxhash-rust` | PDFium, `packing-pdf`, `packing-verify` |
 | `packing-verify` | `lopdf`, `serde_json`, `sha2`, `xxhash-rust` | `packing-engine`, `packing-pdf`, `packing-store`, PDFium |
 | `packing-app`, `packing-cli` | all of the above | — |
 

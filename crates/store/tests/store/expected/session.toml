@@ -1,0 +1,84 @@
+schema = "1.0"
+namespace = "Toko Contoh"
+date = "2026-10-07"
+journal_seq = 3
+reprints = []
+
+[input_pdfs.1]
+filename = "labels_1.pdf"
+size = 1000
+hash_sha256 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+create_time = "2026-10-07T07:00:00+07:00"
+modify_time = "2026-10-07T07:01:00+07:00"
+order_count = 3
+page_count = 4
+earliest_ship_by_date = "2026-10-08"
+latest_ship_by_date = "2026-10-08"
+couriers = ["jnt"]
+warnings = ["Slip total differs for JY0000000002: printed 3, lines add up to 2."]
+errors = []
+
+[label_sort_rules.1]
+name = "default"
+
+[[label_sort_rules.1.label_groups]]
+code = "A"
+name = "Sepatu"
+filter = 'name contains "sepatu"'
+
+[[label_sort_rules.1.label_groups]]
+code = "Z"
+name = "Lainnya"
+
+[[label_batches]]
+id = 1
+create_time = "2026-10-07T09:12:00+07:00"
+modify_time = "2026-10-07T09:12:00+07:00"
+input_pdfs = [1]
+sort_rule_id = 1
+earliest_ship_by_date = "2026-10-08"
+latest_ship_by_date = "2026-10-08"
+couriers = ["jnt"]
+warnings = ["Slip total differs for JY0000000002: printed 3, lines add up to 2."]
+errors = []
+order_count = 3
+summary_pdf_path = "output/1 summary.pdf"
+
+[[label_batches.result_groups]]
+code = "A"
+output_path = "output/1-A Sepatu x2.pdf"
+is_marked_as_printed = true
+
+[[label_batches.result_groups.order_contents]]
+content_id = 1
+order_count = 2
+
+[[label_batches.result_groups]]
+code = "Z"
+output_path = "output/1-Z Lainnya x1.pdf"
+is_marked_as_printed = false
+
+[[label_batches.result_groups.order_contents]]
+content_id = 2
+order_count = 1
+
+[[label_batches.picking_list]]
+name = "Sepatu Standar Samping Motor | Pelindung Rantai"
+variant = "honda"
+quantity = 2
+
+[[label_batches.picking_list]]
+name = "Spion Beat"
+variant = ""
+quantity = 2
+
+[[label_batches.left_out]]
+order_id = "580000000000000001"
+pdf = 1
+page_start = 4
+page_end = 4
+reason = "repeat"
+
+[label_batches.left_out.kept]
+pdf = 1
+page_start = 1

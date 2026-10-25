@@ -2836,6 +2836,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "packing-store"
+version = "0.1.0"
+dependencies = [
+ "jiff",
+ "packing-engine",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "testkit",
+ "toml 1.1.8+spec-1.1.0",
+ "xxhash-rust",
+]
+
+[[package]]
 name = "pango"
 version = "0.18.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

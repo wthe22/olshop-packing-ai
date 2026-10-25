@@ -4,3 +4,6 @@ testdata/*.pdf binary
 
 # Shell scripts must keep LF or bash fails on a fresh checkout
 *.sh text eol=lf
+
+# Expected views are compared byte for byte
+crates/store/tests/store/expected/* -text

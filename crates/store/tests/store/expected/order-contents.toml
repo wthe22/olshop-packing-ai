@@ -1,0 +1,12 @@
+schema = "1.0"
+auto_increment = 3
+
+[[order_content.1.items]]
+name = "Sepatu Standar Samping Motor | Pelindung Rantai"
+variant = "honda"
+quantity = 1
+
+[[order_content.2.items]]
+name = "Spion Beat"
+variant = ""
+quantity = 2
