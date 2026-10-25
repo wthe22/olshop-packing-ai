@@ -34,7 +34,8 @@ to the console. `dump` prints real order data when given a sample file: its outp
 
 ## `packing-fixtures`
 
-`cargo run -p packing-fixtures [dir]` writes `labels-slip.pdf`, `labels-plain.pdf` and their answer
-`expected-labels.json` into `dir` (default: `testdata/`). The orders are Rust data in
+`cargo run -p packing-fixtures [dir]` writes into `dir` (default: `testdata/`) `labels-slip.pdf` and
+`labels-plain.pdf` with their answer `expected-labels.json`, and `labels-repeat-1.pdf` and
+`labels-repeat-2.pdf` — an order printed twice in a row, an order in both — with `expected-repeat.json`. The orders are Rust data in
 `crates/fixtures/src/orders.rs`. A change to them, or to how the pages are drawn, is committed together
 with the files this command writes; until then the crate's test fails ([testing.md](testing.md)).

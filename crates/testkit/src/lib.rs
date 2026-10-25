@@ -8,9 +8,12 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use packing_engine::copies::Copy;
 use packing_engine::ids::{OrderId, TrackingId};
 use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
+use packing_engine::record::{CourierClue, CourierClueKind};
 use packing_engine::rules::{Category, parse_condition};
+use packing_engine::slip::SlipLine;
 
 /// The pinned `pdfium.dll` directory, or `None` when it has not been downloaded.
 pub fn vendor_dir() -> Option<PathBuf> {
@@ -121,6 +124,39 @@ pub fn category(code: &str, name: &str, when: Option<&str>) -> Category {
         name: name.to_string(),
         condition: when.map(|text| parse_condition(text).expect("parse category")),
         when: when.map(str::to_string),
+    }
+}
+
+/// A slip line of a v0.2 copy.
+pub fn slip_line(name: &str, variation: &str, seller_sku: &str, quantity: i64) -> SlipLine {
+    SlipLine {
+        name: name.to_string(),
+        variation: variation.to_string(),
+        seller_sku: seller_sku.to_string(),
+        quantity,
+    }
+}
+
+/// A one-page v0.2 copy of `order_id` at `page` of `input`, with no tracking ID, courier or
+/// printed total; a test sets what it needs.
+pub fn copy(order_id: &str, input: usize, page: u16, lines: Vec<SlipLine>) -> Copy {
+    Copy {
+        order_id: OrderId::new(order_id),
+        input,
+        page_start: page,
+        page_end: page,
+        tracking_id: None,
+        courier: None,
+        courier_clue: CourierClue {
+            kind: CourierClueKind::None,
+            value: None,
+            form: None,
+        },
+        ship_by_date: None,
+        pickup_code: None,
+        lines,
+        total_quantity: None,
+        fingerprints: vec![0],
     }
 }
 

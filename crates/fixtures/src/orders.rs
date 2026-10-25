@@ -361,3 +361,46 @@ pub fn plain_labels() -> Vec<Label> {
         },
     ]
 }
+
+/// The two inputs of `labels-repeat-1.pdf` and `labels-repeat-2.pdf`: order 102 printed twice in a
+/// row, each copy a label page and a continuation page; order 103 at the end of the first input
+/// and again at the start of the second.
+pub fn repeat_inputs() -> [Vec<Label>; 2] {
+    let label = |suffix: &str, tracking_id, courier, product: &Product, quantity, message| Label {
+        order_id: order_id(suffix),
+        tracking_id,
+        courier,
+        prints_jet_site: courier == "J&T Express",
+        ship_by: Some("08/10/2026 23:59".into()),
+        spaced: false,
+        slip: Some(Slip {
+            rows: vec![row(product, quantity, "Default")],
+            qty_total: quantity,
+            message,
+        }),
+        style: Style::Glyphs,
+    };
+    let second = || {
+        label(
+            "102",
+            "JY0000000202",
+            "J&T Express",
+            &SPION,
+            1,
+            Some("Jangan dibanting"),
+        )
+    };
+    let last = || label("103", "000000000203", "", &JOK, 1, None);
+    [
+        vec![
+            label("101", "JY0000000201", "J&T Express", &SEPATU, 1, None),
+            second(),
+            second(),
+            last(),
+        ],
+        vec![
+            last(),
+            label("104", "TKP0000000204", "IDX", &KNALPOT, 2, None),
+        ],
+    ]
+}

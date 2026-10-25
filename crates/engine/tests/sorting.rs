@@ -5,47 +5,15 @@ use std::fs;
 
 use jiff::civil::date;
 use packing_engine::copies::Copy;
-use packing_engine::ids::{BatchId, CourierCode, OrderId, TrackingId};
-use packing_engine::record::{CourierClue, CourierClueKind};
+use packing_engine::ids::{BatchId, CourierCode, TrackingId};
 use packing_engine::rules::{evaluate_filter, parse_filter};
-use packing_engine::slip::SlipLine;
 use packing_engine::sorting::{
     FileNameError, PlanGroup, REST_CODE, check_file_names, content_of, default_file_name,
     plan_groups, sort_batch, suggested_file,
 };
-use packing_engine::workflows::load_workflows;
+use packing_engine::workflows::{Filter, load_workflows};
 use serde_json::Value;
-use testkit::testdata;
-
-fn line(name: &str, variation: &str, sku: &str, quantity: i64) -> SlipLine {
-    SlipLine {
-        name: name.into(),
-        variation: variation.into(),
-        seller_sku: sku.into(),
-        quantity,
-    }
-}
-
-fn copy(order: &str, input: usize, page: u16, lines: Vec<SlipLine>) -> Copy {
-    Copy {
-        order_id: OrderId::new(order),
-        input,
-        page_start: page,
-        page_end: page,
-        tracking_id: None,
-        courier: None,
-        courier_clue: CourierClue {
-            kind: CourierClueKind::None,
-            value: None,
-            form: None,
-        },
-        ship_by_date: None,
-        pickup_code: None,
-        lines,
-        total_quantity: None,
-        fingerprints: vec![0],
-    }
-}
+use testkit::{copy, slip_line as line, testdata};
 
 /// The fixture's orders of `labels-slip.pdf`, as copies, from its answer.
 fn fixture_copies() -> Vec<Copy> {
@@ -185,7 +153,10 @@ fn a_group_that_takes_nothing_has_no_file_and_a_last_group_without_filter_leaves
         PlanGroup {
             code: "A".into(),
             name: "Spion".into(),
-            filter: Some(parse_filter("name contains \"spion\"").unwrap()),
+            filter: Some(Filter {
+                text: "name contains \"spion\"".into(),
+                condition: parse_filter("name contains \"spion\"").unwrap(),
+            }),
             file_name: None,
         },
         PlanGroup {

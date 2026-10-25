@@ -5,11 +5,10 @@ use std::collections::BTreeMap;
 
 use packing_engine::copies::Copy;
 use packing_engine::ids::{BatchId, OrderId, TrackingId};
-use packing_engine::record::{CourierClue, CourierClueKind};
 use packing_engine::repeats::{
     ChoiceError, Choices, Difference, GroupChoice, LeftOut, LeftOutBecause, sort_out,
 };
-use packing_engine::slip::SlipLine;
+use testkit::slip_line;
 
 fn id(order: u32) -> OrderId {
     OrderId::new(format!("5800000000000000{order:02}"))
@@ -17,29 +16,16 @@ fn id(order: u32) -> OrderId {
 
 /// A one-page copy of `order` at `page` of `input`; its fingerprint is `print`.
 fn copy(order: u32, input: usize, page: u16, print: u64) -> Copy {
-    Copy {
-        order_id: id(order),
+    let mut copy = testkit::copy(
+        id(order).as_str(),
         input,
-        page_start: page,
-        page_end: page,
-        tracking_id: Some(TrackingId::new(format!("JY00000000{order:02}"))),
-        courier: None,
-        courier_clue: CourierClue {
-            kind: CourierClueKind::None,
-            value: None,
-            form: None,
-        },
-        ship_by_date: None,
-        pickup_code: None,
-        lines: vec![SlipLine {
-            name: "Sepatu".into(),
-            variation: String::new(),
-            seller_sku: String::new(),
-            quantity: 1,
-        }],
-        total_quantity: Some(1),
-        fingerprints: vec![print],
-    }
+        page,
+        vec![slip_line("Sepatu", "", "", 1)],
+    );
+    copy.tracking_id = Some(TrackingId::new(format!("JY00000000{order:02}")));
+    copy.total_quantity = Some(1);
+    copy.fingerprints = vec![print];
+    copy
 }
 
 fn repeat_left_out(copy: usize, kept: usize) -> LeftOut {

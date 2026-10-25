@@ -87,3 +87,42 @@ fn pretty(value: &Value, indent: usize) -> String {
         other => other.to_string(),
     }
 }
+
+/// `expected-repeat.json`: the copies of the repeat inputs in reading order, and what keeping the
+/// first copy of each order keeps and leaves out (each left-out copy with the copy kept instead).
+pub fn expected_repeat(inputs: &[Vec<Label>], names: &[&str]) -> String {
+    let mut copies = Vec::new();
+    let mut first: Vec<(&str, usize)> = Vec::new();
+    let mut kept = Vec::new();
+    let mut left_out = Vec::new();
+    for (input, labels) in inputs.iter().enumerate() {
+        let mut page = 1;
+        for label in labels {
+            let index = copies.len();
+            let pages = label.pages();
+            copies.push(json!({
+                "order_id": label.order_id,
+                "input": input,
+                "page_start": page,
+                "page_end": page + pages - 1,
+            }));
+            page += pages;
+            match first.iter().find(|(id, _)| *id == label.order_id) {
+                Some((_, at)) => left_out.push(json!({ "copy": index, "kept": at })),
+                None => {
+                    first.push((&label.order_id, index));
+                    kept.push(index);
+                }
+            }
+        }
+    }
+    let answer = json!({
+        "inputs": names,
+        "copies": copies,
+        "kept": kept,
+        "left_out": left_out,
+    });
+    let mut text = serde_json::to_string_pretty(&answer).expect("plain JSON");
+    text.push('\n');
+    text
+}

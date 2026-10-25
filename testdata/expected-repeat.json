@@ -1,0 +1,60 @@
+{
+  "copies": [
+    {
+      "input": 0,
+      "order_id": "580000000000000101",
+      "page_end": 1,
+      "page_start": 1
+    },
+    {
+      "input": 0,
+      "order_id": "580000000000000102",
+      "page_end": 3,
+      "page_start": 2
+    },
+    {
+      "input": 0,
+      "order_id": "580000000000000102",
+      "page_end": 5,
+      "page_start": 4
+    },
+    {
+      "input": 0,
+      "order_id": "580000000000000103",
+      "page_end": 6,
+      "page_start": 6
+    },
+    {
+      "input": 1,
+      "order_id": "580000000000000103",
+      "page_end": 1,
+      "page_start": 1
+    },
+    {
+      "input": 1,
+      "order_id": "580000000000000104",
+      "page_end": 2,
+      "page_start": 2
+    }
+  ],
+  "inputs": [
+    "labels-repeat-1.pdf",
+    "labels-repeat-2.pdf"
+  ],
+  "kept": [
+    0,
+    1,
+    3,
+    5
+  ],
+  "left_out": [
+    {
+      "copy": 2,
+      "kept": 1
+    },
+    {
+      "copy": 4,
+      "kept": 3
+    }
+  ]
+}

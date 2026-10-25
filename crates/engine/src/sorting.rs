@@ -8,8 +8,9 @@ use std::fmt;
 use crate::copies::Copy;
 use crate::ids::BatchId;
 use crate::record::{ItemPick, OrderContent};
-use crate::rules::{Condition, evaluate_filter};
-use crate::workflows::SortRule;
+use crate::record::{LabelGroupRule, LabelSortRule};
+use crate::rules::evaluate_filter;
+use crate::workflows::{Filter, SortRule};
 
 /// The rest group when the last group has a filter or was skipped: Windows allows no `?` in a
 /// file name, so its file name has no code.
@@ -25,9 +26,24 @@ pub struct PlanGroup {
     pub code: String,
     pub name: String,
     /// None: takes every order left.
-    pub filter: Option<Condition>,
+    pub filter: Option<Filter>,
     /// The owner's file name, without `.pdf`; none for the suggested one.
     pub file_name: Option<String>,
+}
+
+/// The plan as a saved batch keeps it: the rule's name and the groups as used.
+pub fn plan_snapshot(rule_name: &str, plan: &[PlanGroup]) -> LabelSortRule {
+    LabelSortRule {
+        name: rule_name.to_string(),
+        label_groups: plan
+            .iter()
+            .map(|group| LabelGroupRule {
+                code: group.code.clone(),
+                name: group.name.clone(),
+                filter: group.filter.as_ref().map(|filter| filter.text.clone()),
+            })
+            .collect(),
+    }
 }
 
 /// The plan a sort rule proposes: its groups in file order.
@@ -37,7 +53,7 @@ pub fn plan_groups(rule: &SortRule) -> Vec<PlanGroup> {
         .map(|group| PlanGroup {
             code: group.code.clone(),
             name: group.name.clone(),
-            filter: group.filter.as_ref().map(|filter| filter.condition.clone()),
+            filter: group.filter.clone(),
             file_name: None,
         })
         .collect()
@@ -133,7 +149,7 @@ pub fn sort_batch(
             group
                 .filter
                 .as_ref()
-                .is_none_or(|filter| evaluate_filter(filter, &copies[copy]))
+                .is_none_or(|filter| evaluate_filter(&filter.condition, &copies[copy]))
         });
         remaining = rest;
         taken.push((&group.code, &group.name, group.file_name.as_deref(), mine));
