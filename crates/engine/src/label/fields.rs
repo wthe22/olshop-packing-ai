@@ -13,7 +13,7 @@ use super::CourierTable;
 /// The characters trimmed from both ends of a tracking token.
 const TOKEN_TRIM: &str = " \t.,;:";
 
-pub(super) fn whitespace_re() -> &'static Regex {
+pub(crate) fn whitespace_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
     R.get_or_init(|| Regex::new(r"\s+").expect("built-in whitespace regex"))
 }
@@ -137,13 +137,42 @@ fn most_frequent(counts: &[(String, usize)]) -> Option<&str> {
     best.map(|(token, _)| token.as_str())
 }
 
-/// `labels.find_tracking_id`: the most frequent tracking token of the text, `None` when none
-/// matches a courier form. `table` is the data folder's courier data: the owner's file decides
-/// which forms name a courier, so a form added there is read without a program change.
+/// One tracking-ID form: its pattern as written, matched fully against a token and unanchored
+/// against the whitespace-collapsed text.
+pub struct Form<'a> {
+    pub source: &'a str,
+    pub full: &'a Regex,
+    pub unanchored: &'a Regex,
+}
+
+/// The most frequent tracking token of the text, `None` when none matches a courier form of
+/// `table`, the data folder's courier data.
 pub fn find_tracking_id(
     text: &str,
     order_id: &OrderId,
     table: &CourierTable,
+) -> Option<TrackingId> {
+    let forms: Vec<Form<'_>> = table
+        .couriers
+        .iter()
+        .filter_map(|courier| {
+            Some(Form {
+                source: courier.tracking.as_deref()?,
+                full: courier.tracking_full.as_ref()?,
+                unanchored: courier.tracking_re.as_ref()?,
+            })
+        })
+        .collect();
+    find_tracking_id_in(text, order_id, &forms)
+}
+
+/// The most frequent token of the text that one of `forms` matches fully, `None` when none does.
+/// The owner's file decides which forms name a courier, so a form added there is read without a
+/// program change.
+pub fn find_tracking_id_in(
+    text: &str,
+    order_id: &OrderId,
+    forms: &[Form<'_>],
 ) -> Option<TrackingId> {
     let mut counts: Vec<(String, usize)> = Vec::new();
     for raw in text.split_whitespace() {
@@ -151,24 +180,15 @@ pub fn find_tracking_id(
         if token.is_empty() || token == order_id.as_str() {
             continue;
         }
-        for courier in &table.couriers {
-            if courier
-                .tracking_full
-                .as_ref()
-                .is_some_and(|re| re.is_match(token))
-            {
-                bump(&mut counts, token);
-                break;
-            }
+        if forms.iter().any(|form| form.full.is_match(token)) {
+            bump(&mut counts, token);
         }
     }
     if counts.is_empty() {
         // Spaced-out IDX/Tokopedia pages: the tracking ID is only whole in the collapsed text.
         let collapsed = whitespace_re().replace_all(text, "");
-        for courier in &table.couriers {
-            let (Some(pattern), Some(re)) = (&courier.tracking, &courier.tracking_re) else {
-                continue;
-            };
+        for form in forms {
+            let (pattern, re) = (form.source, form.unanchored);
             let left_boundary = pattern.starts_with(|c: char| c.is_ascii_digit());
             for m in re.find_iter(&collapsed) {
                 if left_boundary && has_digit_left(&collapsed, m.start()) {

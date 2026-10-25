@@ -18,7 +18,8 @@ pub use self::deduce::{
     candidates, deduce_courier, deduce_courier_in, form_names_courier_in, is_unseen_logo,
     logo_courier,
 };
-pub use self::fields::{find_order_id, find_ship_by, find_tracking_id};
+pub(crate) use self::fields::whitespace_re;
+pub use self::fields::{Form, find_order_id, find_ship_by, find_tracking_id, find_tracking_id_in};
 
 /// The courier data built into the program, written into a new data folder.
 pub const COURIERS_TOML: &str = include_str!("../../couriers.toml");

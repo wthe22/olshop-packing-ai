@@ -72,6 +72,7 @@ fn page_with(
         text: text.to_string(),
         runs,
         width: WIDTH,
+        height: 420.0,
         logos,
     }
 }
@@ -82,6 +83,7 @@ fn plain_page(text: &str) -> PageText {
         text: text.to_string(),
         runs: Vec::new(),
         width: WIDTH,
+        height: 420.0,
         logos: Vec::new(),
     }
 }
@@ -124,6 +126,7 @@ fn shopee_page(rows: &[Row]) -> PageText {
         text: "No.Pesanan: 261014ABCD1234\nSPXID00000000002A\nBatas Kirim: 15-10-2026".to_string(),
         runs,
         width: 297.12,
+        height: 420.0,
         logos: vec![logo("4583097ef370a670")],
     }
 }

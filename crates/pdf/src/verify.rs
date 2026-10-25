@@ -140,6 +140,7 @@ mod tests {
                 })
                 .collect(),
             width: 595.0,
+            height: 842.0,
             logos: Vec::new(),
         }
     }

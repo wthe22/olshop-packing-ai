@@ -33,6 +33,8 @@ pub struct PageText {
     pub runs: Vec<Run>,
     /// Page width in points.
     pub width: f64,
+    /// Page height in points: the header band is its top 40.
+    pub height: f64,
     /// The images whose whole box lies in the page's top band, in page order.
     pub logos: Vec<LogoImage>,
 }

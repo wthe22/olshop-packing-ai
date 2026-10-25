@@ -73,6 +73,7 @@ fn make_slip_with(
         text: String::new(),
         runs,
         width: WIDTH,
+        height: 420.0,
         logos: Vec::new(),
     }
 }
@@ -147,6 +148,7 @@ fn shopee_page(header: Vec<Run>, rows: &[Row]) -> PageText {
         text: String::new(),
         runs,
         width: 297.12,
+        height: 420.0,
         logos: Vec::new(),
     }
 }
@@ -322,6 +324,7 @@ fn a_page_without_the_header_or_without_rows_reads_as_no_slip_or_an_empty_one() 
         text: String::new(),
         runs: vec![run(5.8, 40.0, "JY0000001234"), run(5.8, 60.0, ORDER_ID)],
         width: WIDTH,
+        height: 420.0,
         logos: Vec::new(),
     };
     assert_eq!(read_slip(&plain), None);

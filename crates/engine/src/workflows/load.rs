@@ -211,9 +211,12 @@ impl File<'_> {
                 format!("tracking_id {source:?} is not a regex: {error}"),
             )
         })?;
+        let unanchored =
+            Regex::new(source).expect("a pattern that compiles anchored compiles bare");
         Ok(TrackingForm {
             source: source.clone(),
             full,
+            unanchored,
         })
     }
 

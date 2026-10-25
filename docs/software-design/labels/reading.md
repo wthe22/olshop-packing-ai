@@ -8,7 +8,7 @@
 | `tracking_id` | The label text, in one of the tracking-ID forms of `packing-workflows.toml` ([courier](courier.md)) |
 | `courier`, `courier_clue` | Deduced from the label: the courier and the clue that named it ([courier](courier.md)) |
 | `ship_by_date` | The date of the label's `In transit by: dd/mm/yyyy hh:mm`, or of the Shopee-style label's `Batas Kirim: dd-mm-yyyy` ([D-APP-21](../decisions/app-features.md)) |
-| `pickup_code` | The instant-service label's `Kode Pengambilan`: two letters and 4 digits ([D-LABEL-8](../decisions/label.md)) |
+| `pickup_code` | The instant-service label's code: the run of two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together) ([D-LABEL-8](../decisions/label.md)) |
 | item lines | The slip table: product name, variation, Seller SKU, quantity |
 | `total_quantity` | The slip's `Qty Total`; none on the Shopee-style slip |
 

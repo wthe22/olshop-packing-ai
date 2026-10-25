@@ -53,6 +53,7 @@ impl<'a> OpenedFile<'a> {
             text: all,
             runs,
             width: page.width().value as f64,
+            height: page.height().value as f64,
             logos,
         })
     }
@@ -69,6 +70,7 @@ impl<'a> OpenedFile<'a> {
             text: all,
             runs,
             width: page.width().value as f64,
+            height: page.height().value as f64,
             logos: Vec::new(),
         })
     }

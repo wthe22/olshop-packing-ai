@@ -9,6 +9,7 @@ use std::fmt;
 use regex::Regex;
 
 use crate::ids::CourierCode;
+use crate::label::Form;
 use crate::record::{LabelGroupRule, LabelSortRule};
 use crate::rules::Condition;
 
@@ -64,11 +65,21 @@ pub struct Classifier {
 pub struct TrackingForm {
     pub source: String,
     pub full: Regex,
+    /// For the whitespace-collapsed text of a spaced-out page.
+    pub unanchored: Regex,
 }
 
 impl TrackingForm {
     pub fn matches(&self, token: &str) -> bool {
         self.full.is_match(token)
+    }
+
+    pub fn form(&self) -> Form<'_> {
+        Form {
+            source: &self.source,
+            full: &self.full,
+            unanchored: &self.unanchored,
+        }
     }
 }
 
