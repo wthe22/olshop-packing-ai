@@ -3,16 +3,11 @@ samples/
 tmp/
 var/
 work/
-spike/out/
 
 # Downloaded PDFium (tools/get-pdfium.sh)
 vendor/
 
 # Tooling
-.venv/
-*.egg-info/
-__pycache__/
-.pytest_cache/
 target/
 build/
 .gradle/

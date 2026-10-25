@@ -100,7 +100,7 @@ fn is_not_courier(table: &CourierTable, hash: Option<&str>, appearance: Option<&
 /// form that carries the vendor's **own marker** (a lettered prefix: `JY…`, `TKP…`, `SPXID…`)
 /// also names the courier on its own, when it names only one: that is the old `tracking_unique`
 /// behaviour derived from the table instead of a flag, and it keeps a label whose image is
-/// missing altogether (the fpdf2 fixtures hold no images; a downloaded label always carries a
+/// missing altogether (the test fixtures hold no images; a downloaded label always carries a
 /// logo) readable. A **bare number** form (`00…`, `57…`) never names alone — the page is full of
 /// numbers, so a number on its own is no clue, which is exactly what marking the `00` form
 /// shared meant.

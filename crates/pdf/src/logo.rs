@@ -26,13 +26,13 @@
 //!    support widened by `in / out` and the weights normalised). The coefficients and the two
 //!    passes are `f64`; only the final pixel is rounded and clamped to 0…255. Measured: the
 //!    thresholded hashes match Pillow's `Image.LANCZOS` on the probe shapes, so a value taken
-//!    with `Pillow` (or `tools/analysis/helpers/courier_clues.py`) can be checked against this.
+//!    with Pillow can be checked against this.
 //! 4. **Paste** — centred on a 64 × 64 white canvas at `((64 - tw) / 2, (64 - th) / 2)`.
 //! 5. **Threshold and pack** — a pixel is **ink** (bit 1) when its luminance is **under 200**,
 //!    else bit 0 (so the dark wordmark is the 1s). The luminance is PIL's `convert("L")`:
 //!    `(r * 19595 + g * 38470 + b * 7471 + 32768) >> 16`. The canvas is packed **8 pixels per
-//!    byte, most significant bit first** — PIL's mode `"1"` layout, exactly what
-//!    `courier_clues.py` hashes — so a 64 × 64 canvas is 512 bytes, and those bytes are hashed.
+//!    byte, most significant bit first** — PIL's mode `"1"` layout — so a 64 × 64 canvas is
+//!    512 bytes, and those bytes are hashed.
 //!
 //! [courier deduction]: ../../../docs/software-design/labels/courier.md
 
@@ -239,7 +239,7 @@ mod tests {
 
     #[test]
     fn known_xxh3_value_of_a_short_buffer() {
-        // The XXH3-64 vector the Rust and Python sides both check (tools/analysis).
+        // The published XXH3-64 of the empty input.
         assert_eq!(hash_bytes(&[]), "2d06800538d394c2");
     }
 

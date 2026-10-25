@@ -9,6 +9,7 @@
 //! packing-cli revert  [--day <day>] [--data <dir>]
 //! packing-cli amend   [--day <day>] [--data <dir>] [--rules <categories.toml>]
 //!                     [--couriers <couriers.toml>]
+//! packing-cli dump    --labels <file>... [--couriers <couriers.toml>] [--pdfium <dir>]
 //! ```
 
 use std::fmt;
@@ -18,9 +19,11 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::mpsc;
 
+mod dump;
+
 use packing_engine::day::{DayState, Layout, PackingListChoice, Scope, delete_batch_folder};
 use packing_engine::groupings::Grouping;
-use packing_engine::label::{CourierTable, load_couriers_file};
+use packing_engine::label::{CourierTable, courier_data, load_couriers_file};
 use packing_engine::plan::{Plan, PlanResult};
 use packing_engine::rules::{Category, catch_all_category, load_rules};
 use packing_pdf::batch::{self, BatchError, Draft, SaveRequest};
@@ -33,6 +36,7 @@ USAGE:
   packing-cli prepare --labels <file>... [options]
   packing-cli revert  [options]
   packing-cli amend   [options]
+  packing-cli dump    --labels <file>... [--couriers <couriers.toml>] [--pdfium <dir>]
 
 OPTIONS (prepare):
   --labels <file>...           One or more label PDFs of this batch (required)
@@ -49,7 +53,8 @@ OPTIONS (revert, amend):
   --day YYYY-MM-DD --data <dir> [--rules <categories.toml>] [--couriers <couriers.toml>]
   [--pdfium <dir>] [--quiet-ids]
 
-The batch is written to <data>/labels/<day>/batch <b>/.
+The batch is written to <data>/labels/<day>/batch <b>/. `dump` saves nothing: it prints what
+reading the files gives as JSON, with the built-in courier list unless --couriers is given.
 ";
 
 fn main() {
@@ -59,8 +64,11 @@ fn main() {
         Some("prepare") => finish(run_prepare(&args[1..])),
         Some("revert") => finish(run_revert(&args[1..])),
         Some("amend") => finish(run_amend(&args[1..])),
+        Some("dump") => finish(run_dump(&args[1..])),
         Some(other) => {
-            eprintln!("error: unknown command \"{other}\"; expected prepare, revert or amend");
+            eprintln!(
+                "error: unknown command \"{other}\"; expected prepare, revert, amend or dump"
+            );
             std::process::exit(1);
         }
     }
@@ -359,8 +367,24 @@ fn spawn_worker(args: &Args) -> Result<PdfWorker, CliError> {
     PdfWorker::spawn(pdfium_dir(args.pdfium.as_deref())).map_err(|e| CliError::Batch(e.into()))
 }
 
-/// `check_files`, then `read` (progress on a private channel), then apply the rules
-/// (steps 1-5).
+fn run_dump(args: &[String]) -> Result<(), CliError> {
+    let args = Args::parse(args)?;
+    if args.labels.is_empty() {
+        return Err(CliError::Usage(
+            "dump needs at least one --labels <file>".to_string(),
+        ));
+    }
+    let couriers = match &args.couriers {
+        Some(path) => load_couriers_file(path).map_err(|e| CliError::Couriers(e.to_string()))?,
+        None => courier_data().clone(),
+    };
+    let worker = spawn_worker(&args)?;
+    let draft = read_draft(&worker, &couriers, &DayState::new(""), &args.labels)?;
+    print!("{}", dump::draft_json(&draft));
+    Ok(())
+}
+
+/// The draft of [`read_draft`], then the plan of its orders.
 fn read_and_plan(
     worker: &PdfWorker,
     categories: &[Category],
@@ -368,18 +392,28 @@ fn read_and_plan(
     state: &DayState,
     files: &[PathBuf],
 ) -> Result<(Draft, PlanResult), CliError> {
+    let draft = read_draft(worker, couriers, state, files)?;
+    let plan = Plan::from_categories(categories).count(&draft.orders, state.next_pdf_number());
+    Ok((draft, plan))
+}
+
+/// `check_files`, then `read`, with progress on a private channel.
+fn read_draft(
+    worker: &PdfWorker,
+    couriers: &CourierTable,
+    state: &DayState,
+    files: &[PathBuf],
+) -> Result<Draft, CliError> {
     let checks = batch::check_files(worker, files, state)?;
     let (progress, _rx) = mpsc::channel();
-    let draft = batch::read(&batch::ReadRequest {
+    Ok(batch::read(&batch::ReadRequest {
         worker,
         files: &checks,
         state,
         cancel: Arc::new(AtomicBool::new(false)),
         progress,
         couriers,
-    })?;
-    let plan = Plan::from_categories(categories).count(&draft.orders, state.next_pdf_number());
-    Ok((draft, plan))
+    })?)
 }
 
 /// Save the batch and print its summary. The check runs on

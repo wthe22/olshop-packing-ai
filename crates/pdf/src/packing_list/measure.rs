@@ -1,4 +1,4 @@
-//! Measuring text with the same fonts the page uses, so the wrapping matches what fpdf2 did.
+//! Measuring text with the same fonts the page uses, so a wrap is where the page breaks the line.
 
 use std::path::Path;
 
@@ -15,7 +15,7 @@ pub(super) fn to_pt(mm: f32) -> f32 {
 }
 
 /// Measures text widths using a throwaway document with the same fonts (PDFium text objects
-/// give the exact Arial/Consola advance widths fpdf2 used, so wrapping matches).
+/// give the exact Arial/Consolas advance widths).
 pub(super) struct Measure<'a> {
     doc: PdfDocument<'a>,
     fonts: FontSet,
@@ -144,7 +144,7 @@ impl<'a> Measure<'a> {
         )
     }
 
-    /// Greedy word wrap to `width_mm`, mirroring fpdf2 `multi_cell(..., dry_run=True)`.
+    /// Greedy word wrap to `width_mm`.
     pub(super) fn wrap(&self, text: &str, width_mm: f32, font: Font, size_pt: f32) -> Vec<String> {
         if text.is_empty() {
             return Vec::new();

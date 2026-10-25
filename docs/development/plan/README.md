@@ -7,9 +7,11 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 ## Status (2026-10-25)
 
 - **The work is the v0.2 rework**: [v0.2-rework.md](v0.2-rework.md) holds the decisions agreed with the owner
-  and the order of work. **R1 is done**: [software-design/](../../software-design/README.md) describes v0.2,
-  and every question open before it is answered by a decision record. **Next: R2.** A
-  task gets its own file in this folder when it starts; until then its row in the order of work is the task.
+  and the order of work. **R1 and R2 are done**: [software-design/](../../software-design/README.md)
+  describes v0.2; the project has no Python; the label fixtures are written by `crates/fixtures` one
+  character per text object, as the downloads are; and today's reading of the owner's eleven sample files is
+  pinned in `work/baseline/` on this PC ([testing.md](../testing.md), *Local baseline*). **Next: R3.** A task
+  gets its own file in this folder when it starts; until then its row in the order of work is the task.
 - **Not blocked on the owner.** The owner may read the design at any time, starting with
   [the workflow](../../software-design/workflow/README.md) (each step against one page) and the points below;
   a finding goes into [reviews/app.md](../../reviews/app.md) under R-APP-2 and changes the design before the
@@ -23,8 +25,6 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   ([D-LABEL-15](../../software-design/decisions/label.md)): the Seller SKU and the printed `Qty Total` moved
   from the content to the order, and the block number (`2-A-05`) is gone. The owner judges on the running
   screens (R8) whether the word fits; a finding goes into [reviews/ui.md](../../reviews/ui.md).
-- **Before R2: Node.** The coverage compare needs Node 26.7 (`setup.md`); the PC now has Node 24.20 in
-  `C:\Program Files\nodejs`, which rejects `--test-coverage-include-all`. Install Node 26.7 again.
 - **Kept for the rework**: [workflow-audit.md](workflow-audit.md) (where the built program differs from the
   design; R4 to R6 close it) and [2.32](2.32-text-object-split-word.md) (part of R4).
 - The v0.1 program folder `target/portable/Packing/` is unchanged. Its regression list, in

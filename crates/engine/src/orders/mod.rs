@@ -14,7 +14,7 @@ pub use self::warnings::{
     LogoAnswer, NoSlip, NoSlipFile, OrderLabel, ReadError, UnseenLogo, Warning,
 };
 
-/// The slip's placeholder for a product without variants (Python `DEFAULT_VARIATION`).
+/// The slip's placeholder for a product without variants.
 pub const DEFAULT_VARIATION: &str = "Default";
 
 /// One item line of an order, from the packing slip.

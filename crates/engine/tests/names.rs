@@ -1,6 +1,5 @@
 //! `names.rs`: saved-PDF file names, the user's whole name, the Windows-forbidden characters,
-//! duplicate names and the folder / file names (mirrors the file-name cases of
-//! tools/analysis/tests/test_picks.py).
+//! duplicate names and the folder / file names.
 
 use packing_engine::ids::{BatchNumber, PdfNumber};
 use packing_engine::names::{

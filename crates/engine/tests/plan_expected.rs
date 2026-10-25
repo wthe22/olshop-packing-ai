@@ -1,6 +1,6 @@
 //! The plan on the shared fixtures: `testdata/expected-labels.json` (orders) with
 //! `testdata/categories.toml` must give `testdata/expected-picks.json` exactly — number, code,
-//! name, orders and runs — the same result as the Python script.
+//! name, orders and runs.
 
 use std::fs;
 

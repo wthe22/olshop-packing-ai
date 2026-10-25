@@ -1,5 +1,5 @@
 //! `day.rs`: `state.json` round trip and format, numbering, the duplicate guard, file
-//! fingerprints, revert, amend and the atomic save (mirrors tools/analysis/tests/test_picks.py).
+//! fingerprints, revert, amend and the atomic save.
 
 use std::fs;
 use std::path::{Path, PathBuf};

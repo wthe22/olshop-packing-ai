@@ -1,8 +1,8 @@
 # Command line tools
 
-`packing-cli` runs the batch steps of the PC app from the command line, for tests and sample runs,
-and the Python analysis helpers inspect label PDFs and CSVs. Neither is part of the app the owner
-uses ([app.md](app.md)); the Python helpers are frozen.
+`packing-cli` runs the batch steps of the PC app from the command line, for tests and sample runs;
+`packing-fixtures` writes the made-up label PDFs of `testdata/`. Neither is part of the app the owner
+uses ([app.md](app.md)).
 
 ## `packing-cli`
 
@@ -13,10 +13,11 @@ From the repository root, Git Bash:
 | `cargo run -p packing-cli -- prepare --labels <file>... [--rules <categories.toml>] [--couriers <couriers.toml>] [--data <dir>] [--day YYYY-MM-DD] [--packing-list whole\|per-pdf\|none] [--layout pick,full,summary] [--pdfium <dir>] [--quiet-ids]` | Read the label files, apply the picks and save one batch, like the app's Save |
 | `cargo run -p packing-cli -- revert [--day <day>] [--data <dir>] [--pdfium <dir>] [--quiet-ids]` | Undo the last batch of the day |
 | `cargo run -p packing-cli -- amend [--day <day>] [--data <dir>] [--rules <categories.toml>] [--couriers <couriers.toml>] [--pdfium <dir>] [--quiet-ids]` | Redo the last batch of the day in place |
+| `cargo run -p packing-cli -- dump --labels <file>... [--couriers <couriers.toml>] [--pdfium <dir>]` | Read the files as the first batch of an empty day and print what that gives as JSON (the files, the counts, every order, the read warnings); saves nothing. Without `--couriers`, the bundled courier list |
 
 | Flag | Meaning |
 |---|---|
-| `--labels <file>...` | One or more label PDFs of this batch (required for `prepare`) |
+| `--labels <file>...` | One or more label PDFs of this batch (required for `prepare` and `dump`) |
 | `--rules <categories.toml>` | The picks, in order (default: `<data>/categories.toml`; without the file, the one catch-all pick) |
 | `--couriers <couriers.toml>` | The courier data (default: `<data>/couriers.toml`, else the bundled list) |
 | `--day YYYY-MM-DD` | The day folder (default: today) |
@@ -29,19 +30,11 @@ From the repository root, Git Bash:
 `cargo run -p packing-cli -- --help` prints the same usage. `prepare` writes the batch to
 `<data>/labels/<day>/batch <b>/` — the saved PDFs, the packing lists, `summary.txt` and a copy of
 the label files read (the v0.1 day folder; the target layout is [data/](../software-design/data/README.md)); the run's counts go
-to the console.
+to the console. `dump` prints real order data when given a sample file: its output goes to `work/` only.
 
-## Python analysis helpers
+## `packing-fixtures`
 
-The helpers live in `tools/analysis` and need the project virtual environment ([setup.md](setup.md)):
-
-```bash
-source .venv/Scripts/activate
-python -m pytest tools/analysis/tests
-```
-
-| Command | Does |
-|---|---|
-| `python -m packing prepare --labels … [--csv …] --work work` | The whole pick flow from the command line (an analysis aid, not the product) |
-| `python tools/analysis/helpers/extract_labels.py "samples/*Shipping label*.pdf" -o work/labels.csv` | Label PDFs → CSV of `order_id,tracking_id`, one row per order |
-| `python tools/analysis/helpers/diff_csv.py A.csv B.csv [--missing f.csv --new f.csv --common f.csv]` | Compare two CSVs by Order ID; prints the counts and IDs and writes a file only per option |
+`cargo run -p packing-fixtures [dir]` writes `labels-slip.pdf`, `labels-plain.pdf` and their answer
+`expected-labels.json` into `dir` (default: `testdata/`). The orders are Rust data in
+`crates/fixtures/src/orders.rs`. A change to them, or to how the pages are drawn, is committed together
+with the files this command writes; until then the crate's test fails ([testing.md](testing.md)).

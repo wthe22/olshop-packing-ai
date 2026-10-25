@@ -24,7 +24,7 @@ pub fn write(
     if list.sections.is_empty() {
         return Err(PdfError::Message("no saved PDFs to write".to_string()));
     }
-    // An order whose lines are unknown cannot be listed (Python raises here).
+    // An order whose lines are unknown cannot be listed.
     for section in &list.sections {
         for run in &section.runs {
             for order in &run.orders {
@@ -72,7 +72,7 @@ fn title(list: &PackingList) -> String {
     title
 }
 
-/// Thousands separators, as Python's `{:,}`.
+/// Thousands separated by commas: `1,234`.
 pub(super) fn grouped(n: i64) -> String {
     let digits = n.unsigned_abs().to_string();
     let mut out = String::new();

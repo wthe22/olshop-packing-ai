@@ -1,7 +1,7 @@
 //! A page's text runs with x, y (the input from `packing-pdf`).
 
 /// One piece of text on a page: `x` is the left edge, `y` the baseline, in PDF points with
-/// `y` growing upwards (as pypdf gave them to the Python script).
+/// `y` growing upwards.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Run {
     pub x: f64,

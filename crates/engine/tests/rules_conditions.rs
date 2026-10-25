@@ -1,8 +1,8 @@
 //! `testdata/conditions.json`: every case through the Rust condition parser, printer and
-//! evaluator (mirrors tools/analysis/tests/test_rules.py::test_conditions_fixture).
+//! evaluator.
 //!
 //! The app reads no orders CSV, so a case whose text uses a CSV-only field expects the
-//! "needs the orders CSV" error instead of Python's result. Cases with `app_fields: true`
+//! "needs the orders CSV" error instead of a result. Cases with `app_fields: true`
 //! (category/batch/group, scan filters only) are skipped and counted.
 
 use std::collections::{BTreeMap, BTreeSet};

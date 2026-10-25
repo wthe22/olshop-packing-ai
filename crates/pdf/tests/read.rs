@@ -1,5 +1,5 @@
-//! Reading `testdata/labels-slip.pdf` and comparing with `testdata/expected-labels.json`
-//! (the same results as the Python script), plus the plain-label stop.
+//! Reading `testdata/labels-slip.pdf` and comparing with `testdata/expected-labels.json`, plus
+//! the plain-label stop.
 
 mod common;
 

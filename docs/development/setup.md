@@ -8,34 +8,17 @@ fresh clone of the repository, run from its root in Git Bash.
 | Tool | Why | Tested version |
 |---|---|---|
 | Git and Git Bash | Clone the repository and run the shell scripts (`tools/get-pdfium.sh`, `tools/make-portable.sh`) | — |
-| Python | The analysis helpers only (`tools/analysis`) | 3.12 or newer; 3.14 at `C:\Python314` (on `PATH` as `python`) |
-| Python packages `pypdf`, `fpdf2`, `pillow`, `xxhash`, `pytest` | Reading PDFs and running the analysis helpers' tests; declared in `tools/analysis/pyproject.toml` | installed by `pip install -e "tools/analysis[dev]"` |
-| Project virtual environment `.venv` | Holds the analysis helpers' packages | in the repository root |
 | Fonts Arial and Consolas | The A4 packing lists | come with Windows (`C:\Windows\Fonts`) |
 | Rust (stable, MSVC toolchain) | The PC app and `packing-cli` | cargo/rustc 1.98.0 |
-| Node.js and npm | The Svelte screens and the Tauri build | Node 26.7, npm 11.19 |
+| Node.js and npm | The Svelte screens and the Tauri build | Node 26.12, npm 11.20 |
 | Microsoft C++ Build Tools | Links the Tauri crate | at `C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools` |
 | WebView2 runtime | The window (Edge WebView2, bundled with Windows 11) | at `C:\Program Files (x86)\Microsoft\EdgeWebView\Application` |
 | `tauri-cli` | The Tauri build tool, run as `cargo tauri` | 2.12.1 (`cargo install tauri-cli --locked`), matching the `tauri` 2.12 of [architecture.md](../software-design/app/architecture.md) |
-| `pdfium.dll` | PDFium: read the page text, copy pages, write the packing lists ([program.md](../software-design/app/program.md)) | `chromium/7881` from bblanchon/pdfium-binaries, matching `pdfium-render` 0.9.4; fetched by `bash tools/get-pdfium.sh` into `vendor/pdfium.dll` (git-ignored), SHA256 checked, with a Python fallback for the download because `curl` fails on GitHub release files on this PC |
+| `pdfium.dll` | PDFium: read the page text, copy pages, write the packing lists ([program.md](../software-design/app/program.md)) | `chromium/7881` from bblanchon/pdfium-binaries, matching `pdfium-render` 0.9.4; fetched by `bash tools/get-pdfium.sh` into `vendor/pdfium.dll` (git-ignored), SHA256 checked, with a PowerShell fallback for the download because `curl` fails on GitHub release files on this PC |
 | `cargo-llvm-cov` | The Rust coverage measurement of `bash tools/check.sh --coverage` | 0.9.1 (`cargo install cargo-llvm-cov --locked`) |
 | `llvm-tools-preview` (rustup component) | The `llvm-cov` and `llvm-profdata` binaries `cargo-llvm-cov` calls | `rustup component add llvm-tools-preview` |
 
 ## Steps
-
-### Python analysis tools (`tools/analysis`)
-
-```bash
-cd /d/workspace/software/olshop-packing-ai    # the clone
-/c/Python314/python.exe -m venv .venv      # the system Python, not another one on PATH
-source .venv/Scripts/activate
-python -m pip install --upgrade pip
-python -m pip install -e "tools/analysis[dev]"     # pypdf, fpdf2, pytest
-python -m pytest tools/analysis/tests
-```
-
-`-e` installs the package in editable mode, so `python -m packing` works from any folder while
-the venv is active. The helpers' commands are in [cli.md](cli.md).
 
 ### PC app
 

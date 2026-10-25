@@ -1,5 +1,5 @@
 # Packing categories for the test data. Order matters: an order goes to the FIRST
-# category whose condition matches. This file is a fixture for the script and the app.
+# category whose condition matches. This file is a fixture of the tests.
 
 [[category]]
 code = "A"

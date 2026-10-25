@@ -1,5 +1,5 @@
 //! `load_rules`: `categories.toml` loading, every validation error and the file-position
-//! mapping for condition errors (mirrors the relevant cases of tools/analysis/tests/test_rules.py).
+//! mapping for condition errors.
 
 use std::fs;
 

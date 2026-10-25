@@ -324,7 +324,7 @@ fn customer_message(runs: &[Run]) -> String {
                         && p.text != "\u{FF1A}"
                 })
                 .collect();
-            // Python `sorted(...)` over (x, y, text) tuples -> lexicographic on x first.
+            // By x first, then y, then the text.
             pieces.sort_by(|a, b| {
                 cmp_asc(a.x, b.x)
                     .then_with(|| cmp_asc(a.y, b.y))

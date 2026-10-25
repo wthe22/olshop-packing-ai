@@ -1,9 +1,9 @@
 # Code rules
 
 Binding for all code in this repository, written by the owner, an agent or a subagent: Rust, Svelte and
-TypeScript. (`tools/analysis/` is the frozen Python reference and is out of scope.) The project is in heavy
-development: build for what is decided now, add no compatibility layer or option for a change that might
-come. Stored user data is the exception: a change to its shape is a migration.
+TypeScript. The project is in heavy development: build for what is decided now, add no compatibility layer
+or option for a change that might come. Stored user data is the exception: a change to its shape is a
+migration.
 
 Every rule states its reason. An exception to a rule is allowed only with a one-line reason in the commit
 message that makes it.
@@ -130,7 +130,6 @@ the code inside is rearranged.*
 
 ## Choices taken in the first refactor
 
-- `tools/analysis/` (the frozen Python reference) and `spike/` are out of scope of the gates.
 - The gate scripts are Node (`tools/*.mjs`): Node is already needed for the app.
 - Rust and TypeScript view types stay hand-mirrored (no generator); they change in the same commit.
 - No DOM test harness for the Svelte screens: the guards are `svelte-check`, the front-end scenario tests (the

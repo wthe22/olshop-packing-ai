@@ -1,5 +1,5 @@
 //! `plan.rs`: the plan edits (skip, move, add, rename), picks from what is left, runs and
-//! numbering (mirrors the relevant cases of tools/analysis/tests/test_picks.py).
+//! numbering.
 
 use packing_engine::ids::{OrderId, PdfNumber, TrackingId};
 use packing_engine::orders::{Line, Order, PageRef, ReadOrder};

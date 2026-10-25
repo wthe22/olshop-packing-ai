@@ -10,7 +10,7 @@ use crate::ids::{OrderId, TrackingId};
 
 use super::CourierTable;
 
-/// The characters `str.strip` removes around a tracking token (Python `_TOKEN_TRIM`).
+/// The characters trimmed from both ends of a tracking token.
 const TOKEN_TRIM: &str = " \t.,;:";
 
 pub(super) fn whitespace_re() -> &'static Regex {
@@ -20,14 +20,14 @@ pub(super) fn whitespace_re() -> &'static Regex {
 
 fn order_id_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
-    // Python: (?<!\d)(5\d{17})(?!\d). The `regex` crate has no lookaround, so the digit
+    // The pattern is (?<!\d)(5\d{17})(?!\d). The `regex` crate has no lookaround, so the digit
     // boundaries are checked by hand from the surrounding characters in `find_order_id`.
     R.get_or_init(|| Regex::new(r"5\d{17}").expect("built-in Order ID regex"))
 }
 
 fn labelled_order_id_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
-    // Python: OrderI[dD][:：](\d{18}); the second colon is fullwidth U+FF1A.
+    // The second colon is fullwidth U+FF1A.
     R.get_or_init(|| {
         Regex::new("OrderI[dD][:\u{FF1A}](\\d{18})").expect("built-in labelled Order ID regex")
     })

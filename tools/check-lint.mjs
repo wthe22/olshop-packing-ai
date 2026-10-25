@@ -33,17 +33,14 @@ const SUPPRESSION_PATTERNS = {
 const SUPPRESSION_EXTENSIONS = /\.(rs|svelte|ts|mts|mjs|js|cjs)$/;
 
 // Folders never scanned: build output, dependencies, downloaded binaries and confidential data.
-// `tools` holds the gate scripts themselves, whose own patterns would count as suppressions; the
-// frozen Python reference `tools/analysis` is out of scope of the code rules.
+// `tools` holds the gate scripts themselves, whose own patterns would count as suppressions.
 const SKIP_DIRS = new Set([
   ".git",
   ".svelte-kit",
-  ".venv",
   "build",
   "docs",
   "node_modules",
   "samples",
-  "spike",
   "target",
   "tmp",
   "tools",

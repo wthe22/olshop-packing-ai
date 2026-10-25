@@ -96,9 +96,8 @@ fn only_the_header_band_images_of_a_page_are_collected() {
     assert_eq!(logos.len(), 1, "only the in-band image is a logo candidate");
     eprintln!("band logo hash: {}", logos[0].hash);
 
-    // The byte hash is Python's `xxhash.xxh3_64_hexdigest` of the 18 stream bytes written above
-    // (`.venv/Scripts/python.exe -c "import xxhash; print(xxhash.xxh3_64(bytes(range(18))).hexdigest())"`)
-    // and the crate's own hash of the same bytes.
+    // The byte hash is the XXH3-64 of the 18 stream bytes written above, a value computed outside
+    // this crate, and the crate's own hash of the same bytes.
     assert_eq!(logos[0].hash, "f6912490d4c0eed5");
     assert_eq!(logos[0].hash, logo::hash_bytes(&in_band_bytes()));
     assert!(logos[0].appearance.is_some(), "the hash is unknown: decode");
@@ -118,7 +117,7 @@ fn a_page_without_images_has_no_logos() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    // The fpdf2 fixtures carry text only.
+    // The fixtures carry text only.
     let path = testdata("labels-slip.pdf");
     let document = pdfium.load_pdf_from_file(&path, None).expect("load");
     let page = document.pages().get(0).expect("page");

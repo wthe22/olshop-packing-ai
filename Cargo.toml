@@ -1,8 +1,6 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "app/src-tauri"]
-# spike is a throwaway spike with its own [workspace]; keep it out.
-exclude = ["spike"]
 
 [workspace.package]
 edition = "2024"
@@ -12,6 +10,7 @@ publish = false
 [workspace.dependencies]
 image = "0.25"
 jiff = "0.2"
+lopdf = { version = "0.46", default-features = false }
 pdfium-render = "=0.9.4"
 regex = "1"
 serde = { version = "1", features = ["derive"] }

@@ -64,7 +64,7 @@ pub struct Courier {
     pub tracking: Option<String>,
     /// `tracking` unanchored (used for the collapsed-text search).
     pub tracking_re: Option<Regex>,
-    /// `tracking` anchored, i.e. a full match (Python `fullmatch`).
+    /// `tracking` anchored: the whole token must match.
     pub tracking_full: Option<Regex>,
 }
 

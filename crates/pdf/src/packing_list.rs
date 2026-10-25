@@ -2,9 +2,9 @@
 //! millimetres, the drawing operations a page is made of, and the rows the full and summary
 //! layouts print.
 //!
-//! The geometry follows fpdf2, in millimetres: a cell's text baseline sits at
-//! `top + 0.5*h + 0.3*font_size` and a left-aligned cell indents its text by the 1 mm cell
-//! margin (`fpdf.c_margin`). Wrapping width is the column width minus twice that margin.
+//! The geometry, in millimetres: a cell's text baseline sits at `top + 0.5*h + 0.3*font_size`
+//! and a left-aligned cell indents its text by the 1 mm cell margin. Wrapping width is the
+//! column width minus twice that margin.
 
 mod emit;
 mod fonts;
@@ -25,12 +25,12 @@ use self::measure::{Measure, PT_PER_MM};
 const NO_ITEM_DATA: &str =
     "no item data: the packing list needs labels with packing slip or the orders CSV";
 
-// Layout constants, millimetres (packing_list.py).
+// Layout constants, millimetres.
 const PAGE_H: f32 = 297.0;
 const MARGIN: f32 = 10.0;
 const BOTTOM: f32 = PAGE_H - MARGIN; // 287
-const CELL_MARGIN: f32 = 1.0; // fpdf c_margin
-/// The page header's height: title 7 + counts line 5 + the 1 mm gap (packing_list.py `header`).
+const CELL_MARGIN: f32 = 1.0;
+/// The page header's height: title 7 + counts line 5 + the 1 mm gap.
 const HEADER_H: f32 = 13.0;
 /// Where the body starts on every page — below the header, never at the top margin, or the first
 /// row of the body is printed over the title and the counts line.
@@ -107,7 +107,7 @@ impl<'m, 'a> Builder<'m, 'a> {
         y_top + 0.5 * h + 0.3 * (size_pt / PT_PER_MM)
     }
 
-    /// Left-aligned cell text (fpdf indents by the cell margin).
+    /// Left-aligned cell text, indented by the cell margin.
     fn cell(&mut self, cell: Cell<'_>) {
         let baseline = Self::baseline(cell.y, cell.h, cell.size_pt);
         self.ops().push(Op::Text {
@@ -145,8 +145,8 @@ impl<'m, 'a> Builder<'m, 'a> {
         });
     }
 
-    /// Start a new page if `height` does not fit; repeat `continued` on the new page
-    /// (fpdf2 `_need`). Returns whether a page break happened.
+    /// Start a new page if `height` does not fit; repeat `continued` on the new page.
+    /// Returns whether a page break happened.
     fn need(&mut self, height: f32, continued: Option<&str>) -> bool {
         if self.y + height > BOTTOM {
             self.pages.push(Vec::new());
@@ -371,7 +371,7 @@ impl<'m, 'a> Builder<'m, 'a> {
     }
 }
 
-/// The run's identical lines as display text, sorted (Python `_run_items`).
+/// The run's identical lines as display text, sorted.
 fn run_items(run: &RunRows) -> Vec<String> {
     let Some(first) = run.orders.first() else {
         return Vec::new();
@@ -393,7 +393,7 @@ type ItemUnits = Vec<(ItemKey, i64)>;
 type ItemNames = Vec<(ItemKey, String)>;
 
 /// One `(units, display name)` per `(name, variation)`, sorted by display name then key
-/// (Python `_pick_entries`).
+///.
 fn category_entries(list: &PackingList) -> Vec<(i64, String)> {
     let (units, names) = entry_totals(list);
     sorted_entries(units, names)
@@ -431,7 +431,7 @@ fn sorted_entries(units: ItemUnits, names: ItemNames) -> Vec<(i64, String)> {
             .map(|(_, name)| name.clone())
             .unwrap_or_default()
     };
-    // Sort by (display name, name, variation), like Python's `sorted(units, key=...)`.
+    // Sort by (display name, name, variation).
     let mut ordered: Vec<((String, String, String), i64, String)> = units
         .iter()
         .map(|(key, value)| {
@@ -451,7 +451,7 @@ fn sorted_entries(units: ItemUnits, names: ItemNames) -> Vec<(i64, String)> {
 }
 
 /// Largest count of the leading entries whose balanced two-column split fits `avail`
-/// (Python `_pick_fit`).
+///.
 fn category_fit(entries: &[(i64, String)], avail: f32, measure: &Measure<'_>) -> usize {
     let mut heights: Vec<f32> = Vec::with_capacity(entries.len());
     for (_units, name) in entries {

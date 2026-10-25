@@ -413,7 +413,7 @@ fn the_testdata_labels_show_no_logo_prompt_and_list_the_couriers() {
         |_| {},
     )
     .expect("read");
-    assert!(read.logos.is_empty(), "the fpdf2 fixtures have no images");
+    assert!(read.logos.is_empty(), "the fixtures have no images");
     assert_eq!(
         read.couriers,
         vec!["J&T Express", "SiCepat", "J&T Cargo", "IDX", "SPX"]

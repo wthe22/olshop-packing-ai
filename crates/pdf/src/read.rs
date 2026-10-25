@@ -1,10 +1,9 @@
 //! Open files, read a page's text with positions, the page count and progress.
 //!
-//! The text runs are rebuilt from PDFium characters, validated against pypdf on 600 sample
-//! pages and 23 testdata orders. Do not
-//! "simplify" the two strategies: the downloaded labels (wkhtmltopdf) hold one character per
-//! text object and need the geometry rebuild, while fpdf2 files (the testdata) hold one whole
-//! run per text object and must not be sorted by position.
+//! The text runs are rebuilt from PDFium characters in one of two ways; do not "simplify" them
+//! into one. The downloaded labels (wkhtmltopdf) and the test fixtures hold one character per
+//! text object and need the geometry rebuild; the Shopee-style label holds whole strings per
+//! text object, one run each.
 
 use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
@@ -302,9 +301,9 @@ pub fn read_all(
 
 /// Rebuild a page's runs; see the module comment for why there are two strategies.
 fn build_runs(page: &PdfPage, text: &PdfPageText) -> Result<Vec<Run>, PdfError> {
-    // Detect the granularity from the first few text objects only: the fpdf2 pages lead with a
-    // multi-char object, the wkhtmltopdf pages have no multi-char object at all. This keeps the
-    // (quadratic) `chars` scan off the per-glyph pages.
+    // Detect the granularity from the first few text objects only: the Shopee-style pages lead
+    // with multi-char objects, the downloaded labels have no multi-char object at all. This keeps
+    // the (quadratic) `chars` scan off the per-glyph pages.
     let mut per_glyph = true;
     let mut seen = 0usize;
     for object in page.objects().iter() {
@@ -330,8 +329,8 @@ fn build_runs(page: &PdfPage, text: &PdfPageText) -> Result<Vec<Run>, PdfError> 
     }
 }
 
-/// Operator-level objects (fpdf2 testdata): one run per text object, characters in PDFium index
-/// order, origin from the first glyph — pypdf's run, exactly.
+/// Whole strings per text object (the Shopee-style label): one run per text object, characters
+/// in PDFium index order, origin from the first glyph.
 fn build_runs_objects(page: &PdfPage, text: &PdfPageText) -> Result<Vec<Run>, PdfError> {
     let mut runs: Vec<Run> = Vec::new();
     for object in page.objects().iter() {

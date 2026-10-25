@@ -21,38 +21,29 @@ const BASELINE_PATH = join(ROOT, "tools", "baselines", "size.json");
 const RUST_CEILING = 800;
 const UI_CEILING = 500;
 
-// Folders that are never measured: build output, dependencies, downloaded binaries, confidential
-// data and the frozen Python reference.
+// Folders that are never measured: build output, dependencies, downloaded binaries and
+// confidential data.
 const SKIP_DIRS = new Set([
   ".git",
   ".svelte-kit",
-  ".venv",
   "build",
   "docs",
   "node_modules",
   "samples",
-  "spike",
   "target",
   "tmp",
   "vendor",
   "work",
 ]);
-const SKIP_PATHS = ["tools/analysis"];
 
 const UPDATE = process.argv.includes("--update");
-
-function isSkippedDir(parentRel, name) {
-  if (SKIP_DIRS.has(name)) return true;
-  const rel = parentRel === "" ? name : `${parentRel}/${name}`;
-  return SKIP_PATHS.some((p) => rel === p || rel.startsWith(`${p}/`));
-}
 
 /** Every measured source file under `dir`, as repository-relative POSIX paths.*/
 function walk(dirRel, out = []) {
   for (const entry of readdirSync(join(ROOT, dirRel), { withFileTypes: true })) {
     const rel = dirRel === "" ? entry.name : `${dirRel}/${entry.name}`;
     if (entry.isDirectory()) {
-      if (!isSkippedDir(dirRel, entry.name)) walk(rel, out);
+      if (!SKIP_DIRS.has(entry.name)) walk(rel, out);
     } else {
       out.push(rel);
     }

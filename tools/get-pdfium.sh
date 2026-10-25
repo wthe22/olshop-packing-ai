@@ -26,21 +26,12 @@ trap 'rm -rf "$tmp"' EXIT
 
 echo "Downloading $url"
 # curl fails to write from release-assets.githubusercontent.com on this host
-# (schannel write error, curl 23); fall back to Python's urllib.
+# (schannel write error, curl 23); fall back to PowerShell.
 if ! curl -fsSL "$url" -o "$tmp/$ASSET" 2>/dev/null; then
-  echo "curl failed; using python"
-  PY=""
-  for cand in "$here/../../.venv/Scripts/python.exe" python3 python; do
-    if command -v "$cand" >/dev/null 2>&1; then PY="$cand"; break; fi
-  done
-  [ -n "$PY" ] || { echo "no python found for download" >&2; exit 1; }
-  dest_win="$(cygpath -w "$tmp/$ASSET" 2>/dev/null || printf '%s' "$tmp/$ASSET")"
-  "$PY" - "$url" "$dest_win" <<'PYEOF'
-import sys, urllib.request
-url, dest = sys.argv[1], sys.argv[2]
-with urllib.request.urlopen(url, timeout=120) as r, open(dest, "wb") as f:
-    f.write(r.read())
-PYEOF
+  echo "curl failed; using PowerShell"
+  dest_win="$(cygpath -w "$tmp/$ASSET")"
+  powershell.exe -NoProfile -Command \
+    "\$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri '$url' -OutFile '$dest_win'"
 fi
 
 if [ "$PDFIUM_SHA256" != "__FILL_AFTER_FIRST_RUN__" ]; then

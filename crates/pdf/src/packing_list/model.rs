@@ -3,7 +3,7 @@
 
 use packing_engine::ids::{BatchNumber, PdfNumber, TrackingId};
 
-/// One slip line of an order as the packing list needs it (Python `orders.Line`).
+/// One slip line of an order as the packing list needs it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PackingLine {
     pub name: String,
@@ -14,7 +14,7 @@ pub struct PackingLine {
     pub display_name: String,
 }
 
-/// One order of a run (Python `orders.Order`): its tracking ID and slip lines.
+/// One order of a run: its tracking ID and slip lines.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RunOrder {
     /// The courier's parcel number; `None` prints an empty cell.
@@ -22,7 +22,7 @@ pub struct RunOrder {
     pub lines: Vec<PackingLine>,
 }
 
-/// One run of a saved PDF (Python `picks.Run`): a group of orders with identical contents.
+/// One run of a saved PDF: a group of orders with identical contents.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RunRows {
     /// The run number; the label is printed as `{section.number}-{number:02}`.
@@ -30,7 +30,7 @@ pub struct RunRows {
     pub orders: Vec<RunOrder>,
 }
 
-/// One saved PDF (Python `picks.SavedPdf`): a pick's number, code, name and its runs.
+/// One saved PDF: a pick's number, code, name and its runs.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SavedPdfSection {
     pub number: PdfNumber,

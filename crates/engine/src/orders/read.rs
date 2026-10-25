@@ -97,7 +97,7 @@ where
     for (file, page, page_text) in pages {
         total_pages += 1;
         if current_file != Some(file) {
-            // Python resets `previous` per file: a page with no Order ID cannot continue an
+            // `previous` is reset per file: a page with no Order ID cannot continue an
             // order that started in another file.
             current_file = Some(file);
             previous = None;
