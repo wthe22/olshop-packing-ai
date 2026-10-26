@@ -55,7 +55,7 @@ export interface Totals {
 
 export interface DayOverview {
   day: string;
-  namespace: string;
+  workspace: string;
   batches: BatchView[];
   totals: Totals;
   // A damaged journal, an input missing or changed.

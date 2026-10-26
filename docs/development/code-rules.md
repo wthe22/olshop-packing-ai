@@ -59,8 +59,8 @@ uses a v0.1 word takes the new one when it is rewritten.
 
 | Concept | Word in code | Not |
 |---|---|---|
-| A folder of the data folder with its own dates | `Namespace` | session, shop, owner |
-| One date of a namespace, its journal folded | `Day` | session, date folder |
+| A folder of the data folder with its own dates | `Workspace` | namespace, session, shop, owner |
+| One date of a workspace, its journal folded | `Day` | session, date folder |
 | The one truth of a day | `Journal`, one `Record` per line | log, state |
 | A file the app writes from the journal | `View` | cache, export |
 | A named list of label groups | `SortRule` | grouping, set |
@@ -74,7 +74,7 @@ uses a v0.1 word takes the new one when it is rewritten.
 | One platform order | `Order`, `OrderId` | |
 | The courier's parcel number | `TrackingId` | AWB, waybill, resi |
 | One product line of an order | `Line` | item, row |
-| The owner's data folder | `DataFolder` | workspace, root |
+| The owner's data folder | `DataFolder` | root |
 | A time stamp | `*_time` | `*_at` |
 
 **Comments.** `//!`/`///` say what a module or item is for and anything surprising (a PDFium quirk, a unit,

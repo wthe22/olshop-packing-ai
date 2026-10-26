@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The window frame: the panel's switch, the program's name, the open namespace and date, the
+  // The window frame: the panel's switch, the program's name, the open workspace and date, the
   // screens that open over the current one, and the theme menu.
   import { texts, formatDay } from "../texts";
   import type { OverlayId } from "./shell.svelte";
@@ -8,7 +8,7 @@
   import ThemeMenu from "./ThemeMenu.svelte";
 
   let {
-    namespace,
+    workspace,
     day,
     overlay,
     // The program's shown version (`v0.2`, from `StartInfo.version`): with the name it is the
@@ -19,7 +19,7 @@
     onNavigate,
     onTheme,
   }: {
-    namespace: string | null;
+    workspace: string | null;
     day: string;
     overlay: OverlayId | null;
     version: string;
@@ -45,7 +45,7 @@
   >
   <span class="brand"><Icon name="box" size={20} />{texts.title}<span class="version">{version}</span></span>
   <span class="where">
-    <span class="namespace">{namespace ?? ""}</span>
+    <span class="workspace">{workspace ?? ""}</span>
     <span class="sep">›</span>
     <span class="day">{formatDay(day)}</span>
   </span>
@@ -110,7 +110,7 @@
     white-space: nowrap;
   }
 
-  .namespace {
+  .workspace {
     font-weight: 600;
   }
 

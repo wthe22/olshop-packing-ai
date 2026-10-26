@@ -7,7 +7,7 @@ Apply to every design, document and code line of the PC app.
   `Datetime`; a `*_date` field is a `Date` (`ship_by_date`).
 - Orders are identified by `Order ID`. Items are identified by product name and variation; the platform
   `SKU ID` is not on the label PDFs, and the Seller SKU is a field of the line ([D-APP-20](decisions/app-features.md)).
-- Namespaces, dates and batches are identified by their names and numbers in the data folder
+- Workspaces, dates and batches are identified by their names and numbers in the data folder
   ([data](data/README.md)); an input by its SHA-256; a courier by its code.
 - Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at `1.0`. The
   schema version is separate from the app version; data of an older schema is not read and not migrated

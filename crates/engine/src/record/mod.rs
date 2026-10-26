@@ -57,7 +57,9 @@ impl RecordBody {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Started {
     pub schema: String,
-    pub namespace: String,
+    /// The journal keeps the field name `namespace`, so no journal is migrated.
+    #[serde(rename = "namespace")]
+    pub workspace: String,
     pub date: Date,
 }
 
@@ -278,7 +280,7 @@ pub struct ReprintedOrder {
     /// The date the order was saved.
     pub date: Date,
     pub batch: BatchId,
-    /// Its input: `{namespace}/{date}/input/{sha256}.pdf`.
+    /// Its input: `{workspace}/{date}/input/{sha256}.pdf`.
     pub sha256: Sha256,
     pub page_start: u16,
     pub page_end: u16,

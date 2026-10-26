@@ -146,7 +146,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
         pdfium,
         &summary_path,
         &SummaryFacts {
-            namespace: folder.namespace(),
+            workspace: folder.workspace(),
             date: folder.date(),
             record: &record,
             printed: "07:00",
@@ -166,7 +166,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
         app: "0.2.0".into(),
         body: RecordBody::Started(packing_engine::record::Started {
             schema: "1.0".into(),
-            namespace: "Toko Contoh".into(),
+            workspace: "Toko Contoh".into(),
             date: folder.date(),
         }),
     };

@@ -4,7 +4,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
 // The sort rules of `packing-workflows.toml`, and the one to preselect: the rule of the
-// namespace's newest batch while it exists, else the first.
+// workspace's newest batch while it exists, else the first.
 export interface SortRules {
   rules: string[];
   preselected: string;

@@ -17,19 +17,19 @@ fn the_shown_version_comes_from_one_place() {
 
 #[test]
 fn explorer_gets_the_path_as_its_only_argument() {
-    let path = r"C:\Packing\data\Toko Contoh\2026-10-07\output";
+    let path = r"C:\Packing\packing-data\Toko Contoh\2026-10-07\output";
     let command = explorer_command(path);
     let args: Vec<_> = command.get_args().collect();
     assert_eq!(args, [path]);
 }
 
 #[test]
-fn a_first_start_writes_the_two_files_and_names_the_first_namespace() {
+fn a_first_start_writes_the_two_files_and_names_the_first_workspace() {
     let _guard = testkit::pdfium_lock();
     let program = TempDir::new("app-start");
     let state = AppState::new(program.path().to_path_buf());
     let info = start_information(&state).unwrap();
-    assert!(info.data_folder.is_none() && info.namespace.is_none());
+    assert!(info.data_folder.is_none() && info.workspace.is_none());
     assert!(
         program.path().join(WORKFLOWS_FILE).is_file(),
         "the bundled rules"
@@ -37,11 +37,11 @@ fn a_first_start_writes_the_two_files_and_names_the_first_namespace() {
 
     let dir = use_folder(&state, &program.path().join(DEFAULT_DATA_DIR)).unwrap();
     let written = fs::read_to_string(program.path().join(SETTINGS_FILE)).unwrap();
-    assert!(written.contains("data_dir = \"data\""), "{written}");
-    assert_eq!(new_namespace(&state, "Toko Contoh").unwrap(), "Toko Contoh");
+    assert!(written.contains("data_dir = \"packing-data\""), "{written}");
+    assert_eq!(new_workspace(&state, "Toko Contoh").unwrap(), "Toko Contoh");
     assert!(Path::new(&dir).join("Toko Contoh").is_dir());
     assert!(
-        new_namespace(&state, "toko contoh").is_err(),
+        new_workspace(&state, "toko contoh").is_err(),
         "a name differs by more than case"
     );
 
@@ -53,7 +53,7 @@ fn a_first_start_writes_the_two_files_and_names_the_first_namespace() {
     );
     drop(state);
     let info = start_information(&second).unwrap();
-    assert_eq!(info.namespace.as_deref(), Some("Toko Contoh"));
+    assert_eq!(info.workspace.as_deref(), Some("Toko Contoh"));
     assert_eq!(info.data_folder.as_deref(), Some(dir.as_str()));
 }
 

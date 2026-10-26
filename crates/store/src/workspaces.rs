@@ -1,4 +1,4 @@
-//! Namespaces (app/namespaces.md): one folder of the data folder per namespace, one folder per
+//! Workspaces (app/workspaces.md): one folder of the data folder per workspace, one folder per
 //! date inside it. The app lists, opens and creates them; it never renames or deletes one.
 
 use std::fmt;
@@ -12,68 +12,68 @@ use packing_engine::sorting::default_file_name;
 use crate::StoreError;
 use crate::journal::JOURNAL;
 
-/// A namespace name is at most this many characters.
-pub const NAMESPACE_LIMIT: usize = 40;
+/// A workspace name is at most this many characters.
+pub const WORKSPACE_LIMIT: usize = 40;
 
 /// The folders of a version 0.1 data folder, which are no names.
 const RESERVED: [&str; 2] = ["labels", "categories"];
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum NamespaceNameError {
-    /// Empty, longer than [`NAMESPACE_LIMIT`], or not what the default file-name rule makes of it.
+pub enum WorkspaceNameError {
+    /// Empty, longer than [`WORKSPACE_LIMIT`], or not what the default file-name rule makes of it.
     NotAName,
     /// A folder of a version 0.1 data folder.
     Reserved,
-    /// Another namespace has it, upper and lower case counting as the same.
+    /// Another workspace has it, upper and lower case counting as the same.
     Taken,
 }
 
-impl fmt::Display for NamespaceNameError {
+impl fmt::Display for WorkspaceNameError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
-            NamespaceNameError::NotAName => {
+            WorkspaceNameError::NotAName => {
                 "1 to 40 letters, digits, spaces, - or _, with no space at either end"
             }
-            NamespaceNameError::Reserved => "that is a folder of Packing v0.1",
-            NamespaceNameError::Taken => "another namespace has that name",
+            WorkspaceNameError::Reserved => "that is a folder of Packing v0.1",
+            WorkspaceNameError::Taken => "another workspace has that name",
         })
     }
 }
 
-/// Whether `name` can be a new namespace beside `existing`.
-pub fn check_namespace_name(name: &str, existing: &[String]) -> Result<(), NamespaceNameError> {
+/// Whether `name` can be a new workspace beside `existing`.
+pub fn check_workspace_name(name: &str, existing: &[String]) -> Result<(), WorkspaceNameError> {
     let length = name.chars().count();
-    if length == 0 || length > NAMESPACE_LIMIT || default_file_name(name) != name {
-        return Err(NamespaceNameError::NotAName);
+    if length == 0 || length > WORKSPACE_LIMIT || default_file_name(name) != name {
+        return Err(WorkspaceNameError::NotAName);
     }
     if RESERVED
         .iter()
         .any(|reserved| name.eq_ignore_ascii_case(reserved))
     {
-        return Err(NamespaceNameError::Reserved);
+        return Err(WorkspaceNameError::Reserved);
     }
     if existing
         .iter()
         .any(|other| other.to_lowercase() == name.to_lowercase())
     {
-        return Err(NamespaceNameError::Taken);
+        return Err(WorkspaceNameError::Taken);
     }
     Ok(())
 }
 
-/// The folders of the data folder whose names are namespace names, sorted.
-pub fn namespaces(data_dir: &Path) -> Result<Vec<String>, StoreError> {
+/// The folders of the data folder whose names are workspace names, sorted.
+pub fn workspaces(data_dir: &Path) -> Result<Vec<String>, StoreError> {
     let mut names: Vec<String> = subfolders(data_dir)?
         .into_iter()
-        .filter(|name| check_namespace_name(name, &[]).is_ok())
+        .filter(|name| check_workspace_name(name, &[]).is_ok())
         .collect();
     names.sort_by_key(|name| name.to_lowercase());
     Ok(names)
 }
 
-/// The dates of a namespace that have a folder, oldest first.
-pub fn dates(data_dir: &Path, namespace: &str) -> Result<Vec<Date>, StoreError> {
-    let mut dates: Vec<Date> = subfolders(&data_dir.join(namespace))?
+/// The dates of a workspace that have a folder, oldest first.
+pub fn dates(data_dir: &Path, workspace: &str) -> Result<Vec<Date>, StoreError> {
+    let mut dates: Vec<Date> = subfolders(&data_dir.join(workspace))?
         .into_iter()
         .filter_map(|name| name.parse::<Date>().ok())
         .collect();
@@ -81,30 +81,30 @@ pub fn dates(data_dir: &Path, namespace: &str) -> Result<Vec<Date>, StoreError> 
     Ok(dates)
 }
 
-/// The namespace whose journal was written last, the one the app opens on at start.
+/// The workspace whose journal was written last, the one the app opens on at start.
 pub fn last_written(data_dir: &Path) -> Result<Option<String>, StoreError> {
     let mut newest: Option<(SystemTime, String)> = None;
-    for namespace in namespaces(data_dir)? {
-        for date in dates(data_dir, &namespace)? {
+    for workspace in workspaces(data_dir)? {
+        for date in dates(data_dir, &workspace)? {
             let journal = data_dir
-                .join(&namespace)
+                .join(&workspace)
                 .join(date.to_string())
                 .join(JOURNAL);
             let Ok(modified) = fs::metadata(&journal).and_then(|meta| meta.modified()) else {
                 continue;
             };
             if newest.as_ref().is_none_or(|(time, _)| modified > *time) {
-                newest = Some((modified, namespace.clone()));
+                newest = Some((modified, workspace.clone()));
             }
         }
     }
-    Ok(newest.map(|(_, namespace)| namespace))
+    Ok(newest.map(|(_, workspace)| workspace))
 }
 
-/// Make a new namespace's folder, empty.
-pub fn create_namespace(data_dir: &Path, name: &str) -> Result<(), StoreError> {
-    let existing = namespaces(data_dir)?;
-    check_namespace_name(name, &existing).map_err(|error| StoreError::BadName {
+/// Make a new workspace's folder, empty.
+pub fn create_workspace(data_dir: &Path, name: &str) -> Result<(), StoreError> {
+    let existing = workspaces(data_dir)?;
+    check_workspace_name(name, &existing).map_err(|error| StoreError::BadName {
         name: name.to_string(),
         reason: error.to_string(),
     })?;

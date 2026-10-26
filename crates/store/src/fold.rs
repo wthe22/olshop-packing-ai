@@ -35,9 +35,9 @@ pub enum DamageReason {
         expected: u32,
         found: u32,
     },
-    /// `started` names another namespace or date than the folder.
+    /// `started` names another workspace or date than the folder.
     OtherFolder {
-        namespace: String,
+        workspace: String,
         date: Date,
     },
     /// A record that breaks its rule of the fold.
@@ -52,10 +52,10 @@ impl fmt::Display for DamageReason {
             DamageReason::SeqGap { expected, found } => {
                 write!(f, "seq {found} where {expected} was due")
             }
-            DamageReason::OtherFolder { namespace, date } => {
+            DamageReason::OtherFolder { workspace, date } => {
                 write!(
                     f,
-                    "it names the namespace {namespace:?} and the date {date}"
+                    "it names the workspace {workspace:?} and the date {date}"
                 )
             }
             DamageReason::Rule(rule) => f.write_str(rule),
@@ -98,7 +98,7 @@ pub enum LastWrites {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Fold {
-    pub namespace: String,
+    pub workspace: String,
     pub date: Date,
     /// The last record's `seq`; 0 for a date with no journal.
     pub last_seq: u32,
@@ -117,9 +117,9 @@ pub struct Reprint {
 }
 
 impl Fold {
-    pub fn new(namespace: impl Into<String>, date: Date) -> Self {
+    pub fn new(workspace: impl Into<String>, date: Date) -> Self {
         Self {
-            namespace: namespace.into(),
+            workspace: workspace.into(),
             date,
             last_seq: 0,
             live: BTreeMap::new(),
@@ -181,9 +181,9 @@ impl Fold {
                 if started.schema != SCHEMA {
                     return Err(rule(format!("schema {} is not {SCHEMA}", started.schema)));
                 }
-                if started.namespace != self.namespace || started.date != self.date {
+                if started.workspace != self.workspace || started.date != self.date {
                     return Err(DamageReason::OtherFolder {
-                        namespace: started.namespace.clone(),
+                        workspace: started.workspace.clone(),
                         date: started.date,
                     });
                 }

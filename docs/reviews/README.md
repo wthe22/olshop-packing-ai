@@ -7,7 +7,7 @@ round:
 |---|---|
 | `label.md` | LABEL: reading labels and slips, couriers, label groups, the summary PDF |
 | `rules.md` | RULES: the sort rules and the filter language |
-| `app.md` | APP: batches, namespaces, the data and the journal, revert and amend, reprint, the program folder |
+| `app.md` | APP: batches, workspaces, the data and the journal, revert and amend, reprint, the program folder |
 | `ui.md` | UI: the window and every screen |
 
 An item is `R-<SCOPE>-n` (for example `R-UI-8`), written as the present state and the target: what the

@@ -1,5 +1,5 @@
-//! The search index (reprint.md): every order of a namespace's live batches, folded from every
-//! journal of the namespace, with the fields a filter reads and its trace back to the input page.
+//! The search index (reprint.md): every order of a workspace's live batches, folded from every
+//! journal of the workspace, with the fields a filter reads and its trace back to the input page.
 //! It is only read: every decision is still taken from a date's own fold.
 
 use std::collections::BTreeMap;
@@ -14,7 +14,7 @@ use crate::StoreError;
 use crate::date::DateFolder;
 use crate::fold::{Damage, Fold};
 use crate::journal::Journal;
-use crate::namespaces::dates;
+use crate::workspaces::dates;
 
 /// One saved order as Search finds it.
 #[derive(Clone, Debug, PartialEq)]
@@ -70,7 +70,7 @@ impl FilterFields for IndexedOrder {
     }
 }
 
-/// The orders of every date of one namespace, by date, each date in printing order.
+/// The orders of every date of one workspace, by date, each date in printing order.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SearchIndex {
     dates: BTreeMap<Date, Vec<IndexedOrder>>,
@@ -79,12 +79,12 @@ pub struct SearchIndex {
 }
 
 impl SearchIndex {
-    /// Fold every journal of `namespace`. Nothing is written: a torn tail or `.partial/` waits for
+    /// Fold every journal of `workspace`. Nothing is written: a torn tail or `.partial/` waits for
     /// the date's own open.
-    pub fn build(data_dir: &Path, namespace: &str) -> Result<Self, StoreError> {
+    pub fn build(data_dir: &Path, workspace: &str) -> Result<Self, StoreError> {
         let mut index = SearchIndex::default();
-        for date in dates(data_dir, namespace)? {
-            let journal = Journal::open(&DateFolder::new(data_dir, namespace, date))?;
+        for date in dates(data_dir, workspace)? {
+            let journal = Journal::open(&DateFolder::new(data_dir, workspace, date))?;
             match journal.damage() {
                 Some(damage) => {
                     index.damaged.insert(date, damage.clone());

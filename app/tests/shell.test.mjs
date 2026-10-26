@@ -11,17 +11,17 @@ import { Shell, backend, overview, read } from "./shellKit.mjs";
 import { texts } from "../src/texts.ts";
 
 
-test("starting the shell loads the folder, the namespace, the day and the day's overview", async () => {
+test("starting the shell loads the folder, the workspace, the day and the day's overview", async () => {
   const calls = useBackend(
     backend({
       start_info: () => ({
         today: "2026-10-07",
         exe_dir: "C:/Packing",
         data_folder: "C:/Data",
-        namespace: "Toko Contoh",
+        workspace: "Toko Contoh",
         version: "0.1",
       }),
-      namespaces_list: () => ({ dates: [{ date: "2026-10-07" }, { date: "2026-10-06" }] }),
+      workspaces_list: () => ({ dates: [{ date: "2026-10-07" }, { date: "2026-10-06" }] }),
       about: () => ({ version: "0.1", pdfium: "140.0", schema: "1.0" }),
     }),
   );
@@ -39,14 +39,14 @@ test("starting the shell loads the folder, the namespace, the day and the day's 
   assert.equal(shell.needsFolder, false, "the start prompt is gone");
   assert.deepEqual(shell.panel.dates.map((row) => row.date), ["2026-10-07", "2026-10-06"]);
   assert.equal(shell.overview.totals.batches, 2, "the overview is today's");
-  assert.equal(shell.namespace, "Toko Contoh");
-  assert.equal(shell.needsNamespace, false);
+  assert.equal(shell.workspace, "Toko Contoh");
+  assert.equal(shell.needsWorkspace, false);
   assert.equal(shell.about.pdfium, "140.0");
   assert.equal(shell.error, "");
   assert.equal(shell.overlay, null);
   assert.deepEqual(
     calls.map((call) => call.command),
-    ["start_info", "namespaces_list", "day_overview", "about"],
+    ["start_info", "workspaces_list", "day_overview", "about"],
   );
   assert.deepEqual(calls[2].args, { day: "2026-10-07" });
 
@@ -59,36 +59,36 @@ test("starting the shell loads the folder, the namespace, the day and the day's 
   assert.equal(prompt.day, "2026-10-08");
   assert.equal(noFolder.length, 1, "no folder: only `start_info` was asked");
 
-  // A folder without an namespace: the first namespace's name is asked, then the day opens.
+  // A folder without a workspace: the first workspace's name is asked, then the day opens.
   const named = useBackend(
     backend({
-      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", namespace: null, version: "0.2" }),
-      namespace_new: (args) => args.name,
+      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", workspace: null, version: "0.2" }),
+      workspace_new: (args) => args.name,
     }),
   );
   const first = new Shell();
   await first.load();
-  assert.equal(first.needsNamespace, true, "the namespace prompt shows");
+  assert.equal(first.needsWorkspace, true, "the workspace prompt shows");
   assert.deepEqual(named.map((call) => call.command), ["start_info"], "and no day is loaded");
-  await first.nameNamespace("Toko Contoh");
-  assert.equal(first.needsNamespace, false);
-  assert.equal(first.namespace, "Toko Contoh");
-  assert.deepEqual(named[1], { command: "namespace_new", args: { name: "Toko Contoh" } });
+  await first.nameWorkspace("Toko Contoh");
+  assert.equal(first.needsWorkspace, false);
+  assert.equal(first.workspace, "Toko Contoh");
+  assert.deepEqual(named[1], { command: "workspace_new", args: { name: "Toko Contoh" } });
   assert.equal(first.overview.totals.batches, 2, "the day opens");
 
   // A name the folder cannot take keeps the prompt and says why.
   useBackend(
     backend({
-      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", namespace: null, version: "0.2" }),
-      namespace_new: () => {
+      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", workspace: null, version: "0.2" }),
+      workspace_new: () => {
         throw "the name is taken";
       },
     }),
   );
   const refused = new Shell();
   await refused.load();
-  await refused.nameNamespace("Toko Contoh");
-  assert.equal(refused.needsNamespace, true);
+  await refused.nameWorkspace("Toko Contoh");
+  assert.equal(refused.needsWorkspace, true);
   assert.equal(refused.error, "the name is taken");
 });
 
@@ -192,48 +192,48 @@ test("leaving an open batch asks before dropping it, and a refused answer stays"
 });
 
 
-test("the panel opens another date and namespace, and a new namespace on today", async () => {
+test("the panel opens another date and workspace, and a new workspace on today", async () => {
   const calls = useBackend(
     backend({
-      namespace_open: () => undefined,
-      namespace_new: (args) => {
-        if (args.name === "Toko Contoh") throw "A namespace Toko Contoh is already there.";
+      workspace_open: () => undefined,
+      workspace_new: (args) => {
+        if (args.name === "Toko Contoh") throw "A workspace Toko Contoh is already there.";
         return args.name;
       },
     }),
   );
   const shell = new Shell();
-  shell.namespace = "Toko Contoh";
+  shell.workspace = "Toko Contoh";
   shell.today = "2026-10-07";
   shell.day = "2026-10-05";
 
-  await shell.openNamespace("Toko Contoh");
-  assert.equal(calls.length, 0, "the open namespace is not opened again");
-  await shell.openNamespace("Toko Lain");
-  assert.equal(shell.namespace, "Toko Lain");
-  assert.equal(shell.day, "2026-10-07", "another namespace opens on today");
+  await shell.openWorkspace("Toko Contoh");
+  assert.equal(calls.length, 0, "the open workspace is not opened again");
+  await shell.openWorkspace("Toko Lain");
+  assert.equal(shell.workspace, "Toko Lain");
+  assert.equal(shell.day, "2026-10-07", "another workspace opens on today");
   assert.deepEqual(
     calls.map((call) => call.command).sort(),
-    ["day_overview", "namespace_open", "namespaces_list"],
+    ["day_overview", "workspace_open", "workspaces_list"],
   );
 
-  assert.equal(await shell.newNamespace("Toko Contoh"), "A namespace Toko Contoh is already there.");
-  assert.equal(shell.namespace, "Toko Lain", "a refused name changes nothing");
+  assert.equal(await shell.newWorkspace("Toko Contoh"), "A workspace Toko Contoh is already there.");
+  assert.equal(shell.workspace, "Toko Lain", "a refused name changes nothing");
   shell.day = "2026-10-05";
-  assert.equal(await shell.newNamespace("Toko Baru"), null);
-  assert.equal(shell.namespace, "Toko Baru");
+  assert.equal(await shell.newWorkspace("Toko Baru"), null);
+  assert.equal(shell.workspace, "Toko Baru");
   assert.equal(shell.day, "2026-10-07");
 
   useBackend(
     backend({
-      namespace_open: () => {
-        throw "Toko Hilang is not a namespace of this data folder.";
+      workspace_open: () => {
+        throw "Toko Hilang is not a workspace of this data folder.";
       },
     }),
   );
-  await shell.openNamespace("Toko Hilang");
-  assert.equal(shell.namespace, "Toko Baru", "a namespace that cannot open changes nothing");
-  assert.equal(shell.error, "Toko Hilang is not a namespace of this data folder.");
+  await shell.openWorkspace("Toko Hilang");
+  assert.equal(shell.workspace, "Toko Baru", "a workspace that cannot open changes nothing");
+  assert.equal(shell.error, "Toko Hilang is not a workspace of this data folder.");
 
   assert.equal(shell.panelShown, true, "the panel is shown at every start");
   shell.togglePanel();

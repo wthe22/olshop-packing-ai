@@ -133,7 +133,7 @@ fn the_facts_then_the_groups_then_the_picks_each_from_a_new_page() {
         &pdfium,
         &path,
         &SummaryFacts {
-            namespace: "Toko Contoh",
+            workspace: "Toko Contoh",
             date: date(2026, 10, 7),
             record: &record,
             printed: "09:12",

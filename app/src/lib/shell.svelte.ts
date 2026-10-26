@@ -1,4 +1,4 @@
-// The app shell's state and commands: it finds the data folder and the namespace, keeps the current
+// The app shell's state and commands: it finds the data folder and the workspace, keeps the current
 // day and screen, routes the Tauri commands, and decides which overlay opens over the current
 // screen (an open draft is kept). The markup is `+page.svelte` and the overlay dialogs are
 // `Overlays.svelte`; nothing is decided there.
@@ -25,8 +25,8 @@ export type OverlayId = "search" | "sort-rules" | "settings";
 export class Shell {
   ready = $state(false);
   needsFolder = $state(true);
-  // The data folder holds no namespace yet: the first namespace's name is asked.
-  needsNamespace = $state(false);
+  // The data folder holds no workspace yet: the first workspace's name is asked.
+  needsWorkspace = $state(false);
   busy = $state(false);
   error = $state("");
 
@@ -34,7 +34,7 @@ export class Shell {
   day = $state("");
   exeDir = $state("");
   dataFolder = $state<string | null>(null);
-  namespace = $state<string | null>(null);
+  workspace = $state<string | null>(null);
   // The theme `packing-settings.toml` names; `+page.svelte` shows it.
   theme = $state<Theme>("system");
   // The program's shown version, for the title bar's brand text; the OS
@@ -42,7 +42,7 @@ export class Shell {
   version = $state("");
   overview = $state<dayData.DayOverview | null>(null);
   about = $state<start.About | null>(null);
-  // The side panel: the namespaces and the open one's dates. It is shown at every start.
+  // The side panel: the workspaces and the open one's dates. It is shown at every start.
   panel = $state<panelData.PanelView | null>(null);
   panelShown = $state(true);
   private panelTimer: ReturnType<typeof setTimeout> | undefined;
@@ -77,7 +77,7 @@ export class Shell {
     this.amendBatch !== null && this.readResult !== null ? this.readResult.plan.sort_rule : null,
   );
 
-  // Start the shell: the data folder, the namespace, the day and About.
+  // Start the shell: the data folder, the workspace, the day and About.
   load = async () => {
     try {
       const info = await start.startInfo();
@@ -85,7 +85,7 @@ export class Shell {
       this.day = info.today;
       this.exeDir = info.exe_dir;
       this.dataFolder = info.data_folder;
-      this.namespace = info.namespace;
+      this.workspace = info.workspace;
       this.version = info.version;
       this.theme = info.theme;
       this.needsFolder = info.data_folder === null;
@@ -107,8 +107,8 @@ export class Shell {
   };
 
   private afterFolder = async () => {
-    this.needsNamespace = this.namespace === null;
-    if (this.needsNamespace) return;
+    this.needsWorkspace = this.workspace === null;
+    if (this.needsWorkspace) return;
     await this.refreshPanel();
     await this.refreshOverview();
     try {
@@ -131,7 +131,7 @@ export class Shell {
   refreshPanel = async () => {
     clearTimeout(this.panelTimer);
     try {
-      this.panel = await panelData.namespacesList();
+      this.panel = await panelData.workspacesList();
     } catch (e) {
       this.error = String(e);
       return;
@@ -139,16 +139,16 @@ export class Shell {
     if (this.panel.loading) this.panelTimer = setTimeout(this.refreshPanel, 500);
   };
 
-  // The data folder's namespace, after a folder is chosen: the one the start opened, if any.
-  private namespaceOfFolder = async () => {
-    this.namespace = (await start.startInfo()).namespace ?? null;
+  // The data folder's workspace, after a folder is chosen: the one the start opened, if any.
+  private workspaceOfFolder = async () => {
+    this.workspace = (await start.startInfo()).workspace ?? null;
   };
 
   useProgramFolder = async () => {
     this.busy = true;
     try {
       this.dataFolder = await start.useProgramFolder();
-      await this.namespaceOfFolder();
+      await this.workspaceOfFolder();
       this.needsFolder = false;
       await this.afterFolder();
     } catch (e) {
@@ -163,7 +163,7 @@ export class Shell {
     this.busy = true;
     try {
       this.dataFolder = await start.chooseDataFolder(picked);
-      await this.namespaceOfFolder();
+      await this.workspaceOfFolder();
       this.needsFolder = false;
       await this.afterFolder();
     } catch (e) {
@@ -172,11 +172,11 @@ export class Shell {
     this.busy = false;
   };
 
-  // The first namespace's name: its folder is made and today's date opens.
-  nameNamespace = async (name: string) => {
+  // The first workspace's name: its folder is made and today's date opens.
+  nameWorkspace = async (name: string) => {
     this.busy = true;
     try {
-      this.namespace = await start.namespaceNew(name);
+      this.workspace = await start.workspaceNew(name);
       this.error = "";
       await this.afterFolder();
     } catch (e) {
@@ -191,7 +191,7 @@ export class Shell {
     if (!(await confirm(texts.settings.confirmChange(picked, this.dataFolder ?? "")))) return;
     try {
       this.dataFolder = await start.chooseDataFolder(picked);
-      await this.namespaceOfFolder();
+      await this.workspaceOfFolder();
       await this.afterFolder();
     } catch (e) {
       this.error = String(e);
@@ -289,25 +289,25 @@ export class Shell {
     await this.refreshOverview();
   };
 
-  // Another namespace of the panel, opened on today's date.
-  openNamespace = async (name: string) => {
-    if (name === this.namespace || !(await this.leaveBatch())) return;
+  // Another workspace of the panel, opened on today's date.
+  openWorkspace = async (name: string) => {
+    if (name === this.workspace || !(await this.leaveBatch())) return;
     try {
-      await panelData.namespaceOpen(name);
+      await panelData.workspaceOpen(name);
     } catch (e) {
       this.error = String(e);
       return;
     }
-    this.namespace = name;
+    this.workspace = name;
     await this.openToday();
   };
 
-  // **+ New namespace**: its folder is made and it opens on today's date. A refused name returns
+  // **+ New workspace**: its folder is made and it opens on today's date. A refused name returns
   // why, for the line beside the field.
-  newNamespace = async (name: string): Promise<string | null> => {
+  newWorkspace = async (name: string): Promise<string | null> => {
     if (!(await this.leaveBatch())) return null;
     try {
-      this.namespace = await start.namespaceNew(name);
+      this.workspace = await start.workspaceNew(name);
     } catch (e) {
       return String(e);
     }

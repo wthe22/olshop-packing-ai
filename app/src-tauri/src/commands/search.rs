@@ -1,4 +1,4 @@
-//! Search and Reprint (search.md, reprint.md): saved orders of the open namespace found by a
+//! Search and Reprint (search.md, reprint.md): saved orders of the open workspace found by a
 //! filter on the search index, each with its trace line, and one PDF of the chosen orders' pages
 //! written into today's date.
 
@@ -65,16 +65,16 @@ pub(crate) fn search(
         Scope::Day => Some(date_of(day)?),
         Scope::All => None,
     };
-    let (data_dir, namespace) = state.with_data(|data| {
-        let namespace = data
-            .namespace
+    let (data_dir, workspace) = state.with_data(|data| {
+        let workspace = data
+            .workspace
             .clone()
-            .ok_or_else(|| "No namespace is open yet.".to_string())?;
-        Ok((data.dir.clone(), namespace))
+            .ok_or_else(|| "No workspace is open yet.".to_string())?;
+        Ok((data.dir.clone(), workspace))
     })?;
     let output = |date: Date| {
         data_dir
-            .join(&namespace)
+            .join(&workspace)
             .join(date.to_string())
             .join("output")
     };

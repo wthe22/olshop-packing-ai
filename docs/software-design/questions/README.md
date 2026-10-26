@@ -6,6 +6,8 @@ blocked.
 
 A question is removed once its answer is written into the design files and recorded in
 [decisions/](../decisions/README.md). A new question takes the next free number of its scope (the last ones
-used: `Q-LABEL-11`, `Q-APP-11`, `Q-UI-8`, `Q-RULES-2`); numbers are never reused.
+used: `Q-LABEL-12`, `Q-APP-11`, `Q-UI-8`, `Q-RULES-2`); numbers are never reused.
 
-No question is open.
+| File | Open questions |
+|---|---|
+| [label.md](label.md) | Q-LABEL-12: what the day summary holds |

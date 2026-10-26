@@ -32,15 +32,15 @@ the label and its packing slip; `orders.csv` is a view the app writes.
 
 **Applies to.** [reading](../labels/reading.md), [filter language](../rules-file/conditions.md).
 
-## D-APP-5 — A namespace replaces the session
+## D-APP-5 — A workspace replaces the session
 
-**Decision.** The session (a day plus an optional name) is replaced by the namespace: one folder per namespace,
-one folder per date inside it. Batch numbers run through a namespace and date. There is no session name and
+**Decision.** The session (a day plus an optional name) is replaced by the workspace: one folder per workspace,
+one folder per date inside it. Batch numbers run through a workspace and date. There is no session name and
 no *Main*.
 
 **Why.** The owner's choice: the session concept does not suit this workflow.
 
-**Applies to.** [namespaces](../app/namespaces.md), [data](../data/README.md).
+**Applies to.** [workspaces](../app/workspaces.md), [data](../data/README.md).
 
 ## D-APP-6 — The courier list is part of packing-workflows.toml
 
@@ -53,7 +53,7 @@ no `couriers.toml`. This replaces D-LABEL-1 (one courier file in the data folder
 
 ## D-APP-7 — The journal is the only truth
 
-**Decision.** Each namespace and date has one `journal.jsonl` of sealed records; a commit is one append and
+**Decision.** Each workspace and date has one `journal.jsonl` of sealed records; a commit is one append and
 `sync_all`; a torn last line is cut and recorded; damage stops the date. It replaces `state.json`.
 
 **Why.** The owner asked for no duplicated truth, ACID without a database, and every value traceable to its

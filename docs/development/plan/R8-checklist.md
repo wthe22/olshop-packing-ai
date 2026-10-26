@@ -5,10 +5,10 @@ with real downloads, in this order. A finding goes into [reviews/ui.md](../../re
 [reviews/app.md](../../reviews/app.md) as `R-<SCOPE>-n`: what was done, what happened, what was expected.
 
 1. **Start.** On a fresh copy: *Where should the data be kept?* → **Use the folder next to the
-   program**, then name the first namespace. The Day screen of today opens; the panel lists the
-   namespace and today. A data folder of v0.1 shows the line *This folder also holds data of Packing
+   program**, then name the first workspace. The Day screen of today opens; the panel lists the
+   workspace and today. A data folder of v0.1 shows the line *This folder also holds data of Packing
    v0.1* and is not changed.
-2. **Panel.** **+ New namespace**, switch between the two, open an older date and today again; **«**
+2. **Panel.** **+ New workspace**, switch between the two, open an older date and today again; **«**
    and `Ctrl+B` hide and show it; **⋯ → Open folder** on a date that has batches.
 3. **New batch.** **Add files…** and a drop; *used in batch n* on a file read before; **×**; the sort
    rule preselected; **Read labels** with its progress and **Cancel**.
@@ -32,5 +32,5 @@ with real downloads, in this order. A finding goes into [reviews/ui.md](../../re
     filter in boxes and in the text view; the counts *In batch n* with a batch open; **Save**, then
     `packing-workflows.toml` keeps its comments; **Edit file as text**.
 11. **Settings.** The data folder, **Change…**, *About* reads *Version v0.2*.
-12. **The words.** Whether *namespace*, *label group*, *order content*, *group PDF* and *summary PDF*
+12. **The words.** Whether *workspace*, *label group*, *order content*, *group PDF* and *summary PDF*
     read well on the screens and the printed summary ([D-LABEL-15](../../software-design/decisions/label.md)).

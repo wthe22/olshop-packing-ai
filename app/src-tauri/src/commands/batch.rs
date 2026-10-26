@@ -61,7 +61,7 @@ pub(crate) fn checked(state: &AppState, paths: &[PathBuf]) -> Result<Vec<FileChe
     })
 }
 
-/// The sort rules of `packing-workflows.toml`, and the one to preselect: the rule of the namespace's
+/// The sort rules of `packing-workflows.toml`, and the one to preselect: the rule of the workspace's
 /// newest batch while it exists, else the first.
 #[derive(Serialize)]
 pub struct SortRulesView {

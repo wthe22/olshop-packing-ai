@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The first namespace's name: shown when the data folder holds no namespace yet. The name becomes the
-  // namespace's folder in the data folder.
+  // The first workspace's name: shown when the data folder holds no workspace yet. The name becomes the
+  // workspace's folder in the data folder.
   import { texts } from "../texts";
   import StartCard from "./StartCard.svelte";
 
@@ -21,17 +21,17 @@
   $effect(() => field?.focus());
 </script>
 
-<StartCard title={texts.namespace.title} {version}>
-  <p class="explain">{texts.namespace.ask}</p>
+<StartCard title={texts.workspace.title} {version}>
+  <p class="explain">{texts.workspace.ask}</p>
   <form
     onsubmit={(event) => {
       event.preventDefault();
       if (name.trim()) onName(name.trim());
     }}
   >
-    <input bind:this={field} bind:value={name} placeholder={texts.namespace.placeholder} maxlength="40" />
+    <input bind:this={field} bind:value={name} placeholder={texts.workspace.placeholder} maxlength="40" />
     <button class="primary" type="submit" disabled={busy || !name.trim()}
-      >{texts.namespace.create}</button
+      >{texts.workspace.create}</button
     >
   </form>
   {#if error}

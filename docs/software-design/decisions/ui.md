@@ -18,9 +18,9 @@ Where a record names a former question (`Q-…`), the owner accepted its default
 
 **Applies to.** [Settings](../ui/settings.md).
 
-## D-UI-3 — Search: this day by default, or all days of the namespace
+## D-UI-3 — Search: this day by default, or all days of the workspace
 
-**Decision.** Search's scope is *This day* (the default) or *All days* of the open namespace (Q-UI-3). Every saved
+**Decision.** Search's scope is *This day* (the default) or *All days* of the open workspace (Q-UI-3). Every saved
 order is found by every field, since the journals keep them all.
 
 **Why.** The open date covers daily use; a reprint of an older label needs the other dates.
@@ -36,14 +36,14 @@ groups yet: all orders go into one PDF**; the Day screen does not (Q-UI-4).
 
 **Applies to.** [Sort rules](../ui/sort-rules.md), [Plan](../ui/plan.md).
 
-## D-UI-5 — A side panel of the namespace's dates
+## D-UI-5 — A side panel of the workspace's dates
 
-**Decision.** A panel that can be hidden lists the open namespace's dates, newest first, months folded except the
+**Decision.** A panel that can be hidden lists the open workspace's dates, newest first, months folded except the
 open and the current one (Q-UI-5); it replaces the title bar's day stepper (Q-UI-7). A row's menu offers **Open
-folder** only: a date has no name, and the app renames no namespace, whose name is in its journals (Q-UI-6 asked
+folder** only: a date has no name, and the app renames no workspace, whose name is in its journals (Q-UI-6 asked
 about renaming sessions, which D-APP-5 removed).
 
-**Why.** The sessions panel's defaults, carried over to namespaces and dates.
+**Why.** The sessions panel's defaults, carried over to workspaces and dates.
 
 **Applies to.** [Panel](../ui/panel.md).
 

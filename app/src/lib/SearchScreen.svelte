@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Search: saved orders of the open namespace found by a filter made with the boxes, over *This
+  // Search: saved orders of the open workspace found by a filter made with the boxes, over *This
   // day* or *All days*, each row with its trace line; the ticked rows are reprinted into one PDF.
   // The state and the commands are `search.svelte.ts`.
   import { Search, itemsText } from "./search.svelte";

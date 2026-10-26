@@ -90,7 +90,7 @@ pub struct Totals {
 #[derive(Serialize)]
 pub struct DayOverview {
     day: String,
-    namespace: String,
+    workspace: String,
     batches: Vec<BatchView>,
     totals: Totals,
     /// What keeps a part of the date from being used: a damaged journal, an input missing or
@@ -141,7 +141,7 @@ pub(super) fn overview(day: &OpenDay, old_data: bool) -> DayOverview {
     }
     DayOverview {
         day: fold.date.to_string(),
-        namespace: fold.namespace.clone(),
+        workspace: fold.workspace.clone(),
         totals: Totals {
             batches: batches.len(),
             orders: batches.iter().map(|b| b.orders).sum(),
@@ -260,7 +260,7 @@ fn left_out(saved: &BatchSaved) -> Vec<LeftOutView> {
         .collect()
 }
 
-/// Whether the data folder holds what a v0.1 data folder holds (namespaces.md).
+/// Whether the data folder holds what a v0.1 data folder holds (workspaces.md).
 pub(super) fn holds_v01_data(data_dir: &Path) -> bool {
     [
         "labels",

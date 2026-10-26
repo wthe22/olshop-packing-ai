@@ -6,8 +6,8 @@ IDs and counts.
 
 | Screen | Content |
 |---|---|
-| [Panel](panel.md) | The side panel: the namespace, its dates, **+ New namespace** |
-| [Day](day.md) | The start screen: the batches of the open date, printed ticks, revert, amend, restore, the day's reprints |
+| [Panel](panel.md) | The side panel: the workspace, its dates, **+ New workspace** |
+| [Day](day.md) | The start screen: the batches of the open date, printed ticks, revert, amend, restore, the day's reprints, the day summary |
 | [New batch](new-batch.md) | Choosing the label files and the sort rule, reading them, the logo prompt |
 | [Repeated orders](duplicates.md) | The orders that appear more than once in a batch, grouped, and the copy that stays |
 | [Plan](plan.md) | The label groups, the per-batch changes and Save |
@@ -15,7 +15,7 @@ IDs and counts.
 | [Sort rules](sort-rules.md) | The boxes editor for the sort rules of `packing-workflows.toml` |
 | [Search](search.md) | Finding saved orders, their trace, and **Reprint** |
 | [Settings](settings.md) | The data folder and *About* |
-| [Start](start.md) | The first start, the lock, the first namespace |
+| [Start](start.md) | The first start, the lock, the first workspace |
 
 ## Daily use in one picture
 
@@ -24,7 +24,7 @@ IDs and counts.
   ▲                    choose files, sort rule                    adjust groups                 │
   └──────────────────────────────── back to the Day screen, new batch shown ◄───────────────────┘
  From the Day screen: [Open] a file to print it · the printed tick · [Amend] / [Revert] the newest batch ·
- [Search] (and Reprint) · [Sort rules] · [Settings] · the panel: another date or namespace
+ [Search] (and Reprint) · [Sort rules] · [Settings] · the panel: another date or workspace
  Between (reading…) and Plan: the logo prompt, and Repeated orders when an order appears twice.
 ```
 
@@ -44,7 +44,7 @@ A normal batch: **New batch** → **Add files…** → **Read labels** → (the 
 - **[▯]** shows or hides the [panel](panel.md) (also `Ctrl+B`).
 - **Packing v0.2** is the window title and the title bar of every screen: the program's name and its version
   from the one place ([Settings › The version](settings.md#the-version)).
-- **The namespace › the date** in the title bar: where everything is saved. Changing the namespace or the
+- **The workspace › the date** in the title bar: where everything is saved. Changing the workspace or the
   date while a draft is open asks first ("Discard the batch being prepared?").
 - **Search**, **Sort rules** and **Settings** open over the current screen; the **×**, a click beside it or
   `Esc` returns to it (an open draft is kept and recounted).

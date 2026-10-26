@@ -26,18 +26,18 @@ moves the program and all its data along.
 
 The first time, the app asks **Where should the data be kept?**
 
-- **Use the folder next to the program** keeps the data in `data` beside the program. Choose this for a
+- **Use the folder next to the program** keeps the data in `packing-data` beside the program. Choose this for a
   normal setup.
 - **Choose a folder…** picks another folder, e.g. when the program folder cannot be written.
 
-Then it asks to **name the first namespace**. A namespace keeps its batches and dates apart from every
-other namespace — for example one per shop owner. Type a name (e.g. *Toko Contoh*) and press
-**Use this name**; the Day screen of today opens. More namespaces are added in the panel.
+Then it asks to **name the first workspace**. A workspace keeps its batches and dates apart from every
+other workspace — for example one per shop owner. Type a name (e.g. *Toko Contoh*) and press
+**Use this name**; the Day screen of today opens. More workspaces are added in the panel.
 
 ## A new version of the program
 
 Close the app, then copy the new `Packing.exe` and `pdfium.dll` over the old ones. Your two files and
-the `data` folder stay as they are.
+the `packing-data` folder stay as they are.
 
 A data folder used by version 0.1 (with `labels\`, `state.json`, `categories.toml`) is not read by this
 version and never deleted: the Day screen says so with **Open folder**.

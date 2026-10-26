@@ -28,7 +28,7 @@ mistake must be avoidable and traceable.
 
 ## D-APP-15 — Search runs on an in-memory index of the journals
 
-**Decision.** The index is built from the namespace's journals when it opens and updated after each commit. It
+**Decision.** The index is built from the workspace's journals when it opens and updated after each commit. It
 is only read; every write decision folds the journal.
 
 **Why.** Fast search over every date, and still one truth.
@@ -45,18 +45,18 @@ scopes and layouts, and their setting, are gone.
 
 **Applies to.** [summary PDF](../labels/summary-pdf.md), [Plan](../ui/plan.md), [Settings](../ui/settings.md).
 
-## D-APP-17 — One namespace per shop owner; v0.1 data is left alone
+## D-APP-17 — One workspace per shop owner; v0.1 data is left alone
 
-**Decision.** A namespace holds one shop owner's labels (Q-APP-10); all of that shop owner's shops share its
-numbers and its guard. The screens, the code and the documents call it a **namespace**, never an owner (the
+**Decision.** A workspace holds one shop owner's labels (Q-APP-10); all of that shop owner's shops share its
+numbers and its guard. The screens, the code and the documents call it a **workspace**, never an owner (the
 owner's word, 2026-10-26).
-Two namespaces share nothing but the files beside the program (Q-APP-5: nothing shared). A v0.1 data folder is
+Two workspaces share nothing but the files beside the program (Q-APP-5: nothing shared). A v0.1 data folder is
 not read and never deleted; the app says what it found. Q-APP-4 (session folders) has no subject any more.
 
 **Why.** The owner's draft: a shop owner may have several shops. "Owner" on screen was confused with the
 owner of the app.
 
-**Applies to.** [namespaces](../app/namespaces.md).
+**Applies to.** [workspaces](../app/workspaces.md).
 
 ## D-APP-18 — A finding of the verifier stops the save
 

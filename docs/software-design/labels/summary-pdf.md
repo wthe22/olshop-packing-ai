@@ -16,7 +16,7 @@ Summary · Toko Contoh · 2026-10-07 · batch 2                                 
 ─────────────────────────────────────────────────────────────────────────────────────────────
 ```
 
-- Header `Summary · <namespace> · <date> · batch <b>`, then `<orders> orders · <units> units · <groups> groups ·
+- Header `Summary · <workspace> · <date> · batch <b>`, then `<orders> orders · <units> units · <groups> groups ·
   printed hh:mm`, and `page x/y`.
 - The header takes the top 23 mm: the title (13 pt bold) and `page x/y` in the first 7 mm, the counts line
   (9.5 pt) in the next 5 mm, then a 1 mm gap. The body starts at 23 mm on every page.

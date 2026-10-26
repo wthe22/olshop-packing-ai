@@ -187,7 +187,7 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
     let saved = |n| RecordBody::BatchSaved(batch(n, false, Vec::new()));
     let other = RecordBody::Started(packing_engine::record::Started {
         schema: "1.0".into(),
-        namespace: "Toko Lain".into(),
+        workspace: "Toko Lain".into(),
         date: folder.date(),
     });
     let mut changed_line = String::from_utf8(packing_store::encode_line(&record(2, saved(1))))
@@ -227,7 +227,7 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
             2,
         ),
         ("no started first", vec![record(1, saved(1))], Vec::new(), 1),
-        ("another namespace", vec![record(1, other)], Vec::new(), 1),
+        ("another workspace", vec![record(1, other)], Vec::new(), 1),
     ];
     for (what, records, tail, line) in cases {
         write_journal(&folder, &records, &tail);
@@ -237,7 +237,7 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
             .damage()
             .unwrap_or_else(|| panic!("{what}: no damage"));
         assert_eq!(damage.line, line, "{what}: {damage}");
-        if what == "another namespace" {
+        if what == "another workspace" {
             assert!(
                 matches!(damage.reason, DamageReason::OtherFolder { .. }),
                 "{what}"

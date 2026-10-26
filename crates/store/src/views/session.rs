@@ -17,7 +17,7 @@ use crate::fold::{Fold, LiveBatch};
 #[derive(Serialize)]
 struct Root<'a> {
     schema: &'static str,
-    namespace: &'a str,
+    workspace: &'a str,
     date: Date,
     journal_seq: u32,
     input_pdfs: Numbered<LabelPdf<'a>>,
@@ -98,7 +98,7 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
     }
     let root = Root {
         schema: SCHEMA,
-        namespace: &fold.namespace,
+        workspace: &fold.workspace,
         date: fold.date,
         journal_seq: fold.last_seq,
         input_pdfs: input_pdfs(fold),

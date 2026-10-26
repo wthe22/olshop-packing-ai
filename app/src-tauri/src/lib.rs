@@ -28,11 +28,11 @@ pub(crate) use index::Index;
 /// The app version the journal's records carry.
 pub(crate) const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// The data folder in use, locked; the namespace open in it and that namespace's open date.
+/// The data folder in use, locked; the workspace open in it and that workspace's open date.
 pub(crate) struct Data {
     pub dir: PathBuf,
     _lock: DataLock,
-    pub namespace: Option<String>,
+    pub workspace: Option<String>,
     pub day: Option<OpenDay>,
 }
 
@@ -42,23 +42,23 @@ impl Data {
         Ok(Self {
             dir,
             _lock: lock,
-            namespace: None,
+            workspace: None,
             day: None,
         })
     }
 
-    /// The namespace's `date`, opened (folded and checked) unless it is the one open.
+    /// The workspace's `date`, opened (folded and checked) unless it is the one open.
     pub(crate) fn open_day(&mut self, date: Date) -> Result<&mut OpenDay, String> {
-        let namespace = self
-            .namespace
+        let workspace = self
+            .workspace
             .clone()
-            .ok_or_else(|| "No namespace is open yet.".to_string())?;
+            .ok_or_else(|| "No workspace is open yet.".to_string())?;
         let open = self
             .day
             .as_ref()
-            .is_some_and(|day| day.folder.namespace() == namespace && day.folder.date() == date);
+            .is_some_and(|day| day.folder.workspace() == workspace && day.folder.date() == date);
         if !open {
-            let folder = DateFolder::new(&self.dir, &namespace, date);
+            let folder = DateFolder::new(&self.dir, &workspace, date);
             let opened = open_date(&folder).map_err(|error| error.to_string())?;
             self.day = Some(OpenDay {
                 folder,
@@ -71,7 +71,7 @@ impl Data {
     }
 }
 
-/// A date of the open namespace, folded, and what its open-time checks found.
+/// A date of the open workspace, folded, and what its open-time checks found.
 pub(crate) struct OpenDay {
     pub folder: DateFolder,
     pub journal: Journal,
@@ -214,7 +214,7 @@ impl AppState {
         *self.cancel.lock().unwrap() = None;
     }
 
-    /// The search index of the open namespace.
+    /// The search index of the open workspace.
     pub(crate) fn index(&self) -> &Index {
         &self.index
     }
@@ -280,7 +280,7 @@ pub fn run() {
             commands::start::start_info,
             commands::start::use_program_folder,
             commands::start::choose_data_folder,
-            commands::start::namespace_new,
+            commands::start::workspace_new,
             commands::start::about,
             commands::start::set_theme,
             commands::start::open_path,
@@ -289,8 +289,8 @@ pub fn run() {
             commands::day::set_printed,
             commands::day::revert_last,
             commands::day::restore_output,
-            commands::panel::namespaces_list,
-            commands::panel::namespace_open,
+            commands::panel::workspaces_list,
+            commands::panel::workspace_open,
             commands::search::search_orders,
             commands::search::reprint,
             commands::batch::check_files,

@@ -21,7 +21,7 @@ use crate::written::{copy_pages, described, partial};
 pub struct ReprintRequest<'a> {
     pub worker: &'a PdfWorker,
     pub data_dir: &'a Path,
-    /// Today's date of the namespace: the reprint is written and recorded there.
+    /// Today's date of the workspace: the reprint is written and recorded there.
     pub today: &'a DateFolder,
     /// Each order with the date it was saved on.
     pub orders: &'a [(Date, OrderId)],
@@ -47,7 +47,7 @@ pub fn reprint(
     request: &ReprintRequest<'_>,
     journal: &mut Journal,
 ) -> Result<ReprintOutcome, BatchError> {
-    let namespace = request.today.namespace();
+    let workspace = request.today.workspace();
     let mut sources = sources(request, journal.fold())?;
     sources.sort_by_key(|source| source.place);
 
@@ -88,7 +88,7 @@ pub fn reprint(
     let findings = verify_reprint(&ReprintCheck {
         journal: &journal.bytes()?,
         append: &pending.bytes,
-        namespace_dir: &request.data_dir.join(namespace),
+        workspace_dir: &request.data_dir.join(workspace),
         output_dir: &packing_store::partial_dir(dir),
     });
     if !findings.is_clean() {
@@ -113,7 +113,7 @@ fn sources(request: &ReprintRequest<'_>, today: &Fold) -> Result<Vec<Source>, Ba
     }
     let mut sources = Vec::new();
     for (date, orders) in by_date {
-        let folder = DateFolder::new(request.data_dir, request.today.namespace(), date);
+        let folder = DateFolder::new(request.data_dir, request.today.workspace(), date);
         let opened;
         let fold = if date == today.date {
             today

@@ -29,7 +29,7 @@ So a second copy right after the first (`A A`) is a repeat, and every page belon
 
 ## 2. Orders already saved
 
-An order saved in a live batch of this namespace and date loses **all** its copies, each recorded as left
+An order saved in a live batch of this workspace and date loses **all** its copies, each recorded as left
 out with the reason `saved_earlier` and the batch that saved it. A repeat of such an order is not asked
 about.
 

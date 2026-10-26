@@ -412,7 +412,7 @@ fn verify_a_reprint(tag: &str, order: &[u32], tamper: impl Fn(&Folder)) -> Findi
     verify_reprint(&ReprintCheck {
         journal: b"",
         append: append.as_bytes(),
-        namespace_dir: &folder.0,
+        workspace_dir: &folder.0,
         output_dir: &folder.partial(),
     })
 }

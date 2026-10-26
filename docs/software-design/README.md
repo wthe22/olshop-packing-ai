@@ -11,7 +11,7 @@ Where a design file disagrees with the business process, the business process wi
 | [requirements.md](requirements.md) | Concepts and the features of the app (`F-<SCOPE>-n`) |
 | [conventions.md](conventions.md) | Naming and identification rules for every design, document and code line |
 | [data/](data/README.md) | The data folder, the journal and its records, the views |
-| [app/](app/README.md) | Scope APP: architecture, commands and start, namespaces, repeated orders, the verifier, search and reprint |
+| [app/](app/README.md) | Scope APP: architecture, commands and start, workspaces, repeated orders, the verifier, search and reprint |
 | [labels/](labels/README.md) | Scope LABEL: reading labels and slips, couriers, label groups and order contents, the summary PDF |
 | [rules-file/](rules-file/README.md) | Scope RULES: `packing-workflows.toml` and the filter language |
 | [ui/](ui/README.md) | Scope UI: the window and every screen |

@@ -1,4 +1,4 @@
-//! The search index of the open namespace (reprint.md): built on its own thread when the namespace
+//! The search index of the open workspace (reprint.md): built on its own thread when the workspace
 //! opens, so the window never waits for it; each commit's date is taken in again from its fold. A
 //! fold that arrives while the build runs is applied when the build ends, so no commit is lost.
 
@@ -17,7 +17,7 @@ enum Built {
 
 #[derive(Default)]
 struct Holder {
-    namespace: String,
+    workspace: String,
     built: Built,
     /// The folds committed while the build ran.
     pending: Vec<Fold>,
@@ -27,19 +27,19 @@ struct Holder {
 pub(crate) struct Index(Arc<Mutex<Holder>>);
 
 impl Index {
-    /// Fold every journal of `namespace` on a thread of its own; the index of another namespace
+    /// Fold every journal of `workspace` on a thread of its own; the index of another workspace
     /// is dropped at once.
-    pub(crate) fn rebuild(&self, data_dir: PathBuf, namespace: String) {
+    pub(crate) fn rebuild(&self, data_dir: PathBuf, workspace: String) {
         *self.0.lock().unwrap() = Holder {
-            namespace: namespace.clone(),
+            workspace: workspace.clone(),
             built: Built::Loading,
             pending: Vec::new(),
         };
         let holder = self.0.clone();
         std::thread::spawn(move || {
-            let built = SearchIndex::build(&data_dir, &namespace);
+            let built = SearchIndex::build(&data_dir, &workspace);
             let mut holder = holder.lock().unwrap();
-            if holder.namespace != namespace {
+            if holder.workspace != workspace {
                 return;
             }
             holder.built = match built {
@@ -57,7 +57,7 @@ impl Index {
     /// Take a committed date in again.
     pub(crate) fn refresh(&self, fold: &Fold) {
         let mut holder = self.0.lock().unwrap();
-        if holder.namespace != fold.namespace {
+        if holder.workspace != fold.workspace {
             return;
         }
         match &mut holder.built {

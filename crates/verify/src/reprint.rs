@@ -33,7 +33,7 @@ struct Reprinted {
 
 pub(crate) fn check_reprint(
     json: &[u8],
-    namespace_dir: &Path,
+    workspace_dir: &Path,
     output_dir: &Path,
     findings: &mut Findings,
 ) {
@@ -46,7 +46,7 @@ pub(crate) fn check_reprint(
     for order in &reprint.orders {
         let pages = inputs
             .entry((order.date.as_str(), order.sha256.as_str()))
-            .or_insert_with(|| input_pages(namespace_dir, order, findings));
+            .or_insert_with(|| input_pages(workspace_dir, order, findings));
         for page in order.page_start..=order.page_end {
             let digest = pages
                 .as_ref()
@@ -88,11 +88,11 @@ pub(crate) fn check_reprint(
 
 /// The page digests of an order's input, after V2.
 fn input_pages(
-    namespace_dir: &Path,
+    workspace_dir: &Path,
     order: &Reprinted,
     findings: &mut Findings,
 ) -> Option<Vec<u64>> {
-    let path = namespace_dir
+    let path = workspace_dir
         .join(&order.date)
         .join("input")
         .join(format!("{}.pdf", order.sha256));

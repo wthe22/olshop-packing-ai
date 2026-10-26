@@ -13,3 +13,4 @@ Requirements: `F-LABEL-1` to `F-LABEL-6` in [requirements.md](../requirements.md
   each order records.
 - [groups.md](groups.md) — label groups, order contents, file names and the already-saved guard.
 - [summary-pdf.md](summary-pdf.md) — the one A4 summary PDF of a batch.
+- [day-summary.md](day-summary.md) — the A4 summary of a whole date, made on request.

@@ -37,6 +37,6 @@
 
 ## The already-saved guard
 
-An order saved in a live batch of the same namespace and date is left out of a new batch, all its copies
+An order saved in a live batch of the same workspace and date is left out of a new batch, all its copies
 recorded as left out with the batch that saved it, and listed in a warning with its tracking ID, batch,
 group and time ([03 Plan](../workflow/03-plan.md#7-orders-already-saved)).

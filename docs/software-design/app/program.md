@@ -4,10 +4,10 @@
 
 | Command | Does | Returns |
 |---|---|---|
-| `namespaces_list()` | The namespaces of the data folder, and the open one's dates from the search index ([namespaces](namespaces.md)) | Names; per date its orders, whether it is damaged, its folder |
-| `namespace_new(name)` | **+ New namespace**: make the namespace's folder and open it on today's date | The name, or why it is refused |
-| `namespace_open(name)` | Open another namespace on today's date; its search index is built beside it | — |
-| `day_open(namespace, date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, printed marks, reprints, findings; or the damage message |
+| `workspaces_list()` | The workspaces of the data folder, and the open one's dates from the search index ([workspaces](workspaces.md)) | Names; per date its orders, whether it is damaged, its folder |
+| `workspace_new(name)` | **+ New workspace**: make the workspace's folder and open it on today's date | The name, or why it is refused |
+| `workspace_open(name)` | Open another workspace on today's date; its search index is built beside it | — |
+| `day_open(workspace, date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, printed marks, reprints, findings; or the damage message |
 | `check_files(paths)` | SHA-256 and page count of each chosen file; *used in batch n*; one file chosen twice is listed once | The file list |
 | `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, repeats, the plan; or the stop |
 | `cancel_read()` | Stop reading | — |
@@ -41,9 +41,9 @@ not `Program Files`) and started from a shortcut:
 Packing\
   Packing.exe
   pdfium.dll
-  packing-settings.toml     data_dir = "data"
+  packing-settings.toml     data_dir = "packing-data"
   packing-workflows.toml
-  data\                     the data folder (the default)
+  packing-data\             the data folder (the default)
 ```
 
 - Copying the folder moves the program and, with a relative `data_dir`, all its data along.
@@ -62,6 +62,6 @@ Packing\
    on that rule.
 3. **The lock** on the data folder ([data](../data/README.md#one-writer)). Held by another copy: say which
    one, and offer **Try again**.
-4. **The namespace** whose journal was written last; none yet: ask for the first namespace's name
-   ([namespaces](namespaces.md)).
-5. **Today's date** of that namespace, opened as in `day_open`; the search index is built beside it.
+4. **The workspace** whose journal was written last; none yet: ask for the first workspace's name
+   ([workspaces](workspaces.md)).
+5. **Today's date** of that workspace, opened as in `day_open`; the search index is built beside it.

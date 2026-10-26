@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 
 pub(crate) const SETTINGS_FILE: &str = "packing-settings.toml";
 
-/// The data folder a first start offers: `data` inside the program's folder.
-pub(crate) const DEFAULT_DATA_DIR: &str = "data";
+/// The data folder a first start offers: `packing-data` inside the program's folder.
+pub(crate) const DEFAULT_DATA_DIR: &str = "packing-data";
 
 /// The window's colours: Windows' own choice, or always light or dark.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

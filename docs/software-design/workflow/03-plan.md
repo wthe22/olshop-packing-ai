@@ -2,7 +2,7 @@
 
 ## 7. Orders already saved
 
-- Every order whose Order ID is in a live batch of this namespace and date (the fold of step 2) is taken
+- Every order whose Order ID is in a live batch of this workspace and date (the fold of step 2) is taken
   out with all its copies, each recorded as left out with the reason `saved_earlier` and that batch. A
   repeat of such an order is not asked about. An amend leaves its own batch out of this set.
 - The orders taken out are one warning: tracking ID, batch, group and time.
@@ -11,7 +11,7 @@
 
 **Keeps:** I2 — no order is written by two live batches of a date.
 
-**Check:** the guard is by Order ID, within one namespace and date. A cancelled order that the platform
+**Check:** the guard is by Order ID, within one workspace and date. A cancelled order that the platform
 reissues with the same Order ID on the same date would be left out as already saved.
 
 ## 8. Repeats

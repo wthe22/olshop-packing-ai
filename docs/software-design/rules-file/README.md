@@ -109,7 +109,7 @@ name = "Lainnya"
   filter's double quotes need no escaping.
 - The bundled copy holds one rule, `default`, with one group `Z Lainnya` and no filter.
 - **Which rule a batch uses** is chosen on [New batch](../ui/new-batch.md#the-sort-rule); the rule of the
-  namespace's newest batch is preselected ([D-RULES-1](../decisions/rules.md)).
+  workspace's newest batch is preselected ([D-RULES-1](../decisions/rules.md)).
 - **A saved batch keeps a snapshot** of its rule in its journal record, so its outputs stay traceable
   whatever the file says later. An **amend** uses the rule of the same name as it is now, so a corrected
   filter applies; when no rule has that name any more, it uses the snapshot ([D-RULES-2](../decisions/rules.md)).

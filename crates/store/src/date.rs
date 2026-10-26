@@ -1,4 +1,4 @@
-//! A namespace's date folder, and what happens when it opens (journal.md, *When a date opens*):
+//! A workspace's date folder, and what happens when it opens (journal.md, *When a date opens*):
 //! fold, inputs, `output/.partial/`, outputs, views — in that order, before the date is shown.
 
 use std::path::{Path, PathBuf};
@@ -11,25 +11,25 @@ use crate::journal::Journal;
 use crate::outputs::{OutputProblem, Settled, check_outputs, settle_partial};
 use crate::views::{views_current, write_views};
 
-/// `{data_dir}/{namespace}/{date}/`.
+/// `{data_dir}/{workspace}/{date}/`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DateFolder {
-    namespace: String,
+    workspace: String,
     date: Date,
     dir: PathBuf,
 }
 
 impl DateFolder {
-    pub fn new(data_dir: &Path, namespace: &str, date: Date) -> Self {
+    pub fn new(data_dir: &Path, workspace: &str, date: Date) -> Self {
         Self {
-            namespace: namespace.to_string(),
+            workspace: workspace.to_string(),
             date,
-            dir: data_dir.join(namespace).join(date.to_string()),
+            dir: data_dir.join(workspace).join(date.to_string()),
         }
     }
 
-    pub fn namespace(&self) -> &str {
-        &self.namespace
+    pub fn workspace(&self) -> &str {
+        &self.workspace
     }
 
     pub fn date(&self) -> Date {

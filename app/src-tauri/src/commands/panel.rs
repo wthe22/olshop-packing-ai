@@ -1,8 +1,8 @@
-//! The side panel (panel.md): the namespaces of the data folder, the open one's dates with their
-//! orders from the search index, and opening another namespace.
+//! The side panel (panel.md): the workspaces of the data folder, the open one's dates with their
+//! orders from the search index, and opening another workspace.
 
 use jiff::civil::Date;
-use packing_store::{dates, namespaces};
+use packing_store::{dates, workspaces};
 use serde::Serialize;
 use tauri::State;
 
@@ -10,7 +10,7 @@ use crate::{AppState, today};
 
 #[derive(Serialize)]
 pub struct PanelView {
-    namespaces: Vec<String>,
+    workspaces: Vec<String>,
     open: Option<String>,
     /// Newest first; today is always listed.
     dates: Vec<DateRow>,
@@ -31,14 +31,14 @@ pub struct DateRow {
 }
 
 pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
-    let (list, open, mut folders, namespace_dir) = state.with_data(|data| {
-        let list = namespaces(&data.dir).map_err(|error| error.to_string())?;
-        let folders = match &data.namespace {
-            Some(namespace) => dates(&data.dir, namespace).map_err(|error| error.to_string())?,
+    let (list, open, mut folders, workspace_dir) = state.with_data(|data| {
+        let list = workspaces(&data.dir).map_err(|error| error.to_string())?;
+        let folders = match &data.workspace {
+            Some(workspace) => dates(&data.dir, workspace).map_err(|error| error.to_string())?,
             None => Vec::new(),
         };
-        let namespace_dir = data.namespace.as_ref().map(|name| data.dir.join(name));
-        Ok((list, data.namespace.clone(), folders, namespace_dir))
+        let workspace_dir = data.workspace.as_ref().map(|name| data.dir.join(name));
+        Ok((list, data.workspace.clone(), folders, workspace_dir))
     })?;
     let today = today();
     let today_has_folder = folders.contains(&today);
@@ -64,28 +64,28 @@ pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
             damaged: counts
                 .as_ref()
                 .is_some_and(|(_, damaged)| damaged.contains(&date)),
-            folder: namespace_dir
+            folder: workspace_dir
                 .as_ref()
                 .filter(|_| date != today || today_has_folder)
                 .map(|dir| dir.join(date.to_string()).display().to_string()),
         })
         .collect();
     Ok(PanelView {
-        namespaces: list,
+        workspaces: list,
         open,
         dates,
         loading,
     })
 }
 
-/// Open another namespace of the data folder on today's date; an open draft is dropped.
-pub(crate) fn open_namespace(state: &AppState, name: &str) -> Result<(), String> {
+/// Open another workspace of the data folder on today's date; an open draft is dropped.
+pub(crate) fn open_workspace(state: &AppState, name: &str) -> Result<(), String> {
     state.with_data(|data| {
-        let list = namespaces(&data.dir).map_err(|error| error.to_string())?;
+        let list = workspaces(&data.dir).map_err(|error| error.to_string())?;
         if !list.iter().any(|known| known == name) {
-            return Err(format!("{name} is not a namespace of this data folder."));
+            return Err(format!("{name} is not a workspace of this data folder."));
         }
-        data.namespace = Some(name.to_string());
+        data.workspace = Some(name.to_string());
         data.day = None;
         state.index().rebuild(data.dir.clone(), name.to_string());
         Ok(())
@@ -95,11 +95,11 @@ pub(crate) fn open_namespace(state: &AppState, name: &str) -> Result<(), String>
 }
 
 #[tauri::command]
-pub fn namespaces_list(state: State<'_, AppState>) -> Result<PanelView, String> {
+pub fn workspaces_list(state: State<'_, AppState>) -> Result<PanelView, String> {
     panel(&state)
 }
 
 #[tauri::command]
-pub fn namespace_open(state: State<'_, AppState>, name: String) -> Result<(), String> {
-    open_namespace(&state, &name)
+pub fn workspace_open(state: State<'_, AppState>, name: String) -> Result<(), String> {
+    open_workspace(&state, &name)
 }

@@ -31,8 +31,8 @@ const COUNT_RIGHT: f32 = MARGIN + WIDTH;
 const COUNT_W: f32 = 20.0;
 
 pub struct SummaryFacts<'a> {
-    /// The namespace's name.
-    pub namespace: &'a str,
+    /// The workspace's name.
+    pub workspace: &'a str,
     pub date: Date,
     /// The batch's record, its group PDFs already in `outputs`.
     pub record: &'a BatchSaved,
@@ -52,7 +52,7 @@ pub fn write_summary(
     let counts = content::counts(record);
     let title = format!(
         "Summary · {} · {} · batch {}",
-        facts.namespace, facts.date, record.batch
+        facts.workspace, facts.date, record.batch
     );
     let subtitle = format!(
         "{} orders · {} units · {} groups · printed {}",

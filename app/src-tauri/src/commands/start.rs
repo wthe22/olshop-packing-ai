@@ -1,12 +1,12 @@
 //! Start (program.md): the data folder `packing-settings.toml` names, its lock, the rules beside
-//! the program and the namespace opened; the first namespace's name; *About*, the version, and opening a
+//! the program and the workspace opened; the first workspace's name; *About*, the version, and opening a
 //! file or folder in Explorer.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use packing_pdf::PDFIUM_VERSION;
-use packing_store::{create_namespace, last_written, namespaces};
+use packing_store::{create_workspace, last_written, workspaces};
 use serde::Serialize;
 use tauri::State;
 
@@ -31,15 +31,15 @@ pub(crate) fn window_title() -> String {
     format!("{PROGRAM_NAME} {}", version_text())
 }
 
-/// What the window needs to open the Start prompt, the first namespace's name or the Day screen.
+/// What the window needs to open the Start prompt, the first workspace's name or the Day screen.
 #[derive(Serialize)]
 pub struct StartInfo {
     /// Where the program is: a first start offers its `data` folder.
     exe_dir: String,
     /// The data folder in use; none until `packing-settings.toml` names one.
     data_folder: Option<String>,
-    /// The namespace open; none until the first one is named.
-    namespace: Option<String>,
+    /// The workspace open; none until the first one is named.
+    workspace: Option<String>,
     /// Whether the PDFium worker started (its dll was found).
     pdfium_ready: bool,
     /// Today's date on the PC (`YYYY-MM-DD`); the Day screen opens there.
@@ -49,7 +49,7 @@ pub struct StartInfo {
 }
 
 /// Open the data folder `packing-settings.toml` names, as at start: the rules checked, the lock
-/// taken, the namespace whose journal was written last (else the first one) opened.
+/// taken, the workspace whose journal was written last (else the first one) opened.
 pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     let program = state.program();
     settings::workflows(program)?;
@@ -58,13 +58,13 @@ pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     {
         open_data(state, dir)?;
     }
-    let (data_folder, namespace) = state
-        .with_data(|data| Ok((Some(data.dir.display().to_string()), data.namespace.clone())))
+    let (data_folder, workspace) = state
+        .with_data(|data| Ok((Some(data.dir.display().to_string()), data.workspace.clone())))
         .unwrap_or((None, None));
     Ok(StartInfo {
         exe_dir: program.display().to_string(),
         data_folder,
-        namespace,
+        workspace,
         pdfium_ready: state.ensure_worker(),
         today: today().to_string(),
         version: version_text(),
@@ -72,18 +72,18 @@ pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     })
 }
 
-/// Take `dir`'s lock and open its namespace; another copy holding it stops with the copy named.
+/// Take `dir`'s lock and open its workspace; another copy holding it stops with the copy named.
 fn open_data(state: &AppState, dir: PathBuf) -> Result<(), String> {
     let mut data = Data::new(dir).map_err(|error| error.to_string())?;
-    data.namespace = match last_written(&data.dir).map_err(|error| error.to_string())? {
-        Some(namespace) => Some(namespace),
-        None => namespaces(&data.dir)
+    data.workspace = match last_written(&data.dir).map_err(|error| error.to_string())? {
+        Some(workspace) => Some(workspace),
+        None => workspaces(&data.dir)
             .map_err(|error| error.to_string())?
             .into_iter()
             .next(),
     };
-    if let Some(namespace) = &data.namespace {
-        state.index().rebuild(data.dir.clone(), namespace.clone());
+    if let Some(workspace) = &data.workspace {
+        state.index().rebuild(data.dir.clone(), workspace.clone());
     }
     state.set_data(data);
     Ok(())
@@ -99,11 +99,11 @@ pub(crate) fn use_folder(state: &AppState, dir: &Path) -> Result<String, String>
     Ok(dir.display().to_string())
 }
 
-/// Name a namespace: the folder is made at once and opened.
-pub(crate) fn new_namespace(state: &AppState, name: &str) -> Result<String, String> {
+/// Name a workspace: the folder is made at once and opened.
+pub(crate) fn new_workspace(state: &AppState, name: &str) -> Result<String, String> {
     state.with_data(|data| {
-        create_namespace(&data.dir, name).map_err(|error| error.to_string())?;
-        data.namespace = Some(name.to_string());
+        create_workspace(&data.dir, name).map_err(|error| error.to_string())?;
+        data.workspace = Some(name.to_string());
         data.day = None;
         state.index().rebuild(data.dir.clone(), name.to_string());
         Ok(name.to_string())
@@ -128,10 +128,10 @@ pub fn choose_data_folder(state: State<'_, AppState>, path: String) -> Result<St
     use_folder(&state, Path::new(&path))
 }
 
-/// The first namespace's name, or **+ New namespace**.
+/// The first workspace's name, or **+ New workspace**.
 #[tauri::command]
-pub fn namespace_new(state: State<'_, AppState>, name: String) -> Result<String, String> {
-    new_namespace(&state, &name)
+pub fn workspace_new(state: State<'_, AppState>, name: String) -> Result<String, String> {
+    new_workspace(&state, &name)
 }
 
 /// The OS title bar's theme; `None` follows Windows.

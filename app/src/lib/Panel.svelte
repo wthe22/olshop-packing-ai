@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The side panel: the open namespace, its dates by month with their saved orders, and the way to
-  // another date or namespace. What a click does (asking about an open draft first) is the shell's.
+  // The side panel: the open workspace, its dates by month with their saved orders, and the way to
+  // another date or workspace. What a click does (asking about an open draft first) is the shell's.
   import type { PanelView } from "./api/panel";
   import { months } from "./panel";
   import { formatMonth, formatShortDay, texts } from "../texts";
@@ -11,17 +11,17 @@
     day,
     today,
     onOpenDate,
-    onOpenNamespace,
-    onNewNamespace,
+    onOpenWorkspace,
+    onNewWorkspace,
     onOpenFolder,
   }: {
     panel: PanelView;
     day: string;
     today: string;
     onOpenDate: (date: string) => void;
-    onOpenNamespace: (name: string) => void;
-    // Resolves to why the name is refused, or `null` when the namespace was made.
-    onNewNamespace: (name: string) => Promise<string | null>;
+    onOpenWorkspace: (name: string) => void;
+    // Resolves to why the name is refused, or `null` when the workspace was made.
+    onNewWorkspace: (name: string) => Promise<string | null>;
     onOpenFolder: (path: string) => void;
   } = $props();
 
@@ -30,7 +30,7 @@
   let toggled = $state<Record<string, boolean>>({});
   // The date whose row menu is open.
   let menuFor = $state<string | null>(null);
-  // **+ New namespace**'s field, and why a name was refused.
+  // **+ New workspace**'s field, and why a name was refused.
   let naming = $state(false);
   let name = $state("");
   let refused = $state("");
@@ -38,7 +38,7 @@
   const isOpen = (key: string, startsOpen: boolean) => toggled[key] ?? startsOpen;
 
   async function create() {
-    refused = (await onNewNamespace(name.trim())) ?? "";
+    refused = (await onNewWorkspace(name.trim())) ?? "";
     if (!refused) {
       naming = false;
       name = "";
@@ -48,21 +48,21 @@
 
 <aside>
   <div class="head">
-    <label for="panel-namespace">{texts.panel.namespace}</label>
+    <label for="panel-workspace">{texts.panel.workspace}</label>
     <div class="pick">
       <select
-        id="panel-namespace"
+        id="panel-workspace"
         value={panel.open ?? ""}
-        onchange={(event) => onOpenNamespace(event.currentTarget.value)}
+        onchange={(event) => onOpenWorkspace(event.currentTarget.value)}
       >
-        {#each panel.namespaces as known (known)}
+        {#each panel.workspaces as known (known)}
           <option value={known}>{known}</option>
         {/each}
       </select>
       <button
         class="add"
-        title={texts.panel.newNamespace}
-        aria-label={texts.panel.newNamespace}
+        title={texts.panel.newWorkspace}
+        aria-label={texts.panel.newWorkspace}
         onclick={() => ((naming = !naming), (refused = ""))}><Icon name="plus" size={16} /></button
       >
     </div>
@@ -74,7 +74,7 @@
           if (name.trim()) create();
         }}
       >
-        <input bind:value={name} placeholder={texts.namespace.placeholder} maxlength="40" />
+        <input bind:value={name} placeholder={texts.workspace.placeholder} maxlength="40" />
         <div class="naming-buttons">
           <button type="button" onclick={() => (naming = false)}>{texts.panel.cancel}</button>
           <button class="primary" type="submit" disabled={name.trim() === ""}

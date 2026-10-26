@@ -24,12 +24,12 @@ pub struct BatchCheck<'a> {
 }
 
 /// What a reprint is checked against: today's journal as on disk, the `reprint_made` line its
-/// commit appends, the namespace's folder (each order's input is `{date}/input/{sha256}.pdf` in
+/// commit appends, the workspace's folder (each order's input is `{date}/input/{sha256}.pdf` in
 /// it) and the folder that holds the new file.
 pub struct ReprintCheck<'a> {
     pub journal: &'a [u8],
     pub append: &'a [u8],
-    pub namespace_dir: &'a Path,
+    pub workspace_dir: &'a Path,
     pub output_dir: &'a Path,
 }
 
@@ -86,7 +86,7 @@ pub fn verify_reprint(check: &ReprintCheck<'_>) -> Findings {
     let mut findings = Findings::default();
     match appended(check.journal, check.append, "reprint_made", &mut findings) {
         Some((json, _)) => {
-            reprint::check_reprint(json, check.namespace_dir, check.output_dir, &mut findings);
+            reprint::check_reprint(json, check.workspace_dir, check.output_dir, &mut findings);
         }
         None => findings.error("the new lines hold no reprint record to check".to_string()),
     }

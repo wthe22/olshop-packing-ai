@@ -1,4 +1,4 @@
-//! The Day screen (05-after-save.md): the open namespace's date from its fold, and what changes it —
+//! The Day screen (05-after-save.md): the open workspace's date from its fold, and what changes it —
 //! the Printed tick, revert and restore — each one append through `packing-batch`.
 
 mod view;
@@ -19,7 +19,7 @@ pub(crate) fn date_of(day: &str) -> Result<Date, String> {
         .map_err(|_| format!("{day} is not a date (YYYY-MM-DD)."))
 }
 
-/// Open `day` of the namespace (folded and checked unless it is open) and describe it.
+/// Open `day` of the workspace (folded and checked unless it is open) and describe it.
 pub(crate) fn overview(state: &AppState, day: &str) -> Result<DayOverview, String> {
     let date = date_of(day)?;
     state.with_data(|data| {

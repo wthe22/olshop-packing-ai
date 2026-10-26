@@ -12,15 +12,15 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   every control in the theme's colours; the new title bar, panel head, first-start cards and Settings with
   *About*; the group code on one line; *Courier · is unknown* (`is_empty`); the summary PDF as facts →
   groups with their order contents → picks. The program folder `target/portable/Packing/` is rebuilt.
-  - **Next session:** R10.5 (*namespace* → *workspace*; the journal's `started` field keeps its stored
-    name `namespace` through `serde(rename)`, so no migration), then R10.6 (the guide's pictures, the
-    portable build, the handoff), then **R6.4** ([R6-app-journal.md](R6-app-journal.md)) and **R9** (the
-    full check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff).
-  - **The owner may test now**, in this order: the theme menu at the right of the title bar in each of
-    its three choices; a sort rule with *Courier · is unknown*; a saved batch's Day card (group codes
-    such as `1-S1`) and its summary PDF. A finding goes into [reviews/ui.md](../../reviews/ui.md),
-    [reviews/label.md](../../reviews/label.md) or [reviews/rules.md](../../reviews/rules.md) as the next
-    `R-<SCOPE>-n` (R-UI-16, R-LABEL-3, R-RULES-4); the next session turns each into a step of R10.
+  - **The owner's second round** (2026-10-26): *workspace* confirmed, the default data folder
+    `packing-data`, *N orders | N contents*, Search's select-all at the left, a designed reprint, a day
+    summary and an app icon — R10.5 to R10.11 in the task file.
+  - **Next:** the first unfinished step of R10, then **R6.4** ([R6-app-journal.md](R6-app-journal.md))
+    and **R9** (the full check, an independent review of the whole v0.2 diff, the coverage baseline, the
+    handoff).
+  - A finding goes into [reviews/ui.md](../../reviews/ui.md), [reviews/label.md](../../reviews/label.md),
+    [reviews/rules.md](../../reviews/rules.md) or [reviews/app.md](../../reviews/app.md) as the next
+    `R-<SCOPE>-n` (R-UI-20, R-LABEL-4, R-RULES-4, R-APP-5); the next session turns each into a step.
   - The guide's pictures are the real program on the `testdata/` labels (`node tools/guide-pictures.mjs`
     drives a fresh copy over WebView2's DevTools port); the same run is a quick smoke test of the build.
 
@@ -29,18 +29,18 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   describes v0.2; the project has no Python; the label fixtures are written by `crates/fixtures` one
   character per text object, as the downloads are; today's reading of the owner's eleven sample files is
   pinned in `work/baseline/` on this PC ([testing.md](../testing.md), *Local baseline*); `crates/store`
-  holds the journal, the lock, the inputs, the views, the open-time checks and the namespaces; and
+  holds the journal, the lock, the inputs, the views, the open-time checks and the workspaces; and
   `packing-engine` holds the v0.2 chain — `packing-workflows.toml`, copies with the courier clue,
   repeats and the copies left out, the plan with order contents, the `batch_saved` record — and the 2.32
   fix; `crates/verify` checks a batch's outputs by page digest with `lopdf` alone (every page of the
   samples that PDFium copies keeps its digest). **R6 is under way** ([R6-app-journal.md](R6-app-journal.md)):
   R6.1 to R6.3 are done, R6.4 follows the owner's test of v0.2. **The program the owner runs is v0.2.0**: it
-  saves through `crates/batch` and the journal into `{data_dir}/{namespace}/{date}/` and writes the summary
+  saves through `crates/batch` and the journal into `{data_dir}/{workspace}/{date}/` and writes the summary
   PDF. A task gets its own file in this folder when it starts; until then its row in the order of work is
   the task.
 - **The owner checked the v0.1 program** (2026-10-26): it works as before, including the full product name
   read without a space inside a word; the owner said to go ahead with R6. R6 is the first task that changes
-  the program the owner runs: the app saves through the journal into `{data_dir}/{namespace}/{date}/` and no
+  the program the owner runs: the app saves through the journal into `{data_dir}/{workspace}/{date}/` and no
   longer shows the v0.1 data (`labels\`, `state.json`), which stays on disk unread
   ([D-APP-17](../../software-design/decisions/app-features.md)).
 - **Not blocked on the owner otherwise.** The owner may read the design at any time, starting with

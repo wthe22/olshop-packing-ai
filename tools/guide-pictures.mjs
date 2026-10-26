@@ -100,7 +100,7 @@ try {
   await until(shows("Where should the data be kept?"));
   await picture("01-start.png");
   await click("Use the folder next to the program");
-  await until(shows("Name the first namespace"));
+  await until(shows("Name the first workspace"));
   await run(`(() => {
     const input = document.querySelector("input");
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, "Toko Contoh");

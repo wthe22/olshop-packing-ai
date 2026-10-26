@@ -10,13 +10,13 @@ use testkit::TempDir;
 
 pub use testkit::{batch, sha, time};
 
-pub const NAMESPACE: &str = "Toko Contoh";
+pub const WORKSPACE: &str = "Toko Contoh";
 pub const APP: &str = "0.2.0";
 
-/// A fresh data folder and the date 2026-10-07 of the namespace `Toko Contoh` in it.
+/// A fresh data folder and the date 2026-10-07 of the workspace `Toko Contoh` in it.
 pub fn date_folder(tag: &str) -> (TempDir, DateFolder) {
     let data = TempDir::new(tag);
-    let folder = DateFolder::new(data.path(), NAMESPACE, date(2026, 10, 7));
+    let folder = DateFolder::new(data.path(), WORKSPACE, date(2026, 10, 7));
     (data, folder)
 }
 
@@ -71,7 +71,7 @@ pub fn record(seq: u32, body: RecordBody) -> Record {
 pub fn started() -> RecordBody {
     RecordBody::Started(Started {
         schema: SCHEMA.to_string(),
-        namespace: NAMESPACE.to_string(),
+        workspace: WORKSPACE.to_string(),
         date: date(2026, 10, 7),
     })
 }

@@ -10,7 +10,7 @@
   orders are then found as already saved (step 7).
 - The list is **sorted by file name**: the download's name starts with its time and part number, so name
   order is download order. This is the **reading order** of the batch.
-- The **sort rule** is chosen here: the rule of the namespace's newest batch is preselected
+- The **sort rule** is chosen here: the rule of the workspace's newest batch is preselected
   ([D-RULES-1](../decisions/rules.md)).
 
 **Stops:** a file that cannot be opened as a PDF.

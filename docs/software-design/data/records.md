@@ -7,7 +7,7 @@ schema version; a field that changes meaning may not.
 ```
 Started {                       // type "started", seq 1
   schema: String                // "1.0"
-  namespace: String
+  namespace: String             // the workspace's name; the stored field keeps this word
   date: Date
 }
 
@@ -108,7 +108,7 @@ ReprintedOrder {
   order_id: String
   date: Date                    // the date the order was saved
   batch: BatchID
-  sha256: String                // its input, {namespace}/{date}/input/{sha256}.pdf
+  sha256: String                // its input, {workspace}/{date}/input/{sha256}.pdf
   page_start: u16
   page_end: u16
 }

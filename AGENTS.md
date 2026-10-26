@@ -38,8 +38,8 @@
   covers them.
 - Naming: timestamps `*_time` (`create_time`, `modify_time`). Orders are identified by `Order ID`; items
   by product name and variation (the platform `SKU ID` is not on the label PDFs). The words of code are the
-  glossary of `code-rules.md` (namespace, sort rule, label group, group PDF, summary PDF, journal).
-- Data: the journal (`{namespace}/{date}/journal.jsonl`) is the only truth; every other data file is an
+  glossary of `code-rules.md` (workspace, sort rule, label group, group PDF, summary PDF, journal).
+- Data: the journal (`{workspace}/{date}/journal.jsonl`) is the only truth; every other data file is an
   input, an output or a view of it, and nothing but the journal decides (`docs/software-design/data/`).
 - Writing: the owner is "the owner", never he/she/they/it/you. The dropship supplier's real name never
   appears: write "the supplier". About 150 lines per file at most; each fact has one home.

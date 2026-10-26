@@ -39,7 +39,7 @@ impl Journal {
     pub fn open(folder: &DateFolder) -> Result<Self, StoreError> {
         let path = folder.dir().join(JOURNAL);
         let mut journal = Journal {
-            fold: Fold::new(folder.namespace(), folder.date()),
+            fold: Fold::new(folder.workspace(), folder.date()),
             path,
             good_len: 0,
             torn: None,
@@ -118,7 +118,7 @@ impl Journal {
         if self.fold.last_seq == 0 {
             all.push(RecordBody::Started(Started {
                 schema: SCHEMA.to_string(),
-                namespace: self.fold.namespace.clone(),
+                workspace: self.fold.workspace.clone(),
                 date: self.fold.date,
             }));
         }

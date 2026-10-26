@@ -37,10 +37,11 @@ Root {
 ```
 {data_dir}/
   .lock  .lock-holder                     one copy of the app at a time
-  {namespace}/                            one per namespace
+  {workspace}/                            one per workspace
     {date}/                               2026-10-07
       journal.jsonl                       the truth
       session.toml  orders.csv  order-contents.toml       views of the journal
+      day summary.pdf                     a view of the journal, written on request
       input/{sha256}.pdf                  each input PDF once, named by its content
       output/{batch}-{code} {name} x{count}.pdf           one per label group
       output/{batch} summary.pdf          one per batch
@@ -48,8 +49,8 @@ Root {
       output/.partial/                    outputs of the operation in progress
 ```
 
-A **namespace** keeps its batches apart from every other ([namespaces](../app/namespaces.md)); a date folder
-holds its work of one date. Batch numbers run through a namespace and date.
+A **workspace** keeps its batches apart from every other ([workspaces](../app/workspaces.md)); a date folder
+holds its work of one date. Batch numbers run through a workspace and date.
 
 ## What is truth, and what is derived
 
@@ -76,7 +77,7 @@ which copy has the folder ([Messages](../ui/messages.md)); it reads and writes n
 
 - `Date` is `2026-10-07`, `Time` is `14:26`, `Datetime` is ISO 8601 with the UTC offset
   (`2026-10-07T14:26:00+07:00`). A `*_time` field is a `Datetime`.
-- `PdfID: u8` (an input of the date), `BatchID: u8` (1, 2, 3, … within the namespace and date),
+- `PdfID: u8` (an input of the date), `BatchID: u8` (1, 2, 3, … within the workspace and date),
   `OrderContentID: u16` and `RuleID: u8` (numbered in the views). `CourierCode` is `Courier.code` of
   `packing-workflows.toml`.
 - Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at `1.0`.

@@ -11,7 +11,7 @@
   import Frame from "../lib/Frame.svelte";
   import Panel from "../lib/Panel.svelte";
   import StartPrompt from "../lib/StartPrompt.svelte";
-  import NamespacePrompt from "../lib/NamespacePrompt.svelte";
+  import WorkspacePrompt from "../lib/WorkspacePrompt.svelte";
   import DayScreen from "../lib/DayScreen.svelte";
   import NewBatchScreen from "../lib/NewBatchScreen.svelte";
   import PlanScreen from "../lib/PlanScreen.svelte";
@@ -33,7 +33,7 @@
       }
     };
     // A folder added in Explorer shows up when the window regains focus.
-    const onFocus = () => shell.namespace && shell.refreshPanel();
+    const onFocus = () => shell.workspace && shell.refreshPanel();
     const onResize = () => {
       if (window.innerWidth < SMALLEST_WIDTH) shell.panelShown = false;
     };
@@ -59,12 +59,12 @@
     onUse={shell.useProgramFolder}
     onChoose={shell.chooseFolder}
   />
-{:else if shell.needsNamespace}
-  <NamespacePrompt version={shell.version} busy={shell.busy} error={shell.error} onName={shell.nameNamespace} />
+{:else if shell.needsWorkspace}
+  <WorkspacePrompt version={shell.version} busy={shell.busy} error={shell.error} onName={shell.nameWorkspace} />
 {:else}
   <div class="window">
     <Frame
-      namespace={shell.namespace}
+      workspace={shell.workspace}
       day={shell.day}
       overlay={shell.overlay}
       version={shell.version}
@@ -80,8 +80,8 @@
           day={shell.day}
           today={shell.today}
           onOpenDate={shell.openDate}
-          onOpenNamespace={shell.openNamespace}
-          onNewNamespace={shell.newNamespace}
+          onOpenWorkspace={shell.openWorkspace}
+          onNewWorkspace={shell.newWorkspace}
           onOpenFolder={shell.openFolder}
         />
       {/if}

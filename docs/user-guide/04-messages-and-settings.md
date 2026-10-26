@@ -28,7 +28,7 @@ A reprint or a restore that the checker refuses keeps nothing and says why.
 
 Open **Settings** in the title bar.
 
-- **Data folder** — where the namespaces and their dates are kept (the default is `data` beside the
+- **Data folder** — where the workspaces and their dates are kept (the default is `data` beside the
   program). **Change…** asks "Use `<folder>` for the data from now on? The data in `<old>` stays where it
   is." and opens that folder; nothing is moved. **Open** shows it in Explorer.
 - **About** — what the program does, its version (**v0.2**), the PDFium version and the journal's

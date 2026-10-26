@@ -3,7 +3,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 
-// One date of the open namespace.
+// One date of the open workspace.
 export interface DateRow {
   date: string;
   today: boolean;
@@ -16,8 +16,8 @@ export interface DateRow {
 }
 
 export interface PanelView {
-  // Every namespace of the data folder, in name order.
-  namespaces: string[];
+  // Every workspace of the data folder, in name order.
+  workspaces: string[];
   open: string | null;
   // Newest first; today is always listed.
   dates: DateRow[];
@@ -25,7 +25,7 @@ export interface PanelView {
   loading: boolean;
 }
 
-export const namespacesList = (): Promise<PanelView> => invoke("namespaces_list");
+export const workspacesList = (): Promise<PanelView> => invoke("workspaces_list");
 
-// Open another namespace on today's date; an open draft is dropped.
-export const namespaceOpen = (name: string): Promise<void> => invoke("namespace_open", { name });
+// Open another workspace on today's date; an open draft is dropped.
+export const workspaceOpen = (name: string): Promise<void> => invoke("workspace_open", { name });

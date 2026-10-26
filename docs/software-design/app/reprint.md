@@ -6,18 +6,21 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
 
 ## The search index
 
-- Built in memory when a namespace opens, on its own thread, by folding every journal of the namespace
+- Built in memory when a workspace opens, on its own thread, by folding every journal of the workspace
   ([journal](../data/journal.md#the-fold)); after each commit the new record is added. A year of dates
   folds in about a second; Search shows *Loading…* until it is ready.
 - One entry per order of a live batch: the fields a filter can use
   ([conditions](../rules-file/conditions.md#fields)), its date, batch and label group, the output file,
   and its **trace**: the input's file name and pages, and the courier's clue.
+- Each date's reprints: which orders (by the date they were saved on and their Order ID) each reprint
+  printed. Search marks those orders *Reprinted*, and the Day screen lists a reprint's orders from the
+  index. A reprint's commit refreshes its date in the index like any other commit.
 - The index is only read. A date whose journal is damaged is left out and named in the panel.
 
 ## Search
 
 The [Search](../ui/search.md) screen takes a filter made with the boxes of the Sort rules screen and a
-scope: *This day* (the open date, the default) or *All days* of the open namespace
+scope: *This day* (the open date, the default) or *All days* of the open workspace
 ([D-UI-3](../decisions/ui.md)). Each result row shows the order, its items, its date, batch and group
 file, a tick, and a trace line when opened:
 
@@ -36,7 +39,7 @@ Orders of an open draft are not searched: they are not saved.
    reprint with its name.
 2. **Order.** The orders in their original printing order: by date, batch, then their place in the
    batch's record.
-3. **Write** the pages, unchanged, into `output/.partial/` of **today's** date of the namespace, named
+3. **Write** the pages, unchanged, into `output/.partial/` of **today's** date of the workspace, named
    `reprint {n} x{count}.pdf`, `n` counting the reprints of today.
 4. **Verify**: the file's page *k* has the digest of the source page at *k*, and the page count adds up
    ([verification](verification.md)). A finding stops the reprint; nothing is kept.

@@ -6,13 +6,13 @@ app, then print.
 ## The window
 
 The title bar has the panel button at the left, the program and its version (**Packing v0.2**), the open
-namespace and the date everything is saved to, and at the right **Search**, **Sort rules**, **Settings** and
+workspace and the date everything is saved to, and at the right **Search**, **Sort rules**, **Settings** and
 the theme menu (**Light**, **Dark** or **System**, which follows Windows). `Esc` closes Search, Sort rules
 and Settings.
 
-The **panel** at the left lists your namespaces and the dates of the open one:
+The **panel** at the left lists your workspaces and the dates of the open one:
 
-- **Namespace** chooses another namespace; **+** beside it asks for a new name and opens it on today.
+- **Workspace** chooses another workspace; **+** beside it asks for a new name and opens it on today.
 - The dates, newest first, by month, each with its number of saved orders. Today is always there,
   marked *today*. Click a date to open it — for a download just after midnight that belongs to the
   evening before. A batch being prepared asks first.
@@ -135,7 +135,7 @@ the date is left out of every later batch of that date, so reading a file again 
 **Search** opens over the screen; **Close** returns. Searching changes nothing.
 
 - Build the filter with the same boxes as the sort rules, e.g. *Tracking ID starts with JY00000012*.
-- **This day** (the open date, the default) or **All days** of the namespace, then **Search**:
+- **This day** (the open date, the default) or **All days** of the workspace, then **Search**:
   "3 orders in 2 batches" and one row per order — Order ID, tracking ID, courier, items, date and group,
   **Open** for its group PDF, and **▸** for where it came from (the label file and pages, and the clue
   that named its courier).

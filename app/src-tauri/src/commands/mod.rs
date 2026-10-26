@@ -1,5 +1,5 @@
-//! The window commands, grouped by screen: [`start`] (the data folder, the first namespace,
-//! *About*), [`panel`] (the namespaces and their dates), [`day`] (the Day screen, Printed, revert,
+//! The window commands, grouped by screen: [`start`] (the data folder, the first workspace,
+//! *About*), [`panel`] (the workspaces and their dates), [`day`] (the Day screen, Printed, revert,
 //! restore), [`batch`] (new batch, plan, save, amend), [`search`] (search and reprint) and
 //! [`rules`] (the Sort rules screen). Each command is a thin wrapper over a plain function the
 //! tests call.

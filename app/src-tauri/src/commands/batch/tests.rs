@@ -24,17 +24,17 @@ use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
 use super::{amend_start, checked, plan_view, resolve, sort_rules_of};
 use crate::AppState;
 use crate::commands::day::{mark_printed, overview, restore_file, revert};
-use crate::commands::panel::{open_namespace, panel};
+use crate::commands::panel::{open_workspace, panel};
 use crate::commands::rules::{
     GroupInput, check, new_rule, renamed, rule_groups, rules_view, save_groups,
 };
 use crate::commands::search::{ReprintChoice, Scope, reprint_orders, search};
-use crate::commands::start::{new_namespace, start_information, use_folder};
+use crate::commands::start::{new_workspace, start_information, use_folder};
 
 const DAY: &str = "2026-10-08";
 const GROUP_FILE: &str = "1-Z Lainnya x4.pdf";
 
-/// A program folder whose first start chose its `data` folder and named a namespace; the guard keeps
+/// A program folder whose first start chose its `data` folder and named a workspace; the guard keeps
 /// this test the only one using PDFium.
 fn started(tag: &str) -> Option<(TempDir, AppState, PdfiumGuard)> {
     vendor_dir()?;
@@ -43,7 +43,7 @@ fn started(tag: &str) -> Option<(TempDir, AppState, PdfiumGuard)> {
     let state = AppState::new(program.path().to_path_buf());
     start_information(&state).unwrap();
     use_folder(&state, &program.path().join("data")).unwrap();
-    new_namespace(&state, "Toko Contoh").unwrap();
+    new_workspace(&state, "Toko Contoh").unwrap();
     overview(&state, DAY).unwrap();
     Some((program, state, guard))
 }
@@ -384,19 +384,19 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
 }
 
 #[test]
-fn the_panel_lists_the_namespaces_and_the_dates_with_their_orders() {
+fn the_panel_lists_the_workspaces_and_the_dates_with_their_orders() {
     let Some((_program, state, _guard)) = started("app-panel") else {
         return skipped();
     };
     read(&state);
     save(&state);
-    new_namespace(&state, "Toko Lain").unwrap();
-    open_namespace(&state, "Toko Contoh").unwrap();
-    assert!(open_namespace(&state, "Toko Ketiga").is_err());
+    new_workspace(&state, "Toko Lain").unwrap();
+    open_workspace(&state, "Toko Contoh").unwrap();
+    assert!(open_workspace(&state, "Toko Ketiga").is_err());
     state.index().wait();
     let shown = serde_json::to_value(panel(&state).unwrap()).unwrap();
     assert_eq!(
-        shown["namespaces"],
+        shown["workspaces"],
         serde_json::json!(["Toko Contoh", "Toko Lain"])
     );
     assert_eq!(shown["open"], "Toko Contoh");

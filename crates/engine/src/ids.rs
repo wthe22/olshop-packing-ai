@@ -100,7 +100,7 @@ impl fmt::Display for PdfNumber {
     }
 }
 
-/// A batch's number within its namespace and date: `1, 2, 3, …` (records.md `BatchID`).
+/// A batch's number within its workspace and date: `1, 2, 3, …` (records.md `BatchID`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct BatchId(u8);

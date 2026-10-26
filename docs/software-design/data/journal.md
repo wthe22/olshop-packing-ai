@@ -1,6 +1,6 @@
 # The journal
 
-`{namespace}/{date}/journal.jsonl` is the only truth of a date ([D-APP-7](../decisions/app.md)). Everything
+`{workspace}/{date}/journal.jsonl` is the only truth of a date ([D-APP-7](../decisions/app.md)). Everything
 else in the date folder is either an input it names, an output it vouches for, or a view written from it.
 Crate `packing-store` owns it.
 
@@ -15,7 +15,7 @@ Crate `packing-store` owns it.
   and the `\n`.
 - Every record carries `seq` (1, 2, 3, … with no gap), `time`, `app` (the app version that wrote it) and
   `type`. The record types and their fields are in [records.md](records.md).
-- Seq 1 is `started`: the schema (`1.0`), the namespace and the date. They must equal the folder's names.
+- Seq 1 is `started`: the schema (`1.0`), the workspace and the date. They must equal the folder's names.
 
 ## A commit
 
@@ -32,7 +32,7 @@ the journal as it is on disk, never from a view or the search index.
 
 | Record | Rule the fold checks |
 |---|---|
-| `started` | Seq 1, and only there; namespace and date equal the folder |
+| `started` | Seq 1, and only there; workspace and date equal the folder |
 | `batch_saved`, `amends: false` | `batch` = the highest live batch + 1 (1 on a date with none) |
 | `batch_saved`, `amends: true` | `batch` = the highest live batch |
 | `batch_reverted` | `batch` = the highest live batch |
@@ -77,5 +77,5 @@ In this order, before the date is shown:
 ## Size
 
 About 150 bytes a saved order plus its item lines once per distinct content: a date of three batches and
-600 orders is about 150 KB. The search index folds every journal of a namespace when it opens
+600 orders is about 150 KB. The search index folds every journal of a workspace when it opens
 ([reprint](../app/reprint.md#the-search-index)).

@@ -17,7 +17,7 @@ test("the data folder: the start prompt, the program folder and a change", async
   let failChoose = false;
   const calls = useBackend({
     ...backend(),
-    start_info: () => ({ today: "2026-10-07", exe_dir: "C:/Packing", data_folder: null, namespace: "Toko Contoh", version: "0.1" }),
+    start_info: () => ({ today: "2026-10-07", exe_dir: "C:/Packing", data_folder: null, workspace: "Toko Contoh", version: "0.1" }),
     "plugin:dialog|open": () => picked,
     "plugin:dialog|message": (args) =>
       answer === "Ok" ? (args.buttons?.OkCancelCustom?.[0] ?? "Ok") : "Cancel",
@@ -39,14 +39,14 @@ test("the data folder: the start prompt, the program folder and a change", async
   assert.equal(shell.busy, false, "a dismissed dialog leaves nothing busy");
   assert.equal(calls.some((call) => call.command === "choose_data_folder"), false, "a dismissed dialog chooses nothing");
 
-  // *Use the program's folder*: the folder is taken, its namespace, the day and About load.
+  // *Use the program's folder*: the folder is taken, its workspace, the day and About load.
   await shell.useProgramFolder();
   assert.equal(shell.dataFolder, "C:/Packing");
   assert.equal(shell.needsFolder, false);
   assert.equal(shell.busy, false);
   assert.deepEqual(shell.panel.dates, [{ date: "2026-10-07" }]);
   assert.equal(shell.overview.totals.batches, 2);
-  assert.equal(shell.namespace, "Toko Contoh");
+  assert.equal(shell.workspace, "Toko Contoh");
   assert.equal(shell.about.version, "0.2");
   assert.deepEqual(calls.find((call) => call.command === "use_program_folder").args, {}, "no argument is sent");
 
@@ -88,7 +88,7 @@ test("the file and printed commands reach the back end", async () => {
   let fail = "";
   const calls = useBackend({
     ...backend(),
-    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", namespace: "Toko Contoh", version: "0.1" }),
+    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", workspace: "Toko Contoh", version: "0.1" }),
     open_path: (args) => {
       if (fail === "open_path") throw "the file is gone";
       return { ...args };
@@ -187,8 +187,8 @@ test("a command that fails while loading shows the error and still opens the day
   const partial = new Shell();
   useBackend({
     ...backend(),
-    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", namespace: "Toko Contoh", version: "0.1" }),
-    namespaces_list: () => {
+    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", workspace: "Toko Contoh", version: "0.1" }),
+    workspaces_list: () => {
       throw "the day folder is unreadable";
     },
     about: () => {

@@ -35,10 +35,10 @@ export const texts = {
     system: "System",
   },
 
-  // The side panel: the namespace, its dates by month, **+ New namespace**.
+  // The side panel: the workspace, its dates by month, **+ New workspace**.
   panel: {
-    namespace: "Namespace",
-    newNamespace: "New namespace",
+    workspace: "Workspace",
+    newWorkspace: "New workspace",
     create: "Create",
     cancel: "Cancel",
     today: "today",
@@ -51,10 +51,10 @@ export const texts = {
     welcome: "Welcome to Packing",
     ask: "Where should Packing keep its data?",
     explain:
-      "Each namespace's labels, group PDFs and summary PDFs are kept there, one folder per namespace and date.",
-    // The suggested folder: `data` beside the program, so the program folder can be copied whole.
+      "Each workspace's labels, group PDFs and summary PDFs are kept there, one folder per workspace and date.",
+    // The suggested folder: `packing-data` beside the program, so the program folder can be copied whole.
     nextToProgram: "Next to the program",
-    folder: (exeDir: string) => `${exeDir}\\data`,
+    folder: (exeDir: string) => `${exeDir}\\packing-data`,
     useThisFolder: "Use this folder",
     chooseFolder: "Choose another folder…",
   },
@@ -285,7 +285,7 @@ export const texts = {
     // "Use `<folder>` for the data from now on? The data in `<old>` stays where it is."
     confirmChange: (folder: string, old: string) =>
       `Use ${folder} for the data from now on? The data in ${old} stays where it is.`,
-    dataFolderHint: "Every namespace and its dates are kept in this folder.",
+    dataFolderHint: "Every workspace and its dates are kept in this folder.",
     about: "About",
     tagline:
       "Sorts the day's label PDFs into group PDFs to print, with a summary PDF to pick and pack by.",
@@ -294,11 +294,11 @@ export const texts = {
     schema: "Journal schema",
   },
 
-  // The first namespace's name, asked once when the data folder holds none.
-  namespace: {
-    title: "Name the first namespace",
-    ask: "Each namespace keeps its own batches and dates apart from the others. One is enough for one shop owner; more can be added in the panel.",
-    placeholder: "Namespace name, e.g. Toko Contoh",
+  // The first workspace's name, asked once when the data folder holds none.
+  workspace: {
+    title: "Name the first workspace",
+    ask: "Each workspace keeps its own batches and dates apart from the others. One is enough for one shop owner; more can be added in the panel.",
+    placeholder: "Workspace name, e.g. Toko Contoh",
     create: "Create",
   },
 

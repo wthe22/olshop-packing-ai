@@ -35,7 +35,7 @@ export interface SearchResults {
   rows: SearchRow[];
 }
 
-// *This day* (the open date, the default) or *All days* of the open namespace.
+// *This day* (the open date, the default) or *All days* of the open workspace.
 export type SearchScope = "day" | "all";
 
 export const searchOrders = (

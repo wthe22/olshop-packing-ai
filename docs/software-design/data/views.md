@@ -10,12 +10,16 @@ Only live batches appear; a reverted batch is gone from the views and stays in t
 the journal does not hold (`RuleID`, `OrderContentID`) are numbered by the fold in order of first
 appearance, so the same journal always gives the same views.
 
+A fourth view, `day summary.pdf`, is written only on request, by **Day summary** on the Day screen, and
+is never checked for staleness: it says what the journal said when it was made
+([day summary](../labels/day-summary.md)).
+
 ## `session.toml`
 
 ```
 Root {
   schema: String                // "1.0"
-  namespace: String
+  workspace: String
   date: Date
   journal_seq: u32              // the journal's last seq when this file was written
   input_pdfs: Map<PdfID, LabelPdf>

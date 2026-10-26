@@ -3,7 +3,7 @@
 # Packing.exe and pdfium.dll, no installer. The owner copies the folder to e.g. D:\Packing\
 # and starts Packing.exe from a shortcut; at the first start the program writes
 # packing-settings.toml and packing-workflows.toml beside itself, and the data folder (by default
-# data\) is there too. A rebuild replaces only the two program files, so those stay.
+# packing-data\) is there too. A rebuild replaces only the two program files, so those stay.
 #
 # Steps:
 #   1. build the release binary without bundling (npm run tauri build -- --no-bundle)

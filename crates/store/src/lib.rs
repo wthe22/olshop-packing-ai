@@ -11,9 +11,9 @@ mod inputs;
 mod journal;
 mod line;
 mod lock;
-mod namespaces;
 mod outputs;
 mod views;
+mod workspaces;
 
 pub use date::{DateFolder, OpenedDate, open_date};
 pub use error::StoreError;
@@ -24,12 +24,12 @@ pub use inputs::{InputProblem, InputState, StoredInput, check_inputs, input_path
 pub use journal::{Journal, Pending};
 pub use line::{encode_line, seal};
 pub use lock::DataLock;
-pub use namespaces::{
-    NAMESPACE_LIMIT, NamespaceNameError, check_namespace_name, create_namespace, dates,
-    last_written, namespaces,
-};
 pub use outputs::{
     OutputProblem, OutputState, Settled, check_outputs, discard_partial, move_aside, move_forward,
     partial_dir, replaced_dir, settle_partial,
 };
 pub use views::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, views_current, write_views};
+pub use workspaces::{
+    WORKSPACE_LIMIT, WorkspaceNameError, check_workspace_name, create_workspace, dates,
+    last_written, workspaces,
+};
