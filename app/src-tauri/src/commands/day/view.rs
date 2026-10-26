@@ -5,7 +5,8 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use packing_engine::ids::BatchId;
+use packing_engine::ids::{BatchId, PdfId};
+use packing_engine::record::{BatchSaved, LeftOutReason};
 use packing_engine::sorting::{REST_CODE, REST_NAME};
 use packing_store::{InputState, LiveBatch, OutputState};
 use serde::Serialize;
@@ -21,8 +22,40 @@ pub struct GroupPdfView {
     orders: usize,
     contents: usize,
     printed: bool,
-    /// The file is missing in `output/`, or not as its record says.
-    missing: bool,
+    problem: Option<FileProblem>,
+}
+
+/// What the open-time check found of an output: its card offers **Restore**.
+#[derive(Clone, Copy, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FileProblem {
+    Missing,
+    /// Its size is not the one its record names.
+    Changed,
+}
+
+/// One copy left out of a batch: where it is, and why.
+#[derive(Serialize)]
+pub struct LeftOutView {
+    order_id: String,
+    input: String,
+    page_start: u16,
+    page_end: u16,
+    #[serde(flatten)]
+    because: LeftOutBecause,
+}
+
+#[derive(Serialize)]
+#[serde(tag = "reason", rename_all = "snake_case")]
+pub enum LeftOutBecause {
+    /// A repeat in this batch: the copy written instead.
+    Repeat {
+        kept_input: String,
+        kept_page: u16,
+    },
+    SavedEarlier {
+        batch: BatchId,
+    },
 }
 
 #[derive(Serialize)]
@@ -35,10 +68,10 @@ pub struct BatchView {
     sort_rule: String,
     files: usize,
     orders: usize,
-    left_out: usize,
+    left_out: Vec<LeftOutView>,
     pdfs: Vec<GroupPdfView>,
     summary: String,
-    summary_missing: bool,
+    summary_problem: Option<FileProblem>,
     /// The read's warnings, then the verifier's on a batch saved anyway.
     warnings: Vec<String>,
     /// The verifier's errors: only on a batch saved anyway.
@@ -72,6 +105,8 @@ pub struct DayOverview {
 #[derive(Serialize)]
 pub struct ReprintRow {
     number: u8,
+    /// `HH:MM` when it was made.
+    time: String,
     file: String,
     orders: usize,
     pages: u16,
@@ -119,11 +154,12 @@ pub(super) fn overview(day: &OpenDay, old_data: bool) -> DayOverview {
             .reprints
             .iter()
             .map(|reprint| ReprintRow {
-                number: reprint.number,
-                file: reprint.file.clone(),
-                orders: reprint.orders.len(),
-                pages: reprint.pages,
-                path: output.join(&reprint.file).display().to_string(),
+                number: reprint.made.number,
+                time: reprint.create_time.zoned().strftime("%H:%M").to_string(),
+                file: reprint.made.file.clone(),
+                orders: reprint.made.orders.len(),
+                pages: reprint.made.pages,
+                path: output.join(&reprint.made.file).display().to_string(),
             })
             .collect(),
     }
@@ -131,13 +167,15 @@ pub(super) fn overview(day: &OpenDay, old_data: bool) -> DayOverview {
 
 fn batch_view(day: &OpenDay, batch: BatchId, live: &LiveBatch, output: &Path) -> BatchView {
     let saved = &live.saved;
-    let missing: BTreeSet<&str> = day
-        .outputs
-        .iter()
-        .filter(|problem| problem.batch == batch)
-        .filter(|problem| matches!(problem.state, OutputState::Missing | OutputState::Changed))
-        .map(|problem| problem.file.as_str())
-        .collect();
+    let problem = |file: &str| {
+        day.outputs
+            .iter()
+            .find(|problem| problem.batch == batch && problem.file == file)
+            .map(|problem| match problem.state {
+                OutputState::Missing => FileProblem::Missing,
+                OutputState::Changed => FileProblem::Changed,
+            })
+    };
     let pdfs = saved
         .outputs
         .iter()
@@ -167,7 +205,7 @@ fn batch_view(day: &OpenDay, batch: BatchId, live: &LiveBatch, output: &Path) ->
                 orders: orders.len(),
                 contents: contents.len(),
                 printed: live.printed.contains(group),
-                missing: missing.contains(file.file.as_str()),
+                problem: problem(&file.file),
             })
         })
         .collect();
@@ -183,14 +221,43 @@ fn batch_view(day: &OpenDay, batch: BatchId, live: &LiveBatch, output: &Path) ->
         sort_rule: saved.sort_rule.name.clone(),
         files: saved.inputs.len(),
         orders: saved.orders.len(),
-        left_out: saved.left_out.len(),
+        left_out: left_out(saved),
         pdfs,
-        summary_missing: missing.contains(summary.as_str()),
+        summary_problem: problem(&summary),
         summary,
         warnings: saved.warnings.iter().map(|f| f.text.clone()).collect(),
         errors: saved.errors.iter().map(|f| f.text.clone()).collect(),
         folder: output.display().to_string(),
     }
+}
+
+fn left_out(saved: &BatchSaved) -> Vec<LeftOutView> {
+    let input = |pdf: &PdfId| {
+        saved
+            .inputs
+            .iter()
+            .find(|input| &input.pdf == pdf)
+            .map_or_else(String::new, |input| input.filename.clone())
+    };
+    saved
+        .left_out
+        .iter()
+        .map(|copy| LeftOutView {
+            order_id: copy.order_id.to_string(),
+            input: input(&copy.pdf),
+            page_start: copy.page_start,
+            page_end: copy.page_end,
+            because: match &copy.reason {
+                LeftOutReason::Repeat { pdf, page_start } => LeftOutBecause::Repeat {
+                    kept_input: input(pdf),
+                    kept_page: *page_start,
+                },
+                LeftOutReason::SavedEarlier { batch } => {
+                    LeftOutBecause::SavedEarlier { batch: *batch }
+                }
+            },
+        })
+        .collect()
 }
 
 /// Whether the data folder holds what a v0.1 data folder holds (namespaces.md).

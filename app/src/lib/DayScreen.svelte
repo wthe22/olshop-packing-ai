@@ -3,7 +3,7 @@
   // with its warnings and each group PDF with its **Printed** tick (a note); *New batch* starts
   // the batch flow.
   import { texts } from "../texts";
-  import type { BatchView, DayOverview, GroupPdfView } from "./api/day";
+  import type { BatchView, DayOverview, FileProblem, GroupPdfView, LeftOutView } from "./api/day";
 
   let {
     overview,
@@ -15,6 +15,7 @@
     onNewBatch,
     onAmend,
     onRevert,
+    onRestore,
   }: {
     overview: DayOverview | null;
     saved: string | null;
@@ -29,27 +30,37 @@
     onNewBatch: () => void;
     onAmend: (batch: BatchView) => void;
     onRevert: (batch: BatchView) => void;
+    // **Restore** an output the open-time check found missing or changed.
+    onRestore: (file: string) => void;
   } = $props();
 
-  // The batch numbers whose *Warnings ▸* is expanded, and those whose *Saved with `<n>` errors ▸*
-  // is.
+  // The batch numbers whose *Warnings ▸*, *Saved with `<n>` errors ▸* and *Left out ▸* are
+  // expanded.
   let openWarnings = $state<number[]>([]);
   let openErrors = $state<number[]>([]);
+  let openLeftOut = $state<number[]>([]);
 
-  function toggleWarnings(batch: number) {
-    openWarnings = openWarnings.includes(batch)
-      ? openWarnings.filter((item) => item !== batch)
-      : [...openWarnings, batch];
-  }
-
-  function toggleErrors(batch: number) {
-    openErrors = openErrors.includes(batch)
-      ? openErrors.filter((item) => item !== batch)
-      : [...openErrors, batch];
-  }
+  const toggled = (list: number[], batch: number) =>
+    list.includes(batch) ? list.filter((item) => item !== batch) : [...list, batch];
 
   const join = (folder: string, file: string) => `${folder}\\${file}`;
+
+  function leftOutLine(copy: LeftOutView): string {
+    const where = texts.day.pages(copy.input, copy.page_start, copy.page_end);
+    return copy.reason === "repeat"
+      ? texts.day.leftOutRepeat(copy.order_id, where, copy.kept_input, copy.kept_page)
+      : texts.day.leftOutSaved(copy.order_id, where, copy.batch);
+  }
 </script>
+
+{#snippet fileButton(folder: string, file: string, problem: FileProblem | null)}
+  {#if problem}
+    <span class="problem">{texts.day.problem(problem)}</span>
+    <button onclick={() => onRestore(file)}>{texts.day.restore}</button>
+  {:else}
+    <button onclick={() => onOpen(join(folder, file))}>{texts.day.open}</button>
+  {/if}
+{/snippet}
 
 <main>
   <div class="bar">
@@ -59,6 +70,7 @@
           overview.totals.batches,
           overview.totals.orders,
           overview.totals.pdfs,
+          overview.reprints.length,
         )}
       {/if}
     </span>
@@ -108,7 +120,6 @@
             <span class="code">{pdf.group}</span>
             <span class="name">{pdf.name}</span>
             <span class="counts">{texts.day.counts(pdf.orders, pdf.contents)}</span>
-            {#if pdf.missing}<span class="problem">{texts.day.missing}</span>{/if}
             <label class="printed">
               <input
                 type="checkbox"
@@ -118,31 +129,31 @@
                 onchange={(event) => onSetPrinted(batch, pdf, event.currentTarget.checked)}
               />
             </label>
-            <button onclick={() => onOpen(join(batch.folder, pdf.file))}
-              >{texts.day.open}</button
-            >
+            {@render fileButton(batch.folder, pdf.file, pdf.problem)}
           </div>
         {/each}
         <div class="batch-foot">
           <span class="packing">
             {texts.day.summaryPdf}
-            {#if batch.summary_missing}<span class="problem">{texts.day.missing}</span>{/if}
-            <button onclick={() => onOpen(join(batch.folder, batch.summary))}
-              >{texts.day.open}</button
-            >
+            {@render fileButton(batch.folder, batch.summary, batch.summary_problem)}
           </span>
-          {#if batch.left_out > 0}
-            <span class="muted">{texts.day.leftOut(batch.left_out)}</span>
+          {#if batch.left_out.length > 0}
+            <button class="link" onclick={() => (openLeftOut = toggled(openLeftOut, batch.batch))}>
+              {texts.day.leftOut(batch.left_out.length)}
+            </button>
           {/if}
           {#if batch.errors.length > 0}
-            <button class="link errors" onclick={() => toggleErrors(batch.batch)}>
+            <button
+              class="link errors"
+              onclick={() => (openErrors = toggled(openErrors, batch.batch))}
+            >
               {texts.day.savedWithErrors(batch.errors.length)}
             </button>
           {/if}
           {#if batch.warnings.length === 0}
             <span class="muted">{texts.day.warningsNone}</span>
           {:else}
-            <button class="link" onclick={() => toggleWarnings(batch.batch)}>
+            <button class="link" onclick={() => (openWarnings = toggled(openWarnings, batch.batch))}>
               {texts.day.warnings(batch.warnings.length)}
             </button>
           {/if}
@@ -165,14 +176,41 @@
             {/each}
           </ul>
         {/if}
+        {#if openLeftOut.includes(batch.batch)}
+          <ul class="warnings">
+            {#each batch.left_out as copy}
+              <li>{leftOutLine(copy)}</li>
+            {/each}
+          </ul>
+        {/if}
       </section>
     {/each}
+  {/if}
+
+  {#if overview && overview.reprints.length > 0}
+    <div class="reprints">
+      <span>{texts.day.reprints}</span>
+      {#each overview.reprints as reprint (reprint.number)}
+        <span class="reprint">
+          {texts.day.reprint(reprint.number, reprint.orders, reprint.time)}
+          <button onclick={() => onOpen(reprint.path)}>{texts.day.open}</button>
+        </span>
+      {/each}
+    </div>
   {/if}
 </main>
 
 <style>
   main {
     padding: 1rem;
+  }
+
+  .reprints {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
   }
 
   .bar {

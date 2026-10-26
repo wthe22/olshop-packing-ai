@@ -303,6 +303,20 @@ export class Shell {
     this.overlay = null;
   };
 
+  // **Restore** an output found missing or changed: written again from the stored inputs and
+  // checked like the original; a finding keeps nothing and is shown.
+  restore = async (file: string) => {
+    this.busy = true;
+    try {
+      const result = await dayData.restoreOutput(this.day, file);
+      if (!result.restored) this.error = texts.day.restoreFailed(file, result.errors);
+      await this.refreshOverview();
+    } catch (e) {
+      this.error = String(e);
+    }
+    this.busy = false;
+  };
+
   // *Revert* the newest batch: confirm, then revert it.
   revert = async (row: dayData.BatchView) => {
     const asked = await confirm(texts.day.confirmRevert(row.batch, row.pdfs.length, row.orders), {

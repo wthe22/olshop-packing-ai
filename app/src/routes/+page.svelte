@@ -95,6 +95,7 @@
             onNewBatch={shell.startBatch}
             onAmend={shell.amend}
             onRevert={shell.revert}
+            onRestore={shell.restore}
           />
         {:else if shell.screen === "new-batch"}
           <NewBatchScreen

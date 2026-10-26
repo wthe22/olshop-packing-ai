@@ -104,9 +104,16 @@ fn a_saved_batch_shows_the_same_day_after_a_restart() {
     let batch = &shown["batches"][0];
     assert_eq!(batch["pdfs"][0]["file"], GROUP_FILE);
     assert_eq!(batch["summary"], "1 summary.pdf");
-    assert_eq!(
-        (batch["orders"].clone(), batch["left_out"].clone()),
-        (4.into(), 2.into())
+    assert_eq!(batch["orders"], 4);
+    let left_out = batch["left_out"].as_array().unwrap();
+    assert_eq!(left_out.len(), 2);
+    assert_eq!(left_out[0]["reason"], "repeat", "{left_out:?}");
+    assert!(
+        left_out[0]["kept_input"]
+            .as_str()
+            .unwrap()
+            .starts_with("labels-repeat-"),
+        "the copy kept names its input: {left_out:?}"
     );
 
     drop(state);
@@ -363,7 +370,7 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     fs::remove_file(output.join(GROUP_FILE)).unwrap();
     let missing = day(&state);
     assert_eq!(
-        missing["batches"][0]["pdfs"][0]["missing"], true,
+        missing["batches"][0]["pdfs"][0]["problem"], "missing",
         "the reprint opened today, so the date is checked again when it opens"
     );
     let restored = serde_json::to_value(restore_file(&state, DAY, GROUP_FILE).unwrap()).unwrap();

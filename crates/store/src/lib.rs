@@ -18,7 +18,7 @@ mod views;
 pub use date::{DateFolder, OpenedDate, open_date};
 pub use error::StoreError;
 pub use files::sha256_of;
-pub use fold::{Damage, DamageReason, Fold, LastWrites, LiveBatch};
+pub use fold::{Damage, DamageReason, Fold, LastWrites, LiveBatch, Reprint};
 pub use index::{IndexedOrder, SearchIndex};
 pub use inputs::{InputProblem, InputState, StoredInput, check_inputs, input_path, store_input};
 pub use journal::{Journal, Pending};

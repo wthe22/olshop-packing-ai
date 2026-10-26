@@ -105,8 +105,15 @@ pub struct Fold {
     pub live: BTreeMap<BatchId, LiveBatch>,
     /// Every input any record named, live or not.
     pub inputs: BTreeMap<PdfId, Sha256>,
-    pub reprints: Vec<ReprintMade>,
+    pub reprints: Vec<Reprint>,
     pub last_writes: LastWrites,
+}
+
+/// A reprint of the date and when it was made.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Reprint {
+    pub made: ReprintMade,
+    pub create_time: Datetime,
 }
 
 impl Fold {
@@ -234,7 +241,10 @@ impl Fold {
                         reprint.number
                     )));
                 }
-                self.reprints.push(reprint.clone());
+                self.reprints.push(Reprint {
+                    made: reprint.clone(),
+                    create_time: record.time.clone(),
+                });
                 self.last_writes =
                     LastWrites::Files(vec![(reprint.file.clone(), reprint.sha256.clone())]);
             }

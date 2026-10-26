@@ -314,7 +314,8 @@ fn a_reprint_writes_the_chosen_orders_pages_into_today_in_printing_order() {
     let reprinted: Vec<&OrderId> = made.orders.iter().map(|o| &o.order_id).collect();
     assert_eq!(reprinted, in_order, "their original printing order");
     assert!(today.dir().join("output").join(&made.file).is_file());
-    assert_eq!(journal.fold().reprints, std::slice::from_ref(&made));
+    let reprints = &journal.fold().reprints;
+    assert_eq!((reprints.len(), &reprints[0].made), (1, &made));
     assert_eq!(
         day.journal.fold().live[&record.batch].saved,
         record,

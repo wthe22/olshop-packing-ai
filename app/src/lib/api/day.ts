@@ -11,9 +11,22 @@ export interface GroupPdfView {
   orders: number;
   contents: number;
   printed: boolean;
-  // Missing in `output\`, or not as its record says.
-  missing: boolean;
+  problem: FileProblem | null;
 }
+
+// What the open-time check found of an output: its card offers **Restore**.
+export type FileProblem = "missing" | "changed";
+
+// One copy left out of a batch: where it is, and why.
+export type LeftOutView = {
+  order_id: string;
+  input: string;
+  page_start: number;
+  page_end: number;
+} & (
+  | { reason: "repeat"; kept_input: string; kept_page: number }
+  | { reason: "saved_earlier"; batch: number }
+);
 
 export interface BatchView {
   batch: number;
@@ -23,10 +36,10 @@ export interface BatchView {
   sort_rule: string;
   files: number;
   orders: number;
-  left_out: number;
+  left_out: LeftOutView[];
   pdfs: GroupPdfView[];
   summary: string;
-  summary_missing: boolean;
+  summary_problem: FileProblem | null;
   warnings: string[];
   // The verifier's errors: only on a batch saved anyway.
   errors: string[];
@@ -49,6 +62,24 @@ export interface DayOverview {
   problems: string[];
   // The data folder also holds files of Packing v0.1, which are not read.
   old_data: boolean;
+  reprints: ReprintRow[];
+}
+
+// One reprint made on the date.
+export interface ReprintRow {
+  number: number;
+  // `HH:MM` when it was made.
+  time: string;
+  file: string;
+  orders: number;
+  pages: number;
+  path: string;
+}
+
+// What **Restore** did: the file written again, or the verifier's findings (nothing kept).
+export interface RestoreResult {
+  restored: boolean;
+  errors: string[];
 }
 
 export const dayOverview = (day: string): Promise<DayOverview> =>
@@ -61,6 +92,9 @@ export const setPrinted = (
   group: string,
   printed: boolean,
 ): Promise<void> => invoke("set_printed", { day, batch, group, printed });
+
+export const restoreOutput = (day: string, file: string): Promise<RestoreResult> =>
+  invoke("restore_output", { day, file });
 
 // *Revert* the newest batch. A file open in a PDF viewer stops it with the file named.
 export const revertLast = (day: string): Promise<void> =>

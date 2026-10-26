@@ -17,14 +17,28 @@ test("the Day screen's counts read singular where they should", () => {
     [texts.day.counts(1, 1), texts.day.counts(88, 3)],
     ["1 order   1 order content", "88 orders   3 order contents"],
   );
+  assert.equal(texts.day.leftOut(14), "Left out: 14 ▸");
   assert.deepEqual(
-    [texts.day.leftOut(1), texts.day.leftOut(14)],
-    ["Left out: 1 copy", "Left out: 14 copies"],
+    [
+      texts.day.leftOutRepeat("580000000000000042", texts.day.pages("labels_3.pdf", 12, 13), "labels_1.pdf", 4),
+      texts.day.leftOutSaved("580000000000000057", texts.day.pages("labels_2.pdf", 7, 7), 1),
+    ],
+    [
+      "580000000000000042 · labels_3.pdf p. 12–13 · repeat in this batch: the copy in labels_1.pdf p. 4 stays",
+      "580000000000000057 · labels_2.pdf p. 7 · saved earlier in batch 1",
+    ],
+  );
+  assert.deepEqual(
+    [texts.day.problem("missing"), texts.day.reprint(1, 3, "09:40")],
+    ["⚠ missing", "reprint 1 x3 (09:40)"],
   );
   assert.equal(texts.day.saved(2, 1), "Batch 2 saved: 1 group PDF and the summary PDF.");
-  assert.equal(
-    texts.day.summary(1, 2, 3),
-    "Today: 1 batch · 2 orders · 3 group PDFs",
+  assert.deepEqual(
+    [texts.day.summary(1, 2, 3, 0), texts.day.summary(2, 729, 5, 1)],
+    [
+      "This day: 1 batch · 2 orders · 3 group PDFs",
+      "This day: 2 batches · 729 orders · 5 group PDFs · 1 reprint",
+    ],
   );
   assert.equal(
     texts.day.batch(2, "09:12", 1, 129),

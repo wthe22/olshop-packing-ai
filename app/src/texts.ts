@@ -41,9 +41,10 @@ export const texts = {
   },
 
   day: {
-    // "Today: 2 batches · 729 orders · 5 group PDFs".
-    summary: (batches: number, orders: number, pdfs: number) =>
-      `Today: ${count(batches, "batch", "batches")} · ${count(orders, "order", "orders")} · ${count(pdfs, "group PDF", "group PDFs")}`,
+    // "This day: 2 batches · 729 orders · 5 group PDFs · 1 reprint".
+    summary: (batches: number, orders: number, pdfs: number, reprints: number) =>
+      `This day: ${count(batches, "batch", "batches")} · ${count(orders, "order", "orders")} · ${count(pdfs, "group PDF", "group PDFs")}` +
+      (reprints > 0 ? ` · ${count(reprints, "reprint", "reprints")}` : ""),
     nothing: "Nothing saved on this day yet.",
     newBatch: "+ New batch",
     // "Batch 2 · saved 09:12 · 2 files · 129 orders".
@@ -59,10 +60,24 @@ export const texts = {
     // "88 orders   3 order contents".
     counts: (orders: number, contents: number) =>
       `${count(orders, "order", "orders")}   ${count(contents, "order content", "order contents")}`,
-    // A batch's copies left out (repeats, orders saved earlier).
-    leftOut: (n: number) => `Left out: ${count(n, "copy", "copies")}`,
-    // An output found missing or changed when the date opened.
-    missing: "missing",
+    // A batch's copies left out (repeats, orders saved earlier), expanding to one line each.
+    leftOut: (n: number) => `Left out: ${n} ▸`,
+    // "580000000000000042 · labels_3.pdf p. 12–13 · repeat in this batch: the copy in labels_1.pdf p. 4 stays".
+    leftOutRepeat: (order: string, where: string, keptInput: string, keptPage: number) =>
+      `${order} · ${where} · repeat in this batch: the copy in ${keptInput} p. ${keptPage} stays`,
+    leftOutSaved: (order: string, where: string, batch: number) =>
+      `${order} · ${where} · saved earlier in batch ${batch}`,
+    // "labels_3.pdf p. 12–13".
+    pages: (input: string, start: number, end: number) =>
+      start === end ? `${input} p. ${start}` : `${input} p. ${start}–${end}`,
+    // An output found missing or changed when the date opened; **Restore** writes it again.
+    problem: (kind: "missing" | "changed") => `⚠ ${kind}`,
+    restore: "Restore",
+    restoreFailed: (file: string, errors: string[]) =>
+      `${file} was not restored: the written file did not pass the check. ${errors.join(" ")}`,
+    // "Reprints: reprint 1 x3 (09:40)".
+    reprints: "Reprints:",
+    reprint: (n: number, orders: number, time: string) => `reprint ${n} x${orders} (${time})`,
     amended: " · amended",
     // The data folder also holds files of Packing v0.1.
     oldData: "This folder also holds data of Packing v0.1 (labels\\). It is not read.",

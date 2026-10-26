@@ -114,9 +114,14 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
             .reprints
             .iter()
             .map(|reprint| Reprint {
-                number: reprint.number,
-                output_path: output_path(&reprint.file),
-                order_ids: reprint.orders.iter().map(|order| &order.order_id).collect(),
+                number: reprint.made.number,
+                output_path: output_path(&reprint.made.file),
+                order_ids: reprint
+                    .made
+                    .orders
+                    .iter()
+                    .map(|order| &order.order_id)
+                    .collect(),
             })
             .collect(),
     };

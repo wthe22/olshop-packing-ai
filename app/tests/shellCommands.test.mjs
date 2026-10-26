@@ -102,6 +102,12 @@ test("the file and printed commands reach the back end", async () => {
     revert_last: () => {
       if (fail === "revert_last") throw "nothing to revert";
     },
+    restore_output: (args) => {
+      if (fail === "restore_output") throw "the input is gone";
+      return args.file === "2-B Spion x2.pdf"
+        ? { restored: false, errors: ["page 3 of labels_1.pdf is in no output."] }
+        : { restored: true, errors: [] };
+    },
     "plugin:dialog|message": (args) => args.buttons?.OkCancelCustom?.[0] ?? "Ok",
   });
   const shell = new Shell();
@@ -117,10 +123,10 @@ test("the file and printed commands reach the back end", async () => {
 
   // The **Printed** tick of one group PDF: written, and the batch's rows updated in place.
   const pdfs = [
-    { group: "A", name: "Sepatu", file: "2-A Sepatu x2.pdf", orders: 2, contents: 1, printed: false, missing: false },
-    { group: "B", name: "Spion", file: "2-B Spion x2.pdf", orders: 2, contents: 1, printed: true, missing: false },
+    { group: "A", name: "Sepatu", file: "2-A Sepatu x2.pdf", orders: 2, contents: 1, printed: false, problem: null },
+    { group: "B", name: "Spion", file: "2-B Spion x2.pdf", orders: 2, contents: 1, printed: true, problem: "missing" },
   ];
-  const row = { batch: 2, time: "09:00", amended: false, sort_rule: "default", files: 2, orders: 4, left_out: 0, pdfs, summary: "2 summary.pdf", summary_missing: false, warnings: [], errors: [], folder: "C:/Data/Toko Contoh/2026-10-07/output" };
+  const row = { batch: 2, time: "09:00", amended: false, sort_rule: "default", files: 2, orders: 4, left_out: [], pdfs, summary: "2 summary.pdf", summary_problem: null, warnings: [], errors: [], folder: "C:/Data/Toko Contoh/2026-10-07/output" };
   await shell.setPrinted(row, pdfs[0], true);
   assert.deepEqual(pdfs.map((pdf) => pdf.printed), [true, true], "the tick is set");
   await shell.setPrinted(row, pdfs[1], false);
@@ -130,6 +136,17 @@ test("the file and printed commands reach the back end", async () => {
     { day: "2026-10-07", batch: 2, group: "B", printed: false },
   ]);
 
+  // **Restore** writes a lost output again and recounts the day; a finding is shown, nothing kept.
+  const counted = calls.filter((call) => call.command === "day_overview").length;
+  await shell.restore("2-A Sepatu x2.pdf");
+  assert.deepEqual(calls.find((call) => call.command === "restore_output").args, { day: "2026-10-07", file: "2-A Sepatu x2.pdf" });
+  assert.equal(shell.error, "");
+  assert.equal(calls.filter((call) => call.command === "day_overview").length, counted + 1);
+  await shell.restore("2-B Spion x2.pdf");
+  assert.equal(shell.error, texts.day.restoreFailed("2-B Spion x2.pdf", ["page 3 of labels_1.pdf is in no output."]));
+  assert.equal(shell.busy, false);
+  shell.error = "";
+
   // *Revert* asks first, then reverts the batch and recounts the day.
   const before = calls.filter((call) => call.command === "day_overview").length;
   await shell.revert(row);
@@ -138,8 +155,9 @@ test("the file and printed commands reach the back end", async () => {
   assert.equal(calls.filter((call) => call.command === "day_overview").length, before + 1, "the day is recounted");
 
   // A failure of any of them shows the error line and keeps the day screen.
-  for (const command of ["open_path", "show_in_folder", "set_printed", "revert_last"]) {
+  for (const command of ["open_path", "show_in_folder", "set_printed", "restore_output", "revert_last"]) {
     fail = command;
+    if (command === "restore_output") await shell.restore("2-A Sepatu x2.pdf");
     if (command === "open_path") await shell.openFile("C:/gone.pdf");
     if (command === "show_in_folder") await shell.openFolder("C:/gone");
     if (command === "set_printed") await shell.setPrinted(row, pdfs[0], true);
