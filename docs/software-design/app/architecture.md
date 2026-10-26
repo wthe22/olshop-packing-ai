@@ -8,6 +8,8 @@
 │        │  invoke("read_labels", …) / events ("read-progress", "save-progress")      │
 │        ▼                                                                            │
 │  packing-app (Tauri 2): commands, the open draft, the worker thread                  │
+│        ▼                                                                            │
+│  packing-batch  the batch steps: read a draft, save, revert, amend, Printed         │
 │        ├──► packing-engine  rules, filters, pages → copies → orders, repeats, plan,  │
 │        │                    order contents, the record of a batch. No PDF, no file   │
 │        ├──► packing-pdf     PDFium: page text and images, copy pages, summary PDF   │
@@ -28,6 +30,7 @@ with the crates that read and write ([verification](verification.md)).
 | `packing-pdf` | `packing-engine` (its types), `pdfium-render` | `packing-store`, `packing-verify` |
 | `packing-store` | `packing-engine` (its types), `serde_json`, `toml`, `jiff`, `sha2`, `xxhash-rust` | PDFium, `packing-pdf`, `packing-verify` |
 | `packing-verify` | `lopdf`, `regex`, `serde`, `serde_json`, `sha2`, `xxhash-rust` | `packing-engine`, `packing-pdf`, `packing-store`, PDFium |
+| `packing-batch` | `packing-engine`, `packing-pdf`, `packing-store`, `packing-verify` | — |
 | `packing-app`, `packing-cli` | all of the above | — |
 
 `packing-verify` reads the journal record as JSON into types of its own, so a field the writer gets wrong
@@ -52,9 +55,10 @@ is read as written, not as meant.
 ## Threads
 
 PDFium is not thread-safe: all PDFium work runs on one worker thread that owns the library, and the
-commands send it jobs. The open draft (orders, the opened input documents) stays on that thread until it
-is saved or cancelled. The verifier and the search index run on their own threads; the journal is written
-only by the command that holds the draft, one commit at a time.
+batch steps send it jobs; a job opens the files it needs and closes them before it returns. The open
+draft (its copies, orders and plan) is the app's until it is saved or cancelled. The verifier and the
+search index run on their own threads; the journal is written only by the command that holds the draft,
+one commit at a time.
 
 ## Text runs from PDFium
 

@@ -19,7 +19,7 @@ pub use error::StoreError;
 pub use files::sha256_of;
 pub use fold::{Damage, DamageReason, Fold, LastWrites, LiveBatch};
 pub use inputs::{InputProblem, InputState, StoredInput, check_inputs, input_path, store_input};
-pub use journal::Journal;
+pub use journal::{Journal, Pending};
 pub use line::{encode_line, seal};
 pub use lock::DataLock;
 pub use namespaces::{
@@ -27,7 +27,7 @@ pub use namespaces::{
     last_written, namespaces,
 };
 pub use outputs::{
-    OutputProblem, OutputState, Settled, check_outputs, move_aside, move_forward, partial_dir,
-    replaced_dir, settle_partial,
+    OutputProblem, OutputState, Settled, check_outputs, discard_partial, move_aside, move_forward,
+    partial_dir, replaced_dir, settle_partial,
 };
 pub use views::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, views_current, write_views};

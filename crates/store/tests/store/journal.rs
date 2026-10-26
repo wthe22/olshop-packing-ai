@@ -31,6 +31,35 @@ fn a_first_commit_starts_the_journal_and_reads_back() {
 }
 
 #[test]
+fn prepared_lines_are_what_the_commit_appends_and_go_stale_after_another_commit() {
+    let (_data, folder) = date_folder("prepared");
+    let mut journal = Journal::open(&folder).unwrap();
+    assert!(journal.bytes().unwrap().is_empty());
+    let first = outputs(&folder.dir().join("output"), 1, "one");
+    let pending = journal
+        .prepare(vec![RecordBody::BatchSaved(batch(1, false, first))], APP)
+        .unwrap();
+    let bytes = pending.bytes.clone();
+    journal.append_pending(pending).unwrap();
+    assert_eq!(journal.bytes().unwrap(), bytes);
+
+    let mark = |printed| {
+        RecordBody::PrintedMarked(PrintedMarked {
+            batch: BatchId::new(1),
+            group: "A".into(),
+            printed,
+        })
+    };
+    let stale = journal.prepare(vec![mark(true)], APP).unwrap();
+    journal.commit(vec![mark(false)], APP).unwrap();
+    assert!(matches!(
+        journal.append_pending(stale),
+        Err(StoreError::Rejected(DamageReason::SeqGap { .. }))
+    ));
+    assert_eq!(journal.fold().last_seq, 3);
+}
+
+#[test]
 fn printed_marks_revert_amend_and_reprints_fold_by_their_rules() {
     let (_data, folder) = date_folder("fold-rules");
     let mut journal = Journal::open(&folder).unwrap();

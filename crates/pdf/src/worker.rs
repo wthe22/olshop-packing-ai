@@ -93,6 +93,8 @@ pub enum Job {
         hash: String,
         reply: Sender<Result<Option<Vec<u8>>, PdfError>>,
     },
+    /// Any work with the library; it opens what it needs and closes it before it returns.
+    Run(Box<dyn FnOnce(&Pdfium) + Send>),
     /// Stop the worker loop.
     Shutdown,
 }
@@ -216,6 +218,20 @@ impl PdfWorker {
         recv(&rx)
     }
 
+    /// Run `task` on the worker thread and return what it returns.
+    pub fn run<R, F>(&self, task: F) -> Result<R, PdfError>
+    where
+        R: Send + 'static,
+        F: FnOnce(&Pdfium) -> R + Send + 'static,
+    {
+        let (reply, rx) = mpsc::channel();
+        self.send(Job::Run(Box::new(move |pdfium| {
+            let _ = reply.send(task(pdfium));
+        })))?;
+        rx.recv()
+            .map_err(|_| PdfError::Message("the PDF worker thread has stopped".into()))
+    }
+
     fn send(&self, job: Job) -> Result<(), PdfError> {
         self.tx
             .send(job)
@@ -301,6 +317,7 @@ fn serve(pdfium: &Pdfium, rx: &Receiver<Job>) {
                 };
                 let _ = reply.send(result);
             }
+            Job::Run(task) => task(pdfium),
             Job::Shutdown => break,
         }
     }

@@ -84,7 +84,7 @@ OutputFile {
 }
 
 Finding {
-  kind: FindingKind             // e.g. slip_total_differs, courier_unknown, page_doubled
+  kind: FindingKind             // e.g. slip_total_differs, courier_unknown; verifier on a batch saved anyway
   pdf: Option<PdfID>
   page: Option<u16>
   order_id: Option<String>

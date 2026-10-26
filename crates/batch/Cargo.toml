@@ -1,0 +1,16 @@
+[package]
+name = "packing-batch"
+description = "The batch steps over the engine, the PDF writer, the store and the verifier: read, save, revert, amend and the Printed tick."
+edition.workspace = true
+version.workspace = true
+publish.workspace = true
+
+[dependencies]
+jiff.workspace = true
+packing-engine.workspace = true
+packing-pdf.workspace = true
+packing-store.workspace = true
+packing-verify.workspace = true
+
+[dev-dependencies]
+testkit = { path = "../testkit" }

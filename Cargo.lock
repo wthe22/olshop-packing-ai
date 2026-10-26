@@ -2790,6 +2790,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "packing-batch"
+version = "0.1.0"
+dependencies = [
+ "jiff",
+ "packing-engine",
+ "packing-pdf",
+ "packing-store",
+ "packing-verify",
+ "testkit",
+]
+
+[[package]]
 name = "packing-cli"
 version = "0.1.0"
 dependencies = [

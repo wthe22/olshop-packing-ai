@@ -9,10 +9,19 @@ use packing_engine::record::{Datetime, Record, RecordBody, Recovered, SCHEMA, St
 
 use crate::StoreError;
 use crate::date::DateFolder;
-use crate::fold::{Damage, Fold};
+use crate::fold::{Damage, DamageReason, Fold};
 use crate::line::{encode_line, parse};
 
 pub const JOURNAL: &str = "journal.jsonl";
+
+/// The lines of a commit, sealed and checked by the fold, not yet appended.
+pub struct Pending {
+    /// The journal's last `seq` they follow.
+    from_seq: u32,
+    pub bytes: Vec<u8>,
+    pub records: Vec<Record>,
+    fold: Fold,
+}
 
 pub struct Journal {
     path: PathBuf,
@@ -75,14 +84,33 @@ impl Journal {
         self.torn.as_deref()
     }
 
+    /// The journal as on disk up to the end of its last good line: what a check of the next
+    /// commit compares with.
+    pub fn bytes(&self) -> Result<Vec<u8>, StoreError> {
+        match fs::read(&self.path) {
+            Ok(mut bytes) => {
+                bytes.truncate(self.good_len as usize);
+                Ok(bytes)
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
+            Err(error) => Err(StoreError::io(&self.path, error)),
+        }
+    }
+
     /// Commit `bodies` as one append, numbered by the fold and stamped with `app` and the time.
-    /// A torn tail is cut first and recorded as `recovered`; the first commit of a date starts
-    /// with `started`. A record the fold would not accept is refused and nothing is written.
     pub fn commit(
         &mut self,
         bodies: Vec<RecordBody>,
         app: &str,
     ) -> Result<Vec<Record>, StoreError> {
+        let pending = self.prepare(bodies, app)?;
+        self.append_pending(pending)
+    }
+
+    /// The lines a commit of `bodies` appends, without appending them: a torn tail is cut first
+    /// and recorded as `recovered`; the first commit of a date starts with `started`. A record the
+    /// fold would not accept is refused.
+    pub fn prepare(&self, bodies: Vec<RecordBody>, app: &str) -> Result<Pending, StoreError> {
         if let Some(damage) = &self.damage {
             return Err(StoreError::Damaged(damage.clone()));
         }
@@ -117,12 +145,28 @@ impl Journal {
             bytes.extend(encode_line(&record));
             records.push(record);
         }
+        Ok(Pending {
+            from_seq: self.fold.last_seq,
+            bytes,
+            records,
+            fold,
+        })
+    }
 
-        self.append(&bytes)?;
-        self.fold = fold;
-        self.good_len += bytes.len() as u64;
+    /// Append what [`Journal::prepare`] gave and `sync_all`: the commit. Lines prepared before
+    /// another commit are refused.
+    pub fn append_pending(&mut self, pending: Pending) -> Result<Vec<Record>, StoreError> {
+        if pending.from_seq != self.fold.last_seq {
+            return Err(StoreError::Rejected(DamageReason::SeqGap {
+                expected: self.fold.last_seq + 1,
+                found: pending.from_seq + 1,
+            }));
+        }
+        self.append(&pending.bytes)?;
+        self.fold = pending.fold;
+        self.good_len += pending.bytes.len() as u64;
         self.torn = None;
-        Ok(records)
+        Ok(pending.records)
     }
 
     fn append(&self, bytes: &[u8]) -> Result<(), StoreError> {

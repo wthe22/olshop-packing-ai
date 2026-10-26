@@ -69,6 +69,11 @@ fn move_back(date_dir: &Path) -> Result<usize, StoreError> {
     Ok(files.len())
 }
 
+/// Delete `.partial/` with what it holds: the outputs of an operation that did not commit.
+pub fn discard_partial(date_dir: &Path) -> Result<(), StoreError> {
+    remove_partial(&partial_dir(date_dir))
+}
+
 fn remove_partial(partial: &Path) -> Result<(), StoreError> {
     match fs::remove_dir_all(partial) {
         Ok(()) => Ok(()),

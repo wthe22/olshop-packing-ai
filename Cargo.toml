@@ -19,6 +19,7 @@ sha2 = "0.10"
 toml = "1"
 toml_edit = "0.25"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
+packing-batch = { path = "crates/batch" }
 packing-engine = { path = "crates/engine" }
 packing-pdf = { path = "crates/pdf" }
 packing-store = { path = "crates/store" }
