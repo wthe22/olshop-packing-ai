@@ -6,7 +6,10 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-10-26)
 
-- **Handoff of the session of 2026-10-26 (night) — the owner's turn: test v0.2.** R7 and R8 are done
+- **The work is [R10-owner-review.md](R10-owner-review.md)**: the owner tested v0.2 and asked for the
+  theme, the look, *workspace*, a filter for an unknown courier and the summary PDF's old order. Its first
+  unfinished step is the next work; R6.4 and R9 follow it.
+- **The owner's test of v0.2 (done, findings in R10).** R7 and R8 are done
   and pushed: the search index, reprint and restore; the side panel with the namespaces and dates; the
   Day card's **Restore**, *Left out* list and reprints; **Search** with **Reprint**; **Repeated orders**;
   **Sort rules** on `packing-workflows.toml`; the user guide rewritten for v0.2. The program folder
