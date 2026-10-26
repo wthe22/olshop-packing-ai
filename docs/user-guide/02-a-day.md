@@ -3,162 +3,141 @@
 A batch is one round of the day: you download the labels in the seller centre, prepare them in the
 app, then print.
 
+## The window
+
+The title bar names the program and its version (**Packing v0.2**), then **☰**, the open namespace
+and the date everything is saved to, and at the right **Search**, **Sort rules** and **Settings**.
+
+The **panel** at the left lists your namespaces and the dates of the open one:
+
+- **Namespace** chooses another namespace; **+ New namespace** asks for a name and opens it on today.
+- The dates, newest first, by month, each with its number of saved orders. Today is always there,
+  marked *· today*. Click a date to open it — for a download just after midnight that belongs to the
+  evening before. A batch being prepared asks first.
+- **⋯** on a date opens its folder in Explorer. A date marked **⚠ damaged** opens for viewing only.
+- **«** hides the panel, **☰** or `Ctrl+B` shows it again.
+
 ## A normal batch, step by step
 
 ### The Day screen
 
-![The Day screen](images/02-day.png)
+The **Day** screen shows what has been saved on the open date and is the way to the next batch.
 
-The **Day** screen shows what has been saved today and is the way to the next batch.
-
-- The top line counts today: "Today: 2 batches · 729 orders · 5 saved PDFs".
+- The top line counts the date: "This day: 2 batches · 729 orders · 5 group PDFs".
 - **+ New batch** starts a new batch.
-- Each batch is a card: "Batch 1 · saved 07:40 · 3 files · 600 orders", with one line per saved
-  PDF (number, pick code and name, orders, runs) and **Open** to open it in your PDF viewer.
-- A tick beside each saved PDF's **Open**, as large as the button, notes that you have printed that
-  PDF. The tick has no word beside it: its tooltip and screen-reader name say *Printed* with the
-  file's name. It is only a note — nothing is blocked or required, and an unticked row works as
-  before. The tick is saved the moment you click it, so it is still there when you open the app
-  again. A batch you amend starts with its ticks cleared.
-- **Open folder** opens the batch folder in Explorer.
-- On the newest batch only: **Amend** and **Revert**
-  ([Revert and amend the last batch](03-changes.md#revert-and-amend-the-last-batch)).
-- A day with nothing saved shows "Nothing saved on this day yet."
-
-The date in the top bar is the day everything is saved to. At the left of the top bar the program
-shows its name and version (**Packing v0.1**), the same on every screen. ◀ ▶ step a day; **Today**
-goes back to today (handy for a download just after midnight).
+- Each batch is a card: "Batch 2 · saved 09:12 · 2 files · 129 orders", one line per group PDF
+  (`2-A`, its name, orders, order contents) with **Open**, and a line for the batch's summary PDF.
+- The tick beside **Open** notes that you have printed that group PDF. It is only a note — nothing is
+  blocked — and it is saved the moment you click it. A batch you amend starts with its ticks cleared.
+- **Open folder** opens the date's `output` folder in Explorer.
+- On the newest batch only: **Amend** and **Revert** ([Changes](03-changes.md)).
+- A date with nothing saved shows "Nothing saved on this day yet."
 
 ### New batch
 
-![New batch with one file](images/03-new-batch.png)
-
-The title line holds a **Grouping** control: the grouping of categories this batch is packed with
-([Groupings](03-changes.md#groupings)). The list holds every grouping of your data
-folder, with the grouping you used last already chosen, so a shop that always uses one grouping never
-touches it.
+![New batch with two files](images/02-new-batch.png)
 
 1. Click **+ New batch**.
-2. If this batch needs another grouping of categories, choose it in **Grouping**; otherwise leave the grouping
-   shown.
-3. Add the label files: click **Add files…** and choose the *Shipping label + Packing slip* PDFs
-   of this download, or drop them onto the window ("Drop label PDFs here, or Add files…").
-   - Each file shows its page count and time. A file already used earlier today shows
-     *used in batch n* in orange.
-   - **×** removes a file from the list.
-4. Click **Read labels**.
-
-### Reading
-
-![Reading the labels](images/04-reading.png)
-
-The app reads the files page by page: "Reading labels …  page 143 of 257 (file 1 of 2)" with a
-progress bar. **Cancel** stops and returns to the file list; nothing is written. When it is done
-the **Plan** screen opens — after the logo prompt, if the batch has a logo the app has not seen.
+2. **Sort rule** is already set to the rule of your newest batch; change it only for a batch that is
+   sorted another way ([Sort rules](03-changes.md#sort-rules)).
+3. Add the label files: **Add files…** and choose the *Shipping label + Packing slip* PDFs of this
+   download, or drop them onto the window.
+   - Each file shows its page count and time. A file read in an earlier batch of this date shows
+     *used in batch n* in orange: its orders are found as already saved.
+   - **×** takes a file off the list.
+4. Click **Read labels**. "Reading labels …  page 143 of 257 (file 1 of 2)" with a progress bar;
+   **Cancel** stops and writes nothing.
 
 ### The logo prompt
 
-A courier is named from two clues, and only when they agree: the **logo** printed on the label and
-the **tracking-ID form**. The app knows the logos of J&T Express, SiCepat, J&T Cargo, IDX and SPX,
-the names of the buttons. A logo the app has not seen before is asked about once, before the
-Plan screen, and the answer is kept in `couriers.toml` (of a page's images, the ones drawn in its
-top 40 pt are looked at, so the frame, the barcode and the QR never ask):
+A courier is named from two clues, and only when they agree: the **logo** on the label and the form of
+its **tracking ID**. A logo the app has not seen is asked about once, before the plan:
+**Which courier is this logo?**, the logo as printed and "4 pages · 4 orders", then a button per
+courier, **Not a courier**, **I don't know** and **Skip all**.
 
-**Which courier is this logo?** — the logo as printed, with "4 pages · 4 orders" beside it, then a
-button per courier name, **Not a courier**, **I don't know** and **Skip all**.
+- **A courier name** names those orders and is remembered in `packing-workflows.toml`, beside the
+  program.
+- **Not a courier** is for a buying channel's strip (`TikTok Shop`, `Shopee`, …); it is remembered too.
+- **I don't know** (or **Esc**) writes nothing: the orders save without a courier and the logo is asked
+  about again next batch. **Skip all** does that for the rest of the batch.
 
-- **A courier name** names those orders at once. An order is named only if its tracking ID fits
-  that courier too, so one answer cannot name a wrong courier. The logo is written into
-  `couriers.toml`, so later batches know it too.
-- **Not a courier** is for an image that is not a courier's logo — a buying channel's strip
-  (`tokopedia | TikTok`, `TikTok Shop`, `Shopee`, …). It is written into `couriers.toml` too, so
-  the same strip is never asked about again.
-- **I don't know** writes nothing: those orders are saved with an empty courier and are listed in
-  the day's warning, and the logo is asked about again in the next batch. **Esc** does the same for
-  the one logo shown; the next logo still asks.
-- **Skip all** stops the prompts for the rest of this batch; nothing is written. The next batch
-  asks again from the start.
-- The prompt never blocks the work: the batch saves either way.
+### Repeated orders
+
+![Repeated orders](images/03-repeats.png)
+
+When an order is in the files more than once — two downloads that overlap, or a label printed twice —
+**Repeated orders** opens before the plan: "14 orders appear more than once · 14 extra copies · …".
+
+- One card per group of files that repeat each other, with each file's copies kept and left out.
+- **Keep the first copies** is chosen already; **Keep the last copies** and **Take file 3 out** are the
+  other choices. A file that also holds orders of its own cannot be taken out, and the card says so.
+- **▸ 10 orders** lists the repeated orders, *same* or *differs: the tracking ID*, with one choice per
+  copy; a choice there overrides the card for that order (*Chosen by hand*).
+- **Continue to the plan** keeps exactly one copy of each order. **Back** returns to the file list,
+  where each file with a repeat shows its group (▌G1) and **Review the repeats**.
 
 ### Plan
 
-![The Plan screen](images/05-plan.png)
+![The Plan screen](images/04-plan.png)
 
-The Plan screen is the heart of the app: which orders go into which saved PDF. It opens with your
-categories applied in order.
+Which orders go into which group PDF. It opens with the sort rule applied in order; on a normal day you
+check the counts and press **Save batch**.
 
-- The header names the grouping the batch is packed with: "Batch 3 · grouping default · 2 files · 257 pages ·
-  256 orders · 0 already saved".
-- **Rows** are the picks in order. Each takes its orders from the rows above.
-- **Use** (the tick) turns a pick off for this batch only; its orders fall to the rows below. The
-  rules file is not changed.
-- **↑ ↓** move a pick. **▸** shows the runs of a pick — what the packing list will show:
+- The header: "Batch 3 · sort rule default · 2 files · 257 pages · 256 orders · 0 already saved". When
+  copies were left out: "14 copies left out ▸" lists them, **Change…** returns to Repeated orders.
+- **Rows** are the groups of the sort rule, in order; each takes its orders from what the rows above
+  left. **Use** unticked skips a group for this batch only. **↑ ↓** move a group for this batch.
+- **▸** lists a group's order contents: "Sepatu Standar ×1 · 96 orders".
+- **File name** is suggested as `3-A Sepatu x130`; you can change it. Two group PDFs of a batch cannot
+  share a name.
+- **+ Add a group for this batch** adds a one-off group. **Edit sort rule** opens the
+  [Sort rules](03-changes.md#sort-rules) screen on this batch's rule; a save there rebuilds the plan.
+- When the sort rule has no groups yet: **No groups yet: all orders go into one PDF**.
+- **Back** returns to the file list with the files still there; only **Cancel** there throws the batch
+  away.
 
-![The runs of a pick](images/06-plan-runs.png)
+### Saving and the check
 
-- **File name**: the suggested name is `<n> <code> <name> ×<orders>`; you can change the whole
-  name. Two saved PDFs of one batch cannot have the same name (the second shows "Same name as
-  PDF 6").
-- **+ Add a pick for this batch** adds a one-off pick (it is not saved to your categories).
-- **Edit categories** opens your categories
-  ([Editing your categories](03-changes.md#editing-your-categories)).
-- **Packing list**: choose *one per PDF*, *one for the batch* (default) or *none*, and the layouts
-  *full*, *summary*, *pick* (default *pick*).
-- **Save batch** writes everything and returns to the Day screen. **Back** (top right) goes back to the
-  file list with the files still there; reading again loses the pick changes. Only **Cancel** there
-  throws the batch away.
+**Save batch** copies the label files into the date's `input` folder, writes the group PDFs and the
+summary PDF, and then a separate checker reads every written page back and compares it with the
+source pages and the plan: a doubled, missing, swapped or foreign page is caught before you print.
+The stage and a progress bar show while it runs (*Copying inputs*, *Writing*, *Verifying*, *Saving*).
 
-### The check before saving
+When the checker finds something, a dialog lists the errors and the warnings apart:
 
-Before the batch is written, the app reads its own saved PDFs and packing lists back and compares
-them with the plan, so a doubled page, a dropped page, an order in two saved PDFs or in none, a
-wrong label on a page or a wrong page order is caught before you print. It runs on every save and
-takes a second or two; the stage and a progress bar are shown while it writes and then checks
-("Writing the saved PDFs …  page 143 of 257", then "Checking the saved PDFs …"), so the window
-never looks frozen.
-
-When it finds something, a dialog names it in plain words, the errors and the warnings in two
-lists:
-
-- **Save anyway** — the batch is saved anyway. The two lists are kept on the batch card and in the
-  batch's `state.json`, so they never scroll away.
-- **Cancel — nothing is saved** — the dialog closes and the batch stays on the Plan screen, so you
-  can look again, change a pick or save anyway.
-
-A batch with every page in place but in another order is a warning only; it is still saved only
-after **Save anyway**.
+- **Save anyway** saves the batch; its card then shows "Saved with 2 errors ▸" until it is amended or
+  reverted.
+- **Cancel — nothing is saved** keeps the batch on the Plan screen.
 
 ### After saving
 
-![The Day screen after saving](images/08-day-saved.png)
+![The Day screen after saving](images/05-day.png)
 
-The Day screen shows the new batch on top with a green line "Batch 3 saved: 3 PDFs, 1 packing
-list." Click **Open** on each saved PDF and on the packing list, and print them.
+The new batch is on top with a green line "Batch 3 saved: 3 group PDFs and the summary PDF." **Open**
+each group PDF and the summary PDF and print them.
 
-A batch saved with **Save anyway** shows "Saved with 2 errors ▸" on its card, beside "Warnings ▸":
-click it to read the errors. The two lines stay on the card until the batch is amended or
-reverted.
-
-Everything is written into the program folder under `labels\<day>\batch <n>\`: the saved PDFs, the
-packing list, a `summary.txt`, and a `download\` copy of the files you read (so Amend works even if
-the originals are gone).
+- **Left out: 3 ▸** on a card lists each copy left out and why: a repeat (and the copy that stays) or
+  an order saved earlier in another batch.
+- **⚠ missing** or **⚠ changed** in place of **Open** means the file in `output` is gone or not as
+  saved; **Restore** writes it again from the stored labels and checks it like the original.
 
 ## Several batches a day
 
-Do the same for each download. The saved-PDF numbers continue through the day (batch 2 starts
-after batch 1's last number), so "sort by name" inside a batch folder is printing order. A file
-you read in an earlier batch today is marked *used in batch n*; if you read it again, its orders
-are found as already saved and left out (a warning lists them).
+Do the same for each download; the batches of a date are numbered 1, 2, 3. An order saved in a batch of
+the date is left out of every later batch of that date, so reading a file again saves nothing twice.
 
-## Find a saved order (Search)
+## Find and reprint a saved order (Search)
 
-**Search** in the top bar opens the Search panel over the screen; **Close** returns. It only reads:
-nothing is changed or saved.
+![Search with a trace line open](images/06-search.png)
 
-- The condition is built with the same boxes as your categories: **field**, **operator** and a
-  typed **value**, **+ condition** for a row, **+ group** for a group inside, **not** to reverse one.
-- Choose **This day** (the date in the top bar; the default) or **All days**.
-- Press **Search**: "3 orders in 2 batches", then one row per order — Order ID, tracking ID,
-  courier, items, batch and its saved PDF, with **Open** to print it.
-- An order saved before Search existed shows *items not stored*; find it by Order ID or tracking ID.
-  Nothing found says "No saved order matches."
+**Search** opens over the screen; **Close** returns. Searching changes nothing.
+
+- Build the filter with the same boxes as the sort rules, e.g. *Tracking ID starts with JY00000012*.
+- **This day** (the open date, the default) or **All days** of the namespace, then **Search**:
+  "3 orders in 2 batches" and one row per order — Order ID, tracking ID, courier, items, date and group,
+  **Open** for its group PDF, and **▸** for where it came from (the label file and pages, and the clue
+  that named its courier).
+- Tick the orders to print again (or **Select all results**) and press **Reprint 2 orders**: one PDF of
+  their label pages, in their original printing order, checked like a save, written into today:
+  "Reprint 1 written: 2 orders, 2 pages." with **Open**. The orders stay in their batches; today's Day
+  screen lists it under **Reprints**.

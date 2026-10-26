@@ -6,11 +6,23 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-10-26)
 
-- **The order of work is R7 → R8 → R6.4 → R9**: the owner asked for the missing features before more
-  clean-up (R6.4 is the CLI and the v0.1 code removal: nothing the owner sees). **R7 is done**: the search
-  index, reprint and restore in the back end, with the panel's and Search's commands. **R8 is under way**
-  ([R8-screens.md](R8-screens.md)): the screens on v0.2. Nothing waits on the owner; the program folder
-  is rebuilt after R8.
+- **Handoff of the session of 2026-10-26 (night) — the owner's turn: test v0.2.** R7 and R8 are done
+  and pushed: the search index, reprint and restore; the side panel with the namespaces and dates; the
+  Day card's **Restore**, *Left out* list and reprints; **Search** with **Reprint**; **Repeated orders**;
+  **Sort rules** on `packing-workflows.toml`; the user guide rewritten for v0.2. The program folder
+  `target/portable/Packing/` is rebuilt (v0.2.0).
+  - **What to review:** the program, with [R8-checklist.md](R8-checklist.md) in its order, and the
+    [user guide](../../user-guide/README.md).
+  - **Where to write answers:** a finding on a screen in [reviews/ui.md](../../reviews/ui.md), on batches,
+    files or data in [reviews/app.md](../../reviews/app.md), each as the next `R-<SCOPE>-n` with what was
+    done, what happened and what was expected. "All fine" can be said in the session.
+  - **What the next session does with each answer:** a finding becomes a task in this folder (or, for a
+    choice, a question in [questions/](../../software-design/questions/README.md) with a default) and is
+    fixed before R6.4; with no finding it goes on with **R6.4** ([R6-app-journal.md](R6-app-journal.md):
+    the CLI on `packing-batch` and the v0.1 code removed) and **R9** (the full check, an independent
+    review of the whole v0.2 diff, the coverage baseline recorded, `make-portable.sh`, the handoff).
+  - The guide's pictures are the real program on the `testdata/` labels (`node tools/guide-pictures.mjs`
+    drives a fresh copy over WebView2's DevTools port); the same run is a quick smoke test of the build.
 
 - **The work is the v0.2 rework**: [v0.2-rework.md](v0.2-rework.md) holds the decisions agreed with the owner
   and the order of work. **R1 to R5 are done**: [software-design/](../../software-design/README.md)
@@ -22,11 +34,10 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   repeats and the copies left out, the plan with order contents, the `batch_saved` record — and the 2.32
   fix; `crates/verify` checks a batch's outputs by page digest with `lopdf` alone (every page of the
   samples that PDFium copies keeps its digest). **R6 is under way** ([R6-app-journal.md](R6-app-journal.md)):
-  R6.1 to R6.3 are done, R6.4 follows R8. **The program the owner runs is v0.2.0**: it saves through
-  `crates/batch` and the journal into `{data_dir}/{namespace}/{date}/` and writes the summary PDF; *Categories*
-  and *Search* are gone until R8 brings them back on v0.2, so until then the sort rules are edited
-  in `packing-workflows.toml` by hand, and every repeat keeps its first copy. A task gets its own file in
-  this folder when it starts; until then its row in the order of work is the task.
+  R6.1 to R6.3 are done, R6.4 follows the owner's test of v0.2. **The program the owner runs is v0.2.0**: it
+  saves through `crates/batch` and the journal into `{data_dir}/{namespace}/{date}/` and writes the summary
+  PDF. A task gets its own file in this folder when it starts; until then its row in the order of work is
+  the task.
 - **The owner checked the v0.1 program** (2026-10-26): it works as before, including the full product name
   read without a space inside a word; the owner said to go ahead with R6. R6 is the first task that changes
   the program the owner runs: the app saves through the journal into `{data_dir}/{namespace}/{date}/` and no
@@ -48,8 +59,8 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 - **Kept for the rework**: [workflow-audit.md](workflow-audit.md), where the built program differs from the
   design; the v0.2 crates close its rows, and the program follows when R5 and R6 put them to use.
 - The program folder `target/portable/Packing/` is rebuilt after each task; a rebuild replaces only
-  `Packing.exe` and `pdfium.dll`, so the owner's settings, rules and data there stay. Its regression list, in [the phase 2 plan](../../archive/handoff-2026-10-23.md), is where R8's checklist
-  starts.
+  `Packing.exe` and `pdfium.dll`, so the owner's settings, rules and data there stay.
+  The owner's checklist for v0.2 is [R8-checklist.md](R8-checklist.md).
 
 ## Where to work
 

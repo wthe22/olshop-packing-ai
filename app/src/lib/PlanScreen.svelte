@@ -381,6 +381,10 @@
   }
 
   @media (prefers-color-scheme: dark) {
+    .no-groups {
+      color: #b0b0b0;
+    }
+
     th {
       color: #b0b0b0;
       border-color: #444444;

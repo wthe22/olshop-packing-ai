@@ -44,6 +44,7 @@ sample numbers are in [testing.md](testing.md).
 | Download `pdfium.dll` | `bash tools/get-pdfium.sh` → `vendor/pdfium.dll` (git-ignored) |
 | Build the program folder | `bash tools/make-portable.sh` → `target/portable/Packing/` |
 | The same from Explorer or `cmd` | `tools\make-portable.bat` (double-click; `--no-pause` for scripts) |
+| The user guide's pictures | `node tools/guide-pictures.mjs` after the build: a fresh copy of the program driven through a batch of the `testdata/` labels, each screen captured into `docs/user-guide/images/` |
 
 The folder holds `Packing.exe` + `pdfium.dll` and no installer. Copy `target/portable/Packing/` to
 the PC and start `Packing.exe` from a shortcut; to update, close the app and replace `Packing.exe`

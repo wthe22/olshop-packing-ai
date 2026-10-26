@@ -117,7 +117,7 @@
         </div>
         {#each batch.pdfs as pdf (pdf.group)}
           <div class="row">
-            <span class="code">{pdf.group}</span>
+            <span class="code">{batch.batch}-{pdf.group}</span>
             <span class="name">{pdf.name}</span>
             <span class="counts">{texts.day.counts(pdf.orders, pdf.contents)}</span>
             <label class="printed">

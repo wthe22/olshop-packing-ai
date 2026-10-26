@@ -350,7 +350,8 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .hint {
+    .hint,
+    .no-groups {
       color: #b0b0b0;
     }
 

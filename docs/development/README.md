@@ -63,6 +63,7 @@ app/                       Tauri app: Svelte screens (src/), Rust commands (src-
 tools/get-pdfium.sh        downloads the pinned pdfium.dll into vendor/ (git-ignored)
 tools/make-portable.sh     builds the portable program folder target/portable/Packing/
 tools/make-portable.bat    the same, for Explorer or cmd (runs the .sh through Git's bash)
+tools/guide-pictures.mjs   the user guide's pictures from the built program on testdata/ (WebView2 DevTools)
 tools/check.sh, *.mjs      the gates of code-rules.md
 testdata/                  made-up fixtures for the tests
 categories.toml            an example picks file: the grouping `default` (a data folder without one uses the one catch-all pick)
