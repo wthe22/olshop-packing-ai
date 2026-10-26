@@ -37,7 +37,8 @@ is only read; every write decision folds the journal.
 
 ## D-APP-16 — One summary PDF per batch, and no output options
 
-**Decision.** Each batch writes `{batch} summary.pdf`: the pick pages and a facts page. The packing-list
+**Decision.** Each batch writes `{batch} summary.pdf`: facts, groups with their order contents, picks
+([D-LABEL-16](label.md)). The packing-list
 scopes and layouts, and their setting, are gone.
 
 **Why.** The owner asked for few options with sensible defaults; the pick layout was the one in use.

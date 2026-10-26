@@ -136,7 +136,7 @@ impl<'m, 'a> Builder<'m, 'a> {
         self.ops().push(Op::Fill { x, y, w, h });
     }
 
-    fn horizontal_line(&mut self, x1: f32, y: f32, x2: f32) {
+    pub(crate) fn horizontal_line(&mut self, x1: f32, y: f32, x2: f32) {
         self.ops().push(Op::Line {
             x1,
             y1: y,

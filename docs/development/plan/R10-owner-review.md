@@ -28,6 +28,6 @@ suppression, coverage not lower*. Test with the owner's rules: copy
 | R10.1 (done) | Theme: colour tokens in `app.css` for light and dark, `color-scheme` so the native controls follow, the theme menu in the title bar, `theme` in `packing-settings.toml` (`system` by default); the group code on one line | Every screen right in both themes; the choice survives a restart |
 | R10.2 (done) | The look: title bar, panel head, first-start prompts, Settings and *About* as cards, the operator words (`starts with`, not `starts_with`) | Screenshots of each screen in both themes |
 | R10.3 (done) | `is_empty` in the filter language (text fields); on screen *is unknown* for Courier and Tracking ID, *is empty* for the others, no value box | Parser, printer and evaluator tables; a sort rule groups the orders with no courier |
-| R10.4 | The summary PDF: facts pages, then the groups with their order contents, then the pick pages | V6 still passes; the page order pinned by a test |
+| R10.4 (done) | The summary PDF: facts pages, then the groups with their order contents, then the pick pages | V6 still passes; the page order pinned by a test |
 | R10.5 | *Namespace* → *workspace* everywhere; the journal's stored field keeps its name `namespace` (no migration) | `git grep -i namespace` finds only that field and `docs/archive/` |
 | R10.6 | The user guide's pictures again (`node tools/guide-pictures.mjs`), `make-portable.sh`, the handoff | The owner can test |

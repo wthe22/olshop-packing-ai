@@ -1,8 +1,10 @@
-//! What the summary PDF prints, as text, from the batch's record: the header's counts, the pick
-//! lines and the facts page's sections. Plain functions, so they are tested without PDFium.
+//! What the summary PDF prints, as text, from the batch's record: the header's counts, the facts
+//! pages' sections, the groups with their order contents and the pick lines. Plain functions, so
+//! they are tested without PDFium.
 
 use packing_engine::orders::display_name;
 use packing_engine::record::{BatchSaved, LeftOutReason, SCHEMA};
+use packing_engine::sorting::{REST_CODE, REST_NAME};
 
 use crate::PDFIUM_VERSION;
 
@@ -52,14 +54,92 @@ pub(crate) fn picks(record: &BatchSaved) -> Vec<(i64, String)> {
         .collect()
 }
 
-/// One section of the facts page: a heading bar and its lines.
+/// One group of the group pages: its bar's heading and counts, and its order contents in the order
+/// the group PDF prints them.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct GroupSection {
+    /// `A  Sepatu`.
+    pub heading: String,
+    pub orders: usize,
+    pub units: u32,
+    pub contents: Vec<ContentRow>,
+}
+
+/// One order content of a group: its items as `display name ×quantity`, and its orders.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ContentRow {
+    pub items: Vec<String>,
+    pub orders: usize,
+}
+
+/// Each group PDF in group order, with its order contents.
+pub(crate) fn group_sections(record: &BatchSaved) -> Vec<GroupSection> {
+    record
+        .outputs
+        .iter()
+        .filter_map(|output| {
+            let code = output.group.as_ref()?;
+            let mut contents: Vec<(u16, usize)> = Vec::new();
+            for order in record.orders.iter().filter(|order| &order.group == code) {
+                match contents
+                    .iter_mut()
+                    .find(|(content, _)| *content == order.content)
+                {
+                    Some((_, orders)) => *orders += 1,
+                    None => contents.push((order.content, 1)),
+                }
+            }
+            let items = |content: u16| &record.contents[content as usize].items;
+            let units = contents
+                .iter()
+                .map(|&(content, orders)| {
+                    let each: u32 = items(content).iter().map(|i| u32::from(i.quantity)).sum();
+                    each * orders as u32
+                })
+                .sum();
+            Some(GroupSection {
+                heading: format!("{code}  {}", group_name(record, code)),
+                orders: contents.iter().map(|(_, orders)| orders).sum(),
+                units,
+                contents: contents
+                    .iter()
+                    .map(|&(content, orders)| ContentRow {
+                        items: items(content)
+                            .iter()
+                            .map(|item| {
+                                let name = display_name(&item.name, &item.variant);
+                                format!("{name} ×{}", item.quantity)
+                            })
+                            .collect(),
+                        orders,
+                    })
+                    .collect(),
+            })
+        })
+        .collect()
+}
+
+/// The group's name in the batch's sort rule; the orders no group took are *Uncategorised*.
+fn group_name<'r>(record: &'r BatchSaved, code: &str) -> &'r str {
+    if code == REST_CODE {
+        return REST_NAME;
+    }
+    record
+        .sort_rule
+        .label_groups
+        .iter()
+        .find(|group| group.code == code)
+        .map_or("", |group| group.name.as_str())
+}
+
+/// One section of the facts pages: a heading bar and its lines.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Section {
     pub heading: &'static str,
     pub lines: Vec<String>,
 }
 
-/// The facts page: groups, inputs, ledger, instant orders, warnings, sort rule and versions.
+/// The facts pages: groups, inputs, ledger, instant orders, warnings, sort rule and versions.
 pub(crate) fn facts(record: &BatchSaved, app: &str) -> Vec<Section> {
     vec![
         Section {

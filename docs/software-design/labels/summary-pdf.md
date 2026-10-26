@@ -2,18 +2,18 @@
 
 One per batch, `output/{batch} summary.pdf`, written with the group PDFs and checked by the verifier
 ([D-APP-16](../decisions/app-features.md)). There is no other packing list and no layout or scope to choose.
-
-## The pick pages
-
-What to take from stock for the whole batch: one line per item (product name and variation), its
-**display name** and its units, in two columns, sorted by display name.
+Three parts, each starting on a new page, in this order ([D-LABEL-16](../decisions/label.md)): the **facts
+pages**, the **group pages**, the **pick pages**. Every page has the same header.
 
 ```
-Summary · Toko Contoh · 2026-10-07 · batch 2                                           page 1/2
+Summary · Toko Contoh · 2026-10-07 · batch 2                                           page 2/4
 129 orders · 141 units · 2 groups · printed 09:12
-▓ Pick summary (units to take from stock) ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
-  96  Sepatu Standar Samping Motor               12  Spion Beat — Standard, honda
-  26  Sepatu Standar Samping Motor — Hitam        7  Knalpot Beat
+▓ A  Sepatu                                                              88 orders · 90 units ▓
+  Sepatu Standar Samping Motor — Hitam ×1                                                  61
+  Sepatu Standar Samping Motor ×2                                                          25
+  Sepatu Standar Samping Motor ×1                                                           2
+  Pelindung Rantai ×1
+─────────────────────────────────────────────────────────────────────────────────────────────
 ```
 
 - Header `Summary · <namespace> · <date> · batch <b>`, then `<orders> orders · <units> units · <groups> groups ·
@@ -21,9 +21,9 @@ Summary · Toko Contoh · 2026-10-07 · batch 2                                 
 - The header takes the top 23 mm: the title (13 pt bold) and `page x/y` in the first 7 mm, the counts line
   (9.5 pt) in the next 5 mm, then a 1 mm gap. The body starts at 23 mm on every page.
 
-## The facts page
+## The facts pages
 
-The last page says what the batch is, so the paper alone can be traced:
+The first pages say what the batch is, so the paper alone can be traced:
 
 | Section | Holds |
 |---|---|
@@ -37,8 +37,22 @@ The last page says what the batch is, so the paper alone can be traced:
 
 A section with nothing to list says *none*.
 
+## The group pages
+
+Each group PDF in group order, as the v0.1 packing list printed it: a bar with the group's code and name and
+its `<orders> orders · <units> units`, then each of its order contents in the order the group PDF prints
+them — its items as `display name ×quantity`, one per line, and its number of orders at the right. A content
+that does not fit at the foot of a page starts on the next one. No tracking ID and no block number
+([D-LABEL-15](../decisions/label.md)).
+
+## The pick pages
+
+What to take from stock for the whole batch: one line per item (product name and variation), its
+**display name** and its units, in two columns, sorted by display name, under the bar
+*Pick summary (units to take from stock)*.
+
 The verifier reads three things back as text and compares them with the record (V6 of
-[verification](../app/verification.md)): the header's `<orders> orders · <units> units · <groups> groups`,
+[verification](../app/verification.md)): the first page header's `<orders> orders · <units> units · <groups> groups`,
 the ledger's `<read> pages read = <written> written + <left> left out`, and each group's line by its tail
 `<orders> orders · <pages> pages · <contents> order contents`, in group order. Their words and order are
 fixed for that reason, and the numbers have no thousands separator. The file name before a group's tail is

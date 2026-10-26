@@ -6,24 +6,21 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-10-26)
 
-- **The work is [R10-owner-review.md](R10-owner-review.md)**: the owner tested v0.2 and asked for the
-  theme, the look, *workspace*, a filter for an unknown courier and the summary PDF's old order. Its first
-  unfinished step is the next work; R6.4 and R9 follow it.
-- **The owner's test of v0.2 (done, findings in R10).** R7 and R8 are done
-  and pushed: the search index, reprint and restore; the side panel with the namespaces and dates; the
-  Day card's **Restore**, *Left out* list and reprints; **Search** with **Reprint**; **Repeated orders**;
-  **Sort rules** on `packing-workflows.toml`; the user guide rewritten for v0.2. The program folder
-  `target/portable/Packing/` is rebuilt (v0.2.0).
-  - **What to review:** the program, with [R8-checklist.md](R8-checklist.md) in its order, and the
-    [user guide](../../user-guide/README.md).
-  - **Where to write answers:** a finding on a screen in [reviews/ui.md](../../reviews/ui.md), on batches,
-    files or data in [reviews/app.md](../../reviews/app.md), each as the next `R-<SCOPE>-n` with what was
-    done, what happened and what was expected. "All fine" can be said in the session.
-  - **What the next session does with each answer:** a finding becomes a task in this folder (or, for a
-    choice, a question in [questions/](../../software-design/questions/README.md) with a default) and is
-    fixed before R6.4; with no finding it goes on with **R6.4** ([R6-app-journal.md](R6-app-journal.md):
-    the CLI on `packing-batch` and the v0.1 code removed) and **R9** (the full check, an independent
-    review of the whole v0.2 diff, the coverage baseline recorded, `make-portable.sh`, the handoff).
+- **Handoff of the session of 2026-10-26 (late) — the work is [R10-owner-review.md](R10-owner-review.md).**
+  The owner tested v0.2 and asked for the theme, the look, *workspace*, a filter for an unknown courier and
+  the summary PDF's old order. R10.1 to R10.4 are done and pushed: the theme menu (Light, Dark, System) and
+  every control in the theme's colours; the new title bar, panel head, first-start cards and Settings with
+  *About*; the group code on one line; *Courier · is unknown* (`is_empty`); the summary PDF as facts →
+  groups with their order contents → picks. The program folder `target/portable/Packing/` is rebuilt.
+  - **Next session:** R10.5 (*namespace* → *workspace*; the journal's `started` field keeps its stored
+    name `namespace` through `serde(rename)`, so no migration), then R10.6 (the guide's pictures, the
+    portable build, the handoff), then **R6.4** ([R6-app-journal.md](R6-app-journal.md)) and **R9** (the
+    full check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff).
+  - **The owner may test now**, in this order: the theme menu at the right of the title bar in each of
+    its three choices; a sort rule with *Courier · is unknown*; a saved batch's Day card (group codes
+    such as `1-S1`) and its summary PDF. A finding goes into [reviews/ui.md](../../reviews/ui.md),
+    [reviews/label.md](../../reviews/label.md) or [reviews/rules.md](../../reviews/rules.md) as the next
+    `R-<SCOPE>-n` (R-UI-16, R-LABEL-3, R-RULES-4); the next session turns each into a step of R10.
   - The guide's pictures are the real program on the `testdata/` labels (`node tools/guide-pictures.mjs`
     drives a fresh copy over WebView2's DevTools port); the same run is a quick smoke test of the build.
 

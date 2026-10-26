@@ -2,7 +2,9 @@ use jiff::civil::date;
 use packing_engine::record::{BatchSaved, OutputFile};
 use testkit::{TempDir, batch, sha, vendor_dir};
 
-use super::content::{Counts, Section, counts, facts, picks};
+use super::content::{
+    ContentRow, Counts, GroupSection, Section, counts, facts, group_sections, picks,
+};
 use super::{SummaryFacts, write_summary};
 
 fn output(file: &str, group: Option<&str>, pages: u16) -> OutputFile {
@@ -43,6 +45,33 @@ fn the_counts_and_the_picks_come_from_the_record() {
         vec![
             (2, "Sepatu Standar Samping Motor — honda".to_string()),
             (2, "Spion Beat".to_string()),
+        ]
+    );
+}
+
+#[test]
+fn each_group_lists_its_order_contents_in_printing_order() {
+    assert_eq!(
+        group_sections(&record()),
+        vec![
+            GroupSection {
+                heading: "A  Sepatu".to_string(),
+                orders: 2,
+                units: 2,
+                contents: vec![ContentRow {
+                    items: vec!["Sepatu Standar Samping Motor — honda ×1".to_string()],
+                    orders: 2,
+                }],
+            },
+            GroupSection {
+                heading: "Z  Lainnya".to_string(),
+                orders: 1,
+                units: 2,
+                contents: vec![ContentRow {
+                    items: vec!["Spion Beat ×2".to_string()],
+                    orders: 1,
+                }],
+            },
         ]
     );
 }
@@ -90,7 +119,7 @@ fn the_facts_page_says_what_the_batch_is() {
 }
 
 #[test]
-fn the_pick_pages_come_before_the_facts_page() {
+fn the_facts_then_the_groups_then_the_picks_each_from_a_new_page() {
     let Some(vendor) = vendor_dir() else {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
@@ -112,7 +141,19 @@ fn the_pick_pages_come_before_the_facts_page() {
         },
     )
     .expect("write the summary");
-    assert_eq!(pages, 2);
+    assert_eq!(pages, 3);
     let doc = pdfium.load_pdf_from_file(&path, None).expect("open it");
-    assert_eq!(doc.pages().len(), 2);
+    let texts: Vec<String> = doc
+        .pages()
+        .iter()
+        .map(|page| page.text().expect("the page's text").all())
+        .collect();
+    assert_eq!(texts.len(), 3);
+    assert!(texts[0].contains("Ledger"), "{}", texts[0]);
+    assert!(
+        texts[1].contains("Lainnya") && !texts[1].contains("Ledger"),
+        "{}",
+        texts[1]
+    );
+    assert!(texts[2].contains("Pick summary"), "{}", texts[2]);
 }

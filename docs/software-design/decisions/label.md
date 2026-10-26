@@ -127,3 +127,13 @@ printing order under their group.
 nothing printed needs a block number.
 
 **Applies to.** [groups](../labels/groups.md#a-group-pdf), [03 Plan](../workflow/03-plan.md#10-order-contents-and-file-names), [records](../data/records.md), [views](../data/views.md), [Plan](../ui/plan.md).
+
+## D-LABEL-16 — The summary PDF reads facts, groups, picks
+
+**Decision.** The summary PDF prints the facts pages first, then each group with its order contents (as the v0.1
+packing list did), then the pick pages, each part from a new page (R-LABEL-2).
+
+**Why.** The owner found the v0.1 order better: what the batch is, then what goes into each group PDF, then what
+to take from stock.
+
+**Applies to.** [summary PDF](../labels/summary-pdf.md).
