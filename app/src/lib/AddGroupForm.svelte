@@ -1,9 +1,9 @@
 <script lang="ts">
   // *+ Add a pick for this batch*: the condition is built in the boxes editor
-  // (the same as Categories) with a text view toggle.
+  // (the same as Sort rules) with a text view toggle.
   import { onMount } from "svelte";
   import { checkCondition as validateCondition } from "./api/batch";
-  import { conditionToTree, treeToCondition } from "./api/categories";
+  import { filterToTree, treeToFilter } from "./api/rules";
   import { texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
   import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
@@ -12,7 +12,7 @@
     onAdd,
     onClose,
   }: {
-    // *Add*: the code, name and condition of the new category; `true` when the plan took it and
+    // *Add*: the code, name and filter of the new group; `true` when the plan took it and
     // this form can close.
     onAdd: (code: string, name: string, condition: string) => Promise<boolean>;
     // *Cancel*, and after a successful *Add*.
@@ -32,7 +32,7 @@
   // The boxes editor changed: turn the tree into the condition text (the printer's form).
   async function treeChanged() {
     try {
-      condition = await treeToCondition(toRustTree(tree));
+      condition = await treeToFilter(toRustTree(tree));
       error = "";
     } catch (e) {
       error = String(e);
@@ -54,7 +54,7 @@
 
   async function toBoxes() {
     try {
-      tree = fromRustTree(await conditionToTree(condition));
+      tree = fromRustTree(await filterToTree(condition));
       mode = "boxes";
       error = "";
     } catch (e) {
@@ -98,7 +98,7 @@
     {#if mode === "boxes"}
       <BoxesEditor tree={tree} onEdit={treeChanged} />
       <button class="link" onclick={() => (mode = "text")}
-        >{texts.categories.textView}</button
+        >{texts.sortRules.textView}</button
       >
     {:else}
       <textarea
@@ -108,7 +108,7 @@
         oninput={checkCondition}
       ></textarea>
       <button class="link" disabled={!!error} onclick={toBoxes}
-        >{texts.categories.boxes}</button
+        >{texts.sortRules.boxes}</button
       >
     {/if}
     {#if error}

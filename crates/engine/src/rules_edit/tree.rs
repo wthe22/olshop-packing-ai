@@ -3,7 +3,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::rules::{Condition, NumberOp, RulesError, TextOp, format_condition, parse_condition};
+use crate::rules::{
+    Condition, NumberOp, RulesError, TextOp, format_condition, parse_condition, parse_filter,
+};
 
 use super::error;
 
@@ -170,8 +172,16 @@ fn to_node(cond: &Condition) -> Node {
 
 /// Parse a condition and show it as boxes.
 pub fn condition_to_tree(text: &str) -> Result<Tree, RulesError> {
-    let condition = parse_condition(text)?;
-    let node = to_node(&condition);
+    Ok(tree_of(&parse_condition(text)?))
+}
+
+/// Parse a filter of `packing-workflows.toml`, a one-off group or a search, and show it as boxes.
+pub fn filter_to_tree(text: &str) -> Result<Tree, RulesError> {
+    Ok(tree_of(&parse_filter(text)?))
+}
+
+fn tree_of(condition: &Condition) -> Tree {
+    let node = to_node(condition);
     let root = match node {
         Node::Group(group) => group,
         row @ Node::Row(_) => Group {
@@ -180,7 +190,7 @@ pub fn condition_to_tree(text: &str) -> Result<Tree, RulesError> {
             children: vec![row],
         },
     };
-    Ok(Tree { root })
+    Tree { root }
 }
 
 /// A group as a condition; an empty group is an error ("This group is empty"). A group
@@ -275,5 +285,13 @@ pub fn tree_to_condition(tree: &Tree) -> Result<String, RulesError> {
     let condition = group_condition(&tree.root)?;
     let text = format_condition(&condition);
     parse_condition(&text)?;
+    Ok(text)
+}
+
+/// Show boxes as filter text, checked by the filter grammar.
+pub fn tree_to_filter(tree: &Tree) -> Result<String, RulesError> {
+    let condition = group_condition(&tree.root)?;
+    let text = format_condition(&condition);
+    parse_filter(&text)?;
     Ok(text)
 }

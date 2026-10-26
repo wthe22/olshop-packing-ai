@@ -4,7 +4,7 @@
 // `SearchScreen.svelte`.
 
 import * as api from "./api/search";
-import { treeToCondition } from "./api/categories";
+import { treeToFilter } from "./api/rules";
 import { newRow, newTree, toRustTree, type UiTree } from "./conditions";
 import { texts } from "../texts";
 
@@ -58,7 +58,7 @@ export class Search {
     this.made = null;
     this.findings = [];
     try {
-      const filter = await treeToCondition(toRustTree(this.tree));
+      const filter = await treeToFilter(toRustTree(this.tree));
       const result = await api.searchOrders(filter, this.scope, this.day());
       this.loading = result.loading;
       if (result.loading) setTimeout(this.run, LOADING_RETRY_MS);

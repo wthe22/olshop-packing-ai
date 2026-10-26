@@ -1,15 +1,13 @@
-// The *No picks yet* line: the picks are unconfigured while the list holds no pick but
-// the one catch-all entry a data folder without `categories.toml` starts with, so
-// every order goes into one PDF set. The Categories screen shows the line for the entries it is
-// editing; the Plan screen's `no_categories` comes from the back end, which applies the same rule to
-// the plan (`rules::unconfigured`).
+// The *No groups yet* line: a sort rule whose only group has no filter sends every order into
+// one PDF. The Sort rules screen shows the line for the groups it is editing; the Plan screen's
+// `no_groups` comes from the back end, which applies the same rule to the plan.
 
-// One entry as the rule needs it: its condition text, `null` when it has none.
-export interface EntryCondition {
-  when: string | null;
+// One group as the rule needs it: its filter text, `null` when it has none.
+export interface GroupFilter {
+  filter: string | null;
 }
 
-// Whether the picks are unconfigured: exactly one entry and it has no condition.
-export function unconfigured(entries: EntryCondition[]): boolean {
-  return entries.length === 1 && entries[0].when === null;
+// Whether the rule has no groups yet: exactly one group and it has no filter.
+export function unconfigured(groups: GroupFilter[]): boolean {
+  return groups.length === 1 && groups[0].filter === null;
 }

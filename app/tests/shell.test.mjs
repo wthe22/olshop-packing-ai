@@ -251,7 +251,7 @@ test("Amend reads the batch's own files and opens the Plan with that batch", asy
         // The read reports its progress while it runs; the shell shows it on the day screen.
         emitEvent("read-progress", { page: 3, pages: 24 });
         during = shell.amendReading;
-        return { batch: 3, files: [], read: read({ amend: 3, plan: { rows: [], has_duplicate_names: false, add_at: 0, no_categories: false, grouping: "ramadhan" } }) };
+        return { batch: 3, files: [], read: read({ amend: 3, plan: { rows: [], has_duplicate_names: false, add_at: 0, no_groups: false, sort_rule: "ramadhan" } }) };
       },
     }),
   );
@@ -336,4 +336,21 @@ test("a batch with a repeat opens Repeated orders before the plan, and comes bac
   assert.equal(shell.draftOpen, true, "Back keeps the draft");
   shell.onPlan(read({ repeats: null }));
   assert.equal(shell.screen, "plan", "no repeat: the plan at once");
+});
+
+
+test("a saved sort rule rebuilds the open plan, which the Plan screen opens again on", async () => {
+  const calls = useBackend(
+    backend({ plan: () => ({ rows: [], has_duplicate_names: false, add_at: 0, no_groups: true, sort_rule: "harian" }) }),
+  );
+  const shell = new Shell();
+  await shell.afterRulesSaved();
+  assert.equal(calls.length, 0, "no batch open: nothing to rebuild");
+  shell.onPlan(read());
+  await shell.afterRulesSaved();
+  assert.deepEqual(calls.at(-1), { command: "plan", args: { edits: [] } });
+  assert.equal(shell.readResult.plan.sort_rule, "harian");
+  assert.equal(shell.planVersion, 1);
+  shell.navigate("sort-rules");
+  assert.equal(shell.overlay, "sort-rules");
 });

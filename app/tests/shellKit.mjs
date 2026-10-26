@@ -30,7 +30,7 @@ export function read(overrides = {}) {
     couriers: ["J&T Express"],
     logos: [],
     repeats: null,
-    plan: { rows: [], has_duplicate_names: false, add_at: 0, no_categories: false, grouping: "default" },
+    plan: { rows: [], has_duplicate_names: false, add_at: 0, no_groups: false, sort_rule: "default" },
     ...overrides,
   };
 }

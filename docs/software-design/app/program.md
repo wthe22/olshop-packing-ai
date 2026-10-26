@@ -18,7 +18,8 @@
 | `revert_last(day)` / `start_amend(day)` | Revert the newest batch / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)) | The date / the amend's file list and read |
 | `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
 | `restore_output(day, file)` | Write a missing output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
-| `rules_list()` / `rules_load(rule)` / `rules_check(rule, …)` / `rules_save(rule, …)` | The Sort rules screen ([rules file](../rules-file/README.md)) | Rules; groups; errors with line and column; live counts on the open draft |
+| `rules_list()` / `rules_load(rule)` / `rules_check(rule, groups)` / `rules_save(rule, groups)` | The Sort rules screen ([rules file](../rules-file/README.md)); a save rebuilds the open draft's plan | Rules, the file and the couriers; groups; errors with line and column; live counts on the open draft |
+| `rules_check_text(text)` / `rules_save_text(text)` | *Edit file as text* | The first check that fails, with its line and column |
 | `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_delete(rule)` | **+ New rule**, **Rename…**, **Delete rule** | — |
 | `filter_to_tree(text)` / `tree_to_filter(tree)` | The boxes editor: the engine's parser and printer, so the window has no second parser | Tree, or an error with line and column / the text |
 | `search_orders(filter, scope, day)` | Search the index ([reprint](reprint.md#search)); scope *This day* (the open `day`) or *All days* | One row per order with its trace |

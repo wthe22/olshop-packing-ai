@@ -4,6 +4,7 @@
   // groups. `onEdit` is called after every change so the caller can recount and re-check.
   import { conditionFields, numberOperators, textOperators, texts } from "../texts";
   import type { FieldType } from "../texts";
+  import type { Courier } from "./api/rules";
   import {
     fieldType,
     newGroup,
@@ -16,12 +17,15 @@
   let {
     tree,
     fields = conditionFields,
+    couriers = [],
     onEdit,
   }: {
     tree: UiTree;
     // The field list to offer: every field of the rules, or a subset.
     //
     fields?: { value: string; label: string; type: FieldType }[];
+    // The Courier box shows these by name and stores the code; none: the code is typed.
+    couriers?: Courier[];
     onEdit: () => void;
   } = $props();
 
@@ -47,7 +51,7 @@
   function setField(row: UiRow, field: string) {
     row.field = field;
     row.operator = fieldType(field) === "text" ? "contains" : "=";
-    row.value = "";
+    row.value = field === "courier" && couriers.length > 0 ? couriers[0].code : "";
     onEdit();
   }
 </script>
@@ -62,8 +66,8 @@
           onEdit();
         }}
       >
-        <option value="all">{texts.categories.allOf}</option>
-        <option value="any">{texts.categories.anyOf}</option>
+        <option value="all">{texts.sortRules.allOf}</option>
+        <option value="any">{texts.sortRules.anyOf}</option>
       </select>
       <label class="not">
         <input
@@ -74,12 +78,12 @@
             onEdit();
           }}
         />
-        {texts.categories.not}
+        {texts.sortRules.not}
       </label>
       {#if !root && parent}
         <span class="grow"></span>
         <button class="remove" onclick={() => removeChild(parent, index)}
-          >{texts.categories.removeGroup}</button
+          >{texts.sortRules.removeBox}</button
         >
       {/if}
     </div>
@@ -93,8 +97,8 @@
     {/each}
 
     <div class="group-foot">
-      <button onclick={() => addRow(group)}>{texts.categories.addCondition}</button>
-      <button onclick={() => addGroup(group)}>{texts.categories.addGroup}</button>
+      <button onclick={() => addRow(group)}>{texts.sortRules.addCondition}</button>
+      <button onclick={() => addGroup(group)}>{texts.sortRules.addBox}</button>
     </div>
   </div>
 {/snippet}
@@ -117,16 +121,31 @@
         <option value={op.value}>{op.label}</option>
       {/each}
     </select>
-    <input
-      class="value"
-      type={valueType(row.field)}
-      value={row.value}
-      placeholder={fieldType(row.field) === "time" ? "2026-10-07" : ""}
-      oninput={(event) => {
-        row.value = event.currentTarget.value;
-        onEdit();
-      }}
-    />
+    {#if row.field === "courier" && couriers.length > 0}
+      <select
+        class="value"
+        value={row.value}
+        onchange={(event) => {
+          row.value = event.currentTarget.value;
+          onEdit();
+        }}
+      >
+        {#each couriers as courier (courier.code)}
+          <option value={courier.code}>{courier.name}</option>
+        {/each}
+      </select>
+    {:else}
+      <input
+        class="value"
+        type={valueType(row.field)}
+        value={row.value}
+        placeholder={fieldType(row.field) === "time" ? "2026-10-07" : ""}
+        oninput={(event) => {
+          row.value = event.currentTarget.value;
+          onEdit();
+        }}
+      />
+    {/if}
     <label class="not">
       <input
         type="checkbox"
@@ -136,9 +155,9 @@
           onEdit();
         }}
       />
-      {texts.categories.not}
+      {texts.sortRules.not}
     </label>
-    <button class="remove" title={texts.categories.delete} onclick={() => removeChild(parent, index)}
+    <button class="remove" title={texts.sortRules.delete} onclick={() => removeChild(parent, index)}
       >×</button
     >
   </div>

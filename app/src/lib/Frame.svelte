@@ -24,6 +24,7 @@
 
   const items: { id: OverlayId; label: string }[] = [
     { id: "search", label: texts.nav.search },
+    { id: "sort-rules", label: texts.nav.sortRules },
     { id: "settings", label: texts.nav.settings },
   ];
 </script>

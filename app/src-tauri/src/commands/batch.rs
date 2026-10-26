@@ -9,7 +9,6 @@ use packing_batch::check_files as check;
 use packing_engine::ids::BatchId;
 use packing_engine::orders::LogoAnswer;
 use packing_engine::rules::parse_filter;
-use packing_engine::rules_edit::{self, Tree};
 use packing_pdf::worker::Progress;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -102,13 +101,13 @@ pub(crate) fn sort_rules_of(state: &AppState) -> Result<SortRulesView, String> {
 }
 
 /// *Read labels*: read on a blocking thread, emitting `read-progress {page, pages}`. A read
-/// replaces any open draft. `grouping` names the sort rule; `redo` is the batch an amend redoes,
+/// replaces any open draft. `sort_rule` names the sort rule; `redo` is the batch an amend redoes,
 /// which reads with that batch's rule.
 #[tauri::command]
 pub async fn read_labels(
     app: AppHandle,
     paths: Vec<String>,
-    grouping: String,
+    sort_rule: String,
     redo: Option<BatchId>,
 ) -> Result<ReadResult, String> {
     let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
@@ -116,7 +115,7 @@ pub async fn read_labels(
         let state = app.state::<AppState>();
         let reading = Reading {
             paths,
-            rule: grouping,
+            rule: sort_rule,
             redo,
             date: open_date(&state)?,
         };
@@ -160,20 +159,6 @@ pub fn check_condition(condition: String) -> Result<(), String> {
     parse_filter(&condition)
         .map(|_| ())
         .map_err(|error| error.to_string())
-}
-
-/// The add form's boxes editor: a filter's text as boxes. The boxes speak the words of
-/// `rules_edit`; a filter they print that the filter grammar refuses is caught by
-/// [`check_condition`].
-#[tauri::command]
-pub fn condition_to_tree(text: String) -> Result<Tree, String> {
-    rules_edit::condition_to_tree(&text).map_err(|error| error.to_string())
-}
-
-/// The add form's boxes as filter text.
-#[tauri::command]
-pub fn tree_to_condition(tree: Tree) -> Result<String, String> {
-    rules_edit::tree_to_condition(&tree).map_err(|error| error.to_string())
 }
 
 /// Repeated orders: keep the copies the choices name; the read as it now is. A choice that cannot

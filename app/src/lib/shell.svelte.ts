@@ -19,7 +19,7 @@ import { amendOpens } from "./planFlow";
 
 // The screens the shell routes between; the batch flow's screens are not in the nav.
 export type Screen = "day" | "new-batch" | "repeats" | "plan";
-export type OverlayId = "search" | "settings";
+export type OverlayId = "search" | "sort-rules" | "settings";
 
 export class Shell {
   ready = $state(false);
@@ -56,6 +56,8 @@ export class Shell {
   amendBatch = $state<number | null>(null);
   readResult = $state<batch.ReadResult | null>(null);
   draftOpen = $state(false);
+  // Counts the plans the back end rebuilt under an open Plan screen, which then opens again.
+  planVersion = $state(0);
   // The progress of *Amend*'s read of the batch's own files (the `read-progress` event), shown on
   // the Day screen until the Plan screen opens; `null` when nothing
   // reads.
@@ -68,8 +70,8 @@ export class Shell {
   nextBatch = $derived((this.overview?.totals.batches ?? 0) + 1);
   // The batch's own sort rule, for the amend's selection page's fixed line;
   // `null` for a new batch's file list.
-  amendGrouping = $derived(
-    this.amendBatch !== null && this.readResult !== null ? this.readResult.plan.grouping : null,
+  amendRule = $derived(
+    this.amendBatch !== null && this.readResult !== null ? this.readResult.plan.sort_rule : null,
   );
 
   // Start the shell: the data folder, the namespace, the day and About.
@@ -313,6 +315,18 @@ export class Shell {
   // *Search* and *Settings* open over the current screen.
   navigate = (id: OverlayId) => {
     this.overlay = id;
+  };
+
+  // A sort rule was written: the open batch's plan follows the file, so the Plan screen opens
+  // again on the rebuilt plan.
+  afterRulesSaved = async () => {
+    if (!this.draftOpen || !this.readResult) return;
+    try {
+      this.readResult = { ...this.readResult, plan: await batch.plan([]) };
+      this.planVersion += 1;
+    } catch (e) {
+      this.error = String(e);
+    }
   };
 
   // A reprint was written into today: today's Day screen lists it.

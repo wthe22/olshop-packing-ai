@@ -118,9 +118,9 @@ pub struct PlanView {
     /// Where *+ Add a group for this batch* inserts, above the rest row.
     pub(super) add_at: usize,
     /// The sort rule is one group that takes every order: one group PDF.
-    pub(super) no_categories: bool,
+    pub(super) no_groups: bool,
     /// The sort rule's name.
-    pub(super) grouping: String,
+    pub(super) sort_rule: String,
 }
 
 /// One row of the Plan screen: a group of the plan, its last group taking the rest, or the

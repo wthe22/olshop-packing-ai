@@ -11,7 +11,7 @@
   import { listen } from "@tauri-apps/api/event";
   import { texts } from "../texts";
   import { planButtons } from "./planFlow";
-  import AddCategoryForm from "./AddCategoryForm.svelte";
+  import AddGroupForm from "./AddGroupForm.svelte";
   import PlanRow from "./PlanRow.svelte";
   import SaveProgress from "./SaveProgress.svelte";
   import { findingsOf, type Findings } from "./saveCheck";
@@ -23,6 +23,7 @@
     onSaved,
     onBack,
     onChangeRepeats,
+    onEditRule,
     onCancel,
   }: {
     batchNumber: number;
@@ -34,6 +35,8 @@
     onBack: () => void;
     // *Change…* beside the copies left out: back to Repeated orders.
     onChangeRepeats: () => void;
+    // *Edit sort rule*: the Sort rules screen on this batch's rule; a save rebuilds the plan.
+    onEditRule: () => void;
     // *Cancel amend* (bottom): leave the batch for the Day screen and discard its draft. Never
     // asks, because an amend writes nothing before *Save batch `<b>` again*.
     onCancel: () => void;
@@ -97,7 +100,7 @@
 
   // *Add* on the add form: the new entry goes at the plan's own add position. `false` leaves the
   // form open; the error line above the table says why.
-  async function addCategory(code: string, name: string, condition: string): Promise<boolean> {
+  async function addGroup(code: string, name: string, condition: string): Promise<boolean> {
     await apply([
       {
         kind: "add",
@@ -156,7 +159,7 @@
       {:else}
         {texts.plan.header(
           batchNo,
-          read.plan.grouping,
+          read.plan.sort_rule,
           read.files,
           read.pages,
           read.orders,
@@ -168,7 +171,7 @@
       <span class="sub">
         {texts.plan.header(
           batchNo,
-          read.plan.grouping,
+          read.plan.sort_rule,
           read.files,
           read.pages,
           read.orders,
@@ -217,15 +220,15 @@
     <p class="error">{error}</p>
   {/if}
 
-  {#if view.no_categories}
-    <p class="no-categories">{texts.noCategories}</p>
+  {#if view.no_groups}
+    <p class="no-groups">{texts.noGroups}</p>
   {/if}
 
   <table>
     <thead>
       <tr>
         <th class="c-use">{texts.plan.use}</th>
-        <th class="c-category">{texts.plan.category}</th>
+        <th class="c-group">{texts.plan.group}</th>
         <th class="c-orders">{texts.plan.orders}</th>
         <th class="c-runs">{texts.plan.runs}</th>
         <th class="c-file">{texts.plan.fileName}</th>
@@ -247,11 +250,12 @@
   </table>
 
   <div class="add-bar">
-    <button onclick={toggleAdd}>{texts.plan.addCategory}</button>
+    <button onclick={toggleAdd}>{texts.plan.addGroup}</button>
+    <button onclick={onEditRule}>{texts.plan.editRule}</button>
   </div>
 
   {#if showAdd}
-    <AddCategoryForm onAdd={addCategory} onClose={() => (showAdd = false)} />
+    <AddGroupForm onAdd={addGroup} onClose={() => (showAdd = false)} />
   {/if}
 
   <SaveProgress
@@ -310,7 +314,7 @@
   }
 
   /*: the plan is the one catch-all entry, so every order goes into one PDF set. */
-  .no-categories {
+  .no-groups {
     margin: 0 0 0.75rem;
     color: #4a4a4a;
     font-weight: 600;

@@ -46,7 +46,7 @@ test("a search finds rows, ticks choose them and Reprint writes them into today"
   let reprinted = 0;
   let refused = false;
   const calls = useBackend({
-    tree_to_condition: () => 'tracking_id starts_with "JY"',
+    tree_to_filter: () => 'tracking_id starts_with "JY"',
     search_orders: () => found,
     reprint: (args) =>
       refused
@@ -96,7 +96,7 @@ test("a search finds rows, ticks choose them and Reprint writes them into today"
 
 test("a filter that does not parse shows its error; an index being built is asked again", async () => {
   useBackend({
-    tree_to_condition: () => {
+    tree_to_filter: () => {
       throw "line 1, col 13: a value is missing";
     },
   });
@@ -107,7 +107,7 @@ test("a filter that does not parse shows its error; an index being built is aske
 
   let asked = 0;
   useBackend({
-    tree_to_condition: () => 'name contains "sepatu"',
+    tree_to_filter: () => 'name contains "sepatu"',
     search_orders: () => {
       asked += 1;
       return asked === 1 ? { loading: true, orders: 0, batches: 0, rows: [] } : found;

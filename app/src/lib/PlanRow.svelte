@@ -32,7 +32,7 @@
       />
     {/if}
   </td>
-  <td class="c-category">
+  <td class="c-group">
     <span class="code">{row.code}</span>
     <span class="name">{row.name}</span>
     {#if row.kind !== "entry"}<span class="tag">{texts.plan.rest}</span>{/if}
@@ -73,7 +73,7 @@
   {#each row.runs as run}
     <tr class="run">
       <td class="c-use"></td>
-      <td class="c-category" colspan="2">{run.contents}</td>
+      <td class="c-group" colspan="2">{run.contents}</td>
       <td class="c-runs run-orders">
         {run.orders} {run.orders === 1 ? "order" : "orders"}
       </td>

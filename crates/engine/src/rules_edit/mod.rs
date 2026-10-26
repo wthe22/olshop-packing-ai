@@ -20,7 +20,8 @@ mod tree;
 pub use self::counts::counts;
 pub use self::document::{Entry, RulesDocument};
 pub use self::tree::{
-    Group, GroupKind, Node, Row, RowValue, Tree, condition_to_tree, tree_to_condition,
+    Group, GroupKind, Node, Row, RowValue, Tree, condition_to_tree, filter_to_tree,
+    tree_to_condition, tree_to_filter,
 };
 
 /// A small `RulesError` (the field is public, the constructor in `rules` is not).

@@ -13,19 +13,19 @@
   import { listen } from "@tauri-apps/api/event";
   import { getCurrentWebview } from "@tauri-apps/api/webview";
   import * as batch from "../lib/api/batch";
-  import { DEFAULT_GROUPING, groupingsList, type GroupingView } from "../lib/api/categories";
-  import { preselectGrouping } from "../lib/groupings";
+  import { sortRules } from "./api/rules";
+  import { preselectRule } from "./sortRules";
   import { LogoPrompt, needsLogoPrompt } from "../lib/logoPrompt";
   import LogoPromptDialog from "./LogoPrompt.svelte";
   import BatchFiles from "./BatchFiles.svelte";
   import { fileChips } from "./repeats";
-  import GroupingControl from "./GroupingControl.svelte";
+  import SortRuleControl from "./SortRuleControl.svelte";
   import { texts } from "../texts";
 
   let {
     batchNumber,
     amend,
-    amendGrouping,
+    amendRule,
     files,
     onFiles,
     repeats,
@@ -38,10 +38,9 @@
     // or `null` for a new batch's file list. Decides the title, the order the files are listed
     // and read in, and that *Read labels* reads an amend.
     amend: number | null;
-    // The batch's own picks set on the amend's selection page, shown fixed — an
-    // amend reads that set again, whatever set was used last; `null` for a new batch's file
-    // list (the *Set* control is shown there instead).
-    amendGrouping: string | null;
+    // The batch's own sort rule on the amend's selection page, shown fixed; `null` for a new
+    // batch's file list, where the rule is chosen.
+    amendRule: string | null;
     // The chosen files. The shell keeps them, so *Back* on the Plan screen shows this list again
     // with the files still there.
     files: batch.FileCheck[];
@@ -63,11 +62,10 @@
   // Set while *Cancel* is pressed: the read then returns to the file list, not to a stop message.
   let cancelling = false;
 
-  // The *Set* control: the sets of the data folder, with the
-  // set used last preselected, so a shop that always uses one set never touches it. The chosen
-  // set is passed to `read_labels` and remembered as the last used there.
-  let groupings = $state<GroupingView[]>([]);
-  let chosenGrouping = $state(DEFAULT_GROUPING);
+  // The sort rules of `packing-workflows.toml`, the newest batch's preselected, so an owner who
+  // always uses one rule never touches the choice.
+  let rules = $state<string[]>([]);
+  let chosenRule = $state("");
 
   // The logo prompt: after a read, before the Plan screen, each unseen
   // logo is asked about once. `asking` is the logo shown now; the flow itself is in logoPrompt.ts.
@@ -145,10 +143,9 @@
     });
     let result: batch.ReadResult | null = null;
     try {
-      // The batch's picks come from the set chosen above.
       result = await batch.readLabels(
         listed.map((file) => file.path),
-        chosenGrouping,
+        chosenRule,
         amend,
       );
     } catch (e) {
@@ -214,13 +211,12 @@
   }
 
   onMount(() => {
-    // The *Set* control's sets, with the set used last preselected. Only a new batch's file list has the control; the amend's selection page shows
-    // the batch's own set. A data folder whose sets cannot be listed keeps the set `default`.
+    // Only a new batch's file list chooses a rule; the amend's selection page shows the batch's.
     if (amend === null) {
-      groupingsList()
+      sortRules()
         .then((list) => {
-          groupings = list.groupings;
-          chosenGrouping = preselectGrouping(list.groupings, list.last_grouping);
+          rules = list.rules;
+          chosenRule = preselectRule(list.rules, list.preselected);
         })
         .catch((e) => (error = String(e)));
     }
@@ -250,12 +246,12 @@
 <main>
   <div class="bar">
     <h2>{amend === null ? texts.newBatch.title(batchNumber) : texts.newBatch.amendTitle(amend)}</h2>
-    <GroupingControl
+    <SortRuleControl
       {amend}
-      {amendGrouping}
-      {groupings}
-      chosen={chosenGrouping}
-      onChosen={(value) => (chosenGrouping = value)}
+      {amendRule}
+      {rules}
+      chosen={chosenRule}
+      onChosen={(value) => (chosenRule = value)}
     />
     <span class="grow"></span>
     <button onclick={cancel}>{texts.newBatch.cancel}</button>

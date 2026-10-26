@@ -1,16 +1,18 @@
 <script lang="ts">
-  // One category of the list: its code and name, its condition built in the
+  // One label group of the rule: its code and name, its filter built in the
   // boxes editor or typed in a text view, the count it takes in the open batch, and the buttons to
   // move, delete and mark it as the one that takes the rest. Every change recounts through
   // `onChange`; the entry itself is the entry the screen holds.
   import { texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
-  import { boxesToCondition, textToTree, type CatEntry } from "./categoryEntry";
+  import type { Courier } from "./api/rules";
+  import { boxesToFilter, textToTree, type GroupEntry } from "./groupEntry";
   import { newTree } from "./conditions";
 
   let {
     entry,
     draftBatch,
+    couriers,
     canUp,
     canDown,
     last,
@@ -19,9 +21,11 @@
     onRemove,
     onHelp,
   }: {
-    entry: CatEntry;
+    entry: GroupEntry;
     // The batch being prepared, for *In batch `<b>`: n*; `null` when no draft is open.
     draftBatch: number | null;
+    // The Courier box's list.
+    couriers: Courier[];
     canUp: boolean;
     canDown: boolean;
     // The last entry of the list: the one that can take the rest.
@@ -35,17 +39,17 @@
   } = $props();
 
   async function onBoxes() {
-    if (await boxesToCondition(entry)) await onChange();
+    if (await boxesToFilter(entry)) await onChange();
   }
 
   function onText() {
-    entry.when = entry.text;
+    entry.filter = entry.text;
     entry.boxesError = "";
     onChange();
   }
 
   async function toText() {
-    entry.text = entry.when ?? "";
+    entry.text = entry.filter ?? "";
     entry.mode = "text";
     entry.boxesError = "";
     await onChange();
@@ -57,12 +61,12 @@
 
   async function setRest(checked: boolean) {
     if (checked) {
-      entry.when = null;
+      entry.filter = null;
       entry.boxesError = "";
       entry.error = "";
       onChange();
     } else {
-      entry.when = "";
+      entry.filter = "";
       entry.text = "";
       entry.tree = newTree();
       entry.mode = "boxes";
@@ -72,17 +76,17 @@
   }
 </script>
 
-<section class="category">
+<section class="group">
   <div class="cat-head">
     <input
       class="code"
-      aria-label={texts.categories.code}
+      aria-label={texts.sortRules.code}
       bind:value={entry.code}
       oninput={onChange}
     />
     <input
       class="name"
-      aria-label={texts.categories.name}
+      aria-label={texts.sortRules.name}
       bind:value={entry.name}
       oninput={onChange}
     />
@@ -90,25 +94,25 @@
     {#if entry.error}
       <span class="count mark">✗</span>
     {:else if draftBatch !== null && entry.count !== null}
-      <span class="count">{texts.categories.inBatch(draftBatch, entry.count)}</span>
+      <span class="count">{texts.sortRules.inBatch(draftBatch, entry.count)}</span>
     {/if}
     <button
-      title={texts.categories.moveUp}
+      title={texts.sortRules.moveUp}
       disabled={!canUp}
       onclick={() => onMove(-1)}>↑</button
     >
     <button
-      title={texts.categories.moveDown}
+      title={texts.sortRules.moveDown}
       disabled={!canDown}
       onclick={() => onMove(1)}>↓</button
     >
-    <button title={texts.categories.delete} onclick={onRemove}>🗑</button>
+    <button title={texts.sortRules.delete} onclick={onRemove}>🗑</button>
   </div>
 
-  {#if entry.when === null}
-    <p class="rest">{texts.categories.takesRest}</p>
+  {#if entry.filter === null}
+    <p class="rest">{texts.sortRules.takesRest}</p>
   {:else if entry.mode === "boxes"}
-    <BoxesEditor tree={entry.tree} onEdit={onBoxes} />
+    <BoxesEditor tree={entry.tree} {couriers} onEdit={onBoxes} />
   {:else}
     <textarea
       class="condition-text"
@@ -127,21 +131,21 @@
       <label class="rest-toggle">
         <input
           type="checkbox"
-          checked={entry.when === null}
+          checked={entry.filter === null}
           onchange={(event) => setRest(event.currentTarget.checked)}
         />
-        {texts.categories.takesRest}
+        {texts.sortRules.takesRest}
       </label>
     {/if}
-    {#if entry.when !== null}
+    {#if entry.filter !== null}
       {#if entry.mode === "boxes"}
-        <button onclick={toText}>{texts.categories.textView}</button>
+        <button onclick={toText}>{texts.sortRules.textView}</button>
       {:else}
         <button disabled={!!entry.error} onclick={toBoxes}
-          >{texts.categories.boxes}</button
+          >{texts.sortRules.boxes}</button
         >
         <button class="link" onclick={onHelp}
-          >{texts.categories.helpExamples}</button
+          >{texts.sortRules.helpExamples}</button
         >
       {/if}
     {/if}
@@ -149,7 +153,7 @@
 </section>
 
 <style>
-  .category {
+  .group {
     border: 1px solid #d5d5d5;
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
@@ -220,7 +224,7 @@
   }
 
   @media (prefers-color-scheme: dark) {
-    .category {
+    .group {
       background: #2b2b2b;
       border-color: #444444;
     }

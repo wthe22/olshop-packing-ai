@@ -25,6 +25,9 @@ use super::{amend_start, checked, plan_view, resolve, sort_rules_of};
 use crate::AppState;
 use crate::commands::day::{mark_printed, overview, restore_file, revert};
 use crate::commands::panel::{open_namespace, panel};
+use crate::commands::rules::{
+    GroupInput, check, new_rule, renamed, rule_groups, rules_view, save_groups,
+};
 use crate::commands::search::{ReprintChoice, Scope, reprint_orders, search};
 use crate::commands::start::{new_namespace, start_information, use_folder};
 
@@ -463,4 +466,65 @@ fn the_last_copies_are_kept_when_chosen_and_the_batch_saves() {
         (2.into(), 4.into()),
         "the first copy left out, the last kept"
     );
+}
+
+#[test]
+fn a_saved_sort_rule_keeps_the_files_comments_and_the_open_plan_follows_it() {
+    let Some((program, state, _guard)) = started("app-rules") else {
+        return skipped();
+    };
+    read(&state);
+    let groups = |value: Value| -> Vec<GroupInput> { serde_json::from_value(value).unwrap() };
+    let spion = groups(serde_json::json!([
+        { "code": "A", "name": "Spion", "filter": "name contains \"spion\"", "origin": null },
+        { "code": "Z", "name": "Lainnya", "filter": null, "origin": 0 }
+    ]));
+    let checked = serde_json::to_value(check(&state, "default", &spion)).unwrap();
+    assert_eq!(checked["general"], Value::Null, "{checked}");
+    assert_eq!(
+        checked["counts"],
+        serde_json::json!([2, 2]),
+        "the two spion orders, then the rest"
+    );
+    let broken = groups(serde_json::json!([
+        { "code": "A", "name": "Spion", "filter": "name has \"spion\"", "origin": null },
+        { "code": "Z", "name": "Lainnya", "filter": null, "origin": 0 }
+    ]));
+    let refused = serde_json::to_value(check(&state, "default", &broken)).unwrap();
+    assert!(
+        refused["errors"][0].is_string() && refused["counts"].is_null(),
+        "{refused}"
+    );
+
+    save_groups(&state, "default", &spion).unwrap();
+    let file = fs::read_to_string(program.path().join(WORKFLOWS_FILE)).unwrap();
+    assert!(file.contains("# Sort rules: a batch is sorted by the rule chosen for it."));
+    assert!(
+        file.contains("filter = 'name contains \"spion\"'"),
+        "{file}"
+    );
+    let plan = |state: &AppState| {
+        state.with_draft(|open| {
+            state.with_data(|data| {
+                let day = data.open_day(open.date)?;
+                Ok(plan_view::plan_view(open, day.journal.fold()))
+            })
+        })
+    };
+    let followed = plan(&state).unwrap();
+    assert_eq!(
+        followed.rows[0].code, "A",
+        "the open plan follows the saved rule"
+    );
+
+    new_rule(&state, "harian", Some("default")).unwrap();
+    renamed(&state, "default", "biasa").unwrap();
+    let view = serde_json::to_value(rules_view(&state).unwrap()).unwrap();
+    assert_eq!(view["rules"], serde_json::json!(["biasa", "harian"]));
+    assert_eq!(
+        view["draft_rule"], "biasa",
+        "the draft's rule takes the new name"
+    );
+    assert_eq!(plan(&state).unwrap().sort_rule, "biasa");
+    assert_eq!(rule_groups(&state, "harian").unwrap().len(), 2);
 }

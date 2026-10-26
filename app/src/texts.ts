@@ -14,15 +14,16 @@ function listed(numbers: number[]): string {
 export const texts = {
   title: "Packing",
 
-  // The line the Categories screen and the Plan screen show while the picks are
-  // unconfigured (the one catch-all entry a folder without `categories.toml` starts with, so
-  // every order goes into one PDF set). The Day screen has no line.
-  noCategories: "No picks yet: all orders go into one PDF set",
+  // The line the Sort rules screen and the Plan screen show while the rule's only group has no
+  // filter, so every order goes into one PDF. The Day screen has no line.
+  noGroups: "No groups yet: all orders go into one PDF",
 
   nav: {
     search: "Search",
     sortRules: "Sort rules",
     settings: "Settings",
+    // Closes a screen opened over the current one.
+    close: "Close",
     showPanel: "Show the panel (Ctrl+B)",
   },
 
@@ -126,11 +127,10 @@ export const texts = {
     cancel: "Cancel",
     dropHint: "Drop label PDFs here, or",
     addFiles: "Add files…",
-    // The Set control before *Read labels*. On the amend's
-    // selection page the batch's own set is shown and not chosen, so the name is followed by
-    // *(fixed)*.
-    grouping: "Grouping",
-    groupingFixed: (name: string) => `${name} (fixed)`,
+    // The sort rule before *Read labels*; on the amend's selection page the batch's own rule is
+    // shown, not chosen.
+    sortRule: "Sort rule",
+    sortRuleFixed: (name: string) => `${name} (as now)`,
     pages: (n: number) => `${count(n, "page", "pages")}`,
     usedInBatch: (n: number) => `used in batch ${n}`,
     remove: "×",
@@ -162,20 +162,20 @@ export const texts = {
     // "Batch 3 · set default · 2 files · 257 pages · 256 orders · 0 already saved".
     header: (
       batch: number,
-      grouping: string,
+      sortRule: string,
       files: number,
       pages: number,
       orders: number,
       alreadySaved: number,
     ) =>
-      `Batch ${batch} · sort rule ${grouping} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
+      `Batch ${batch} · sort rule ${sortRule} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
     // After the header when the batch held repeats: "14 copies left out ▸".
     leftOut: (n: number) => `${count(n, "copy", "copies")} left out ▸`,
     changeRepeats: "Change…",
     warnings: (n: number) => `Warnings: ${n} ▸`,
     warningsNone: "Warnings: none",
     use: "Use",
-    category: "Group",
+    group: "Group",
     orders: "Orders",
     runs: "Contents",
     fileName: "File name",
@@ -187,7 +187,8 @@ export const texts = {
     moveDown: "Move down",
     expand: "Order contents",
     collapse: "Hide order contents",
-    addCategory: "+ Add a group for this batch",
+    addGroup: "+ Add a group for this batch",
+    editRule: "Edit sort rule",
     addCode: "Code",
     addName: "Name",
     addCondition: "Condition",
@@ -287,61 +288,56 @@ export const texts = {
     create: "Use this name",
   },
 
-  // The boxes editor and the file editor.
-  categories: {
-    title: "Categories",
-    close: "Close",
-    hint: "Order matters: an order is taken by the first category whose condition matches.",
-    // The set row — the chooser, **+ New set** and **Delete set** — and the
-    // file the chosen set is kept in. A batch is packed with one set, chosen on *New batch*;
-    // same file name as the set name.
-    grouping: "Grouping",
-    newGrouping: "+ New grouping",
-    deleteGrouping: "Delete grouping",
-    groupingFile: (file: string) => `file: ${file}`,
-    createGrouping: "Create",
-    // A new set's name is refused before the file is written: empty, the reserved
-    // name `default` (the data folder's own `categories.toml`), or a name already in the list.
-    groupingNeedsName: "A grouping needs a name.",
-    groupingNameReserved:
-      "The name \"default\" belongs to the data folder's own categories.toml. Choose another name.",
-    groupingNameTaken: "A grouping with that name is already there.",
-    // **Delete set** asks first; the set's file is deleted and its categories fall back to the one
-    // catch-all entry.
-    confirmDeleteGrouping: (name: string) =>
-      `Delete grouping ${name}? Its categories fall back to the one catch-all entry.`,
+  // The Sort rules screen: the rule row, the label groups with their boxes, and the file editor.
+  sortRules: {
+    title: "Sort rules",
+    hint: "Order matters: an order goes to the first group whose filter matches.",
+    rule: "Rule",
+    newRule: "+ New rule",
+    rename: "Rename…",
+    deleteRule: "Delete rule",
+    ruleName: "Rule name",
+    // **+ New rule** starts with one group `Z Lainnya`, or copies the rule shown.
+    copyOf: (rule: string) => `a copy of ${rule}`,
+    create: "Create",
+    renameTo: "Rename",
+    ruleNeedsName: "A rule needs a name.",
+    ruleNameTaken: "A rule with that name is already there.",
+    confirmDeleteRule: (rule: string) =>
+      `Delete the sort rule ${rule}? Saved batches keep the rule they were saved with.`,
     code: "Code",
     name: "Name",
     // "In batch 3: 130", in order from what is left.
     inBatch: (n: number, taken: number) => `In batch ${n}: ${taken}`,
     boxes: "Boxes",
     textView: "Text view",
-    takesRest: "no condition: takes the rest",
-    addCategory: "+ Add category",
+    takesRest: "no filter: takes the rest",
+    addGroup: "+ Add group",
     editFile: "Edit file as text",
     fileText: "File text",
     cancel: "Cancel",
     save: "Save",
     delete: "Delete",
-    confirmDelete: (code: string) => `Delete category ${code}?`,
+    confirmDelete: (code: string) => `Delete group ${code}?`,
     moveUp: "Move up",
     moveDown: "Move down",
+    // The boxes: **All of these** / **Any of these**, rows and boxes inside boxes.
     allOf: "All of these",
     anyOf: "Any of these",
     addCondition: "+ condition",
-    addGroup: "+ group",
-    removeGroup: "× group",
+    addBox: "+ group",
+    removeBox: "× group",
     not: "not",
-    groupEmpty: "This group is empty",
+    boxEmpty: "This group is empty",
     helpExamples: "Help: examples ▸",
     helpTitle: "Examples",
-    // The condition language examples shown by *Help: examples ▸*.
+    // The filter language examples shown by *Help: examples ▸*.
     examples: [
       "name contains \"sepatu\"",
       "total_quantity = 1",
       "tracking_id starts_with \"JY\"",
-      "courier starts_with \"J&T\"",
-      "ship_by < \"2026-10-07 17:00\"",
+      "courier equals \"jnt\"",
+      "ship_by < \"2026-10-07\"",
       "not name contains \"sepatu\" and (name contains \"spion\" or name contains \"knalpot\")",
     ],
   },

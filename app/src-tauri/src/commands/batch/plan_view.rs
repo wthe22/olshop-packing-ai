@@ -50,8 +50,8 @@ pub(super) fn plan_view(open: &OpenDraft, fold: &Fold) -> PlanView {
         has_duplicate_names: rows.iter().any(|row| row.duplicate_of.is_some()),
         rows,
         add_at: movable,
-        no_categories: entries.len() == 1 && entries[0].group.filter.is_none(),
-        grouping: draft.rule_name.clone(),
+        no_groups: entries.len() == 1 && entries[0].group.filter.is_none(),
+        sort_rule: draft.rule_name.clone(),
     }
 }
 

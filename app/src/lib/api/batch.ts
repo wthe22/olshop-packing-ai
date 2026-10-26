@@ -50,10 +50,10 @@ export interface PlanView {
   has_duplicate_names: boolean;
   add_at: number;
   // The sort rule is one group that takes every order: one group PDF.
-  no_categories: boolean;
+  no_groups: boolean;
   // The sort rule's name: the one chosen on the New batch screen, or the batch's own for an
   // amend.
-  grouping: string;
+  sort_rule: string;
 }
 
 // One unseen logo as the logo prompt shows it: the
@@ -198,18 +198,16 @@ export type PlanEdit =
 export const checkFiles = (paths: string[]): Promise<FileCheck[]> =>
   invoke("check_files", { paths });
 
-// *Read labels*: read the chosen files and open the Plan screen. `grouping` is
-// the grouping the batch uses, chosen on the selection page; `default` for the data
-// folder's own `categories.toml`. `redo` is the batch being redone when the read comes from the
-// amend's selection page; `null` for a new
-// batch's file list — an amend reads with the grouping that batch recorded, whatever `grouping`
-// says. The selection is read exactly as it stands: the batch's own `download/` copy in its
-// stored order, an added file where the owner put it, a file taken off the list not read at all.
+// *Read labels*: read the chosen files and open the Plan screen. `sortRule` is the rule chosen on
+// the file list; `redo` is the batch being redone when the read comes from the amend's selection
+// page, `null` for a new batch — an amend reads with that batch's rule, whatever `sortRule` says.
+// The selection is read exactly as it stands: the batch's own inputs in their recorded order, an
+// added file where the owner put it, a file taken off the list not read at all.
 export const readLabels = (
   paths: string[],
-  grouping = "default",
+  sortRule = "default",
   redo: number | null = null,
-): Promise<ReadResult> => invoke("read_labels", { paths, grouping, redo });
+): Promise<ReadResult> => invoke("read_labels", { paths, sortRule, redo });
 
 export const cancelRead = (): Promise<void> => invoke("cancel_read");
 

@@ -19,7 +19,7 @@
   <header>
     <h2>{title}</h2>
     <span class="grow"></span>
-    <button onclick={onClose}>{texts.categories.close}</button>
+    <button onclick={onClose}>{texts.nav.close}</button>
   </header>
   <div class="body">
     {@render children()}

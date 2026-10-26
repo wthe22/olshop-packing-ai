@@ -102,7 +102,7 @@
           <NewBatchScreen
             batchNumber={shell.nextBatch}
             amend={shell.amendBatch}
-            amendGrouping={shell.amendGrouping}
+            amendRule={shell.amendRule}
             files={shell.files}
             onFiles={(next) => (shell.files = next)}
             repeats={shell.draftOpen ? (shell.readResult?.repeats ?? null) : null}
@@ -118,14 +118,17 @@
             onBack={shell.backToFiles}
           />
         {:else if shell.screen === "plan" && shell.readResult}
-          <PlanScreen
-            batchNumber={shell.nextBatch}
-            read={shell.readResult}
-            onSaved={shell.onSaved}
-            onBack={shell.backToFiles}
-            onChangeRepeats={shell.reviewRepeats}
-            onCancel={shell.cancelBatch}
-          />
+          {#key shell.planVersion}
+            <PlanScreen
+              batchNumber={shell.nextBatch}
+              read={shell.readResult}
+              onSaved={shell.onSaved}
+              onBack={shell.backToFiles}
+              onChangeRepeats={shell.reviewRepeats}
+              onEditRule={() => shell.navigate("sort-rules")}
+              onCancel={shell.cancelBatch}
+            />
+          {/key}
         {/if}
       </div>
     </div>

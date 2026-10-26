@@ -1,6 +1,6 @@
 <script lang="ts">
   // The shown set's file as text: the whole
-  // `categories.toml`, checked as it is typed and saved as it stands, comments and all.
+  // `packing-workflows.toml`, checked as it is typed and saved as it stands, comments and all.
   import { texts } from "../texts";
 
   let {
@@ -22,7 +22,7 @@
 </script>
 
 <div class="file">
-  <label for="file-text">{texts.categories.fileText}</label>
+  <label for="file-text">{texts.sortRules.fileText}</label>
   <textarea
     id="file-text"
     rows="18"
@@ -34,9 +34,9 @@
   {/if}
   <div class="actions">
     <span class="grow"></span>
-    <button onclick={onCancel}>{texts.categories.cancel}</button>
+    <button onclick={onCancel}>{texts.sortRules.cancel}</button>
     <button class="primary" disabled={!!error || busy} onclick={onSave}
-      >{texts.categories.save}</button
+      >{texts.sortRules.save}</button
     >
   </div>
 </div>

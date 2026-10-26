@@ -2,6 +2,7 @@
 //! images that are not couriers, and the sort rules. One file beside the program, the owner's;
 //! the bundled copy is written when it is missing.
 
+mod edit;
 mod load;
 mod remember;
 
@@ -14,6 +15,9 @@ use crate::label::Form;
 use crate::record::{LabelGroupRule, LabelSortRule};
 use crate::rules::Condition;
 
+pub use self::edit::{
+    EditError, GroupEdit, NewRule, add_rule, delete_rule, rename_rule, write_groups,
+};
 pub use self::load::load_workflows;
 pub use self::remember::{LogoIs, remember_logo};
 

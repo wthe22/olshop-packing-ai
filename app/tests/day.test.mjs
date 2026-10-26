@@ -1,16 +1,11 @@
-// The Day screen's and Settings' lines, and the sort rules as the New batch screen lists them: the
-// counts read singular where they should, and the back end's sort-rule list becomes the screen's
-// groupings with the newest batch's rule preselected.
+// The Day screen's and Settings' lines: the counts read singular where they should.
 //
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { useBackend } from "./tsModule.mjs";
 import { texts } from "../src/texts.ts";
-
-const { groupingsList } = await import("../src/lib/api/categories.ts");
 
 test("the Day screen's counts read singular where they should", () => {
   assert.deepEqual(
@@ -49,19 +44,4 @@ test("the Day screen's counts read singular where they should", () => {
     [texts.settings.version("v0.2"), texts.settings.pdfium("chromium/7881"), texts.settings.schema("1.0")],
     ["Version v0.2", "PDFium chromium/7881", "schema 1.0"],
   );
-});
-
-test("the sort rules are the New batch screen's groupings, the newest batch's rule preselected", async () => {
-  const calls = useBackend({
-    sort_rules: () => ({ rules: ["default", "harian"], preselected: "harian" }),
-  });
-  const list = await groupingsList();
-  assert.deepEqual(list, {
-    groupings: [
-      { name: "default", file: "packing-workflows.toml" },
-      { name: "harian", file: "packing-workflows.toml" },
-    ],
-    last_grouping: "harian",
-  });
-  assert.deepEqual(calls.map((call) => call.command), ["sort_rules"]);
 });
