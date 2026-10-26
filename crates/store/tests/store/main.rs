@@ -2,6 +2,7 @@
 //! the journal, the views, the lock and the inputs.
 
 mod common;
+mod index;
 mod journal;
 mod lock_and_files;
 mod namespaces;

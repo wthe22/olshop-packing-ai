@@ -6,6 +6,12 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-10-26)
 
+- **The order of work is R7 → R8 → R6.4 → R9**: the owner asked for the missing features before more
+  clean-up (R6.4 is the CLI and the v0.1 code removal: nothing the owner sees). **R7 is done**: the search
+  index, reprint and restore in the back end, with the panel's and Search's commands. **R8 is under way**
+  ([R8-screens.md](R8-screens.md)): the screens on v0.2. Nothing waits on the owner; the program folder
+  is rebuilt after R8.
+
 - **The work is the v0.2 rework**: [v0.2-rework.md](v0.2-rework.md) holds the decisions agreed with the owner
   and the order of work. **R1 to R5 are done**: [software-design/](../../software-design/README.md)
   describes v0.2; the project has no Python; the label fixtures are written by `crates/fixtures` one
@@ -16,9 +22,9 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   repeats and the copies left out, the plan with order contents, the `batch_saved` record — and the 2.32
   fix; `crates/verify` checks a batch's outputs by page digest with `lopdf` alone (every page of the
   samples that PDFium copies keeps its digest). **R6 is under way** ([R6-app-journal.md](R6-app-journal.md)):
-  R6.1 to R6.3 are done, R6.4 is next. **The program the owner runs is v0.2.0**: it saves through
+  R6.1 to R6.3 are done, R6.4 follows R8. **The program the owner runs is v0.2.0**: it saves through
   `crates/batch` and the journal into `{data_dir}/{namespace}/{date}/` and writes the summary PDF; *Categories*
-  and *Search* are gone until R8 and R7 bring them back on v0.2, so until then the sort rules are edited
+  and *Search* are gone until R8 brings them back on v0.2, so until then the sort rules are edited
   in `packing-workflows.toml` by hand, and every repeat keeps its first copy. A task gets its own file in
   this folder when it starts; until then its row in the order of work is the task.
 - **The owner checked the v0.1 program** (2026-10-26): it works as before, including the full product name

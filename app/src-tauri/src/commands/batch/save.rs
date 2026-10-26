@@ -34,6 +34,7 @@ pub(super) fn save_draft(
             if let SaveOutcome::Saved(saved) = &outcome {
                 day.outputs
                     .retain(|problem| problem.batch != saved.record.batch);
+                state.index().refresh(day.journal.fold());
             }
             Ok((batch, outcome))
         })

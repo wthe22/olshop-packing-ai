@@ -38,7 +38,7 @@ export function read(overrides = {}) {
 // dialog answers with the label of the button it was given: *Ok*, or the caller's own label.
 export function backend(extra = {}) {
   return {
-    days: () => ["2026-10-07"],
+    namespaces_list: () => ({ dates: [{ date: "2026-10-07" }] }),
     day_overview: () => overview(),
     about: () => ({ version: "0.2", pdfium: "140.0", schema: "1.0" }),
     "plugin:event|listen": () => 1,

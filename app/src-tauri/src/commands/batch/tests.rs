@@ -21,7 +21,9 @@ use super::save::save_draft;
 use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
 use super::{amend_start, checked, plan_view, sort_rules_of};
 use crate::AppState;
-use crate::commands::day::{mark_printed, overview, revert};
+use crate::commands::day::{mark_printed, overview, restore_file, revert};
+use crate::commands::panel::{open_namespace, panel};
+use crate::commands::search::{ReprintChoice, Scope, reprint_orders, search};
 use crate::commands::start::{new_namespace, start_information, use_folder};
 
 const DAY: &str = "2026-10-08";
@@ -310,4 +312,84 @@ fn a_logo_answer_is_remembered_in_the_rules_and_the_prompt_moves_on() {
         "{rules}"
     );
     assert!(rules.contains("fedcba9876543210"));
+}
+
+#[test]
+fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
+    let Some((program, state, _guard)) = started("app-search") else {
+        return skipped();
+    };
+    read(&state);
+    save(&state);
+    state.index().wait();
+    let found =
+        serde_json::to_value(search(&state, "name contains \"\"", Scope::All, DAY).unwrap())
+            .unwrap();
+    assert_eq!(
+        (found["orders"].clone(), found["batches"].clone()),
+        (4.into(), 1.into())
+    );
+    let row = &found["rows"][0];
+    assert_eq!(row["group"], "1-Z");
+    let trace = row["trace"].as_str().unwrap();
+    assert!(
+        trace.starts_with("from labels-repeat-1.pdf p. ") && trace.ends_with("batch 1 · 1-Z"),
+        "{trace}"
+    );
+    let on_other_day = search(&state, "name contains \"\"", Scope::Day, "2026-10-09").unwrap();
+    assert_eq!(serde_json::to_value(on_other_day).unwrap()["orders"], 0);
+    assert!(search(&state, "name has \"x\"", Scope::All, DAY).is_err());
+
+    let choices: Vec<ReprintChoice> = found["rows"].as_array().unwrap()[..2]
+        .iter()
+        .map(|row| ReprintChoice {
+            day: DAY.into(),
+            order_id: row["order_id"].as_str().unwrap().into(),
+        })
+        .collect();
+    let made = serde_json::to_value(reprint_orders(&state, &choices).unwrap()).unwrap();
+    assert_eq!(made["errors"], Value::Array(Vec::new()));
+    assert_eq!(made["made"]["file"], "reprint 1 x2.pdf");
+    assert!(Path::new(made["made"]["path"].as_str().unwrap()).is_file());
+    let today = crate::today().to_string();
+    let shown = serde_json::to_value(overview(&state, &today).unwrap()).unwrap();
+    assert_eq!(shown["reprints"][0]["orders"], 2);
+
+    let output = program
+        .path()
+        .join("data/Toko Contoh")
+        .join(DAY)
+        .join("output");
+    fs::remove_file(output.join(GROUP_FILE)).unwrap();
+    let missing = day(&state);
+    assert_eq!(
+        missing["batches"][0]["pdfs"][0]["missing"], true,
+        "the reprint opened today, so the date is checked again when it opens"
+    );
+    let restored = serde_json::to_value(restore_file(&state, DAY, GROUP_FILE).unwrap()).unwrap();
+    assert_eq!(restored["restored"], true, "{restored}");
+    assert!(output.join(GROUP_FILE).is_file());
+}
+
+#[test]
+fn the_panel_lists_the_namespaces_and_the_dates_with_their_orders() {
+    let Some((_program, state, _guard)) = started("app-panel") else {
+        return skipped();
+    };
+    read(&state);
+    save(&state);
+    new_namespace(&state, "Toko Lain").unwrap();
+    open_namespace(&state, "Toko Contoh").unwrap();
+    assert!(open_namespace(&state, "Toko Ketiga").is_err());
+    state.index().wait();
+    let shown = serde_json::to_value(panel(&state).unwrap()).unwrap();
+    assert_eq!(
+        shown["namespaces"],
+        serde_json::json!(["Toko Contoh", "Toko Lain"])
+    );
+    assert_eq!(shown["open"], "Toko Contoh");
+    let dates = shown["dates"].as_array().unwrap();
+    assert!(dates.iter().any(|row| row["today"] == true));
+    let saved = dates.iter().find(|row| row["date"] == DAY).unwrap();
+    assert_eq!(saved["orders"], 4);
 }

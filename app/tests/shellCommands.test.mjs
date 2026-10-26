@@ -170,7 +170,7 @@ test("a command that fails while loading shows the error and still opens the day
   useBackend({
     ...backend(),
     start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", namespace: "Toko Contoh", version: "0.1" }),
-    days: () => {
+    namespaces_list: () => {
       throw "the day folder is unreadable";
     },
     about: () => {

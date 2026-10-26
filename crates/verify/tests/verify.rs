@@ -7,7 +7,10 @@ use std::path::{Path, PathBuf};
 
 use lopdf::content::{Content, Operation};
 use lopdf::{Document, Object, Stream, dictionary};
-use packing_verify::{BatchCheck, Findings, page_digests, verify_batch};
+use packing_verify::{
+    BatchCheck, Findings, ReprintCheck, RestoreCheck, page_digests, verify_batch, verify_reprint,
+    verify_restore,
+};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use xxhash_rust::xxh3::xxh3_64;
@@ -382,5 +385,137 @@ fn a_page_has_one_digest_however_it_is_stored() {
         page_digests(&changed).unwrap()[0],
         original[0],
         "a page that draws more"
+    );
+}
+
+const REPRINT_FILE: &str = "reprint 1 x2.pdf";
+
+/// A reprint of orders 103 and 101 into today's `partial`, its pages in `order`; the input stored
+/// under the date it was saved on.
+fn verify_a_reprint(tag: &str, order: &[u32], tamper: impl Fn(&Folder)) -> Findings {
+    let folder = Folder::new(tag);
+    let (input_sha, _) = sha_and_size(&testdata(INPUT));
+    let input_dir = folder.0.join("2026-10-08").join("input");
+    fs::create_dir_all(&input_dir).unwrap();
+    fs::copy(testdata(INPUT), input_dir.join(format!("{input_sha}.pdf"))).unwrap();
+    let file = folder.partial().join(REPRINT_FILE);
+    group_pdf(&file, order);
+    let (sha, size) = sha_and_size(&file);
+    let reprinted = |id: &str, page: u16| json!({"order_id": id, "date": "2026-10-08", "batch": 1, "sha256": input_sha, "page_start": page, "page_end": page});
+    let record = json!({
+        "seq": 2, "time": "2026-10-09T10:00:00+07:00", "app": "0.2.0", "type": "reprint_made",
+        "number": 1, "file": REPRINT_FILE, "pages": 2, "size": size, "sha256": sha,
+        "orders": [reprinted("580000000000000103", 6), reprinted("580000000000000101", 1)],
+    });
+    tamper(&folder);
+    let append = format!("{}{}", line(&started()), line(&record));
+    verify_reprint(&ReprintCheck {
+        journal: b"",
+        append: append.as_bytes(),
+        namespace_dir: &folder.0,
+        output_dir: &folder.partial(),
+    })
+}
+
+#[test]
+fn a_reprint_holds_exactly_its_orders_pages_in_their_order() {
+    let right = verify_a_reprint("reprint", &[6, 1], |_| {});
+    assert!(right.is_clean(), "{right:?}");
+
+    let swapped = verify_a_reprint("reprint-swapped", &[1, 6], |_| {});
+    assert!(
+        swapped
+            .errors
+            .iter()
+            .any(|f| f.contains("page 1 of reprint 1 x2.pdf is not page 6")),
+        "{swapped:?}"
+    );
+    let short = verify_a_reprint("reprint-short", &[6], |_| {});
+    assert!(
+        short.errors.iter().any(|f| f.contains("is not in reprint")),
+        "{short:?}"
+    );
+    let changed = verify_a_reprint("reprint-input", &[6, 1], |folder| {
+        let input = fs::read_dir(folder.0.join("2026-10-08").join("input"))
+            .unwrap()
+            .next()
+            .unwrap()
+            .unwrap()
+            .path();
+        fs::write(input, b"not the labels").unwrap();
+    });
+    assert!(
+        changed.errors.iter().any(|f| f.contains("has changed")),
+        "{changed:?}"
+    );
+}
+
+/// The date's journal holds batch 1; `file` is written again into `partial` and named by an
+/// `output_restored` of `batch`.
+fn verify_a_restore(tag: &str, file: &str, batch: u8, write: impl Fn(&Path)) -> Findings {
+    let folder = Folder::new(tag);
+    let (input_sha, _) = sha_and_size(&testdata(INPUT));
+    fs::copy(
+        testdata(INPUT),
+        folder.input().join(format!("{input_sha}.pdf")),
+    )
+    .unwrap();
+    let journal = format!(
+        "{}{}",
+        line(&started()),
+        line(&record(
+            &input_sha,
+            ("0".repeat(64), 1),
+            ("0".repeat(64), 1)
+        ))
+    );
+    let path = folder.partial().join(file);
+    write(&path);
+    let (sha, size) = sha_and_size(&path);
+    let pages = page_digests(&path).map_or(0, |pages| pages.len());
+    let restored = json!({"seq": 3, "time": "2026-10-08T11:00:00+07:00", "app": "0.2.0", "type": "output_restored",
+                          "batch": batch, "file": file, "pages": pages, "size": size, "sha256": sha});
+    verify_restore(&RestoreCheck {
+        journal: journal.as_bytes(),
+        append: line(&restored).as_bytes(),
+        input_dir: &folder.input(),
+        output_dir: &folder.partial(),
+    })
+}
+
+#[test]
+fn a_restored_output_is_checked_as_at_the_save() {
+    let group = verify_a_restore("restore-group", GROUP_FILE, 1, |path| {
+        group_pdf(path, &[1, 2, 3, 6])
+    });
+    assert!(group.is_clean(), "{group:?}");
+    let summary = verify_a_restore("restore-summary", SUMMARY_FILE, 1, |path| {
+        summary_pdf(path, &right_summary())
+    });
+    assert!(summary.is_clean(), "{summary:?}");
+
+    let missing = verify_a_restore("restore-missing", GROUP_FILE, 1, |path| {
+        group_pdf(path, &[1, 2, 6])
+    });
+    assert!(
+        missing.errors.iter().any(|f| f.contains("is in no output")),
+        "{missing:?}"
+    );
+    let counts = verify_a_restore("restore-counts", SUMMARY_FILE, 1, |path| {
+        summary_pdf(path, &right_summary()[..2])
+    });
+    assert!(
+        counts.errors.iter().any(|f| f.contains("prints no ledger")),
+        "{counts:?}"
+    );
+    let not_live = verify_a_restore("restore-not-live", GROUP_FILE, 2, |path| {
+        group_pdf(path, &[1, 2, 3, 6])
+    });
+    assert!(
+        not_live
+            .errors
+            .iter()
+            .any(|f| f.contains("batch 2 is not live")),
+        "{not_live:?}"
     );
 }

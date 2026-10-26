@@ -12,10 +12,11 @@ use std::sync::mpsc;
 
 use jiff::civil::date;
 use packing_batch::{
-    BatchError, Draft, ReadRequest, SaveOutcome, SaveRequest, Saved, amend, check_files,
-    read_draft, revert, save, set_printed,
+    BatchError, Draft, ReadRequest, ReprintOutcome, ReprintRequest, RestoreOutcome, RestoreRequest,
+    SaveOutcome, SaveRequest, Saved, amend, check_files, read_draft, reprint, restore, revert,
+    save, set_printed,
 };
-use packing_engine::ids::BatchId;
+use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::record::PrintedMarked;
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, SortRule, Workflows, load_workflows};
 use packing_pdf::worker::PdfWorker;
@@ -269,4 +270,110 @@ fn a_finding_stops_the_save_until_save_anyway() {
         day.journal.fold().live[&record.batch].saved.errors,
         record.errors
     );
+}
+
+#[test]
+fn a_reprint_writes_the_chosen_orders_pages_into_today_in_printing_order() {
+    let Some(mut day) = day("batch-reprint") else {
+        return skipped();
+    };
+    let draft = day.read_inputs().unwrap();
+    let record = saved(day.save(&draft, false)).record;
+    let saved_on = day.folder.date();
+    let chosen: Vec<(jiff::civil::Date, OrderId)> = record
+        .orders
+        .iter()
+        .rev()
+        .take(2)
+        .map(|order| (saved_on, order.order_id.clone()))
+        .collect();
+
+    let today = DateFolder::new(day._data.path(), "Toko Contoh", date(2026, 10, 9));
+    let mut journal = open_date(&today).unwrap().journal;
+    let request = ReprintRequest {
+        worker: &day.worker,
+        data_dir: day._data.path(),
+        today: &today,
+        orders: &chosen,
+        app: APP,
+    };
+    let made = match reprint(&request, &mut journal).unwrap() {
+        ReprintOutcome::Made(made) => made,
+        ReprintOutcome::Findings(findings) => panic!("the verifier found {findings:?}"),
+    };
+    assert_eq!(made.number, 1);
+    assert_eq!(made.file, "reprint 1 x2.pdf");
+    let in_order: Vec<&OrderId> = record
+        .orders
+        .iter()
+        .rev()
+        .take(2)
+        .rev()
+        .map(|o| &o.order_id)
+        .collect();
+    let reprinted: Vec<&OrderId> = made.orders.iter().map(|o| &o.order_id).collect();
+    assert_eq!(reprinted, in_order, "their original printing order");
+    assert!(today.dir().join("output").join(&made.file).is_file());
+    assert_eq!(journal.fold().reprints, std::slice::from_ref(&made));
+    assert_eq!(
+        day.journal.fold().live[&record.batch].saved,
+        record,
+        "no batch changes"
+    );
+
+    let unknown = [(saved_on, OrderId::new("580000000000000999"))];
+    let refused = reprint(
+        &ReprintRequest {
+            orders: &unknown,
+            ..request
+        },
+        &mut journal,
+    );
+    assert!(
+        matches!(refused, Err(BatchError::NotSaved { .. })),
+        "{refused:?}"
+    );
+}
+
+#[test]
+fn a_missing_output_is_restored_and_recorded() {
+    let Some(mut day) = day("batch-restore") else {
+        return skipped();
+    };
+    let draft = day.read_inputs().unwrap();
+    let record = saved(day.save(&draft, false)).record;
+    for file in [GROUP_FILE, "1 summary.pdf"] {
+        fs::remove_file(day.output(file)).unwrap();
+        let request = RestoreRequest {
+            worker: &day.worker,
+            folder: &day.folder,
+            file,
+            app: APP,
+        };
+        let restored = match restore(&request, &mut day.journal).unwrap() {
+            RestoreOutcome::Restored(restored) => restored,
+            RestoreOutcome::Findings(findings) => panic!("{file}: the verifier found {findings:?}"),
+        };
+        assert_eq!(
+            (restored.batch, restored.file.as_str()),
+            (record.batch, file)
+        );
+        assert!(day.output(file).is_file());
+        assert_eq!(
+            day.journal.fold().live[&record.batch].restored[file],
+            restored
+        );
+    }
+    let opened = open_date(&day.folder).unwrap();
+    assert!(opened.outputs.is_empty(), "{:?}", opened.outputs);
+    let refused = restore(
+        &RestoreRequest {
+            worker: &day.worker,
+            folder: &day.folder,
+            file: "nothing.pdf",
+            app: APP,
+        },
+        &mut day.journal,
+    );
+    assert!(matches!(refused, Err(BatchError::NoOutput { .. })));
 }

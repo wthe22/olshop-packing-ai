@@ -1,13 +1,14 @@
 //! The Day screen (05-after-save.md): the open namespace's date from its fold, and what changes it —
-//! the Printed tick and revert — each one append through `packing-batch`.
+//! the Printed tick, revert and restore — each one append through `packing-batch`.
 
 mod view;
 
 use jiff::civil::Date;
+use packing_batch::{RestoreOutcome, RestoreRequest, restore};
 use packing_engine::ids::BatchId;
 use packing_engine::record::PrintedMarked;
-use packing_store::dates;
-use tauri::State;
+use serde::Serialize;
+use tauri::{AppHandle, Manager, State};
 
 use crate::{APP_VERSION, AppState};
 
@@ -44,7 +45,52 @@ pub(crate) fn revert(state: &AppState, day: &str) -> Result<BatchId, String> {
         let batch = packing_batch::revert(&open.folder, &mut open.journal, APP_VERSION)
             .map_err(|error| error.to_string())?;
         open.outputs.retain(|problem| problem.batch != batch);
+        state.index().refresh(open.journal.fold());
         Ok(batch)
+    })
+}
+
+/// The verifier's findings of a restore; none when the file was written again.
+#[derive(Serialize)]
+pub struct RestoreView {
+    restored: bool,
+    errors: Vec<String>,
+}
+
+pub(crate) fn restore_file(state: &AppState, day: &str, file: &str) -> Result<RestoreView, String> {
+    let date = date_of(day)?;
+    state.with_data(|data| {
+        let open = data.open_day(date)?;
+        let outcome = state
+            .with_worker(|worker| {
+                restore(
+                    &RestoreRequest {
+                        worker,
+                        folder: &open.folder,
+                        file,
+                        app: APP_VERSION,
+                    },
+                    &mut open.journal,
+                )
+            })?
+            .map_err(|error| error.to_string())?;
+        Ok(match outcome {
+            RestoreOutcome::Restored(_) => {
+                open.outputs.retain(|problem| problem.file != file);
+                RestoreView {
+                    restored: true,
+                    errors: Vec::new(),
+                }
+            }
+            RestoreOutcome::Findings(findings) => RestoreView {
+                restored: false,
+                errors: findings
+                    .errors
+                    .into_iter()
+                    .chain(findings.warnings)
+                    .collect(),
+            },
+        })
     })
 }
 
@@ -70,22 +116,24 @@ pub fn set_printed(
     mark_printed(&state, &day, mark)
 }
 
-/// The open namespace's dates with a folder, newest first.
-#[tauri::command]
-pub fn days(state: State<'_, AppState>) -> Result<Vec<String>, String> {
-    state.with_data(|data| {
-        let Some(namespace) = &data.namespace else {
-            return Ok(Vec::new());
-        };
-        let mut dates = dates(&data.dir, namespace).map_err(|error| error.to_string())?;
-        dates.sort_unstable_by(|a, b| b.cmp(a));
-        Ok(dates.iter().map(ToString::to_string).collect())
-    })
-}
-
 /// *Revert* the newest batch. A file open in a PDF viewer stops it with the file named, and the
 /// date is as before.
 #[tauri::command]
 pub fn revert_last(state: State<'_, AppState>, day: String) -> Result<(), String> {
     revert(&state, &day).map(|_| ())
+}
+
+/// **Restore** a group PDF or summary PDF found missing or changed, on its own thread.
+#[tauri::command]
+pub async fn restore_output(
+    app: AppHandle,
+    day: String,
+    file: String,
+) -> Result<RestoreView, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<AppState>();
+        restore_file(&state, &day, &file)
+    })
+    .await
+    .map_err(|error| format!("the restore task stopped: {error}"))?
 }

@@ -3,22 +3,21 @@
 //! views written. Nothing of the date changes before the commit; after it the batch is saved,
 //! whatever a later move or view write says.
 
-use std::fs;
 use std::path::PathBuf;
 
 use packing_engine::batch_record::{BatchFacts, batch_saved};
 use packing_engine::ids::BatchId;
-use packing_engine::record::{BatchSaved, Finding, FindingKind, InputPdf, OutputFile, RecordBody};
+use packing_engine::record::{BatchSaved, Finding, FindingKind, InputPdf, RecordBody};
 use packing_engine::sorting::{SortedBatch, check_file_names};
 use packing_pdf::summary_pdf::{SummaryFacts, write_summary};
 use packing_pdf::worker::PdfWorker;
-use packing_pdf::{read, write};
 use packing_store::{
     DateFolder, Fold, Journal, StoreError, discard_partial, input_path, move_aside, move_forward,
-    partial_dir, settle_partial, sha256_of, store_input, write_views,
+    partial_dir, settle_partial, store_input, write_views,
 };
 use packing_verify::{BatchCheck, Findings, verify_batch};
 
+use crate::written::{copy_pages, described, partial};
 use crate::{BatchError, Draft};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -174,11 +173,7 @@ fn write_outputs(
     progress: &dyn Fn(SaveStage, usize, usize),
 ) -> Result<BatchSaved, BatchError> {
     let dir = request.folder.dir();
-    let partial = partial_dir(dir);
-    fs::create_dir_all(&partial).map_err(|error| StoreError::Io {
-        path: partial.clone(),
-        error,
-    })?;
+    let partial = partial(dir)?;
     let draft = request.draft;
     let sources: Vec<PathBuf> = inputs.iter().map(|i| input_path(dir, &i.sha256)).collect();
     let mut outputs = Vec::new();
@@ -195,11 +190,8 @@ fn write_outputs(
             })
             .collect();
         let out = partial.join(&group.file);
-        let (sources, target, count) = (sources.clone(), out.clone(), pages.len());
-        request.worker.run(move |pdfium| {
-            let opened = read::open_all(pdfium, &sources)?;
-            write::copy_pages(pdfium, &opened, &pages, &target)
-        })??;
+        let count = pages.len();
+        copy_pages(request.worker, sources.clone(), pages, out.clone())?;
         outputs.push(described(&out, Some(&group.code), count)?);
     }
     let mut record = batch_saved(BatchFacts {
@@ -235,28 +227,6 @@ fn write_outputs(
     })??;
     record.outputs.push(described(&out, None, pages)?);
     Ok(record)
-}
-
-fn described(
-    path: &std::path::Path,
-    group: Option<&str>,
-    pages: usize,
-) -> Result<OutputFile, BatchError> {
-    let size = fs::metadata(path)
-        .map_err(|error| StoreError::Io {
-            path: path.to_path_buf(),
-            error,
-        })?
-        .len();
-    Ok(OutputFile {
-        file: path
-            .file_name()
-            .map_or_else(String::new, |name| name.to_string_lossy().into_owned()),
-        group: group.map(str::to_string),
-        pages: u16::try_from(pages).unwrap_or(u16::MAX),
-        size,
-        sha256: sha256_of(path)?,
-    })
 }
 
 /// A finding of the verifier as the record keeps it on a batch saved anyway.

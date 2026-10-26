@@ -20,7 +20,10 @@ use packing_store::{
 use tauri::Manager;
 
 pub mod commands;
+mod index;
 mod settings;
+
+pub(crate) use index::Index;
 
 /// The app version the journal's records carry.
 pub(crate) const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -115,6 +118,7 @@ pub struct AppState {
     worker: Mutex<Option<PdfWorker>>,
     draft: Mutex<Option<OpenDraft>>,
     cancel: Mutex<Option<Arc<AtomicBool>>>,
+    index: Index,
 }
 
 impl AppState {
@@ -125,6 +129,7 @@ impl AppState {
             worker: Mutex::new(None),
             draft: Mutex::new(None),
             cancel: Mutex::new(None),
+            index: Index::default(),
         }
     }
 
@@ -209,6 +214,11 @@ impl AppState {
         *self.cancel.lock().unwrap() = None;
     }
 
+    /// The search index of the open namespace.
+    pub(crate) fn index(&self) -> &Index {
+        &self.index
+    }
+
     /// Stop the running read; nothing is written.
     pub(crate) fn request_cancel(&self) {
         if let Some(flag) = self.cancel.lock().unwrap().as_ref() {
@@ -272,8 +282,12 @@ pub fn run() {
             commands::start::show_in_folder,
             commands::day::day_overview,
             commands::day::set_printed,
-            commands::day::days,
             commands::day::revert_last,
+            commands::day::restore_output,
+            commands::panel::namespaces_list,
+            commands::panel::namespace_open,
+            commands::search::search_orders,
+            commands::search::reprint,
             commands::batch::check_files,
             commands::batch::sort_rules,
             commands::batch::read_labels,

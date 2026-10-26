@@ -65,6 +65,17 @@ pub struct DayOverview {
     problems: Vec<String>,
     /// The data folder also holds a v0.1 data folder's files, which are not read.
     old_data: bool,
+    /// The reprints made on this date.
+    reprints: Vec<ReprintRow>,
+}
+
+#[derive(Serialize)]
+pub struct ReprintRow {
+    number: u8,
+    file: String,
+    orders: usize,
+    pages: u16,
+    path: String,
 }
 
 pub(super) fn overview(day: &OpenDay, old_data: bool) -> DayOverview {
@@ -104,6 +115,17 @@ pub(super) fn overview(day: &OpenDay, old_data: bool) -> DayOverview {
         batches,
         problems,
         old_data,
+        reprints: fold
+            .reprints
+            .iter()
+            .map(|reprint| ReprintRow {
+                number: reprint.number,
+                file: reprint.file.clone(),
+                orders: reprint.orders.len(),
+                pages: reprint.pages,
+                path: output.join(&reprint.file).display().to_string(),
+            })
+            .collect(),
     }
 }
 

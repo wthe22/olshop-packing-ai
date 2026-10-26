@@ -1,6 +1,8 @@
 use std::fmt;
 
+use jiff::civil::Date;
 use packing_engine::copies::CopiesStop;
+use packing_engine::ids::OrderId;
 use packing_engine::repeats::ChoiceError;
 use packing_engine::rules::RulesError;
 use packing_engine::sorting::FileNameError;
@@ -29,6 +31,21 @@ pub enum BatchError {
     NotNewest,
     /// A filter of the sort rule an amend takes from the batch's record does not parse.
     Rule(RulesError),
+    /// A reprint names an order no live batch of that date holds.
+    NotSaved {
+        order_id: OrderId,
+        date: Date,
+    },
+    /// An input a reprint needs is missing or not the bytes the journal names.
+    InputUnusable {
+        file: String,
+        date: Date,
+    },
+    /// A restore names a file that is no output of a live batch.
+    NoOutput {
+        file: String,
+    },
+    TooManyReprints,
 }
 
 impl fmt::Display for BatchError {
@@ -51,6 +68,17 @@ impl fmt::Display for BatchError {
                 f.write_str("The batch being amended is no longer the newest one.")
             }
             BatchError::Rule(error) => write!(f, "the batch's sort rule: {error}"),
+            BatchError::NotSaved { order_id, date } => {
+                write!(f, "Order {order_id} is not saved on {date}.")
+            }
+            BatchError::InputUnusable { file, date } => write!(
+                f,
+                "{file}, an input of {date}, is missing or has changed. It cannot be printed again."
+            ),
+            BatchError::NoOutput { file } => {
+                write!(f, "{file} is not a file of a saved batch of this date.")
+            }
+            BatchError::TooManyReprints => f.write_str("This date has too many reprints."),
         }
     }
 }

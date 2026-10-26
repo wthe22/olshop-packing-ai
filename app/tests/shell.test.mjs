@@ -21,7 +21,7 @@ test("starting the shell loads the folder, the namespace, the day and the day's 
         namespace: "Toko Contoh",
         version: "0.1",
       }),
-      days: () => ["2026-10-07", "2026-10-06"],
+      namespaces_list: () => ({ dates: [{ date: "2026-10-07" }, { date: "2026-10-06" }] }),
       about: () => ({ version: "0.1", pdfium: "140.0", schema: "1.0" }),
     }),
   );
@@ -46,7 +46,7 @@ test("starting the shell loads the folder, the namespace, the day and the day's 
   assert.equal(shell.overlay, null);
   assert.deepEqual(
     calls.map((call) => call.command),
-    ["start_info", "days", "day_overview", "about"],
+    ["start_info", "namespaces_list", "day_overview", "about"],
   );
   assert.deepEqual(calls[2].args, { day: "2026-10-07" });
 

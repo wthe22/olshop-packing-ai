@@ -80,6 +80,9 @@ fn open_data(state: &AppState, dir: PathBuf) -> Result<(), String> {
             .into_iter()
             .next(),
     };
+    if let Some(namespace) = &data.namespace {
+        state.index().rebuild(data.dir.clone(), namespace.clone());
+    }
     state.set_data(data);
     Ok(())
 }
@@ -100,6 +103,7 @@ pub(crate) fn new_namespace(state: &AppState, name: &str) -> Result<String, Stri
         create_namespace(&data.dir, name).map_err(|error| error.to_string())?;
         data.namespace = Some(name.to_string());
         data.day = None;
+        state.index().rebuild(data.dir.clone(), name.to_string());
         Ok(name.to_string())
     })
 }

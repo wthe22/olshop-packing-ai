@@ -200,7 +200,11 @@ pub(crate) fn check_group_pdfs(
 }
 
 /// The digests of an output's pages, after its SHA-256, size and page count are checked.
-fn output_pages(output: &Output, output_dir: &Path, findings: &mut Findings) -> Vec<u64> {
+pub(crate) fn output_pages(
+    output: &Output,
+    output_dir: &Path,
+    findings: &mut Findings,
+) -> Vec<u64> {
     let path = output_dir.join(&output.file);
     let Some((sha, size)) = sha256_and_size(&path) else {
         findings.error(format!("{} was not written", output.file));
