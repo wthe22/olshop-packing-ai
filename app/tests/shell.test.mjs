@@ -37,7 +37,7 @@ test("starting the shell loads the folder, the namespace, the day and the day's 
   assert.equal(shell.dataFolder, "C:/Data");
   assert.equal(shell.version, "0.1", "the title bar's version");
   assert.equal(shell.needsFolder, false, "the start prompt is gone");
-  assert.deepEqual(shell.dayList, ["2026-10-07", "2026-10-06"]);
+  assert.deepEqual(shell.panel.dates.map((row) => row.date), ["2026-10-07", "2026-10-06"]);
   assert.equal(shell.overview.totals.batches, 2, "the overview is today's");
   assert.equal(shell.namespace, "Toko Contoh");
   assert.equal(shell.needsNamespace, false);
@@ -171,50 +171,73 @@ test("leaving an open batch asks before dropping it, and a refused answer stays"
   const open = new Shell();
   open.onPlan(read());
   open.screen = "plan";
-  await open.navigate("categories");
-  assert.equal(open.overlay, "categories", "an overlay opens over the batch without asking");
+  await open.navigate("settings");
+  assert.equal(open.overlay, "settings", "an overlay opens over the batch without asking");
   assert.equal(confirmations.length, 0);
 
-  await open.navigate("day");
+  await open.openDate("2026-10-06");
   assert.equal(confirmations[0], texts.day.confirmDiscardDraft);
   assert.equal(open.screen, "plan", "the refused answer changes nothing");
   assert.equal(open.draftOpen, true);
   assert.equal(discard, 0, "the draft is kept");
 
-  // The owner says yes: the draft is discarded and the day screen shows.
-  await open.navigate("day");
+  // The owner says yes: the draft is discarded and the chosen date's Day screen shows.
+  await open.openDate("2026-10-06");
   assert.equal(discard, 1, "the open draft is discarded once");
   assert.equal(open.draftOpen, false);
   assert.equal(open.screen, "day");
+  assert.equal(open.day, "2026-10-06");
   assert.equal(open.overlay, null);
   clearTimeout(open.savedTimer);
+});
 
-  // *Today* returns to today's day without changing the screen, and asks nothing with no draft.
-  open.day = "2026-10-05";
-  open.today = "2026-10-07";
-  await open.goToday();
-  assert.equal(open.day, "2026-10-07", "back to today");
-  assert.equal(confirmations.length, 2, "a closed batch is not asked about again");
 
-  // A day switch: `dayList` is newest first, so a step of 1 walks towards the newest day.
-  const steps = useBackend(backend());
-  const stepping = new Shell();
-  stepping.dayList = ["2026-10-07", "2026-10-06", "2026-10-05"];
-  stepping.day = "2026-10-06";
-  stepping.today = "2026-10-07";
-  await stepping.stepDay(1);
-  assert.equal(stepping.day, "2026-10-07", "the next day up the list");
-  await stepping.stepDay(-1);
-  assert.equal(stepping.day, "2026-10-06", "and back");
-  assert.equal(steps.filter((call) => call.command === "day_overview").length, 2, "each switch recounts the day");
-  assert.deepEqual(steps[0].args, { day: "2026-10-07" });
-  assert.deepEqual(steps[1].args, { day: "2026-10-06" });
+test("the panel opens another date and namespace, and a new namespace on today", async () => {
+  const calls = useBackend(
+    backend({
+      namespace_open: () => undefined,
+      namespace_new: (args) => {
+        if (args.name === "Toko Contoh") throw "A namespace Toko Contoh is already there.";
+        return args.name;
+      },
+    }),
+  );
+  const shell = new Shell();
+  shell.namespace = "Toko Contoh";
+  shell.today = "2026-10-07";
+  shell.day = "2026-10-05";
 
-  // The newest day has no day after it, so nothing changes.
-  stepping.day = "2026-10-07";
-  await stepping.stepDay(1);
-  assert.equal(stepping.day, "2026-10-07");
-  assert.equal(steps.length, 2, "and the day is not recounted");
+  await shell.openNamespace("Toko Contoh");
+  assert.equal(calls.length, 0, "the open namespace is not opened again");
+  await shell.openNamespace("Toko Lain");
+  assert.equal(shell.namespace, "Toko Lain");
+  assert.equal(shell.day, "2026-10-07", "another namespace opens on today");
+  assert.deepEqual(
+    calls.map((call) => call.command).sort(),
+    ["day_overview", "namespace_open", "namespaces_list"],
+  );
+
+  assert.equal(await shell.newNamespace("Toko Contoh"), "A namespace Toko Contoh is already there.");
+  assert.equal(shell.namespace, "Toko Lain", "a refused name changes nothing");
+  shell.day = "2026-10-05";
+  assert.equal(await shell.newNamespace("Toko Baru"), null);
+  assert.equal(shell.namespace, "Toko Baru");
+  assert.equal(shell.day, "2026-10-07");
+
+  useBackend(
+    backend({
+      namespace_open: () => {
+        throw "Toko Hilang is not a namespace of this data folder.";
+      },
+    }),
+  );
+  await shell.openNamespace("Toko Hilang");
+  assert.equal(shell.namespace, "Toko Baru", "a namespace that cannot open changes nothing");
+  assert.equal(shell.error, "Toko Hilang is not a namespace of this data folder.");
+
+  assert.equal(shell.panelShown, true, "the panel is shown at every start");
+  shell.togglePanel();
+  assert.equal(shell.panelShown, false);
 });
 
 

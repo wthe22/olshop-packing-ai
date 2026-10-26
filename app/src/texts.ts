@@ -13,13 +13,23 @@ export const texts = {
   noCategories: "No picks yet: all orders go into one PDF set",
 
   nav: {
-    day: "Day",
     search: "Search",
-    categories: "Categories",
+    sortRules: "Sort rules",
     settings: "Settings",
-    today: "Today",
-    previousDay: "Previous day",
-    nextDay: "Next day",
+    showPanel: "Show the panel (Ctrl+B)",
+  },
+
+  // The side panel: the namespace, its dates by month, **+ New namespace**.
+  panel: {
+    namespace: "Namespace",
+    newNamespace: "+ New namespace",
+    create: "Create",
+    cancel: "Cancel",
+    hide: "Hide the panel (Ctrl+B)",
+    today: " · today",
+    damaged: "damaged",
+    menu: "More",
+    openFolder: "Open folder",
   },
 
   start: {
@@ -354,6 +364,23 @@ const dayFormat = new Intl.DateTimeFormat("en-GB", {
 
 export function formatDay(day: string): string {
   return dayFormat.format(new Date(`${day}T00:00:00`));
+}
+
+// The panel's date rows, "Wed 7 Oct", and its month headings, "October 2026" (from `2026-10`).
+const shortDayFormat = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+});
+
+const monthFormat = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
+
+export function formatShortDay(day: string): string {
+  return shortDayFormat.format(new Date(`${day}T00:00:00`));
+}
+
+export function formatMonth(key: string): string {
+  return monthFormat.format(new Date(`${key}-01T00:00:00`));
 }
 
 // The title bar's brand text — the program's name and its shown version,

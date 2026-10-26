@@ -26,19 +26,23 @@ pub struct DateRow {
     orders: Option<usize>,
     /// Its journal is damaged: it opens for viewing only.
     damaged: bool,
+    /// The date's folder, for *Open folder*; none before its first commit.
+    folder: Option<String>,
 }
 
 pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
-    let (list, open, mut folders) = state.with_data(|data| {
+    let (list, open, mut folders, namespace_dir) = state.with_data(|data| {
         let list = namespaces(&data.dir).map_err(|error| error.to_string())?;
         let folders = match &data.namespace {
             Some(namespace) => dates(&data.dir, namespace).map_err(|error| error.to_string())?,
             None => Vec::new(),
         };
-        Ok((list, data.namespace.clone(), folders))
+        let namespace_dir = data.namespace.as_ref().map(|name| data.dir.join(name));
+        Ok((list, data.namespace.clone(), folders, namespace_dir))
     })?;
     let today = today();
-    if !folders.contains(&today) {
+    let today_has_folder = folders.contains(&today);
+    if !today_has_folder {
         folders.push(today);
     }
     folders.sort_unstable_by(|a, b| b.cmp(a));
@@ -60,6 +64,10 @@ pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
             damaged: counts
                 .as_ref()
                 .is_some_and(|(_, damaged)| damaged.contains(&date)),
+            folder: namespace_dir
+                .as_ref()
+                .filter(|_| date != today || today_has_folder)
+                .map(|dir| dir.join(date.to_string()).display().to_string()),
         })
         .collect();
     Ok(PanelView {

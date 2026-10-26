@@ -30,7 +30,7 @@ test("the data folder: the start prompt, the program folder and a change", async
   const shell = new Shell();
   await shell.load();
   assert.equal(shell.needsFolder, true, "no folder yet");
-  assert.equal(shell.dayList.length, 0);
+  assert.equal(shell.panel, null);
 
   // The dialog was dismissed: the folder is still unknown and nothing else is asked.
   await shell.chooseFolder();
@@ -44,7 +44,7 @@ test("the data folder: the start prompt, the program folder and a change", async
   assert.equal(shell.dataFolder, "C:/Packing");
   assert.equal(shell.needsFolder, false);
   assert.equal(shell.busy, false);
-  assert.deepEqual(shell.dayList, ["2026-10-07"]);
+  assert.deepEqual(shell.panel.dates, [{ date: "2026-10-07" }]);
   assert.equal(shell.overview.totals.batches, 2);
   assert.equal(shell.namespace, "Toko Contoh");
   assert.equal(shell.about.version, "0.2");
@@ -162,7 +162,7 @@ test("a command that fails while loading shows the error and still opens the day
   assert.equal(shell.ready, true, "the day opens even so");
   assert.equal(shell.error, "the program folder cannot be read");
   assert.equal(shell.needsFolder, true);
-  assert.deepEqual(shell.dayList, []);
+  assert.equal(shell.panel, null);
 
   // A failing day list, day or About leaves the day usable: the list is empty and the error
   // line carries the fault.
@@ -182,7 +182,7 @@ test("a command that fails while loading shows the error and still opens the day
   });
   await partial.load();
   assert.equal(partial.ready, true);
-  assert.deepEqual(partial.dayList, [], "no days to step through");
+  assert.equal(partial.panel, null, "no panel list");
   assert.equal(partial.about, null);
   assert.equal(partial.overview, null);
   assert.equal(partial.error, "pdfium is missing", "the last failure is the one shown");

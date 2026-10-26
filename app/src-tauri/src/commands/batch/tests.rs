@@ -392,4 +392,11 @@ fn the_panel_lists_the_namespaces_and_the_dates_with_their_orders() {
     assert!(dates.iter().any(|row| row["today"] == true));
     let saved = dates.iter().find(|row| row["date"] == DAY).unwrap();
     assert_eq!(saved["orders"], 4);
+    assert!(saved["folder"].as_str().unwrap().ends_with(DAY));
+    let today = dates.iter().find(|row| row["today"] == true).unwrap();
+    assert_eq!(
+        today["folder"],
+        Value::Null,
+        "no folder before its first commit"
+    );
 }

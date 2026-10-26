@@ -11,6 +11,7 @@ import { confirm, open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import * as start from "./api/start";
 import * as dayData from "./api/day";
+import * as panelData from "./api/panel";
 import * as batch from "./api/batch";
 import { togglePrinted } from "./printed";
 import { texts, amendOpens } from "../texts";
@@ -18,7 +19,6 @@ import { texts, amendOpens } from "../texts";
 // The screens the shell routes between; the batch flow's screens are not in the nav.
 export type Screen = "day" | "new-batch" | "plan";
 export type OverlayId = "settings";
-export type NavId = "day" | "settings";
 
 export class Shell {
   ready = $state(false);
@@ -38,7 +38,10 @@ export class Shell {
   version = $state("");
   overview = $state<dayData.DayOverview | null>(null);
   about = $state<start.About | null>(null);
-  dayList = $state<string[]>([]);
+  // The side panel: the namespaces and the open one's dates. It is shown at every start.
+  panel = $state<panelData.PanelView | null>(null);
+  panelShown = $state(true);
+  private panelTimer: ReturnType<typeof setTimeout> | undefined;
   screen = $state<Screen>("day");
   // Settings opens over the current screen and closes back to it.
   overlay = $state<OverlayId | null>(null);
@@ -89,11 +92,7 @@ export class Shell {
   private afterFolder = async () => {
     this.needsNamespace = this.namespace === null;
     if (this.needsNamespace) return;
-    try {
-      this.dayList = await dayData.days();
-    } catch {
-      this.dayList = [];
-    }
+    await this.refreshPanel();
     await this.refreshOverview();
     try {
       this.about = await start.about();
@@ -108,6 +107,19 @@ export class Shell {
     } catch (e) {
       this.error = String(e);
     }
+  };
+
+  // The panel's list, read again after each change and when the window regains focus. While the
+  // search index is being built it has no counts yet, so it is asked again shortly.
+  refreshPanel = async () => {
+    clearTimeout(this.panelTimer);
+    try {
+      this.panel = await panelData.namespacesList();
+    } catch (e) {
+      this.error = String(e);
+      return;
+    }
+    if (this.panel.loading) this.panelTimer = setTimeout(this.refreshPanel, 500);
   };
 
   // The data folder's namespace, after a folder is chosen: the one the start opened, if any.
@@ -219,7 +231,7 @@ export class Shell {
     this.savedMessage = texts.day.saved(result.batch, result.pdfs);
     if (result.after_save.length > 0) this.error = result.after_save.join(" ");
     this.screen = "day";
-    await this.refreshOverview();
+    await Promise.all([this.refreshOverview(), this.refreshPanel()]);
     if (this.savedTimer) clearTimeout(this.savedTimer);
     this.savedTimer = setTimeout(() => (this.savedMessage = null), 6000);
   };
@@ -236,33 +248,55 @@ export class Shell {
     this.screen = "day";
   };
 
-  // The day switch. `dayList` is newest first.
-  stepDay = async (delta: number) => {
+  // A date of the panel opens on the Day screen; a draft being prepared asks first.
+  openDate = async (date: string) => {
     if (!(await this.leaveBatch())) return;
-    const next = this.dayList[this.dayList.indexOf(this.day) - delta];
-    if (next) {
-      this.day = next;
-      this.overlay = null;
-      this.refreshOverview();
-    }
+    this.day = date;
+    this.overlay = null;
+    this.screen = "day";
+    await this.refreshOverview();
   };
 
-  goToday = async () => {
-    if (!(await this.leaveBatch())) return;
+  // Another namespace of the panel, opened on today's date.
+  openNamespace = async (name: string) => {
+    if (name === this.namespace || !(await this.leaveBatch())) return;
+    try {
+      await panelData.namespaceOpen(name);
+    } catch (e) {
+      this.error = String(e);
+      return;
+    }
+    this.namespace = name;
+    await this.openToday();
+  };
+
+  // **+ New namespace**: its folder is made and it opens on today's date. A refused name returns
+  // why, for the line beside the field.
+  newNamespace = async (name: string): Promise<string | null> => {
+    if (!(await this.leaveBatch())) return null;
+    try {
+      this.namespace = await start.namespaceNew(name);
+    } catch (e) {
+      return String(e);
+    }
+    await this.openToday();
+    return null;
+  };
+
+  private openToday = async () => {
     this.day = this.today;
     this.overlay = null;
-    this.refreshOverview();
+    this.screen = "day";
+    await Promise.all([this.refreshPanel(), this.refreshOverview()]);
   };
 
-  // *Day* returns to the day screen; *Settings* opens over the current screen.
-  navigate = async (id: NavId) => {
-    if (id === "day") {
-      if (!(await this.leaveBatch())) return;
-      this.overlay = null;
-      this.screen = "day";
-    } else {
-      this.overlay = id;
-    }
+  togglePanel = () => {
+    this.panelShown = !this.panelShown;
+  };
+
+  // *Settings* opens over the current screen.
+  navigate = (id: OverlayId) => {
+    this.overlay = id;
   };
 
   closeOverlay = () => {
@@ -278,7 +312,7 @@ export class Shell {
     if (!asked) return;
     try {
       await dayData.revertLast(this.day);
-      await this.refreshOverview();
+      await Promise.all([this.refreshOverview(), this.refreshPanel()]);
     } catch (e) {
       this.error = String(e);
     }

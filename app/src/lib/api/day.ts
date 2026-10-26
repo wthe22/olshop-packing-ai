@@ -62,10 +62,6 @@ export const setPrinted = (
   printed: boolean,
 ): Promise<void> => invoke("set_printed", { day, batch, group, printed });
 
-// The open namespace's dates, newest first, today always listed.
-export const days = async (): Promise<string[]> =>
-  (await invoke<{ dates: { date: string }[] }>("namespaces_list")).dates.map((row) => row.date);
-
 // *Revert* the newest batch. A file open in a PDF viewer stops it with the file named.
 export const revertLast = (day: string): Promise<void> =>
   invoke("revert_last", { day });

@@ -15,7 +15,7 @@ Read first: [ui/](../../software-design/ui/README.md) (the window frame and each
 
 | Step | What | Done when |
 |---|---|---|
-| R8.1 | The panel and the title bar: the namespace list, **+ New namespace**, the dates by month with their orders, today, a damaged date, **Open folder**, hide and show (`Ctrl+B`), read again on focus; the day stepper goes; **Search**, **Sort rules**, **Settings** in the title bar | The shell's tests open another date and namespace through the panel; a draft asks first |
+| R8.1 (done) | The panel and the title bar: the namespace list, **+ New namespace**, the dates by month with their orders, today, a damaged date, **Open folder**, hide and show (`Ctrl+B`), read again on focus; the day stepper goes; the title bar names the namespace and the date (**Search** and **Sort rules** join it with their steps) | The shell's tests open another date and namespace through the panel; a draft asks first |
 | R8.2 | The Day card: **Restore** on a missing or changed output, **Left out ▸** listing each copy left out, **Reprints** with **Open** | The app's test restores through the command; the front-end tests show the rows |
 | R8.3 | Search on the index: the boxes as filter text, *This day* / *All days*, *Loading…*, the rows with their tick and trace line, **Select all results**, **Reprint `<n>` orders** and its line with **Open** | A front-end test searches, ticks and reprints against the fake back end |
 | R8.4 | Repeated orders: the read's repeats as groups and files, `resolve_repeats`, the screen after the logo prompt, the Plan header's *copies left out ▸* and **Change…**, the group chips on the file list | The app's test chooses *Keep the last copies* on the repeat fixture and saves; the verifier passes |

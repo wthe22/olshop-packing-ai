@@ -9,6 +9,7 @@
   import { texts } from "../texts";
   import { Shell } from "../lib/shell.svelte";
   import Frame from "../lib/Frame.svelte";
+  import Panel from "../lib/Panel.svelte";
   import StartPrompt from "../lib/StartPrompt.svelte";
   import NamespacePrompt from "../lib/NamespacePrompt.svelte";
   import DayScreen from "../lib/DayScreen.svelte";
@@ -16,8 +17,33 @@
   import PlanScreen from "../lib/PlanScreen.svelte";
   import Overlays from "../lib/Overlays.svelte";
 
+  // Below the smallest window width the panel hides on its own.
+  const SMALLEST_WIDTH = 1024;
+
   const shell = new Shell();
-  onMount(shell.load);
+  onMount(() => {
+    shell.load();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key.toLowerCase() === "b") {
+        event.preventDefault();
+        shell.togglePanel();
+      }
+    };
+    // A folder added in Explorer shows up when the window regains focus.
+    const onFocus = () => shell.namespace && shell.refreshPanel();
+    const onResize = () => {
+      if (window.innerWidth < SMALLEST_WIDTH) shell.panelShown = false;
+    };
+    onResize();
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("resize", onResize);
+    };
+  });
 </script>
 
 {#if !shell.ready}
@@ -32,54 +58,89 @@
 {:else if shell.needsNamespace}
   <NamespacePrompt busy={shell.busy} error={shell.error} onName={shell.nameNamespace} />
 {:else}
-  <Frame
-    day={shell.day}
-    screen={shell.screen}
-    overlay={shell.overlay}
-    version={shell.version}
-    onStep={shell.stepDay}
-    onToday={shell.goToday}
-    onNavigate={shell.navigate}
-  />
-  {#if shell.error}
-    <p class="error">{shell.error}</p>
-  {/if}
-  {#if shell.screen === "day"}
-    <DayScreen
-      overview={shell.overview}
-      saved={shell.savedMessage}
-      reading={shell.amendReading}
-      onOpen={shell.openFile}
-      onOpenFolder={shell.openFolder}
-      onSetPrinted={shell.setPrinted}
-      onNewBatch={shell.startBatch}
-      onAmend={shell.amend}
-      onRevert={shell.revert}
+  <div class="window">
+    <Frame
+      namespace={shell.namespace}
+      day={shell.day}
+      overlay={shell.overlay}
+      version={shell.version}
+      onTogglePanel={shell.togglePanel}
+      onNavigate={shell.navigate}
     />
-  {:else if shell.screen === "new-batch"}
-    <NewBatchScreen
-      batchNumber={shell.nextBatch}
-      amend={shell.amendBatch}
-      amendGrouping={shell.amendGrouping}
-      files={shell.files}
-      onFiles={(next) => (shell.files = next)}
-      onPlan={shell.onPlan}
-      onCancel={shell.cancelBatch}
-    />
-  {:else if shell.screen === "plan" && shell.readResult}
-    <PlanScreen
-      batchNumber={shell.nextBatch}
-      read={shell.readResult}
-      onSaved={shell.onSaved}
-      onBack={shell.backToFiles}
-      onCancel={shell.cancelBatch}
-    />
-  {/if}
+    <div class="body">
+      {#if shell.panelShown && shell.panel}
+        <Panel
+          panel={shell.panel}
+          day={shell.day}
+          today={shell.today}
+          onOpenDate={shell.openDate}
+          onOpenNamespace={shell.openNamespace}
+          onNewNamespace={shell.newNamespace}
+          onOpenFolder={shell.openFolder}
+          onHide={shell.togglePanel}
+        />
+      {/if}
+      <div class="screen">
+        {#if shell.error}
+          <p class="error">{shell.error}</p>
+        {/if}
+        {#if shell.screen === "day"}
+          <DayScreen
+            overview={shell.overview}
+            saved={shell.savedMessage}
+            reading={shell.amendReading}
+            onOpen={shell.openFile}
+            onOpenFolder={shell.openFolder}
+            onSetPrinted={shell.setPrinted}
+            onNewBatch={shell.startBatch}
+            onAmend={shell.amend}
+            onRevert={shell.revert}
+          />
+        {:else if shell.screen === "new-batch"}
+          <NewBatchScreen
+            batchNumber={shell.nextBatch}
+            amend={shell.amendBatch}
+            amendGrouping={shell.amendGrouping}
+            files={shell.files}
+            onFiles={(next) => (shell.files = next)}
+            onPlan={shell.onPlan}
+            onCancel={shell.cancelBatch}
+          />
+        {:else if shell.screen === "plan" && shell.readResult}
+          <PlanScreen
+            batchNumber={shell.nextBatch}
+            read={shell.readResult}
+            onSaved={shell.onSaved}
+            onBack={shell.backToFiles}
+            onCancel={shell.cancelBatch}
+          />
+        {/if}
+      </div>
+    </div>
+  </div>
 
   <Overlays {shell} />
 {/if}
 
 <style>
+  .window {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+  }
+
+  .screen {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+  }
+
   .boot {
     display: flex;
     align-items: center;

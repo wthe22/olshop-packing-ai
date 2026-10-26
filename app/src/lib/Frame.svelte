@@ -1,58 +1,42 @@
 <script lang="ts">
-  // The window frame: title, the day switch and the navigation. *Settings* opens over the current
-  // screen; *Day* returns to it.
+  // The window frame: the title, the panel's switch, the open namespace and date, and the screens
+  // that open over the current one.
   import { texts, formatDay, brandText } from "../texts";
-
-  // The batch flow screens (*new-batch*, *plan*) are not in the nav; none is active there.
-  type Screen = "day" | "new-batch" | "plan";
-  type Overlay = "settings" | null;
-  type NavId = "day" | "settings";
+  import type { OverlayId } from "./shell.svelte";
 
   let {
+    namespace,
     day,
-    screen,
     overlay,
     // The program's shown version: the title bar's brand text is the
     // program's name and this, the same line as the OS window title (from `StartInfo.version`).
     version,
-    onStep,
-    onToday,
+    onTogglePanel,
     onNavigate,
   }: {
+    namespace: string | null;
     day: string;
-    screen: Screen;
-    overlay: Overlay;
+    overlay: OverlayId | null;
     version: string;
-    onStep: (delta: number) => void;
-    onToday: () => void;
-    onNavigate: (id: NavId) => void;
+    onTogglePanel: () => void;
+    onNavigate: (id: OverlayId) => void;
   } = $props();
 
-  const items: { id: NavId; label: string }[] = [
-    { id: "day", label: texts.nav.day },
+  const items: { id: OverlayId; label: string }[] = [
     { id: "settings", label: texts.nav.settings },
   ];
-
-  const active = (id: NavId) => (overlay ? overlay === id : screen === id);
 </script>
 
 <header>
   <span class="brand">{brandText(version)}</span>
   <span class="dot">·</span>
   <button
-    class="step"
-    title={texts.nav.previousDay}
-    aria-label={texts.nav.previousDay}
-    onclick={() => onStep(-1)}>◀</button
+    class="panel"
+    title={texts.nav.showPanel}
+    aria-label={texts.nav.showPanel}
+    onclick={onTogglePanel}>☰</button
   >
-  <span class="day">{formatDay(day)}</span>
-  <button
-    class="step"
-    title={texts.nav.nextDay}
-    aria-label={texts.nav.nextDay}
-    onclick={() => onStep(1)}>▶</button
-  >
-  <button class="today" onclick={onToday}>{texts.nav.today}</button>
+  <span class="where">{namespace ?? ""} · {formatDay(day)}</span>
 
   <span class="grow"></span>
 
@@ -60,7 +44,7 @@
     {#each items as item (item.id)}
       <button
         class="nav"
-        class:active={active(item.id)}
+        class:active={overlay === item.id}
         onclick={() => onNavigate(item.id)}>{item.label}</button
       >
     {/each}
@@ -85,18 +69,12 @@
     color: #9a9a9a;
   }
 
-  .step {
+  .panel {
     padding: 0.15rem 0.5rem;
   }
 
-  .day {
-    min-width: 9.5rem;
-    text-align: center;
+  .where {
     font-variant-numeric: tabular-nums;
-  }
-
-  .today {
-    padding: 0.2rem 0.6rem;
   }
 
   .grow {

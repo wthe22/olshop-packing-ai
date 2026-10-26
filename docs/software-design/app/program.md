@@ -4,8 +4,9 @@
 
 | Command | Does | Returns |
 |---|---|---|
-| `namespaces_list()` | The namespaces of the data folder, and the open one's dates from the search index ([namespaces](namespaces.md)) | Names; per date its batches and orders |
-| `namespace_new(name)` | **+ New namespace**: make the namespace's folder | The list, or why the name is refused |
+| `namespaces_list()` | The namespaces of the data folder, and the open one's dates from the search index ([namespaces](namespaces.md)) | Names; per date its orders, whether it is damaged, its folder |
+| `namespace_new(name)` | **+ New namespace**: make the namespace's folder and open it on today's date | The name, or why it is refused |
+| `namespace_open(name)` | Open another namespace on today's date; its search index is built beside it | — |
 | `day_open(namespace, date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, printed marks, reprints, findings; or the damage message |
 | `check_files(paths)` | SHA-256 and page count of each chosen file; *used in batch n*; one file chosen twice is listed once | The file list |
 | `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, repeats, the plan; or the stop |
@@ -16,11 +17,11 @@
 | `save_batch(save_anyway)` | Write, verify, commit, move ([04 Save](../workflow/04-save.md)). Emits `save-progress {stage, page, pages}` | The saved batch, or the verifier's findings (nothing saved until *Save anyway*) |
 | `revert_last(day)` / `start_amend(day)` | Revert the newest batch / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)) | The date / the amend's file list and read |
 | `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
-| `restore_output(day, batch, file)` | Write a missing output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
+| `restore_output(day, file)` | Write a missing output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
 | `rules_list()` / `rules_load(rule)` / `rules_check(rule, …)` / `rules_save(rule, …)` | The Sort rules screen ([rules file](../rules-file/README.md)) | Rules; groups; errors with line and column; live counts on the open draft |
 | `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_delete(rule)` | **+ New rule**, **Rename…**, **Delete rule** | — |
 | `filter_to_tree(text)` / `tree_to_filter(tree)` | The boxes editor: the engine's parser and printer, so the window has no second parser | Tree, or an error with line and column / the text |
-| `search_orders(filter, scope)` | Search the index ([reprint](reprint.md#search)); scope *This day* or *All days* | One row per order with its trace |
+| `search_orders(filter, scope, day)` | Search the index ([reprint](reprint.md#search)); scope *This day* (the open `day`) or *All days* | One row per order with its trace |
 | `reprint(orders)` | One PDF of the chosen orders' pages, verified, recorded ([reprint](reprint.md#reprint)) | The file, or the verifier's findings |
 | `open_path(path)` / `show_in_folder(path)` | `explorer.exe "<path>"`, the path the only argument | — |
 | `settings_get()` / `settings_set(data_dir)` | Settings ([settings](../ui/settings.md)) | — |
