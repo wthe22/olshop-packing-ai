@@ -1,6 +1,6 @@
 <script lang="ts">
-  // One plan row: the *Use* tick, the category's number, code, name, counts and
-  // file name with its move buttons, and the runs of its saved PDF when the row is expanded.
+  // One plan row: the *Use* tick, the group's code, name, counts and file name with its move
+  // buttons, and the order contents of its group PDF when the row is expanded.
   import type { PlanRow } from "./api/batch";
   import { texts } from "../texts";
 
@@ -32,7 +32,6 @@
       />
     {/if}
   </td>
-  <td class="c-num">{row.number ?? ""}</td>
   <td class="c-category">
     <span class="code">{row.code}</span>
     <span class="name">{row.name}</span>
@@ -74,8 +73,7 @@
   {#each row.runs as run}
     <tr class="run">
       <td class="c-use"></td>
-      <td class="c-num"></td>
-      <td class="c-category" colspan="2">{run.label}&nbsp;&nbsp;{run.contents}</td>
+      <td class="c-category" colspan="2">{run.contents}</td>
       <td class="c-runs run-orders">
         {run.orders} {run.orders === 1 ? "order" : "orders"}
       </td>
@@ -90,11 +88,6 @@
     padding: 0.35rem 0.4rem;
     border-bottom: 1px solid #ececec;
     vertical-align: top;
-  }
-
-  .c-num {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
   }
 
   .c-orders,

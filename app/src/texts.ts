@@ -23,40 +23,47 @@ export const texts = {
   },
 
   start: {
-    // "No packing data next to the program (`D:\Packing\`)."
-    noData: (folder: string) => `No packing data next to the program (${folder}).`,
-    useThisFolder: "Use this folder",
+    // "Where should the data be kept? `D:\Packing\data` is next to the program."
+    noData: (folder: string) =>
+      `Where should the data be kept? The data folder next to the program is ${folder}\\data.`,
+    useThisFolder: "Use the folder next to the program",
     chooseFolder: "Choose a folder…",
   },
 
   day: {
-    // "Today: 2 batches · 729 orders · 5 saved PDFs".
+    // "Today: 2 batches · 729 orders · 5 group PDFs".
     summary: (batches: number, orders: number, pdfs: number) =>
-      `Today: ${count(batches, "batch", "batches")} · ${count(orders, "order", "orders")} · ${count(pdfs, "saved PDF", "saved PDFs")}`,
+      `Today: ${count(batches, "batch", "batches")} · ${count(orders, "order", "orders")} · ${count(pdfs, "group PDF", "group PDFs")}`,
     nothing: "Nothing saved on this day yet.",
     newBatch: "+ New batch",
     // "Batch 2 · saved 09:12 · 2 files · 129 orders".
     batch: (n: number, time: string, files: number, orders: number) =>
       `Batch ${n} · saved ${time} · ${count(files, "file", "files")} · ${count(orders, "order", "orders")}`,
     open: "Open",
-    // The **Printed** tick beside *Open* on each saved-PDF row. The tick carries no
-    // word, so this is its accessible name and tooltip; it names the saved PDF (its file name), so
-    // a screen reader reads one row's tick apart from another's.
+    // The **Printed** tick beside *Open* on each group PDF. The tick carries no word, so this is
+    // its accessible name and tooltip; it names the file, so a screen reader reads one row's tick
+    // apart from another's.
     printedLabel: (file: string) => `Printed ${file}`,
     openFolder: "Open folder",
-    packingList: "Packing list",
-    // "88 orders   3 runs".
-    counts: (orders: number, runs: number) =>
-      `${count(orders, "order", "orders")}   ${count(runs, "run", "runs")}`,
+    summaryPdf: "Summary PDF",
+    // "88 orders   3 order contents".
+    counts: (orders: number, contents: number) =>
+      `${count(orders, "order", "orders")}   ${count(contents, "order content", "order contents")}`,
+    // A batch's copies left out (repeats, orders saved earlier).
+    leftOut: (n: number) => `Left out: ${count(n, "copy", "copies")}`,
+    // An output found missing or changed when the date opened.
+    missing: "missing",
+    amended: " · amended",
+    // The data folder also holds files of Packing v0.1.
+    oldData: "This folder also holds data of Packing v0.1 (labels\\). It is not read.",
     // The batch's stored warnings, expanding to the texts.
     warnings: (n: number) => `Warnings: ${n} ▸`,
     warningsNone: "Warnings: none",
-    // The check before saving's errors of a batch saved anyway, expanding to
-    // the texts. Shown until the batch is reverted or amended.
+    // The verifier's errors of a batch saved anyway, expanding to the texts. Shown until the batch is reverted or amended.
     savedWithErrors: (n: number) => `Saved with ${count(n, "error", "errors")} ▸`,
     // The green line after *Save batch*, shown for a few seconds.
-    saved: (n: number, pdfs: number, lists: number) =>
-      `Batch ${n} saved: ${count(pdfs, "PDF", "PDFs")}, ${count(lists, "packing list", "packing lists")}.`,
+    saved: (n: number, pdfs: number) =>
+      `Batch ${n} saved: ${count(pdfs, "group PDF", "group PDFs")} and the summary PDF.`,
     loading: "Loading…",
     // *Amend* and *Revert*, on the newest batch only.
     amend: "Amend",
@@ -65,11 +72,11 @@ export const texts = {
     redoBatch: (n: number) => `Redo batch ${n}`,
     // The Revert confirmation, verbatim.
     confirmRevert: (n: number, pdfs: number, orders: number) =>
-      `Undo batch ${n}? Its ${count(pdfs, "saved PDF", "saved PDFs")}, packing list and download copies are deleted, and its ${count(orders, "order", "orders")} can be saved again. If you already printed them, throw the printed labels away.`,
-    // The Amend confirmation, verbatim. An amend redoes the batch with the set it
-    // was packed with, so the confirmation names that set.
-    confirmAmend: (n: number, grouping: string, time: string) =>
-      `Redo batch ${n} with its grouping (${grouping})? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
+      `Undo batch ${n}? Its ${count(pdfs, "group PDF", "group PDFs")} and its summary PDF are deleted, and its ${count(orders, "order", "orders")} can be saved again. If you already printed them, throw the printed labels away.`,
+    // The Amend confirmation, verbatim. An amend redoes the batch with its sort rule, so the
+    // confirmation names it.
+    confirmAmend: (n: number, rule: string, time: string) =>
+      `Redo batch ${n} with its sort rule (${rule})? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
     // While *Amend* reads the batch's own label files again (the
     // `read-progress` event), shown with a progress bar before the Plan screen opens.
     amendReading: (page: number, pages: number) =>
@@ -129,57 +136,47 @@ export const texts = {
       orders: number,
       alreadySaved: number,
     ) =>
-      `Batch ${batch} · grouping ${grouping} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
+      `Batch ${batch} · sort rule ${grouping} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
     warnings: (n: number) => `Warnings: ${n} ▸`,
     warningsNone: "Warnings: none",
     use: "Use",
-    hash: "#",
-    category: "Pick",
+    category: "Group",
     orders: "Orders",
-    runs: "Runs",
+    runs: "Contents",
     fileName: "File name",
     rest: "(the rest)",
-    // A pick that takes 0 orders.
+    // A group that takes 0 orders.
     noPdf: "0 orders — no PDF",
     skipped: "skipped for this batch",
     moveUp: "Move up",
     moveDown: "Move down",
-    expand: "Runs",
-    collapse: "Hide runs",
-    addCategory: "+ Add a pick for this batch",
+    expand: "Order contents",
+    collapse: "Hide order contents",
+    addCategory: "+ Add a group for this batch",
     addCode: "Code",
     addName: "Name",
     addCondition: "Condition",
     addSubmit: "Add",
     addCancel: "Cancel",
-    // The boxes editor is used for the added pick's condition, with a text toggle.
-    packingList: "Packing list:",
-    scopeWhole: "one for the batch",
-    scopePerPdf: "one per PDF",
-    scopeNone: "none",
-    layoutFull: "full",
-    layoutSummary: "summary",
-    layoutCategory: "pick",
     save: "Save batch",
     // An amend uses the same screen, titled *Redo batch 2*, with this button.
     saveAgain: (n: number) => `Save batch ${n} again`,
     // While *Save batch* runs — the stage and a progress bar. `saving` shows before the first `save-progress`.
     saving: "Saving …",
-    saveWriting: (page: number, pages: number) =>
-      `Writing the saved PDFs …  page ${page} of ${pages}`,
-    saveChecking: (page: number, pages: number) =>
-      `Checking the saved PDFs …  page ${page} of ${pages}`,
+    saveCopying: "Copying inputs …",
+    saveWriting: (done: number, all: number) => `Writing …  file ${done + 1} of ${all}`,
+    saveVerifying: "Verifying the outputs …",
+    saveCommitting: "Saving …",
     // The check before saving found something — the two lists, kept apart, with
     // *Save anyway* and *Cancel — nothing is saved*.
-    checkTitle: "The saved files do not match the plan.",
+    checkTitle: "The verifier found the outputs differ from the record.",
     checkErrors: (n: number) => `Errors: ${n}`,
     checkWarnings: (n: number) => `Warnings: ${n}`,
     saveAnyway: "Save anyway",
     saveCancel: "Cancel — nothing is saved",
     amendTitle: (n: number) => `Redo batch ${n}`,
-    editCategories: "Edit categories",
     // The second of two PDFs with the same name.
-    duplicate: (n: number) => `Same name as PDF ${n}`,
+    duplicate: (code: string) => `Same name as group ${code}`,
     // The top button, on a new batch and on an amend alike (the same string, so
     // one home for it). It is not a discard: it returns to the PDF selection page the batch came
     // from — the new batch's file list, or the amend's selection page — with the files still
@@ -195,23 +192,21 @@ export const texts = {
     dataFolder: "Data folder",
     change: "Change…",
     open: "Open",
-    // "Use `<folder>` until the app closes? Existing days stay in `<old>`."
+    // "Use `<folder>` for the data from now on? The data in `<old>` stays where it is."
     confirmChange: (folder: string, old: string) =>
-      `Use ${folder} until the app closes? Existing days stay in ${old}.`,
-    packingList: "Packing list default",
-    scope: "Scope",
-    scopeWhole: "one for the batch",
-    scopePerPdf: "one per PDF",
-    scopeNone: "none",
-    layouts: "Layouts",
-    layoutFull: "full",
-    layoutSummary: "summary",
-    layoutCategory: "pick",
-    save: "Save",
+      `Use ${folder} for the data from now on? The data in ${old} stays where it is.`,
     about: "About",
     version: (version: string) => `Version ${version}`,
     // The PDFium version (D14: version + PDFium version only).
     pdfium: (version: string) => `PDFium ${version}`,
+    schema: (version: string) => `schema ${version}`,
+  },
+
+  // The first owner's name, asked once when the data folder holds no owner.
+  owner: {
+    ask: "Whose labels does this data folder hold? Name the shop owner; each owner keeps their own batches.",
+    placeholder: "Owner name",
+    create: "Use this name",
   },
 
   // The boxes editor and the file editor.
@@ -371,13 +366,20 @@ export function brandText(version: string): string {
 // The stage of a running save, from the `save-progress` event — the stage in plain words with the pages done. The Plan screen
 // shows this with a progress bar; before the first event it shows `plan.saving`.
 export function saveStageText(
-  stage: "Writing" | "Checking",
+  stage: "CopyingInputs" | "Writing" | "Verifying" | "Saving",
   page: number,
   pages: number,
 ): string {
-  return stage === "Checking"
-    ? texts.plan.saveChecking(page, pages)
-    : texts.plan.saveWriting(page, pages);
+  switch (stage) {
+    case "CopyingInputs":
+      return texts.plan.saveCopying;
+    case "Writing":
+      return texts.plan.saveWriting(page, pages);
+    case "Verifying":
+      return texts.plan.saveVerifying;
+    case "Saving":
+      return texts.plan.saveCommitting;
+  }
 }
 
 // The Plan screen's two ways out, from the kind of batch. The top button is

@@ -11,18 +11,18 @@ import { Shell, backend, overview, read } from "./shellKit.mjs";
 import { texts } from "../src/texts.ts";
 
 
-test("starting the shell loads the folder, the day, the settings and the day's overview", async () => {
+test("starting the shell loads the folder, the owner, the day and the day's overview", async () => {
   const calls = useBackend(
     backend({
       start_info: () => ({
         today: "2026-10-07",
         exe_dir: "C:/Packing",
         data_folder: "C:/Data",
+        owner: "Toko Contoh",
         version: "0.1",
       }),
       days: () => ["2026-10-07", "2026-10-06"],
-      settings_get: () => ({ scope: "whole", layouts: ["pick"], grouping: "default" }),
-      about: () => ({ version: "0.1", pdfium: "140.0" }),
+      about: () => ({ version: "0.1", pdfium: "140.0", schema: "1.0" }),
     }),
   );
   const shell = new Shell();
@@ -39,13 +39,14 @@ test("starting the shell loads the folder, the day, the settings and the day's o
   assert.equal(shell.needsFolder, false, "the start prompt is gone");
   assert.deepEqual(shell.dayList, ["2026-10-07", "2026-10-06"]);
   assert.equal(shell.overview.totals.batches, 2, "the overview is today's");
-  assert.equal(shell.settings.grouping, "default");
+  assert.equal(shell.owner, "Toko Contoh");
+  assert.equal(shell.needsOwner, false);
   assert.equal(shell.about.pdfium, "140.0");
   assert.equal(shell.error, "");
-  assert.equal(shell.overlay, null, "a good categories file opens nothing");
+  assert.equal(shell.overlay, null);
   assert.deepEqual(
     calls.map((call) => call.command),
-    ["start_info", "days", "day_overview", "settings_get", "about", "rules_load"],
+    ["start_info", "days", "day_overview", "about"],
   );
   assert.deepEqual(calls[2].args, { day: "2026-10-07" });
 
@@ -58,30 +59,37 @@ test("starting the shell loads the folder, the day, the settings and the day's o
   assert.equal(prompt.day, "2026-10-08");
   assert.equal(noFolder.length, 1, "no folder: only `start_info` was asked");
 
-  // A broken categories file opens the Categories screen over the day.
-  const broken = new Shell();
-  useBackend(
+  // A folder without an owner: the first owner's name is asked, then the day opens.
+  const named = useBackend(
     backend({
-      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", version: "0.1" }),
-      rules_load: () => ({ text: "[[category]]\n", error: "line 2, col 1", entries: [], file: "categories.toml" }),
+      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", owner: null, version: "0.2" }),
+      owner_new: (args) => args.name,
     }),
   );
-  await broken.load();
-  assert.equal(broken.overlay, "categories", "the broken file is shown first");
+  const first = new Shell();
+  await first.load();
+  assert.equal(first.needsOwner, true, "the owner prompt shows");
+  assert.deepEqual(named.map((call) => call.command), ["start_info"], "and no day is loaded");
+  await first.nameOwner("Toko Contoh");
+  assert.equal(first.needsOwner, false);
+  assert.equal(first.owner, "Toko Contoh");
+  assert.deepEqual(named[1], { command: "owner_new", args: { name: "Toko Contoh" } });
+  assert.equal(first.overview.totals.batches, 2, "the day opens");
 
-  // A folder with no categories file at all: nothing to open.
-  const none = new Shell();
+  // A name the folder cannot take keeps the prompt and says why.
   useBackend(
     backend({
-      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", version: "0.1" }),
-      rules_load: () => {
-        throw "no categories.toml";
+      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", owner: null, version: "0.2" }),
+      owner_new: () => {
+        throw "the name is taken";
       },
     }),
   );
-  await none.load();
-  assert.equal(none.overlay, null);
-  assert.equal(none.error, "");
+  const refused = new Shell();
+  await refused.load();
+  await refused.nameOwner("Toko Contoh");
+  assert.equal(refused.needsOwner, true);
+  assert.equal(refused.error, "the name is taken");
 });
 
 
@@ -113,21 +121,23 @@ test("a new batch goes New batch → Plan → Save → the day screen", async ()
 
   // *Save batch* returns to the day screen and reports the batch.
   shell.onPlan(plan);
-  await shell.onSaved({ batch: 1, pdfs: 2, packing_lists: 1, saved: true, errors: [], warnings: [] });
+  await shell.onSaved({ batch: 1, pdfs: 2, saved: true, errors: [], warnings: [], after_save: [] });
   assert.equal(shell.screen, "day");
   assert.equal(shell.draftOpen, false, "the draft is gone");
   assert.equal(shell.readResult, null);
   assert.deepEqual(shell.files, []);
   assert.equal(shell.overlay, null);
-  assert.equal(shell.savedMessage, texts.day.saved(1, 2, 1), "the green line names the batch");
+  assert.equal(shell.savedMessage, texts.day.saved(1, 2), "the green line names the batch");
   assert.equal(calls.filter((call) => call.command === "day_overview").length, 1, "the day was recounted");
   clearTimeout(shell.savedTimer);
 
   // A second save replaces the line and its earlier timer.
   shell.startBatch();
   shell.onPlan(plan);
-  await shell.onSaved({ batch: 2, pdfs: 1, packing_lists: 1, saved: true, errors: [], warnings: [] });
-  assert.equal(shell.savedMessage, texts.day.saved(2, 1, 1));
+  await shell.onSaved({ batch: 2, pdfs: 1, saved: true, errors: [], warnings: [], after_save: ["output\\1 summary.pdf is open in another program"] });
+  assert.equal(shell.savedMessage, texts.day.saved(2, 1));
+  assert.equal(shell.error, "output\\1 summary.pdf is open in another program", "a move after the commit is reported");
+  shell.error = "";
   clearTimeout(shell.savedTimer);
   shell.closeOverlay();
   assert.equal(shell.overlay, null, "an overlay that is not open stays closed");
@@ -226,14 +236,18 @@ test("Amend reads the batch's own files and opens the Plan with that batch", asy
   shell.savedMessage = "Batch 2 saved";
   await shell.amend({
     batch: 3,
-    save_time: "2026-10-07T09:12:00+07:00",
     time: "09:12",
-    grouping: "ramadhan",
+    amended: false,
+    sort_rule: "ramadhan",
     files: 2,
     orders: 23,
+    left_out: 0,
     pdfs: [],
-    packing_lists: [],
+    summary: "3 summary.pdf",
+    summary_missing: false,
     warnings: [],
+    errors: [],
+    folder: "C:/Data/Toko Contoh/2026-10-07/output",
   });
 
   assert.equal(shell.screen, "plan", "the Plan screen opens at once");
@@ -246,22 +260,10 @@ test("Amend reads the batch's own files and opens the Plan with that batch", asy
   assert.deepEqual(during, { page: 3, pages: 24 }, "and it was shown while the read ran");
   assert.deepEqual(shell.files, []);
   assert.equal(shell.overlay, null);
-  assert.equal(shell.categoriesGrouping, null);
   assert.equal(calls.filter((call) => call.command === "start_amend").length, 1);
   assert.equal(calls.filter((call) => call.command === "plugin:event|listen").length, 1, "the read's progress is listened to");
   assert.equal(calls.filter((call) => call.command === "plugin:event|unlisten").length, 1, "and the listener is released");
   assert.equal(calls.filter((call) => call.command === "day_overview").length, 0);
-
-  // The Plan screen's *Edit categories* opens the Categories overlay on the batch's own set.
-  shell.openCategoriesFromPlan();
-  assert.equal(shell.overlay, "categories");
-  assert.equal(shell.categoriesGrouping, "ramadhan");
-  shell.onCategoriesSaved();
-  assert.equal(shell.overlay, null);
-  assert.equal(shell.planRefresh, 1, "the open Plan screen recounts");
-  // From the top bar the set used last is shown, not the batch's.
-  await shell.navigate("categories");
-  assert.equal(shell.categoriesGrouping, null);
 
   // A failed amend reports it and leaves the day screen alone.
   useBackend(
@@ -275,14 +277,18 @@ test("Amend reads the batch's own files and opens the Plan with that batch", asy
   failing.day = "2026-10-07";
   await failing.amend({
     batch: 3,
-    save_time: "2026-10-07T09:12:00+07:00",
     time: "09:12",
-    grouping: "ramadhan",
+    amended: false,
+    sort_rule: "ramadhan",
     files: 2,
     orders: 23,
+    left_out: 0,
     pdfs: [],
-    packing_lists: [],
+    summary: "3 summary.pdf",
+    summary_missing: false,
     warnings: [],
+    errors: [],
+    folder: "C:/Data/Toko Contoh/2026-10-07/output",
   });
   assert.equal(failing.error, "no batch to redo");
   assert.equal(failing.screen, "day", "the screen stays on the day");

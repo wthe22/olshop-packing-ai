@@ -12,9 +12,9 @@ Only the newest batch can be changed — later batches depend on it.
   says which file to close and changes nothing.
 - **Amend** — "I fixed a category, do the last batch again". It names the grouping the batch was packed
   with and asks:
-  "Redo batch 2 with its grouping (default)? Batch 2 was saved at 09:12. If you already
+  "Redo batch 2 with its sort rule (default)? Batch 2 was saved at 09:12. If you already
   printed it, print it again after saving." [Cancel] [Redo batch 2]. The batch's own label files are
-  read again, with the grouping that batch used (whatever grouping you have used since), and the **Plan**
+  read again, with the sort rule that batch used (as it is now, or as saved when it is gone), and the **Plan**
   screen opens (titled *Redo batch 2*, button *Save batch 2 again*). To change which PDFs go in,
   press **Back** (top): the file list shows the batch's PDFs already selected and its grouping fixed
   ("Grouping: default (fixed)"); add PDFs with **Add files…** or drop them, remove one with **×**, then

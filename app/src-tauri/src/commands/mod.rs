@@ -1,8 +1,7 @@
-//! The window commands, grouped by screen: [`day`] (start, day overview, settings), [`batch`]
-//! (new batch, plan, save, revert/amend) and [`rules`] (the Categories editor). Every command is a
-//! thin wrapper over a plain function that is unit-tested.
+//! The window commands, grouped by screen: [`start`] (the data folder, the owner, *About*),
+//! [`day`] (the Day screen, Printed, revert) and [`batch`] (new batch, plan, save, amend). Each
+//! command is a thin wrapper over a plain function the tests call.
 
 pub mod batch;
 pub mod day;
-pub mod rules;
-pub mod search;
+pub mod start;

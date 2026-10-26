@@ -1,9 +1,9 @@
 <script lang="ts">
-  // The Day screen: what has been saved today. Batches come from state.json,
-  // each with its stored warnings and each saved-PDF row with its **Printed** tick (a note);
-  // *New batch* starts the batch flow.
+  // The Day screen: what has been saved on the date. Batches come from the date's journal, each
+  // with its warnings and each group PDF with its **Printed** tick (a note); *New batch* starts
+  // the batch flow.
   import { texts } from "../texts";
-  import type { BatchView, DayOverview, PdfView } from "./api/day";
+  import type { BatchView, DayOverview, GroupPdfView } from "./api/day";
 
   let {
     overview,
@@ -23,10 +23,9 @@
     reading: { page: number; pages: number } | null;
     onOpen: (path: string) => void;
     onOpenFolder: (path: string) => void;
-    // The **Printed** tick of one saved-PDF row: the owner ticks it to note that
-    // this saved PDF has been printed; it is written to the day's `state.json` the moment it is
-    // clicked.
-    onSetPrinted: (batch: BatchView, pdf: PdfView, printed: boolean) => void;
+    // The **Printed** tick of one group PDF: the owner ticks it to note that the file has been
+    // printed; it is written to the date's journal the moment it is clicked.
+    onSetPrinted: (batch: BatchView, pdf: GroupPdfView, printed: boolean) => void;
     onNewBatch: () => void;
     onAmend: (batch: BatchView) => void;
     onRevert: (batch: BatchView) => void;
@@ -70,6 +69,15 @@
     <p class="saved">{saved}</p>
   {/if}
 
+  {#if overview}
+    {#each overview.problems as problem}
+      <p class="problem">{problem}</p>
+    {/each}
+    {#if overview.old_data}
+      <p class="muted">{texts.day.oldData}</p>
+    {/if}
+  {/if}
+
   {#if reading}
     <div class="reading">
       <p class="muted">{texts.day.amendReading(reading.page, reading.pages)}</p>
@@ -87,6 +95,7 @@
         <div class="batch-head">
           <span class="head-text">
             {texts.day.batch(batch.batch, batch.time, batch.files, batch.orders)}
+            {#if batch.amended}{texts.day.amended}{/if}
           </span>
           {#if i === 0}
             <span class="grow"></span>
@@ -94,12 +103,12 @@
             <button onclick={() => onRevert(batch)}>{texts.day.revert}</button>
           {/if}
         </div>
-        {#each batch.pdfs as pdf (pdf.number)}
+        {#each batch.pdfs as pdf (pdf.group)}
           <div class="row">
-            <span class="num">{pdf.number}</span>
-            <span class="code">{pdf.code}</span>
+            <span class="code">{pdf.group}</span>
             <span class="name">{pdf.name}</span>
-            <span class="counts">{texts.day.counts(pdf.orders, pdf.runs)}</span>
+            <span class="counts">{texts.day.counts(pdf.orders, pdf.contents)}</span>
+            {#if pdf.missing}<span class="problem">{texts.day.missing}</span>{/if}
             <label class="printed">
               <input
                 type="checkbox"
@@ -115,14 +124,16 @@
           </div>
         {/each}
         <div class="batch-foot">
-          {#each batch.packing_lists as list (list)}
-            <span class="packing">
-              {texts.day.packingList}
-              <button onclick={() => onOpen(join(batch.folder, list))}
-                >{texts.day.open}</button
-              >
-            </span>
-          {/each}
+          <span class="packing">
+            {texts.day.summaryPdf}
+            {#if batch.summary_missing}<span class="problem">{texts.day.missing}</span>{/if}
+            <button onclick={() => onOpen(join(batch.folder, batch.summary))}
+              >{texts.day.open}</button
+            >
+          </span>
+          {#if batch.left_out > 0}
+            <span class="muted">{texts.day.leftOut(batch.left_out)}</span>
+          {/if}
           {#if batch.errors.length > 0}
             <button class="link errors" onclick={() => toggleErrors(batch.batch)}>
               {texts.day.savedWithErrors(batch.errors.length)}
@@ -261,12 +272,6 @@
   .row button,
   .printed input {
     height: var(--control-height);
-  }
-
-  .num {
-    width: 2rem;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
   }
 
   .code {

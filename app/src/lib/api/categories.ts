@@ -61,8 +61,15 @@ export interface GroupingsList {
 // what an older screen that knows no groupings uses.
 export const DEFAULT_GROUPING = "default";
 
-// The groupings of the data folder and the grouping used last.
-export const groupingsList = (): Promise<GroupingsList> => invoke("groupings_list");
+// The sort rules of `packing-workflows.toml`, shown as the New batch screen's groupings until the
+// screens take the sort rule's word; the rule of the newest batch is preselected.
+export const groupingsList = async (): Promise<GroupingsList> => {
+  const rules = await invoke<{ rules: string[]; preselected: string }>("sort_rules");
+  return {
+    groupings: rules.rules.map((name) => ({ name, file: "packing-workflows.toml" })),
+    last_grouping: rules.preselected,
+  };
+};
 
 // **+ New set**: write `categories/<name>.toml`, empty (the
 // one catch-all entry) or a copy of `copyFrom`'s file. The name `default` is refused (it is the

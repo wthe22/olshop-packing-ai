@@ -20,8 +20,11 @@ tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 jiff.workspace = true
+packing-batch.workspace = true
 packing-engine.workspace = true
 packing-pdf.workspace = true
+packing-store.workspace = true
+toml.workspace = true
 
 [dev-dependencies]
 testkit = { path = "../../crates/testkit" }

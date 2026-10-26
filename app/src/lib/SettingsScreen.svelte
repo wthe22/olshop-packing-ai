@@ -1,57 +1,20 @@
 <script lang="ts">
-  // Settings: the data folder and the packing-list default.
+  // Settings: the data folder and *About*. Every other choice has one fixed default, shown where
+  // it acts.
   import { texts } from "../texts";
-  import type { About, Layout, Scope, Settings } from "./api/start";
+  import type { About } from "./api/start";
 
   let {
-    settings,
     about,
     dataFolder,
     onChangeFolder,
     onOpenFolder,
-    onSave,
   }: {
-    settings: Settings | null;
     about: About | null;
     dataFolder: string | null;
     onChangeFolder: () => void;
     onOpenFolder: () => void;
-    onSave: (settings: Settings) => void;
   } = $props();
-
-  let scope = $state<Scope>("whole");
-  let layouts = $state<Layout[]>(["pick"]);
-
-  // Fill the form when the settings arrive or change.
-  $effect(() => {
-    if (settings) {
-      scope = settings.scope;
-      layouts = [...settings.layouts];
-    }
-  });
-
-  const scopes: { value: Scope; label: string }[] = [
-    { value: "whole", label: texts.settings.scopeWhole },
-    { value: "per-pdf", label: texts.settings.scopePerPdf },
-    { value: "none", label: texts.settings.scopeNone },
-  ];
-
-  const layoutOptions: { value: Layout; label: string }[] = [
-    { value: "full", label: texts.settings.layoutFull },
-    { value: "summary", label: texts.settings.layoutSummary },
-    { value: "pick", label: texts.settings.layoutCategory },
-  ];
-
-  function toggleLayout(layout: Layout, checked: boolean) {
-    layouts = checked
-      ? [...layouts, layout]
-      : layouts.filter((item) => item !== layout);
-  }
-
-  // *Save* keeps the grouping the batch screen recorded; this screen does not change it.
-  function save() {
-    onSave({ scope, layouts, grouping: settings?.grouping ?? "default" });
-  }
 </script>
 
 <div class="settings">
@@ -65,51 +28,15 @@
   </section>
 
   <section>
-    <h3>{texts.settings.packingList}</h3>
-    <div class="group">
-      <span class="label">{texts.settings.scope}</span>
-      {#each scopes as option (option.value)}
-        <label>
-          <input
-            type="radio"
-            name="scope"
-            value={option.value}
-            checked={scope === option.value}
-            onchange={() => (scope = option.value)}
-          />
-          {option.label}
-        </label>
-      {/each}
-    </div>
-    <div class="group">
-      <span class="label">{texts.settings.layouts}</span>
-      {#each layoutOptions as option (option.value)}
-        <label>
-          <input
-            type="checkbox"
-            checked={layouts.includes(option.value)}
-            onchange={(event) =>
-              toggleLayout(option.value, event.currentTarget.checked)}
-          />
-          {option.label}
-        </label>
-      {/each}
-    </div>
-  </section>
-
-  <section>
     <h3>{texts.settings.about}</h3>
     {#if about}
       <div class="group">
         <span>{texts.settings.version(about.version)}</span>
         <span>{texts.settings.pdfium(about.pdfium)}</span>
+        <span>{texts.settings.schema(about.schema)}</span>
       </div>
     {/if}
   </section>
-
-  <div class="actions">
-    <button class="primary" onclick={save}>{texts.settings.save}</button>
-  </div>
 </div>
 
 <style>
@@ -143,27 +70,5 @@
     align-items: center;
     gap: 1rem;
     margin-bottom: 0.4rem;
-  }
-
-  .group label {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-  }
-
-  .label {
-    width: 4rem;
-    color: #4a4a4a;
-  }
-
-  .actions {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .label {
-      color: #b0b0b0;
-    }
   }
 </style>

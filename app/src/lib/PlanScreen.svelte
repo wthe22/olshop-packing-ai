@@ -1,6 +1,6 @@
 <script lang="ts">
-  // Plan: the picks in order with their counts and runs, the per-batch changes
-  // (*Use*, move, add, rename) and the packing-list options; *Save batch* writes the batch. An
+  // Plan: the label groups in order with their counts and order contents, and the per-batch
+  // changes (*Use*, move, add, rename); *Save batch* writes the batch and its summary PDF. An
   // amend uses the same screen, titled *Redo batch `<b>`*, with *Save batch `<b>` again* and a
   // bottom *Cancel amend*. The top button is *Back* on both and it never asks or discards: it
   // returns to the PDF selection page the batch came from — a new batch's file list, or the
@@ -8,11 +8,9 @@
   // *Cancel amend* discard).
   import { untrack } from "svelte";
   import * as batch from "../lib/api/batch";
-  import type { Layout, Scope, Settings } from "../lib/api/start";
   import { listen } from "@tauri-apps/api/event";
   import { texts, planButtons } from "../texts";
   import AddCategoryForm from "./AddCategoryForm.svelte";
-  import PackingListOptions from "./PackingListOptions.svelte";
   import PlanRow from "./PlanRow.svelte";
   import SaveProgress from "./SaveProgress.svelte";
   import { findingsOf, type Findings } from "./saveCheck";
@@ -20,18 +18,12 @@
   let {
     batchNumber,
     read,
-    settings,
-    refresh,
     onSaved,
     onBack,
     onCancel,
-    onEditCategories,
   }: {
     batchNumber: number;
     read: batch.ReadResult;
-    settings: Settings | null;
-    // Bumped when the Categories screen saves, so the plan is recounted.
-    refresh: number;
     onSaved: (result: batch.SaveResult) => void;
     // *Back* (top): return to the PDF selection page — a new batch's file list, or the amend's
     // selection page — with the files still listed and the draft kept (a new *Read labels*
@@ -40,7 +32,6 @@
     // *Cancel amend* (bottom): leave the batch for the Day screen and discard its draft. Never
     // asks, because an amend writes nothing before *Save batch `<b>` again*.
     onCancel: () => void;
-    onEditCategories: () => void;
   } = $props();
 
   // The batch number for the header and the amend's title: the amended batch for an amend,
@@ -58,10 +49,6 @@
   let expanded = $state<string[]>([]);
   let error = $state("");
 
-  // The packing-list choice, starting from the Settings default.
-  let scope = $state<Scope>(untrack(() => settings?.scope ?? "whole"));
-  let layouts = $state<Layout[]>(untrack(() => settings?.layouts ?? ["pick"]));
-
   let saving = $state(false);
   let saveError = $state("");
   // The check before saving's progress (the `save-progress` event: the stage and a progress bar)
@@ -70,23 +57,6 @@
   let findings = $state<Findings | null>(null);
 
   let showAdd = $state(false);
-
-  // Recount after the Categories screen saves.
-  let lastRefresh = $state(untrack(() => refresh));
-  $effect(() => {
-    if (refresh !== lastRefresh) {
-      lastRefresh = refresh;
-      reload();
-    }
-  });
-
-  async function reload() {
-    try {
-      view = await batch.plan([]);
-    } catch (e) {
-      error = String(e);
-    }
-  }
 
   async function apply(edits: batch.PlanEdit[]) {
     error = "";
@@ -116,12 +86,6 @@
     expanded = expanded.includes(key)
       ? expanded.filter((item) => item !== key)
       : [...expanded, key];
-  }
-
-  function toggleLayout(layout: Layout, checked: boolean) {
-    layouts = checked
-      ? [...layouts, layout]
-      : layouts.filter((item) => item !== layout);
   }
 
   // *Add* on the add form: the new entry goes at the plan's own add position. `false` leaves the
@@ -156,7 +120,7 @@
       saveProgress = event.payload;
     });
     try {
-      const result = await batch.saveBatch({ scope, layouts }, saveAnyway);
+      const result = await batch.saveBatch(saveAnyway);
       findings = findingsOf(result);
       if (result.saved) onSaved(result);
     } catch (e) {
@@ -238,7 +202,6 @@
     <thead>
       <tr>
         <th class="c-use">{texts.plan.use}</th>
-        <th class="c-num">{texts.plan.hash}</th>
         <th class="c-category">{texts.plan.category}</th>
         <th class="c-orders">{texts.plan.orders}</th>
         <th class="c-runs">{texts.plan.runs}</th>
@@ -262,7 +225,6 @@
 
   <div class="add-bar">
     <button onclick={toggleAdd}>{texts.plan.addCategory}</button>
-    <button onclick={onEditCategories}>{texts.plan.editCategories}</button>
   </div>
 
   {#if showAdd}
@@ -278,12 +240,6 @@
   />
 
   <div class="foot">
-    <PackingListOptions
-      {scope}
-      {layouts}
-      onScope={(value) => (scope = value)}
-      onLayout={toggleLayout}
-    />
     <span class="grow"></span>
     {#if buttons.discard}
       <button onclick={onCancel}>{buttons.discard}</button>
@@ -363,12 +319,6 @@
   /* The column widths sit on the header cells; a row's cells line up under them. */
   th.c-use {
     width: 2.5rem;
-  }
-
-  th.c-num {
-    width: 2.5rem;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
   }
 
   th.c-orders,

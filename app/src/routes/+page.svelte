@@ -10,6 +10,7 @@
   import { Shell } from "../lib/shell.svelte";
   import Frame from "../lib/Frame.svelte";
   import StartPrompt from "../lib/StartPrompt.svelte";
+  import OwnerPrompt from "../lib/OwnerPrompt.svelte";
   import DayScreen from "../lib/DayScreen.svelte";
   import NewBatchScreen from "../lib/NewBatchScreen.svelte";
   import PlanScreen from "../lib/PlanScreen.svelte";
@@ -28,6 +29,8 @@
     onUse={shell.useProgramFolder}
     onChoose={shell.chooseFolder}
   />
+{:else if shell.needsOwner}
+  <OwnerPrompt busy={shell.busy} error={shell.error} onName={shell.nameOwner} />
 {:else}
   <Frame
     day={shell.day}
@@ -67,12 +70,9 @@
     <PlanScreen
       batchNumber={shell.nextBatch}
       read={shell.readResult}
-      settings={shell.settings}
-      refresh={shell.planRefresh}
       onSaved={shell.onSaved}
       onBack={shell.backToFiles}
       onCancel={shell.cancelBatch}
-      onEditCategories={shell.openCategoriesFromPlan}
     />
   {/if}
 

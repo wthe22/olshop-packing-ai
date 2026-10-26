@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The Start prompt: shown at every start until `couriers.toml` is found next
-  // to the program.
+  // The Start prompt: shown at every start until `packing-settings.toml` beside the program names
+  // the data folder.
   import { texts } from "../texts";
 
   let {

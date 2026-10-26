@@ -146,38 +146,20 @@ fn number(draft: &Draft, fold: &Fold) -> Result<BatchId, BatchError> {
     }
 }
 
-/// Step 11: each input in `input/` by its content, numbered as the date numbers it.
+/// Step 11: each input in `input/` by its content, as it was read.
 fn store_inputs(
     draft: &Draft,
     dir: &std::path::Path,
     fold: &Fold,
 ) -> Result<Vec<InputPdf>, BatchError> {
-    let mut next = fold.next_pdf();
-    let mut inputs = Vec::with_capacity(draft.files.len());
-    for file in &draft.files {
+    let inputs = draft.inputs(fold);
+    for (file, input) in draft.files.iter().zip(&inputs) {
         let stored = store_input(dir, &file.path)?;
-        if stored.sha256 != file.sha256 {
+        if stored.sha256 != input.sha256 || stored.size != input.size {
             return Err(BatchError::FileChanged {
                 file: file.filename.clone(),
             });
         }
-        let pdf = match fold.pdf_of(&file.sha256) {
-            Some(pdf) => pdf,
-            None => {
-                let pdf = next;
-                next = next.next();
-                pdf
-            }
-        };
-        inputs.push(InputPdf {
-            pdf,
-            sha256: stored.sha256,
-            filename: file.filename.clone(),
-            size: stored.size,
-            page_count: file.page_count,
-            create_time: file.create_time.clone(),
-            modify_time: file.modify_time.clone(),
-        });
     }
     Ok(inputs)
 }

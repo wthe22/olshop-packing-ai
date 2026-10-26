@@ -40,9 +40,7 @@ export function backend(extra = {}) {
   return {
     days: () => ["2026-10-07"],
     day_overview: () => overview(),
-    settings_get: () => ({ scope: "whole", layouts: ["pick"], grouping: "default" }),
-    about: () => ({ version: "0.1", pdfium: "140.0" }),
-    rules_load: () => ({ text: "", error: null, entries: [], file: "categories.toml" }),
+    about: () => ({ version: "0.2", pdfium: "140.0", schema: "1.0" }),
     "plugin:event|listen": () => 1,
     "plugin:event|unlisten": () => undefined,
     // A confirm dialog answers with the label of the *Ok* button it was given: the caller's own

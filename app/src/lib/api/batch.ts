@@ -3,29 +3,26 @@
 // interfaces here match it.
 
 import { invoke } from "@tauri-apps/api/core";
-import type { Layout, Scope } from "./start";
 
 // One chosen label file as *New batch* shows it.
 export interface FileCheck {
   path: string;
   name: string;
   size: number;
-  // `HH:MM` of the file's modified time (its download time); `null` when it cannot be read.
-  time: string | null;
+  // `HH:MM` of the file's modified time (its download time).
+  time: string;
   pages: number;
   used_in_batch: number | null;
 }
 
-// One run inside a saved PDF, for the expanded row.
+// One order content of a group, for the expanded row: its items and how many orders have it.
 export interface RunView {
-  label: string;
   contents: string;
   orders: number;
 }
 
 // The fields every Plan row carries.
 export interface PlanRowFields {
-  number: number | null;
   code: string;
   name: string;
   condition: string | null;
@@ -34,7 +31,8 @@ export interface PlanRowFields {
   pages: number;
   file_name: string;
   skipped: boolean;
-  duplicate_of: number | null;
+  // The code of the earlier row whose file has the same name.
+  duplicate_of: string | null;
   can_move_up: boolean;
   can_move_down: boolean;
 }
@@ -51,12 +49,10 @@ export interface PlanView {
   rows: PlanRow[];
   has_duplicate_names: boolean;
   add_at: number;
-  // The plan is the one catch-all entry, so the picks are unconfigured: the screen shows the
-  // *No picks yet* line.
+  // The sort rule is one group that takes every order: one group PDF.
   no_categories: boolean;
-  // The grouping the plan belongs to: the grouping chosen on the New batch
-  // screen, or the batch's own grouping for an amend. The header names it and **Edit
-  // categories** opens it.
+  // The sort rule's name: the one chosen on the New batch screen, or the batch's own for an
+  // amend.
   grouping: string;
 }
 
@@ -110,7 +106,6 @@ export type LogoAnswer =
 export interface SaveResult {
   batch: number;
   pdfs: number;
-  packing_lists: number;
   // Whether the batch was written; `false` when the check found something and *Save anyway* was
   // not chosen. The Plan screen then keeps the draft and shows the findings dialog.
   saved: boolean;
@@ -118,6 +113,8 @@ export interface SaveResult {
   errors: string[];
   // The check's warnings (the dialog's second list).
   warnings: string[];
+  // What failed after the commit: the batch is saved, and the next open settles it.
+  after_save: string[];
 }
 
 // The `read-progress` event payload.
@@ -126,10 +123,9 @@ export interface ReadProgress {
   pages: number;
 }
 
-// The `save-progress` event payload: the stage in plain words is
-// *Writing* or *Checking*, with the pages done of all pages.
+// The `save-progress` event payload: the stage, with the steps done of all steps.
 export interface SaveProgress {
-  stage: "Writing" | "Checking";
+  stage: "CopyingInputs" | "Writing" | "Verifying" | "Saving";
   page: number;
   pages: number;
 }
@@ -141,12 +137,6 @@ export type PlanEdit =
   | { kind: "move_down"; index: number }
   | { kind: "add"; at: number; code: string; name: string; condition: string }
   | { kind: "rename"; index: number; name: string };
-
-// The packing-list choice sent to `save_batch`.
-export interface PackingChoice {
-  scope: Scope;
-  layouts: Layout[];
-}
 
 export const checkFiles = (paths: string[]): Promise<FileCheck[]> =>
   invoke("check_files", { paths });
@@ -179,14 +169,12 @@ export const plan = (edits: PlanEdit[]): Promise<PlanView> =>
 
 // *Save batch*: `saveAnyway` is the findings dialog's *Save anyway*, `false`
 // (the default) for a normal save.
-export const saveBatch = (
-  packing: PackingChoice | null,
-  saveAnyway = false,
-): Promise<SaveResult> => invoke("save_batch", { packing, saveAnyway });
+export const saveBatch = (saveAnyway = false): Promise<SaveResult> =>
+  invoke("save_batch", { saveAnyway });
 
 export const discardDraft = (): Promise<void> => invoke("discard_draft");
 
-// *Amend* the last batch: read the batch's own `download/` files again and return
+// *Amend* the newest batch: read the batch's own inputs (`input\`) again and return
 // its file list with the read, so the Plan screen opens at once with the draft open. Nothing is
 // written until **Save batch `<b>` again** (`saveBatch`); the list is what the Plan screen's
 // *Back* shows on the selection page.

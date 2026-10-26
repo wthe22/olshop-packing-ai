@@ -15,10 +15,12 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   `packing-engine` holds the v0.2 chain — `packing-workflows.toml`, copies with the courier clue,
   repeats and the copies left out, the plan with order contents, the `batch_saved` record — and the 2.32
   fix; `crates/verify` checks a batch's outputs by page digest with `lopdf` alone (every page of the
-  samples that PDFium copies keeps its digest). **Nothing calls the v0.2 crates yet: the program the
-  owner runs is still v0.1** until R6 moves the app onto them. **R6 is under way**: its steps are in
-  [R6-app-journal.md](R6-app-journal.md). A task gets its own file in this folder when it starts; until
-  then its row in the order of work is the task.
+  samples that PDFium copies keeps its digest). **R6 is under way** ([R6-app-journal.md](R6-app-journal.md)):
+  R6.1 to R6.3 are done, R6.4 is next. **The program the owner runs is v0.2.0**: it saves through
+  `crates/batch` and the journal into `{data_dir}/{owner}/{date}/` and writes the summary PDF; *Categories*
+  and *Search* are gone until R8 and R7 bring them back on v0.2, so until then the sort rules are edited
+  in `packing-workflows.toml` by hand, and every repeat keeps its first copy. A task gets its own file in
+  this folder when it starts; until then its row in the order of work is the task.
 - **The owner checked the v0.1 program** (2026-10-26): it works as before, including the full product name
   read without a space inside a word; the owner said to go ahead with R6. R6 is the first task that changes
   the program the owner runs: the app saves through the journal into `{data_dir}/{owner}/{date}/` and no
@@ -39,8 +41,8 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   screens (R8) whether the word fits; a finding goes into [reviews/ui.md](../../reviews/ui.md).
 - **Kept for the rework**: [workflow-audit.md](workflow-audit.md), where the built program differs from the
   design; the v0.2 crates close its rows, and the program follows when R5 and R6 put them to use.
-- The program folder `target/portable/Packing/` is rebuilt after each task and still runs v0.1. Its
-  regression list, in [the phase 2 plan](../../archive/handoff-2026-10-23.md), is where R8's checklist
+- The program folder `target/portable/Packing/` is rebuilt after each task; a rebuild replaces only
+  `Packing.exe` and `pdfium.dll`, so the owner's settings, rules and data there stay. Its regression list, in [the phase 2 plan](../../archive/handoff-2026-10-23.md), is where R8's checklist
   starts.
 
 ## Where to work

@@ -50,18 +50,19 @@ test("a stopped save opens the dialog with its findings, and a saved one opens n
 test("the dialog's words and the stage lines are the designed words", () => {
   assert.equal(texts.plan.saveAnyway, "Save anyway");
   assert.equal(texts.plan.saveCancel, "Cancel — nothing is saved");
-  assert.equal(texts.plan.checkTitle, "The saved files do not match the plan.");
+  assert.equal(texts.plan.checkTitle, "The verifier found the outputs differ from the record.");
   assert.equal(texts.plan.checkErrors(2), "Errors: 2");
   assert.equal(texts.plan.checkWarnings(1), "Warnings: 1");
 
-  // The two stages read in plain words.
-  assert.equal(
-    saveStageText("Writing", 3, 10),
-    "Writing the saved PDFs …  page 3 of 10",
-  );
-  assert.equal(
-    saveStageText("Checking", 1, 4),
-    "Checking the saved PDFs …  page 1 of 4",
+  // The four stages of the design read in plain words; *Writing* counts the files.
+  assert.deepEqual(
+    [
+      saveStageText("CopyingInputs", 0, 2),
+      saveStageText("Writing", 1, 3),
+      saveStageText("Verifying", 0, 1),
+      saveStageText("Saving", 0, 1),
+    ],
+    ["Copying inputs …", "Writing …  file 2 of 3", "Verifying the outputs …", "Saving …"],
   );
   // Before the first event the Plan screen says it is saving.
   assert.equal(texts.plan.saving, "Saving …");

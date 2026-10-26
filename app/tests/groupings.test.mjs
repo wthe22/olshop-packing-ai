@@ -38,7 +38,7 @@ test("the grouping control's words are the designed words", () => {
   // The Plan header names the grouping the batch was packed with.
   assert.equal(
     texts.plan.header(3, "default", 2, 257, 256, 0),
-    "Batch 3 · grouping default · 2 files · 257 pages · 256 orders · 0 already saved",
+    "Batch 3 · sort rule default · 2 files · 257 pages · 256 orders · 0 already saved",
   );
 });
 
@@ -46,7 +46,7 @@ test("the Amend confirmation names the batch's grouping, in the words the guide 
   const amend = texts.day.confirmAmend(2, "default", "09:12");
   assert.equal(
     amend,
-    "Redo batch 2 with its grouping (default)? Batch 2 was saved at 09:12. If you already printed it, print it again after saving.",
+    "Redo batch 2 with its sort rule (default)? Batch 2 was saved at 09:12. If you already printed it, print it again after saving.",
   );
   // 03-changes.md quotes the Amend confirmation, so the two must not drift. The quote is wrapped
   // over two lines in the Markdown, so its whitespace is collapsed first.

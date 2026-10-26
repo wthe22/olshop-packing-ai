@@ -1,127 +1,116 @@
-//! The Plan screen's rows: the plan and the draft's orders mapped into the view, and the window's
-//! plan edits applied to the open plan.
+//! The Plan screen (03-plan.md, steps 9 and 10): the draft's groups as rows with their orders,
+//! order contents and file names, and the owner's edits for this batch only — skip, move, add a
+//! one-off group, rename a file. Every edit sorts the whole batch again.
 
-use std::collections::HashMap;
+use packing_engine::orders::display_name;
+use packing_engine::rules::parse_filter;
+use packing_engine::sorting::{PlanGroup, REST_CODE, SortedGroup};
+use packing_engine::workflows::Filter;
+use packing_store::Fold;
 
-use packing_engine::groupings::Grouping;
-use packing_engine::ids::PdfNumber;
-use packing_engine::orders::{Order, ReadOrder, display_name};
-use packing_engine::plan::{CategoryResult, Plan, PlanEntry};
-use packing_engine::rules::{Category, Condition, evaluate, parse_condition};
+use crate::{OpenDraft, PlanEntry};
 
 use super::views::{PlanEdit, PlanRow, PlanRowKind, PlanView, RunView};
 
-/// Map the plan and the draft's orders into the Plan screen's rows. Every entry
-/// becomes a row (skipped and 0-order rows included); the leftovers, if any, become the final
-/// `? Uncategorised` row. The numbers, runs and names come from [`Plan::count`] so the screen and
-/// the saved PDFs agree. `set` is the picks set the plan was built from; the screen's header
-/// names it.
-pub(super) fn plan_view(
-    plan: &Plan,
-    orders: &[ReadOrder],
-    first_number: PdfNumber,
-    grouping: &Grouping,
-) -> PlanView {
-    let result = plan.count(orders, first_number);
-    let entries = plan.entries();
-    let index = order_index(orders);
-
-    // The last entry when it has no condition is the rest row and stays last.
-    let rest_entry = match entries.last() {
-        Some(last) if last.category.condition.is_none() => Some(entries.len() - 1),
-        _ => None,
-    };
-    let add_at = rest_entry.unwrap_or(entries.len());
-
-    let mut remaining: Vec<&ReadOrder> = orders.iter().collect();
-    let mut categories = result.categories.iter();
-    let mut rows = entry_rows(entries, rest_entry, &mut remaining, &mut categories, &index);
-
-    // The leftovers when no entry took them become `? Uncategorised`.
-    if !remaining.is_empty() {
-        let category = categories.next().expect("the rest pick");
-        rows.push(rest_row(category, &index));
-    }
-
-    // Duplicate saved-PDF names, case-insensitive as Windows is.
-    let has_duplicate_names = duplicate_names(&mut rows);
-
-    PlanView {
-        rows,
-        has_duplicate_names,
-        add_at,
-        no_categories: plan.unconfigured(),
-        grouping: grouping.clone(),
-    }
-}
-
-/// The plan's entries as rows, taking the counted numbers and runs from `categories`.
-fn entry_rows(
-    entries: &[PlanEntry],
-    rest_entry: Option<usize>,
-    remaining: &mut Vec<&ReadOrder>,
-    categories: &mut std::slice::Iter<'_, CategoryResult>,
-    index: &HashMap<&str, &ReadOrder>,
-) -> Vec<PlanRow> {
-    let mut rows: Vec<PlanRow> = Vec::with_capacity(entries.len() + 1);
-    for (position, entry) in entries.iter().enumerate() {
-        let is_rest = rest_entry == Some(position);
-        let kind = if is_rest {
-            PlanRowKind::Rest { index: position }
+pub(super) fn plan_view(open: &OpenDraft, fold: &Fold) -> PlanView {
+    let draft = &open.draft;
+    let sorted = draft.sorted(draft.batch(fold));
+    let entries = &open.entries;
+    let movable = movable(entries);
+    let mut taken = sorted.groups.iter().peekable();
+    let mut rows: Vec<PlanRow> = Vec::new();
+    for (index, entry) in entries.iter().enumerate() {
+        let group = if entry.skipped {
+            None
         } else {
-            PlanRowKind::Entry { index: position }
+            taken.next_if(|group| group.code == entry.group.code)
         };
-        let mut row = PlanRow {
-            kind,
-            number: None,
-            code: entry.category.code.clone(),
-            name: entry.category.name.clone(),
-            condition: entry.category.when.clone(),
-            orders: 0,
-            runs: Vec::new(),
-            pages: 0,
-            file_name: String::new(),
-            skipped: entry.skipped,
-            duplicate_of: None,
-            can_move_up: position > 0 && !is_rest,
-            can_move_down: position + 1 < entries.len()
-                && rest_entry != Some(position + 1)
-                && !is_rest,
+        let kind = if index < movable {
+            PlanRowKind::Entry { index }
+        } else {
+            PlanRowKind::Rest { index }
         };
-        if !entry.skipped {
-            let (taken, left) = split(remaining, entry.category.condition.as_ref());
-            *remaining = left;
-            if !taken.is_empty() {
-                let category = categories.next().expect("a pick for every non-empty entry");
-                fill_counted(&mut row, category, index);
-            }
-        }
+        let mut row = row(open, kind, &entry.group, group);
+        row.skipped = entry.skipped;
+        row.can_move_up = index < movable && index > 0;
+        row.can_move_down = index + 1 < movable;
         rows.push(row);
     }
-    rows
+    if let Some(rest) = taken.find(|group| group.code == REST_CODE) {
+        let generated = PlanGroup {
+            code: rest.code.clone(),
+            name: rest.name.clone(),
+            filter: None,
+            file_name: None,
+        };
+        rows.push(row(open, PlanRowKind::Generated, &generated, Some(rest)));
+    }
+    mark_duplicates(&mut rows);
+    PlanView {
+        has_duplicate_names: rows.iter().any(|row| row.duplicate_of.is_some()),
+        rows,
+        add_at: movable,
+        no_categories: entries.len() == 1 && entries[0].group.filter.is_none(),
+        grouping: draft.rule_name.clone(),
+    }
 }
 
-/// The counted numbers, runs and file name of a row that takes orders.
-fn fill_counted(row: &mut PlanRow, category: &CategoryResult, index: &HashMap<&str, &ReadOrder>) {
-    row.number = Some(category.number);
-    row.orders = category.orders.len();
-    row.runs = run_views(category, index);
-    row.pages = category.pages;
-    row.file_name = category.file_name.clone();
+/// The groups that move: all but a last one without a filter, which takes the rest.
+fn movable(entries: &[PlanEntry]) -> usize {
+    match entries.last() {
+        Some(last) if last.group.filter.is_none() => entries.len() - 1,
+        _ => entries.len(),
+    }
 }
 
-/// The generated `? Uncategorised` row.
-fn rest_row(category: &CategoryResult, index: &HashMap<&str, &ReadOrder>) -> PlanRow {
+fn row(
+    open: &OpenDraft,
+    kind: PlanRowKind,
+    group: &PlanGroup,
+    sorted: Option<&SortedGroup>,
+) -> PlanRow {
+    let copies = &open.draft.copies;
+    let runs: Vec<RunView> = sorted
+        .map(|sorted| {
+            sorted
+                .contents
+                .iter()
+                .map(|block| RunView {
+                    contents: block
+                        .content
+                        .items
+                        .iter()
+                        .map(|item| {
+                            format!(
+                                "{} ×{}",
+                                display_name(&item.name, &item.variant),
+                                item.quantity
+                            )
+                        })
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    orders: block.orders.len(),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let pages = sorted.map_or(0, |sorted| {
+        sorted
+            .contents
+            .iter()
+            .flat_map(|block| &block.orders)
+            .map(|&at| usize::from(copies[at].page_end - copies[at].page_start) + 1)
+            .sum()
+    });
     PlanRow {
-        kind: PlanRowKind::Generated,
-        number: Some(category.number),
-        code: category.code.clone(),
-        name: category.name.clone(),
-        condition: None,
-        orders: category.orders.len(),
-        runs: run_views(category, index),
-        pages: category.pages,
-        file_name: category.file_name.clone(),
+        kind,
+        code: group.code.clone(),
+        name: group.name.clone(),
+        condition: group.filter.as_ref().map(|filter| filter.text.clone()),
+        orders: sorted.map_or(0, SortedGroup::order_count),
+        runs,
+        pages,
+        file_name: sorted.map_or_else(String::new, |sorted| sorted.file.clone()),
         skipped: false,
         duplicate_of: None,
         can_move_up: false,
@@ -129,123 +118,81 @@ fn rest_row(category: &CategoryResult, index: &HashMap<&str, &ReadOrder>) -> Pla
     }
 }
 
-/// Mark every row whose saved-PDF name repeats an earlier one, and report whether any does.
-///
-fn duplicate_names(rows: &mut [PlanRow]) -> bool {
-    let mut seen: Vec<(String, PdfNumber)> = Vec::new();
-    let mut has_duplicate_names = false;
-    for row in rows.iter_mut() {
-        let Some(number) = row.number else {
+/// A row whose file has the name of an earlier row's file (upper and lower case the same).
+fn mark_duplicates(rows: &mut [PlanRow]) {
+    for at in 0..rows.len() {
+        if rows[at].file_name.is_empty() {
             continue;
-        };
-        let key = row.file_name.to_lowercase();
-        if let Some((_, first)) = seen.iter().find(|(name, _)| *name == key) {
-            row.duplicate_of = Some(*first);
-            has_duplicate_names = true;
-        } else {
-            seen.push((key, number));
         }
+        let name = rows[at].file_name.to_lowercase();
+        rows[at].duplicate_of = rows[..at]
+            .iter()
+            .find(|earlier| earlier.file_name.to_lowercase() == name)
+            .map(|earlier| earlier.code.clone());
     }
-    has_duplicate_names
 }
 
-fn order_index(orders: &[ReadOrder]) -> HashMap<&str, &ReadOrder> {
-    orders
-        .iter()
-        .map(|order| (order.order.order_id.as_str(), order))
-        .collect()
-}
-
-/// Split the orders into the ones a condition takes and the ones left; `None` takes every order
-/// (the rest entry). Mirrors the engine's `count` so the row counts match the saved PDFs.
-fn split<'a>(
-    orders: &[&'a ReadOrder],
-    condition: Option<&Condition>,
-) -> (Vec<&'a ReadOrder>, Vec<&'a ReadOrder>) {
-    let mut taken = Vec::new();
-    let mut left = Vec::new();
-    for order in orders {
-        let matches = match condition {
-            None => true,
-            Some(cond) => evaluate(cond, &order.order),
-        };
-        if matches {
-            taken.push(*order);
-        } else {
-            left.push(*order);
-        }
-    }
-    (taken, left)
-}
-
-/// A pick's runs as the expanded row shows them; the label is `<pick number>-<run number>`.
-fn run_views(category: &CategoryResult, index: &HashMap<&str, &ReadOrder>) -> Vec<RunView> {
-    category
-        .runs
-        .iter()
-        .map(|run| RunView {
-            label: format!("{}-{:02}", category.number, run.number),
-            contents: run
-                .orders
-                .first()
-                .and_then(|id| index.get(id.as_str()))
-                .map(|order| run_contents(&order.order))
-                .unwrap_or_default(),
-            orders: run.orders.len(),
-        })
-        .collect()
-}
-
-/// The identical contents of a run, as text: each line `display name ×quantity`.
-fn run_contents(order: &Order) -> String {
-    order
-        .lines
-        .iter()
-        .map(|line| {
-            format!(
-                "{} ×{}",
-                display_name(&line.name, &line.variation),
-                line.quantity
-            )
-        })
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
-/// Apply the window's edits to the open plan in order. A bad condition text or a
-/// bad file name stops with the engine's message (line/col for a condition).
-pub(super) fn apply_edits(plan: &mut Plan, edits: &[PlanEdit]) -> Result<(), String> {
+/// Apply the edits in order, then sort by the plan they leave. An edit that names no group, or a
+/// filter that does not parse, stops with its message and the plan as before.
+pub(super) fn apply_edits(open: &mut OpenDraft, edits: &[PlanEdit]) -> Result<(), String> {
+    let mut entries = open.entries.clone();
     for edit in edits {
+        let movable = movable(&entries);
         match edit {
-            PlanEdit::SetSkipped { index, skipped } => plan.set_skipped(*index, *skipped),
-            PlanEdit::MoveUp { index } => plan.move_up(*index),
-            PlanEdit::MoveDown { index } => plan.move_down(*index),
+            PlanEdit::SetSkipped { index, skipped } => {
+                entry(&mut entries, *index)?.skipped = *skipped
+            }
+            PlanEdit::MoveUp { index } if *index > 0 && *index < movable => {
+                entries.swap(index - 1, *index);
+            }
+            PlanEdit::MoveDown { index } if index + 1 < movable => entries.swap(*index, index + 1),
+            PlanEdit::MoveUp { .. } | PlanEdit::MoveDown { .. } => {}
             PlanEdit::Add {
                 at,
                 code,
                 name,
                 condition,
             } => {
-                let code = code.trim();
-                if code.is_empty() {
-                    return Err("the pick code must not be empty".to_string());
-                }
-                if name.trim().is_empty() {
-                    return Err("the pick name must not be empty".to_string());
-                }
-                let condition = condition.trim();
-                let node = parse_condition(condition).map_err(|error| error.to_string())?;
-                let category = Category {
-                    code: code.to_string(),
-                    name: name.trim().to_string(),
-                    condition: Some(node),
-                    when: Some(condition.to_string()),
+                let parsed = parse_filter(condition).map_err(|error| error.to_string())?;
+                let group = PlanGroup {
+                    code: code.clone(),
+                    name: name.clone(),
+                    filter: Some(Filter {
+                        text: condition.clone(),
+                        condition: parsed,
+                    }),
+                    file_name: None,
                 };
-                plan.add(*at, category)
+                let entry = PlanEntry {
+                    group,
+                    skipped: false,
+                };
+                entries.insert((*at).min(movable), entry);
             }
-            PlanEdit::Rename { index, name } => plan.rename(*index, name),
+            PlanEdit::Rename { index, name } => {
+                let stem = name.trim().trim_end_matches(".pdf").to_string();
+                entry(&mut entries, *index)?.group.file_name = (!stem.is_empty()).then_some(stem);
+            }
         }
-        .map_err(|error| error.to_string())?;
     }
+    open.entries = entries;
+    open.apply_plan();
     Ok(())
+}
+
+fn entry(entries: &mut [PlanEntry], index: usize) -> Result<&mut PlanEntry, String> {
+    entries
+        .get_mut(index)
+        .ok_or_else(|| format!("The plan has no group {}.", index + 1))
+}
+
+/// The plan's groups as the draft first sorts by them.
+pub(super) fn entries_of(sorted_plan: &[PlanGroup]) -> Vec<PlanEntry> {
+    sorted_plan
+        .iter()
+        .map(|group| PlanEntry {
+            group: group.clone(),
+            skipped: false,
+        })
+        .collect()
 }

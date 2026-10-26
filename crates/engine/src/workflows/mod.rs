@@ -3,6 +3,7 @@
 //! the bundled copy is written when it is missing.
 
 mod load;
+mod remember;
 
 use std::fmt;
 
@@ -14,6 +15,7 @@ use crate::record::{LabelGroupRule, LabelSortRule};
 use crate::rules::Condition;
 
 pub use self::load::load_workflows;
+pub use self::remember::{LogoIs, remember_logo};
 
 pub const WORKFLOWS_FILE: &str = "packing-workflows.toml";
 

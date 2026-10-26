@@ -1,34 +1,36 @@
-// Typed wrappers around the Tauri commands for the Day screen. The Rust side sends snake_case fields; the interfaces here match it.
+// Typed wrappers around the Tauri commands for the Day screen. The Rust side sends snake_case
+// fields; the interfaces here match it.
 
 import { invoke } from "@tauri-apps/api/core";
 
-export interface PdfView {
-  number: number;
-  code: string;
+export interface GroupPdfView {
+  // The label group's code: the **Printed** tick names it.
+  group: string;
   name: string;
   file: string;
   orders: number;
-  runs: number;
-  // The row's **Printed** tick, from the batch's `printed` list: a note only.
+  contents: number;
   printed: boolean;
+  // Missing in `output\`, or not as its record says.
+  missing: boolean;
 }
 
 export interface BatchView {
   batch: number;
-  save_time: string;
   time: string;
-  // The grouping the batch was packed with, recorded at
-  // save; **Amend** reports it in its confirmation and reads that grouping again. An older
-  // `state.json` without it reads as `default`.
-  grouping: string;
+  // Saved again by an amend.
+  amended: boolean;
+  sort_rule: string;
   files: number;
   orders: number;
-  pdfs: PdfView[];
-  packing_lists: string[];
+  left_out: number;
+  pdfs: GroupPdfView[];
+  summary: string;
+  summary_missing: boolean;
   warnings: string[];
-  // The check before saving's errors, for *Saved with `<n>` errors ▸*;
-  // empty unless the batch was saved anyway.
+  // The verifier's errors: only on a batch saved anyway.
   errors: string[];
+  // `output\`, for *Open* and *Open folder*.
   folder: string;
 }
 
@@ -40,25 +42,28 @@ export interface Totals {
 
 export interface DayOverview {
   day: string;
+  owner: string;
   batches: BatchView[];
   totals: Totals;
+  // A damaged journal, an input missing or changed.
+  problems: string[];
+  // The data folder also holds files of Packing v0.1, which are not read.
+  old_data: boolean;
 }
 
 export const dayOverview = (day: string): Promise<DayOverview> =>
   invoke("day_overview", { day });
 
-// The **Printed** tick of one saved-PDF row of a batch: writes the day's
-// `state.json`; it changes nothing else. An unknown batch or saved-PDF number changes nothing.
+// The **Printed** tick of one group PDF: a note in the date's journal.
 export const setPrinted = (
   day: string,
   batch: number,
-  pdf: number,
+  group: string,
   printed: boolean,
-): Promise<void> => invoke("set_printed", { day, batch, pdf, printed });
+): Promise<void> => invoke("set_printed", { day, batch, group, printed });
 
 export const days = (): Promise<string[]> => invoke("days");
 
-// *Revert* the last batch: delete its folder and forget it. A file open in a PDF
-// viewer stops with the 08 *file in use* message and changes nothing.
+// *Revert* the newest batch. A file open in a PDF viewer stops it with the file named.
 export const revertLast = (day: string): Promise<void> =>
   invoke("revert_last", { day });

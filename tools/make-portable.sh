@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Build the portable program folder: one folder with
 # Packing.exe and pdfium.dll, no installer. The owner copies the folder to e.g. D:\Packing\
-# and starts Packing.exe from a shortcut; the data (categories.toml, settings.json, labels/)
-# lives in the same folder.
+# and starts Packing.exe from a shortcut; at the first start the program writes
+# packing-settings.toml and packing-workflows.toml beside itself, and the data folder (by default
+# data\) is there too. A rebuild replaces only the two program files, so those stay.
 #
 # Steps:
 #   1. build the release binary without bundling (npm run tauri build -- --no-bundle)
 #   2. copy the binary (renamed Packing.exe) and pdfium.dll into
-#      target/portable/Packing/
+#      target/portable/Packing/, replacing the two and nothing else
 #
 # Run from anywhere:  bash tools/make-portable.sh
 # From Explorer or cmd, without a Git Bash window:  tools\make-portable.bat
@@ -48,7 +49,6 @@ if [ -z "$exe" ]; then
 fi
 
 echo "==> Assembling the program folder at $out"
-rm -rf "$portable"
 mkdir -p "$out"
 cp "$exe" "$out/Packing.exe"
 cp "$vendor/pdfium.dll" "$out/pdfium.dll"
