@@ -6,21 +6,29 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-10-26)
 
-- **Handoff of the session of 2026-10-26 (late) — the work is [R10-owner-review.md](R10-owner-review.md).**
-  The owner tested v0.2 and asked for the theme, the look, *workspace*, a filter for an unknown courier and
-  the summary PDF's old order. R10.1 to R10.4 are done and pushed: the theme menu (Light, Dark, System) and
-  every control in the theme's colours; the new title bar, panel head, first-start cards and Settings with
-  *About*; the group code on one line; *Courier · is unknown* (`is_empty`); the summary PDF as facts →
-  groups with their order contents → picks. The program folder `target/portable/Packing/` is rebuilt.
-  - **The owner's second round** (2026-10-26): *workspace* confirmed, the default data folder
-    `packing-data`, *N orders | N contents*, Search's select-all at the left, a designed reprint, a day
-    summary and an app icon — R10.5 to R10.11 in the task file.
-  - **Next:** the first unfinished step of R10, then **R6.4** ([R6-app-journal.md](R6-app-journal.md))
-    and **R9** (the full check, an independent review of the whole v0.2 diff, the coverage baseline, the
-    handoff).
+- **Handoff of the session of 2026-10-26 (night) — the owner tests the second round of R10; then the
+  work is R6.4 and R9.** Both rounds of the owner's v0.2 review are built and pushed; the task file R10 is
+  done and gone, its findings written into the design. Round one: the theme menu, the new look, *Courier ·
+  is unknown*, the summary PDF's order. Round two: *workspace* everywhere (the journal's stored field keeps
+  `namespace`), the default data folder `packing-data`, *88 orders | 3 contents*, Search's head row with
+  the select-all tick, the reprint bar, *Reprinted* marks and the ask before printing again, the Day
+  screen's *Reprints* card, **Day summary** and the app icon. `target/portable/Packing/` is rebuilt and
+  the guide's pictures are retaken.
+  - **The owner may test now**, in this order: Search — type or scan a tracking ID and press Enter; a
+    click on a row ticks it; reprint one order, search it again: it shows *Reprinted*, and a second
+    reprint asks first. The Day screen's *Reprints* card and its *Orders ▸*. **Day summary** after a
+    batch. The icon on `Packing.exe` and in the taskbar. A program folder whose `packing-settings.toml`
+    names `data` keeps it; `packing-data` is only offered at a first start.
+  - **One open question:** [Q-LABEL-12](../../software-design/questions/label.md), what the day summary
+    holds; the default (option 1) is built. The owner answers there with an option or in words; the next
+    session writes the answer into [day-summary.md](../../software-design/labels/day-summary.md) and
+    [decisions/label.md](../../software-design/decisions/label.md), removes the question, and changes
+    the PDF when the answer is not the default.
   - A finding goes into [reviews/ui.md](../../reviews/ui.md), [reviews/label.md](../../reviews/label.md),
     [reviews/rules.md](../../reviews/rules.md) or [reviews/app.md](../../reviews/app.md) as the next
-    `R-<SCOPE>-n` (R-UI-20, R-LABEL-4, R-RULES-4, R-APP-5); the next session turns each into a step.
+    `R-<SCOPE>-n` (R-UI-20, R-LABEL-4, R-RULES-4, R-APP-5); the next session turns each into a task.
+  - **Next without the owner:** **R6.4** ([R6-app-journal.md](R6-app-journal.md)), then **R9** (the full
+    check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff).
   - The guide's pictures are the real program on the `testdata/` labels (`node tools/guide-pictures.mjs`
     drives a fresh copy over WebView2's DevTools port); the same run is a quick smoke test of the build.
 
