@@ -1,15 +1,20 @@
 <script lang="ts">
-  // The screen that opens over the current one: Settings, in the shared frame with its title. An
-  // open draft is kept; whether it shows is the shell's own state.
+  // The screens that open over the current one: Search and Settings, in the shared frame with
+  // their titles. An open draft is kept; whether it shows is the shell's own state.
   import type { Shell } from "./shell.svelte";
   import Overlay from "./Overlay.svelte";
+  import SearchScreen from "./SearchScreen.svelte";
   import SettingsScreen from "./SettingsScreen.svelte";
   import { texts } from "../texts";
 
   let { shell }: { shell: Shell } = $props();
 </script>
 
-{#if shell.overlay === "settings"}
+{#if shell.overlay === "search"}
+  <Overlay title={texts.search.title} onClose={shell.closeOverlay}>
+    <SearchScreen day={shell.day} onOpen={shell.openFile} onReprinted={shell.afterReprint} />
+  </Overlay>
+{:else if shell.overlay === "settings"}
   <Overlay title={texts.settings.title} onClose={shell.closeOverlay}>
     <SettingsScreen
       about={shell.about}

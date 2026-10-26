@@ -18,7 +18,7 @@ import { texts, amendOpens } from "../texts";
 
 // The screens the shell routes between; the batch flow's screens are not in the nav.
 export type Screen = "day" | "new-batch" | "plan";
-export type OverlayId = "settings";
+export type OverlayId = "search" | "settings";
 
 export class Shell {
   ready = $state(false);
@@ -294,9 +294,14 @@ export class Shell {
     this.panelShown = !this.panelShown;
   };
 
-  // *Settings* opens over the current screen.
+  // *Search* and *Settings* open over the current screen.
   navigate = (id: OverlayId) => {
     this.overlay = id;
+  };
+
+  // A reprint was written into today: today's Day screen lists it.
+  afterReprint = async () => {
+    await Promise.all([this.refreshOverview(), this.refreshPanel()]);
   };
 
   closeOverlay = () => {

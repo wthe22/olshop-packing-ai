@@ -1,4 +1,5 @@
-// Typed wrappers around the Tauri commands for the Search screen. The Rust side sends snake_case fields; the interfaces here match it.
+// Typed wrappers around the Tauri commands for the Search screen. The Rust side sends snake_case
+// fields; the interfaces here match it.
 
 import { invoke } from "@tauri-apps/api/core";
 
@@ -8,39 +9,60 @@ export interface SearchItem {
   quantity: number;
 }
 
-// One matching saved order as the Search panel shows it: its IDs, courier, items,
-// the batch it was saved in, its saved PDF (name, and the full `path` *Open* uses) and whether its
-// items were stored at all (an order saved before search existed).
+// One saved order the filter matches.
 export interface SearchRow {
   day: string;
   order_id: string;
-  // The order's tracking ID; `null` when the label carried none (the table shows an empty cell).
+  // `null` when the label printed none.
   tracking_id: string | null;
-  // The named courier; `null` when it is unknown.
+  // The courier's code; `null` when no courier was named.
   courier: string | null;
   items: SearchItem[];
   batch: number;
-  pdf: number;
-  file: string;
+  // `<batch>-<code>`.
+  group: string;
+  // The group PDF, for *Open*.
   path: string;
-  items_not_stored: boolean;
+  // Its input and pages, and the clue that named its courier.
+  trace: string;
 }
 
-// What a search returns: the counts shown above the rows, then one row per
-// matching saved order.
 export interface SearchResults {
-  rows: SearchRow[];
+  // The search index is still being built: no rows yet.
+  loading: boolean;
   orders: number;
   batches: number;
+  rows: SearchRow[];
 }
 
-// Which day folders *search_orders* reads: `day` is *This day* (the day in the title
-// bar, the default), `all` is *All days*.
+// *This day* (the open date, the default) or *All days* of the open namespace.
 export type SearchScope = "day" | "all";
 
-// Search the saved orders for the condition boxes: the same tree as Categories
-// (`toRustTree`), with the scope. Reads `state.json` only; *Open* then uses `openPath`.
 export const searchOrders = (
-  conditions: unknown,
+  filter: string,
   scope: SearchScope,
-): Promise<SearchResults> => invoke("search_orders", { conditions, scope });
+  day: string,
+): Promise<SearchResults> => invoke("search_orders", { filter, scope, day });
+
+// One ticked row: the order and the date it was saved on.
+export interface ReprintChoice {
+  day: string;
+  order_id: string;
+}
+
+export interface ReprintMade {
+  number: number;
+  file: string;
+  path: string;
+  orders: number;
+  pages: number;
+}
+
+// What **Reprint** did: the file written into today, or the verifier's findings (nothing kept).
+export interface ReprintResult {
+  made: ReprintMade | null;
+  errors: string[];
+}
+
+export const reprint = (orders: ReprintChoice[]): Promise<ReprintResult> =>
+  invoke("reprint", { orders });

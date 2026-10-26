@@ -23,6 +23,7 @@
   } = $props();
 
   const items: { id: OverlayId; label: string }[] = [
+    { id: "search", label: texts.nav.search },
     { id: "settings", label: texts.nav.settings },
   ];
 </script>

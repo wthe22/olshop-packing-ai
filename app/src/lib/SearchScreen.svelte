@@ -1,59 +1,39 @@
 <script lang="ts">
-  // Search: find a saved order by the same condition boxes as Categories,
-  // over *This day* (the day in the title bar, the default) or *All days*. It only reads
-  // `state.json`: nothing is changed or saved, and an order of an open draft is never found.
-  // A row's *Open* goes through the app shell (`open_path`), as on the Day screen.
-  import * as search from "../lib/api/search";
-  import { formatDay, rowItemsText, searchFields, searchSummary, texts } from "../texts";
+  // Search: saved orders of the open namespace found by a filter made with the boxes, over *This
+  // day* or *All days*, each row with its trace line; the ticked rows are reprinted into one PDF.
+  // The state and the commands are `search.svelte.ts`.
+  import { Search, itemsText } from "./search.svelte";
+  import type { SearchScope } from "./api/search";
+  import { conditionFields, formatShortDay, searchSummary, texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
-  import { newTree, toRustTree, type UiTree } from "./conditions";
 
   let {
+    day,
     onOpen,
+    onReprinted,
   }: {
-    // *Open* on a row: the app shell opens that saved PDF in the PC's viewer.
+    // The open date: *This day*.
+    day: string;
     onOpen: (path: string) => void;
+    onReprinted: () => void;
   } = $props();
 
-  // The condition boxes: the same component as Categories, with the fields Search offers.
-  let tree = $state<UiTree>(newTree());
-  // The scope: *This day* is the default.
-  let scope = $state<search.SearchScope>("day");
-  let busy = $state(false);
-  // A bad condition, or a read error, in plain text.
-  let error = $state("");
-  // The last search's rows; `null` before the first *Search*, and after an error or any change,
-  // so the rows on screen always match the boxes and the scope shown.
-  let result = $state<search.SearchResults | null>(null);
+  const search = new Search(
+    () => day,
+    () => onReprinted(),
+  );
 
-  const scopes: { value: search.SearchScope; label: string }[] = [
+  const scopes: { value: SearchScope; label: string }[] = [
     { value: "day", label: texts.search.scopeDay },
     { value: "all", label: texts.search.scopeAll },
   ];
 
-  function invalidate() {
-    error = "";
-    result = null;
-  }
-
-  function setScope(value: search.SearchScope) {
-    scope = value;
-    invalidate();
-  }
-
-  async function run() {
-    busy = true;
-    invalidate();
-    try {
-      result = await search.searchOrders(toRustTree(tree), scope);
-    } catch (e) {
-      error = String(e);
-    }
-    busy = false;
-  }
+  const tickedCount = $derived(search.ticked.length);
 </script>
 
 <div class="search">
+  <BoxesEditor tree={search.tree} fields={conditionFields} onEdit={search.invalidate} />
+
   <div class="controls">
     <span class="label">{texts.search.scope}</span>
     {#each scopes as option (option.value)}
@@ -62,80 +42,128 @@
           type="radio"
           name="search-scope"
           value={option.value}
-          checked={scope === option.value}
-          onchange={() => setScope(option.value)}
+          checked={search.scope === option.value}
+          onchange={() => search.setScope(option.value)}
         />
         {option.label}
       </label>
     {/each}
     <span class="grow"></span>
-    <button class="primary" disabled={busy} onclick={run}>{texts.search.search}</button>
+    <button class="primary" disabled={search.busy} onclick={search.run}>{texts.search.search}</button>
   </div>
 
-  <BoxesEditor {tree} fields={searchFields} onEdit={invalidate} />
-
-  {#if error}
-    <p class="error">{error}</p>
+  {#if search.error}
+    <p class="error">{search.error}</p>
+  {/if}
+  {#if search.loading}
+    <p class="muted">{texts.search.loading}</p>
   {/if}
 
-  {#if result}
-    {#if result.orders === 0}
+  {#if search.result}
+    {#if search.result.orders === 0}
       <p class="muted">{texts.search.noMatch}</p>
     {:else}
-      <p class="summary">{searchSummary(result.orders, result.batches)}</p>
+      <div class="summary">
+        <span>{searchSummary(search.result.orders, search.result.batches)}</span>
+        <span class="grow"></span>
+        <label>
+          <input
+            type="checkbox"
+            checked={search.allTicked()}
+            onchange={(event) => search.selectAll(event.currentTarget.checked)}
+          />
+          {texts.search.selectAll}
+        </label>
+      </div>
       <table>
         <tbody>
-          {#each result.rows as row (row.path + row.order_id)}
+          {#each search.result.rows as row (row.day + row.order_id)}
             <tr>
-              {#if scope === "all"}
-                <td class="day">{formatDay(row.day)}</td>
-              {/if}
-              <td class="order">{row.order_id}</td>
-              <td class="tracking">{row.tracking_id ?? ""}</td>
+              <td class="tick">
+                <input
+                  type="checkbox"
+                  aria-label={texts.search.tick(row.order_id)}
+                  checked={search.isTicked(row)}
+                  onchange={() => search.toggle(row)}
+                />
+              </td>
+              <td class="id">{row.order_id}</td>
+              <td class="id">{row.tracking_id ?? ""}</td>
               <td class="courier">{row.courier ?? ""}</td>
-              <td class="items">{rowItemsText(row)}</td>
-              <td class="batch">{texts.search.batch(row.batch)}</td>
-              <td class="file">{row.file}</td>
+              <td class="items">{itemsText(row)}</td>
+              <td class="where">{formatShortDay(row.day)} · {row.group}</td>
               <td class="tools">
                 <button onclick={() => onOpen(row.path)}>{texts.day.open}</button>
+                <button
+                  title={texts.search.trace}
+                  aria-label={texts.search.trace}
+                  onclick={() => search.toggleTrace(row)}>{search.isTraced(row) ? "▾" : "▸"}</button
+                >
               </td>
             </tr>
+            {#if search.isTraced(row)}
+              <tr class="trace">
+                <td></td>
+                <td colspan="6">{row.trace}</td>
+              </tr>
+            {/if}
           {/each}
         </tbody>
       </table>
+      <div class="foot">
+        {#if search.made}
+          <span class="made">
+            {texts.search.made(search.made.number, search.made.orders, search.made.pages)}
+            <button onclick={() => search.made && onOpen(search.made.path)}>{texts.day.open}</button>
+          </span>
+        {/if}
+        <span class="grow"></span>
+        <button class="primary" disabled={search.busy || tickedCount === 0} onclick={search.reprint}
+          >{texts.search.reprint(tickedCount)}</button
+        >
+      </div>
+      {#if search.findings.length > 0}
+        <div class="error">
+          <p>{texts.search.notKept}</p>
+          <ul>
+            {#each search.findings as finding}
+              <li>{finding}</li>
+            {/each}
+          </ul>
+        </div>
+      {/if}
     {/if}
   {/if}
 </div>
 
 <style>
-  .controls {
+  .controls,
+  .summary,
+  .foot {
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    margin-bottom: 0.75rem;
+    margin: 0.75rem 0 0.35rem;
   }
 
-  .controls .label {
+  .controls .label,
+  .summary {
     font-weight: 600;
   }
 
-  .controls label {
+  .controls label,
+  .summary label {
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    font-weight: normal;
   }
 
   .grow {
     flex: 1;
   }
 
-  .summary {
-    margin: 0.75rem 0 0.35rem;
-    font-weight: 600;
-  }
-
   .muted {
-    margin-top: 0.75rem;
     color: #6a6a6a;
   }
 
@@ -150,13 +178,7 @@
     vertical-align: top;
   }
 
-  .day {
-    color: #6a6a6a;
-    white-space: nowrap;
-  }
-
-  .order,
-  .tracking {
+  .id {
     font-variant-numeric: tabular-nums;
   }
 
@@ -164,19 +186,24 @@
     color: #4a4a4a;
   }
 
-  .batch {
+  .where,
+  .courier {
     color: #6a6a6a;
     white-space: nowrap;
-  }
-
-  .file {
-    color: #6a6a6a;
-    font-size: 0.9rem;
   }
 
   .tools {
-    width: 5rem;
     white-space: nowrap;
+  }
+
+  .trace td {
+    color: #6a6a6a;
+    font-size: 0.85rem;
+    word-break: break-all;
+  }
+
+  .made {
+    color: #1f6f2f;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -184,14 +211,11 @@
       border-color: #3a3a3a;
     }
 
-    .day,
-    .batch,
-    .file,
-    .muted {
-      color: #b0b0b0;
-    }
-
-    .items {
+    .where,
+    .courier,
+    .muted,
+    .items,
+    .trace td {
       color: #b0b0b0;
     }
   }

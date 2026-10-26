@@ -293,25 +293,31 @@ export const texts = {
     ],
   },
 
-  // Find a saved order by the same condition boxes as Categories. It only
-  // reads; nothing is changed or saved.
+  // Find saved orders by a filter made with the boxes; only **Reprint** writes a file.
   search: {
     title: "Search",
     // The line above the rows, "N orders in M batches".
     summary: (orders: number, batches: number) =>
       `${count(orders, "order", "orders")} in ${count(batches, "batch", "batches")}`,
     scope: "Scope",
-    // *This day* (the day in the title bar) is the default.
+    // *This day* (the open date) is the default.
     scopeDay: "This day",
     scopeAll: "All days",
     search: "Search",
+    // The search index is still being built.
+    loading: "Loading…",
     // One row's items, "name × quantity".
     item: (name: string, quantity: number) => `${name} ×${quantity}`,
-    // An order saved before search existed keeps only its IDs.
-    itemsNotStored: "items not stored",
-    // The batch a matching order was saved in.
-    batch: (n: number) => `batch ${n}`,
     noMatch: "No saved order matches.",
+    selectAll: "Select all results",
+    tick: (order: string) => `Reprint ${order}`,
+    // The ▸ that opens a row's trace line.
+    trace: "Where it came from",
+    reprint: (n: number) => `Reprint ${count(n, "order", "orders")}`,
+    // "Reprint 1 written: 2 orders, 2 pages."
+    made: (n: number, orders: number, pages: number) =>
+      `Reprint ${n} written: ${count(orders, "order", "orders")}, ${count(pages, "page", "pages")}.`,
+    notKept: "The reprint was not kept: the written file did not match its sources.",
   },
 } as const;
 
@@ -332,24 +338,6 @@ export const conditionFields: { value: string; label: string; type: FieldType }[
   { value: "tracking_id", label: "Tracking ID", type: "text" },
   { value: "ship_by", label: "Ship by", type: "time" },
 ];
-
-// The fields the Search panel offers: the ones a saved order keeps, a subset of
-// `conditionFields` so a field reads the same in both screens. The display name and Ship by are
-// not searched.
-const searchFieldValues = [
-  "order_id",
-  "tracking_id",
-  "courier",
-  "name",
-  "variation",
-  "seller_sku",
-  "line_quantity",
-  "total_quantity",
-  "distinct_items",
-];
-
-export const searchFields: { value: string; label: string; type: FieldType }[] =
-  conditionFields.filter((field) => searchFieldValues.includes(field.value));
 
 // The operators a text field takes.
 export const textOperators: { value: string; label: string }[] = [
@@ -473,25 +461,7 @@ export function amendOpens(): FlowScreen {
   return "plan";
 }
 
-// The window side of the result, pure so it is tested without a window. One row
-// reads "Sepatu ×2, Spion ×1"; an order saved before search existed kept no items and its row
-// says *items not stored*.
-
-// One Search row as the helpers below need it: the stored items, or the flag saying there are
-// none.
-export interface SearchRowText {
-  items: { name: string; quantity: number }[];
-  items_not_stored: boolean;
-}
-
-// The line above the Search panel's rows: "3 orders in 2 batches".
+// The line above the Search screen's rows: "3 orders in 2 batches".
 export function searchSummary(orders: number, batches: number): string {
   return texts.search.summary(orders, batches);
-}
-
-// One Search row's items: "Sepatu ×2, Spion ×1", or *items not stored* for an
-// order saved before search existed.
-export function rowItemsText(row: SearchRowText): string {
-  if (row.items_not_stored) return texts.search.itemsNotStored;
-  return row.items.map((item) => texts.search.item(item.name, item.quantity)).join(", ");
 }

@@ -121,7 +121,7 @@
       class="value"
       type={valueType(row.field)}
       value={row.value}
-      placeholder={fieldType(row.field) === "time" ? "2026-10-07 14:00" : ""}
+      placeholder={fieldType(row.field) === "time" ? "2026-10-07" : ""}
       oninput={(event) => {
         row.value = event.currentTarget.value;
         onEdit();
