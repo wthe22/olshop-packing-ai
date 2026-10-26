@@ -38,15 +38,14 @@ impl<'a> Measure<'a> {
         self.fonts.token(font, cid)
     }
 
-    /// The advance width of `text` at `size_pt`, in millimetres.
+    /// The width of `text` at `size_pt`, in millimetres. Text of several runs is measured whole
+    /// with the CID font, which has every character's true advance.
     pub(crate) fn width_mm(&self, text: &str, font: Font, size_pt: f32) -> f32 {
-        if text.is_empty() {
-            return 0.0;
+        match segments(text).as_slice() {
+            [] => 0.0,
+            [(chunk, cid)] => self.chunk_width_mm(chunk, font, size_pt, *cid),
+            _ => self.chunk_width_mm(text, font, size_pt, true),
         }
-        segments(text)
-            .iter()
-            .map(|(chunk, cid)| self.chunk_width_mm(chunk, font, size_pt, *cid))
-            .sum()
     }
 
     pub(super) fn chunk_width_mm(&self, text: &str, font: Font, size_pt: f32, cid: bool) -> f32 {

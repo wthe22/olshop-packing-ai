@@ -486,7 +486,7 @@ mod tests {
         for text in [
             "Packing list · 2026-10-11 · batch 1 · saved PDFs 1-2",
             "54 orders · 77 units · 9 runs · printed 13:15",
-            "Sepatu Standar Samping Motor — honda",
+            "Sepatu Standar Samping Motor",
             "Pick summary (units to take from stock)",
         ] {
             let parts = segments(text);
@@ -494,15 +494,19 @@ mod tests {
             assert!(!parts[0].1, "{text:?} needs no CID font");
         }
 
-        // An item line: only the `×` needs the CID font, the name and the count stay plain.
+        // An item line: only the `×` needs the CID font; the `—` is a plain run of its own, so the
+        // text after it starts at its true origin.
         assert_eq!(
             segments("Sepatu Standar Samping Motor — honda  ×1"),
             vec![
-                ("Sepatu Standar Samping Motor — honda  ", false),
+                ("Sepatu Standar Samping Motor ", false),
+                ("—", false),
+                (" honda  ", false),
                 ("×", true),
                 ("1", false),
             ]
         );
+        assert_eq!(segments("——"), vec![("—", false), ("—", false)]);
 
         // Characters PDFium writes as `ÿ` each get their own run — the spaces between them stay
         // plain, and no run mixes the two.

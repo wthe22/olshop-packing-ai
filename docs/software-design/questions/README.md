@@ -8,6 +8,5 @@ A question is removed once its answer is written into the design files and recor
 [decisions/](../decisions/README.md). A new question takes the next free number of its scope (the last ones
 used: `Q-LABEL-12`, `Q-APP-11`, `Q-UI-8`, `Q-RULES-2`); numbers are never reused.
 
-| File | Open questions |
-|---|---|
-| [label.md](label.md) | Q-LABEL-12: what the day summary holds |
+No question is open. A new one goes into a file per scope (`label.md`, `app.md`, `ui.md`, `rules.md`),
+listed here.

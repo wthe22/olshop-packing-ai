@@ -35,26 +35,49 @@ pub(super) fn cid_required(ch: char) -> bool {
     !(ch.is_ascii() || matches!(ch, '·' | 'Ø' | '§' | '—' | '–' | '…' | '’' | '“' | '”'))
 }
 
-/// `text` split into runs that the non-CID font writes correctly and runs that need the CID font
-/// ([`cid_required`]), in order. Most text is one run.
+/// The characters the non-CID font draws with the right glyph but too small an advance (their
+/// WinAnsi codes lie in 0x80–0x9F): in a run, `—` covers the space after it and every character
+/// after it sits a little to the left. Each is drawn as a run of its own, placed at its true
+/// origin.
+fn narrow_advance(ch: char) -> bool {
+    matches!(ch, '—' | '–' | '…' | '’' | '“' | '”')
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Run {
+    Plain,
+    Cid,
+    Alone,
+}
+
+fn run_of(ch: char) -> Run {
+    if narrow_advance(ch) {
+        Run::Alone
+    } else if cid_required(ch) {
+        Run::Cid
+    } else {
+        Run::Plain
+    }
+}
+
+/// `text` split into runs, in order, each with whether it needs the CID font ([`cid_required`]);
+/// a [`narrow_advance`] character is a run of its own. Most text is one run.
 pub(super) fn segments(text: &str) -> Vec<(&str, bool)> {
     let mut segments: Vec<(&str, bool)> = Vec::new();
     let mut start = 0usize;
-    let mut current: Option<bool> = None;
+    let mut current: Option<Run> = None;
     for (index, ch) in text.char_indices() {
-        let cid = cid_required(ch);
-        match current {
-            Some(flag) if flag == cid => {}
-            Some(flag) => {
-                segments.push((&text[start..index], flag));
-                start = index;
-                current = Some(cid);
-            }
-            None => current = Some(cid),
+        let run = run_of(ch);
+        if let Some(open) = current
+            && (open != run || open == Run::Alone)
+        {
+            segments.push((&text[start..index], open == Run::Cid));
+            start = index;
         }
+        current = Some(run);
     }
-    if let Some(flag) = current {
-        segments.push((&text[start..], flag));
+    if let Some(open) = current {
+        segments.push((&text[start..], open == Run::Cid));
     }
     segments
 }

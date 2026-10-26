@@ -2,10 +2,9 @@ use jiff::civil::date;
 use packing_engine::record::{BatchSaved, OutputFile};
 use testkit::{TempDir, batch, sha, vendor_dir};
 
-use super::content::{
-    ContentRow, Counts, GroupSection, Section, counts, facts, group_sections, picks,
-};
+use super::content::{ContentRow, Counts, GroupSection, counts, facts, group_sections, picks};
 use super::{SummaryFacts, write_summary};
+use crate::facts::{Row, RowKind, Section};
 
 fn output(file: &str, group: Option<&str>, pages: u16) -> OutputFile {
     OutputFile {
@@ -59,6 +58,7 @@ fn each_group_lists_its_order_contents_in_printing_order() {
                 orders: 2,
                 units: 2,
                 contents: vec![ContentRow {
+                    number: "A-1".to_string(),
                     items: vec!["Sepatu Standar Samping Motor — honda ×1".to_string()],
                     orders: 2,
                 }],
@@ -68,6 +68,7 @@ fn each_group_lists_its_order_contents_in_printing_order() {
                 orders: 1,
                 units: 2,
                 contents: vec![ContentRow {
+                    number: "Z-1".to_string(),
                     items: vec!["Spion Beat ×2".to_string()],
                     orders: 1,
                 }],
@@ -78,41 +79,55 @@ fn each_group_lists_its_order_contents_in_printing_order() {
 
 #[test]
 fn the_facts_page_says_what_the_batch_is() {
-    let section = |heading, lines: &[&str]| Section {
-        heading,
-        lines: lines.iter().map(|line| line.to_string()).collect(),
-    };
+    let section = |heading, rows: Vec<Row>| Section { heading, rows };
+    let plain = |text: &str| Row::plain(text);
     assert_eq!(
         facts(&record(), "0.2.0"),
         vec![
             section(
                 "Groups",
-                &[
-                    "1-A Sepatu x2.pdf · 2 orders · 2 pages · 1 order contents",
-                    "1-Z Lainnya x1.pdf · 1 orders · 1 pages · 1 order contents",
+                vec![
+                    plain("1-A Sepatu x2.pdf")
+                        .count(0, "2 orders")
+                        .count(1, "2 pages")
+                        .count(2, "1 order contents"),
+                    plain("1-Z Lainnya x1.pdf")
+                        .count(0, "1 orders")
+                        .count(1, "1 pages")
+                        .count(2, "1 order contents"),
                 ]
             ),
-            section("Inputs", &["labels_1.pdf · 4 pages · aaaaaaaaaaaa"]),
-            section(
-                "Ledger",
-                &["4 pages read = 3 written + 1 left out (1 repeats, 0 saved earlier)"]
-            ),
-            section("Instant orders", &["none"]),
+            section("Couriers", vec![plain("jnt").count(0, "3 orders")]),
+            section("Instant orders", vec![plain("none")]),
             section(
                 "Warnings",
-                &["Slip total differs for JY0000000002: printed 3, lines add up to 2."]
+                vec![plain(
+                    "Slip total differs for JY0000000002: printed 3, lines add up to 2."
+                )]
+            ),
+            section(
+                "Inputs",
+                vec![
+                    plain("labels_1.pdf")
+                        .count(1, "4 pages")
+                        .count(2, "aaaaaaaaaaaa"),
+                    Row::new(
+                        RowKind::Head,
+                        "4 pages read = 3 written + 1 left out (1 repeats, 0 saved earlier)"
+                    ),
+                ]
             ),
             section(
                 "Sort rule",
-                &[
-                    "default",
-                    "A Sepatu · name contains \"sepatu\"",
-                    "Z Lainnya · every order left"
+                vec![
+                    Row::new(RowKind::Head, "default"),
+                    Row::new(RowKind::Part, "A Sepatu · name contains \"sepatu\""),
+                    Row::new(RowKind::Part, "Z Lainnya · every order left"),
                 ]
             ),
             section(
                 "Versions",
-                &["schema 1.0 · Packing v0.2.0 · PDFium chromium/7881"]
+                vec![plain("schema 1.0 · Packing v0.2.0 · PDFium chromium/7881")]
             ),
         ]
     );
@@ -149,9 +164,9 @@ fn the_facts_then_the_groups_then_the_picks_each_from_a_new_page() {
         .map(|page| page.text().expect("the page's text").all())
         .collect();
     assert_eq!(texts.len(), 3);
-    assert!(texts[0].contains("Ledger"), "{}", texts[0]);
+    assert!(texts[0].contains("pages read"), "{}", texts[0]);
     assert!(
-        texts[1].contains("Lainnya") && !texts[1].contains("Ledger"),
+        texts[1].contains("Z-1") && !texts[1].contains("pages read"),
         "{}",
         texts[1]
     );

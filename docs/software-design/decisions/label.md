@@ -58,7 +58,7 @@ lists it beside the order (Q-LABEL-3).
 
 **Why.** The driver asks for the code; it belongs on the paper the owner carries.
 
-**Applies to.** [summary PDF](../labels/summary-pdf.md#the-facts-page), [records](../data/records.md).
+**Applies to.** [summary PDF](../labels/summary-pdf.md#the-facts-pages), [records](../data/records.md).
 
 ## D-LABEL-9 — The logo candidates are the images in the page's top 40 pt
 
@@ -120,11 +120,10 @@ repeat (Q-LABEL-10). Whether an output page is its source page is the verifier's
 **Decision.** Inside a group PDF, the orders with the same **order content** — their item lines as (product
 name, variation, quantity) — are printed next to each other, and the screens call such a block an *order
 content* (Q-LABEL-11). The Seller SKU and the printed `Qty Total` are stored with the order, not with its
-content, so one order content is exactly one block. A block has no number: the order contents are listed in
-printing order under their group.
+content, so one order content is exactly one block. The screens list a group's order contents in printing
+order; the summary PDF numbers them ([D-LABEL-18](#d-label-18--the-summary-pdf-numbers-order-contents-and-counts-couriers)).
 
-**Why.** It is the owner's own word and the data already names it (`order_contents`, `order-contents.toml`);
-nothing printed needs a block number.
+**Why.** It is the owner's own word and the data already names it (`order_contents`, `order-contents.toml`).
 
 **Applies to.** [groups](../labels/groups.md#a-group-pdf), [03 Plan](../workflow/03-plan.md#10-order-contents-and-file-names), [records](../data/records.md), [views](../data/views.md), [Plan](../ui/plan.md).
 
@@ -137,3 +136,29 @@ packing list did), then the pick pages, each part from a new page (R-LABEL-2).
 to take from stock.
 
 **Applies to.** [summary PDF](../labels/summary-pdf.md).
+
+## D-LABEL-17 — The day summary: batches, couriers, picks
+
+**Decision.** The day summary holds each live batch with its group PDFs and their Printed ticks, the orders per
+courier, and from a new page the day's pick pages. It does not list the reprints (Q-LABEL-12, option 1
+without the reprints).
+
+**Why.** The owner's answer: the reprints are on the Day screen's *Reprints* card; the paper is for the end of
+the day — what is not printed yet, what each courier takes, what was taken from stock.
+
+**Applies to.** [day summary](../labels/day-summary.md).
+
+## D-LABEL-18 — The summary PDF numbers order contents and counts couriers
+
+**Decision.** On the summary PDF's group pages each order content carries a number in its group, `A-1`, `A-2`,
+… (the group's code and the place). The facts pages list the batch's orders per courier after the groups. The
+summary PDF and the day summary share one layout: a bar per section, rows whose text starts in line with the
+bar's heading, the counts in three columns, the same gaps everywhere. It replaces the rule of D-LABEL-15 that
+an order content has no number.
+
+**Why.** The owner asked for numbers to refer to an order content easily, for the couriers' counts on the
+batch's paper, and for a first page that reads cleanly: the old facts page had text out of line with the
+bars, uneven gaps and the counts inside the text; the day summary's columns read better.
+
+**Applies to.** [summary PDF](../labels/summary-pdf.md), [day summary](../labels/day-summary.md),
+[groups](../labels/groups.md#a-group-pdf).

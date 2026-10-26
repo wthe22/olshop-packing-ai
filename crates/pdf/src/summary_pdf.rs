@@ -1,8 +1,8 @@
 //! The summary PDF of a batch (summary-pdf.md), each part from a new page: the facts pages, which
-//! say what the batch is so the paper alone can be traced; each group with its order contents; and
-//! the pick pages, what to take from stock. The verifier reads the header's counts, the ledger and
-//! each group's line back as text, so their words are fixed and their numbers have no thousands
-//! separator.
+//! say what the batch is so the paper alone can be traced; each group with its numbered order
+//! contents; and the pick pages, what to take from stock. The verifier reads the header's counts,
+//! the ledger and each group's row back as text, so their words are fixed and their numbers have no
+//! thousands separator.
 
 pub(crate) mod content;
 
@@ -13,22 +13,22 @@ use packing_engine::record::BatchSaved;
 use pdfium_render::prelude::Pdfium;
 
 use crate::PdfError;
+use crate::facts::{
+    GAP_BELOW_SECTION, ROW_H, TEXT_RIGHT, TEXT_X, WIDTH, draw_bar, draw_section, keep_together,
+    new_page,
+};
 use crate::packing_list::emit::{emit, header_ops};
 use crate::packing_list::fonts::{FONT_DIR, Font};
 use crate::packing_list::measure::Measure;
-use crate::packing_list::{BAR_H, BODY_TOP, Builder, CELL_MARGIN, Cell, Layout, MARGIN, Op};
+use crate::packing_list::{Builder, CELL_MARGIN, Cell, Layout, MARGIN, Op};
 
-use self::content::{ContentRow, GroupSection, Section};
+use self::content::{ContentRow, GroupSection};
 
-/// A facts line's height, millimetres.
-pub(crate) const LINE_H: f32 = 5.0;
-pub(crate) const LINE_PT: f32 = 9.5;
-pub(crate) const WIDTH: f32 = 190.0;
-/// An order content's item line, millimetres.
-const ITEM_H: f32 = 5.2;
-/// Where an order content's count of orders ends, millimetres from the left edge.
-const COUNT_RIGHT: f32 = MARGIN + WIDTH;
+/// Where an order content's items start, right of its number.
+const ITEMS_X: f32 = TEXT_X + 15.0;
+/// The width of an order content's count of orders, at the right edge.
 const COUNT_W: f32 = 20.0;
+const ITEM_PT: f32 = 10.5;
 
 pub struct SummaryFacts<'a> {
     /// The workspace's name.
@@ -72,12 +72,7 @@ pub fn write_summary(
             draw_group(&mut builder, group, &measure);
         }
     }
-    let picks = content::picks([record]);
-    if !picks.is_empty() {
-        new_page(&mut builder);
-        builder.draw_summary_bar(picks.len());
-        builder.draw_summary_rows(&picks);
-    }
+    draw_picks(&mut builder, &content::picks([record]));
 
     let body = builder.pages;
     let count = body.len();
@@ -93,111 +88,79 @@ pub fn write_summary(
     emit(pdfium, path, &pages, font_dir, &measure)
 }
 
-pub(crate) fn new_page(builder: &mut Builder<'_, '_>) {
-    builder.pages.push(Vec::new());
-    builder.y = BODY_TOP;
+/// From a new page, the pick bar and the units per item in two columns.
+pub(crate) fn draw_picks(builder: &mut Builder<'_, '_>, picks: &[(i64, String)]) {
+    if picks.is_empty() {
+        return;
+    }
+    new_page(builder);
+    draw_bar(
+        builder,
+        "Pick summary (units to take from stock)",
+        None,
+        ROW_H,
+    );
+    builder.draw_summary_rows(picks);
 }
 
 /// A group's bar with its counts, then each of its order contents under a rule.
 fn draw_group(builder: &mut Builder<'_, '_>, group: &GroupSection, measure: &Measure<'_>) {
-    builder.need(BAR_H + ITEM_H * 2.0, None);
-    let top = builder.y;
-    builder.fill(MARGIN, top, WIDTH, BAR_H);
-    builder.cell(Cell {
-        x: MARGIN,
-        y: top,
-        h: BAR_H,
-        size_pt: 11.0,
-        font: Font::ArialBold,
-        text: &format!(" {}", group.heading),
-    });
-    builder.cell_right(
-        Cell {
-            x: MARGIN,
-            y: top,
-            h: BAR_H,
-            size_pt: 9.5,
-            font: Font::Arial,
-            text: &format!("{} orders · {} units", group.orders, group.units),
-        },
-        WIDTH,
-    );
-    builder.y = top + BAR_H;
+    let counts = format!("{} orders · {} units", group.orders, group.units);
+    draw_bar(builder, &group.heading, Some(&counts), ROW_H * 2.0);
     for content in &group.contents {
-        draw_content(builder, content, measure);
+        draw_content(builder, content, measure, &group.heading);
     }
-    builder.y += 1.5;
+    builder.y += GAP_BELOW_SECTION;
 }
 
-/// One order content: its items, each wrapped at spaces, and its number of orders at the right; a
-/// content that does not fit starts on the next page.
-fn draw_content(builder: &mut Builder<'_, '_>, content: &ContentRow, measure: &Measure<'_>) {
-    let width = COUNT_RIGHT - COUNT_W - (MARGIN + 2.0) - 2.0 * CELL_MARGIN;
+/// One order content: its number, its items, each wrapped at spaces, and its number of orders at
+/// the right; a content that does not fit starts on the next page under its group's bar.
+fn draw_content(
+    builder: &mut Builder<'_, '_>,
+    content: &ContentRow,
+    measure: &Measure<'_>,
+    heading: &str,
+) {
+    let width = TEXT_RIGHT - COUNT_W - ITEMS_X;
     let lines: Vec<String> = content
         .items
         .iter()
-        .flat_map(|item| measure.wrap(item, width, Font::Arial, 10.5))
+        .flat_map(|item| measure.wrap(item, width, Font::Arial, ITEM_PT))
         .collect();
-    builder.need(ITEM_H * lines.len() as f32 + 1.2, None);
+    keep_together(builder, ROW_H * lines.len() as f32 + 1.2, heading);
     let top = builder.y;
+    builder.cell(Cell {
+        x: TEXT_X,
+        y: top,
+        h: ROW_H,
+        size_pt: ITEM_PT,
+        font: Font::ArialBold,
+        text: &content.number,
+    });
     for (index, text) in lines.iter().enumerate() {
         builder.cell(Cell {
-            x: MARGIN + 2.0,
-            y: top + ITEM_H * index as f32,
-            h: ITEM_H,
-            size_pt: 10.5,
+            x: ITEMS_X,
+            y: top + ROW_H * index as f32,
+            h: ROW_H,
+            size_pt: ITEM_PT,
             font: Font::Arial,
             text,
         });
     }
     builder.cell_right(
         Cell {
-            x: COUNT_RIGHT - COUNT_W,
+            x: TEXT_RIGHT + CELL_MARGIN - COUNT_W,
             y: top,
-            h: ITEM_H,
+            h: ROW_H,
             size_pt: 11.5,
             font: Font::ArialBold,
             text: &content.orders.to_string(),
         },
         COUNT_W,
     );
-    let line_y = top + ITEM_H * lines.len() as f32 + 0.6;
-    builder.horizontal_line(MARGIN, line_y, COUNT_RIGHT);
+    let line_y = top + ROW_H * lines.len() as f32 + 0.6;
+    builder.horizontal_line(MARGIN, line_y, MARGIN + WIDTH);
     builder.y = line_y + 0.6;
-}
-
-/// A heading bar, then each line wrapped at spaces; a section that breaks to a new page repeats its
-/// heading there.
-fn draw_section(builder: &mut Builder<'_, '_>, section: &Section, measure: &Measure<'_>) {
-    builder.need(BAR_H + LINE_H, None);
-    builder.y += 1.0;
-    let top = builder.y;
-    builder.fill(MARGIN, top, WIDTH, BAR_H);
-    builder.cell(Cell {
-        x: MARGIN,
-        y: top,
-        h: BAR_H,
-        size_pt: 11.0,
-        font: Font::ArialBold,
-        text: &format!(" {}", section.heading),
-    });
-    builder.y = top + BAR_H;
-    let continued = format!("{} (continued)", section.heading);
-    for line in &section.lines {
-        for text in measure.wrap(line, WIDTH - 2.0 * CELL_MARGIN, Font::Arial, LINE_PT) {
-            builder.need(LINE_H, Some(&continued));
-            builder.cell(Cell {
-                x: MARGIN,
-                y: builder.y,
-                h: LINE_H,
-                size_pt: LINE_PT,
-                font: Font::Arial,
-                text: &text,
-            });
-            builder.y += LINE_H;
-        }
-    }
-    builder.y += 1.5;
 }
 
 #[cfg(test)]

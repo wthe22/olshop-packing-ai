@@ -1,12 +1,15 @@
 //! What the summary PDF prints, as text, from the batch's record: the header's counts, the facts
-//! pages' sections, the groups with their order contents and the pick lines. Plain functions, so
-//! they are tested without PDFium.
+//! pages' sections, the groups with their numbered order contents and the pick lines. Plain
+//! functions, so they are tested without PDFium.
+
+use std::collections::BTreeMap;
 
 use packing_engine::orders::display_name;
-use packing_engine::record::{BatchSaved, LeftOutReason, SCHEMA};
+use packing_engine::record::{BatchSaved, LeftOutReason, SCHEMA, SavedOrder};
 use packing_engine::sorting::{REST_CODE, REST_NAME};
 
 use crate::PDFIUM_VERSION;
+use crate::facts::{Row, RowKind, Section, count};
 
 /// The header's counts: orders, units and group PDFs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -67,9 +70,11 @@ pub(crate) struct GroupSection {
     pub contents: Vec<ContentRow>,
 }
 
-/// One order content of a group: its items as `display name ×quantity`, and its orders.
+/// One order content of a group: its number in the group (`A-1`), its items as
+/// `display name ×quantity`, and its orders.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct ContentRow {
+    pub number: String,
     pub items: Vec<String>,
     pub orders: usize,
 }
@@ -105,7 +110,9 @@ pub(crate) fn group_sections(record: &BatchSaved) -> Vec<GroupSection> {
                 units,
                 contents: contents
                     .iter()
-                    .map(|&(content, orders)| ContentRow {
+                    .enumerate()
+                    .map(|(index, &(content, orders))| ContentRow {
+                        number: format!("{code}-{}", index + 1),
                         items: items(content)
                             .iter()
                             .map(|item| {
@@ -134,80 +141,78 @@ fn group_name<'r>(record: &'r BatchSaved, code: &str) -> &'r str {
         .map_or("", |group| group.name.as_str())
 }
 
-/// One section of the facts pages: a heading bar and its lines.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Section {
-    pub heading: &'static str,
-    pub lines: Vec<String>,
-}
-
-/// The facts pages: groups, inputs, ledger, instant orders, warnings, sort rule and versions.
+/// The facts pages: the group PDFs, the couriers, the instant orders, the warnings, the inputs with
+/// the ledger, the sort rule and the versions.
 pub(crate) fn facts(record: &BatchSaved, app: &str) -> Vec<Section> {
     vec![
         Section {
             heading: "Groups",
-            lines: group_lines(record),
+            rows: group_rows(record),
         },
         Section {
-            heading: "Inputs",
-            lines: record
-                .inputs
-                .iter()
-                .map(|input| {
-                    let sha = input.sha256.as_str();
-                    format!(
-                        "{} · {} pages · {}",
-                        input.filename,
-                        input.page_count,
-                        &sha[..12.min(sha.len())]
-                    )
-                })
-                .collect(),
-        },
-        Section {
-            heading: "Ledger",
-            lines: vec![ledger(record)],
+            heading: "Couriers",
+            rows: courier_rows(&record.orders),
         },
         Section {
             heading: "Instant orders",
-            lines: or_none(
+            rows: or_none(
                 record
                     .orders
                     .iter()
                     .filter_map(|order| {
                         let code = order.pickup_code.as_ref()?;
-                        Some(format!(
-                            "{} · group {} · pickup code {code}",
-                            order.order_id, order.group
-                        ))
+                        let text = format!("{} · group {}", order.order_id, order.group);
+                        Some(Row::plain(text).count(2, format!("pickup code {code}")))
                     })
                     .collect(),
             ),
         },
         Section {
             heading: "Warnings",
-            lines: or_none(record.warnings.iter().map(|w| w.text.clone()).collect()),
+            rows: or_none(
+                record
+                    .warnings
+                    .iter()
+                    .map(|w| Row::plain(w.text.clone()))
+                    .collect(),
+            ),
+        },
+        Section {
+            heading: "Inputs",
+            rows: record
+                .inputs
+                .iter()
+                .map(|input| {
+                    let sha = input.sha256.as_str();
+                    Row::plain(input.filename.clone())
+                        .count(1, format!("{} pages", input.page_count))
+                        .count(2, &sha[..12.min(sha.len())])
+                })
+                .chain([Row::new(RowKind::Head, ledger(record))])
+                .collect(),
         },
         Section {
             heading: "Sort rule",
-            lines: std::iter::once(record.sort_rule.name.clone())
+            rows: std::iter::once(Row::new(RowKind::Head, record.sort_rule.name.clone()))
                 .chain(record.sort_rule.label_groups.iter().map(|group| {
                     let filter = group.filter.as_deref().unwrap_or("every order left");
-                    format!("{} {} · {filter}", group.code, group.name)
+                    let text = format!("{} {} · {filter}", group.code, group.name);
+                    Row::new(RowKind::Part, text)
                 }))
                 .collect(),
         },
         Section {
             heading: "Versions",
-            lines: vec![format!(
+            rows: vec![Row::plain(format!(
                 "schema {SCHEMA} · Packing v{app} · PDFium {PDFIUM_VERSION}"
-            )],
+            ))],
         },
     ]
 }
 
-/// Each group PDF: its file name followed by its orders, which the verifier reads back.
-fn group_lines(record: &BatchSaved) -> Vec<String> {
+/// Each group PDF: its file name, then its orders, pages and order contents, which the verifier
+/// reads back.
+fn group_rows(record: &BatchSaved) -> Vec<Row> {
     record
         .outputs
         .iter()
@@ -222,14 +227,33 @@ fn group_lines(record: &BatchSaved) -> Vec<String> {
             let mut contents = orders.clone();
             contents.sort_unstable();
             contents.dedup();
-            Some(format!(
-                "{} · {} orders · {} pages · {} order contents",
-                output.file,
-                orders.len(),
-                output.pages,
-                contents.len()
-            ))
+            Some(
+                Row::plain(output.file.clone())
+                    .count(0, format!("{} orders", orders.len()))
+                    .count(1, format!("{} pages", output.pages))
+                    .count(2, format!("{} order contents", contents.len())),
+            )
         })
+        .collect()
+}
+
+/// The orders per courier code, most first; the orders no clue named are *unknown*, last.
+pub(crate) fn courier_rows<'r>(orders: impl IntoIterator<Item = &'r SavedOrder>) -> Vec<Row> {
+    let mut known: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut unknown = 0;
+    for order in orders {
+        match &order.courier {
+            Some(code) => *known.entry(code.as_str()).or_default() += 1,
+            None => unknown += 1,
+        }
+    }
+    let mut known: Vec<(&str, usize)> = known.into_iter().collect();
+    known.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
+    let unknown = (unknown > 0).then_some(("unknown", unknown));
+    known
+        .into_iter()
+        .chain(unknown)
+        .map(|(code, n)| Row::plain(code).count(0, count(n, "order", "orders")))
         .collect()
 }
 
@@ -256,10 +280,10 @@ fn ledger(record: &BatchSaved) -> String {
     )
 }
 
-fn or_none(lines: Vec<String>) -> Vec<String> {
-    if lines.is_empty() {
-        vec!["none".to_string()]
+fn or_none(rows: Vec<Row>) -> Vec<Row> {
+    if rows.is_empty() {
+        vec![Row::plain("none")]
     } else {
-        lines
+        rows
     }
 }

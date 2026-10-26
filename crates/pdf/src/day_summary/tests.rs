@@ -1,18 +1,18 @@
 use std::collections::BTreeSet;
 
 use jiff::civil::date;
-use packing_engine::ids::{BatchId, OrderId};
-use packing_engine::record::{BatchSaved, OutputFile, ReprintMade, ReprintedOrder};
+use packing_engine::record::{BatchSaved, OutputFile};
 use testkit::{TempDir, batch, sha, vendor_dir};
 
-use super::content::{DayLine, LineKind, header_counts, picks, sections};
-use super::{DayBatch, DayFacts, DayReprint, write_day_summary};
+use super::content::{header_counts, picks, sections};
+use super::{DayBatch, DayFacts, write_day_summary};
+use crate::facts::{Row, RowKind};
 
-fn output(file: &str, group: Option<&str>) -> OutputFile {
+fn output(file: &str, group: Option<&str>, pages: u16) -> OutputFile {
     OutputFile {
         file: file.to_string(),
         group: group.map(str::to_string),
-        pages: 1,
+        pages,
         size: 1,
         sha256: sha('b'),
     }
@@ -22,9 +22,9 @@ fn output(file: &str, group: Option<&str>) -> OutputFile {
 fn records() -> (BatchSaved, BatchSaved) {
     let groups = |n: u8| {
         vec![
-            output(&format!("{n}-A Sepatu x2.pdf"), Some("A")),
-            output(&format!("{n}-Z Lainnya x1.pdf"), Some("Z")),
-            output(&format!("{n} summary.pdf"), None),
+            output(&format!("{n}-A Sepatu x2.pdf"), Some("A"), 2),
+            output(&format!("{n}-Z Lainnya x1.pdf"), Some("Z"), 1),
+            output(&format!("{n} summary.pdf"), None, 3),
         ]
     };
     let first = batch(1, false, groups(1));
@@ -33,29 +33,10 @@ fn records() -> (BatchSaved, BatchSaved) {
     (first, second)
 }
 
-fn reprint() -> ReprintMade {
-    ReprintMade {
-        number: 1,
-        file: "reprint 1 x1.pdf".into(),
-        pages: 1,
-        size: 1,
-        sha256: sha('c'),
-        orders: vec![ReprintedOrder {
-            order_id: OrderId::new("580000000000000002"),
-            date: date(2026, 10, 7),
-            batch: BatchId::new(1),
-            sha256: sha('a'),
-            page_start: 2,
-            page_end: 2,
-        }],
-    }
-}
-
 fn facts<'a>(
     first: &'a BatchSaved,
     second: &'a BatchSaved,
     printed: &'a BTreeSet<String>,
-    reprints: Vec<DayReprint<'a>>,
 ) -> DayFacts<'a> {
     DayFacts {
         workspace: "Toko Contoh",
@@ -72,72 +53,50 @@ fn facts<'a>(
                 printed,
             },
         ],
-        reprints,
         printed: "17:05",
     }
 }
 
-fn texts(lines: &[DayLine]) -> Vec<(LineKind, String, Option<String>)> {
-    lines
-        .iter()
-        .map(|line| (line.kind, line.text.clone(), line.right.clone()))
-        .collect()
-}
-
 #[test]
-fn the_day_reads_its_couriers_batches_and_reprints_from_the_records() {
+fn the_day_reads_its_batches_and_couriers_from_the_records() {
     let (first, second) = records();
     let printed: BTreeSet<String> = ["A".to_string()].into();
-    let made = reprint();
-    let reprints = vec![DayReprint {
-        made: &made,
-        time: "09:40".into(),
-    }];
-    let day = facts(&first, &second, &printed, reprints);
+    let day = facts(&first, &second, &printed);
     assert_eq!(
         header_counts(&day),
-        "6 orders · 8 units · 2 batches · 4 group PDFs · 1 reprint"
+        "6 orders · 8 units · 2 batches · 4 groups"
     );
 
-    let plain = |text: &str, right: Option<&str>| {
-        (LineKind::Plain, text.to_string(), right.map(str::to_string))
+    let head = |text: &str| {
+        Row::new(RowKind::Head, text)
+            .count(0, "3 orders")
+            .count(1, "3 pages")
     };
-    let head = |text: &str, right: &str| (LineKind::Head, text.to_string(), Some(right.into()));
-    let part = |text: &str, right: Option<&str>| {
-        (LineKind::Part, text.to_string(), right.map(str::to_string))
+    let part = |text: &str, orders: &str, pages: &str, printed: &str| {
+        Row::new(RowKind::Part, text)
+            .count(0, orders)
+            .count(1, pages)
+            .count(2, printed)
     };
     let shown = sections(&day);
     let headings: Vec<&str> = shown.iter().map(|s| s.heading).collect();
-    assert_eq!(headings, ["Couriers", "Batches", "Reprints"]);
+    assert_eq!(headings, ["Batches", "Couriers"]);
     assert_eq!(
-        texts(&shown[0].lines),
+        shown[0].rows,
         [
-            plain("jnt", Some("5 orders")),
-            plain("unknown", Some("1 order"))
+            head("Batch 2 · saved 09:12 · sort rule default · amended"),
+            part("2-A Sepatu x2.pdf", "2 orders", "2 pages", "printed"),
+            part("2-Z Lainnya x1.pdf", "1 order", "1 page", "not printed"),
+            head("Batch 1 · saved 07:40 · sort rule default"),
+            part("1-A Sepatu x2.pdf", "2 orders", "2 pages", "printed"),
+            part("1-Z Lainnya x1.pdf", "1 order", "1 page", "not printed"),
         ]
     );
     assert_eq!(
-        texts(&shown[1].lines),
+        shown[1].rows,
         [
-            head(
-                "Batch 2 · saved 09:12 · sort rule default · amended",
-                "3 orders · 4 units"
-            ),
-            part("2-A Sepatu", Some("2 orders | 1 content · printed")),
-            part("2-Z Lainnya", Some("1 order | 1 content · not printed")),
-            head(
-                "Batch 1 · saved 07:40 · sort rule default",
-                "3 orders · 4 units"
-            ),
-            part("1-A Sepatu", Some("2 orders | 1 content · printed")),
-            part("1-Z Lainnya", Some("1 order | 1 content · not printed")),
-        ]
-    );
-    assert_eq!(
-        texts(&shown[2].lines),
-        [
-            head("reprint 1 x1.pdf · made 09:40", "1 order · 1 page"),
-            part("580000000000000002 · saved 2026-10-07 in batch 1", None),
+            Row::plain("jnt").count(0, "5 orders"),
+            Row::plain("unknown").count(0, "1 order"),
         ]
     );
     assert_eq!(
@@ -148,9 +107,6 @@ fn the_day_reads_its_couriers_batches_and_reprints_from_the_records() {
         ],
         "the units of both batches"
     );
-
-    let none = facts(&first, &second, &printed, Vec::new());
-    assert_eq!(texts(&sections(&none)[2].lines), [plain("none", None)]);
 }
 
 #[test]
@@ -165,12 +121,8 @@ fn the_facts_then_the_picks_from_a_new_page() {
     let path = dir.path().join("day summary.pdf");
     let (first, second) = records();
     let printed = BTreeSet::new();
-    let pages = write_day_summary(
-        &pdfium,
-        &path,
-        &facts(&first, &second, &printed, Vec::new()),
-    )
-    .expect("write the day summary");
+    let pages = write_day_summary(&pdfium, &path, &facts(&first, &second, &printed))
+        .expect("write the day summary");
     assert_eq!(pages, 2);
     let doc = pdfium.load_pdf_from_file(&path, None).expect("open it");
     let texts: Vec<String> = doc

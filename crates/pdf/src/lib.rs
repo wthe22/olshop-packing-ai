@@ -16,6 +16,7 @@ pub const PDFIUM_VERSION: &str = "chromium/7881";
 
 pub mod batch;
 pub mod day_summary;
+mod facts;
 pub mod logo;
 pub mod packing_list;
 pub mod read;

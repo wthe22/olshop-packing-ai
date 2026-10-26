@@ -6,7 +6,7 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 
-use packing_pdf::day_summary::{DayBatch, DayFacts, DayReprint, write_day_summary};
+use packing_pdf::day_summary::{DayBatch, DayFacts, write_day_summary};
 use packing_pdf::worker::PdfWorker;
 use packing_store::{DateFolder, Fold, StoreError};
 
@@ -44,14 +44,6 @@ pub fn day_summary(
                         record: &live.saved,
                         time: hh_mm(&live.modify_time),
                         printed: &live.printed,
-                    })
-                    .collect(),
-                reprints: fold
-                    .reprints
-                    .iter()
-                    .map(|reprint| DayReprint {
-                        made: &reprint.made,
-                        time: hh_mm(&reprint.create_time),
                     })
                     .collect(),
                 printed: &printed,

@@ -21,7 +21,8 @@
   compares as a number). Inside one order content the orders keep their **reading position**: the input's
   place in the batch, then the page.
 - **Pages**: every page of each order's written copy, unchanged and in its order.
-- An order content has no number: the screens list a group's order contents in printing order.
+- The screens list a group's order contents in printing order; the [summary PDF](summary-pdf.md#the-group-pages)
+  numbers them in their group, `A-1`, `A-2`, … ([D-LABEL-18](../decisions/label.md)).
 
 ## File names
 

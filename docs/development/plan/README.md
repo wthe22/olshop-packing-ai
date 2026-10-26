@@ -6,27 +6,27 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-10-26)
 
-- **Handoff of the session of 2026-10-26 (night) — the owner tests the second round of R10; then the
-  work is R6.4 and R9.** Both rounds of the owner's v0.2 review are built and pushed; the task file R10 is
-  done and gone, its findings written into the design. Round one: the theme menu, the new look, *Courier ·
-  is unknown*, the summary PDF's order. Round two: *workspace* everywhere (the journal's stored field keeps
-  `namespace`), the default data folder `packing-data`, *88 orders | 3 contents*, Search's head row with
-  the select-all tick, the reprint bar, *Reprinted* marks and the ask before printing again, the Day
-  screen's *Reprints* card, **Day summary** and the app icon. `target/portable/Packing/` is rebuilt and
-  the guide's pictures are retaken.
-  - **The owner may test now**, in this order: Search — type or scan a tracking ID and press Enter; a
-    click on a row ticks it; reprint one order, search it again: it shows *Reprinted*, and a second
-    reprint asks first. The Day screen's *Reprints* card and its *Orders ▸*. **Day summary** after a
-    batch. The icon on `Packing.exe` and in the taskbar. A program folder whose `packing-settings.toml`
-    names `data` keeps it; `packing-data` is only offered at a first start.
-  - **One open question:** [Q-LABEL-12](../../software-design/questions/label.md), what the day summary
-    holds; the default (option 1) is built. The owner answers there with an option or in words; the next
-    session writes the answer into [day-summary.md](../../software-design/labels/day-summary.md) and
-    [decisions/label.md](../../software-design/decisions/label.md), removes the question, and changes
-    the PDF when the answer is not the default.
+- **Handoff of the session of 2026-10-26 (late night) — the owner tests the summaries and the exe's icon;
+  then the work is R6.4 and R9.** The owner's v0.2 review is built and pushed in three rounds; the task
+  file R10 is done and gone, its findings written into the design. Rounds one and two: the theme menu, the
+  new look, *Courier · is unknown*, the summary PDF's order, *workspace* everywhere (the journal's stored
+  field keeps `namespace`), the default data folder `packing-data`, *88 orders | 3 contents*, Search's head
+  row, the reprint bar and *Reprinted* marks, the Day screen's *Reprints* card, **Day summary**. Round
+  three, from the owner's words in chat: the summary PDF's order contents numbered `A-1`, `A-2`, …, its
+  first page laid out in columns with even gaps and with the couriers' counts, one layout for the summary
+  PDF and the day summary, the day summary without the reprints (the answer to Q-LABEL-12:
+  [D-LABEL-17](../../software-design/decisions/label.md), [D-LABEL-18](../../software-design/decisions/label.md)),
+  `—` no longer covering the space after it, and the new icon embedded in `Packing.exe` itself (the
+  build had kept Tauri's icon). `target/portable/Packing/` is rebuilt.
+  - **The owner may test now**: save a batch and open its summary PDF — the first page, the numbered
+    order contents, a group that runs over a page; **Day summary**; the icon of `Packing.exe` in Explorer
+    and in the taskbar. Explorer may show the old icon from its cache until it refreshes; signing out
+    and in again refreshes it. Earlier: Search with a scanned tracking ID, a reprint and *Reprinted*, the
+    *Reprints* card.
+  - No question is open.
   - A finding goes into [reviews/ui.md](../../reviews/ui.md), [reviews/label.md](../../reviews/label.md),
     [reviews/rules.md](../../reviews/rules.md) or [reviews/app.md](../../reviews/app.md) as the next
-    `R-<SCOPE>-n` (R-UI-20, R-LABEL-4, R-RULES-4, R-APP-5); the next session turns each into a task.
+    `R-<SCOPE>-n` (R-UI-20, R-LABEL-6, R-RULES-4, R-APP-6); the next session turns each into a task.
   - **Next without the owner:** **R6.4** ([R6-app-journal.md](R6-app-journal.md)), then **R9** (the full
     check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff).
   - The guide's pictures are the real program on the `testdata/` labels (`node tools/guide-pictures.mjs`

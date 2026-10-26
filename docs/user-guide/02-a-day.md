@@ -27,9 +27,9 @@ The **Day** screen shows what has been saved on the open date and is the way to 
 
 - The top line counts the date: "This day: 2 batches · 729 orders · 5 group PDFs".
 - **+ New batch** starts a new batch.
-- **Day summary** writes one PDF of the whole date and opens it: the orders per courier (the count to
-  hand over at each pickup), each batch with its group PDFs and whether each is ticked as printed, the
-  reprints, then the pick list of the whole day. It is written again each time you press it, so press
+- **Day summary** writes one PDF of the whole date and opens it: each batch with its group PDFs, their
+  orders and pages and whether each is ticked as printed, the orders per courier (the count to hand
+  over at each pickup), then the pick list of the whole day. It is laid out like a batch's summary PDF. It is written again each time you press it, so press
   it after the last batch of the day. A day summary still open in a PDF viewer may have to be closed
   first.
 - Each batch is a card: "Batch 2 · saved 09:12 · 2 files · 129 orders", one line per group PDF
@@ -123,7 +123,10 @@ When the checker finds something, a dialog lists the errors and the warnings apa
 ![The Day screen after saving](images/05-day.png)
 
 The new batch is on top with a green line "Batch 3 saved: 3 group PDFs and the summary PDF." **Open**
-each group PDF and the summary PDF and print them.
+each group PDF and the summary PDF and print them. The summary PDF's first page lists the group PDFs
+with their orders, pages and order contents, and the orders per courier; then each group's order
+contents, numbered `A-1`, `A-2`, … in the order the group PDF prints them; then what to take from
+stock.
 
 - **Left out: 3 ▸** on a card lists each copy left out and why: a repeat (and the copy that stays) or
   an order saved earlier in another batch.
