@@ -5,17 +5,19 @@ app, then print.
 
 ## The window
 
-The title bar names the program and its version (**Packing v0.2**), then **☰**, the open namespace
-and the date everything is saved to, and at the right **Search**, **Sort rules** and **Settings**.
+The title bar has the panel button at the left, the program and its version (**Packing v0.2**), the open
+namespace and the date everything is saved to, and at the right **Search**, **Sort rules**, **Settings** and
+the theme menu (**Light**, **Dark** or **System**, which follows Windows). `Esc` closes Search, Sort rules
+and Settings.
 
 The **panel** at the left lists your namespaces and the dates of the open one:
 
-- **Namespace** chooses another namespace; **+ New namespace** asks for a name and opens it on today.
+- **Namespace** chooses another namespace; **+** beside it asks for a new name and opens it on today.
 - The dates, newest first, by month, each with its number of saved orders. Today is always there,
-  marked *· today*. Click a date to open it — for a download just after midnight that belongs to the
+  marked *today*. Click a date to open it — for a download just after midnight that belongs to the
   evening before. A batch being prepared asks first.
 - **⋯** on a date opens its folder in Explorer. A date marked **⚠ damaged** opens for viewing only.
-- **«** hides the panel, **☰** or `Ctrl+B` shows it again.
+- The panel button in the title bar (or `Ctrl+B`) hides and shows the panel.
 
 ## A normal batch, step by step
 

@@ -86,7 +86,7 @@
 <style>
   td {
     padding: 0.35rem 0.4rem;
-    border-bottom: 1px solid #ececec;
+    border-bottom: 1px solid var(--border-soft);
     vertical-align: top;
   }
 
@@ -108,17 +108,18 @@
   .code {
     display: inline-block;
     min-width: 1.4rem;
+    white-space: nowrap;
     font-weight: 600;
   }
 
   .tag {
     margin-left: 0.4rem;
-    color: #6a6a6a;
+    color: var(--text-muted);
     font-size: 0.85rem;
   }
 
   .condition {
-    color: #6a6a6a;
+    color: var(--text-muted);
     font-size: 0.85rem;
     white-space: pre-wrap;
   }
@@ -129,43 +130,27 @@
   }
 
   .dup {
-    color: #8a1f1f;
+    color: var(--danger);
     font-size: 0.85rem;
   }
 
   .no-pdf {
-    color: #8a8a8a;
+    color: var(--text-faint);
   }
 
   tr.skipped td,
   tr.empty td {
-    color: #9a9a9a;
+    color: var(--text-faint);
   }
 
   tr.run td {
     border-bottom: none;
-    color: #4a4a4a;
+    color: var(--text-muted);
     font-family: Consolas, monospace;
     font-size: 0.9rem;
   }
 
   .run-orders {
     font-family: "Segoe UI", sans-serif;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    td {
-      border-color: #3a3a3a;
-    }
-
-    .condition,
-    .tag,
-    tr.run td {
-      color: #b0b0b0;
-    }
-
-    .no-pdf {
-      color: #8a8a8a;
-    }
   }
 </style>

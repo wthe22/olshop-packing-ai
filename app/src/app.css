@@ -1,14 +1,76 @@
-/* Base styles of the PC app: one window, plain CSS, no component library. */
+/* Base styles of the PC app: one window, plain CSS, no component library. Every colour is a token
+   below; `data-theme` on <html> picks the light or dark set, and `color-scheme` makes the native
+   controls (text boxes, lists, ticks, radio buttons, scroll bars) follow it. */
 
 :root {
+  color-scheme: light;
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --surface-hover: #eef1f5;
+  --border: #d9dde3;
+  --border-strong: #b9c0ca;
+  --border-soft: #eceef2;
+  --text: #1c1f24;
+  --text-muted: #5b636e;
+  --text-faint: #8d949e;
+  --accent: #1f6feb;
+  --accent-hover: #1a5fce;
+  --accent-soft: #e6effc;
+  --accent-border: #7aa7e6;
+  --on-accent: #ffffff;
+  --link: #1f6feb;
+  --danger: #a12626;
+  --danger-bg: #fdeeee;
+  --danger-border: #e3a3a3;
+  --ok: #1f6f2f;
+  --ok-bg: #eaf7ea;
+  --ok-border: #a6d8a6;
+  --warn: #a35d00;
+  --backdrop: rgba(15, 18, 24, 0.4);
+  --shadow: 0 1px 2px rgba(15, 18, 24, 0.06);
+  --shadow-lg: 0 12px 40px rgba(15, 18, 24, 0.22);
+  --radius: 6px;
+
   font-family: "Segoe UI", Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 15px;
   line-height: 1.45;
-  color: #1b1b1b;
-  background-color: #f6f6f6;
+  color: var(--text);
+  background-color: var(--bg);
+  accent-color: var(--accent);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1b1c1f;
+  --surface: #25272b;
+  --surface-2: #2c2e33;
+  --surface-hover: #33363c;
+  --border: #3d4047;
+  --border-strong: #565a63;
+  --border-soft: #33353a;
+  --text: #eceef1;
+  --text-muted: #a9afb8;
+  --text-faint: #7d838c;
+  --accent: #2f7cf6;
+  --accent-hover: #4a8ef8;
+  --accent-soft: #22344f;
+  --accent-border: #4c78b8;
+  --on-accent: #ffffff;
+  --link: #6ea8ff;
+  --danger: #f0b0b0;
+  --danger-bg: #3a2222;
+  --danger-border: #8a4a4a;
+  --ok: #a6d8a6;
+  --ok-bg: #1f3320;
+  --ok-border: #4a7a4a;
+  --warn: #e8a85a;
+  --backdrop: rgba(0, 0, 0, 0.55);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -19,67 +81,104 @@ html,
 body {
   margin: 0;
   height: 100%;
+  background: var(--bg);
 }
 
 button {
   font: inherit;
   padding: 0.35rem 0.8rem;
-  border: 1px solid #b8b8b8;
-  border-radius: 4px;
-  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
   cursor: pointer;
 }
 
 button:hover:not(:disabled) {
-  background: #eef4fb;
-  border-color: #7aa7d6;
+  background: var(--surface-hover);
+  border-color: var(--accent-border);
 }
 
 button:disabled {
-  color: #9a9a9a;
+  color: var(--text-faint);
   cursor: default;
 }
 
 button.primary {
-  background: #1f6feb;
-  border-color: #1f6feb;
-  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
 
 button.primary:hover:not(:disabled) {
-  background: #1a5fce;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+button.primary:disabled {
+  opacity: 0.55;
+  color: var(--on-accent);
+}
+
+input:where(:not([type="checkbox"], [type="radio"])),
+select,
+textarea {
+  font: inherit;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
+input:where(:not([type="checkbox"], [type="radio"])):focus,
+select:focus,
+textarea:focus,
+button:focus-visible {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 0;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-faint);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  vertical-align: middle;
 }
 
 .error {
   margin: 0.5rem 1rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #d98a8a;
-  border-radius: 4px;
-  background: #fdecec;
-  color: #8a1f1f;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius);
+  background: var(--danger-bg);
+  color: var(--danger);
   white-space: pre-wrap;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f0f0f0;
-    background-color: #242424;
-  }
+/* A button that is only an icon, or an icon and a word, without a box until pointed at. */
+button.icon,
+button.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
 
-  button {
-    background: #333333;
-    border-color: #555555;
-    color: #f0f0f0;
-  }
+button.icon {
+  padding: 0.35rem;
+}
 
-  button:hover:not(:disabled) {
-    background: #3d4b5c;
-    border-color: #6f8fb5;
-  }
-
-  .error {
-    background: #3a2020;
-    border-color: #8a4a4a;
-    color: #f0b8b8;
-  }
+button.icon:hover:not(:disabled),
+button.ghost:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--surface-hover);
+  color: var(--text);
 }

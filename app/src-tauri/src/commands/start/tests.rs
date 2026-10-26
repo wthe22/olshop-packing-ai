@@ -56,3 +56,17 @@ fn a_first_start_writes_the_two_files_and_names_the_first_namespace() {
     assert_eq!(info.namespace.as_deref(), Some("Toko Contoh"));
     assert_eq!(info.data_folder.as_deref(), Some(dir.as_str()));
 }
+
+#[test]
+fn the_theme_and_the_data_folder_are_kept_apart_in_the_settings() {
+    let program = TempDir::new("app-theme");
+    assert_eq!(settings::theme(program.path()).unwrap(), Theme::System);
+    settings::set_theme(program.path(), Theme::Dark).unwrap();
+    let dir = program.path().join(DEFAULT_DATA_DIR);
+    settings::set_data_dir(program.path(), &dir).unwrap();
+    assert_eq!(settings::theme(program.path()).unwrap(), Theme::Dark);
+    settings::set_theme(program.path(), Theme::Light).unwrap();
+    assert_eq!(settings::data_dir(program.path()).unwrap(), Some(dir));
+    let written = fs::read_to_string(program.path().join(SETTINGS_FILE)).unwrap();
+    assert!(written.contains("theme = \"light\""), "{written}");
+}

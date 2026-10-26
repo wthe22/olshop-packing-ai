@@ -5,6 +5,12 @@
     <link rel="icon" href="%sveltekit.assets%/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Packing</title>
+    <script>
+      // Windows' own theme until the stored choice is read, so a dark start does not flash white.
+      document.documentElement.dataset.theme = matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

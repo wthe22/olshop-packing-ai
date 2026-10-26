@@ -9,6 +9,8 @@ name contains "sepatu"
 total_quantity = 1
 tracking_id starts_with "JY"
 courier equals "jnt"
+courier is_empty
+not tracking_id is_empty
 ship_by < "2026-10-08"
 not name contains "sepatu" and (name contains "spion" or name contains "knalpot")
 display_name equals "Spion Beat — Standard, honda" and line_quantity >= 2
@@ -23,6 +25,7 @@ and_expr   = not_expr { "and" not_expr }
 not_expr   = "not" not_expr | primary
 primary    = "(" or_expr ")" | comparison
 comparison = text_field text_op string
+           | text_field "is_empty"
            | number_field number_op integer
            | date_field number_op date
 text_op    = "contains" | "equals" | "starts_with"
@@ -36,9 +39,13 @@ date       = '"' digit digit digit digit "-" digit digit "-" digit digit '"'
 - `not` binds tighter than `and`, `and` tighter than `or`: `not a and b or c` = `((not a) and b) or c`.
 - Text comparison ignores upper and lower case (`honda` = `HONDA`) and trims spaces of the field value. It
   does not ignore accents.
+- `is_empty` is true when the field has no value; spaces count as none. On an item field it is true when
+  one line has none (`seller_sku is_empty`). It is how a filter takes the orders whose courier was not
+  named (`courier is_empty`) or that have no tracking ID ([D-RULES-3](../decisions/rules.md)); a
+  `courier equals` value must be a courier's code.
 - A date is written year-month-day ([D-APP-21](../decisions/app-features.md)).
 - Errors give line and column and say what is expected, e.g.
-  `line 2, col 18: expected a text operator (contains, equals, starts_with) after "name"`. Inside
+  `line 2, col 18: expected a text operator (contains, equals, starts_with, is_empty) after "name"`. Inside
   `packing-workflows.toml` the line and column are those of the file, not of the filter text.
 
 ## Fields

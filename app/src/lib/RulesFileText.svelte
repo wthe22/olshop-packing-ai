@@ -59,16 +59,10 @@
     align-items: center;
     gap: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid #d5d5d5;
+    border-top: 1px solid var(--border);
   }
 
   .grow {
     flex: 1;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .actions {
-      border-color: #444444;
-    }
   }
 </style>

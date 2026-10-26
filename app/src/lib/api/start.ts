@@ -2,6 +2,7 @@
 // opens and *About*. The Rust side sends snake_case fields; the interfaces here match it.
 
 import { invoke } from "@tauri-apps/api/core";
+import type { Theme } from "../theme";
 
 export interface StartInfo {
   exe_dir: string;
@@ -14,6 +15,8 @@ export interface StartInfo {
   // The program's shown version (`v` + major.minor); the title bar's brand text is the program's
   // name and this.
   version: string;
+  // The theme `packing-settings.toml` names.
+  theme: Theme;
 }
 
 // Settings › *About*.
@@ -40,5 +43,8 @@ export const openPath = (path: string): Promise<void> =>
 
 export const showInFolder = (path: string): Promise<void> =>
   invoke("show_in_folder", { path });
+
+// The theme menu: stored in `packing-settings.toml`; the OS title bar follows it.
+export const setTheme = (theme: Theme): Promise<void> => invoke("set_theme", { theme });
 
 export const about = (): Promise<About> => invoke("about");

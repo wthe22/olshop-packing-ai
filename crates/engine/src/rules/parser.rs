@@ -4,7 +4,7 @@
 use jiff::civil::Date;
 
 use super::condition::{
-    CSV_ONLY_FIELDS, Condition, FieldType, Level, NumberOp, TextOp, field_type,
+    CSV_ONLY_FIELDS, Condition, FieldType, IS_EMPTY, Level, NumberOp, TextOp, field_type,
 };
 use super::error::RulesError;
 use super::tokenizer::{Token, TokenKind, tokenize};
@@ -225,12 +225,18 @@ impl Parser {
 
     fn parse_text_comparison(&mut self, field: &str) -> Result<Condition, RulesError> {
         let op_token = self.peek().clone();
+        if op_token.kind == TokenKind::Word && op_token.text.eq_ignore_ascii_case(IS_EMPTY) {
+            self.advance();
+            return Ok(Condition::Empty {
+                field: field.to_string(),
+            });
+        }
         let op = (op_token.kind == TokenKind::Word)
             .then(|| TextOp::parse(&op_token.text.to_lowercase()))
             .flatten();
         let Some(op) = op else {
             return Err(RulesError::new(format!(
-                "line {}, col {}: expected a text operator (contains, equals, starts_with) after \"{field}\"",
+                "line {}, col {}: expected a text operator (contains, equals, starts_with, is_empty) after \"{field}\"",
                 op_token.line, op_token.col
             )));
         };

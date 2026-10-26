@@ -342,10 +342,10 @@
 
   .stop {
     padding: 1rem;
-    border: 1px solid #d98a8a;
+    border: 1px solid var(--danger-border);
     border-radius: 6px;
-    background: #fdecec;
-    color: #8a1f1f;
+    background: var(--danger-bg);
+    color: var(--danger);
   }
 
   .stop p {
@@ -355,7 +355,7 @@
 
   .muted {
     margin: 0;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   /* An answer to the logo prompt that failed: shown over the prompt's backdrop. */
@@ -366,28 +366,10 @@
     transform: translateX(-50%);
     margin: 0;
     padding: 0.5rem 1rem;
-    background: #fdecec;
-    border: 1px solid #d98a8a;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
     border-radius: 6px;
-    color: #8a1f1f;
+    color: var(--danger);
     z-index: 12;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .muted {
-      color: #b0b0b0;
-    }
-
-    .stop {
-      background: #3a2020;
-      border-color: #8a4a4a;
-      color: #f0b8b8;
-    }
-
-    .answer-error {
-      background: #3a2020;
-      border-color: #8a4a4a;
-      color: #f0b8b8;
-    }
   }
 </style>

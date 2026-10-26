@@ -6,6 +6,9 @@ import { conditionFields, type FieldType } from "../texts";
 
 export type GroupKind = "all" | "any";
 
+// The operator of a text field with no value; its row has no value box.
+export const IS_EMPTY = "is_empty";
+
 // A row: one comparison `field · operator · value` with a **not** flag.
 export interface UiRow {
   kind: "row";
@@ -70,7 +73,7 @@ interface RustRow {
   value: RustValue;
 }
 
-type RustValue = { text: string } | { number: number } | { time: string };
+type RustValue = { text: string } | { number: number } | { time: string } | "no_value";
 
 export function fromRustTree(raw: unknown): UiTree {
   const tree = raw as { root: RustGroup };
@@ -101,6 +104,7 @@ function fromRustNode(node: RustNode): UiNode {
 }
 
 function valueString(value: RustValue): string {
+  if (value === "no_value") return "";
   if ("text" in value) return value.text;
   if ("number" in value) return String(value.number);
   return value.time;
@@ -133,6 +137,7 @@ function toRustNode(node: UiNode): RustNode {
 }
 
 function rowValue(row: UiRow): RustValue {
+  if (row.operator === IS_EMPTY) return "no_value";
   const type = fieldType(row.field);
   if (type === "number") {
     return { number: Number.parseInt(row.value || "0", 10) || 0 };

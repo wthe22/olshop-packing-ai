@@ -52,7 +52,7 @@
   .backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--backdrop);
     z-index: 10;
   }
 
@@ -66,10 +66,10 @@
     max-height: 80vh;
     overflow: auto;
     padding: 1rem 1.25rem 1.25rem;
-    background: #ffffff;
-    border: 1px solid #b8b8b8;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-lg);
     z-index: 11;
   }
 
@@ -86,31 +86,16 @@
   .list {
     margin: 0;
     padding-left: 1.2rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   .list.errors {
-    color: #8a1f1f;
+    color: var(--danger);
   }
 
   .buttons {
     display: flex;
     gap: 0.5rem;
     margin-top: 1rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .panel {
-      background: #242424;
-      border-color: #555555;
-    }
-
-    .list {
-      color: #b0b0b0;
-    }
-
-    .list.errors {
-      color: #f0b8b8;
-    }
   }
 </style>

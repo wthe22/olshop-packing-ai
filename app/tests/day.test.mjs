@@ -40,8 +40,4 @@ test("the Day screen's counts read singular where they should", () => {
     "Batch 2 · saved 09:12 · 1 file · 129 orders",
   );
   assert.equal(texts.plan.duplicate("A"), "Same name as group A");
-  assert.deepEqual(
-    [texts.settings.version("v0.2"), texts.settings.pdfium("chromium/7881"), texts.settings.schema("1.0")],
-    ["Version v0.2", "PDFium chromium/7881", "schema 1.0"],
-  );
 });

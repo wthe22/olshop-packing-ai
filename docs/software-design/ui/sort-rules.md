@@ -43,7 +43,8 @@ filter language: each filter is made from boxes. A text view is there for typing
   - **Field**: Product name (`name`), Display name, Variation, Seller SKU, Line quantity, Total quantity,
     Different items (`distinct_items`), Courier, Order ID, Tracking ID, Ship by
     ([fields](../rules-file/conditions.md#fields)).
-  - **Operator**: text — contains, equals, starts with; number and date — =, ≠, <, ≤, >, ≥.
+  - **Operator**: text — contains, equals, starts with, and *is unknown* (Courier, Tracking ID) or *is
+    empty* (the other text fields), which takes no value; number and date — =, ≠, <, ≤, >, ≥.
   - **Value**: typed without quotes; a whole number for a number field; `2026-10-07` for Ship by; Courier is
     a list of the couriers by name, stored by code. A wrong value is red with the language's message.
 - **not** (per row and per box) reverses it: the first row of B reads "name does not contain sepatu".

@@ -39,16 +39,10 @@
 <style>
   .rule {
     margin-left: 1rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   .rule select {
     max-width: 14rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .rule {
-      color: #b0b0b0;
-    }
   }
 </style>

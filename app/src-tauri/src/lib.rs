@@ -269,6 +269,10 @@ pub fn run() {
             // screen needs. The window `title` in `tauri.conf.json` is the bare name.
             if let Some(window) = app.get_webview_window("main") {
                 window.set_title(&commands::start::window_title())?;
+                // The title bar takes the stored theme before the window draws; a settings file
+                // that does not read is reported by `start_info`.
+                let theme = settings::theme(&program_folder()).unwrap_or_default();
+                window.set_theme(commands::start::window_theme(theme))?;
             }
             Ok(())
         })
@@ -278,6 +282,7 @@ pub fn run() {
             commands::start::choose_data_folder,
             commands::start::namespace_new,
             commands::start::about,
+            commands::start::set_theme,
             commands::start::open_path,
             commands::start::show_in_folder,
             commands::day::day_overview,

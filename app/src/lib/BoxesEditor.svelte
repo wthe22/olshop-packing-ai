@@ -6,6 +6,7 @@
   import type { FieldType } from "../texts";
   import type { Courier } from "./api/rules";
   import {
+    IS_EMPTY,
     fieldType,
     newGroup,
     newRow,
@@ -30,7 +31,7 @@
   } = $props();
 
   const operatorsFor = (field: string) =>
-    fieldType(field) === "text" ? textOperators : numberOperators;
+    fieldType(field) === "text" ? textOperators(field) : numberOperators;
   const valueType = (field: string) => (fieldType(field) === "number" ? "number" : "text");
 
   function addRow(group: UiGroup) {
@@ -121,7 +122,9 @@
         <option value={op.value}>{op.label}</option>
       {/each}
     </select>
-    {#if row.field === "courier" && couriers.length > 0}
+    {#if row.operator === IS_EMPTY}
+      <span class="value"></span>
+    {:else if row.field === "courier" && couriers.length > 0}
       <select
         class="value"
         value={row.value}
@@ -175,14 +178,14 @@
   }
 
   .group {
-    border: 1px solid #d5d5d5;
+    border: 1px solid var(--border);
     border-radius: 5px;
     padding: 0.35rem 0.5rem;
-    background: #fafafa;
+    background: var(--surface-2);
   }
 
   .group.root {
-    background: #ffffff;
+    background: var(--surface);
   }
 
   .group-head {
@@ -215,7 +218,7 @@
     align-items: center;
     gap: 0.25rem;
     font-size: 0.85rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   .grow {
@@ -229,20 +232,5 @@
   select,
   input {
     font: inherit;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .group {
-      background: #2b2b2b;
-      border-color: #444444;
-    }
-
-    .group.root {
-      background: #242424;
-    }
-
-    .not {
-      color: #b0b0b0;
-    }
   }
 </style>

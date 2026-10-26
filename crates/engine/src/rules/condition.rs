@@ -29,6 +29,9 @@ impl TextOp {
     }
 }
 
+/// The operator of a text field with no value: `courier is_empty`.
+pub const IS_EMPTY: &str = "is_empty";
+
 /// A number/date-time comparison operator (`=` | `!=` | `<` | `<=` | `>` | `>=`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum NumberOp {
@@ -78,6 +81,10 @@ pub enum Condition {
         field: String,
         op: NumberOp,
         value: i64,
+    },
+    /// `field is_empty`: a text field with no value (spaces count as none).
+    Empty {
+        field: String,
     },
     /// `value` is canonical: `YYYY-MM-DD`, `HH:MM` or `YYYY-MM-DD HH:MM`.
     Time {

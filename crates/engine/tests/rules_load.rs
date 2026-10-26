@@ -71,13 +71,13 @@ fn validation_cases() -> Vec<(&'static str, String, &'static str)> {
         (
             "condition error",
             "[[category]]\ncode = \"B\"\nname = \"N\"\nwhen = 'name foo \"y\"'\n".to_string(),
-            "categories.toml, line 4, col 14: category \"B\" (when): expected a text operator (contains, equals, starts_with) after \"name\"",
+            "categories.toml, line 4, col 14: category \"B\" (when): expected a text operator (contains, equals, starts_with, is_empty) after \"name\"",
         ),
         (
             "condition error line 2",
             "[[category]]\ncode = \"B\"\nname = \"N\"\nwhen = '''name contains \"x\"\nand name foo \"y\"'''\n"
                 .to_string(),
-            "categories.toml, line 5, col 10: category \"B\" (when): expected a text operator (contains, equals, starts_with) after \"name\"",
+            "categories.toml, line 5, col 10: category \"B\" (when): expected a text operator (contains, equals, starts_with, is_empty) after \"name\"",
         ),
     ]
 }

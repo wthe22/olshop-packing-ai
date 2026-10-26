@@ -164,7 +164,7 @@
   }
 
   .muted {
-    color: #6a6a6a;
+    color: var(--text-muted);
   }
 
   table {
@@ -174,7 +174,7 @@
 
   td {
     padding: 0.35rem 0.4rem;
-    border-bottom: 1px solid #ececec;
+    border-bottom: 1px solid var(--border-soft);
     vertical-align: top;
   }
 
@@ -183,12 +183,12 @@
   }
 
   .items {
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   .where,
   .courier {
-    color: #6a6a6a;
+    color: var(--text-muted);
     white-space: nowrap;
   }
 
@@ -197,26 +197,12 @@
   }
 
   .trace td {
-    color: #6a6a6a;
+    color: var(--text-muted);
     font-size: 0.85rem;
     word-break: break-all;
   }
 
   .made {
-    color: #1f6f2f;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    td {
-      border-color: #3a3a3a;
-    }
-
-    .where,
-    .courier,
-    .muted,
-    .items,
-    .trace td {
-      color: #b0b0b0;
-    }
+    color: var(--ok);
   }
 </style>

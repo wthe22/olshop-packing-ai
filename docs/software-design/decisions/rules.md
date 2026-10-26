@@ -23,3 +23,14 @@ rename to rewrite stored batches, and the journal is never rewritten. This gives
 ever missing, and a renamed rule amends with the groups the batch had.
 
 **Applies to.** [rules file](../rules-file/README.md#sort-rules), [Sort rules](../ui/sort-rules.md), [05 After the save](../workflow/05-after-save.md#18-amend-newest-live-batch-only).
+
+## D-RULES-3 — `is_empty` takes the orders with no courier or no tracking ID
+
+**Decision.** The filter language has `<text field> is_empty` (R-RULES-3). On screen it is *is unknown* for
+Courier and Tracking ID, *is empty* for the other text fields, and takes no value. `courier equals` still takes a
+courier's code only.
+
+**Why.** An unnamed courier is stored empty, and an empty `equals` value is refused as "names no courier"; a
+word of its own reads plainly in the file and on screen.
+
+**Applies to.** [Filter language](../rules-file/conditions.md), [Sort rules](../ui/sort-rules.md).

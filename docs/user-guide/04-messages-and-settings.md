@@ -31,8 +31,10 @@ Open **Settings** in the title bar.
 - **Data folder** — where the namespaces and their dates are kept (the default is `data` beside the
   program). **Change…** asks "Use `<folder>` for the data from now on? The data in `<old>` stays where it
   is." and opens that folder; nothing is moved. **Open** shows it in Explorer.
-- **About** — the program's version (**Version v0.2**), the PDFium version and the data's schema
-  version.
+- **About** — what the program does, its version (**v0.2**), the PDFium version and the journal's
+  schema version.
+
+The theme is not here: it is the menu at the right of the title bar (**Light**, **Dark**, **System**).
 
 There are no other settings: the sort rule of your newest batch is preselected, the summary PDF is
 always written, and the couriers and sort rules live in `packing-workflows.toml` beside the program.

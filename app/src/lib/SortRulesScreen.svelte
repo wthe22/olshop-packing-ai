@@ -311,12 +311,12 @@
 
   .hint {
     margin: 0 0 0.75rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   .no-groups {
     margin: 0 0 0.75rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
     font-weight: 600;
   }
 
@@ -325,7 +325,7 @@
     align-items: center;
     gap: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid #d5d5d5;
+    border-top: 1px solid var(--border);
   }
 
   .grow {
@@ -335,9 +335,9 @@
   .help {
     margin-top: 0.75rem;
     padding: 0.5rem 0.75rem;
-    border: 1px solid #d5d5d5;
+    border: 1px solid var(--border);
     border-radius: 6px;
-    background: #fafafa;
+    background: var(--surface-2);
   }
 
   .help ul {
@@ -347,21 +347,5 @@
 
   .help code {
     font-family: Consolas, monospace;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .hint,
-    .no-groups {
-      color: #b0b0b0;
-    }
-
-    .actions {
-      border-color: #444444;
-    }
-
-    .help {
-      background: #2b2b2b;
-      border-color: #444444;
-    }
   }
 </style>

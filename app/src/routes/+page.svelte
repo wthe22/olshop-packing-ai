@@ -17,11 +17,13 @@
   import PlanScreen from "../lib/PlanScreen.svelte";
   import RepeatsScreen from "../lib/RepeatsScreen.svelte";
   import Overlays from "../lib/Overlays.svelte";
+  import { applyTheme } from "../lib/theme";
 
   // Below the smallest window width the panel hides on its own.
   const SMALLEST_WIDTH = 1024;
 
   const shell = new Shell();
+  $effect(() => applyTheme(shell.theme));
   onMount(() => {
     shell.load();
     const onKey = (event: KeyboardEvent) => {
@@ -52,12 +54,13 @@
 {:else if shell.needsFolder}
   <StartPrompt
     exeDir={shell.exeDir}
+    version={shell.version}
     busy={shell.busy}
     onUse={shell.useProgramFolder}
     onChoose={shell.chooseFolder}
   />
 {:else if shell.needsNamespace}
-  <NamespacePrompt busy={shell.busy} error={shell.error} onName={shell.nameNamespace} />
+  <NamespacePrompt version={shell.version} busy={shell.busy} error={shell.error} onName={shell.nameNamespace} />
 {:else}
   <div class="window">
     <Frame
@@ -65,8 +68,10 @@
       day={shell.day}
       overlay={shell.overlay}
       version={shell.version}
+      theme={shell.theme}
       onTogglePanel={shell.togglePanel}
       onNavigate={shell.navigate}
+      onTheme={shell.chooseTheme}
     />
     <div class="body">
       {#if shell.panelShown && shell.panel}
@@ -78,7 +83,6 @@
           onOpenNamespace={shell.openNamespace}
           onNewNamespace={shell.newNamespace}
           onOpenFolder={shell.openFolder}
-          onHide={shell.togglePanel}
         />
       {/if}
       <div class="screen">
@@ -161,6 +165,6 @@
     align-items: center;
     justify-content: center;
     height: 60vh;
-    color: #6a6a6a;
+    color: var(--text-muted);
   }
 </style>

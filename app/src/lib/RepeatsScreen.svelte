@@ -191,7 +191,7 @@
   }
 
   .group {
-    border: 1px solid #d5d5d5;
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
     margin-bottom: 0.75rem;
@@ -224,20 +224,10 @@
   }
 
   .muted {
-    color: #6a6a6a;
+    color: var(--text-muted);
   }
 
   .foot {
     margin-top: 1rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .group {
-      border-color: #444444;
-    }
-
-    .muted {
-      color: #b0b0b0;
-    }
   }
 </style>

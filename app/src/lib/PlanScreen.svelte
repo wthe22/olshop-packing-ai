@@ -316,7 +316,7 @@
   /*: the plan is the one catch-all entry, so every order goes into one PDF set. */
   .no-groups {
     margin: 0 0 0.75rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
     font-weight: 600;
   }
 
@@ -324,7 +324,7 @@
     padding: 0;
     border: none;
     background: none;
-    color: #1f6feb;
+    color: var(--link);
     cursor: pointer;
   }
 
@@ -338,9 +338,9 @@
     text-align: left;
     font-weight: 600;
     font-size: 0.9rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
     padding: 0.3rem 0.4rem;
-    border-bottom: 1px solid #d5d5d5;
+    border-bottom: 1px solid var(--border);
   }
 
   /* The column widths sit on the header cells; a row's cells line up under them. */
@@ -367,7 +367,7 @@
 
   .sub {
     margin-left: 0.75rem;
-    color: #6a6a6a;
+    color: var(--text-muted);
     font-size: 0.9rem;
     font-weight: 400;
   }
@@ -377,25 +377,6 @@
     align-items: center;
     gap: 0.75rem;
     padding-top: 0.5rem;
-    border-top: 1px solid #d5d5d5;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .no-groups {
-      color: #b0b0b0;
-    }
-
-    th {
-      color: #b0b0b0;
-      border-color: #444444;
-    }
-
-    .foot {
-      border-color: #444444;
-    }
-
-    .muted {
-      color: #b0b0b0;
-    }
+    border-top: 1px solid var(--border);
   }
 </style>

@@ -186,6 +186,7 @@ fn the_design_examples_are_filters() {
         "display_name equals \"Spion Beat — Standard, honda\" and line_quantity >= 2",
         "distinct_items > 1 and order_id equals \"580000000000000001\" and seller_sku contains \"SEL\"",
         "variation equals \"honda\"",
+        "courier is_empty or tracking_id is_empty",
     ];
     for example in examples {
         assert!(crate::rules::parse_filter(example).is_ok(), "{example}");
@@ -194,6 +195,8 @@ fn the_design_examples_are_filters() {
         "ship_by < \"14:00\"",
         "paid_time < \"2026-10-08\"",
         "category equals \"A\"",
+        "total_quantity is_empty",
+        "courier is_empty \"jnt\"",
     ] {
         assert!(crate::rules::parse_filter(refused).is_err(), "{refused}");
     }

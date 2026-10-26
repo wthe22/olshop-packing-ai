@@ -1,7 +1,7 @@
 //! The printer: a condition back to its canonical text, one space around the operators and
 //! only the parentheses the precedence needs.
 
-use super::condition::Condition;
+use super::condition::{Condition, IS_EMPTY};
 
 fn escape(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
@@ -12,6 +12,7 @@ fn format_node(node: &Condition, min_prec: u8) -> String {
         Condition::Text { field, op, value } => {
             format!("{field} {} \"{}\"", op.as_str(), escape(value))
         }
+        Condition::Empty { field } => format!("{field} {IS_EMPTY}"),
         Condition::Number { field, op, value } => format!("{field} {} {value}", op.as_str()),
         Condition::Time { field, op, value } => {
             format!("{field} {} \"{}\"", op.as_str(), escape(value))

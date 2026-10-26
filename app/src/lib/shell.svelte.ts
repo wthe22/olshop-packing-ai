@@ -16,6 +16,7 @@ import * as batch from "./api/batch";
 import { togglePrinted } from "./printed";
 import { texts } from "../texts";
 import { amendOpens } from "./planFlow";
+import type { Theme } from "./theme";
 
 // The screens the shell routes between; the batch flow's screens are not in the nav.
 export type Screen = "day" | "new-batch" | "repeats" | "plan";
@@ -34,6 +35,8 @@ export class Shell {
   exeDir = $state("");
   dataFolder = $state<string | null>(null);
   namespace = $state<string | null>(null);
+  // The theme `packing-settings.toml` names; `+page.svelte` shows it.
+  theme = $state<Theme>("system");
   // The program's shown version, for the title bar's brand text; the OS
   // window title is set from the same one-place text on the Rust side at start.
   version = $state("");
@@ -84,12 +87,23 @@ export class Shell {
       this.dataFolder = info.data_folder;
       this.namespace = info.namespace;
       this.version = info.version;
+      this.theme = info.theme;
       this.needsFolder = info.data_folder === null;
       if (!this.needsFolder) await this.afterFolder();
     } catch (e) {
       this.error = String(e);
     }
     this.ready = true;
+  };
+
+  // The theme menu: shown at once (the window follows `theme`), then stored.
+  chooseTheme = async (theme: Theme) => {
+    this.theme = theme;
+    try {
+      await start.setTheme(theme);
+    } catch (e) {
+      this.error = String(e);
+    }
   };
 
   private afterFolder = async () => {

@@ -57,12 +57,6 @@
 
   .saving .muted {
     margin: 0;
-    color: #4a4a4a;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .saving .muted {
-      color: #b0b0b0;
-    }
+    color: var(--text-muted);
   }
 </style>

@@ -124,9 +124,9 @@
     gap: 0.6rem;
     padding: 0.75rem;
     margin-bottom: 0.75rem;
-    border: 1px solid #d5d5d5;
+    border: 1px solid var(--border);
     border-radius: 6px;
-    background: #ffffff;
+    background: var(--surface);
   }
 
   .add-top {
@@ -162,7 +162,7 @@
 
   .add-condition .label {
     font-size: 0.85rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   .add-form .condition-input {
@@ -176,19 +176,12 @@
     padding: 0;
     border: none;
     background: none;
-    color: #1f6feb;
+    color: var(--link);
     cursor: pointer;
   }
 
   .add-error {
     width: 100%;
     margin: 0;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .add-form {
-      background: #2b2b2b;
-      border-color: #444444;
-    }
   }
 </style>

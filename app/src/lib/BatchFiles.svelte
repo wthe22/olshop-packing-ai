@@ -69,7 +69,7 @@
 
 <style>
   .chip {
-    color: #a35d00;
+    color: var(--warn);
     font-weight: 600;
   }
 
@@ -80,9 +80,9 @@
     gap: 0.75rem;
     padding: 1.5rem;
     margin-bottom: 1rem;
-    border: 2px dashed #b8b8b8;
+    border: 2px dashed var(--border-strong);
     border-radius: 8px;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   .files {
@@ -96,7 +96,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.35rem 0.25rem;
-    border-bottom: 1px solid #ececec;
+    border-bottom: 1px solid var(--border-soft);
   }
 
   .name {
@@ -113,12 +113,12 @@
   .time {
     min-width: 3.5rem;
     text-align: right;
-    color: #6a6a6a;
+    color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
 
   .used {
-    color: #c07a00;
+    color: var(--warn);
     min-width: 8rem;
   }
 
@@ -136,20 +136,5 @@
   .selected {
     flex: 1;
     font-weight: 600;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .drop {
-      color: #b0b0b0;
-      border-color: #555555;
-    }
-
-    .files li {
-      border-color: #3a3a3a;
-    }
-
-    .time {
-      color: #b0b0b0;
-    }
   }
 </style>

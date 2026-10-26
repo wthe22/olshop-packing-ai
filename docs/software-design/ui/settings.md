@@ -3,9 +3,10 @@
 | Setting | Control |
 |---|---|
 | Data folder | The folder of `packing-settings.toml` + [Change…] + [Open] |
-| About | Version v0.2, the PDFium version, and the schema version `1.0` |
+| About | The program's name, version and what it does; then Version (`v0.2`), PDFium and Journal schema (`1.0`) |
 
-There are no other settings: every other choice has one fixed default, shown where it acts
+The theme is the title bar's menu ([window frame](README.md#window-frame)). There are no other settings:
+every other choice has one fixed default, shown where it acts
 ([D-APP-16](../decisions/app-features.md)). There is no log file: the journal of each date is the record of what was
 done ([D-UI-2](../decisions/ui.md)).
 

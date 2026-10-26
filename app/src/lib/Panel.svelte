@@ -4,6 +4,7 @@
   import type { PanelView } from "./api/panel";
   import { months } from "./panel";
   import { formatMonth, formatShortDay, texts } from "../texts";
+  import Icon from "./Icon.svelte";
 
   let {
     panel,
@@ -13,7 +14,6 @@
     onOpenNamespace,
     onNewNamespace,
     onOpenFolder,
-    onHide,
   }: {
     panel: PanelView;
     day: string;
@@ -23,7 +23,6 @@
     // Resolves to why the name is refused, or `null` when the namespace was made.
     onNewNamespace: (name: string) => Promise<string | null>;
     onOpenFolder: (path: string) => void;
-    onHide: () => void;
   } = $props();
 
   const list = $derived(months(panel.dates, day, today));
@@ -49,9 +48,10 @@
 
 <aside>
   <div class="head">
-    <label>
-      {texts.panel.namespace}
+    <label for="panel-namespace">{texts.panel.namespace}</label>
+    <div class="pick">
       <select
+        id="panel-namespace"
         value={panel.open ?? ""}
         onchange={(event) => onOpenNamespace(event.currentTarget.value)}
       >
@@ -59,21 +59,29 @@
           <option value={known}>{known}</option>
         {/each}
       </select>
-    </label>
-    <div class="tools">
-      <button onclick={() => ((naming = true), (refused = ""))}>{texts.panel.newNamespace}</button>
-      <button title={texts.panel.hide} aria-label={texts.panel.hide} onclick={onHide}>«</button>
+      <button
+        class="add"
+        title={texts.panel.newNamespace}
+        aria-label={texts.panel.newNamespace}
+        onclick={() => ((naming = !naming), (refused = ""))}><Icon name="plus" size={16} /></button
+      >
     </div>
     {#if naming}
-      <div class="naming">
-        <input
-          bind:value={name}
-          onkeydown={(event) => event.key === "Enter" && create()}
-          placeholder={texts.namespace.placeholder}
-        />
-        <button disabled={name.trim() === ""} onclick={create}>{texts.panel.create}</button>
-        <button onclick={() => (naming = false)}>{texts.panel.cancel}</button>
-      </div>
+      <form
+        class="naming"
+        onsubmit={(event) => {
+          event.preventDefault();
+          if (name.trim()) create();
+        }}
+      >
+        <input bind:value={name} placeholder={texts.namespace.placeholder} maxlength="40" />
+        <div class="naming-buttons">
+          <button type="button" onclick={() => (naming = false)}>{texts.panel.cancel}</button>
+          <button class="primary" type="submit" disabled={name.trim() === ""}
+            >{texts.panel.create}</button
+          >
+        </div>
+      </form>
       {#if refused}<p class="refused">{refused}</p>{/if}
     {/if}
   </div>
@@ -83,17 +91,18 @@
       {@const open = isOpen(month.key, month.startsOpen)}
       <li>
         <button class="month" onclick={() => (toggled[month.key] = !open)}>
-          {open ? "▾" : "▸"}
+          <span class="chevron" class:open>▸</span>
           {formatMonth(month.key)}
         </button>
         {#if open}
           <ul>
             {#each month.rows as row (row.date)}
               <li class="date" class:open={row.date === day}>
-                <button class="pick" onclick={() => onOpenDate(row.date)}>
+                <button class="pick-date" onclick={() => onOpenDate(row.date)}>
                   <span class="label">
                     {#if row.damaged}⚠{/if}
-                    {formatShortDay(row.date)}{#if row.today}{texts.panel.today}{/if}
+                    {formatShortDay(row.date)}
+                    {#if row.today}<span class="today">{texts.panel.today}</span>{/if}
                   </span>
                   <span class="count">
                     {#if row.damaged}{texts.panel.damaged}{:else}{row.orders ?? ""}{/if}
@@ -112,7 +121,7 @@
                       onclick={() => {
                         menuFor = null;
                         if (row.folder) onOpenFolder(row.folder);
-                      }}>{texts.panel.openFolder}</button
+                      }}><Icon name="folder" size={16} />{texts.panel.openFolder}</button
                     >
                   {/if}
                 {/if}
@@ -129,39 +138,62 @@
   aside {
     width: 16rem;
     flex: none;
-    border-right: 1px solid #d5d5d5;
-    background: #f7f7f7;
+    border-right: 1px solid var(--border);
+    background: var(--surface-2);
     overflow-y: auto;
-    padding: 0.6rem 0.5rem;
+    padding: 0.9rem 0.6rem;
+  }
+
+  .head {
+    padding: 0 0.2rem 0.9rem;
+    border-bottom: 1px solid var(--border);
   }
 
   .head label {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
+    display: block;
+    margin-bottom: 0.3rem;
+    color: var(--text-faint);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
-  .head select {
+  .pick {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .pick select {
     flex: 1;
     min-width: 0;
+    font-weight: 600;
   }
 
-  .tools,
+  button.add {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.45rem;
+  }
+
   .naming {
+    margin-top: 0.5rem;
+  }
+
+  .naming input {
+    width: 100%;
+  }
+
+  .naming-buttons {
     display: flex;
+    justify-content: flex-end;
     gap: 0.35rem;
     margin-top: 0.4rem;
   }
 
-  .tools button:first-child,
-  .naming input {
-    flex: 1;
-    min-width: 0;
-  }
-
   .refused {
     margin: 0.3rem 0 0;
-    color: #b3261e;
+    color: var(--danger);
     font-size: 0.85rem;
   }
 
@@ -172,42 +204,77 @@
   }
 
   .months {
-    margin-top: 0.75rem;
+    margin-top: 0.6rem;
   }
 
   button.month {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
     width: 100%;
-    text-align: left;
+    margin-top: 0.3rem;
+    padding: 0.3rem 0.3rem;
     border: none;
     background: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
     font-weight: 600;
-    padding: 0.3rem 0.2rem;
+    text-align: left;
+  }
+
+  .chevron {
+    display: inline-block;
+    font-size: 0.7rem;
+    transition: transform 0.1s;
+  }
+
+  .chevron.open {
+    transform: rotate(90deg);
   }
 
   .date {
     position: relative;
     display: flex;
     align-items: center;
-    border-left: 3px solid transparent;
+    margin: 1px 0;
+    border-radius: var(--radius);
+  }
+
+  .date:hover {
+    background: var(--surface-hover);
   }
 
   .date.open {
-    border-left-color: #2f6fb5;
-    background: #e3ecf7;
+    background: var(--accent-soft);
+    box-shadow: inset 3px 0 0 var(--accent);
   }
 
-  button.pick {
+  .date.open .label {
+    font-weight: 600;
+  }
+
+  button.pick-date {
     flex: 1;
     display: flex;
     justify-content: space-between;
     border: none;
     background: none;
-    padding: 0.25rem 0.4rem;
+    padding: 0.3rem 0.5rem 0.3rem 0.65rem;
     text-align: left;
   }
 
+  button.pick-date:hover {
+    background: none;
+  }
+
+  .today {
+    margin-left: 0.2rem;
+    color: var(--link);
+    font-size: 0.85rem;
+  }
+
   .count {
-    color: #6a6a6a;
+    color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
 
@@ -215,7 +282,8 @@
     visibility: hidden;
     border: none;
     background: none;
-    padding: 0 0.35rem;
+    padding: 0 0.4rem;
+    color: var(--text-muted);
   }
 
   .date:hover button.menu,
@@ -228,21 +296,9 @@
     right: 0;
     top: 100%;
     z-index: 5;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    aside {
-      background: #262626;
-      border-right-color: #444444;
-    }
-
-    .date.open {
-      background: #34455a;
-      border-left-color: #6f8fb5;
-    }
-
-    .count {
-      color: #b0b0b0;
-    }
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    box-shadow: var(--shadow-lg);
   }
 </style>

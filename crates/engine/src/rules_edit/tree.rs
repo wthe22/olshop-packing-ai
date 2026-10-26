@@ -4,7 +4,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::rules::{
-    Condition, NumberOp, RulesError, TextOp, format_condition, parse_condition, parse_filter,
+    Condition, IS_EMPTY, NumberOp, RulesError, TextOp, format_condition, parse_condition,
+    parse_filter,
 };
 
 use super::error;
@@ -38,19 +39,21 @@ pub struct Row {
     pub not: bool,
     /// The field name as the printer writes it (lowercased), e.g. `name`.
     pub field: String,
-    /// The operator as its canonical text (`contains`, `equals`, `starts_with`, `=`, `!=`,
-    /// `<`, `<=`, `>`, `>=`).
+    /// The operator as its canonical text (`contains`, `equals`, `starts_with`, `is_empty`,
+    /// `=`, `!=`, `<`, `<=`, `>`, `>=`).
     pub operator: String,
     pub value: RowValue,
 }
 
-/// A row's value, tagged by the field type (text, whole number, date/time).
+/// A row's value, tagged by the field type (text, whole number, date/time); `is_empty` takes
+/// none.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum RowValue {
     Text(String),
     Number(i64),
     Time(String),
+    NoValue,
 }
 
 /// The boxes of one condition: a root group ("Every condition starts as one *All of
@@ -109,6 +112,12 @@ fn leaf_row(cond: &Condition) -> Row {
             operator: text_op_str(*op).to_string(),
             value: RowValue::Text(value.clone()),
         },
+        Condition::Empty { field } => Row {
+            not: false,
+            field: field.clone(),
+            operator: IS_EMPTY.to_string(),
+            value: RowValue::NoValue,
+        },
         Condition::Number { field, op, value } => Row {
             not: false,
             field: field.clone(),
@@ -132,9 +141,10 @@ fn leaf_row(cond: &Condition) -> Row {
 /// text can be shown as boxes).
 fn to_node(cond: &Condition) -> Node {
     match cond {
-        Condition::Text { .. } | Condition::Number { .. } | Condition::Time { .. } => {
-            Node::Row(leaf_row(cond))
-        }
+        Condition::Text { .. }
+        | Condition::Empty { .. }
+        | Condition::Number { .. }
+        | Condition::Time { .. } => Node::Row(leaf_row(cond)),
         Condition::And(operands) => Node::Group(Group {
             kind: GroupKind::All,
             not: false,
@@ -146,7 +156,10 @@ fn to_node(cond: &Condition) -> Node {
             children: operands.iter().map(to_node).collect(),
         }),
         Condition::Not(inner) => match inner.as_ref() {
-            Condition::Text { .. } | Condition::Number { .. } | Condition::Time { .. } => {
+            Condition::Text { .. }
+            | Condition::Empty { .. }
+            | Condition::Number { .. }
+            | Condition::Time { .. } => {
                 let mut row = leaf_row(inner);
                 row.not = true;
                 Node::Row(row)
@@ -250,6 +263,13 @@ fn row_condition(row: &Row) -> Result<Condition, RulesError> {
                 value: value.clone(),
             })
         }
+        RowValue::NoValue if row.operator.trim().eq_ignore_ascii_case(IS_EMPTY) => {
+            Ok(Condition::Empty { field })
+        }
+        RowValue::NoValue => Err(error(format!(
+            "the operator \"{}\" of \"{field}\" needs a value",
+            row.operator
+        ))),
         RowValue::Number(value) => {
             let op = number_op(row, &field)?;
             Ok(Condition::Number {

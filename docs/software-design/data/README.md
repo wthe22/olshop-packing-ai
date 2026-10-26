@@ -14,12 +14,13 @@ Where the app keeps what it knows, and which file is the truth. The rules that f
 ```
 Packing.exe
 pdfium.dll
-packing-settings.toml      where the data folder is
+packing-settings.toml      where the data folder is, the theme
 packing-workflows.toml     couriers, courier clues, sort rules
 ```
 
-- `packing-settings.toml`: `schema` and `data_dir`, an absolute path or one relative to the program's
-  folder. Written at the first start ([Start](../ui/start.md)) and by Settings › **Change…**.
+- `packing-settings.toml`: `schema`, `data_dir` (an absolute path or one relative to the program's
+  folder) and `theme`. Written at the first start ([Start](../ui/start.md)), by Settings › **Change…** and
+  by the title bar's theme menu; each keeps the other's value.
 - `packing-workflows.toml`: the owner's rules ([rules file](../rules-file/README.md)). Written from the copy
   bundled in the program when it is missing; from then on it is the owner's.
 
@@ -27,6 +28,7 @@ packing-workflows.toml     couriers, courier clues, sort rules
 Root {
   schema: String // X.Y version, starts at 1.0
   data_dir: Path // absolute, or relative to the program's folder
+  theme: Theme   // system (missing: system) | light | dark ([D-UI-7](../decisions/ui.md))
 }
 ```
 

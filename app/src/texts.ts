@@ -24,28 +24,39 @@ export const texts = {
     settings: "Settings",
     // Closes a screen opened over the current one.
     close: "Close",
-    showPanel: "Show the panel (Ctrl+B)",
+    togglePanel: "Show or hide the panel (Ctrl+B)",
+  },
+
+  // The title bar's theme menu.
+  theme: {
+    title: "Theme",
+    light: "Light",
+    dark: "Dark",
+    system: "System",
   },
 
   // The side panel: the namespace, its dates by month, **+ New namespace**.
   panel: {
     namespace: "Namespace",
-    newNamespace: "+ New namespace",
+    newNamespace: "New namespace",
     create: "Create",
     cancel: "Cancel",
-    hide: "Hide the panel (Ctrl+B)",
-    today: " · today",
+    today: "today",
     damaged: "damaged",
     menu: "More",
     openFolder: "Open folder",
   },
 
   start: {
-    // "Where should the data be kept? `D:\Packing\data` is next to the program."
-    noData: (folder: string) =>
-      `Where should the data be kept? The data folder next to the program is ${folder}\\data.`,
-    useThisFolder: "Use the folder next to the program",
-    chooseFolder: "Choose a folder…",
+    welcome: "Welcome to Packing",
+    ask: "Where should Packing keep its data?",
+    explain:
+      "Each namespace's labels, group PDFs and summary PDFs are kept there, one folder per namespace and date.",
+    // The suggested folder: `data` beside the program, so the program folder can be copied whole.
+    nextToProgram: "Next to the program",
+    folder: (exeDir: string) => `${exeDir}\\data`,
+    useThisFolder: "Use this folder",
+    chooseFolder: "Choose another folder…",
   },
 
   day: {
@@ -274,18 +285,21 @@ export const texts = {
     // "Use `<folder>` for the data from now on? The data in `<old>` stays where it is."
     confirmChange: (folder: string, old: string) =>
       `Use ${folder} for the data from now on? The data in ${old} stays where it is.`,
+    dataFolderHint: "Every namespace and its dates are kept in this folder.",
     about: "About",
-    version: (version: string) => `Version ${version}`,
-    // The PDFium version (D14: version + PDFium version only).
-    pdfium: (version: string) => `PDFium ${version}`,
-    schema: (version: string) => `schema ${version}`,
+    tagline:
+      "Sorts the day's label PDFs into group PDFs to print, with a summary PDF to pick and pack by.",
+    version: "Version",
+    pdfium: "PDFium",
+    schema: "Journal schema",
   },
 
   // The first namespace's name, asked once when the data folder holds none.
   namespace: {
-    ask: "Name the first namespace. Each namespace keeps its own batches and dates apart from the others.",
-    placeholder: "Namespace name",
-    create: "Use this name",
+    title: "Name the first namespace",
+    ask: "Each namespace keeps its own batches and dates apart from the others. One is enough for one shop owner; more can be added in the panel.",
+    placeholder: "Namespace name, e.g. Toko Contoh",
+    create: "Create",
   },
 
   // The Sort rules screen: the rule row, the label groups with their boxes, and the file editor.
@@ -337,6 +351,7 @@ export const texts = {
       "total_quantity = 1",
       "tracking_id starts_with \"JY\"",
       "courier equals \"jnt\"",
+      "courier is_empty",
       "ship_by < \"2026-10-07\"",
       "not name contains \"sepatu\" and (name contains \"spion\" or name contains \"knalpot\")",
     ],
@@ -388,12 +403,17 @@ export const conditionFields: { value: string; label: string; type: FieldType }[
   { value: "ship_by", label: "Ship by", type: "time" },
 ];
 
-// The operators a text field takes.
-export const textOperators: { value: string; label: string }[] = [
-  { value: "contains", label: "contains" },
-  { value: "equals", label: "equals" },
-  { value: "starts_with", label: "starts_with" },
-];
+// The operators a text field takes. `is_empty` reads *is unknown* on the courier and the
+// tracking ID, which are empty when the label did not name them.
+export function textOperators(field: string): { value: string; label: string }[] {
+  const unknown = field === "courier" || field === "tracking_id";
+  return [
+    { value: "contains", label: "contains" },
+    { value: "equals", label: "equals" },
+    { value: "starts_with", label: "starts with" },
+    { value: "is_empty", label: unknown ? "is unknown" : "is empty" },
+  ];
+}
 
 // The operators a number or date/time field takes.
 export const numberOperators: { value: string; label: string }[] = [
@@ -433,13 +453,6 @@ export function formatShortDay(day: string): string {
 
 export function formatMonth(key: string): string {
   return monthFormat.format(new Date(`${key}-01T00:00:00`));
-}
-
-// The title bar's brand text — the program's name and its shown version,
-// e.g. "Packing v0.1". The version is the one-place text the window title and *About* also show
-// (from `StartInfo.version`, made in one function on the Rust side).
-export function brandText(version: string): string {
-  return `${texts.title} ${version}`;
 }
 
 // The stage of a running save, from the `save-progress` event — the stage in plain words with the pages done. The Plan screen

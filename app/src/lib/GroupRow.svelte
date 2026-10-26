@@ -154,11 +154,11 @@
 
 <style>
   .group {
-    border: 1px solid #d5d5d5;
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 0.5rem 0.75rem;
     margin-bottom: 0.75rem;
-    background: #ffffff;
+    background: var(--surface);
   }
 
   .cat-head {
@@ -180,18 +180,18 @@
   }
 
   .count {
-    color: #4a4a4a;
+    color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
 
   .count.mark {
-    color: #8a1f1f;
+    color: var(--danger);
     font-weight: 600;
   }
 
   .rest {
     margin: 0.3rem 0;
-    color: #6a6a6a;
+    color: var(--text-muted);
     font-style: italic;
   }
 
@@ -212,27 +212,14 @@
     align-items: center;
     gap: 0.3rem;
     font-size: 0.9rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   .link {
     padding: 0;
     border: none;
     background: none;
-    color: #1f6feb;
+    color: var(--link);
     cursor: pointer;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .group {
-      background: #2b2b2b;
-      border-color: #444444;
-    }
-
-    .count,
-    .rest,
-    .rest-toggle {
-      color: #b0b0b0;
-    }
   }
 </style>

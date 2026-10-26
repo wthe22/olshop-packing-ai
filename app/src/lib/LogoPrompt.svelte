@@ -55,7 +55,7 @@
   .backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--backdrop);
     z-index: 10;
   }
 
@@ -67,10 +67,10 @@
     min-width: 34rem;
     max-width: 90vw;
     padding: 1rem 1.25rem 1.25rem;
-    background: #ffffff;
-    border: 1px solid #b8b8b8;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-lg);
     z-index: 11;
   }
 
@@ -92,21 +92,21 @@
     max-height: 5rem;
     /* The logo as printed, on the white it was composited onto. */
     background: #ffffff;
-    border: 1px solid #ececec;
+    border: 1px solid var(--border-soft);
     border-radius: 4px;
   }
 
   .hash {
     padding: 0.5rem 0.75rem;
     font-size: 0.9rem;
-    background: #f4f4f4;
+    background: var(--surface-2);
     border-radius: 4px;
   }
 
   .counts {
     margin-left: auto;
     white-space: nowrap;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   .answers {
@@ -118,25 +118,5 @@
 
   .grow {
     flex: 1;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .panel {
-      background: #242424;
-      border-color: #555555;
-    }
-
-    .logo img {
-      background: #ffffff;
-      border-color: #3a3a3a;
-    }
-
-    .hash {
-      background: #333333;
-    }
-
-    .counts {
-      color: #b0b0b0;
-    }
   }
 </style>

@@ -84,6 +84,17 @@ fn time_match(field_value: Option<DateTime>, op: NumberOp, literal: &str) -> boo
     }
 }
 
+/// The text of an order-level field, or of one line's item field; `None` for another field.
+fn order_text<'o>(order: &'o crate::orders::Order, field: &str) -> Option<&'o str> {
+    match field {
+        "courier" => Some(order.courier.as_deref().unwrap_or("")),
+        "order_id" => Some(order.order_id.as_str()),
+        // An order with no tracking ID matches text as the empty string.
+        "tracking_id" => Some(order.tracking_id.as_ref().map_or("", TrackingId::as_str)),
+        _ => None,
+    }
+}
+
 fn item_text(order: &crate::orders::Order, field: &str, op: TextOp, literal: &str) -> bool {
     order.lines.iter().any(|line| {
         let value = match field {
@@ -103,20 +114,14 @@ pub fn evaluate(cond: &Condition, order: &crate::orders::Order) -> bool {
         Condition::Not(operand) => !evaluate(operand, order),
         Condition::And(operands) => operands.iter().all(|o| evaluate(o, order)),
         Condition::Or(operands) => operands.iter().any(|o| evaluate(o, order)),
-        Condition::Text { field, op, value } => match field.as_str() {
-            "courier" => text_match(order.courier.as_deref().unwrap_or(""), *op, value),
-            "order_id" => text_match(order.order_id.as_str(), *op, value),
-            // An order with no tracking ID matches text as the empty string.
-            "tracking_id" => text_match(
-                order.tracking_id.as_ref().map_or("", TrackingId::as_str),
-                *op,
-                value,
-            ),
-            "name" | "display_name" | "variation" | "seller_sku" => {
-                item_text(order, field, *op, value)
-            }
-            // sku_id / product_category / channel are CSV-only and never parsed in the app.
-            _ => false,
+        Condition::Text { field, op, value } => match order_text(order, field) {
+            Some(text) => text_match(text, *op, value),
+            None => item_text(order, field, *op, value),
+        },
+        // No value is the empty text: `equals ""` is the same test.
+        Condition::Empty { field } => match order_text(order, field) {
+            Some(text) => text_match(text, TextOp::Equals, ""),
+            None => item_text(order, field, TextOp::Equals, ""),
         },
         Condition::Number { field, op, value } => match field.as_str() {
             "line_quantity" => order
@@ -144,6 +149,7 @@ pub fn fields_used(cond: &Condition) -> BTreeSet<String> {
 fn collect_fields(cond: &Condition, used: &mut BTreeSet<String>) {
     match cond {
         Condition::Text { field, .. }
+        | Condition::Empty { field }
         | Condition::Number { field, .. }
         | Condition::Time { field, .. } => {
             used.insert(field.clone());
@@ -178,6 +184,29 @@ pub struct FilterLine<'a> {
     pub quantity: i64,
 }
 
+/// Whether a text field passes `test`: an order-level field, or an item field on one line.
+fn filter_text(order: &dyn FilterFields, field: &str, test: impl Fn(&str) -> bool) -> bool {
+    let single = match field {
+        "courier" => Some(order.courier()),
+        "order_id" => Some(order.order_id()),
+        "tracking_id" => Some(order.tracking_id()),
+        _ => None,
+    };
+    if let Some(text) = single {
+        return test(text);
+    }
+    order.lines().iter().any(|line| {
+        let text = match field {
+            "name" => line.name.to_string(),
+            "display_name" => crate::orders::display_name(line.name, line.variation),
+            "variation" => line.variation.to_string(),
+            "seller_sku" => line.seller_sku.to_string(),
+            _ => return false,
+        };
+        test(&text)
+    })
+}
+
 /// Evaluate a filter of `packing-workflows.toml`, a one-off group or a search: an item field is
 /// true when one line matches; a field with no value matches no comparison.
 pub fn evaluate_filter(cond: &Condition, order: &dyn FilterFields) -> bool {
@@ -186,26 +215,9 @@ pub fn evaluate_filter(cond: &Condition, order: &dyn FilterFields) -> bool {
         Condition::And(operands) => operands.iter().all(|o| evaluate_filter(o, order)),
         Condition::Or(operands) => operands.iter().any(|o| evaluate_filter(o, order)),
         Condition::Text { field, op, value } => {
-            let single = match field.as_str() {
-                "courier" => Some(order.courier()),
-                "order_id" => Some(order.order_id()),
-                "tracking_id" => Some(order.tracking_id()),
-                _ => None,
-            };
-            if let Some(text) = single {
-                return text_match(text, *op, value);
-            }
-            order.lines().iter().any(|line| {
-                let text = match field.as_str() {
-                    "name" => line.name.to_string(),
-                    "display_name" => crate::orders::display_name(line.name, line.variation),
-                    "variation" => line.variation.to_string(),
-                    "seller_sku" => line.seller_sku.to_string(),
-                    _ => return false,
-                };
-                text_match(&text, *op, value)
-            })
+            filter_text(order, field, |text| text_match(text, *op, value))
         }
+        Condition::Empty { field } => filter_text(order, field, |text| text.trim().is_empty()),
         Condition::Number { field, op, value } => match field.as_str() {
             "line_quantity" => order
                 .lines()

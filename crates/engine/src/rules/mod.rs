@@ -12,7 +12,7 @@ mod parser;
 mod printer;
 mod tokenizer;
 
-pub use condition::{Category, Condition, NumberOp, TextOp};
+pub use condition::{Category, Condition, IS_EMPTY, NumberOp, TextOp};
 pub use error::RulesError;
 pub use evaluate::{FilterFields, FilterLine, evaluate, evaluate_filter, fields_used};
 pub use file::{

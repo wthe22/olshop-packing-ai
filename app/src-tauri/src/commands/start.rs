@@ -10,7 +10,7 @@ use packing_store::{create_namespace, last_written, namespaces};
 use serde::Serialize;
 use tauri::State;
 
-use crate::settings::{self, DEFAULT_DATA_DIR};
+use crate::settings::{self, DEFAULT_DATA_DIR, Theme};
 use crate::{AppState, Data, today};
 
 /// The program's name as the window title and the title bar show it.
@@ -45,6 +45,7 @@ pub struct StartInfo {
     /// Today's date on the PC (`YYYY-MM-DD`); the Day screen opens there.
     today: String,
     version: String,
+    theme: Theme,
 }
 
 /// Open the data folder `packing-settings.toml` names, as at start: the rules checked, the lock
@@ -67,6 +68,7 @@ pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
         pdfium_ready: state.ensure_worker(),
         today: today().to_string(),
         version: version_text(),
+        theme: settings::theme(program)?,
     })
 }
 
@@ -130,6 +132,29 @@ pub fn choose_data_folder(state: State<'_, AppState>, path: String) -> Result<St
 #[tauri::command]
 pub fn namespace_new(state: State<'_, AppState>, name: String) -> Result<String, String> {
     new_namespace(&state, &name)
+}
+
+/// The OS title bar's theme; `None` follows Windows.
+pub(crate) fn window_theme(theme: Theme) -> Option<tauri::Theme> {
+    match theme {
+        Theme::System => None,
+        Theme::Light => Some(tauri::Theme::Light),
+        Theme::Dark => Some(tauri::Theme::Dark),
+    }
+}
+
+/// The theme menu: the choice is written into `packing-settings.toml` and the OS title bar
+/// follows it.
+#[tauri::command]
+pub fn set_theme(
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+    theme: Theme,
+) -> Result<(), String> {
+    settings::set_theme(state.program(), theme)?;
+    window
+        .set_theme(window_theme(theme))
+        .map_err(|error| error.to_string())
 }
 
 /// Settings › *About*.

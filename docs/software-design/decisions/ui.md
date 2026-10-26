@@ -55,3 +55,13 @@ there is no check of saved files for repeats (Q-UI-8).
 **Why.** The verifier proves that a saved batch holds no order twice.
 
 **Applies to.** [Repeated orders](../ui/duplicates.md).
+
+## D-UI-7 — The theme is the owner's choice
+
+**Decision.** The title bar's theme menu offers **Light**, **Dark** and **System** (Windows' own, the default). The
+choice is `theme` in `packing-settings.toml`; every screen and every control (text boxes, lists, ticks, radio
+buttons) follows it, and so does the OS title bar.
+
+**Why.** The owner asked for it (R-UI-12), and found the controls left light in dark mode (R-UI-11).
+
+**Applies to.** [Window frame](../ui/README.md#window-frame), [data](../data/README.md).

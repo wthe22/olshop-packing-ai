@@ -1,5 +1,5 @@
 {
-  "about": "Condition-language fixtures (docs/software-design/rules-file/conditions.md). Shape: about, orders (id -> order fields), cases. A case with 'error' expects parse_condition to raise RulesError with that exact message; otherwise 'text' must parse, format_condition must equal 'canonical', re-parsing the canonical text must give the same AST (round trip), and for each key of 'values' evaluate(condition, that order[, app_values]) must equal the boolean. Positions in error messages are 1-based line and column within the condition text. 'app_fields' true enables category/batch/group (default false rejects them). An optional 'fields' list is the expected fields_used(condition) (sorted here for readability, compared as a set). Date/time orders carry ship_by/paid_time/rts_time/created_time as 'YYYY-MM-DDTHH:MM:SS' ISO strings or null (a null field makes every date/time comparison false). Fixed error messages: 'line L, col C: expected a condition'; '...: unknown field \\\"X\\\"'; '...: field \\\"X\\\" is allowed in app scan filters only'; '...: expected a text operator (contains, equals, starts_with) after \\\"field\\\"'; '...: expected a number operator (=, !=, <, <=, >, >=) after \\\"field\\\"'; '...: expected a string after \\\"field op\\\"'; '...: expected an integer after \\\"field op\\\"'; '...: expected a date \\\"YYYY-MM-DD\\\", a time \\\"HH:MM\\\" or a date and time \\\"YYYY-MM-DD HH:MM\\\"'; \\\"...: expected ')'\\\"; '...: unexpected text after the condition'; '...: unterminated string'; '...: bad escape sequence \\\"\\\\\\\\x\\\"'. All-order IDs, tracking IDs and names are made up.",
+  "about": "Condition-language fixtures (docs/software-design/rules-file/conditions.md). Shape: about, orders (id -> order fields), cases. A case with 'error' expects parse_condition to raise RulesError with that exact message; otherwise 'text' must parse, format_condition must equal 'canonical', re-parsing the canonical text must give the same AST (round trip), and for each key of 'values' evaluate(condition, that order[, app_values]) must equal the boolean. Positions in error messages are 1-based line and column within the condition text. 'app_fields' true enables category/batch/group (default false rejects them). An optional 'fields' list is the expected fields_used(condition) (sorted here for readability, compared as a set). Date/time orders carry ship_by/paid_time/rts_time/created_time as 'YYYY-MM-DDTHH:MM:SS' ISO strings or null (a null field makes every date/time comparison false). Fixed error messages: 'line L, col C: expected a condition'; '...: unknown field \\\"X\\\"'; '...: field \\\"X\\\" is allowed in app scan filters only'; '...: expected a text operator (contains, equals, starts_with, is_empty) after \\\"field\\\"'; '...: expected a number operator (=, !=, <, <=, >, >=) after \\\"field\\\"'; '...: expected a string after \\\"field op\\\"'; '...: expected an integer after \\\"field op\\\"'; '...: expected a date \\\"YYYY-MM-DD\\\", a time \\\"HH:MM\\\" or a date and time \\\"YYYY-MM-DD HH:MM\\\"'; \\\"...: expected ')'\\\"; '...: unexpected text after the condition'; '...: unterminated string'; '...: bad escape sequence \\\"\\\\\\\\x\\\"'. All-order IDs, tracking IDs and names are made up.",
   "orders": {
     "o1": {
       "order_id": "580000000000000001",
@@ -1022,12 +1022,12 @@
     },
     {
       "text": "name foo \"x\"",
-      "error": "line 1, col 6: expected a text operator (contains, equals, starts_with) after \"name\"",
+      "error": "line 1, col 6: expected a text operator (contains, equals, starts_with, is_empty) after \"name\"",
       "app_fields": false
     },
     {
       "text": "name = \"x\"",
-      "error": "line 1, col 6: expected a text operator (contains, equals, starts_with) after \"name\"",
+      "error": "line 1, col 6: expected a text operator (contains, equals, starts_with, is_empty) after \"name\"",
       "app_fields": false
     },
     {
@@ -1092,7 +1092,7 @@
     },
     {
       "text": "name contains \"x\"\nand name foo \"y\"",
-      "error": "line 2, col 10: expected a text operator (contains, equals, starts_with) after \"name\"",
+      "error": "line 2, col 10: expected a text operator (contains, equals, starts_with, is_empty) after \"name\"",
       "app_fields": false
     },
     {

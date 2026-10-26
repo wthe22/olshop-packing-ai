@@ -225,16 +225,16 @@
   }
 
   .muted {
-    color: #6a6a6a;
+    color: var(--text-muted);
   }
 
   .saved {
     margin: 0 0 0.75rem;
     padding: 0.4rem 0.75rem;
-    border: 1px solid #a6d8a6;
+    border: 1px solid var(--ok-border);
     border-radius: 4px;
-    background: #eaf7ea;
-    color: #1f6f2f;
+    background: var(--ok-bg);
+    color: var(--ok);
   }
 
   /* *Amend*'s read of the batch's own files, shown with a progress bar
@@ -259,27 +259,27 @@
     padding: 0;
     border: none;
     background: none;
-    color: #1f6feb;
+    color: var(--link);
     cursor: pointer;
   }
 
   .warnings {
     margin: 0;
     padding: 0.4rem 0.75rem 0.6rem 2rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
     font-size: 0.9rem;
   }
 
   /* The check before saving's errors, kept apart from the warnings. */
   .link.errors,
   .warnings.errors {
-    color: #8a1f1f;
+    color: var(--danger);
   }
 
   .batch {
-    border: 1px solid #d5d5d5;
+    border: 1px solid var(--border);
     border-radius: 6px;
-    background: #ffffff;
+    background: var(--surface);
     margin-bottom: 0.75rem;
   }
 
@@ -288,7 +288,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid #ececec;
+    border-bottom: 1px solid var(--border-soft);
     font-weight: 600;
   }
 
@@ -312,9 +312,12 @@
     height: var(--control-height);
   }
 
+  /* The batch and group code (`2-SN`) on one line, codes of several letters included. */
   .code {
-    width: 1.5rem;
+    min-width: 3.5rem;
+    white-space: nowrap;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
 
   .name {
@@ -323,7 +326,7 @@
 
   .counts {
     min-width: 11rem;
-    color: #4a4a4a;
+    color: var(--text-muted);
   }
 
   /* The **Printed** tick beside *Open*: a note only. It carries no word — the tick
@@ -344,7 +347,7 @@
     align-items: center;
     gap: 1rem;
     padding: 0.5rem 0.75rem;
-    border-top: 1px solid #ececec;
+    border-top: 1px solid var(--border-soft);
   }
 
   .packing {
@@ -355,34 +358,5 @@
 
   .grow {
     flex: 1;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .batch {
-      background: #2b2b2b;
-      border-color: #444444;
-    }
-
-    .batch-head,
-    .batch-foot {
-      border-color: #3a3a3a;
-    }
-
-    .counts,
-    .muted,
-    .warnings {
-      color: #b0b0b0;
-    }
-
-    .link.errors,
-    .warnings.errors {
-      color: #f0b8b8;
-    }
-
-    .saved {
-      border-color: #4a7a4a;
-      background: #1f3320;
-      color: #a6d8a6;
-    }
   }
 </style>

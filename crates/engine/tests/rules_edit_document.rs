@@ -185,7 +185,7 @@ fn invalid_edits_are_errors() {
     let err = edited.set_condition(0, Some("name foo \"x\"")).unwrap_err();
     assert_eq!(
         err.message,
-        "line 1, col 6: expected a text operator (contains, equals, starts_with) after \"name\""
+        "line 1, col 6: expected a text operator (contains, equals, starts_with, is_empty) after \"name\""
     );
     assert_eq!(
         edited.entries()[0].when.as_deref(),
