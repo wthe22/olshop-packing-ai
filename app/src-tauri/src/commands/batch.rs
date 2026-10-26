@@ -20,10 +20,12 @@ use crate::{AppState, settings, today};
 mod logo;
 mod plan_view;
 mod read;
+mod repeats;
 mod save;
 mod views;
 
-use self::read::{Reading, read_into_draft};
+use self::read::{Reading, read_into_draft, read_result};
+use self::repeats::RepeatChoices;
 use self::views::{
     AmendStart, FileCheckView, PlanEdit, PlanView, ReadProgress, ReadResult, SaveProgressEvent,
     SaveResultView, file_view,
@@ -172,6 +174,29 @@ pub fn condition_to_tree(text: String) -> Result<Tree, String> {
 #[tauri::command]
 pub fn tree_to_condition(tree: Tree) -> Result<String, String> {
     rules_edit::tree_to_condition(&tree).map_err(|error| error.to_string())
+}
+
+/// Repeated orders: keep the copies the choices name; the read as it now is. A choice that cannot
+/// apply changes nothing.
+#[tauri::command]
+pub fn resolve_repeats(
+    state: State<'_, AppState>,
+    choices: RepeatChoices,
+) -> Result<ReadResult, String> {
+    resolve(&state, &choices)
+}
+
+pub(crate) fn resolve(state: &AppState, choices: &RepeatChoices) -> Result<ReadResult, String> {
+    let (_, workflows) = settings::workflows(state.program())?;
+    state.with_draft(|open| {
+        open.draft
+            .choose(choices.choices())
+            .map_err(|error| error.to_string())?;
+        state.with_data(|data| {
+            let day = data.open_day(open.date)?;
+            Ok(read_result(open, day.journal.fold(), &workflows))
+        })
+    })
 }
 
 /// Apply the plan edits and sort again.

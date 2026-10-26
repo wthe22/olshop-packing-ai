@@ -9,17 +9,20 @@
   import { untrack } from "svelte";
   import * as batch from "../lib/api/batch";
   import { listen } from "@tauri-apps/api/event";
-  import { texts, planButtons } from "../texts";
+  import { texts } from "../texts";
+  import { planButtons } from "./planFlow";
   import AddCategoryForm from "./AddCategoryForm.svelte";
   import PlanRow from "./PlanRow.svelte";
   import SaveProgress from "./SaveProgress.svelte";
   import { findingsOf, type Findings } from "./saveCheck";
+  import { leftOutLines } from "./repeats";
 
   let {
     batchNumber,
     read,
     onSaved,
     onBack,
+    onChangeRepeats,
     onCancel,
   }: {
     batchNumber: number;
@@ -29,6 +32,8 @@
     // selection page — with the files still listed and the draft kept (a new *Read labels*
     // replaces it). Never asks and writes nothing.
     onBack: () => void;
+    // *Change…* beside the copies left out: back to Repeated orders.
+    onChangeRepeats: () => void;
     // *Cancel amend* (bottom): leave the batch for the Day screen and discard its draft. Never
     // asks, because an amend writes nothing before *Save batch `<b>` again*.
     onCancel: () => void;
@@ -46,6 +51,8 @@
   // (`untrack`: the screen starts from it once; it is not a value the read keeps in step.)
   let view = $state<batch.PlanView>(untrack(() => read.plan));
   let showWarnings = $state(false);
+  let showLeftOut = $state(false);
+  const leftOut = $derived(read.repeats ? leftOutLines(read.repeats) : []);
   let expanded = $state<string[]>([]);
   let error = $state("");
 
@@ -172,6 +179,22 @@
     <span class="grow"></span>
     <button onclick={back}>{buttons.top}</button>
   </div>
+
+  {#if leftOut.length > 0}
+    <div class="warnings">
+      <button class="link" onclick={() => (showLeftOut = !showLeftOut)}>
+        {texts.plan.leftOut(leftOut.length)}
+      </button>
+      <button onclick={onChangeRepeats}>{texts.plan.changeRepeats}</button>
+      {#if showLeftOut}
+        <ul>
+          {#each leftOut as line}
+            <li>{line}</li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
+  {/if}
 
   <div class="warnings">
     {#if read.warnings.length === 0}

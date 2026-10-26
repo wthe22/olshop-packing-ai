@@ -296,6 +296,7 @@ pub fn run() {
             commands::batch::check_condition,
             commands::batch::condition_to_tree,
             commands::batch::tree_to_condition,
+            commands::batch::resolve_repeats,
             commands::batch::plan,
             commands::batch::save_batch,
             commands::batch::discard_draft,

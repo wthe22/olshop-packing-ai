@@ -5,6 +5,8 @@ use packing_batch::{ChosenFile, SaveProgress, SaveStage};
 use packing_engine::ids::BatchId;
 use serde::{Deserialize, Serialize};
 
+use super::repeats::RepeatsView;
+
 /// One chosen file as the file list shows it.
 #[derive(Serialize)]
 pub struct FileCheckView {
@@ -84,6 +86,8 @@ pub struct ReadResult {
     pub(super) couriers: Vec<String>,
     /// The header images the rules do not know and the owner has not passed over.
     pub(super) logos: Vec<LogoView>,
+    /// The orders that appear more than once; none when every order has one copy.
+    pub(super) repeats: Option<RepeatsView>,
     pub(super) plan: PlanView,
 }
 

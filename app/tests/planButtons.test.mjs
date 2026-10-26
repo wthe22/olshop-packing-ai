@@ -10,7 +10,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { texts, planButtons, amendOpens } from "../src/texts.ts";
+import "./tsModule.mjs";
+import { texts } from "../src/texts.ts";
+const { planButtons, amendOpens } = await import("../src/lib/planFlow.ts");
 
 test("the Plan screen's buttons depend only on whether it is an amend", () => {
   // A new batch: *Back* to its file list, and no bottom discard button.

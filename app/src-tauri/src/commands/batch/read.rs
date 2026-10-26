@@ -22,6 +22,7 @@ use crate::{AppState, OpenDraft};
 
 use super::logo::{logo_views, read_pictures};
 use super::plan_view::{entries_of, plan_view};
+use super::repeats::repeats_view;
 use super::views::ReadResult;
 
 /// What to read: the files in reading order, the sort rule's name, the batch an amend redoes,
@@ -133,6 +134,7 @@ pub(super) fn read_result(open: &OpenDraft, fold: &Fold, workflows: &Workflows) 
         amend: draft.redo,
         couriers: workflows.couriers.iter().map(|c| c.name.clone()).collect(),
         logos: logo_views(open),
+        repeats: repeats_view(draft),
         plan: plan_view(open, fold),
     }
 }

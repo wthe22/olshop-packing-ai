@@ -15,6 +15,7 @@
   import DayScreen from "../lib/DayScreen.svelte";
   import NewBatchScreen from "../lib/NewBatchScreen.svelte";
   import PlanScreen from "../lib/PlanScreen.svelte";
+  import RepeatsScreen from "../lib/RepeatsScreen.svelte";
   import Overlays from "../lib/Overlays.svelte";
 
   // Below the smallest window width the panel hides on its own.
@@ -104,8 +105,17 @@
             amendGrouping={shell.amendGrouping}
             files={shell.files}
             onFiles={(next) => (shell.files = next)}
+            repeats={shell.draftOpen ? (shell.readResult?.repeats ?? null) : null}
             onPlan={shell.onPlan}
+            onReviewRepeats={shell.reviewRepeats}
             onCancel={shell.cancelBatch}
+          />
+        {:else if shell.screen === "repeats" && shell.readResult}
+          <RepeatsScreen
+            read={shell.readResult}
+            onResult={shell.onRepeats}
+            onContinue={shell.continueToPlan}
+            onBack={shell.backToFiles}
           />
         {:else if shell.screen === "plan" && shell.readResult}
           <PlanScreen
@@ -113,6 +123,7 @@
             read={shell.readResult}
             onSaved={shell.onSaved}
             onBack={shell.backToFiles}
+            onChangeRepeats={shell.reviewRepeats}
             onCancel={shell.cancelBatch}
           />
         {/if}

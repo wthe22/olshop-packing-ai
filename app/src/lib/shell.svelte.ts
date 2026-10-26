@@ -14,10 +14,11 @@ import * as dayData from "./api/day";
 import * as panelData from "./api/panel";
 import * as batch from "./api/batch";
 import { togglePrinted } from "./printed";
-import { texts, amendOpens } from "../texts";
+import { texts } from "../texts";
+import { amendOpens } from "./planFlow";
 
 // The screens the shell routes between; the batch flow's screens are not in the nav.
-export type Screen = "day" | "new-batch" | "plan";
+export type Screen = "day" | "new-batch" | "repeats" | "plan";
 export type OverlayId = "search" | "settings";
 
 export class Shell {
@@ -215,10 +216,25 @@ export class Shell {
     this.screen = "new-batch";
   };
 
+  // A read ended (after the logo prompt): Repeated orders first when the batch holds a repeat.
   onPlan = (result: batch.ReadResult) => {
     this.readResult = result;
     this.draftOpen = true;
     this.overlay = null;
+    this.screen = result.repeats ? "repeats" : "plan";
+  };
+
+  // A choice on Repeated orders: the read as it now is.
+  onRepeats = (result: batch.ReadResult) => {
+    this.readResult = result;
+  };
+
+  // *Review the repeats* on the file list and *Change…* on the Plan screen.
+  reviewRepeats = () => {
+    this.screen = "repeats";
+  };
+
+  continueToPlan = () => {
     this.screen = "plan";
   };
 

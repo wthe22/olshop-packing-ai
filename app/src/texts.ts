@@ -4,6 +4,13 @@ function count(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
+// "1", "1 and 3", "1, 2 and 3".
+function listed(numbers: number[]): string {
+  return numbers.length < 2
+    ? numbers.join("")
+    : `${numbers.slice(0, -1).join(", ")} and ${numbers[numbers.length - 1]}`;
+}
+
 export const texts = {
   title: "Packing",
 
@@ -162,6 +169,9 @@ export const texts = {
       alreadySaved: number,
     ) =>
       `Batch ${batch} · sort rule ${grouping} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
+    // After the header when the batch held repeats: "14 copies left out ▸".
+    leftOut: (n: number) => `${count(n, "copy", "copies")} left out ▸`,
+    changeRepeats: "Change…",
     warnings: (n: number) => `Warnings: ${n} ▸`,
     warningsNone: "Warnings: none",
     use: "Use",
@@ -210,6 +220,49 @@ export const texts = {
     // Bottom, beside *Save batch `<b>` again* on an amend only. It leaves the
     // batch as it was and returns to the Day screen, and never asks (it writes nothing).
     cancelAmend: "Cancel amend",
+  },
+
+  // The orders that appear more than once in the batch, and the copy of each that stays.
+  repeats: {
+    title: "Repeated orders in this batch",
+    back: "Back",
+    // "14 orders appear more than once · 14 extra copies · 14 extra pages · 3 of 5 files".
+    summary: (orders: number, extra: number, pages: number, files: number, all: number) =>
+      `${count(orders, "order appears", "orders appear")} more than once · ${count(extra, "extra copy", "extra copies")} · ${count(pages, "extra page", "extra pages")} · ${files} of ${all} files`,
+    // "Group 1 · files 1 and 3 · 10 orders", "Group 2 · file 2 only · 4 orders".
+    group: (n: number, files: number[], orders: number) =>
+      `Group ${n} · ${files.length === 1 ? `file ${files[0]} only` : `files ${listed(files)}`} · ${count(orders, "order", "orders")}`,
+    file: "File",
+    pages: "Pages",
+    copies: "Copies",
+    kept: "Kept",
+    leftOut: "Left out",
+    keepFirst: "Keep the first copies",
+    keepLast: "Keep the last copies",
+    takeOut: (file: number) => `Take file ${file} out`,
+    onlyHere: (file: number, orders: number) =>
+      `File ${file} also holds ${count(orders, "order that is", "orders that are")} in no other file.`,
+    byHand: "Chosen by hand",
+    orders: (n: number) => count(n, "order", "orders"),
+    difference: (what: "tracking_id" | "line_count" | "page_count" | "pages" | null) =>
+      what === null
+        ? "same"
+        : `differs: ${{ tracking_id: "the tracking ID", line_count: "the item lines", page_count: "the page count", pages: "the pages" }[what]}`,
+    copy: (file: number, page: number) => `file ${file} p. ${page}`,
+    // "14 copies are left out; 986 of 1000 pages go on to the plan."
+    foot: (left: number, pages: number, all: number) =>
+      `${count(left, "copy is", "copies are")} left out; ${pages} of ${all} pages go on to the plan.`,
+    continue: "Continue to the plan",
+    // A copy left out, on the Plan screen's list.
+    leftOutLine: (order: string, file: number, page: number, keptFile: number, keptPage: number) =>
+      `${order} · file ${file} p. ${page} · the copy in file ${keptFile} p. ${keptPage} stays`,
+    // The file list's chip and line beside a file that holds a repeat.
+    chip: (group: number) => `G${group}`,
+    alsoIn: (orders: number, others: number[]) =>
+      others.length === 0
+        ? `${count(orders, "order", "orders")} twice in this file`
+        : `${count(orders, "order", "orders")} also in file ${listed(others)}`,
+    review: "Review the repeats",
   },
 
   settings: {
@@ -410,55 +463,6 @@ export function saveStageText(
     case "Saving":
       return texts.plan.saveCommitting;
   }
-}
-
-// The Plan screen's two ways out, from the kind of batch. The top button is
-// *Back* on both — it returns to the PDF selection page the batch came from, with the files still
-// listed, and is not a discard; the bottom discard button beside *Save batch* exists on an amend
-// only and goes to the Day screen. Which
-// screen each button leads to is part of the helper, so a test reads it without a window.
-
-// The screen a Plan-screen button leads to: the PDF selection page (a new
-// batch's file list, or the amend's selection page) or the Day screen.
-export type PlanTarget = "selection" | "day";
-
-// The Plan screen's buttons: their texts and the screen each one leads to. `discard` is `null`
-// when there is no bottom discard button (a new batch).
-export interface PlanButtons {
-  top: string;
-  topTarget: PlanTarget;
-  discard: string | null;
-  discardTarget: PlanTarget | null;
-}
-
-// The Plan screen's top button and bottom discard button, with their targets. `amend` is the
-// batch being redone, or `null` for a new batch: an amend's top *Back* returns
-// to its selection page and its *Cancel amend* to the Day screen; a new batch has neither a
-// *Cancel amend* nor a button that leaves for the Day screen (only its file list's *Cancel*
-// does, and it is not on this screen).
-export function planButtons(amend: number | null): PlanButtons {
-  return {
-    top: texts.plan.back,
-    topTarget: "selection",
-    discard: amend === null ? null : texts.plan.cancelAmend,
-    discardTarget: amend === null ? null : "day",
-  };
-}
-
-// **Amend** on the newest batch reads the batch's own `download/` files
-// again and opens the Plan screen (the picks) at once, titled *Redo batch `<b>`*; the PDF
-// selection page comes only from that Plan screen's *Back*.
-// Pure, so the flow is tested without a
-// window.
-
-// The batch-flow screens, named as the shell's own `Screen` is: *Day*, the
-// PDF selection page (a new batch's file list, or the amend's selection page) or the Plan screen.
-export type FlowScreen = "day" | "new-batch" | "plan";
-
-// The screen **Amend** opens: the Plan screen — the picks first, read from the
-// batch's own `download/` files — never the PDF selection page.
-export function amendOpens(): FlowScreen {
-  return "plan";
 }
 
 // The line above the Search screen's rows: "3 orders in 2 batches".

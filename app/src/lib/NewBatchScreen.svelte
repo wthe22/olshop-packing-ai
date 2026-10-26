@@ -18,6 +18,7 @@
   import { LogoPrompt, needsLogoPrompt } from "../lib/logoPrompt";
   import LogoPromptDialog from "./LogoPrompt.svelte";
   import BatchFiles from "./BatchFiles.svelte";
+  import { fileChips } from "./repeats";
   import GroupingControl from "./GroupingControl.svelte";
   import { texts } from "../texts";
 
@@ -27,7 +28,9 @@
     amendGrouping,
     files,
     onFiles,
+    repeats,
     onPlan,
+    onReviewRepeats,
     onCancel,
   }: {
     batchNumber: number;
@@ -43,9 +46,14 @@
     // with the files still there.
     files: batch.FileCheck[];
     onFiles: (files: batch.FileCheck[]) => void;
+    // The repeats of the read still open: each file that holds one gets its group chip.
+    repeats: batch.RepeatsView | null;
     onPlan: (result: batch.ReadResult) => void;
+    onReviewRepeats: () => void;
     onCancel: () => void;
   } = $props();
+
+  const chips = $derived(repeats ? fileChips(repeats) : new Map());
 
   let busy = $state(false);
   let reading = $state(false);
@@ -272,11 +280,17 @@
       <button onclick={cancel}>{texts.newBatch.cancel}</button>
     </div>
   {:else}
+    {#if repeats}
+      <p class="repeats">
+        <button onclick={onReviewRepeats}>{texts.repeats.review}</button>
+      </p>
+    {/if}
     <BatchFiles
       {listed}
       {totalPages}
       {busy}
       {error}
+      {chips}
       onAdd={pickFiles}
       onRemove={remove}
       onRead={read}

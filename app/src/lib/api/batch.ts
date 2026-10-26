@@ -81,7 +81,64 @@ export interface ReadResult {
   // The header-band images the courier data does not know; empty when every logo is
   // known and no prompt is needed.
   logos: LogoView[];
+  // The orders that appear more than once; `null` when every order has one copy.
+  repeats: RepeatsView | null;
   plan: PlanView;
+}
+
+// Repeated orders: the groups of files that repeat each other, and the copy of each order that
+// stays.
+export interface RepeatsView {
+  orders: number;
+  extra_copies: number;
+  extra_pages: number;
+  // Files that hold a repeat, of all the batch's files.
+  files: number;
+  all_files: number;
+  groups: RepeatGroupView[];
+}
+
+export interface RepeatGroupView {
+  number: number;
+  files: RepeatFileView[];
+  choice: ChoiceView;
+  // An order of the group has its copy chosen by hand.
+  by_hand: boolean;
+  // *Take file f out*, for each file whose repeated orders all have a copy in another file.
+  take_out: { file: number; only_here: number }[];
+  orders: RepeatOrderView[];
+}
+
+// One file of a group, by its number in the batch (from 1).
+export interface RepeatFileView {
+  file: number;
+  name: string;
+  pages: number;
+  copies: number;
+  kept: number;
+  left_out: number;
+}
+
+export interface RepeatOrderView {
+  order_id: string;
+  tracking_id: string | null;
+  // `null`: every page of every copy prints the same.
+  difference: "tracking_id" | "line_count" | "page_count" | "pages" | null;
+  copies: { copy: number; file: number; page_start: number }[];
+  // The copy that stays, by its `copy`.
+  kept: number;
+  by_hand: boolean;
+}
+
+export type ChoiceView =
+  | { kind: "keep_first" }
+  | { kind: "keep_last" }
+  | { kind: "take_out"; file: number };
+
+// The owner's choices: one per group, and the orders chosen by hand.
+export interface RepeatChoices {
+  groups: { group: number; choice: ChoiceView }[];
+  by_hand: { order_id: string; copy: number }[];
 }
 
 // What *Amend* opens with: the batch being redone, its `download/`
@@ -166,6 +223,10 @@ export const checkCondition = (condition: string): Promise<void> =>
 
 export const plan = (edits: PlanEdit[]): Promise<PlanView> =>
   invoke("plan", { edits });
+
+// Apply the Repeated orders choices to the open draft; the read as it now is.
+export const resolveRepeats = (choices: RepeatChoices): Promise<ReadResult> =>
+  invoke("resolve_repeats", { choices });
 
 // *Save batch*: `saveAnyway` is the findings dialog's *Save anyway*, `false`
 // (the default) for a normal save.

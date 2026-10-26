@@ -317,3 +317,23 @@ test("Amend reads the batch's own files and opens the Plan with that batch", asy
   assert.equal(failing.screen, "day", "the screen stays on the day");
   assert.equal(failing.busy, false, "and the busy flag is cleared");
 });
+
+
+test("a batch with a repeat opens Repeated orders before the plan, and comes back to it", () => {
+  useBackend(backend());
+  const shell = new Shell();
+  const repeats = { orders: 1, extra_copies: 1, extra_pages: 1, files: 1, all_files: 1, groups: [] };
+  shell.onPlan(read({ repeats }));
+  assert.equal(shell.screen, "repeats");
+  shell.onRepeats(read({ repeats, orders: 22 }));
+  assert.equal(shell.readResult.orders, 22, "a choice recounts the read");
+  shell.continueToPlan();
+  assert.equal(shell.screen, "plan");
+  shell.reviewRepeats();
+  assert.equal(shell.screen, "repeats", "Change… on the Plan screen");
+  shell.backToFiles();
+  assert.equal(shell.screen, "new-batch");
+  assert.equal(shell.draftOpen, true, "Back keeps the draft");
+  shell.onPlan(read({ repeats: null }));
+  assert.equal(shell.screen, "plan", "no repeat: the plan at once");
+});

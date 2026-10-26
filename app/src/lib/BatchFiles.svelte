@@ -11,6 +11,7 @@
     totalPages,
     busy,
     error,
+    chips,
     onAdd,
     onRemove,
     onRead,
@@ -19,6 +20,8 @@
     totalPages: number;
     busy: boolean;
     error: string;
+    // A file's group chip and line when it holds a repeat, by its number in the list (from 1).
+    chips: Map<number, { chip: string; line: string }>;
     onAdd: () => void;
     onRemove: (path: string) => void;
     onRead: () => void;
@@ -35,14 +38,17 @@
 {/if}
 
 <ul class="files">
-  {#each listed as file (file.path)}
+  {#each listed as file, i (file.path)}
+    {@const chip = chips.get(i + 1)}
     <li>
+      {#if chip}<span class="chip">▌{chip.chip}</span>{/if}
       <span class="name">{file.name}</span>
       <span class="pages">{texts.newBatch.pages(file.pages)}</span>
       <span class="time">{file.time ?? ""}</span>
       {#if file.used_in_batch !== null}
         <span class="used">{texts.newBatch.usedInBatch(file.used_in_batch)}</span>
       {/if}
+      {#if chip}<span class="used">{chip.line}</span>{/if}
       <button class="remove" title={texts.newBatch.removeTitle} onclick={() => onRemove(file.path)}
         >{texts.newBatch.remove}</button
       >
@@ -62,6 +68,11 @@
 </div>
 
 <style>
+  .chip {
+    color: #a35d00;
+    font-weight: 600;
+  }
+
   .drop {
     display: flex;
     align-items: center;

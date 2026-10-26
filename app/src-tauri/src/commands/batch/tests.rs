@@ -1,6 +1,7 @@
 //! The app over `packing-batch` on the repeat fixture: a batch read and saved shows the same Day
 //! screen to a second copy of the app; Printed, amend and revert through the commands; the plan's
-//! edits for this batch; the sort rule preselected and *used in batch n*; the logo prompt's answers.
+//! edits for this batch; the sort rule preselected and *used in batch n*; the logo prompt's answers;
+//! the Repeated orders choices; search, reprint, restore and the panel.
 //!
 //! Skipped with a message when `pdfium.dll` has not been downloaded (tools/get-pdfium.sh).
 
@@ -17,9 +18,10 @@ use testkit::{PdfiumGuard, TempDir, testdata, vendor_dir};
 
 use super::logo::{answer_logo, read_pictures};
 use super::read::{Reading, read_into_draft};
+use super::repeats::RepeatChoices;
 use super::save::save_draft;
 use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
-use super::{amend_start, checked, plan_view, sort_rules_of};
+use super::{amend_start, checked, plan_view, resolve, sort_rules_of};
 use crate::AppState;
 use crate::commands::day::{mark_printed, overview, restore_file, revert};
 use crate::commands::panel::{open_namespace, panel};
@@ -405,5 +407,60 @@ fn the_panel_lists_the_namespaces_and_the_dates_with_their_orders() {
         today["folder"],
         Value::Null,
         "no folder before its first commit"
+    );
+}
+
+#[test]
+fn the_last_copies_are_kept_when_chosen_and_the_batch_saves() {
+    let Some((_program, state, _guard)) = started("app-repeats") else {
+        return skipped();
+    };
+    let first = serde_json::to_value(read(&state)).unwrap();
+    let group = &first["repeats"]["groups"][0];
+    assert_eq!(first["repeats"]["groups"].as_array().unwrap().len(), 1);
+    assert_eq!(group["choice"]["kind"], "keep_first");
+    assert_eq!(
+        group["take_out"],
+        serde_json::json!([{ "file": 2, "only_here": 1 }]),
+        "file 1 holds a repeat with no copy elsewhere; file 2 also holds an order of its own"
+    );
+
+    let choices = |value: Value| -> RepeatChoices { serde_json::from_value(value).unwrap() };
+    let wrong = choices(serde_json::json!({
+        "groups": [],
+        "by_hand": [{ "order_id": "580000000000000103", "copy": 0 }]
+    }));
+    assert!(
+        resolve(&state, &wrong).is_err(),
+        "a copy of another order is refused"
+    );
+    let by_hand = choices(serde_json::json!({
+        "groups": [],
+        "by_hand": [{ "order_id": "580000000000000103", "copy": 3 }]
+    }));
+    let chosen = serde_json::to_value(resolve(&state, &by_hand).unwrap()).unwrap();
+    assert_eq!(chosen["repeats"]["groups"][0]["by_hand"], true);
+
+    let last = choices(serde_json::json!({
+        "groups": [{ "group": 1, "choice": { "kind": "keep_last" } }],
+        "by_hand": []
+    }));
+    let resolved = serde_json::to_value(resolve(&state, &last).unwrap()).unwrap();
+    let files = &resolved["repeats"]["groups"][0]["files"];
+    assert_eq!(
+        (files[0]["kept"].clone(), files[0]["left_out"].clone()),
+        (1.into(), 2.into())
+    );
+    save(&state);
+    let shown = day(&state);
+    let left_out = shown["batches"][0]["left_out"].as_array().unwrap();
+    let spion = left_out
+        .iter()
+        .find(|copy| copy["order_id"] == "580000000000000102")
+        .unwrap();
+    assert_eq!(
+        (spion["page_start"].clone(), spion["kept_page"].clone()),
+        (2.into(), 4.into()),
+        "the first copy left out, the last kept"
     );
 }
