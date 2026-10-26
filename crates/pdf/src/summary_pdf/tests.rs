@@ -41,7 +41,7 @@ fn the_counts_and_the_picks_come_from_the_record() {
         }
     );
     assert_eq!(
-        picks(&record),
+        picks([&record]),
         vec![
             (2, "Sepatu Standar Samping Motor — honda".to_string()),
             (2, "Spion Beat".to_string()),

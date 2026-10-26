@@ -76,9 +76,9 @@ export const texts = {
     printedLabel: (file: string) => `Printed ${file}`,
     openFolder: "Open folder",
     summaryPdf: "Summary PDF",
-    // "88 orders   3 order contents".
+    // "88 orders | 3 contents": a group PDF's orders and their order contents.
     counts: (orders: number, contents: number) =>
-      `${count(orders, "order", "orders")}   ${count(contents, "order content", "order contents")}`,
+      `${count(orders, "order", "orders")} | ${count(contents, "content", "contents")}`,
     // A batch's copies left out (repeats, orders saved earlier), expanding to one line each.
     leftOut: (n: number) => `Left out: ${n} ▸`,
     // "580000000000000042 · labels_3.pdf p. 12–13 · repeat in this batch: the copy in labels_1.pdf p. 4 stays".
@@ -94,9 +94,20 @@ export const texts = {
     restore: "Restore",
     restoreFailed: (file: string, errors: string[]) =>
       `${file} was not restored: the written file did not pass the check. ${errors.join(" ")}`,
-    // "Reprints: reprint 1 x3 (09:40)".
-    reprints: "Reprints:",
-    reprint: (n: number, orders: number, time: string) => `reprint ${n} x${orders} (${time})`,
+    // The Reprints card: "Reprints · 2 files · 5 orders", then one row per reprint,
+    // "R1   made 09:40   3 orders | 3 pages", and its orders under *Orders ▸*.
+    reprints: (files: number, orders: number) =>
+      `Reprints · ${count(files, "file", "files")} · ${count(orders, "order", "orders")}`,
+    reprintCode: (n: number) => `R${n}`,
+    reprintMade: (time: string) => `made ${time}`,
+    reprintCounts: (orders: number, pages: number) =>
+      `${count(orders, "order", "orders")} | ${count(pages, "page", "pages")}`,
+    reprintOrders: "Orders",
+    // An order of a reprint whose batch was reverted since: only the record's facts are left.
+    savedIn: (day: string, batch: number) => `saved ${day} in batch ${batch}`,
+    // *Day summary*: the day summary PDF of the open date, written and opened.
+    daySummary: "Day summary",
+    daySummaryTitle: "Write the summary of the whole day as a PDF and open it",
     amended: " · amended",
     // The data folder also holds files of Packing v0.1.
     oldData: "This folder also holds data of Packing v0.1 (labels\\). It is not read.",
@@ -373,8 +384,28 @@ export const texts = {
     // One row's items, "name × quantity".
     item: (name: string, quantity: number) => `${name} ×${quantity}`,
     noMatch: "No saved order matches.",
+    // The head row; its tick selects every row the filter found.
+    columns: {
+      orderId: "Order ID",
+      trackingId: "Tracking ID",
+      courier: "Courier",
+      items: "Items",
+      saved: "Saved in",
+    },
     selectAll: "Select all results",
     tick: (order: string) => `Reprint ${order}`,
+    // An order printed again before, and its tooltip, one line per reprint.
+    reprinted: (n: number) => (n === 1 ? "Reprinted" : `Reprinted ${n}×`),
+    reprintOn: (n: number, day: string) => `Reprint ${n} on ${day}`,
+    // The reprint bar at the foot of the screen.
+    selected: (n: number, all: number) => `${n} of ${all} selected`,
+    clear: "Clear",
+    reprintedBefore: (n: number) => `${n} of them ${n === 1 ? "was" : "were"} reprinted before`,
+    // Asked before printing again an order that was reprinted before.
+    confirmAgain: (before: number, all: number) =>
+      all === 1
+        ? "This order was reprinted before. Reprint it again?"
+        : `${before} of these ${all} orders ${before === 1 ? "was" : "were"} reprinted before. Reprint all ${all} anyway?`,
     // The ▸ that opens a row's trace line.
     trace: "Where it came from",
     reprint: (n: number) => `Reprint ${count(n, "order", "orders")}`,
@@ -424,36 +455,6 @@ export const numberOperators: { value: string; label: string }[] = [
   { value: ">", label: ">" },
   { value: ">=", label: "≥" },
 ];
-
-// The day switch shows e.g. "Wed 7 Oct 2026". Derived from the date, so it
-// is not a fixed screen text; kept here with the other texts.
-const dayFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-});
-
-export function formatDay(day: string): string {
-  return dayFormat.format(new Date(`${day}T00:00:00`));
-}
-
-// The panel's date rows, "Wed 7 Oct", and its month headings, "October 2026" (from `2026-10`).
-const shortDayFormat = new Intl.DateTimeFormat("en-GB", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-});
-
-const monthFormat = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" });
-
-export function formatShortDay(day: string): string {
-  return shortDayFormat.format(new Date(`${day}T00:00:00`));
-}
-
-export function formatMonth(key: string): string {
-  return monthFormat.format(new Date(`${key}-01T00:00:00`));
-}
 
 // The stage of a running save, from the `save-progress` event — the stage in plain words with the pages done. The Plan screen
 // shows this with a progress bar; before the first event it shows `plan.saving`.

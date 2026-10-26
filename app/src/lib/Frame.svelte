@@ -1,10 +1,12 @@
 <script lang="ts">
   // The window frame: the panel's switch, the program's name, the open workspace and date, the
   // screens that open over the current one, and the theme menu.
-  import { texts, formatDay } from "../texts";
+  import { texts } from "../texts";
+  import { formatDay } from "../dates";
   import type { OverlayId } from "./shell.svelte";
   import type { Theme } from "./theme";
   import Icon, { type IconName } from "./Icon.svelte";
+  import Logo from "./Logo.svelte";
   import ThemeMenu from "./ThemeMenu.svelte";
 
   let {
@@ -43,7 +45,7 @@
     aria-label={texts.nav.togglePanel}
     onclick={onTogglePanel}><Icon name="panel" /></button
   >
-  <span class="brand"><Icon name="box" size={20} />{texts.title}<span class="version">{version}</span></span>
+  <span class="brand"><Logo size={22} />{texts.title}<span class="version">{version}</span></span>
   <span class="where">
     <span class="workspace">{workspace ?? ""}</span>
     <span class="sep">›</span>
@@ -82,10 +84,6 @@
     gap: 0.4rem;
     font-weight: 650;
     color: var(--text);
-  }
-
-  .brand :global(svg) {
-    color: var(--accent);
   }
 
   .version {

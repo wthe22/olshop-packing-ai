@@ -96,6 +96,10 @@ export const setPrinted = (
 export const restoreOutput = (day: string, file: string): Promise<RestoreResult> =>
   invoke("restore_output", { day, file });
 
+// *Day summary*: write the date's summary PDF from its journal; the file's path comes back. A day
+// summary open in a PDF viewer that locks it stops the write with the file named.
+export const writeDaySummary = (day: string): Promise<string> => invoke("day_summary", { day });
+
 // *Revert* the newest batch. A file open in a PDF viewer stops it with the file named.
 export const revertLast = (day: string): Promise<void> =>
   invoke("revert_last", { day });

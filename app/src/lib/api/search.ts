@@ -25,6 +25,15 @@ export interface SearchRow {
   path: string;
   // Its input and pages, and the clue that named its courier.
   trace: string;
+  // The reprints that printed it again, oldest first.
+  reprints: ReprintMark[];
+}
+
+// A reprint that printed an order again.
+export interface ReprintMark {
+  // The date the reprint was made on.
+  day: string;
+  number: number;
 }
 
 export interface SearchResults {
@@ -66,3 +75,22 @@ export interface ReprintResult {
 
 export const reprint = (orders: ReprintChoice[]): Promise<ReprintResult> =>
   invoke("reprint", { orders });
+
+// One order of a reprint: where it was saved, and the order as Search shows it; `found` is `null`
+// once no saved batch holds it (its batch was reverted since).
+export interface ReprintedOrder {
+  order_id: string;
+  day: string;
+  batch: number;
+  found: SearchRow | null;
+}
+
+export interface ReprintedOrders {
+  // The search index is still being built: no orders yet.
+  loading: boolean;
+  orders: ReprintedOrder[];
+}
+
+// The orders of reprint `number` of `day`, for the Day screen's *Orders ▸*.
+export const reprintedOrders = (day: string, number: number): Promise<ReprintedOrders> =>
+  invoke("reprint_orders_of", { day, number });

@@ -98,6 +98,7 @@
             onOpenFolder={shell.openFolder}
             onSetPrinted={shell.setPrinted}
             onNewBatch={shell.startBatch}
+            onDaySummary={shell.daySummary}
             onAmend={shell.amend}
             onRevert={shell.revert}
             onRestore={shell.restore}

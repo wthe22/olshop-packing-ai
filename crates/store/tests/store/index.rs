@@ -1,13 +1,14 @@
 //! The search index: every live order of every date of a workspace, found by a filter on one date
-//! or all, a reverted batch gone, a damaged date left out and named.
+//! or all, a reverted batch gone, a damaged date left out and named, an order's reprints.
 
 use std::fs;
 
 use jiff::civil::date;
-use packing_engine::record::{BatchReverted, RecordBody};
+use packing_engine::ids::{BatchId, OrderId};
+use packing_engine::record::{BatchReverted, RecordBody, ReprintMade, ReprintedOrder};
 use packing_engine::rules::parse_filter;
-use packing_store::{DateFolder, Journal, SearchIndex};
-use testkit::TempDir;
+use packing_store::{DateFolder, Journal, ReprintMark, SearchIndex};
+use testkit::{TempDir, sha};
 
 use crate::common::{APP, WORKSPACE, batch};
 
@@ -105,7 +106,7 @@ fn every_live_order_of_the_workspace_is_found_by_its_fields() {
     eighth
         .commit(
             vec![RecordBody::BatchReverted(BatchReverted {
-                batch: packing_engine::ids::BatchId::new(2),
+                batch: BatchId::new(2),
             })],
             APP,
         )
@@ -139,4 +140,78 @@ fn a_damaged_date_is_left_out_and_named() {
         index.damaged.keys().copied().collect::<Vec<_>>(),
         [date(2026, 10, 7)]
     );
+}
+
+#[test]
+fn an_order_printed_again_carries_each_reprint_and_is_found_by_its_date() {
+    let data = TempDir::new("index-reprints");
+    commit(
+        &data,
+        7,
+        vec![RecordBody::BatchSaved(batch(1, false, Vec::new()))],
+    );
+    let printed = |number: u8, ids: &[&str]| {
+        RecordBody::ReprintMade(ReprintMade {
+            number,
+            file: format!("reprint {number} x{}.pdf", ids.len()),
+            pages: ids.len() as u16,
+            size: 1,
+            sha256: sha('c'),
+            orders: ids
+                .iter()
+                .map(|id| ReprintedOrder {
+                    order_id: OrderId::new(*id),
+                    date: date(2026, 10, 7),
+                    batch: BatchId::new(1),
+                    sha256: sha('a'),
+                    page_start: 1,
+                    page_end: 1,
+                })
+                .collect(),
+        })
+    };
+    commit(&data, 7, vec![printed(1, &["580000000000000001"])]);
+    let mut index = SearchIndex::build(data.path(), WORKSPACE).unwrap();
+    let marks = |index: &SearchIndex, id: &str| {
+        let order = index
+            .find(date(2026, 10, 7), &OrderId::new(id))
+            .expect("saved on the 7th");
+        index.reprints_of(order)
+    };
+    assert_eq!(
+        marks(&index, "580000000000000001"),
+        [ReprintMark {
+            date: date(2026, 10, 7),
+            number: 1
+        }]
+    );
+    assert!(marks(&index, "580000000000000002").is_empty());
+    assert!(
+        index
+            .find(date(2026, 10, 8), &OrderId::new("580000000000000001"))
+            .is_none(),
+        "not saved on the 8th"
+    );
+
+    let eighth = commit(
+        &data,
+        8,
+        vec![printed(1, &["580000000000000001", "580000000000000002"])],
+    );
+    index.refresh(eighth.fold());
+    assert_eq!(
+        marks(&index, "580000000000000001"),
+        [
+            ReprintMark {
+                date: date(2026, 10, 7),
+                number: 1
+            },
+            ReprintMark {
+                date: date(2026, 10, 8),
+                number: 1
+            }
+        ],
+        "a reprint of another date marks the order too"
+    );
+    assert_eq!(marks(&index, "580000000000000002").len(), 1);
 }

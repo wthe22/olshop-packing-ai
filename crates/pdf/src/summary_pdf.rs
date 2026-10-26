@@ -4,7 +4,7 @@
 //! each group's line back as text, so their words are fixed and their numbers have no thousands
 //! separator.
 
-mod content;
+pub(crate) mod content;
 
 use std::path::Path;
 
@@ -21,9 +21,9 @@ use crate::packing_list::{BAR_H, BODY_TOP, Builder, CELL_MARGIN, Cell, Layout, M
 use self::content::{ContentRow, GroupSection, Section};
 
 /// A facts line's height, millimetres.
-const LINE_H: f32 = 5.0;
-const LINE_PT: f32 = 9.5;
-const WIDTH: f32 = 190.0;
+pub(crate) const LINE_H: f32 = 5.0;
+pub(crate) const LINE_PT: f32 = 9.5;
+pub(crate) const WIDTH: f32 = 190.0;
 /// An order content's item line, millimetres.
 const ITEM_H: f32 = 5.2;
 /// Where an order content's count of orders ends, millimetres from the left edge.
@@ -72,7 +72,7 @@ pub fn write_summary(
             draw_group(&mut builder, group, &measure);
         }
     }
-    let picks = content::picks(record);
+    let picks = content::picks([record]);
     if !picks.is_empty() {
         new_page(&mut builder);
         builder.draw_summary_bar(picks.len());
@@ -93,7 +93,7 @@ pub fn write_summary(
     emit(pdfium, path, &pages, font_dir, &measure)
 }
 
-fn new_page(builder: &mut Builder<'_, '_>) {
+pub(crate) fn new_page(builder: &mut Builder<'_, '_>) {
     builder.pages.push(Vec::new());
     builder.y = BODY_TOP;
 }

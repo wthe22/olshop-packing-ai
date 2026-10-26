@@ -21,8 +21,14 @@ const program = fs.mkdtempSync(path.join(os.tmpdir(), "packing-pictures-"));
 for (const file of ["Packing.exe", "pdfium.dll"]) {
   fs.copyFileSync(path.join(ROOT, "target", "portable", "Packing", file), path.join(program, file));
 }
+// A WebView2 profile of its own: a copy of the program the owner has open would otherwise share its
+// browser process, which ignores the DevTools port.
 const app = spawn(path.join(program, "Packing.exe"), [], {
-  env: { ...process.env, WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${PORT}` },
+  env: {
+    ...process.env,
+    WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${PORT}`,
+    WEBVIEW2_USER_DATA_FOLDER: path.join(program, "webview"),
+  },
   stdio: "ignore",
 });
 
@@ -81,7 +87,12 @@ async function until(expression) {
 async function click(text, selector = "button") {
   const clicked = await run(`(() => {
     const found = [...document.querySelectorAll(${JSON.stringify(selector)})]
-      .find((item) => item.textContent.trim().startsWith(${JSON.stringify(text)}) && !item.disabled);
+      .find(
+        (item) =>
+          (item.textContent.trim().startsWith(${JSON.stringify(text)}) ||
+            item.getAttribute("aria-label") === ${JSON.stringify(text)}) &&
+          !item.disabled,
+      );
     found?.click();
     return Boolean(found);
   })()`);
@@ -97,16 +108,16 @@ async function picture(name) {
 
 try {
   await send("Runtime.enable");
-  await until(shows("Where should the data be kept?"));
+  await until(shows("Where should Packing keep its data?"));
   await picture("01-start.png");
-  await click("Use the folder next to the program");
+  await click("Use this folder");
   await until(shows("Name the first workspace"));
   await run(`(() => {
     const input = document.querySelector("input");
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, "Toko Contoh");
     input.dispatchEvent(new Event("input", { bubbles: true }));
   })()`);
-  await click("Use this name");
+  await click("Create");
   await until(shows("Nothing saved on this day yet."));
 
   await click("+ New batch");
@@ -138,7 +149,13 @@ try {
   await run(`document.querySelectorAll(".search td.tools button")[1].click()`);
   await wait(400);
   await picture("06-search.png");
+  await click("Reprint 1 order");
+  await until(shows("Reprint 1 written"));
   await click("Close");
+  await until(shows("Reprints · 1 file"));
+  await click("Orders");
+  await wait(800);
+  await picture("08-reprints.png");
 
   await click("Sort rules");
   await until(shows("Order matters"));

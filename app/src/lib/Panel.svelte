@@ -3,7 +3,8 @@
   // another date or workspace. What a click does (asking about an open draft first) is the shell's.
   import type { PanelView } from "./api/panel";
   import { months } from "./panel";
-  import { formatMonth, formatShortDay, texts } from "../texts";
+  import { texts } from "../texts";
+  import { formatMonth, formatShortDay } from "../dates";
   import Icon from "./Icon.svelte";
 
   let {

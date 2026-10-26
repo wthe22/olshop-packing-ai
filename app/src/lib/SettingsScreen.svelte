@@ -4,6 +4,7 @@
   import { texts } from "../texts";
   import type { About } from "./api/start";
   import Icon from "./Icon.svelte";
+  import Logo from "./Logo.svelte";
 
   let {
     about,
@@ -33,7 +34,7 @@
   <section class="card about">
     <h3>{texts.settings.about}</h3>
     <div class="brand">
-      <span class="mark"><Icon name="box" size={28} /></span>
+      <Logo size={48} />
       <div>
         <div class="name">
           {texts.title}
@@ -104,14 +105,6 @@
     align-items: center;
     gap: 0.9rem;
     margin: 0.75rem 0 1rem;
-  }
-
-  .mark {
-    display: inline-flex;
-    padding: 0.55rem;
-    border-radius: 12px;
-    background: var(--accent-soft);
-    color: var(--accent);
   }
 
   .name {

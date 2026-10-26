@@ -1,14 +1,16 @@
 //! Search and Reprint (search.md, reprint.md): saved orders of the open workspace found by a
-//! filter on the search index, each with its trace line, and one PDF of the chosen orders' pages
-//! written into today's date.
+//! filter on the search index, each with its trace line and the reprints that printed it again;
+//! one PDF of the chosen orders' pages written into today's date; and a reprint's orders as Search
+//! shows them.
 
 use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
 
 use jiff::civil::Date;
 use packing_batch::{ReprintOutcome, ReprintRequest, reprint as write_reprint};
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::rules::parse_filter;
-use packing_store::IndexedOrder;
+use packing_store::{IndexedOrder, SearchIndex};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, State};
 
@@ -46,6 +48,15 @@ pub struct OrderRow {
     /// The group PDF, for *Open*.
     path: String,
     trace: String,
+    /// The reprints that printed it again, oldest first.
+    reprints: Vec<ReprintMarkView>,
+}
+
+#[derive(Serialize)]
+pub struct ReprintMarkView {
+    /// The date the reprint was made on.
+    day: String,
+    number: u8,
 }
 
 #[derive(Serialize)]
@@ -65,24 +76,12 @@ pub(crate) fn search(
         Scope::Day => Some(date_of(day)?),
         Scope::All => None,
     };
-    let (data_dir, workspace) = state.with_data(|data| {
-        let workspace = data
-            .workspace
-            .clone()
-            .ok_or_else(|| "No workspace is open yet.".to_string())?;
-        Ok((data.dir.clone(), workspace))
-    })?;
-    let output = |date: Date| {
-        data_dir
-            .join(&workspace)
-            .join(date.to_string())
-            .join("output")
-    };
+    let output = Outputs::open(state)?;
     let rows = state.index().with(|index| {
         index
             .search(&filter, date)
             .into_iter()
-            .map(|order| row(order, &output(order.date)))
+            .map(|order| row(index, order, &output.of(order.date)))
             .collect::<Vec<_>>()
     })?;
     let Some(rows) = rows else {
@@ -105,7 +104,35 @@ pub(crate) fn search(
     })
 }
 
-fn row(order: &IndexedOrder, output: &std::path::Path) -> OrderRow {
+/// Where the open workspace keeps each date's outputs.
+struct Outputs {
+    data_dir: PathBuf,
+    workspace: String,
+}
+
+impl Outputs {
+    fn open(state: &AppState) -> Result<Self, String> {
+        state.with_data(|data| {
+            let workspace = data
+                .workspace
+                .clone()
+                .ok_or_else(|| "No workspace is open yet.".to_string())?;
+            Ok(Outputs {
+                data_dir: data.dir.clone(),
+                workspace,
+            })
+        })
+    }
+
+    fn of(&self, date: Date) -> PathBuf {
+        self.data_dir
+            .join(&self.workspace)
+            .join(date.to_string())
+            .join("output")
+    }
+}
+
+fn row(index: &SearchIndex, order: &IndexedOrder, output: &Path) -> OrderRow {
     let saved = &order.order;
     OrderRow {
         day: order.date.to_string(),
@@ -124,6 +151,14 @@ fn row(order: &IndexedOrder, output: &std::path::Path) -> OrderRow {
         group: format!("{}-{}", order.batch, saved.group),
         path: output.join(&order.file).display().to_string(),
         trace: trace_line(order),
+        reprints: index
+            .reprints_of(order)
+            .into_iter()
+            .map(|mark| ReprintMarkView {
+                day: mark.date.to_string(),
+                number: mark.number,
+            })
+            .collect(),
     }
 }
 
@@ -212,6 +247,7 @@ pub(crate) fn reprint_orders(
                 )
             })?
             .map_err(|error| error.to_string())?;
+        state.index().refresh(day.journal.fold());
         Ok(match outcome {
             ReprintOutcome::Made(made) => ReprintView {
                 made: Some(MadeView {
@@ -250,4 +286,75 @@ pub async fn reprint(app: AppHandle, orders: Vec<ReprintChoice>) -> Result<Repri
     })
     .await
     .map_err(|error| format!("the reprint task stopped: {error}"))?
+}
+
+/// One order of a reprint: where it was saved, and the order as Search shows it.
+#[derive(Serialize)]
+pub struct ReprintedView {
+    order_id: String,
+    /// The date it was saved on.
+    day: String,
+    batch: BatchId,
+    /// None once no live batch holds it (its batch was reverted since).
+    found: Option<OrderRow>,
+}
+
+#[derive(Serialize)]
+pub struct ReprintedOrdersView {
+    /// The search index is still being built: no orders yet.
+    loading: bool,
+    /// In printing order.
+    orders: Vec<ReprintedView>,
+}
+
+pub(crate) fn reprinted_orders(
+    state: &AppState,
+    day: &str,
+    number: u8,
+) -> Result<ReprintedOrdersView, String> {
+    let date = date_of(day)?;
+    let output = Outputs::open(state)?;
+    let printed = state.with_data(|data| {
+        let open = data.open_day(date)?;
+        open.journal
+            .fold()
+            .reprints
+            .iter()
+            .find(|reprint| reprint.made.number == number)
+            .map(|reprint| reprint.made.orders.clone())
+            .ok_or_else(|| format!("{day} has no reprint {number}."))
+    })?;
+    let orders = state.index().with(|index| {
+        printed
+            .iter()
+            .map(|order| ReprintedView {
+                order_id: order.order_id.to_string(),
+                day: order.date.to_string(),
+                batch: order.batch,
+                found: index
+                    .find(order.date, &order.order_id)
+                    .map(|found| row(index, found, &output.of(found.date))),
+            })
+            .collect()
+    })?;
+    Ok(match orders {
+        Some(orders) => ReprintedOrdersView {
+            loading: false,
+            orders,
+        },
+        None => ReprintedOrdersView {
+            loading: true,
+            orders: Vec::new(),
+        },
+    })
+}
+
+/// The orders of reprint `number` of `day`, for the Day screen's *Orders ▸*.
+#[tauri::command]
+pub fn reprint_orders_of(
+    state: State<'_, AppState>,
+    day: String,
+    number: u8,
+) -> Result<ReprintedOrdersView, String> {
+    reprinted_orders(&state, &day, number)
 }

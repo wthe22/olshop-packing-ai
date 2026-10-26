@@ -1,9 +1,10 @@
 <script lang="ts">
   // The Day screen: what has been saved on the date. Batches come from the date's journal, each
-  // with its warnings and each group PDF with its **Printed** tick (a note); *New batch* starts
-  // the batch flow.
+  // with its warnings and each group PDF with its **Printed** tick (a note), then the date's
+  // reprints; *New batch* starts the batch flow and *Day summary* writes the date's summary PDF.
   import { texts } from "../texts";
   import type { BatchView, DayOverview, FileProblem, GroupPdfView, LeftOutView } from "./api/day";
+  import ReprintsCard from "./ReprintsCard.svelte";
 
   let {
     overview,
@@ -13,6 +14,7 @@
     onOpenFolder,
     onSetPrinted,
     onNewBatch,
+    onDaySummary,
     onAmend,
     onRevert,
     onRestore,
@@ -28,6 +30,7 @@
     // printed; it is written to the date's journal the moment it is clicked.
     onSetPrinted: (batch: BatchView, pdf: GroupPdfView, printed: boolean) => void;
     onNewBatch: () => void;
+    onDaySummary: () => void;
     onAmend: (batch: BatchView) => void;
     onRevert: (batch: BatchView) => void;
     // **Restore** an output the open-time check found missing or changed.
@@ -74,6 +77,11 @@
         )}
       {/if}
     </span>
+    <button
+      title={texts.day.daySummaryTitle}
+      disabled={!overview || overview.batches.length === 0}
+      onclick={onDaySummary}>{texts.day.daySummary}</button
+    >
     <button class="primary" onclick={onNewBatch}>{texts.day.newBatch}</button>
   </div>
 
@@ -188,15 +196,9 @@
   {/if}
 
   {#if overview && overview.reprints.length > 0}
-    <div class="reprints">
-      <span>{texts.day.reprints}</span>
-      {#each overview.reprints as reprint (reprint.number)}
-        <span class="reprint">
-          {texts.day.reprint(reprint.number, reprint.orders, reprint.time)}
-          <button onclick={() => onOpen(reprint.path)}>{texts.day.open}</button>
-        </span>
-      {/each}
-    </div>
+    {#key overview.day}
+      <ReprintsCard day={overview.day} reprints={overview.reprints} {onOpen} />
+    {/key}
   {/if}
 </main>
 
@@ -205,17 +207,10 @@
     padding: 1rem;
   }
 
-  .reprints {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-  }
-
   .bar {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
     margin-bottom: 0.75rem;
   }
 
@@ -325,8 +320,9 @@
   }
 
   .counts {
-    min-width: 11rem;
+    min-width: 9.5rem;
     color: var(--text-muted);
+    white-space: nowrap;
   }
 
   /* The **Printed** tick beside *Open*: a note only. It carries no word — the tick

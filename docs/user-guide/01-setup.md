@@ -24,15 +24,15 @@ moves the program and all its data along.
 
 ![The first start](images/01-start.png)
 
-The first time, the app asks **Where should the data be kept?**
+The first time, the app asks **Where should Packing keep its data?**
 
-- **Use the folder next to the program** keeps the data in `packing-data` beside the program. Choose this for a
-  normal setup.
+- **Use this folder** keeps the data in `packing-data` beside the program (*Next to the program*).
+  Choose this for a normal setup.
 - **Choose a folder…** picks another folder, e.g. when the program folder cannot be written.
 
 Then it asks to **name the first workspace**. A workspace keeps its batches and dates apart from every
 other workspace — for example one per shop owner. Type a name (e.g. *Toko Contoh*) and press
-**Use this name**; the Day screen of today opens. More workspaces are added in the panel.
+**Create**; the Day screen of today opens. More workspaces are added in the panel.
 
 ## A new version of the program
 

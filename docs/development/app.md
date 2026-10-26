@@ -45,6 +45,7 @@ sample numbers are in [testing.md](testing.md).
 | Build the program folder | `bash tools/make-portable.sh` → `target/portable/Packing/` |
 | The same from Explorer or `cmd` | `tools\make-portable.bat` (double-click; `--no-pause` for scripts) |
 | The user guide's pictures | `node tools/guide-pictures.mjs` after the build: a fresh copy of the program driven through a batch of the `testdata/` labels, each screen captured into `docs/user-guide/images/` |
+| The app icon | `app/src-tauri/icons/icon.svg` is the one source; after a change, `cd app && npx tauri icon src-tauri/icons/icon.svg`, then delete the `android/`, `ios/` and `64x64.png` it also writes. The window shows the same SVG (`Logo.svelte`) |
 
 The folder holds `Packing.exe` + `pdfium.dll` and no installer. Copy `target/portable/Packing/` to
 the PC and start `Packing.exe` from a shortcut; to update, close the app and replace `Packing.exe`

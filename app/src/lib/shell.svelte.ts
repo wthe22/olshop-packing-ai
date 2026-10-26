@@ -430,6 +430,17 @@ export class Shell {
     }
   };
 
+  // *Day summary*: the open date's summary PDF, written from its journal, then opened.
+  daySummary = async () => {
+    this.busy = true;
+    try {
+      await start.openPath(await dayData.writeDaySummary(this.day));
+    } catch (e) {
+      this.error = String(e);
+    }
+    this.busy = false;
+  };
+
   // The **Printed** tick of one group PDF: write it and update the batch's rows in place, without
   // reloading the whole overview. The tick rule is the pure [`togglePrinted`]; a failed write
   // shows the usual error.

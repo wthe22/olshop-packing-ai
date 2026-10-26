@@ -13,7 +13,6 @@
     plus: "M12 5v14M5 12h14",
     close: "M6 6l12 12M18 6 6 18",
     check: "M5 12.5l4.5 4.5L19 7",
-    box: "M3 7.5 12 3l9 4.5v9L12 21l-9-4.5zM3 7.5l9 4.5 9-4.5M12 12v9",
     folder: "M3 6h6l2 2h10v11H3z",
   } as const;
 

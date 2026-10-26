@@ -15,6 +15,7 @@ use pdfium_render::prelude::{Pdfium, PdfiumError};
 pub const PDFIUM_VERSION: &str = "chromium/7881";
 
 pub mod batch;
+pub mod day_summary;
 pub mod logo;
 pub mod packing_list;
 pub mod read;

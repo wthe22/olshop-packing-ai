@@ -7,7 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import "./tsModule.mjs";
-import { formatMonth, formatShortDay } from "../src/texts.ts";
+import { formatMonth, formatShortDay } from "../src/dates.ts";
 const { months } = await import("../src/lib/panel.ts");
 
 const row = (date) => ({ date, today: false, orders: 1, damaged: false, folder: null });

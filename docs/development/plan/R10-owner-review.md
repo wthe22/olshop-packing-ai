@@ -37,8 +37,8 @@ suppression, coverage not lower*. Test with the owner's rules: copy
 | R10.4 (done) | The summary PDF: facts pages, then the groups with their order contents, then the pick pages | V6 still passes; the page order pinned by a test |
 | R10.5 (done) | *Namespace* → *workspace* everywhere; the journal's stored field keeps its name `namespace` (no migration) | `git grep -i namespace` finds only that field, this file, the plan's status and `docs/archive/` |
 | R10.6 (done) | The default data folder `packing-data` (R-APP-4); a settings file that names another folder keeps it | The first-start test writes `data_dir = "packing-data"` |
-| R10.7 | The Day card's counts *N orders \| N contents* (R-UI-16); Search's select-all tick in the head row of the tick column (R-UI-17) | The texts table; the screens |
-| R10.8 | Reprints (R-UI-18): Search marks an order reprinted before and asks before printing it again; a click on a row ticks it; Enter in a box searches; the reprint bar stays in view; the Day screen's *Reprints* card lists each reprint with its orders | The index's reprint marks pinned by a test; the Search store's tests |
-| R10.9 | The day summary (R-LABEL-3): **Day summary** on the Day screen writes `day summary.pdf` in the date's folder from the journal and opens it | Its content tables; a written file's page count |
-| R10.10 | The app icon (R-UI-19): one SVG source, every size made by `npx tauri icon` | The program shows it in Explorer and the taskbar |
+| R10.7 (done) | The Day card's counts *N orders \| N contents* (R-UI-16); Search's select-all tick in the head row of the tick column (R-UI-17) | The texts table; the screens |
+| R10.8 (done) | Reprints (R-UI-18): Search marks an order reprinted before and asks before printing it again; a click on a row ticks it; Enter in a box searches; the reprint bar stays in view; the Day screen's *Reprints* card lists each reprint with its orders | The index's reprint marks pinned by a test; the Search store's tests |
+| R10.9 (done) | The day summary (R-LABEL-3): **Day summary** on the Day screen writes `day summary.pdf` in the date's folder from the journal and opens it | Its content tables; a written file's page count |
+| R10.10 (done) | The app icon (R-UI-19): one SVG source, every size made by `npx tauri icon` | The program shows it in Explorer and the taskbar |
 | R10.11 | The user guide's pictures again (`node tools/guide-pictures.mjs`), `make-portable.sh`, the handoff | The owner can test |

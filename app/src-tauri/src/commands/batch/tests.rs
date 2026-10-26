@@ -1,5 +1,5 @@
 //! The app over `packing-batch` on the repeat fixture: a batch read and saved shows the same Day
-//! screen to a second copy of the app; Printed, amend and revert through the commands; the plan's
+//! screen to a second copy of the app, and writes its day summary; Printed, amend and revert through the commands; the plan's
 //! edits for this batch; the sort rule preselected and *used in batch n*; the logo prompt's answers;
 //! the Repeated orders choices; search, reprint, restore and the panel.
 //!
@@ -23,12 +23,12 @@ use super::save::save_draft;
 use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
 use super::{amend_start, checked, plan_view, resolve, sort_rules_of};
 use crate::AppState;
-use crate::commands::day::{mark_printed, overview, restore_file, revert};
+use crate::commands::day::{mark_printed, overview, restore_file, revert, write_day_summary};
 use crate::commands::panel::{open_workspace, panel};
 use crate::commands::rules::{
     GroupInput, check, new_rule, renamed, rule_groups, rules_view, save_groups,
 };
-use crate::commands::search::{ReprintChoice, Scope, reprint_orders, search};
+use crate::commands::search::{ReprintChoice, Scope, reprint_orders, reprinted_orders, search};
 use crate::commands::start::{new_workspace, start_information, use_folder};
 
 const DAY: &str = "2026-10-08";
@@ -119,6 +119,15 @@ fn a_saved_batch_shows_the_same_day_after_a_restart() {
             .unwrap()
             .starts_with("labels-repeat-"),
         "the copy kept names its input: {left_out:?}"
+    );
+    let summary = write_day_summary(&state, DAY).unwrap();
+    assert!(
+        summary.ends_with("day summary.pdf") && Path::new(&summary).is_file(),
+        "{summary}"
+    );
+    assert!(
+        write_day_summary(&state, "2026-10-09").is_err(),
+        "a date with nothing saved has no day summary"
     );
 
     drop(state);
@@ -366,6 +375,22 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     let today = crate::today().to_string();
     let shown = serde_json::to_value(overview(&state, &today).unwrap()).unwrap();
     assert_eq!(shown["reprints"][0]["orders"], 2);
+    let again =
+        serde_json::to_value(search(&state, "name contains \"\"", Scope::All, DAY).unwrap())
+            .unwrap();
+    assert_eq!(
+        again["rows"][0]["reprints"][0]["number"], 1,
+        "the order printed again is marked"
+    );
+    assert_eq!(again["rows"][3]["reprints"], Value::Array(Vec::new()));
+    let listed = serde_json::to_value(reprinted_orders(&state, &today, 1).unwrap()).unwrap();
+    assert_eq!(listed["loading"], false);
+    assert_eq!(
+        listed["orders"][0]["order_id"],
+        choices[0].order_id.as_str()
+    );
+    assert_eq!(listed["orders"][1]["found"]["group"], "1-Z");
+    assert!(reprinted_orders(&state, &today, 2).is_err(), "no reprint 2");
 
     let output = program
         .path()

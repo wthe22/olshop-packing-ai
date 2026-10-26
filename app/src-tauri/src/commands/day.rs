@@ -1,5 +1,6 @@
 //! The Day screen (05-after-save.md): the open workspace's date from its fold, and what changes it —
-//! the Printed tick, revert and restore — each one append through `packing-batch`.
+//! the Printed tick, revert and restore — each one append through `packing-batch`; and the day
+//! summary, a view written from the fold.
 
 mod view;
 
@@ -35,6 +36,20 @@ pub(crate) fn mark_printed(state: &AppState, day: &str, mark: PrintedMarked) -> 
         let open = data.open_day(date)?;
         packing_batch::set_printed(&open.folder, &mut open.journal, mark, APP_VERSION)
             .map_err(|error| error.to_string())
+    })
+}
+
+/// Write the date's day summary from its journal and return its path.
+pub(crate) fn write_day_summary(state: &AppState, day: &str) -> Result<String, String> {
+    let date = date_of(day)?;
+    state.with_data(|data| {
+        let open = data.open_day(date)?;
+        let path = state
+            .with_worker(|worker| {
+                packing_batch::day_summary(worker, &open.folder, open.journal.fold())
+            })?
+            .map_err(|error| error.to_string())?;
+        Ok(path.display().to_string())
     })
 }
 
@@ -121,6 +136,17 @@ pub fn set_printed(
 #[tauri::command]
 pub fn revert_last(state: State<'_, AppState>, day: String) -> Result<(), String> {
     revert(&state, &day).map(|_| ())
+}
+
+/// **Day summary**: the date's summary PDF, written on its own thread; its path comes back.
+#[tauri::command]
+pub async fn day_summary(app: AppHandle, day: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<AppState>();
+        write_day_summary(&state, &day)
+    })
+    .await
+    .map_err(|error| format!("the day summary task stopped: {error}"))?
 }
 
 /// **Restore** a group PDF or summary PDF found missing or changed, on its own thread.

@@ -30,20 +30,22 @@ pub(crate) fn counts(record: &BatchSaved) -> Counts {
     }
 }
 
-/// The units to take from stock per item (name and variation) over the batch, as (units, display
-/// name), sorted by display name, then name and variation.
-pub(crate) fn picks(record: &BatchSaved) -> Vec<(i64, String)> {
+/// The units to take from stock per item (name and variation) over the batches, as (units,
+/// display name), sorted by display name, then name and variation.
+pub(crate) fn picks<'r>(records: impl IntoIterator<Item = &'r BatchSaved>) -> Vec<(i64, String)> {
     let mut totals: Vec<((String, String, String), i64)> = Vec::new();
-    for order in &record.orders {
-        for item in &record.contents[order.content as usize].items {
-            let key = (
-                display_name(&item.name, &item.variant),
-                item.name.clone(),
-                item.variant.clone(),
-            );
-            match totals.iter_mut().find(|(known, _)| *known == key) {
-                Some((_, units)) => *units += i64::from(item.quantity),
-                None => totals.push((key, i64::from(item.quantity))),
+    for record in records {
+        for order in &record.orders {
+            for item in &record.contents[order.content as usize].items {
+                let key = (
+                    display_name(&item.name, &item.variant),
+                    item.name.clone(),
+                    item.variant.clone(),
+                );
+                match totals.iter_mut().find(|(known, _)| *known == key) {
+                    Some((_, units)) => *units += i64::from(item.quantity),
+                    None => totals.push((key, i64::from(item.quantity))),
+                }
             }
         }
     }

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b86f7"/>
+      <stop offset="1" stop-color="#1a5fce"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#tile)"/>
+  <!-- The parcel: top, left and right faces of an isometric box. -->
+  <polygon points="256,92 418,173 256,254 94,173" fill="#f8d9a4"/>
+  <polygon points="94,173 256,254 256,436 94,355" fill="#eab36a"/>
+  <polygon points="256,254 418,173 418,355 256,436" fill="#d4964a"/>
+  <!-- The tape across the top and down the right face. -->
+  <polygon points="158,141 192,124 354,205 320,222" fill="#c98a3e" opacity="0.55"/>
+  <polygon points="320,222 354,205 354,387 320,404" fill="#b97a32" opacity="0.6"/>
+  <!-- The shipping label on the left face. -->
+  <polygon points="118,226 232,283 232,395 118,338" fill="#ffffff"/>
+  <g fill="#1c1f24">
+    <polygon points="130,248 136,251 136,295 130,292"/>
+    <polygon points="141,253.5 151,258.5 151,302.5 141,297.5"/>
+    <polygon points="156,261 160,263 160,307 156,305"/>
+    <polygon points="165,265.5 173,269.5 173,313.5 165,309.5"/>
+    <polygon points="178,272 182,274 182,318 178,316"/>
+    <polygon points="187,276.5 197,281.5 197,325.5 187,320.5"/>
+    <polygon points="202,284 206,286 206,330 202,328"/>
+    <polygon points="211,288.5 220,293 220,337 211,332.5"/>
+  </g>
+  <g fill="#9aa3ae">
+    <polygon points="130,306 200,341 200,349 130,314"/>
+    <polygon points="130,322 180,347 180,355 130,330"/>
+  </g>
+  <!-- Edge light on the box's top ridge. -->
+  <polyline points="94,173 256,254 418,173" fill="none" stroke="#fff3dc" stroke-width="5" stroke-linejoin="round" opacity="0.7"/>
+</svg>

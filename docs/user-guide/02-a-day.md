@@ -27,8 +27,15 @@ The **Day** screen shows what has been saved on the open date and is the way to 
 
 - The top line counts the date: "This day: 2 batches · 729 orders · 5 group PDFs".
 - **+ New batch** starts a new batch.
+- **Day summary** writes one PDF of the whole date and opens it: the orders per courier (the count to
+  hand over at each pickup), each batch with its group PDFs and whether each is ticked as printed, the
+  reprints, then the pick list of the whole day. It is written again each time you press it, so press
+  it after the last batch of the day. A day summary still open in a PDF viewer may have to be closed
+  first.
 - Each batch is a card: "Batch 2 · saved 09:12 · 2 files · 129 orders", one line per group PDF
-  (`2-A`, its name, orders, order contents) with **Open**, and a line for the batch's summary PDF.
+  (`2-A`, its name, "88 orders | 3 contents") with **Open**, and a line for the batch's summary PDF.
+- **Reprints**, under the batches, lists each reprint made on the date: `R1`, when it was made, its
+  orders and pages, **Open**, and **Orders ▸** for the orders in it.
 - The tick beside **Open** notes that you have printed that group PDF. It is only a note — nothing is
   blocked — and it is saved the moment you click it. A batch you amend starts with its ticks cleared.
 - **Open folder** opens the date's `output` folder in Explorer.
@@ -135,11 +142,18 @@ the date is left out of every later batch of that date, so reading a file again 
 **Search** opens over the screen; **Close** returns. Searching changes nothing.
 
 - Build the filter with the same boxes as the sort rules, e.g. *Tracking ID starts with JY00000012*.
+  The first box has the cursor when Search opens, and **Enter** searches: scan a parcel's barcode and
+  its order is found at once.
 - **This day** (the open date, the default) or **All days** of the workspace, then **Search**:
   "3 orders in 2 batches" and one row per order — Order ID, tracking ID, courier, items, date and group,
   **Open** for its group PDF, and **▸** for where it came from (the label file and pages, and the clue
   that named its courier).
-- Tick the orders to print again (or **Select all results**) and press **Reprint 2 orders**: one PDF of
-  their label pages, in their original printing order, checked like a save, written into today:
-  "Reprint 1 written: 2 orders, 2 pages." with **Open**. The orders stay in their batches; today's Day
-  screen lists it under **Reprints**.
+- An order printed again before carries **Reprinted**; point at it to see which reprint and when.
+- Tick the orders to print again: click a row, or its tick; the tick above the ticks selects every row
+  or none. A search that finds one order ticks it.
+- The bar at the foot says how many are selected and has **Reprint 2 orders**: one PDF of their label
+  pages, in their original printing order, checked like a save, written into today: "Reprint 1 written:
+  2 orders, 2 pages." with **Open**. When one of them was reprinted before, the app asks first. The
+  orders stay in their batches; today's Day screen lists it under **Reprints**.
+
+![The Reprints card with a reprint's orders open](images/08-reprints.png)

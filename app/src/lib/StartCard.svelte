@@ -2,7 +2,7 @@
   // The card the first start asks its questions on: the program's name and version over the
   // question, centred in the window.
   import type { Snippet } from "svelte";
-  import Icon from "./Icon.svelte";
+  import Logo from "./Logo.svelte";
   import { texts } from "../texts";
 
   let { title, version, children }: { title: string; version: string; children: Snippet } =
@@ -12,7 +12,7 @@
 <main>
   <section class="card">
     <div class="brand">
-      <span class="mark"><Icon name="box" size={22} /></span>
+      <Logo size={34} />
       <span>{texts.title}</span>
       {#if version}<span class="version">{version}</span>{/if}
     </div>
@@ -45,14 +45,6 @@
     gap: 0.5rem;
     color: var(--text-muted);
     font-weight: 600;
-  }
-
-  .mark {
-    display: inline-flex;
-    padding: 0.35rem;
-    border-radius: 8px;
-    background: var(--accent-soft);
-    color: var(--accent);
   }
 
   .version {
