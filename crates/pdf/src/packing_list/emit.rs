@@ -85,7 +85,7 @@ pub(super) fn grouped(n: i64) -> String {
     if n < 0 { format!("-{out}") } else { out }
 }
 
-pub(super) fn header_ops(
+pub(crate) fn header_ops(
     title: &str,
     subtitle: &str,
     page_no: usize,
@@ -146,7 +146,7 @@ pub(super) fn build_pages(
 }
 
 /// Draw the laid-out pages into a new A4 PDF and save it.
-pub(super) fn emit(
+pub(crate) fn emit(
     pdfium: &Pdfium,
     path: &Path,
     pages: &[Vec<Op>],

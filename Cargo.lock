@@ -2794,7 +2794,6 @@ name = "packing-cli"
 version = "0.1.0"
 dependencies = [
  "jiff",
- "lopdf",
  "packing-engine",
  "packing-pdf",
  "packing-store",
@@ -2831,6 +2830,7 @@ name = "packing-pdf"
 version = "0.1.0"
 dependencies = [
  "image",
+ "jiff",
  "packing-engine",
  "pdfium-render",
  "serde",
@@ -4406,6 +4406,7 @@ dependencies = [
 name = "testkit"
 version = "0.1.0"
 dependencies = [
+ "jiff",
  "packing-engine",
 ]
 

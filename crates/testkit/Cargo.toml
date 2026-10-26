@@ -6,4 +6,5 @@ version.workspace = true
 publish = false
 
 [dependencies]
+jiff.workspace = true
 packing-engine.workspace = true

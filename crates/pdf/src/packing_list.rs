@@ -6,9 +6,9 @@
 //! and a left-aligned cell indents its text by the 1 mm cell margin. Wrapping width is the
 //! column width minus twice that margin.
 
-mod emit;
-mod fonts;
-mod measure;
+pub(crate) mod emit;
+pub(crate) mod fonts;
+pub(crate) mod measure;
 mod model;
 
 pub use emit::write;
@@ -26,15 +26,15 @@ const NO_ITEM_DATA: &str =
     "no item data: the packing list needs labels with packing slip or the orders CSV";
 
 // Layout constants, millimetres.
-const PAGE_H: f32 = 297.0;
-const MARGIN: f32 = 10.0;
-const BOTTOM: f32 = PAGE_H - MARGIN; // 287
-const CELL_MARGIN: f32 = 1.0;
+pub(crate) const PAGE_H: f32 = 297.0;
+pub(crate) const MARGIN: f32 = 10.0;
+pub(crate) const BOTTOM: f32 = PAGE_H - MARGIN; // 287
+pub(crate) const CELL_MARGIN: f32 = 1.0;
 /// The page header's height: title 7 + counts line 5 + the 1 mm gap.
 const HEADER_H: f32 = 13.0;
 /// Where the body starts on every page — below the header, never at the top margin, or the first
 /// row of the body is printed over the title and the counts line.
-const BODY_TOP: f32 = MARGIN + HEADER_H; // 23
+pub(crate) const BODY_TOP: f32 = MARGIN + HEADER_H; // 23
 const LH: f32 = 5.2; // item line height
 const TH: f32 = 4.6; // tracking-ID row height
 const NCOL: usize = 6; // tracking-ID columns
@@ -43,11 +43,11 @@ const X_ITEMS: f32 = 22.0; // item text left edge
 const COL_X: [f32; 2] = [10.0, 106.0]; // pick-summary column left edges
 const COL_W: f32 = 80.0; // pick-summary name wrap width
 const ROW_H: f32 = 5.0; // pick-summary row height
-const BAR_H: f32 = 6.5; // heading bar height
+pub(crate) const BAR_H: f32 = 6.5; // heading bar height
 
 /// One drawing operation, in millimetres from the page's top-left.
 #[derive(Clone, Debug)]
-enum Op {
+pub(crate) enum Op {
     Text {
         x: f32,
         /// Baseline distance from the page top.
@@ -72,24 +72,24 @@ enum Op {
 
 /// One piece of text the list draws: where it sits (millimetres from the page's top-left, `y` is
 /// the cell's top), the cell's height and the font.
-struct Cell<'t> {
-    x: f32,
-    y: f32,
-    h: f32,
-    size_pt: f32,
-    font: Font,
-    text: &'t str,
+pub(crate) struct Cell<'t> {
+    pub(crate) x: f32,
+    pub(crate) y: f32,
+    pub(crate) h: f32,
+    pub(crate) size_pt: f32,
+    pub(crate) font: Font,
+    pub(crate) text: &'t str,
 }
 
-struct Builder<'m, 'a> {
-    pages: Vec<Vec<Op>>,
-    y: f32,
+pub(crate) struct Builder<'m, 'a> {
+    pub(crate) pages: Vec<Vec<Op>>,
+    pub(crate) y: f32,
     layout: Layout,
     measure: &'m Measure<'a>,
 }
 
 impl<'m, 'a> Builder<'m, 'a> {
-    fn new(layout: Layout, measure: &'m Measure<'a>) -> Builder<'m, 'a> {
+    pub(crate) fn new(layout: Layout, measure: &'m Measure<'a>) -> Builder<'m, 'a> {
         Builder {
             pages: vec![Vec::new()],
             y: BODY_TOP,
@@ -108,7 +108,7 @@ impl<'m, 'a> Builder<'m, 'a> {
     }
 
     /// Left-aligned cell text, indented by the cell margin.
-    fn cell(&mut self, cell: Cell<'_>) {
+    pub(crate) fn cell(&mut self, cell: Cell<'_>) {
         let baseline = Self::baseline(cell.y, cell.h, cell.size_pt);
         self.ops().push(Op::Text {
             x: cell.x + CELL_MARGIN,
@@ -120,7 +120,7 @@ impl<'m, 'a> Builder<'m, 'a> {
     }
 
     /// Right-aligned text inside a cell of width `w`.
-    fn cell_right(&mut self, cell: Cell<'_>, w: f32) {
+    pub(crate) fn cell_right(&mut self, cell: Cell<'_>, w: f32) {
         let width = self.measure.width_mm(cell.text, cell.font, cell.size_pt);
         let baseline = Self::baseline(cell.y, cell.h, cell.size_pt);
         self.ops().push(Op::Text {
@@ -132,7 +132,7 @@ impl<'m, 'a> Builder<'m, 'a> {
         });
     }
 
-    fn fill(&mut self, x: f32, y: f32, w: f32, h: f32) {
+    pub(crate) fn fill(&mut self, x: f32, y: f32, w: f32, h: f32) {
         self.ops().push(Op::Fill { x, y, w, h });
     }
 
@@ -147,7 +147,7 @@ impl<'m, 'a> Builder<'m, 'a> {
 
     /// Start a new page if `height` does not fit; repeat `continued` on the new page.
     /// Returns whether a page break happened.
-    fn need(&mut self, height: f32, continued: Option<&str>) -> bool {
+    pub(crate) fn need(&mut self, height: f32, continued: Option<&str>) -> bool {
         if self.y + height > BOTTOM {
             self.pages.push(Vec::new());
             self.y = BODY_TOP;
@@ -294,7 +294,7 @@ impl<'m, 'a> Builder<'m, 'a> {
     }
 
     /// The pick summary's heading bar.
-    fn draw_summary_bar(&mut self, rows: usize) {
+    pub(crate) fn draw_summary_bar(&mut self, rows: usize) {
         self.need(BAR_H + rows.min(4) as f32 * (ROW_H + 1.0) + 2.0, None);
         self.y += 1.0;
         let top = self.y;
@@ -311,7 +311,7 @@ impl<'m, 'a> Builder<'m, 'a> {
     }
 
     /// The summary's rows, breaking to a new page when the next chunk does not fit.
-    fn draw_summary_rows(&mut self, entries: &[(i64, String)]) {
+    pub(crate) fn draw_summary_rows(&mut self, entries: &[(i64, String)]) {
         let mut top = self.y;
         let mut index = 0;
         while index < entries.len() {

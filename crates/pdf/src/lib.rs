@@ -18,6 +18,7 @@ pub mod batch;
 pub mod logo;
 pub mod packing_list;
 pub mod read;
+pub mod summary_pdf;
 pub mod verify;
 pub mod worker;
 pub mod write;

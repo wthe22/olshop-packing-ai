@@ -1,0 +1,28 @@
+# R6: the app saves through the journal
+
+Started 2026-10-26, after the owner's go-ahead (the v0.1 program checked: it works as before).
+[code-rules.md](../code-rules.md) is binding for every step and every subagent; each step's report states
+*size gate passed, no new lint suppression, coverage not lower*.
+
+**Proves it:** save → reopen → the same Day screen; every save passes `packing-verify`.
+
+Read first: [04 Save](../../software-design/workflow/04-save.md), [05 After the save](../../software-design/workflow/05-after-save.md),
+[journal](../../software-design/data/journal.md), [records](../../software-design/data/records.md),
+[summary PDF](../../software-design/labels/summary-pdf.md), [verification](../../software-design/app/verification.md),
+[program](../../software-design/app/program.md), [namespaces](../../software-design/app/namespaces.md).
+
+## Steps
+
+| Step | What | Done when |
+|---|---|---|
+| R6.1 (done) | `packing-pdf`: the summary PDF writer — pick pages and facts page from the batch's record | V6 passes on a summary PDFium wrote; `verify_outputs.rs` uses it instead of its lopdf stand-in |
+| R6.2 | New crate `packing-batch`: the batch steps over engine, pdf, store and verify — save (steps 11–15), revert (17), Printed (16), the amend's read from `input/` (18) | Known-answer test through read → plan → save → verify → reopen; a finding stops the save and *Save anyway* records it; revert and amend keep the numbers |
+| R6.3 | The app on v0.2: `packing-settings.toml` and `packing-workflows.toml` beside the program, the owner (namespace) and date, `read_labels` through copies → repeats → plan, Save/Revert/Amend/Printed through `packing-batch`, the Day screen from the fold; the CLI's `prepare`/`revert`/`amend` on `packing-batch` | Save → reopen → same Day screen, in the app's tests and in the portable build |
+| R6.4 | v0.1 code removed: engine `day`, `verify`, `plan`, `groupings`, `names`; `packing-pdf` `batch`, `verify` and the v0.1 packing-list layouts (their fonts and measuring move under the summary writer) | Nothing uses them; all checks green |
+
+## Notes for the steps
+
+- The summary's counts are printed without thousands separators: V6 reads `<n> orders` with `\d+`.
+- Until R6.4 the summary writer borrows the page drawing of `packing_list` (fonts, measuring, emit).
+- The Sort rules screen and Search keep their v0.1 files until R8 and R7; R6.3 says on screen what they
+  do not see yet, and the plan's status says it for the owner.

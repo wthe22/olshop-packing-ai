@@ -1,5 +1,6 @@
 //! V6: the summary PDF's printed counts, read back as text, equal the record's — the orders, units
-//! and groups of its header, the ledger of its facts page, and each group PDF's orders.
+//! and groups of its header, the ledger of its facts page, and each group PDF's orders, in group
+//! order.
 
 use std::path::Path;
 use std::sync::OnceLock;
@@ -15,6 +16,15 @@ fn counts_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
     R.get_or_init(|| {
         Regex::new(r"(\d+) orders\D+(\d+) units\D+(\d+) groups").expect("built-in counts regex")
+    })
+}
+
+/// A group's line by its fixed tail: the file name before it is not read, because lopdf reads no
+/// text of a character the summary draws with its CID font (an `é` in a name).
+fn group_re() -> &'static Regex {
+    static R: OnceLock<Regex> = OnceLock::new();
+    R.get_or_init(|| {
+        Regex::new(r"(\d+) orders\D+\d+ pages\D+\d+ order contents").expect("built-in group regex")
     })
 }
 
@@ -99,17 +109,26 @@ pub(crate) fn check_summary(batch: &Batch, output_dir: &Path, findings: &mut Fin
     );
     compare("ledger", ledger_re(), [read, written, left]);
 
-    for output in batch.outputs.iter().filter(|o| o.group.is_some()) {
+    let printed: Vec<Option<usize>> = group_re()
+        .captures_iter(&text)
+        .map(|caps| caps[1].parse().ok())
+        .collect();
+    let groups: Vec<_> = batch.outputs.iter().filter(|o| o.group.is_some()).collect();
+    if printed.len() != groups.len() {
+        findings.error(format!(
+            "{} prints {} group lines, the record has {} group PDFs",
+            summary.file,
+            printed.len(),
+            groups.len()
+        ));
+    }
+    for (at, output) in groups.iter().enumerate() {
         let want = batch
             .orders
             .iter()
             .filter(|order| Some(&order.group) == output.group.as_ref())
             .count();
-        let line = Regex::new(&format!(r"{}\D*(\d+) orders", regex::escape(&output.file)))
-            .expect("an escaped file name");
-        let printed = line
-            .captures(&text)
-            .and_then(|caps| caps[1].parse::<usize>().ok());
+        let printed = printed.get(at).copied().flatten();
         if printed != Some(want) {
             findings.error(format!(
                 "{} prints {printed:?} orders for {}, the record says {want}",

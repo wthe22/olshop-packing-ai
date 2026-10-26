@@ -16,17 +16,14 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   repeats and the copies left out, the plan with order contents, the `batch_saved` record — and the 2.32
   fix; `crates/verify` checks a batch's outputs by page digest with `lopdf` alone (every page of the
   samples that PDFium copies keeps its digest). **Nothing calls the v0.2 crates yet: the program the
-  owner runs is still v0.1** until R6 moves the app onto them. **Next: R6.** A task gets its own file in
-  this folder when it starts; until then its row in the order of work is the task.
-- **The owner's turn (2026-10-26), before R6.** R6 is the first task that changes the program the owner
-  runs: the app saves through the journal into `{data_dir}/{owner}/{date}/` and no longer shows the v0.1
-  data (`labels\`, `state.json`), which stays on disk unread ([D-APP-17](../../software-design/decisions/app-features.md)).
-  Before it starts the owner (1) tests `target/portable/Packing/`, still v0.1 — its one change: a
-  Shopee-style label's full product name is read without a space inside a word (`Variasi`, not
-  `V ariasi`), which a `name contains` filter and the full name in Search see; the display name before
-  the first `|` was never affected — and (2) says *go ahead with R6*. Answers in chat, or in [reviews/app.md](../../reviews/app.md) under R-APP-2. A
-  go-ahead starts R6 with its own task file; a finding goes into the review file and, when it changes
-  the design, into `software-design/` before R6 builds it.
+  owner runs is still v0.1** until R6 moves the app onto them. **R6 is under way**: its steps are in
+  [R6-app-journal.md](R6-app-journal.md). A task gets its own file in this folder when it starts; until
+  then its row in the order of work is the task.
+- **The owner checked the v0.1 program** (2026-10-26): it works as before, including the full product name
+  read without a space inside a word; the owner said to go ahead with R6. R6 is the first task that changes
+  the program the owner runs: the app saves through the journal into `{data_dir}/{owner}/{date}/` and no
+  longer shows the v0.1 data (`labels\`, `state.json`), which stays on disk unread
+  ([D-APP-17](../../software-design/decisions/app-features.md)).
 - **Not blocked on the owner otherwise.** The owner may read the design at any time, starting with
   [the workflow](../../software-design/workflow/README.md) (each step against one page) and the points below;
   a finding goes into [reviews/app.md](../../reviews/app.md) under R-APP-2 and changes the design before the

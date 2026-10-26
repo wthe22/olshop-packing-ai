@@ -8,11 +8,11 @@ use pdfium_render::prelude::*;
 use crate::PdfError;
 
 /// The font files, from `C:\Windows\Fonts`.
-pub(super) const FONT_DIR: &str = r"C:\Windows\Fonts";
+pub(crate) const FONT_DIR: &str = r"C:\Windows\Fonts";
 
 /// Which of the three packed fonts a piece of text uses.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum Font {
+pub(crate) enum Font {
     Arial,
     ArialBold,
     Consola,

@@ -35,10 +35,14 @@ The last page says what the batch is, so the paper alone can be traced:
 | Sort rule | Its name and each group's code, name and filter, as used |
 | Versions | `schema 1.0 · Packing v0.2 · PDFium <version>` |
 
+A section with nothing to list says *none*.
+
 The verifier reads three things back as text and compares them with the record (V6 of
 [verification](../app/verification.md)): the header's `<orders> orders · <units> units · <groups> groups`,
-the ledger's `<read> pages read = <written> written + <left> left out`, and each group's line, its file
-name followed by `<orders> orders`. Their words and order are fixed for that reason.
+the ledger's `<read> pages read = <written> written + <left> left out`, and each group's line by its tail
+`<orders> orders · <pages> pages · <contents> order contents`, in group order. Their words and order are
+fixed for that reason, and the numbers have no thousands separator. The file name before a group's tail is
+not read: `lopdf` reads no text of a character drawn with the CID font (an `é` in a name).
 
 ## Fonts
 

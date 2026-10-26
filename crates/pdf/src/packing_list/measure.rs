@@ -16,13 +16,13 @@ pub(super) fn to_pt(mm: f32) -> f32 {
 
 /// Measures text widths using a throwaway document with the same fonts (PDFium text objects
 /// give the exact Arial/Consolas advance widths).
-pub(super) struct Measure<'a> {
+pub(crate) struct Measure<'a> {
     doc: PdfDocument<'a>,
     fonts: FontSet,
 }
 
 impl<'a> Measure<'a> {
-    pub(super) fn new(pdfium: &'a Pdfium, dir: &Path) -> Result<Measure<'a>, PdfError> {
+    pub(crate) fn new(pdfium: &'a Pdfium, dir: &Path) -> Result<Measure<'a>, PdfError> {
         let mut doc = pdfium.create_new_pdf()?;
         let mut fonts = FontSet::load(&mut doc, dir)?;
         // The measuring document is thrown away, never saved, so it can hold both flavours of all
@@ -39,7 +39,7 @@ impl<'a> Measure<'a> {
     }
 
     /// The advance width of `text` at `size_pt`, in millimetres.
-    pub(super) fn width_mm(&self, text: &str, font: Font, size_pt: f32) -> f32 {
+    pub(crate) fn width_mm(&self, text: &str, font: Font, size_pt: f32) -> f32 {
         if text.is_empty() {
             return 0.0;
         }
@@ -145,7 +145,7 @@ impl<'a> Measure<'a> {
     }
 
     /// Greedy word wrap to `width_mm`.
-    pub(super) fn wrap(&self, text: &str, width_mm: f32, font: Font, size_pt: f32) -> Vec<String> {
+    pub(crate) fn wrap(&self, text: &str, width_mm: f32, font: Font, size_pt: f32) -> Vec<String> {
         if text.is_empty() {
             return Vec::new();
         }

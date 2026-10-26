@@ -1,5 +1,5 @@
-//! Fixtures the crates' tests share: made-up orders, product lines and categories, the temp and
-//! `testdata/` folders, and the lock that serialises PDFium, which is not thread-safe.
+//! Fixtures the crates' tests share: made-up orders, product lines, categories and a batch record,
+//! the temp and `testdata/` folders, and the lock that serialises PDFium, which is not thread-safe.
 //!
 //! The builders hold made-up values only, so a test never copies a real ID, name or address from
 //! `samples/`. They are plain functions; a test with a fixture of its own keeps it.
@@ -14,6 +14,10 @@ use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
 use packing_engine::record::{CourierClue, CourierClueKind};
 use packing_engine::rules::{Category, parse_condition};
 use packing_engine::slip::SlipLine;
+
+mod record;
+
+pub use record::{batch, sha, time};
 
 /// The pinned `pdfium.dll` directory, or `None` when it has not been downloaded.
 pub fn vendor_dir() -> Option<PathBuf> {
