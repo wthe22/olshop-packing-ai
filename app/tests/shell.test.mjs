@@ -11,14 +11,14 @@ import { Shell, backend, overview, read } from "./shellKit.mjs";
 import { texts } from "../src/texts.ts";
 
 
-test("starting the shell loads the folder, the owner, the day and the day's overview", async () => {
+test("starting the shell loads the folder, the namespace, the day and the day's overview", async () => {
   const calls = useBackend(
     backend({
       start_info: () => ({
         today: "2026-10-07",
         exe_dir: "C:/Packing",
         data_folder: "C:/Data",
-        owner: "Toko Contoh",
+        namespace: "Toko Contoh",
         version: "0.1",
       }),
       days: () => ["2026-10-07", "2026-10-06"],
@@ -39,8 +39,8 @@ test("starting the shell loads the folder, the owner, the day and the day's over
   assert.equal(shell.needsFolder, false, "the start prompt is gone");
   assert.deepEqual(shell.dayList, ["2026-10-07", "2026-10-06"]);
   assert.equal(shell.overview.totals.batches, 2, "the overview is today's");
-  assert.equal(shell.owner, "Toko Contoh");
-  assert.equal(shell.needsOwner, false);
+  assert.equal(shell.namespace, "Toko Contoh");
+  assert.equal(shell.needsNamespace, false);
   assert.equal(shell.about.pdfium, "140.0");
   assert.equal(shell.error, "");
   assert.equal(shell.overlay, null);
@@ -59,36 +59,36 @@ test("starting the shell loads the folder, the owner, the day and the day's over
   assert.equal(prompt.day, "2026-10-08");
   assert.equal(noFolder.length, 1, "no folder: only `start_info` was asked");
 
-  // A folder without an owner: the first owner's name is asked, then the day opens.
+  // A folder without an namespace: the first namespace's name is asked, then the day opens.
   const named = useBackend(
     backend({
-      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", owner: null, version: "0.2" }),
-      owner_new: (args) => args.name,
+      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", namespace: null, version: "0.2" }),
+      namespace_new: (args) => args.name,
     }),
   );
   const first = new Shell();
   await first.load();
-  assert.equal(first.needsOwner, true, "the owner prompt shows");
+  assert.equal(first.needsNamespace, true, "the namespace prompt shows");
   assert.deepEqual(named.map((call) => call.command), ["start_info"], "and no day is loaded");
-  await first.nameOwner("Toko Contoh");
-  assert.equal(first.needsOwner, false);
-  assert.equal(first.owner, "Toko Contoh");
-  assert.deepEqual(named[1], { command: "owner_new", args: { name: "Toko Contoh" } });
+  await first.nameNamespace("Toko Contoh");
+  assert.equal(first.needsNamespace, false);
+  assert.equal(first.namespace, "Toko Contoh");
+  assert.deepEqual(named[1], { command: "namespace_new", args: { name: "Toko Contoh" } });
   assert.equal(first.overview.totals.batches, 2, "the day opens");
 
   // A name the folder cannot take keeps the prompt and says why.
   useBackend(
     backend({
-      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", owner: null, version: "0.2" }),
-      owner_new: () => {
+      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", namespace: null, version: "0.2" }),
+      namespace_new: () => {
         throw "the name is taken";
       },
     }),
   );
   const refused = new Shell();
   await refused.load();
-  await refused.nameOwner("Toko Contoh");
-  assert.equal(refused.needsOwner, true);
+  await refused.nameNamespace("Toko Contoh");
+  assert.equal(refused.needsNamespace, true);
   assert.equal(refused.error, "the name is taken");
 });
 

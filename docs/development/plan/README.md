@@ -17,13 +17,13 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   fix; `crates/verify` checks a batch's outputs by page digest with `lopdf` alone (every page of the
   samples that PDFium copies keeps its digest). **R6 is under way** ([R6-app-journal.md](R6-app-journal.md)):
   R6.1 to R6.3 are done, R6.4 is next. **The program the owner runs is v0.2.0**: it saves through
-  `crates/batch` and the journal into `{data_dir}/{owner}/{date}/` and writes the summary PDF; *Categories*
+  `crates/batch` and the journal into `{data_dir}/{namespace}/{date}/` and writes the summary PDF; *Categories*
   and *Search* are gone until R8 and R7 bring them back on v0.2, so until then the sort rules are edited
   in `packing-workflows.toml` by hand, and every repeat keeps its first copy. A task gets its own file in
   this folder when it starts; until then its row in the order of work is the task.
 - **The owner checked the v0.1 program** (2026-10-26): it works as before, including the full product name
   read without a space inside a word; the owner said to go ahead with R6. R6 is the first task that changes
-  the program the owner runs: the app saves through the journal into `{data_dir}/{owner}/{date}/` and no
+  the program the owner runs: the app saves through the journal into `{data_dir}/{namespace}/{date}/` and no
   longer shows the v0.1 data (`labels\`, `state.json`), which stays on disk unread
   ([D-APP-17](../../software-design/decisions/app-features.md)).
 - **Not blocked on the owner otherwise.** The owner may read the design at any time, starting with

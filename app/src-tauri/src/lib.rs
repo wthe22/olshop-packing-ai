@@ -25,11 +25,11 @@ mod settings;
 /// The app version the journal's records carry.
 pub(crate) const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// The data folder in use, locked; the owner open in it and that owner's open date.
+/// The data folder in use, locked; the namespace open in it and that namespace's open date.
 pub(crate) struct Data {
     pub dir: PathBuf,
     _lock: DataLock,
-    pub owner: Option<String>,
+    pub namespace: Option<String>,
     pub day: Option<OpenDay>,
 }
 
@@ -39,23 +39,23 @@ impl Data {
         Ok(Self {
             dir,
             _lock: lock,
-            owner: None,
+            namespace: None,
             day: None,
         })
     }
 
-    /// The owner's `date`, opened (folded and checked) unless it is the one open.
+    /// The namespace's `date`, opened (folded and checked) unless it is the one open.
     pub(crate) fn open_day(&mut self, date: Date) -> Result<&mut OpenDay, String> {
-        let owner = self
-            .owner
+        let namespace = self
+            .namespace
             .clone()
-            .ok_or_else(|| "No owner is open yet.".to_string())?;
+            .ok_or_else(|| "No namespace is open yet.".to_string())?;
         let open = self
             .day
             .as_ref()
-            .is_some_and(|day| day.folder.namespace() == owner && day.folder.date() == date);
+            .is_some_and(|day| day.folder.namespace() == namespace && day.folder.date() == date);
         if !open {
-            let folder = DateFolder::new(&self.dir, &owner, date);
+            let folder = DateFolder::new(&self.dir, &namespace, date);
             let opened = open_date(&folder).map_err(|error| error.to_string())?;
             self.day = Some(OpenDay {
                 folder,
@@ -68,7 +68,7 @@ impl Data {
     }
 }
 
-/// A date of the open owner, folded, and what its open-time checks found.
+/// A date of the open namespace, folded, and what its open-time checks found.
 pub(crate) struct OpenDay {
     pub folder: DateFolder,
     pub journal: Journal,
@@ -266,7 +266,7 @@ pub fn run() {
             commands::start::start_info,
             commands::start::use_program_folder,
             commands::start::choose_data_folder,
-            commands::start::owner_new,
+            commands::start::namespace_new,
             commands::start::about,
             commands::start::open_path,
             commands::start::show_in_folder,

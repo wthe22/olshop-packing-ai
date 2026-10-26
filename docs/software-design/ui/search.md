@@ -1,6 +1,6 @@
 # Search
 
-Finds saved orders of the open owner and prints their labels again. **Search** in the title bar opens it over
+Finds saved orders of the open namespace and prints their labels again. **Search** in the title bar opens it over
 the current screen; **Close** returns to it. Searching changes nothing; **Reprint** writes one file
 ([reprint](../app/reprint.md)).
 
@@ -23,7 +23,7 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 - **The filter** is made with the boxes of [Sort rules](sort-rules.md); the fields are those of the filter
   language ([fields](../rules-file/conditions.md#fields)). Matching ignores case; an item field matches when one
   line matches.
-- **Scope**: *This day* (the open date, the default) or *All days* of the open owner
+- **Scope**: *This day* (the open date, the default) or *All days* of the open namespace
   ([D-UI-3](../decisions/ui.md)). Results come from the search index ([reprint](../app/reprint.md#the-search-index));
   until it is built the screen says *Loading…*.
 - **Results**: the number of orders and batches, then one row per order: Order ID · tracking ID · courier ·

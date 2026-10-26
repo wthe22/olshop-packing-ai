@@ -1,4 +1,4 @@
-// The app shell's state and commands: it finds the data folder and the owner, keeps the current
+// The app shell's state and commands: it finds the data folder and the namespace, keeps the current
 // day and screen, routes the Tauri commands, and decides which overlay opens over the current
 // screen (an open draft is kept). The markup is `+page.svelte` and the overlay dialogs are
 // `Overlays.svelte`; nothing is decided there.
@@ -23,8 +23,8 @@ export type NavId = "day" | "settings";
 export class Shell {
   ready = $state(false);
   needsFolder = $state(true);
-  // The data folder holds no owner yet: the first owner's name is asked.
-  needsOwner = $state(false);
+  // The data folder holds no namespace yet: the first namespace's name is asked.
+  needsNamespace = $state(false);
   busy = $state(false);
   error = $state("");
 
@@ -32,7 +32,7 @@ export class Shell {
   day = $state("");
   exeDir = $state("");
   dataFolder = $state<string | null>(null);
-  owner = $state<string | null>(null);
+  namespace = $state<string | null>(null);
   // The program's shown version, for the title bar's brand text; the OS
   // window title is set from the same one-place text on the Rust side at start.
   version = $state("");
@@ -68,7 +68,7 @@ export class Shell {
     this.amendBatch !== null && this.readResult !== null ? this.readResult.plan.grouping : null,
   );
 
-  // Start the shell: the data folder, the owner, the day and About.
+  // Start the shell: the data folder, the namespace, the day and About.
   load = async () => {
     try {
       const info = await start.startInfo();
@@ -76,7 +76,7 @@ export class Shell {
       this.day = info.today;
       this.exeDir = info.exe_dir;
       this.dataFolder = info.data_folder;
-      this.owner = info.owner;
+      this.namespace = info.namespace;
       this.version = info.version;
       this.needsFolder = info.data_folder === null;
       if (!this.needsFolder) await this.afterFolder();
@@ -87,8 +87,8 @@ export class Shell {
   };
 
   private afterFolder = async () => {
-    this.needsOwner = this.owner === null;
-    if (this.needsOwner) return;
+    this.needsNamespace = this.namespace === null;
+    if (this.needsNamespace) return;
     try {
       this.dayList = await dayData.days();
     } catch {
@@ -110,16 +110,16 @@ export class Shell {
     }
   };
 
-  // The data folder's owner, after a folder is chosen: the one the start opened, if any.
-  private ownerOfFolder = async () => {
-    this.owner = (await start.startInfo()).owner ?? null;
+  // The data folder's namespace, after a folder is chosen: the one the start opened, if any.
+  private namespaceOfFolder = async () => {
+    this.namespace = (await start.startInfo()).namespace ?? null;
   };
 
   useProgramFolder = async () => {
     this.busy = true;
     try {
       this.dataFolder = await start.useProgramFolder();
-      await this.ownerOfFolder();
+      await this.namespaceOfFolder();
       this.needsFolder = false;
       await this.afterFolder();
     } catch (e) {
@@ -134,7 +134,7 @@ export class Shell {
     this.busy = true;
     try {
       this.dataFolder = await start.chooseDataFolder(picked);
-      await this.ownerOfFolder();
+      await this.namespaceOfFolder();
       this.needsFolder = false;
       await this.afterFolder();
     } catch (e) {
@@ -143,11 +143,11 @@ export class Shell {
     this.busy = false;
   };
 
-  // The first owner's name: the owner's folder is made and today's date opens.
-  nameOwner = async (name: string) => {
+  // The first namespace's name: its folder is made and today's date opens.
+  nameNamespace = async (name: string) => {
     this.busy = true;
     try {
-      this.owner = await start.ownerNew(name);
+      this.namespace = await start.namespaceNew(name);
       this.error = "";
       await this.afterFolder();
     } catch (e) {
@@ -162,7 +162,7 @@ export class Shell {
     if (!(await confirm(texts.settings.confirmChange(picked, this.dataFolder ?? "")))) return;
     try {
       this.dataFolder = await start.chooseDataFolder(picked);
-      await this.ownerOfFolder();
+      await this.namespaceOfFolder();
       await this.afterFolder();
     } catch (e) {
       this.error = String(e);

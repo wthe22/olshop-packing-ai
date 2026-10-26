@@ -104,7 +104,7 @@ fn the_pick_pages_come_before_the_facts_page() {
         &pdfium,
         &path,
         &SummaryFacts {
-            owner: "Toko Contoh",
+            namespace: "Toko Contoh",
             date: date(2026, 10, 7),
             record: &record,
             printed: "09:12",

@@ -1,4 +1,4 @@
-//! The Day screen (05-after-save.md): the open owner's date from its fold, and what changes it —
+//! The Day screen (05-after-save.md): the open namespace's date from its fold, and what changes it —
 //! the Printed tick and revert — each one append through `packing-batch`.
 
 mod view;
@@ -18,7 +18,7 @@ pub(crate) fn date_of(day: &str) -> Result<Date, String> {
         .map_err(|_| format!("{day} is not a date (YYYY-MM-DD)."))
 }
 
-/// Open `day` of the owner (folded and checked unless it is open) and describe it.
+/// Open `day` of the namespace (folded and checked unless it is open) and describe it.
 pub(crate) fn overview(state: &AppState, day: &str) -> Result<DayOverview, String> {
     let date = date_of(day)?;
     state.with_data(|data| {
@@ -70,14 +70,14 @@ pub fn set_printed(
     mark_printed(&state, &day, mark)
 }
 
-/// The open owner's dates with a folder, newest first.
+/// The open namespace's dates with a folder, newest first.
 #[tauri::command]
 pub fn days(state: State<'_, AppState>) -> Result<Vec<String>, String> {
     state.with_data(|data| {
-        let Some(owner) = &data.owner else {
+        let Some(namespace) = &data.namespace else {
             return Ok(Vec::new());
         };
-        let mut dates = dates(&data.dir, owner).map_err(|error| error.to_string())?;
+        let mut dates = dates(&data.dir, namespace).map_err(|error| error.to_string())?;
         dates.sort_unstable_by(|a, b| b.cmp(a));
         Ok(dates.iter().map(ToString::to_string).collect())
     })

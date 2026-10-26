@@ -1,6 +1,6 @@
 # Day
 
-The start screen: what has been saved on the open date of the open owner, and the way to the next batch.
+The start screen: what has been saved on the open date of the open namespace, and the way to the next batch.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐

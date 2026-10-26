@@ -26,7 +26,7 @@ const WIDTH: f32 = 190.0;
 
 pub struct SummaryFacts<'a> {
     /// The namespace's name.
-    pub owner: &'a str,
+    pub namespace: &'a str,
     pub date: Date,
     /// The batch's record, its group PDFs already in `outputs`.
     pub record: &'a BatchSaved,
@@ -46,7 +46,7 @@ pub fn write_summary(
     let counts = content::counts(record);
     let title = format!(
         "Summary · {} · {} · batch {}",
-        facts.owner, facts.date, record.batch
+        facts.namespace, facts.date, record.batch
     );
     let subtitle = format!(
         "{} orders · {} units · {} groups · printed {}",

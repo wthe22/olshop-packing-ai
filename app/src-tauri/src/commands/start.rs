@@ -1,5 +1,5 @@
 //! Start (program.md): the data folder `packing-settings.toml` names, its lock, the rules beside
-//! the program and the owner opened; the first owner's name; *About*, the version, and opening a
+//! the program and the namespace opened; the first namespace's name; *About*, the version, and opening a
 //! file or folder in Explorer.
 
 use std::path::{Path, PathBuf};
@@ -31,15 +31,15 @@ pub(crate) fn window_title() -> String {
     format!("{PROGRAM_NAME} {}", version_text())
 }
 
-/// What the window needs to open the Start prompt, the first owner's name or the Day screen.
+/// What the window needs to open the Start prompt, the first namespace's name or the Day screen.
 #[derive(Serialize)]
 pub struct StartInfo {
     /// Where the program is: a first start offers its `data` folder.
     exe_dir: String,
     /// The data folder in use; none until `packing-settings.toml` names one.
     data_folder: Option<String>,
-    /// The owner open; none until the first owner is named.
-    owner: Option<String>,
+    /// The namespace open; none until the first one is named.
+    namespace: Option<String>,
     /// Whether the PDFium worker started (its dll was found).
     pdfium_ready: bool,
     /// Today's date on the PC (`YYYY-MM-DD`); the Day screen opens there.
@@ -48,7 +48,7 @@ pub struct StartInfo {
 }
 
 /// Open the data folder `packing-settings.toml` names, as at start: the rules checked, the lock
-/// taken, the owner whose journal was written last (else the first one) opened.
+/// taken, the namespace whose journal was written last (else the first one) opened.
 pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     let program = state.program();
     settings::workflows(program)?;
@@ -57,24 +57,24 @@ pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     {
         open_data(state, dir)?;
     }
-    let (data_folder, owner) = state
-        .with_data(|data| Ok((Some(data.dir.display().to_string()), data.owner.clone())))
+    let (data_folder, namespace) = state
+        .with_data(|data| Ok((Some(data.dir.display().to_string()), data.namespace.clone())))
         .unwrap_or((None, None));
     Ok(StartInfo {
         exe_dir: program.display().to_string(),
         data_folder,
-        owner,
+        namespace,
         pdfium_ready: state.ensure_worker(),
         today: today().to_string(),
         version: version_text(),
     })
 }
 
-/// Take `dir`'s lock and open its owner; another copy holding it stops with the copy named.
+/// Take `dir`'s lock and open its namespace; another copy holding it stops with the copy named.
 fn open_data(state: &AppState, dir: PathBuf) -> Result<(), String> {
     let mut data = Data::new(dir).map_err(|error| error.to_string())?;
-    data.owner = match last_written(&data.dir).map_err(|error| error.to_string())? {
-        Some(owner) => Some(owner),
+    data.namespace = match last_written(&data.dir).map_err(|error| error.to_string())? {
+        Some(namespace) => Some(namespace),
         None => namespaces(&data.dir)
             .map_err(|error| error.to_string())?
             .into_iter()
@@ -94,11 +94,11 @@ pub(crate) fn use_folder(state: &AppState, dir: &Path) -> Result<String, String>
     Ok(dir.display().to_string())
 }
 
-/// Name an owner: the folder is made at once and opened.
-pub(crate) fn new_owner(state: &AppState, name: &str) -> Result<String, String> {
+/// Name a namespace: the folder is made at once and opened.
+pub(crate) fn new_namespace(state: &AppState, name: &str) -> Result<String, String> {
     state.with_data(|data| {
         create_namespace(&data.dir, name).map_err(|error| error.to_string())?;
-        data.owner = Some(name.to_string());
+        data.namespace = Some(name.to_string());
         data.day = None;
         Ok(name.to_string())
     })
@@ -122,10 +122,10 @@ pub fn choose_data_folder(state: State<'_, AppState>, path: String) -> Result<St
     use_folder(&state, Path::new(&path))
 }
 
-/// The first owner's name, or **+ New owner**.
+/// The first namespace's name, or **+ New namespace**.
 #[tauri::command]
-pub fn owner_new(state: State<'_, AppState>, name: String) -> Result<String, String> {
-    new_owner(&state, &name)
+pub fn namespace_new(state: State<'_, AppState>, name: String) -> Result<String, String> {
+    new_namespace(&state, &name)
 }
 
 /// Settings › *About*.

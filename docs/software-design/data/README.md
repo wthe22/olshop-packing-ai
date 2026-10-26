@@ -35,7 +35,7 @@ Root {
 ```
 {data_dir}/
   .lock  .lock-holder                     one copy of the app at a time
-  {namespace}/                            one per shop owner
+  {namespace}/                            one per namespace
     {date}/                               2026-10-07
       journal.jsonl                       the truth
       session.toml  orders.csv  order-contents.toml       views of the journal
@@ -46,8 +46,8 @@ Root {
       output/.partial/                    outputs of the operation in progress
 ```
 
-A **namespace** stands for one shop owner ([namespaces](../app/namespaces.md)); a date folder holds that
-owner's work of one date. Batch numbers run through a namespace and date.
+A **namespace** keeps its batches apart from every other ([namespaces](../app/namespaces.md)); a date folder
+holds its work of one date. Batch numbers run through a namespace and date.
 
 ## What is truth, and what is derived
 

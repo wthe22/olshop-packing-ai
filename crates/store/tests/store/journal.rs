@@ -227,7 +227,7 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
             2,
         ),
         ("no started first", vec![record(1, saved(1))], Vec::new(), 1),
-        ("another owner", vec![record(1, other)], Vec::new(), 1),
+        ("another namespace", vec![record(1, other)], Vec::new(), 1),
     ];
     for (what, records, tail, line) in cases {
         write_journal(&folder, &records, &tail);
@@ -237,7 +237,7 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
             .damage()
             .unwrap_or_else(|| panic!("{what}: no damage"));
         assert_eq!(damage.line, line, "{what}: {damage}");
-        if what == "another owner" {
+        if what == "another namespace" {
             assert!(
                 matches!(damage.reason, DamageReason::OtherFolder { .. }),
                 "{what}"

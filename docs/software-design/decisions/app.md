@@ -34,7 +34,7 @@ the label and its packing slip; `orders.csv` is a view the app writes.
 
 ## D-APP-5 — A namespace replaces the session
 
-**Decision.** The session (a day plus an optional name) is replaced by the namespace: one folder per owner,
+**Decision.** The session (a day plus an optional name) is replaced by the namespace: one folder per namespace,
 one folder per date inside it. Batch numbers run through a namespace and date. There is no session name and
 no *Main*.
 

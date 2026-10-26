@@ -6,7 +6,7 @@ each step against what the shop needs; a step that is wrong is a review item
 ([reviews/](../../reviews/README.md)). The words are in [Concepts](../requirements.md#concepts).
 
 ```
- 1 Start ─► 2 Open owner and date ─► 3 Choose files ─► 4 Read pages ─► 5 Copies and orders ─► 6 Checks, logo prompt
+ 1 Start ─► 2 Open namespace and date ─► 3 Choose files ─► 4 Read pages ─► 5 Copies and orders ─► 6 Checks, logo prompt
                                                                                                    │
  ┌─────────────────────────────────────────────────────────────────────────────────────────────────┘
  ▼

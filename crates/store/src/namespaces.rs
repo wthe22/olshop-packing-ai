@@ -1,4 +1,4 @@
-//! Namespaces (app/namespaces.md): one folder of the data folder per shop owner, one folder per
+//! Namespaces (app/namespaces.md): one folder of the data folder per namespace, one folder per
 //! date inside it. The app lists, opens and creates them; it never renames or deletes one.
 
 use std::fmt;
@@ -35,7 +35,7 @@ impl fmt::Display for NamespaceNameError {
                 "1 to 40 letters, digits, spaces, - or _, with no space at either end"
             }
             NamespaceNameError::Reserved => "that is a folder of Packing v0.1",
-            NamespaceNameError::Taken => "another owner has that name",
+            NamespaceNameError::Taken => "another namespace has that name",
         })
     }
 }

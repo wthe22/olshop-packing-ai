@@ -1,12 +1,14 @@
 # Namespaces and dates
 
-A **namespace** stands for one shop owner whose labels the app prepares; the owner of the app may work
-for several ([D-APP-17](../decisions/app-features.md)). It is a folder of the data folder, and one folder per date
-sits inside it ([data](../data/README.md#the-data-folder)). On screen a namespace is an **owner**.
+A **namespace** is a folder of the data folder that keeps its batches apart from every other namespace's
+([D-APP-17](../decisions/app-features.md)); one folder per date sits inside it
+([data](../data/README.md#the-data-folder)). The screens call it a **namespace** too. What a namespace stands
+for is the owner's choice; it was made for one shop owner of the
+[business process](../../business-process/01-packing-workflow.md), all of whose shops and platforms share it.
 
 | Word | Meaning |
 |---|---|
-| **Namespace** | One shop owner: a folder of the data folder. All the owner's shops and platforms share it |
+| **Namespace** | A folder of the data folder with its own dates, batch numbers and guard |
 | **Date** | A calendar date of a namespace: one folder with its journal, inputs and outputs |
 
 ## What a namespace holds on its own
@@ -14,7 +16,7 @@ sits inside it ([data](../data/README.md#the-data-folder)). On screen a namespac
 - The batches of each date, numbered 1, 2, 3, … per date.
 - The **already-saved guard**: an order saved in a live batch of a date is left out of a later batch of
   that date ([03 Plan](../workflow/03-plan.md#7-orders-already-saved)). Two namespaces never touch each
-  other: the same labels read under another owner are new orders there.
+  other: the same labels read under another namespace are new orders there.
 - The *used in batch n* hint, revert and amend: each date has its own newest batch.
 - The search index and the reprints ([reprint](reprint.md)).
 
@@ -33,8 +35,8 @@ What namespaces share is beside the program: `packing-workflows.toml` (couriers 
 - **The list** is every folder of the data folder whose name is a namespace name, read at start and when
   the window regains focus, so a folder added in Explorer shows up.
 - **At start** the app opens the namespace whose `journal.jsonl` was written last, on today's date (the
-  PC's date). With no namespace yet it asks for the first owner's name ([Start](../ui/start.md)).
-- **+ New owner** creates the folder at once, empty, and opens it on today's date.
+  PC's date). With no namespace yet it asks for the first namespace's name ([Start](../ui/start.md)).
+- **+ New namespace** creates the folder at once, empty, and opens it on today's date.
 - **Another date** is opened from the [panel](../ui/panel.md): a download just after midnight that
   belongs to the evening before is saved under that evening's date.
 - **A date folder** is created at its first commit; today is listed before it exists.

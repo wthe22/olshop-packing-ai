@@ -4,16 +4,16 @@
 
 | Tool | Runs on | Does |
 |---|---|---|
-| **PC app** | Windows PC, Rust + Tauri window | A shop owner's label PDFs with packing slip → label groups shown and adjusted on screen, one PDF per group and a summary PDF per batch, each verified before it is saved; revert and amend of the newest batch; search and reprint ([PC app](app/README.md), [Screens](ui/README.md)) |
+| **PC app** | Windows PC, Rust + Tauri window | A namespace's label PDFs with packing slip → label groups shown and adjusted on screen, one PDF per group and a summary PDF per batch, each verified before it is saved; revert and amend of the newest batch; search and reprint ([PC app](app/README.md), [Screens](ui/README.md)) |
 
-The owner of the app prepares the labels of one or more shop owners; each is a **namespace**
+The owner of the app prepares the labels of one or more shop owners, each in a **namespace** of its own
 ([namespaces](app/namespaces.md)).
 
 ## Concepts
 
 | Term | Meaning |
 |---|---|
-| **Namespace** | One shop owner: a folder of the data folder with one folder per date. On screen an **owner** |
+| **Namespace** | A folder of the data folder with its own batches and one folder per date; a **namespace** on screen too |
 | **Journal** | The one file of a namespace and date that holds every saved fact ([journal](data/journal.md)) |
 | **Input PDF** | A label download, stored once by its content: `input/{sha256}.pdf` |
 | **Sort rule** | A named list of label group rules in `packing-workflows.toml`; a batch is sorted by one ([rules file](rules-file/README.md)) |
@@ -42,7 +42,7 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
   orders from what is left; the last may have no filter and takes the rest; leftovers are a final group.
 - **F-LABEL-4** Write one PDF per label group (pages unchanged), its orders re-ordered by order content, sorted
   by (orders descending, order content ascending), inside one order content in reading order. An order already
-  saved on the same date of the same owner is left out and warned.
+  saved on the same date of the same namespace is left out and warned.
 - **F-LABEL-5** Write one A4 summary PDF per batch: the units to take from stock and the facts of the batch.
 - **F-LABEL-6** Find the orders that appear more than once in a batch, count them, and let the owner choose
   which copy stays; every order is written once.
@@ -60,7 +60,7 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
 - **F-APP-7** Every output is checked before it is saved by code independent of the code that wrote it: every
   input page appears exactly once — written or left out on purpose — and every output page is its source page
   unchanged ([verification](app/verification.md)).
-- **F-APP-8** One namespace per shop owner, each with its own dates, batches, numbers and guard
+- **F-APP-8** Namespaces, each with its own dates, batches, numbers and guard
   ([namespaces](app/namespaces.md)).
 - **F-APP-9** Every saved fact is kept once, in the journal, and every order is traceable to its input, pages
   and courier clue; the files a person reads are written from it ([data](data/README.md)).
@@ -78,7 +78,7 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
 - **F-UI-4** The sort rules are edited in the app with live checks and counts.
 - **F-UI-6** The files that hold repeated orders are marked; a screen shows how many repeats there are, groups
   the files that repeat each other and lets the owner choose which copy stays ([Repeated orders](ui/duplicates.md)).
-- **F-UI-7** A side panel names the open owner, lists its dates, and opens another date or owner
+- **F-UI-7** A side panel names the open namespace, lists its dates, and opens another date or namespace
   ([Panel](ui/panel.md)).
 - **F-UI-8** Search finds saved orders by any filter field, shows each one's trace, and reprints the ticked
   ones ([Search](ui/search.md)).

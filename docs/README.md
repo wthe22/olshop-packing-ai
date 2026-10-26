@@ -65,7 +65,7 @@ still cite old IDs (`D2`, `D24`, …); `archive/id-map.md` maps them to the new 
 | **Tracking ID** | The courier's parcel number, e.g. `JY0000001234`. Printed on the label as text, 1D barcode and QR code |
 | **Item line** | One product with a variation, a Seller SKU and a quantity inside an order, read from the packing slip. An item is its name and variation |
 | **Order content** | The item lines of one order as (name, variation, quantity). Orders with the same order content are packed the same way and are printed next to each other in their group PDF |
-| **Namespace** | One shop owner whose labels the app prepares (an **owner** on screen): a folder with one folder per date |
+| **Namespace** | A folder of the data folder with its own dates, batch numbers and already-saved guard, one folder per date inside it (a **namespace** on screen too) |
 | **Sort rule** | A named list of label groups in `packing-workflows.toml`; a batch is sorted by the rule chosen for it ([rules file](software-design/rules-file/README.md)) |
 | **Label group** | One entry of a sort rule: a code, a name and a filter (`name contains "sepatu"`); the orders it takes are written as one **group PDF**, `2-A Sepatu x88.pdf` |
 | **Summary PDF** | The one A4 sheet set of a batch: the units to take from stock and the batch's facts |

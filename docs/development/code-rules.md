@@ -59,7 +59,7 @@ uses a v0.1 word takes the new one when it is rewritten.
 
 | Concept | Word in code | Not |
 |---|---|---|
-| One shop owner's folder | `Namespace` | session, shop |
+| A folder of the data folder with its own dates | `Namespace` | session, shop, owner |
 | One date of a namespace, its journal folded | `Day` | session, date folder |
 | The one truth of a day | `Journal`, one `Record` per line | log, state |
 | A file the app writes from the journal | `View` | cache, export |

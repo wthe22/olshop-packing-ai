@@ -1,4 +1,4 @@
-# Steps 1–2: start, and open an owner's date
+# Steps 1–2: start, and open a namespace's date
 
 ## 1. Start
 
@@ -11,14 +11,14 @@
    start time) ([data](../data/README.md#one-writer)).
 4. **v0.1 data.** If the data folder holds `labels/`, `state.json`, `couriers.toml`, `categories.toml` or
    `categories/`, the Day screen will say so; nothing of it is read or deleted.
-5. **Namespace.** The one whose `journal.jsonl` was written last; none: ask for the first owner's name and
+5. **Namespace.** The one whose `journal.jsonl` was written last; none: ask for the first namespace's name and
    create its folder ([namespaces](../app/namespaces.md)).
 6. **Search index.** Fold every journal of the namespace on its own thread ([reprint](../app/reprint.md#the-search-index)).
 
 **Stops:** `packing-workflows.toml` that does not parse (its line and column); the lock held by another copy
 (which one, and **Try again**); a data folder that cannot be written.
 
-**Check:** is *the owner whose journal was written last* the right one to open on?
+**Check:** is *the namespace whose journal was written last* the right one to open on?
 
 ## 2. Open a date
 

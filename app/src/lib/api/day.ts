@@ -42,7 +42,7 @@ export interface Totals {
 
 export interface DayOverview {
   day: string;
-  owner: string;
+  namespace: string;
   batches: BatchView[];
   totals: Totals;
   // A damaged journal, an input missing or changed.

@@ -1,4 +1,4 @@
-// Typed wrappers around the Tauri commands for the start, the first owner's name, the shell's file
+// Typed wrappers around the Tauri commands for the start, the first namespace's name, the shell's file
 // opens and *About*. The Rust side sends snake_case fields; the interfaces here match it.
 
 import { invoke } from "@tauri-apps/api/core";
@@ -7,8 +7,8 @@ export interface StartInfo {
   exe_dir: string;
   // The data folder `packing-settings.toml` names; null until one is chosen.
   data_folder: string | null;
-  // The owner open; null until the first owner is named.
-  owner: string | null;
+  // The namespace open; null until the first one is named.
+  namespace: string | null;
   pdfium_ready: boolean;
   today: string;
   // The program's shown version (`v` + major.minor); the title bar's brand text is the program's
@@ -31,9 +31,9 @@ export const useProgramFolder = (): Promise<string> =>
 export const chooseDataFolder = (path: string): Promise<string> =>
   invoke("choose_data_folder", { path });
 
-// The first owner's name: the owner's folder is made at once and opened.
-export const ownerNew = (name: string): Promise<string> =>
-  invoke("owner_new", { name });
+// The first namespace's name: its folder is made at once and opened.
+export const namespaceNew = (name: string): Promise<string> =>
+  invoke("namespace_new", { name });
 
 export const openPath = (path: string): Promise<void> =>
   invoke("open_path", { path });

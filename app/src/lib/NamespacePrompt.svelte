@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The first owner's name: shown when the data folder holds no owner yet. The name becomes the
-  // owner's folder in the data folder.
+  // The first namespace's name: shown when the data folder holds no namespace yet. The name becomes the
+  // namespace's folder in the data folder.
   import { texts } from "../texts";
 
   let {
@@ -17,16 +17,16 @@
 </script>
 
 <main>
-  <p class="message">{texts.owner.ask}</p>
+  <p class="message">{texts.namespace.ask}</p>
   <form
     onsubmit={(event) => {
       event.preventDefault();
       if (name.trim()) onName(name.trim());
     }}
   >
-    <input bind:value={name} placeholder={texts.owner.placeholder} maxlength="40" />
+    <input bind:value={name} placeholder={texts.namespace.placeholder} maxlength="40" />
     <button class="primary" type="submit" disabled={busy || !name.trim()}
-      >{texts.owner.create}</button
+      >{texts.namespace.create}</button
     >
   </form>
   {#if error}

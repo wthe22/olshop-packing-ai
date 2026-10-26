@@ -9,7 +9,7 @@ When `packing-settings.toml` is missing beside the program, or names no data fol
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │  Where should Packing keep its data?                                                   │
-│  Each owner's labels and outputs are kept there, one folder per owner and date.        │
+│  Each namespace's labels and outputs are kept there, one folder per namespace and date.│
 │                                                                                        │
 │  [ Use D:\Packing\data ]                 [ Choose a folder… ]                          │
 └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -28,16 +28,16 @@ When `packing-settings.toml` is missing beside the program, or names no data fol
 │  Close it there, then try again.                                    [ Try again ]      │
 ```
 
-## The first owner
+## The first namespace
 
-When the data folder holds no owner yet:
+When the data folder holds no namespace yet:
 
 ```
-│  Whose labels are these?   Owner [ Toko Contoh            ]             [ Create ]     │
+│  Name the first namespace.   [ Toko Contoh            ]                  [ Create ]    │
 ```
 
-The name follows [namespaces › Names](../app/namespaces.md#names); **Create** makes the owner's folder and
-opens today's date. More owners are added in the [panel](panel.md).
+The name follows [namespaces › Names](../app/namespaces.md#names); **Create** makes the namespace's folder
+and opens today's date. More namespaces are added in the [panel](panel.md).
 
 ## The rules file
 

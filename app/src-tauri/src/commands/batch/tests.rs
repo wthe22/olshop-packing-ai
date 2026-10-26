@@ -22,12 +22,12 @@ use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
 use super::{amend_start, checked, plan_view, sort_rules_of};
 use crate::AppState;
 use crate::commands::day::{mark_printed, overview, revert};
-use crate::commands::start::{new_owner, start_information, use_folder};
+use crate::commands::start::{new_namespace, start_information, use_folder};
 
 const DAY: &str = "2026-10-08";
 const GROUP_FILE: &str = "1-Z Lainnya x4.pdf";
 
-/// A program folder whose first start chose its `data` folder and named an owner; the guard keeps
+/// A program folder whose first start chose its `data` folder and named a namespace; the guard keeps
 /// this test the only one using PDFium.
 fn started(tag: &str) -> Option<(TempDir, AppState, PdfiumGuard)> {
     vendor_dir()?;
@@ -36,7 +36,7 @@ fn started(tag: &str) -> Option<(TempDir, AppState, PdfiumGuard)> {
     let state = AppState::new(program.path().to_path_buf());
     start_information(&state).unwrap();
     use_folder(&state, &program.path().join("data")).unwrap();
-    new_owner(&state, "Toko Contoh").unwrap();
+    new_namespace(&state, "Toko Contoh").unwrap();
     overview(&state, DAY).unwrap();
     Some((program, state, guard))
 }

@@ -57,7 +57,7 @@ pub struct Totals {
 #[derive(Serialize)]
 pub struct DayOverview {
     day: String,
-    owner: String,
+    namespace: String,
     batches: Vec<BatchView>,
     totals: Totals,
     /// What keeps a part of the date from being used: a damaged journal, an input missing or
@@ -95,7 +95,7 @@ pub(super) fn overview(day: &OpenDay, old_data: bool) -> DayOverview {
     }
     DayOverview {
         day: fold.date.to_string(),
-        owner: fold.namespace.clone(),
+        namespace: fold.namespace.clone(),
         totals: Totals {
             batches: batches.len(),
             orders: batches.iter().map(|b| b.orders).sum(),

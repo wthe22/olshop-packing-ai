@@ -217,7 +217,7 @@ fn write_outputs(
     progress(SaveStage::Writing, total - 1, total);
     let out = partial.join(sorted.summary_file());
     let target = out.clone();
-    let (owner, date, app) = (fold.namespace.clone(), fold.date, request.app.to_string());
+    let (namespace, date, app) = (fold.namespace.clone(), fold.date, request.app.to_string());
     let printed = jiff::Zoned::now().strftime("%H:%M").to_string();
     let snapshot = record.clone();
     let pages = request.worker.run(move |pdfium| {
@@ -225,7 +225,7 @@ fn write_outputs(
             pdfium,
             &target,
             &SummaryFacts {
-                owner: &owner,
+                namespace: &namespace,
                 date,
                 record: &snapshot,
                 printed: &printed,

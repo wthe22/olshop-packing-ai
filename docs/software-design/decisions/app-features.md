@@ -46,11 +46,14 @@ scopes and layouts, and their setting, are gone.
 
 ## D-APP-17 — One namespace per shop owner; v0.1 data is left alone
 
-**Decision.** A namespace is one shop owner (Q-APP-10); all the owner's shops share its numbers and its guard.
+**Decision.** A namespace holds one shop owner's labels (Q-APP-10); all of that shop owner's shops share its
+numbers and its guard. The screens, the code and the documents call it a **namespace**, never an owner (the
+owner's word, 2026-10-26).
 Two namespaces share nothing but the files beside the program (Q-APP-5: nothing shared). A v0.1 data folder is
 not read and never deleted; the app says what it found. Q-APP-4 (session folders) has no subject any more.
 
-**Why.** The owner's draft: a namespace represents an owner, who may have several shops.
+**Why.** The owner's draft: a shop owner may have several shops. "Owner" on screen was confused with the
+owner of the app.
 
 **Applies to.** [namespaces](../app/namespaces.md).
 

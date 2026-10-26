@@ -202,10 +202,10 @@ export const texts = {
     schema: (version: string) => `schema ${version}`,
   },
 
-  // The first owner's name, asked once when the data folder holds no owner.
-  owner: {
-    ask: "Whose labels does this data folder hold? Name the shop owner; each owner keeps their own batches.",
-    placeholder: "Owner name",
+  // The first namespace's name, asked once when the data folder holds none.
+  namespace: {
+    ask: "Name the first namespace. Each namespace keeps its own batches and dates apart from the others.",
+    placeholder: "Namespace name",
     create: "Use this name",
   },
 

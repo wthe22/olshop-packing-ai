@@ -53,7 +53,10 @@ impl fmt::Display for DamageReason {
                 write!(f, "seq {found} where {expected} was due")
             }
             DamageReason::OtherFolder { namespace, date } => {
-                write!(f, "it names the owner {namespace:?} and the date {date}")
+                write!(
+                    f,
+                    "it names the namespace {namespace:?} and the date {date}"
+                )
             }
             DamageReason::Rule(rule) => f.write_str(rule),
         }

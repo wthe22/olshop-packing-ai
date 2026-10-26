@@ -4,8 +4,8 @@
 
 | Command | Does | Returns |
 |---|---|---|
-| `owners_list()` | The namespaces of the data folder, and the open one's dates from the search index ([namespaces](namespaces.md)) | Names; per date its batches and orders |
-| `owner_new(name)` | **+ New owner**: make the namespace's folder | The list, or why the name is refused |
+| `namespaces_list()` | The namespaces of the data folder, and the open one's dates from the search index ([namespaces](namespaces.md)) | Names; per date its batches and orders |
+| `namespace_new(name)` | **+ New namespace**: make the namespace's folder | The list, or why the name is refused |
 | `day_open(namespace, date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, printed marks, reprints, findings; or the damage message |
 | `check_files(paths)` | SHA-256 and page count of each chosen file; *used in batch n*; one file chosen twice is listed once | The file list |
 | `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, repeats, the plan; or the stop |
@@ -60,6 +60,6 @@ Packing\
    on that rule.
 3. **The lock** on the data folder ([data](../data/README.md#one-writer)). Held by another copy: say which
    one, and offer **Try again**.
-4. **The namespace** whose journal was written last; none yet: ask for the first owner's name
+4. **The namespace** whose journal was written last; none yet: ask for the first namespace's name
    ([namespaces](namespaces.md)).
 5. **Today's date** of that namespace, opened as in `day_open`; the search index is built beside it.

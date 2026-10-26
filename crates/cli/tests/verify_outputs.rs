@@ -146,7 +146,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
         pdfium,
         &summary_path,
         &SummaryFacts {
-            owner: folder.namespace(),
+            namespace: folder.namespace(),
             date: folder.date(),
             record: &record,
             printed: "07:00",

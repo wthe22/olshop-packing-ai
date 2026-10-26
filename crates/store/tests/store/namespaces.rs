@@ -51,7 +51,7 @@ fn the_list_holds_the_namespace_folders_and_the_last_written_one_opens() {
         ["Toko Contoh", "toko lain"]
     );
     match create_namespace(data.path(), "TOKO LAIN") {
-        Err(StoreError::BadName { reason, .. }) => assert!(reason.contains("another owner")),
+        Err(StoreError::BadName { reason, .. }) => assert!(reason.contains("another namespace")),
         other => panic!("expected the name taken, got {:?}", other.err()),
     }
 
