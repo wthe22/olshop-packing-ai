@@ -14,7 +14,7 @@ An amend writes the batch afresh, so its ticks start empty.
 
 ## 17. Revert (newest live batch only)
 
-After a confirmation that names the batch and its files:
+After a question that names the batch and its files:
 
 1. Move the batch's outputs into `output/.partial/replaced/`. A file Windows refuses to move stops the revert:
    the files moved go back, and the message names the file to close.
@@ -35,15 +35,15 @@ For "a filter was wrong, do the last batch again":
    saved set; each repeat's kept copy is preselected from the record.
 2. **Back** shows the amend's file list: the owner may add files from anywhere and take files off; a file
    taken off leaves its orders unsaved, for a later batch ([D-APP-19](../decisions/app-features.md)).
-3. **Save batch `<b>` again** runs steps 11–15 with `amends: true` and the same number; step 14 moves the
-   old outputs aside first. **Cancel amend** writes nothing.
+3. **Save batch** runs steps 11–15 with `amends: true` and the same number; step 14 moves the old
+   outputs aside first. **Cancel amend** writes nothing.
 
-**Check:** printed labels may no longer match the amended files; the confirmation says so.
+**Check:** printed labels may no longer match the amended files; the batch's printed ticks start empty.
 
 ## 19. Search and reprint
 
-- **Search** filters the in-memory index of the workspace, *This day* or *All days*, and shows each order
-  with its trace ([reprint](../app/reprint.md#search)).
+- **Search** filters the in-memory index of the workspace over a range of dates or all of them, and shows
+  each order with its trace ([reprint](../app/reprint.md#search)).
 - **Reprint** writes one PDF of the ticked orders' pages: the sources from a fold of each order's date
   journal, the pages unchanged from `input/` in the original printing order, written through
   `output/.partial/` of today's date, verified (V2, V5), recorded as `reprint_made` in today's journal,
@@ -53,9 +53,10 @@ For "a filter was wrong, do the last batch again":
 
 ## 20. Restore
 
-An output of a live batch found missing or changed when the date opened is written again on **Restore**: a
-group PDF from `input/` by its record, the summary PDF from its record; verified (V2, V5 or V6), recorded as
-`output_restored`, moved into `output/` ([reprint](../app/reprint.md#restore)).
+An output of a live batch found changed when the date opened is written again on **Restore**, and one that
+is not there is written again by **Open**: a group PDF from `input/` by its record, the summary PDF from its
+record in today's layout; verified (V2, V5 or V6), recorded as `output_restored`, moved into `output/`
+([reprint](../app/reprint.md#restore)).
 
 **Keeps:** I5, I12 — a restored file is checked like the original.
 

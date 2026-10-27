@@ -4,17 +4,15 @@
 
 Only the newest batch of a date can be changed — a later batch depends on the ones before it.
 
-- **Revert** — undo the last batch. It asks:
-  "Undo batch 2? Its 2 group PDFs and its summary PDF are deleted, and its 129 orders can be saved
-  again. If you already printed them, throw the printed labels away." [Cancel] [Undo batch 2]. Its
-  orders count as not saved again and the next batch takes its number. If a file is open in a PDF
+- **Revert** — undo the last batch. It asks: "Undo batch 2? Its 2 group PDFs and summary PDF are
+  deleted. Throw away its printed labels." [Undo batch 2] [Cancel]. Its orders count as not saved
+  again and the next batch takes its number. If a file is open in a PDF
   viewer, the app names the file to close and changes nothing.
-- **Amend** — "I fixed a sort rule, do the last batch again". It asks:
-  "Redo batch 2 with its sort rule (default)? Batch 2 was saved at 09:12. If you already
-  printed it, print it again after saving." [Cancel] [Redo batch 2]. The batch's own label files are
+- **Amend** — "I fixed a sort rule, do the last batch again". It asks: "Redo batch 2? Its labels
+  are read again with the sort rule default." [Redo batch 2] [Cancel]. The batch's own label files are
   read again from the date's `input` folder, with the sort rule of that name as it is now (or as it was
   saved, when no rule has that name any more), the same copies of repeated orders kept, and the **Plan**
-  screen opens titled *Redo batch 2* with **Save batch 2 again**.
+  screen opens titled *Redo batch 2*; **Save batch** writes it again. Print it again after saving.
   - **Back** (top) shows the batch's files, its rule fixed ("Sort rule: default (as now)"); add files
     with **Add files…**, take one off with **×** (its orders stay unsaved for a later batch), then
     **Read labels** again.

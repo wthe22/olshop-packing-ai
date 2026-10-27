@@ -1,8 +1,10 @@
 //! The Day screen (05-after-save.md): the open workspace's date from its fold, and what changes it —
-//! the Printed tick, revert and restore — each one append through `packing-batch`; and the day
-//! summary, a view written from the fold.
+//! the Printed tick, revert and restore — each one append through `packing-batch`; the day
+//! summary, a view written from the fold; and *Open* on an output, which writes a missing one again.
 
 mod view;
+
+use std::path::PathBuf;
 
 use jiff::civil::Date;
 use packing_batch::{RestoreOutcome, RestoreRequest, restore};
@@ -11,6 +13,7 @@ use packing_engine::record::PrintedMarked;
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 
+use crate::commands::start::open_with_explorer;
 use crate::{APP_VERSION, AppState, settings};
 
 pub use self::view::{BatchView, DayOverview, GroupPdfView, Totals};
@@ -117,6 +120,47 @@ pub(crate) fn restore_file(state: &AppState, day: &str, file: &str) -> Result<Re
     })
 }
 
+/// What *Open* on a group PDF or summary PDF did.
+#[derive(Debug, PartialEq, Eq, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum OpenView {
+    Opened,
+    /// It was not there: written again first, then opened.
+    WrittenAgain,
+    /// It was not there, and the file written again did not pass the check: nothing was kept.
+    NotKept {
+        errors: Vec<String>,
+    },
+}
+
+/// A group PDF or summary PDF of `day` made ready to open, and its path: one that is not there
+/// any more is written again and checked, as **Restore** does, so an old batch's summary PDF comes
+/// back in today's layout.
+pub(crate) fn ready_to_open(
+    state: &AppState,
+    day: &str,
+    file: &str,
+) -> Result<(PathBuf, OpenView), String> {
+    if file.contains(['/', '\\']) {
+        return Err(format!("{file} is not a file name."));
+    }
+    let date = date_of(day)?;
+    let path =
+        state.with_data(|data| Ok(data.open_day(date)?.folder.dir().join("output").join(file)))?;
+    if path.is_file() {
+        return Ok((path, OpenView::Opened));
+    }
+    let restored = restore_file(state, day, file)?;
+    let view = if restored.restored {
+        OpenView::WrittenAgain
+    } else {
+        OpenView::NotKept {
+            errors: restored.errors,
+        }
+    };
+    Ok((path, view))
+}
+
 #[tauri::command]
 pub fn day_overview(state: State<'_, AppState>, day: String) -> Result<DayOverview, String> {
     overview(&state, &day)
@@ -155,6 +199,22 @@ pub async fn day_summary(app: AppHandle, day: String) -> Result<String, String> 
     })
     .await
     .map_err(|error| format!("the day summary task stopped: {error}"))?
+}
+
+/// *Open* a group PDF or summary PDF in the PC's default PDF viewer, on its own thread: one that is
+/// not there any more is written again first.
+#[tauri::command]
+pub async fn open_output(app: AppHandle, day: String, file: String) -> Result<OpenView, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<AppState>();
+        let (path, view) = ready_to_open(&state, &day, &file)?;
+        if !matches!(view, OpenView::NotKept { .. }) {
+            open_with_explorer(&path.display().to_string())?;
+        }
+        Ok(view)
+    })
+    .await
+    .map_err(|error| format!("the open task stopped: {error}"))?
 }
 
 /// **Restore** a group PDF or summary PDF found missing or changed, on its own thread.

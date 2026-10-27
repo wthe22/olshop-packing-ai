@@ -146,7 +146,7 @@
   tr.run td {
     border-bottom: none;
     color: var(--text-muted);
-    font-family: Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
   }
 

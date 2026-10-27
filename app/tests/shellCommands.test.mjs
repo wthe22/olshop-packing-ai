@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 
 import { useBackend, emitEvent } from "./tsModule.mjs";
 import { Shell, backend, overview, read } from "./shellKit.mjs";
+import { answerQuestions } from "./answers.mjs";
 import { texts } from "../src/texts.ts";
 
 
@@ -19,14 +20,13 @@ test("the data folder: the start prompt, the program folder and a change", async
     ...backend(),
     start_info: () => ({ today: "2026-10-07", exe_dir: "C:/Packing", data_folder: null, workspace: "Toko Contoh", version: "0.1" }),
     "plugin:dialog|open": () => picked,
-    "plugin:dialog|message": (args) =>
-      answer === "Ok" ? (args.buttons?.OkCancelCustom?.[0] ?? "Ok") : "Cancel",
     use_program_folder: () => "C:/Packing",
     choose_data_folder: (args) => {
       if (failChoose) throw "the folder cannot be written to";
       return args.path;
     },
   });
+  answerQuestions(() => answer === "Ok");
   const shell = new Shell();
   await shell.load();
   assert.equal(shell.needsFolder, true, "no folder yet");
@@ -108,7 +108,6 @@ test("the file and printed commands reach the back end", async () => {
         ? { restored: false, errors: ["page 3 of labels_1.pdf is in no output."] }
         : { restored: true, errors: [] };
     },
-    "plugin:dialog|message": (args) => args.buttons?.OkCancelCustom?.[0] ?? "Ok",
   });
   const shell = new Shell();
   await shell.load();
@@ -220,4 +219,49 @@ test("a command that fails while loading shows the error and still opens the day
   assert.equal(stuck.dataFolder, null);
   assert.equal(stuck.needsFolder, true);
   assert.equal(stuck.busy, false);
+});
+
+
+test("*Open* writes a missing output again, and a write the owner waits for runs once", async () => {
+  let finish;
+  const calls = useBackend({
+    ...backend(),
+    open_output: (args) =>
+      args.file === "1 summary.pdf"
+        ? { kind: "written_again" }
+        : args.file === "1-B Spion x2.pdf"
+          ? { kind: "not_kept", errors: ["page 3 of labels_1.pdf is in no output."] }
+          : { kind: "opened" },
+    day_summary: () => new Promise((resolve) => (finish = resolve)),
+    open_path: () => undefined,
+  });
+  const shell = new Shell();
+  shell.day = "2026-10-07";
+
+  // A file that is there opens; one written again recounts the day; a finding is shown.
+  await shell.openOutput("2026-10-07", "1-A Sepatu x2.pdf");
+  assert.equal(calls.some((call) => call.command === "day_overview"), false, "nothing changed");
+  await shell.openOutput("2026-10-07", "1 summary.pdf");
+  assert.deepEqual(calls.at(-1), { command: "day_overview", args: { day: "2026-10-07" } });
+  await shell.openOutput("2026-10-06", "1-B Spion x2.pdf");
+  assert.equal(shell.error, texts.day.restoreFailed("1-B Spion x2.pdf", ["page 3 of labels_1.pdf is in no output."]));
+  assert.equal(calls.at(-1).command, "open_output", "another date's Day screen is not shown");
+  shell.error = "";
+
+  // *Day summary*: a second click while it is written starts nothing; its dialog shows after a
+  // moment and goes when the file opens.
+  const first = shell.daySummary();
+  await shell.daySummary();
+  assert.equal(shell.writing, true);
+  assert.equal(calls.filter((call) => call.command === "day_summary").length, 1, "written once");
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  assert.equal(shell.working, texts.day.writingDaySummary);
+  finish("C:/Data/Toko Contoh/2026-10-07/output/day summary.pdf");
+  await first;
+  assert.equal(shell.working, null);
+  assert.equal(shell.writing, false);
+  assert.deepEqual(calls.at(-1), {
+    command: "open_path",
+    args: { path: "C:/Data/Toko Contoh/2026-10-07/output/day summary.pdf" },
+  });
 });

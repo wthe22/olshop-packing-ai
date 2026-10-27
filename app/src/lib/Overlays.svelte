@@ -13,7 +13,13 @@
 
 {#if shell.overlay === "search"}
   <Overlay title={texts.search.title} onClose={shell.closeOverlay}>
-    <SearchScreen day={shell.day} onOpen={shell.openFile} onReprinted={shell.afterReprint} />
+    <SearchScreen
+      day={shell.day}
+      today={shell.today}
+      onOpen={shell.openFile}
+      onOpenOutput={shell.openOutput}
+      onReprinted={shell.afterReprint}
+    />
   </Overlay>
 {:else if shell.overlay === "sort-rules"}
   <Overlay title={texts.sortRules.title} onClose={shell.closeOverlay}>

@@ -46,7 +46,7 @@ on a normal day the owner checks the counts and presses **Save batch**.
 - Every change (tick, move, add, edit the sort rule) recounts all rows at once.
 - **Back** returns to the file list ([New batch](new-batch.md)) without asking and writes nothing; only
   **Cancel** there discards the draft.
-- An amend uses the same screen, titled *Redo batch 2*, with **Save batch 2 again** and a bottom **Cancel
+- An amend uses the same screen, titled *Redo batch 2*, with the same **Save batch** and a bottom **Cancel
   amend**; **Back** opens the amend's file list. Neither asks: an amend writes nothing before it is saved.
 
 ## Saving

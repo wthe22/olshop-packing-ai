@@ -11,7 +11,9 @@
     overview,
     saved,
     reading,
+    writing,
     onOpen,
+    onOpenOutput,
     onOpenFolder,
     onSetPrinted,
     onNewBatch,
@@ -25,7 +27,13 @@
     // *Amend*'s read of the batch's own files (`read-progress`): its page progress is shown until
     // the Plan screen opens; `null` when nothing reads.
     reading: { page: number; pages: number } | null;
+    // A write the owner waits for runs (its dialog is the shell's): *Day summary* waits.
+    writing: boolean;
+    // A reprint's file.
     onOpen: (path: string) => void;
+    // A group PDF or summary PDF of the date, by its file name: one that is not there any more is
+    // written again first.
+    onOpenOutput: (file: string) => void;
     onOpenFolder: (path: string) => void;
     // The **Printed** tick of one group PDF: the owner ticks it to note that the file has been
     // printed; it is written to the date's journal the moment it is clicked.
@@ -34,7 +42,7 @@
     onDaySummary: () => void;
     onAmend: (batch: BatchView) => void;
     onRevert: (batch: BatchView) => void;
-    // **Restore** an output the open-time check found missing or changed.
+    // **Restore** an output the open-time check found changed.
     onRestore: (file: string) => void;
   } = $props();
 
@@ -47,8 +55,6 @@
   const toggled = (list: number[], batch: number) =>
     list.includes(batch) ? list.filter((item) => item !== batch) : [...list, batch];
 
-  const join = (folder: string, file: string) => `${folder}\\${file}`;
-
   function leftOutLine(copy: LeftOutView): string {
     const where = texts.day.pages(copy.input, copy.page_start, copy.page_end);
     return copy.reason === "repeat"
@@ -57,12 +63,14 @@
   }
 </script>
 
-{#snippet fileButton(folder: string, file: string, problem: FileProblem | null)}
+{#snippet fileButton(file: string, problem: FileProblem | null)}
   {#if problem}
     <span class="problem">{texts.day.problem(problem)}</span>
+  {/if}
+  {#if problem === "changed"}
     <button onclick={() => onRestore(file)}>{texts.day.restore}</button>
   {:else}
-    <button onclick={() => onOpen(join(folder, file))}>{texts.day.open}</button>
+    <button onclick={() => onOpenOutput(file)}>{texts.day.open}</button>
   {/if}
 {/snippet}
 
@@ -80,7 +88,7 @@
     </span>
     <button
       title={texts.day.daySummaryTitle}
-      disabled={!overview || overview.batches.length === 0}
+      disabled={writing || !overview || overview.batches.length === 0}
       onclick={onDaySummary}>{texts.day.daySummary}</button
     >
     <button class="primary" onclick={onNewBatch}>{texts.day.newBatch}</button>
@@ -139,13 +147,13 @@
                 onchange={(event) => onSetPrinted(batch, pdf, event.currentTarget.checked)}
               />
             </label>
-            {@render fileButton(batch.folder, pdf.file, pdf.problem)}
+            {@render fileButton(pdf.file, pdf.problem)}
           </div>
         {/each}
         <div class="batch-foot">
           <span class="packing">
             {texts.day.summaryPdf}
-            {@render fileButton(batch.folder, batch.summary, batch.summary_problem)}
+            {@render fileButton(batch.summary, batch.summary_problem)}
           </span>
           {#if batch.left_out.length > 0}
             <button class="link" onclick={() => (openLeftOut = toggled(openLeftOut, batch.batch))}>

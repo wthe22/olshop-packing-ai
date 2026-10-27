@@ -2,7 +2,7 @@
 // `Tree`. Rust serialises a `Node` as
 // `{"Group": …}` or `{"Row": …}` (serde's external tagging); the window uses a friendlier shape.
 
-import { conditionFields, type FieldType } from "../texts";
+import { conditionFields, type FieldType } from "../fields";
 
 export type GroupKind = "all" | "any";
 

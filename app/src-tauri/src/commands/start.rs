@@ -184,7 +184,11 @@ fn explorer_command(path: &str) -> Command {
 /// Open a file with the PC's default program, or a folder as a folder in Explorer. The path is
 /// Explorer's **only** argument: Explorer parses `/select,<path>` itself and does not understand
 /// the quotes Rust puts around an argument that holds a space, so it opened *Documents* instead.
-fn open_with_explorer(path: &str) -> Result<(), String> {
+/// A path that is not there is refused: Explorer would open its home page.
+pub(crate) fn open_with_explorer(path: &str) -> Result<(), String> {
+    if !Path::new(path).exists() {
+        return Err(format!("Cannot open {path}: it is not there any more."));
+    }
     explorer_command(path)
         .spawn()
         .map(|_| ())

@@ -4,6 +4,7 @@
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
 import { useRunes } from "./tsModule.mjs";
+import { answerQuestions } from "./answers.mjs";
 
 useRunes();
 
@@ -35,18 +36,16 @@ export function read(overrides = {}) {
   };
 }
 
-// The commands every shell test needs; a test adds its own or asks this one to fail. A confirm
-// dialog answers with the label of the button it was given: *Ok*, or the caller's own label.
+// The commands every shell test needs; a test adds its own or asks this one to fail. The app's
+// own yes-or-no dialog answers yes, unless the test answers it itself after this call.
 export function backend(extra = {}) {
+  answerQuestions(() => true);
   return {
     workspaces_list: () => ({ dates: [{ date: "2026-10-07" }] }),
     day_overview: () => overview(),
     about: () => ({ version: "0.2", pdfium: "140.0", schema: "1.0" }),
     "plugin:event|listen": () => 1,
     "plugin:event|unlisten": () => undefined,
-    // A confirm dialog answers with the label of the *Ok* button it was given: the caller's own
-    // label, or *Ok*. Rust names the two labels `OkCancelCustom`.
-    "plugin:dialog|message": (args) => args.buttons?.OkCancelCustom?.[0] ?? "Ok",
     ...extra,
   };
 }

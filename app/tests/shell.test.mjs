@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 
 import { useBackend, emitEvent } from "./tsModule.mjs";
 import { Shell, backend, overview, read } from "./shellKit.mjs";
+import { answerQuestions } from "./answers.mjs";
 import { texts } from "../src/texts.ts";
 
 
@@ -153,19 +154,15 @@ test("a new batch goes New batch → Plan → Save → the day screen", async ()
 
 test("leaving an open batch asks before dropping it, and a refused answer stays", async () => {
   let discard = 0;
-  const confirmations = [];
   useBackend(
     backend({
-      "plugin:dialog|message": (args) => {
-        confirmations.push(args.message);
-        // The first answer is *Cancel*, the others are the dialog's *Ok*.
-        return confirmations.length !== 1 ? (args.buttons?.OkCancelCustom?.[0] ?? "Ok") : "Cancel";
-      },
       discard_draft: () => {
         discard += 1;
       },
     }),
   );
+  // The first answer is *Cancel*, the others are yes.
+  const confirmations = answerQuestions(() => confirmations.length !== 1);
 
   // The owner says no: the batch and its screen stay.
   const open = new Shell();
@@ -176,7 +173,7 @@ test("leaving an open batch asks before dropping it, and a refused answer stays"
   assert.equal(confirmations.length, 0);
 
   await open.openDate("2026-10-06");
-  assert.equal(confirmations[0], texts.day.confirmDiscardDraft);
+  assert.equal(confirmations[0], texts.day.askDiscardDraft);
   assert.equal(open.screen, "plan", "the refused answer changes nothing");
   assert.equal(open.draftOpen, true);
   assert.equal(discard, 0, "the draft is kept");

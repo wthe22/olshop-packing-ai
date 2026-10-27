@@ -9,7 +9,8 @@ import { registerHooks } from "node:module";
 
 registerHooks({
   resolve(specifier, context, next) {
-    if (specifier.startsWith(".") && !/\.[a-z]+$/.test(specifier)) {
+    // `./confirm.svelte` is the rune module `confirm.svelte.ts`.
+    if (specifier.startsWith(".") && (!/\.[a-z]+$/.test(specifier) || specifier.endsWith(".svelte"))) {
       for (const extension of [".ts", ".js"]) {
         try {
           return next(specifier + extension, context);

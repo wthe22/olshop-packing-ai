@@ -4,8 +4,7 @@
   // view), with the count it takes in the open batch. *Save* writes the file, keeping its comments
   // and every filter that was not changed; the open batch's plan then follows the file.
   import { onMount } from "svelte";
-  // The plugin's `confirm` (not `window.confirm`), awaited.
-  import { confirm } from "@tauri-apps/plugin-dialog";
+  import { confirmBox } from "./confirm.svelte";
   import * as api from "./api/rules";
   import { openingRule } from "./sortRules";
   import { texts } from "../texts";
@@ -143,7 +142,7 @@
   }
 
   async function deleteRule() {
-    if (!(await confirm(texts.sortRules.confirmDeleteRule(current)))) return;
+    if (!(await confirmBox.ask(texts.sortRules.askDeleteRule(current)))) return;
     await api.ruleDelete(current);
     await written(rules.find((rule) => rule !== current) ?? "");
   }
@@ -171,7 +170,7 @@
   }
 
   async function removeGroup(index: number) {
-    if (!(await confirm(texts.sortRules.confirmDelete(entries[index].code)))) return;
+    if (!(await confirmBox.ask(texts.sortRules.askDelete(entries[index].code)))) return;
     entries.splice(index, 1);
     refresh();
   }
@@ -346,6 +345,6 @@
   }
 
   .help code {
-    font-family: Consolas, monospace;
+    font-family: var(--font-mono);
   }
 </style>

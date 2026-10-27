@@ -1,9 +1,9 @@
-//! The search index: every live order of every date of a workspace, found by a filter on one date
-//! or all, a reverted batch gone, a damaged date left out and named, an order's reprints.
+//! The search index: every live order of every date of a workspace, found by a filter on a range
+//! of dates or all, a reverted batch gone, a damaged date left out and named, an order's reprints.
 
 use std::fs;
 
-use jiff::civil::date;
+use jiff::civil::{Date, date};
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::record::{BatchReverted, RecordBody, ReprintMade, ReprintedOrder};
 use packing_engine::rules::parse_filter;
@@ -19,10 +19,14 @@ fn commit(data: &TempDir, day: i8, bodies: Vec<RecordBody>) -> Journal {
     journal
 }
 
-fn ids(index: &SearchIndex, filter: &str, day: Option<i8>) -> Vec<String> {
+/// The orders found on the October dates `days` (both ends included), or on every date.
+fn ids(index: &SearchIndex, filter: &str, days: Option<(i8, i8)>) -> Vec<String> {
     let filter = parse_filter(filter).unwrap();
+    let dates = days.map_or(Date::MIN..=Date::MAX, |(from, to)| {
+        date(2026, 10, from)..=date(2026, 10, to)
+    });
     index
-        .search(&filter, day.map(|day| date(2026, 10, day)))
+        .search(&filter, dates)
         .iter()
         .map(|order| format!("{} {}", order.date.day(), order.order.order_id))
         .collect()
@@ -59,28 +63,38 @@ fn every_live_order_of_the_workspace_is_found_by_its_fields() {
             ],
         ),
         (
+            "order_id equals \"580000000000000002\"",
+            Some((8, 9)),
+            vec!["8 580000000000000002", "8 580000000000000002"],
+        ),
+        (
+            "order_id equals \"580000000000000002\"",
+            Some((6, 7)),
+            vec!["7 580000000000000002"],
+        ),
+        (
             "tracking_id starts_with \"jy0000000003\"",
-            Some(7),
+            Some((7, 7)),
             vec!["7 580000000000000003"],
         ),
         (
             "name contains \"spion\" and line_quantity = 2",
-            Some(7),
+            Some((7, 7)),
             vec!["7 580000000000000002"],
         ),
         (
             "seller_sku equals \"SELL-SEP-01\" and variation equals \"honda\"",
-            Some(7),
+            Some((7, 7)),
             vec!["7 580000000000000001", "7 580000000000000003"],
         ),
         (
             "courier equals \"jnt\" and ship_by = \"2026-10-08\" and total_quantity = 1",
-            Some(9),
+            Some((9, 9)),
             vec![],
         ),
         (
             "display_name equals \"Sepatu Standar Samping Motor — honda\"",
-            Some(7),
+            Some((7, 7)),
             vec!["7 580000000000000001", "7 580000000000000003"],
         ),
     ];
@@ -93,7 +107,7 @@ fn every_live_order_of_the_workspace_is_found_by_its_fields() {
 
     let found = &index.search(
         &parse_filter("order_id equals \"580000000000000002\"").unwrap(),
-        Some(date(2026, 10, 7)),
+        date(2026, 10, 7)..=date(2026, 10, 7),
     )[0];
     assert_eq!(
         (found.file.as_str(), found.input.as_str()),

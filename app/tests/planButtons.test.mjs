@@ -60,8 +60,8 @@ test("the Plan screen's words are the designed words", () => {
     "Reading the batch's labels …  page 143 of 257",
   );
   // The day switch still asks before discarding a draft.
-  assert.equal(
-    texts.day.confirmDiscardDraft,
-    "Discard the batch being prepared?",
-  );
+  assert.equal(texts.day.askDiscardDraft.title, "Discard the batch being prepared?");
+  // A new batch and an amend save with the same button.
+  assert.equal(texts.plan.save, "Save batch");
+  assert.equal("saveAgain" in texts.plan, false);
 });

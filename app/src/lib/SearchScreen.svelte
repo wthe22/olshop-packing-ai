@@ -1,35 +1,39 @@
 <script lang="ts">
-  // Search: saved orders of the open workspace found by a filter made with the boxes, over *This
-  // day* or *All days*, each row with its trace line and its *Reprinted* mark; the ticked rows are
+  // Search: saved orders of the open workspace found by a filter made with the boxes, over a range
+  // of dates or all of them, each row with its trace line and its *Reprinted* mark; the ticked rows are
   // reprinted into one PDF from the bar at the foot. Enter in a box searches, so a scanned tracking
   // ID finds its order at once. The state and the commands are `search.svelte.ts`.
   import { onMount } from "svelte";
   import { Search, itemsText, reprintedMark } from "./search.svelte";
-  import type { SearchScope } from "./api/search";
-  import { conditionFields, searchSummary, texts } from "../texts";
+  import { RANGE_PRESETS, type RangePreset } from "./searchRange";
+  import { searchSummary, texts } from "../texts";
+  import { conditionFields } from "../fields";
   import { formatShortDay } from "../dates";
   import BoxesEditor from "./BoxesEditor.svelte";
 
   let {
     day,
+    today,
     onOpen,
+    onOpenOutput,
     onReprinted,
   }: {
     // The open date: *This day*.
     day: string;
+    // The other choices of dates end today.
+    today: string;
+    // The reprint just written.
     onOpen: (path: string) => void;
+    // A row's group PDF, by the date it was saved on and its file name.
+    onOpenOutput: (day: string, file: string) => void;
     onReprinted: () => void;
   } = $props();
 
   const search = new Search(
     () => day,
+    () => today,
     () => onReprinted(),
   );
-
-  const scopes: { value: SearchScope; label: string }[] = [
-    { value: "day", label: texts.search.scopeDay },
-    { value: "all", label: texts.search.scopeAll },
-  ];
 
   let filters: HTMLDivElement;
 
@@ -58,19 +62,31 @@
   </div>
 
   <div class="controls">
-    <span class="label">{texts.search.scope}</span>
-    {#each scopes as option (option.value)}
-      <label>
-        <input
-          type="radio"
-          name="search-scope"
-          value={option.value}
-          checked={search.scope === option.value}
-          onchange={() => search.setScope(option.value)}
-        />
-        {option.label}
-      </label>
-    {/each}
+    <label for="search-dates" class="label">{texts.search.dates}</label>
+    <select
+      id="search-dates"
+      value={search.preset}
+      onchange={(event) => search.setPreset(event.currentTarget.value as RangePreset)}
+    >
+      {#each RANGE_PRESETS as preset (preset)}
+        <option value={preset}>{texts.search.ranges[preset]}</option>
+      {/each}
+    </select>
+    {#if search.preset !== "all"}
+      <input
+        type="date"
+        aria-label={texts.search.rangeFrom}
+        value={search.range.from}
+        onchange={(event) => search.setRange({ ...search.range, from: event.currentTarget.value })}
+      />
+      <span>{texts.search.rangeTo}</span>
+      <input
+        type="date"
+        aria-label={texts.search.rangeUntil}
+        value={search.range.to}
+        onchange={(event) => search.setRange({ ...search.range, to: event.currentTarget.value })}
+      />
+    {/if}
     <span class="grow"></span>
     <button class="primary" disabled={search.busy} onclick={search.run}>{texts.search.search}</button>
   </div>
@@ -136,7 +152,7 @@
                 ><label for={tickId(row)}>{formatShortDay(row.day)} · {row.group}</label></td
               >
               <td class="tools">
-                <button onclick={() => onOpen(row.path)}>{texts.day.open}</button>
+                <button onclick={() => onOpenOutput(row.day, row.file)}>{texts.day.open}</button>
                 <button
                   title={texts.search.trace}
                   aria-label={texts.search.trace}
@@ -147,7 +163,10 @@
             {#if search.isTraced(row)}
               <tr class="trace">
                 <td></td>
-                <td colspan="6">{row.trace}</td>
+                <td colspan="6"
+                  >{#each row.trace as part, i (i)}{#if part.code}<code>{part.text}</code
+                      >{:else}{part.text}{/if}{/each}</td
+                >
               </tr>
             {/if}
           {/each}
@@ -212,11 +231,6 @@
     font-weight: 600;
   }
 
-  .controls label {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
 
   .summary {
     margin: 0.75rem 0 0.35rem;

@@ -1,5 +1,7 @@
 // Every screen text of the PC app, in English. Components import from here; no screen text is written in a component.
 
+import type { Question } from "./lib/confirm.svelte";
+
 function count(n: number, one: string, many: string): string {
   return `${n} ${n === 1 ? one : many}`;
 }
@@ -13,6 +15,8 @@ function listed(numbers: number[]): string {
 
 export const texts = {
   title: "Packing",
+  // The *no* of the app's own yes-or-no dialog.
+  confirmCancel: "Cancel",
 
   // The line the Sort rules screen and the Plan screen show while the rule's only group has no
   // filter, so every order goes into one PDF. The Day screen has no line.
@@ -108,6 +112,10 @@ export const texts = {
     // *Day summary*: the day summary PDF of the open date, written and opened.
     daySummary: "Day summary",
     daySummaryTitle: "Write the summary of the whole day as a PDF and open it",
+    // The dialog while a file is written that the owner waits for: the day summary, or an output
+    // that *Open* found missing.
+    writingDaySummary: "Writing the day summary …",
+    writingAgain: (file: string) => `Writing ${file} again …`,
     amended: " · amended",
     // The data folder also holds files of Packing v0.1.
     oldData: "This folder also holds data of Packing v0.1 (labels\\). It is not read.",
@@ -123,22 +131,25 @@ export const texts = {
     // *Amend* and *Revert*, on the newest batch only.
     amend: "Amend",
     revert: "Revert",
-    undoBatch: (n: number) => `Undo batch ${n}`,
-    redoBatch: (n: number) => `Redo batch ${n}`,
-    // The Revert confirmation, verbatim.
-    confirmRevert: (n: number, pdfs: number, orders: number) =>
-      `Undo batch ${n}? Its ${count(pdfs, "group PDF", "group PDFs")} and its summary PDF are deleted, and its ${count(orders, "order", "orders")} can be saved again. If you already printed them, throw the printed labels away.`,
-    // The Amend confirmation, verbatim. An amend redoes the batch with its sort rule, so the
-    // confirmation names it.
-    confirmAmend: (n: number, rule: string, time: string) =>
-      `Redo batch ${n} with its sort rule (${rule})? Batch ${n} was saved at ${time}. If you already printed it, print it again after saving.`,
+    // The questions before *Revert* and *Amend*. An amend redoes the batch with its sort rule, so
+    // the question names it.
+    askRevert: (n: number, pdfs: number): Question => ({
+      title: `Undo batch ${n}?`,
+      body: `Its ${count(pdfs, "group PDF", "group PDFs")} and summary PDF are deleted. Throw away its printed labels.`,
+      ok: `Undo batch ${n}`,
+    }),
+    askAmend: (n: number, rule: string): Question => ({
+      title: `Redo batch ${n}?`,
+      body: `Its labels are read again with the sort rule ${rule}.`,
+      ok: `Redo batch ${n}`,
+    }),
     // While *Amend* reads the batch's own label files again (the
     // `read-progress` event), shown with a progress bar before the Plan screen opens.
     amendReading: (page: number, pages: number) =>
       `Reading the batch's labels …  page ${page} of ${pages}`,
     // Changing the day while a draft is open asks first; the batch being
     // prepared is thrown away. (The Plan screen's top *Back* never asks.)
-    confirmDiscardDraft: "Discard the batch being prepared?",
+    askDiscardDraft: { title: "Discard the batch being prepared?", body: null, ok: "Discard" },
   },
 
   newBatch: {
@@ -154,6 +165,8 @@ export const texts = {
     sortRule: "Sort rule",
     sortRuleFixed: (name: string) => `${name} (as now)`,
     pages: (n: number) => `${count(n, "page", "pages")}`,
+    // A file's modify time, which is when it was downloaded: "downloaded 11:02".
+    downloaded: (time: string) => `downloaded ${time}`,
     usedInBatch: (n: number) => `used in batch ${n}`,
     // A file whose bytes equal a listed file: it is not listed again.
     sameFile: (name: string, listed: string) => `${name} is the same file as ${listed}: listed once.`,
@@ -218,9 +231,8 @@ export const texts = {
     addCondition: "Condition",
     addSubmit: "Add",
     addCancel: "Cancel",
+    // A new batch and an amend alike.
     save: "Save batch",
-    // An amend uses the same screen, titled *Redo batch 2*, with this button.
-    saveAgain: (n: number) => `Save batch ${n} again`,
     // While *Save batch* runs — the stage and a progress bar. `saving` shows before the first `save-progress`.
     saving: "Saving …",
     saveCopying: "Copying inputs …",
@@ -242,7 +254,7 @@ export const texts = {
     // from — the new batch's file list, or the amend's selection page — with the files still
     // listed. Only *Cancel* on that page and an amend's *Cancel amend* discard.
     back: "Back",
-    // Bottom, beside *Save batch `<b>` again* on an amend only. It leaves the
+    // Bottom, beside *Save batch* on an amend only. It leaves the
     // batch as it was and returns to the Day screen, and never asks (it writes nothing).
     cancelAmend: "Cancel amend",
   },
@@ -295,9 +307,11 @@ export const texts = {
     dataFolder: "Data folder",
     change: "Change…",
     open: "Open",
-    // "Use `<folder>` for the data from now on? The data in `<old>` stays where it is."
-    confirmChange: (folder: string, old: string) =>
-      `Use ${folder} for the data from now on? The data in ${old} stays where it is.`,
+    askChange: (folder: string, old: string): Question => ({
+      title: "Change the data folder?",
+      body: `New: ${folder}. The data in ${old} stays where it is.`,
+      ok: "Change",
+    }),
     dataFolderHint: "Every workspace and its dates are kept in this folder.",
     about: "About",
     tagline:
@@ -330,8 +344,11 @@ export const texts = {
     renameTo: "Rename",
     ruleNeedsName: "A rule needs a name.",
     ruleNameTaken: "A rule with that name is already there.",
-    confirmDeleteRule: (rule: string) =>
-      `Delete the sort rule ${rule}? Saved batches keep the rule they were saved with.`,
+    askDeleteRule: (rule: string): Question => ({
+      title: `Delete the sort rule ${rule}?`,
+      body: "Saved batches keep the rule they were saved with.",
+      ok: "Delete",
+    }),
     code: "Code",
     name: "Name",
     // "In batch 3: 130", in order from what is left.
@@ -345,7 +362,7 @@ export const texts = {
     cancel: "Cancel",
     save: "Save",
     delete: "Delete",
-    confirmDelete: (code: string) => `Delete group ${code}?`,
+    askDelete: (code: string): Question => ({ title: `Delete group ${code}?`, body: null, ok: "Delete" }),
     moveUp: "Move up",
     moveDown: "Move down",
     // The boxes: **All of these** / **Any of these**, rows and boxes inside boxes.
@@ -376,10 +393,20 @@ export const texts = {
     // The line above the rows, "N orders in M batches".
     summary: (orders: number, batches: number) =>
       `${count(orders, "order", "orders")} in ${count(batches, "batch", "batches")}`,
-    scope: "Scope",
-    // *This day* (the open date) is the default.
-    scopeDay: "This day",
-    scopeAll: "All days",
+    // The dates searched: the open date (the default), ranges that end today, a range of the
+    // owner's own, or every date. The range's two dates show under each choice but *All days*.
+    dates: "Dates",
+    ranges: {
+      day: "This day",
+      yesterday: "Yesterday",
+      week: "Last 7 days",
+      month: "Last 30 days",
+      custom: "Custom range",
+      all: "All days",
+    },
+    rangeTo: "to",
+    rangeFrom: "First date",
+    rangeUntil: "Last date",
     search: "Search",
     // The search index is still being built.
     loading: "Loading…",
@@ -404,10 +431,14 @@ export const texts = {
     clear: "Clear",
     reprintedBefore: (n: number) => `${n} of them ${n === 1 ? "was" : "were"} reprinted before`,
     // Asked before printing again an order that was reprinted before.
-    confirmAgain: (before: number, all: number) =>
-      all === 1
-        ? "This order was reprinted before. Reprint it again?"
-        : `${before} of these ${all} orders ${before === 1 ? "was" : "were"} reprinted before. Reprint all ${all} anyway?`,
+    askAgain: (before: number, all: number): Question => ({
+      title: `Reprint ${count(all, "order", "orders")}?`,
+      body:
+        all === 1
+          ? "It was reprinted before."
+          : `${before} of them ${before === 1 ? "was" : "were"} reprinted before.`,
+      ok: `Reprint ${count(all, "order", "orders")}`,
+    }),
     // The ▸ that opens a row's trace line.
     trace: "Where it came from",
     reprint: (n: number) => `Reprint ${count(n, "order", "orders")}`,
@@ -417,46 +448,6 @@ export const texts = {
     notKept: "The reprint was not kept: the written file did not match its sources.",
   },
 } as const;
-
-// The fields a condition can use,
-// with the plain name and the field type that decides the operators and the value input.
-export type FieldType = "text" | "number" | "time";
-
-export const conditionFields: { value: string; label: string; type: FieldType }[] = [
-  { value: "name", label: "Product name", type: "text" },
-  { value: "display_name", label: "Display name", type: "text" },
-  { value: "variation", label: "Variation", type: "text" },
-  { value: "seller_sku", label: "Seller SKU", type: "text" },
-  { value: "line_quantity", label: "Line quantity", type: "number" },
-  { value: "total_quantity", label: "Total quantity", type: "number" },
-  { value: "distinct_items", label: "Different items", type: "number" },
-  { value: "courier", label: "Courier", type: "text" },
-  { value: "order_id", label: "Order ID", type: "text" },
-  { value: "tracking_id", label: "Tracking ID", type: "text" },
-  { value: "ship_by", label: "Ship by", type: "time" },
-];
-
-// The operators a text field takes. `is_empty` reads *is unknown* on the courier and the
-// tracking ID, which are empty when the label did not name them.
-export function textOperators(field: string): { value: string; label: string }[] {
-  const unknown = field === "courier" || field === "tracking_id";
-  return [
-    { value: "contains", label: "contains" },
-    { value: "equals", label: "equals" },
-    { value: "starts_with", label: "starts with" },
-    { value: "is_empty", label: unknown ? "is unknown" : "is empty" },
-  ];
-}
-
-// The operators a number or date/time field takes.
-export const numberOperators: { value: string; label: string }[] = [
-  { value: "=", label: "=" },
-  { value: "!=", label: "≠" },
-  { value: "<", label: "<" },
-  { value: "<=", label: "≤" },
-  { value: ">", label: ">" },
-  { value: ">=", label: "≥" },
-];
 
 // The stage of a running save, from the `save-progress` event — the stage in plain words with the pages done. The Plan screen
 // shows this with a progress bar; before the first event it shows `plan.saving`.

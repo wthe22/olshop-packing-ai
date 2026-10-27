@@ -2,8 +2,9 @@
   // The boxes editor: a group is *All of these* (`and`) or *Any of these*
   // (`or`) and holds rows (field · operator · value) and other groups; **not** sits on rows and
   // groups. `onEdit` is called after every change so the caller can recount and re-check.
-  import { conditionFields, numberOperators, textOperators, texts } from "../texts";
-  import type { FieldType } from "../texts";
+  import { texts } from "../texts";
+  import { conditionFields, numberOperators, textOperators } from "../fields";
+  import type { FieldType } from "../fields";
   import type { Courier } from "./api/rules";
   import {
     IS_EMPTY,

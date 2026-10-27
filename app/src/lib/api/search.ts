@@ -2,6 +2,7 @@
 // fields; the interfaces here match it.
 
 import { invoke } from "@tauri-apps/api/core";
+import type { DateRange } from "../searchRange";
 
 // One line of a Search row: the product name and its quantity.
 export interface SearchItem {
@@ -21,12 +22,18 @@ export interface SearchRow {
   batch: number;
   // `<batch>-<code>`.
   group: string;
-  // The group PDF, for *Open*.
-  path: string;
+  // The group PDF's file name, for *Open*.
+  file: string;
   // Its input and pages, and the clue that named its courier.
-  trace: string;
+  trace: TracePart[];
   // The reprints that printed it again, oldest first.
   reprints: ReprintMark[];
+}
+
+// A piece of a row's trace line: a logo's hash or a tracking-ID form is `code`, set in monospace.
+export interface TracePart {
+  text: string;
+  code: boolean;
 }
 
 // A reprint that printed an order again.
@@ -44,14 +51,10 @@ export interface SearchResults {
   rows: SearchRow[];
 }
 
-// *This day* (the open date, the default) or *All days* of the open workspace.
-export type SearchScope = "day" | "all";
-
-export const searchOrders = (
-  filter: string,
-  scope: SearchScope,
-  day: string,
-): Promise<SearchResults> => invoke("search_orders", { filter, scope, day });
+// The saved orders the filter matches on the dates of `range`, both ends included; `null` searches
+// every date of the open workspace.
+export const searchOrders = (filter: string, range: DateRange | null): Promise<SearchResults> =>
+  invoke("search_orders", { filter, range });
 
 // One ticked row: the order and the date it was saved on.
 export interface ReprintChoice {

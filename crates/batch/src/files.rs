@@ -1,6 +1,7 @@
 //! The files chosen for a batch (step 3): each one's SHA-256, size, times and page count, and the
 //! live batch of the date that read the same bytes — never the batch an amend redoes, whose own
-//! files they may be. One file chosen twice is listed once.
+//! files they may be. One file chosen twice is listed once. A file read from the date's `input/`,
+//! where it is named by its hash, keeps the name its record gives it.
 
 use std::fs;
 use std::path::PathBuf;
@@ -12,7 +13,7 @@ use packing_engine::ids::BatchId;
 use packing_engine::record::{Datetime, Sha256};
 use packing_pdf::read;
 use packing_pdf::worker::PdfWorker;
-use packing_store::{Fold, StoreError, sha256_of};
+use packing_store::{DateFolder, Fold, StoreError, input_path, sha256_of};
 
 use crate::BatchError;
 
@@ -30,10 +31,12 @@ pub struct ChosenFile {
     pub used_in: Option<BatchId>,
 }
 
-/// The files at `paths` for a batch on `fold`'s date; `redo` is the batch an amend redoes.
+/// The files at `paths` for a batch on `fold`'s date, kept in `folder`; `redo` is the batch an
+/// amend redoes.
 pub fn check_files(
     worker: &PdfWorker,
     paths: &[PathBuf],
+    folder: &DateFolder,
     fold: &Fold,
     redo: Option<BatchId>,
 ) -> Result<Vec<ChosenFile>, BatchError> {
@@ -47,11 +50,15 @@ pub fn check_files(
             path: path.clone(),
             error,
         })?;
+        let recorded = (*path == input_path(folder.dir(), &sha256))
+            .then(|| recorded_name(fold, &sha256))
+            .flatten();
         files.push(ChosenFile {
             path: path.clone(),
-            filename: path
-                .file_name()
-                .map_or_else(String::new, |name| name.to_string_lossy().into_owned()),
+            filename: recorded.unwrap_or_else(|| {
+                path.file_name()
+                    .map_or_else(String::new, |name| name.to_string_lossy().into_owned())
+            }),
             used_in: used_in(fold, &sha256, redo),
             sha256,
             size: meta.len(),
@@ -69,6 +76,15 @@ pub fn check_files(
         file.page_count = u16::try_from(pages).unwrap_or(u16::MAX);
     }
     Ok(files)
+}
+
+/// The name a live batch's record gives the bytes `sha256`.
+fn recorded_name(fold: &Fold, sha256: &Sha256) -> Option<String> {
+    fold.live
+        .values()
+        .flat_map(|live| &live.saved.inputs)
+        .find(|input| input.sha256 == *sha256)
+        .map(|input| input.filename.clone())
 }
 
 /// The live batch other than `redo` whose inputs hold these bytes.

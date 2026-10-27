@@ -3,6 +3,7 @@
 //! and every date's reprints. It is only read: every decision is still taken from a date's own fold.
 
 use std::collections::BTreeMap;
+use std::ops::RangeInclusive;
 use std::path::Path;
 
 use jiff::civil::Date;
@@ -151,11 +152,11 @@ impl SearchIndex {
             .collect()
     }
 
-    /// The orders a filter matches, on one date or on all, in printing order.
-    pub fn search(&self, filter: &Condition, date: Option<Date>) -> Vec<&IndexedOrder> {
+    /// The orders a filter matches on the dates of `dates`, in printing order; only those dates
+    /// are looked at.
+    pub fn search(&self, filter: &Condition, dates: RangeInclusive<Date>) -> Vec<&IndexedOrder> {
         self.dates
-            .iter()
-            .filter(|(at, _)| date.is_none_or(|date| **at == date))
+            .range(dates)
             .flat_map(|(_, orders)| orders)
             .filter(|order| evaluate_filter(filter, *order))
             .collect()

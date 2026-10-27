@@ -24,8 +24,8 @@ with real downloads, in this order. A finding goes into [reviews/ui.md](../../re
    order of the summary; the summary's counts add up.
 8. **Day.** The printed tick survives a restart; **Left out ▸**; **Amend** (Plan titled *Redo batch n*,
    **Back** to its files, **Cancel amend**) and **Revert** on the newest batch. Delete a group PDF in
-   Explorer, reopen the date: *⚠ missing* and **Restore**.
-9. **Search and reprint.** By tracking ID on *This day* and on *All days*, by product name and quantity;
+   Explorer, reopen the date: *⚠ missing* and **Open**, which writes it again.
+9. **Search and reprint.** By tracking ID on *This day*, *Last 7 days* and *All days*, by product name and quantity;
    **▸** shows where an order came from; tick two orders, **Reprint 2 orders**, **Open**; today's Day
    screen lists the reprint.
 10. **Sort rules.** **+ New rule** (empty and as a copy), **Rename…**, **Delete rule**; a group's

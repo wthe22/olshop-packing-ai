@@ -5,6 +5,7 @@
   // screen and nothing is written by this component.
   import type { Findings } from "./saveCheck";
   import { texts } from "../texts";
+  import Dialog from "./Dialog.svelte";
 
   let {
     findings,
@@ -20,9 +21,7 @@
   } = $props();
 </script>
 
-<div class="backdrop" role="presentation"></div>
-<div class="panel" role="dialog" aria-label={texts.plan.checkTitle}>
-  <h2>{texts.plan.checkTitle}</h2>
+<Dialog title={texts.plan.checkTitle} width="44rem">
 
   {#if findings.errors.length > 0}
     <p class="kind">{texts.plan.checkErrors(findings.errors.length)}</p>
@@ -46,38 +45,9 @@
     <button class="primary" disabled={busy} onclick={onSaveAnyway}>{texts.plan.saveAnyway}</button>
     <button disabled={busy} onclick={onCancel}>{texts.plan.saveCancel}</button>
   </div>
-</div>
+</Dialog>
 
 <style>
-  .backdrop {
-    position: fixed;
-    inset: 0;
-    background: var(--backdrop);
-    z-index: 10;
-  }
-
-  .panel {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90vw;
-    max-width: 44rem;
-    max-height: 80vh;
-    overflow: auto;
-    padding: 1rem 1.25rem 1.25rem;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: 8px;
-    box-shadow: var(--shadow-lg);
-    z-index: 11;
-  }
-
-  h2 {
-    margin: 0 0 0.75rem;
-    font-size: 1.05rem;
-  }
-
   .kind {
     margin: 0.75rem 0 0.25rem;
     font-weight: 600;

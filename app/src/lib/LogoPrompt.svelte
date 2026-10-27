@@ -4,6 +4,7 @@
   // here; the flow is in `logoPrompt.ts` and nothing is written by this component.
   import type { LogoAnswer, LogoView } from "./api/batch";
   import { texts } from "../texts";
+  import Dialog from "./Dialog.svelte";
 
   let {
     logo,
@@ -22,9 +23,7 @@
   } = $props();
 </script>
 
-<div class="backdrop" role="presentation"></div>
-<div class="panel" role="dialog" aria-label={texts.logo.title}>
-  <h2>{texts.logo.title}</h2>
+<Dialog title={texts.logo.title} width="46rem">
 
   <div class="logo">
     {#if logo.picture}
@@ -49,36 +48,9 @@
     </button>
     <button disabled={busy} onclick={onSkipAll}>{texts.logo.skipAll}</button>
   </div>
-</div>
+</Dialog>
 
 <style>
-  .backdrop {
-    position: fixed;
-    inset: 0;
-    background: var(--backdrop);
-    z-index: 10;
-  }
-
-  .panel {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    min-width: 34rem;
-    max-width: 90vw;
-    padding: 1rem 1.25rem 1.25rem;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: 8px;
-    box-shadow: var(--shadow-lg);
-    z-index: 11;
-  }
-
-  h2 {
-    margin: 0 0 0.75rem;
-    font-size: 1.05rem;
-  }
-
   .logo {
     display: flex;
     align-items: center;

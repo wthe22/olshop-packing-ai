@@ -50,7 +50,7 @@
 
   .file textarea {
     width: 100%;
-    font-family: Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
   }
 

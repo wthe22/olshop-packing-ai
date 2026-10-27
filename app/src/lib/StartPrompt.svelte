@@ -58,7 +58,7 @@
   }
 
   .path {
-    font-family: Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
     overflow-wrap: anywhere;
   }

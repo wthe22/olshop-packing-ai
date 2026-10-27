@@ -7,7 +7,7 @@
 // read again) → *Back* → the amend's selection page → Plan → Day. The Plan screen's *Back* returns
 // to the PDF selection page with the files still listed, for a new batch and an amend alike.
 
-import { confirm, open } from "@tauri-apps/plugin-dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import { listen } from "@tauri-apps/api/event";
 import * as start from "./api/start";
 import * as dayData from "./api/day";
@@ -16,11 +16,16 @@ import * as batch from "./api/batch";
 import { togglePrinted } from "./printed";
 import { texts } from "../texts";
 import { amendOpens } from "./planFlow";
+import { confirmBox } from "./confirm.svelte";
 import type { Theme } from "./theme";
 
 // The screens the shell routes between; the batch flow's screens are not in the nav.
 export type Screen = "day" | "new-batch" | "repeats" | "plan";
 export type OverlayId = "search" | "sort-rules" | "settings";
+
+// A write the owner waits for shows its dialog only when it takes longer than this, so an *Open*
+// of a file that is there does not flash one.
+const WORKING_DELAY_MS = 200;
 
 export class Shell {
   ready = $state(false);
@@ -68,6 +73,11 @@ export class Shell {
   // The green *Batch n saved* line on the Day screen, shown for a few seconds.
   savedMessage = $state<string | null>(null);
   private savedTimer: ReturnType<typeof setTimeout> | undefined;
+  // The dialog line of a file being written that the owner waits for (the day summary, an output
+  // written again); `null` while none is shown.
+  working = $state<string | null>(null);
+  // Such a write is running: a second click starts nothing.
+  writing = $state(false);
 
   // The batch number the next save will get (continuing the day).
   nextBatch = $derived((this.overview?.totals.batches ?? 0) + 1);
@@ -188,7 +198,7 @@ export class Shell {
   changeFolder = async () => {
     const picked = await this.pickFolder(texts.settings.change);
     if (!picked) return;
-    if (!(await confirm(texts.settings.confirmChange(picked, this.dataFolder ?? "")))) return;
+    if (!(await confirmBox.ask(texts.settings.askChange(picked, this.dataFolder ?? "")))) return;
     try {
       this.dataFolder = await start.chooseDataFolder(picked);
       await this.workspaceOfFolder();
@@ -206,7 +216,7 @@ export class Shell {
   // Ask to discard the open batch before leaving it.
   private leaveBatch = async (): Promise<boolean> => {
     if (this.draftOpen) {
-      if (!(await confirm(texts.day.confirmDiscardDraft))) return false;
+      if (!(await confirmBox.ask(texts.day.askDiscardDraft))) return false;
       await batch.discardDraft();
       this.draftOpen = false;
       this.readResult = null;
@@ -352,27 +362,49 @@ export class Shell {
     this.overlay = null;
   };
 
-  // **Restore** an output found missing or changed: written again from the stored inputs and
-  // checked like the original; a finding keeps nothing and is shown.
-  restore = async (file: string) => {
-    this.busy = true;
+  // Run a write the owner waits for: its dialog shows after a moment and a second one is not
+  // started while it runs. `null` when it did not run or failed (the failure is shown).
+  private waitFor = async <T>(text: string, job: () => Promise<T>): Promise<T | null> => {
+    if (this.writing) return null;
+    this.writing = true;
+    const shown = setTimeout(() => (this.working = text), WORKING_DELAY_MS);
     try {
-      const result = await dayData.restoreOutput(this.day, file);
-      if (!result.restored) this.error = texts.day.restoreFailed(file, result.errors);
-      await this.refreshOverview();
+      return await job();
     } catch (e) {
       this.error = String(e);
+      return null;
+    } finally {
+      clearTimeout(shown);
+      this.working = null;
+      this.writing = false;
     }
-    this.busy = false;
+  };
+
+  // **Restore** an output found changed: written again from the stored inputs and checked like
+  // the original; a finding keeps nothing and is shown.
+  restore = async (file: string) => {
+    const result = await this.waitFor(texts.day.writingAgain(file), () =>
+      dayData.restoreOutput(this.day, file),
+    );
+    if (!result) return;
+    if (!result.restored) this.error = texts.day.restoreFailed(file, result.errors);
+    await this.refreshOverview();
+  };
+
+  // *Open* on a group PDF or a summary PDF of `day`: one that is not there any more is written
+  // again first, checked like a **Restore**, so an old batch's summary shows today's layout.
+  openOutput = async (day: string, file: string) => {
+    const opened = await this.waitFor(texts.day.writingAgain(file), () =>
+      dayData.openOutput(day, file),
+    );
+    if (!opened) return;
+    if (opened.kind === "not_kept") this.error = texts.day.restoreFailed(file, opened.errors);
+    if (opened.kind !== "opened" && day === this.day) await this.refreshOverview();
   };
 
   // *Revert* the newest batch: confirm, then revert it.
   revert = async (row: dayData.BatchView) => {
-    const asked = await confirm(texts.day.confirmRevert(row.batch, row.pdfs.length, row.orders), {
-      title: texts.title,
-      okLabel: texts.day.undoBatch(row.batch),
-    });
-    if (!asked) return;
+    if (!(await confirmBox.ask(texts.day.askRevert(row.batch, row.pdfs.length)))) return;
     try {
       await dayData.revertLast(this.day);
       await Promise.all([this.refreshOverview(), this.refreshPanel()]);
@@ -387,11 +419,7 @@ export class Shell {
   // current selection listed. The read's
   // `read-progress` events show on the Day screen until the Plan screen opens.
   amend = async (row: dayData.BatchView) => {
-    const asked = await confirm(texts.day.confirmAmend(row.batch, row.sort_rule, row.time), {
-      title: texts.title,
-      okLabel: texts.day.redoBatch(row.batch),
-    });
-    if (!asked) return;
+    if (!(await confirmBox.ask(texts.day.askAmend(row.batch, row.sort_rule)))) return;
     this.busy = true;
     this.amendReading = null;
     const unlisten = await listen<batch.ReadProgress>("read-progress", (event) => {
@@ -432,13 +460,9 @@ export class Shell {
 
   // *Day summary*: the open date's summary PDF, written from its journal, then opened.
   daySummary = async () => {
-    this.busy = true;
-    try {
-      await start.openPath(await dayData.writeDaySummary(this.day));
-    } catch (e) {
-      this.error = String(e);
-    }
-    this.busy = false;
+    await this.waitFor(texts.day.writingDaySummary, async () =>
+      start.openPath(await dayData.writeDaySummary(this.day)),
+    );
   };
 
   // The **Printed** tick of one group PDF: write it and update the batch's rows in place, without

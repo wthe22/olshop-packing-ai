@@ -24,19 +24,23 @@ test("the sort rule's words are the designed words", () => {
   );
 });
 
-test("the Amend confirmation names the batch's sort rule, in the words the guide quotes", () => {
-  const amend = texts.day.confirmAmend(2, "default", "09:12");
-  assert.equal(
-    amend,
-    "Redo batch 2 with its sort rule (default)? Batch 2 was saved at 09:12. If you already printed it, print it again after saving.",
-  );
-  // 03-changes.md quotes the Amend confirmation, so the two must not drift. The quote is wrapped
+test("the Amend question names the batch's sort rule, in the words the guide quotes", () => {
+  const amend = texts.day.askAmend(2, "default");
+  assert.deepEqual(amend, {
+    title: "Redo batch 2?",
+    body: "Its labels are read again with the sort rule default.",
+    ok: "Redo batch 2",
+  });
+  // 03-changes.md quotes the Amend question, so the two must not drift. The quote may be wrapped
   // over two lines in the Markdown, so its whitespace is collapsed first.
   const doc = readFileSync(
     new URL("../../docs/user-guide/03-changes.md", import.meta.url),
     "utf8",
   ).replace(/\s+/g, " ");
-  assert.ok(doc.includes(amend), "03-changes.md must quote the Amend confirmation as texts.ts writes it");
+  assert.ok(
+    doc.includes(`${amend.title} ${amend.body}`),
+    "03-changes.md must quote the Amend question as texts.ts writes it",
+  );
 });
 
 test("the newest batch's rule is preselected, the first when it is gone", () => {

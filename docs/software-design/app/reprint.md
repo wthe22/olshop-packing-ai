@@ -19,14 +19,16 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
 
 ## Search
 
-The [Search](../ui/search.md) screen takes a filter made with the boxes of the Sort rules screen and a
-scope: *This day* (the open date, the default) or *All days* of the open workspace
-([D-UI-3](../decisions/ui.md)). Each result row shows the order, its items, its date, batch and group
+The [Search](../ui/search.md) screen takes a filter made with the boxes of the Sort rules screen and the
+dates to search: a range (the open date by default) or all dates of the open workspace
+([D-UI-3](../decisions/ui.md)); only the dates of the range are looked at. Each result row shows the order, its items, its date, batch and group
 file, a tick, and a trace line when opened:
 
 ```
 from 10-07_07-00-00_Shipping label+Packing slip_1.pdf p. 12–13 · courier jnt by logo 39b9b7b9f61d0e7f + form J[XY]\d{10} · batch 2 · 2-A
 ```
+
+The logo's hash and the tracking-ID form are set in monospace.
 
 Orders of an open draft are not searched: they are not saved.
 
@@ -53,10 +55,12 @@ and no printed mark moves. The Day screen lists the day's reprints with **Open**
 
 The open-time check lists an output of a live batch that is missing or changed
 ([journal](../data/journal.md#when-a-date-opens)).
-**Restore** on its batch card writes it again:
+**Restore** on its batch card writes a changed one again; **Open** on a group PDF or summary PDF that is not
+there (missing when the date opened, or deleted since) writes it again first, then opens it:
 
 - a group PDF from `input/` and the batch's record — the reprint path, its pages in the recorded order;
-- the summary PDF from the batch's record, as at save.
+- the summary PDF from the batch's record, in the program's current layout: deleting an old batch's
+  summary PDF and pressing **Open** shows its data in today's layout.
 
 The file is verified like the original (V2, V5 or V6), written through `output/.partial/`, and committed as
 `output_restored` with its new size and SHA-256, which the open-time check uses from then on.

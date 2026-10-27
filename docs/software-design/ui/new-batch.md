@@ -8,9 +8,9 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 │  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐       │
 │     Drop label PDFs here, or  [Add files…]                                             │
 │  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘       │
-│  1  10-07_11-02-10_Shipping label+Packing slip_1.pdf 200 pages 11:02               [×] │
-│  2  10-07_11-02-21_Shipping label+Packing slip_2.pdf  57 pages 11:02               [×] │
-│  3  10-07_09-05-49_Shipping label+Packing slip_2.pdf  41 pages 09:05 used in batch 2[×]│
+│  1  10-07_11-02-10_Shipping label+Packing slip_1.pdf 200 pages downloaded 11:02    [×] │
+│  2  10-07_11-02-21_Shipping label+Packing slip_2.pdf  57 pages downloaded 11:02    [×] │
+│  3  10-07_09-05-49_…slip_2.pdf  41 pages downloaded 09:05 used in batch 2          [×] │
 │     labels (1).pdf is the same file as 2: listed once.                                 │
 │  Selected: 3 files · 298 pages                                         [ Read labels ] │
 └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -18,7 +18,7 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 
 - **Add files…** opens the Windows file dialog (several files at once, in the folder used last). Dropping
   files onto the window does the same.
-- Each listed file shows its page count; its SHA-256 is taken at once
+- Each listed file shows its page count and *downloaded* with its modify time; its SHA-256 is taken at once
   ([02 Read](../workflow/02-read.md#3-choose-the-files)). A file whose bytes equal a listed file is not listed
   again: a line names both. A file that is an input of a live batch of this date shows *used in batch n*
   in orange: it can be read, its orders are then found as already saved. On an amend's selection page the

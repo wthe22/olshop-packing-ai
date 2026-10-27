@@ -37,5 +37,5 @@ Every message says what happened and what to do. A **stop** ends the step with n
 | Stop | A sort rule's filter has an error | **Sort rule `<name>` has an error:** `<line, col: message>`. The Sort rules screen opens on it. |
 | Damage | The journal of a date is damaged, or names another workspace or date | **`<date>` of `<workspace>` cannot be changed:** line `<n>` of its journal `<is damaged / names another workspace>`. It can be viewed; nothing is written to it. |
 | Warning | An input of a live batch is missing or changed | **`<file>`, an input of batch `<b>`, is missing or has changed.** Amend, reprint and restore cannot use it. |
-| Warning | An output is missing or changed | On its batch card: **⚠ missing** / **⚠ changed** and **Restore**. |
+| Warning | An output is missing or changed | On its batch card: **⚠ missing** and **Open** (writes it again) / **⚠ changed** and **Restore**. |
 | Note | A version 0.1 data folder | **This folder also holds data of Packing v0.1 (`labels\`). It is not read.** [Open folder] |

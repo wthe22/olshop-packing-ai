@@ -274,7 +274,7 @@
     <button
       class="primary"
       disabled={view.has_duplicate_names || saving}
-      onclick={() => save()}>{amending ? texts.plan.saveAgain(batchNo) : texts.plan.save}</button
+      onclick={() => save()}>{texts.plan.save}</button
     >
   </div>
 

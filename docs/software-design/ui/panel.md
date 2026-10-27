@@ -12,11 +12,11 @@ another date or workspace. It sits at the left of every screen; the owner of the
 │ [Toko Contoh      ▾] [+] │                                         [ + New batch ]     │
 │                          │  ┌ Batch 2 · saved 09:12 · 129 orders ─ [Amend] ┐           │
 │ ▾ October 2026           │  │  2-A  Sepatu         88 orders  [✓] [Open]   │           │
-│ ▌ Wed 21 Oct · today 729 │  │  2-Z  Lainnya        41 orders  [ ] [Open]   │           │
-│   Tue 20 Oct         530 │  └──────────────────────────────────────────────┘           │
-│   Mon 19 Oct         412 │                                                             │
+│ ▌ Wed, 21 Oct · today 729│  │  2-Z  Lainnya        41 orders  [ ] [Open]   │           │
+│   Tue, 20 Oct        530 │  └──────────────────────────────────────────────┘           │
+│   Mon, 19 Oct        412 │                                                             │
 │ ▸ September 2026         │                                                             │
-│ ⚠ Sat 3 Oct  damaged     │                                                             │
+│ ⚠ Sat, 3 Oct  damaged    │                                                             │
 └──────────────────────────┴─────────────────────────────────────────────────────────────┘
 ```
 
@@ -26,7 +26,7 @@ another date or workspace. It sits at the left of every screen; the owner of the
   one opens it on today's date. **+ New workspace** asks for a name ([workspaces › Names](../app/workspaces.md#names))
   and opens the new workspace on today's date; a name taken is refused beside the field. It is the **[+]** beside
   the list, which opens the name field with **Cancel** and **Create**.
-- **Dates** of the workspace, newest first, each with its number of orders from the search index. Today is
+- **Dates** of the workspace, newest first (*Wed, 21 Oct*), each with its number of orders from the search index. Today is
   always listed, with *· today*, even before it has a folder. The open date is marked ▌ and shaded.
 - **Months fold**: the month of the open date and the current month start open, the others closed.
 - **Click a date** to open it ([01 Start and open](../workflow/01-start-and-open.md#2-open-a-date)). A draft

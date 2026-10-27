@@ -17,7 +17,7 @@ use packing_batch::{
     save, set_printed,
 };
 use packing_engine::ids::{BatchId, OrderId};
-use packing_engine::record::PrintedMarked;
+use packing_engine::record::{BatchSaved, PrintedMarked};
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, SortRule, Workflows, load_workflows};
 use packing_pdf::worker::PdfWorker;
 use packing_store::{DateFolder, Journal, Settled, input_path, open_date, partial_dir};
@@ -60,7 +60,7 @@ impl Day {
         rule: &SortRule,
         redo: Option<BatchId>,
     ) -> Result<Draft, BatchError> {
-        let files = check_files(&self.worker, paths, self.journal.fold(), redo)?;
+        let files = check_files(&self.worker, paths, &self.folder, self.journal.fold(), redo)?;
         let (progress, _) = mpsc::channel();
         read_draft(ReadRequest {
             worker: &self.worker,
@@ -192,9 +192,8 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
         matches!(refused, Err(BatchError::NotNewest)),
         "an amend of a batch reverted meanwhile: {refused:?}"
     );
-    let numbers = |record: &packing_engine::record::BatchSaved| -> Vec<_> {
-        record.inputs.iter().map(|input| input.pdf).collect()
-    };
+    let numbers =
+        |record: &BatchSaved| -> Vec<_> { record.inputs.iter().map(|input| input.pdf).collect() };
     assert_eq!(
         numbers(&again),
         numbers(&first),
@@ -226,11 +225,17 @@ fn an_amend_saves_the_newest_batch_again_under_its_number() {
     // The batch's own downloads chosen again: used in batch 1 for a new batch, not for its amend.
     let downloads: Vec<PathBuf> = INPUTS.iter().map(|name| testdata(name)).collect();
     let used_in = |redo| -> Vec<Option<BatchId>> {
-        check_files(&day.worker, &downloads, day.journal.fold(), redo)
-            .unwrap()
-            .iter()
-            .map(|file| file.used_in)
-            .collect()
+        check_files(
+            &day.worker,
+            &downloads,
+            &day.folder,
+            day.journal.fold(),
+            redo,
+        )
+        .unwrap()
+        .iter()
+        .map(|file| file.used_in)
+        .collect()
     };
     assert_eq!(used_in(None), [Some(first.batch), Some(first.batch)]);
     assert_eq!(used_in(Some(first.batch)), [None, None]);
@@ -241,6 +246,18 @@ fn an_amend_saves_the_newest_batch_again_under_its_number() {
     assert_eq!((again.batch, again.amends), (first.batch, true));
     assert_eq!(again.orders, first.orders, "the same copies kept");
     assert_eq!(again.left_out, first.left_out);
+    let names = |record: &BatchSaved| -> Vec<String> {
+        record
+            .inputs
+            .iter()
+            .map(|input| input.filename.clone())
+            .collect()
+    };
+    assert_eq!(
+        names(&again),
+        names(&first),
+        "the inputs read again from input/ keep their download names"
+    );
     let live = &day.journal.fold().live[&first.batch];
     assert!(live.printed.is_empty(), "an amend starts its ticks empty");
     assert_eq!(day.journal.fold().last_seq, 4);

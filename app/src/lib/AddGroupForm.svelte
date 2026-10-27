@@ -168,7 +168,7 @@
   .add-form .condition-input {
     width: 100%;
     min-width: 16rem;
-    font-family: Consolas, monospace;
+    font-family: var(--font-mono);
   }
 
   .link {

@@ -17,14 +17,16 @@
 | `save_batch(save_anyway)` | Write, verify, commit, move ([04 Save](../workflow/04-save.md)). Emits `save-progress {stage, page, pages}` | The saved batch, or the verifier's findings (nothing saved until *Save anyway*) |
 | `revert_last(day)` / `start_amend(day)` | Revert the newest batch / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)) | The date / the amend's file list and read |
 | `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
-| `restore_output(day, file)` | Write a missing output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
+| `restore_output(day, file)` | Write a changed output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
+| `open_output(day, file)` | **Open** a group PDF or summary PDF; one that is not there is written again first, like `restore_output` | Opened, written again, or not kept with the verifier's findings |
+| `day_summary(day)` | Write the date's [day summary](../labels/day-summary.md) on its own thread, then the window opens it | Its path |
 | `rules_list()` / `rules_load(rule)` / `rules_check(rule, groups)` / `rules_save(rule, groups)` | The Sort rules screen ([rules file](../rules-file/README.md)); a save rebuilds the open draft's plan | Rules, the file and the couriers; groups; errors with line and column; live counts on the open draft |
 | `rules_check_text(text)` / `rules_save_text(text)` | *Edit file as text* | The first check that fails, with its line and column |
 | `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_delete(rule)` | **+ New rule**, **Rename…**, **Delete rule** | — |
 | `filter_to_tree(text)` / `tree_to_filter(tree)` | The boxes editor: the engine's parser and printer, so the window has no second parser | Tree, or an error with line and column / the text |
-| `search_orders(filter, scope, day)` | Search the index ([reprint](reprint.md#search)); scope *This day* (the open `day`) or *All days* | One row per order with its trace |
+| `search_orders(filter, range)` | Search the index ([reprint](reprint.md#search)) on the dates `from`–`to`, both included; no range searches every date | One row per order with its group file and its trace in pieces (a hash or form as code) |
 | `reprint(orders)` | One PDF of the chosen orders' pages, verified, recorded ([reprint](reprint.md#reprint)) | The file, or the verifier's findings |
-| `open_path(path)` / `show_in_folder(path)` | `explorer.exe "<path>"`, the path the only argument | — |
+| `open_path(path)` / `show_in_folder(path)` | `explorer.exe "<path>"`, the path the only argument; a path that is not there is refused, since Explorer would open its home page | — |
 | `settings_get()` / `settings_set(data_dir)` | Settings ([settings](../ui/settings.md)) | — |
 | `about()` | The app version and the PDFium version | — |
 

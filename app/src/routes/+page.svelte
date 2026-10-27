@@ -17,6 +17,8 @@
   import PlanScreen from "../lib/PlanScreen.svelte";
   import RepeatsScreen from "../lib/RepeatsScreen.svelte";
   import Overlays from "../lib/Overlays.svelte";
+  import ConfirmDialog from "../lib/ConfirmDialog.svelte";
+  import WorkingDialog from "../lib/WorkingDialog.svelte";
   import { applyTheme } from "../lib/theme";
 
   // Below the smallest window width the panel hides on its own.
@@ -94,7 +96,9 @@
             overview={shell.overview}
             saved={shell.savedMessage}
             reading={shell.amendReading}
+            writing={shell.writing}
             onOpen={shell.openFile}
+            onOpenOutput={(file) => shell.openOutput(shell.day, file)}
             onOpenFolder={shell.openFolder}
             onSetPrinted={shell.setPrinted}
             onNewBatch={shell.startBatch}
@@ -140,7 +144,10 @@
   </div>
 
   <Overlays {shell} />
+  <WorkingDialog text={shell.working} />
 {/if}
+
+<ConfirmDialog />
 
 <style>
   .window {

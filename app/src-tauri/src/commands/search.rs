@@ -4,11 +4,12 @@
 //! shows them.
 
 use std::collections::BTreeSet;
-use std::path::{Path, PathBuf};
+use std::ops::RangeInclusive;
 
 use jiff::civil::Date;
 use packing_batch::{ReprintOutcome, ReprintRequest, reprint as write_reprint};
 use packing_engine::ids::{BatchId, OrderId};
+use packing_engine::record::{CourierClue, CourierClueKind};
 use packing_engine::rules::parse_filter;
 use packing_store::{IndexedOrder, SearchIndex};
 use serde::{Deserialize, Serialize};
@@ -17,12 +18,24 @@ use tauri::{AppHandle, Manager, State};
 use crate::commands::day::date_of;
 use crate::{APP_VERSION, AppState, today};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Scope {
-    /// The open date.
-    Day,
-    All,
+/// The dates a search covers, both ends included, as `2026-10-07`.
+#[derive(Deserialize)]
+pub struct DateRange {
+    pub(crate) from: String,
+    pub(crate) to: String,
+}
+
+impl DateRange {
+    fn dates(&self) -> Result<RangeInclusive<Date>, String> {
+        let (from, to) = (date_of(&self.from)?, date_of(&self.to)?);
+        if from > to {
+            return Err(format!(
+                "The dates run backwards: {} is after {}.",
+                self.from, self.to
+            ));
+        }
+        Ok(from..=to)
+    }
 }
 
 #[derive(Serialize)]
@@ -45,11 +58,35 @@ pub struct OrderRow {
     batch: BatchId,
     /// `<batch>-<code>`.
     group: String,
-    /// The group PDF, for *Open*.
-    path: String,
-    trace: String,
+    /// The group PDF's file name, for *Open*.
+    file: String,
+    trace: Vec<TracePart>,
     /// The reprints that printed it again, oldest first.
     reprints: Vec<ReprintMarkView>,
+}
+
+/// A piece of a row's trace line; a logo's hash or a tracking-ID form is `code`, which the window
+/// sets in monospace.
+#[derive(Debug, PartialEq, Eq, Serialize)]
+pub struct TracePart {
+    text: String,
+    code: bool,
+}
+
+impl TracePart {
+    fn text(text: impl Into<String>) -> Self {
+        TracePart {
+            text: text.into(),
+            code: false,
+        }
+    }
+
+    fn code(text: impl Into<String>) -> Self {
+        TracePart {
+            text: text.into(),
+            code: true,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -65,23 +102,22 @@ pub struct ItemView {
     quantity: u16,
 }
 
+/// The saved orders `filter` matches on the dates of `range`; none searches every date.
 pub(crate) fn search(
     state: &AppState,
     filter: &str,
-    scope: Scope,
-    day: &str,
+    range: Option<&DateRange>,
 ) -> Result<SearchView, String> {
     let filter = parse_filter(filter).map_err(|error| error.to_string())?;
-    let date = match scope {
-        Scope::Day => Some(date_of(day)?),
-        Scope::All => None,
+    let dates = match range {
+        Some(range) => range.dates()?,
+        None => Date::MIN..=Date::MAX,
     };
-    let output = Outputs::open(state)?;
     let rows = state.index().with(|index| {
         index
-            .search(&filter, date)
+            .search(&filter, dates)
             .into_iter()
-            .map(|order| row(index, order, &output.of(order.date)))
+            .map(|order| row(index, order))
             .collect::<Vec<_>>()
     })?;
     let Some(rows) = rows else {
@@ -104,35 +140,7 @@ pub(crate) fn search(
     })
 }
 
-/// Where the open workspace keeps each date's outputs.
-struct Outputs {
-    data_dir: PathBuf,
-    workspace: String,
-}
-
-impl Outputs {
-    fn open(state: &AppState) -> Result<Self, String> {
-        state.with_data(|data| {
-            let workspace = data
-                .workspace
-                .clone()
-                .ok_or_else(|| "No workspace is open yet.".to_string())?;
-            Ok(Outputs {
-                data_dir: data.dir.clone(),
-                workspace,
-            })
-        })
-    }
-
-    fn of(&self, date: Date) -> PathBuf {
-        self.data_dir
-            .join(&self.workspace)
-            .join(date.to_string())
-            .join("output")
-    }
-}
-
-fn row(index: &SearchIndex, order: &IndexedOrder, output: &Path) -> OrderRow {
+fn row(index: &SearchIndex, order: &IndexedOrder) -> OrderRow {
     let saved = &order.order;
     OrderRow {
         day: order.date.to_string(),
@@ -149,7 +157,7 @@ fn row(index: &SearchIndex, order: &IndexedOrder, output: &Path) -> OrderRow {
             .collect(),
         batch: order.batch,
         group: format!("{}-{}", order.batch, saved.group),
-        path: output.join(&order.file).display().to_string(),
+        file: order.file.clone(),
         trace: trace_line(order),
         reprints: index
             .reprints_of(order)
@@ -162,41 +170,55 @@ fn row(index: &SearchIndex, order: &IndexedOrder, output: &Path) -> OrderRow {
     }
 }
 
-/// `from <input> p. 12–13 · courier jnt by logo 39b9… + form J[XY]\d{10} · batch 2 · 2-A`.
-pub(crate) fn trace_line(order: &IndexedOrder) -> String {
+/// `from <input> p. 12–13 · courier jnt by logo 39b9… + form J[XY]\d{10} · batch 2 · 2-A`, the
+/// hash and the form as `code`.
+pub(crate) fn trace_line(order: &IndexedOrder) -> Vec<TracePart> {
     let saved = &order.order;
     let pages = if saved.page_start == saved.page_end {
         format!("p. {}", saved.page_start)
     } else {
         format!("p. {}–{}", saved.page_start, saved.page_end)
     };
-    let clue = &saved.courier_clue;
-    let mut by: Vec<String> = Vec::new();
+    let mut parts = vec![TracePart::text(format!("from {} {pages} · ", order.input))];
+    match &saved.courier {
+        None => parts.push(TracePart::text("no courier named")),
+        Some(code) => {
+            parts.push(TracePart::text(format!("courier {}", code.as_str())));
+            parts.extend(clue_parts(&saved.courier_clue));
+        }
+    }
+    parts.push(TracePart::text(format!(
+        " · batch {} · {}-{}",
+        order.batch, order.batch, saved.group
+    )));
+    parts
+}
+
+/// ` by logo 39b9… + form J[XY]\d{10}`: what named the courier; nothing when no clue is kept.
+fn clue_parts(clue: &CourierClue) -> Vec<TracePart> {
+    let mut parts = Vec::new();
     if let Some(value) = &clue.value {
-        by.push(format!("{} {value}", clue.kind.as_str()));
+        parts.push(TracePart::text(format!(" by {} ", clue.kind.as_str())));
+        parts.push(match clue.kind {
+            CourierClueKind::Logo | CourierClueKind::Shape => TracePart::code(value),
+            _ => TracePart::text(value),
+        });
     }
     if let Some(form) = &clue.form {
-        by.push(format!("form {form}"));
+        let joint = if parts.is_empty() { " by" } else { " +" };
+        parts.push(TracePart::text(format!("{joint} form ")));
+        parts.push(TracePart::code(form));
     }
-    let courier = match (&saved.courier, by.is_empty()) {
-        (None, _) => "no courier named".to_string(),
-        (Some(code), true) => format!("courier {}", code.as_str()),
-        (Some(code), false) => format!("courier {} by {}", code.as_str(), by.join(" + ")),
-    };
-    format!(
-        "from {} {pages} · {courier} · batch {} · {}-{}",
-        order.input, order.batch, order.batch, saved.group
-    )
+    parts
 }
 
 #[tauri::command]
 pub fn search_orders(
     state: State<'_, AppState>,
     filter: String,
-    scope: Scope,
-    day: String,
+    range: Option<DateRange>,
 ) -> Result<SearchView, String> {
-    search(&state, &filter, scope, &day)
+    search(&state, &filter, range.as_ref())
 }
 
 /// One ticked row: the order and the date it was saved on.
@@ -313,7 +335,6 @@ pub(crate) fn reprinted_orders(
     number: u8,
 ) -> Result<ReprintedOrdersView, String> {
     let date = date_of(day)?;
-    let output = Outputs::open(state)?;
     let printed = state.with_data(|data| {
         let open = data.open_day(date)?;
         open.journal
@@ -333,7 +354,7 @@ pub(crate) fn reprinted_orders(
                 batch: order.batch,
                 found: index
                     .find(order.date, &order.order_id)
-                    .map(|found| row(index, found, &output.of(found.date))),
+                    .map(|found| row(index, found)),
             })
             .collect()
     })?;

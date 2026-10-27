@@ -6,31 +6,30 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-10-27)
 
-- **Handoff of the session of 2026-10-27 — the owner tests the summaries, the Day screen, Grab and
-  Anteraja, and an amend that adds a file; then the work is R6.4 and R9.** Round four of the owner's
-  review, from the owner's words in chat, is built and pushed: the summary PDF's first page draws the rows
-  of the group pages, names the couriers, and lists no groups and no instant orders
-  ([D-LABEL-19](../../software-design/decisions/label.md); the verifier reads each group's counts from its
-  bar); the day summary draws each batch as its Day card with *contents* and no Printed ticks
-  ([D-LABEL-20](../../software-design/decisions/label.md)); the Day screen's counts stand in columns; an
-  item's `×` no longer covers the space before it when the same item is printed twice; numbers right-
-  aligned by their advance, so a `1` lines up. Grab is named by its tag `Sameday`, Anteraja by its logo and
-  `TSA-` + 11 digits, and an instant label's channel strip is never asked about
-  ([D-LABEL-21](../../software-design/decisions/label.md)). An amend's selection page no longer marks the
-  batch's own files *used in batch n* and lists a file added again by its bytes once.
-  `target/portable/Packing/` is rebuilt.
-  - **The owner's `packing-workflows.toml`** there was corrected: the logo the owner had named Grab
-    (`f2cf7019646c955b`) is the `TikTok Shop` strip on every TikTok instant label, so it named no Gojek or
-    Grab label; it is now under `not_courier` with `tokopedia PLUS` (`330b79a3b29d4646`), Grab has
-    `instant_tags = ["Sameday"]` and Anteraja `tracking_id = 'TSA-\d{11}'`. The file before is kept as
-    `work/packing-workflows.before-2026-10-27.toml`.
-  - **The owner may test now**: a batch's summary PDF (first page, group pages), **Day summary**, the Day
-    screen's columns; a Grab instant label and an Anteraja label read with their courier; **Amend** with
-    a label file of that batch added again.
+- **Handoff of the second session of 2026-10-27 — the owner tests round five; then the work is R6.4 and
+  R9.** Round five of the owner's review, from the owner's words in chat, is built and pushed: every
+  yes-or-no question is the app's own dialog with a title and one short line (Amend, Revert, a draft
+  dropped, the data folder, a reprint again, a sort rule or group deleted); **Save batch** reads the same
+  on an amend; Search's **Dates** are *This day*, *Yesterday*, *Last 7 days*, *Last 30 days*, *Custom
+  range* or *All days* ([D-UI-3](../../software-design/decisions/ui.md)), and the index looks only at the
+  dates of the range; dates read *Tue, 27 Oct*; the file list says *downloaded 11:02*; a logo's hash and a
+  tracking-ID form are in monospace; **Open** on a group PDF or summary PDF that is not there writes it
+  again first (an old batch's summary in today's layout: delete it in Explorer, press **Open**), and a
+  missing path no longer opens Explorer's home page; **Day summary** shows *Writing the day summary …*
+  and is written once however often it is clicked ([ui/README](../../software-design/ui/README.md)).
+  - **Amend → Back → a file of the batch dropped again** was driven in the built program: the file is
+    listed once (*labels (1).pdf is the same file as …*), no *used in batch*, and the batch saves. The run
+    found that the inputs read again from `input/` were recorded under their hash instead of the
+    download's name (the trace and the summary PDF showed `5cd1….pdf`); they now keep the recorded name
+    ([02 Read, step 3](../../software-design/workflow/02-read.md)).
+  - `target/portable/Packing/` is rebuilt. **The owner may test now**: **Amend** and **Revert** (the
+    dialog), Search's **Dates**, the panel's dates, the New batch file list, a summary PDF deleted in
+    Explorer then **Open**, **Day summary** (one click, the dialog); and from the round before, a Grab
+    instant label and an Anteraja label read with their courier, and the summary PDFs' row style.
   - No question is open.
   - A finding goes into [reviews/ui.md](../../reviews/ui.md), [reviews/label.md](../../reviews/label.md),
     [reviews/rules.md](../../reviews/rules.md) or [reviews/app.md](../../reviews/app.md) as the next
-    `R-<SCOPE>-n` (R-UI-21, R-LABEL-9, R-RULES-4, R-APP-7); the next session turns each into a task.
+    `R-<SCOPE>-n` (R-UI-28, R-LABEL-9, R-RULES-4, R-APP-8); the next session turns each into a task.
   - **Next without the owner:** **R6.4** ([R6-app-journal.md](R6-app-journal.md)), then **R9** (the full
     check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff). An instant
     label's unknown tag is not asked about yet (W-9 of [workflow-audit.md](workflow-audit.md)).

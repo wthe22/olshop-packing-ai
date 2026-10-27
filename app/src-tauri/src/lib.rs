@@ -289,6 +289,7 @@ pub fn run() {
             commands::day::set_printed,
             commands::day::revert_last,
             commands::day::restore_output,
+            commands::day::open_output,
             commands::day::day_summary,
             commands::panel::workspaces_list,
             commands::panel::workspace_open,

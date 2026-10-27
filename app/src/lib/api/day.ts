@@ -14,7 +14,8 @@ export interface GroupPdfView {
   problem: FileProblem | null;
 }
 
-// What the open-time check found of an output: its card offers **Restore**.
+// What the open-time check found of an output: *Open* writes a missing one again, **Restore** a
+// changed one.
 export type FileProblem = "missing" | "changed";
 
 // One copy left out of a batch: where it is, and why.
@@ -95,6 +96,16 @@ export const setPrinted = (
 
 export const restoreOutput = (day: string, file: string): Promise<RestoreResult> =>
   invoke("restore_output", { day, file });
+
+// What *Open* on a group PDF or summary PDF did: opened the file, wrote it again first because it
+// was not there, or kept nothing because the written file did not pass the check.
+export type OpenResult =
+  | { kind: "opened" }
+  | { kind: "written_again" }
+  | { kind: "not_kept"; errors: string[] };
+
+export const openOutput = (day: string, file: string): Promise<OpenResult> =>
+  invoke("open_output", { day, file });
 
 // *Day summary*: write the date's summary PDF from its journal; the file's path comes back. A day
 // summary open in a PDF viewer that locks it stops the write with the file named.

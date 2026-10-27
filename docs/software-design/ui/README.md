@@ -50,3 +50,15 @@ A normal batch: **New batch** → **Add files…** → **Read labels** → (the 
   `Esc` returns to it (an open draft is kept and recounted).
 - **[☀]** is the theme menu: **Light**, **Dark** or **System** (Windows' own choice, the default), stored in
   `packing-settings.toml` ([D-UI-7](../decisions/ui.md)). The button shows the theme in use.
+
+## Questions, waits and how things are written
+
+- **A question** before an action that deletes or redoes something is the app's own dialog, never Windows'
+  message box: a title that asks ("Undo batch 2?"), at most one short line, the button named for what it
+  does and **Cancel**. Enter answers with the button, `Esc` with **Cancel**.
+- **A wait**: a file the owner waits for (the day summary, an output written again) shows a dialog with its
+  line and a moving bar once it takes longer than a moment, over a backdrop that takes the clicks; a second
+  click while it is written starts nothing.
+- **Dates** read *Wed, 21 Oct* (*Wed, 21 Oct 2026* in the title bar); **a time** always carries its word
+  (*saved 09:12*, *made 09:40*, *downloaded 11:02*), never a bare `09:12`.
+- **A hash or a pattern** (a logo's hash, a tracking-ID form, the rules file) is set in monospace.

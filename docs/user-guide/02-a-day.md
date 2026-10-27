@@ -132,8 +132,10 @@ stock.
 
 - **Left out: 3 ▸** on a card lists each copy left out and why: a repeat (and the copy that stays) or
   an order saved earlier in another batch.
-- **⚠ missing** or **⚠ changed** in place of **Open** means the file in `output` is gone or not as
-  saved; **Restore** writes it again from the stored labels and checks it like the original.
+- **Open** on a file that is gone from `output` writes it again from the stored labels, checks it like
+  the original, then opens it. To see an old batch's summary PDF in the current layout, delete it in
+  Explorer and press **Open**. **⚠ missing** before **Open** says the file was gone when the date opened;
+  **⚠ changed** with **Restore** says it is not as saved, and **Restore** writes it again.
 
 ## Several batches a day
 
@@ -149,7 +151,8 @@ the date is left out of every later batch of that date, so reading a file again 
 - Build the filter with the same boxes as the sort rules, e.g. *Tracking ID starts with JY00000012*.
   The first box has the cursor when Search opens, and **Enter** searches: scan a parcel's barcode and
   its order is found at once.
-- **This day** (the open date, the default) or **All days** of the workspace, then **Search**:
+- **Dates**: **This day** (the open date, the default), **Yesterday**, **Last 7 days**, **Last 30 days**,
+  **Custom range** (pick the first and last date) or **All days** of the workspace, then **Search**:
   "3 orders in 2 batches" and one row per order — Order ID, tracking ID, courier, items, date and group,
   **Open** for its group PDF, and **▸** for where it came from (the label file and pages, and the clue
   that named its courier).

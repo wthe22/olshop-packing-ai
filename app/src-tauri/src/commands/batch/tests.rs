@@ -23,12 +23,14 @@ use super::save::save_draft;
 use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
 use super::{amend_start, checked, plan_view, resolve, sort_rules_of};
 use crate::AppState;
-use crate::commands::day::{mark_printed, overview, restore_file, revert, write_day_summary};
+use crate::commands::day::{
+    OpenView, mark_printed, overview, ready_to_open, restore_file, revert, write_day_summary,
+};
 use crate::commands::panel::{open_workspace, panel};
 use crate::commands::rules::{
     GroupInput, check, new_rule, renamed, rule_groups, rules_view, save_groups,
 };
-use crate::commands::search::{ReprintChoice, Scope, reprint_orders, reprinted_orders, search};
+use crate::commands::search::{DateRange, ReprintChoice, reprint_orders, reprinted_orders, search};
 use crate::commands::start::{new_workspace, start_information, use_folder};
 
 const DAY: &str = "2026-10-08";
@@ -343,23 +345,49 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     read(&state);
     save(&state);
     state.index().wait();
-    let found =
-        serde_json::to_value(search(&state, "name contains \"\"", Scope::All, DAY).unwrap())
-            .unwrap();
+    let found = serde_json::to_value(search(&state, "name contains \"\"", None).unwrap()).unwrap();
     assert_eq!(
         (found["orders"].clone(), found["batches"].clone()),
         (4.into(), 1.into())
     );
     let row = &found["rows"][0];
     assert_eq!(row["group"], "1-Z");
-    let trace = row["trace"].as_str().unwrap();
+    assert_eq!(row["file"], GROUP_FILE);
+    let trace: String = row["trace"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|part| part["text"].as_str().unwrap())
+        .collect();
     assert!(
         trace.starts_with("from labels-repeat-1.pdf p. ") && trace.ends_with("batch 1 · 1-Z"),
         "{trace}"
     );
-    let on_other_day = search(&state, "name contains \"\"", Scope::Day, "2026-10-09").unwrap();
-    assert_eq!(serde_json::to_value(on_other_day).unwrap()["orders"], 0);
-    assert!(search(&state, "name has \"x\"", Scope::All, DAY).is_err());
+    let range = |from: &str, to: &str| DateRange {
+        from: from.into(),
+        to: to.into(),
+    };
+    let orders_in = |from: &str, to: &str| {
+        let found = search(&state, "name contains \"\"", Some(&range(from, to))).unwrap();
+        serde_json::to_value(found).unwrap()["orders"].clone()
+    };
+    assert_eq!(orders_in(DAY, DAY), 4);
+    assert_eq!(
+        orders_in("2026-10-01", DAY),
+        4,
+        "a range that ends on the date"
+    );
+    assert_eq!(orders_in("2026-10-09", "2026-10-15"), 0, "a range after it");
+    assert!(
+        search(
+            &state,
+            "name contains \"\"",
+            Some(&range("2026-10-09", DAY))
+        )
+        .is_err(),
+        "dates that run backwards"
+    );
+    assert!(search(&state, "name has \"x\"", None).is_err());
 
     let choices: Vec<ReprintChoice> = found["rows"].as_array().unwrap()[..2]
         .iter()
@@ -375,9 +403,7 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     let today = crate::today().to_string();
     let shown = serde_json::to_value(overview(&state, &today).unwrap()).unwrap();
     assert_eq!(shown["reprints"][0]["orders"], 2);
-    let again =
-        serde_json::to_value(search(&state, "name contains \"\"", Scope::All, DAY).unwrap())
-            .unwrap();
+    let again = serde_json::to_value(search(&state, "name contains \"\"", None).unwrap()).unwrap();
     assert_eq!(
         again["rows"][0]["reprints"][0]["number"], 1,
         "the order printed again is marked"
@@ -406,6 +432,37 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     let restored = serde_json::to_value(restore_file(&state, DAY, GROUP_FILE).unwrap()).unwrap();
     assert_eq!(restored["restored"], true, "{restored}");
     assert!(output.join(GROUP_FILE).is_file());
+}
+
+#[test]
+fn open_writes_a_deleted_summary_again_from_the_journal() {
+    let Some((program, state, _guard)) = started("app-open") else {
+        return skipped();
+    };
+    read(&state);
+    save(&state);
+    let output = program
+        .path()
+        .join("data/Toko Contoh")
+        .join(DAY)
+        .join("output");
+    let summary = output.join("1 summary.pdf");
+    fs::remove_file(&summary).unwrap();
+    let (path, view) = ready_to_open(&state, DAY, "1 summary.pdf").unwrap();
+    assert_eq!(
+        (path.as_path(), view),
+        (summary.as_path(), OpenView::WrittenAgain)
+    );
+    assert!(summary.is_file());
+    assert_eq!(
+        ready_to_open(&state, DAY, "1 summary.pdf").unwrap().1,
+        OpenView::Opened
+    );
+    assert!(ready_to_open(&state, DAY, "..\\1 summary.pdf").is_err());
+    assert!(
+        ready_to_open(&state, DAY, "9 summary.pdf").is_err(),
+        "a file no batch wrote is not written"
+    );
 }
 
 #[test]

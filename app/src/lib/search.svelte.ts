@@ -1,14 +1,15 @@
 // The Search screen's state and commands: the filter boxes turned into filter text by the engine's
-// printer, the search on the index over the open date or all dates, the ticked rows and their
+// printer, the search on the index over a range of dates or all of them, the ticked rows and their
 // reprint. Searching changes nothing; only **Reprint** writes a file, and it asks first when a
 // ticked order was printed again before. The markup is `SearchScreen.svelte`.
 
-import { confirm } from "@tauri-apps/plugin-dialog";
 import * as api from "./api/search";
 import { treeToFilter } from "./api/rules";
 import { newRow, newTree, toRustTree, type UiTree } from "./conditions";
 import { texts } from "../texts";
 import { formatShortDay } from "../dates";
+import { confirmBox } from "./confirm.svelte";
+import { presetRange, type DateRange, type RangePreset } from "./searchRange";
 
 // While the index is being built the search is asked again after this many milliseconds.
 const LOADING_RETRY_MS = 500;
@@ -17,7 +18,9 @@ const key = (row: { day: string; order_id: string }) => `${row.day} ${row.order_
 
 export class Search {
   tree = $state<UiTree>(firstTree());
-  scope = $state<api.SearchScope>("day");
+  preset = $state<RangePreset>("day");
+  // The range's two dates as shown; kept under *All days*, so *Custom range* finds them again.
+  range = $state<DateRange>({ from: "", to: "" });
   busy = $state(false);
   loading = $state(false);
   // A filter that does not parse, or a failed command.
@@ -32,14 +35,17 @@ export class Search {
   // The verifier's findings of a reprint that was not kept.
   findings = $state<string[]>([]);
 
-  // The open date, read when a search runs; and what lets the Day screen and the panel recount
-  // after a reprint.
+  // The open date and today, which the choices of dates count from; and what lets the Day screen
+  // and the panel recount after a reprint.
   private readonly day: () => string;
+  private readonly today: () => string;
   private readonly onReprinted: () => void;
 
-  constructor(day: () => string, onReprinted: () => void) {
+  constructor(day: () => string, today: () => string, onReprinted: () => void) {
     this.day = day;
+    this.today = today;
     this.onReprinted = onReprinted;
+    this.range = { from: day(), to: day() };
   }
 
   invalidate = () => {
@@ -49,8 +55,16 @@ export class Search {
     this.traced = [];
   };
 
-  setScope = (scope: api.SearchScope) => {
-    this.scope = scope;
+  setPreset = (preset: RangePreset) => {
+    this.preset = preset;
+    this.range = presetRange(preset, this.day(), this.today(), this.range) ?? this.range;
+    this.invalidate();
+  };
+
+  // A date typed or picked: the range is the owner's own from then on.
+  setRange = (range: DateRange) => {
+    this.preset = "custom";
+    this.range = range;
     this.invalidate();
   };
 
@@ -68,7 +82,7 @@ export class Search {
     this.invalidate();
     try {
       const filter = await treeToFilter(toRustTree(this.tree));
-      const result = await api.searchOrders(filter, this.scope, this.day());
+      const result = await api.searchOrders(filter, this.preset === "all" ? null : this.range);
       this.loading = result.loading;
       if (result.loading) setTimeout(this.find, LOADING_RETRY_MS);
       else {
@@ -119,11 +133,7 @@ export class Search {
     if (rows.length === 0) return;
     const before = this.reprintedBefore();
     if (before > 0) {
-      const asked = await confirm(texts.search.confirmAgain(before, rows.length), {
-        title: texts.title,
-        okLabel: texts.search.reprint(rows.length),
-      });
-      if (!asked) return;
+      if (!(await confirmBox.ask(texts.search.askAgain(before, rows.length)))) return;
     }
     this.busy = true;
     this.made = null;
@@ -164,7 +174,7 @@ export function itemsText(row: api.SearchRow): string {
 }
 
 // The mark of an order printed again before, and its tooltip naming each reprint:
-// "Reprinted", "Reprint 1 on Wed 7 Oct".
+// "Reprinted", "Reprint 1 on Wed, 7 Oct".
 export function reprintedMark(row: api.SearchRow): { text: string; title: string } | null {
   if (row.reprints.length === 0) return null;
   return {

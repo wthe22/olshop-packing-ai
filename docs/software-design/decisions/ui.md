@@ -18,12 +18,14 @@ Where a record names a former question (`Q-…`), the owner accepted its default
 
 **Applies to.** [Settings](../ui/settings.md).
 
-## D-UI-3 — Search: this day by default, or all days of the workspace
+## D-UI-3 — Search: this day by default, a range of dates, or all days of the workspace
 
-**Decision.** Search's scope is *This day* (the default) or *All days* of the open workspace (Q-UI-3). Every saved
+**Decision.** Search covers *This day* (the default), *Yesterday*, *Last 7 days*, *Last 30 days*, a *Custom
+range* or *All days* of the open workspace (Q-UI-3); the ranges other than *This day* end today. Every saved
 order is found by every field, since the journals keep them all.
 
-**Why.** The open date covers daily use; a reprint of an older label needs the other dates.
+**Why.** The open date covers daily use; a reprint of an older label needs the other dates, and a short range
+keeps a search of a workspace with months of data small.
 
 **Applies to.** [Search](../ui/search.md), [reprint](../app/reprint.md#search).
 

@@ -95,7 +95,7 @@
   .path {
     flex: 1;
     color: var(--text);
-    font-family: Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.9rem;
     overflow-wrap: anywhere;
   }

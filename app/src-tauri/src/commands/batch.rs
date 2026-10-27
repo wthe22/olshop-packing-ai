@@ -61,7 +61,7 @@ pub(crate) fn checked(
     state.with_data(|data| {
         let day = data.open_day(date)?;
         let files = state
-            .with_worker(|worker| check(worker, paths, day.journal.fold(), redo))?
+            .with_worker(|worker| check(worker, paths, &day.folder, day.journal.fold(), redo))?
             .map_err(|error| error.to_string())?;
         Ok(files.iter().map(file_view).collect())
     })

@@ -197,7 +197,7 @@
 
   .condition-text {
     width: 100%;
-    font-family: Consolas, monospace;
+    font-family: var(--font-mono);
   }
 
   .cat-foot {

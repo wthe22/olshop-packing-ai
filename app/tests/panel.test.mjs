@@ -25,5 +25,5 @@ test("the dates fold by month, the open and the current month open", () => {
     ],
   );
   assert.deepEqual(months([], "2026-10-07", "2026-10-07"), []);
-  assert.deepEqual([formatMonth("2026-10"), formatShortDay("2026-10-21")], ["October 2026", "Wed 21 Oct"]);
+  assert.deepEqual([formatMonth("2026-10"), formatShortDay("2026-10-21")], ["October 2026", "Wed, 21 Oct"]);
 });

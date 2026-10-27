@@ -50,7 +50,7 @@
       {#if chip}<span class="chip">▌{chip.chip}</span>{/if}
       <span class="name">{file.name}</span>
       <span class="pages">{texts.newBatch.pages(file.pages)}</span>
-      <span class="time">{file.time ?? ""}</span>
+      <span class="time">{texts.newBatch.downloaded(file.time)}</span>
       {#if file.used_in_batch !== null}
         <span class="used">{texts.newBatch.usedInBatch(file.used_in_batch)}</span>
       {/if}
@@ -121,7 +121,7 @@
   }
 
   .time {
-    min-width: 3.5rem;
+    min-width: 7.5rem;
     text-align: right;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
