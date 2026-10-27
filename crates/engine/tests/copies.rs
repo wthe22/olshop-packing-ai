@@ -11,6 +11,11 @@ use packing_engine::workflows::{BUNDLED_WORKFLOWS, Workflows, load_workflows};
 const JNT_LOGO: &str = "39b9b7b9f61d0e7f";
 const SICEPAT_LOGO: &str = "cf33ed60daa291b1";
 const CARGO_SHAPE: &str = "753ccbd14749befa";
+const ANTERAJA_LOGO: &str = "556e376839c5805d";
+/// The `tokopedia | Shop` strip: not a courier.
+const TOKOPEDIA_STRIP: &str = "6c1340227db55be4";
+/// The `TikTok Shop` strip an instant label carries: not a courier.
+const TIKTOK_STRIP: &str = "f2cf7019646c955b";
 
 fn workflows() -> Workflows {
     load_workflows(BUNDLED_WORKFLOWS).unwrap()
@@ -234,6 +239,15 @@ fn the_courier_and_the_clue_that_named_it() {
             Some(JNT_LOGO),
         ),
         (
+            "a form with a hyphen, beside a channel strip",
+            Some("TSA-00000000001"),
+            vec![(ANTERAJA_LOGO, None), (TOKOPEDIA_STRIP, None)],
+            &[],
+            Some("anteraja"),
+            CourierClueKind::Logo,
+            Some(ANTERAJA_LOGO),
+        ),
+        (
             "a masked logo by its shape",
             Some("570000000001"),
             vec![("aaaaaaaaaaaaaaaa", Some(CARGO_SHAPE))],
@@ -315,33 +329,37 @@ fn the_courier_and_the_clue_that_named_it() {
 
 #[test]
 fn an_instant_label_is_named_by_its_tag_and_keeps_its_pickup_code() {
-    // The code is printed in large type beside its caption; a Seller SKU of the same form further
-    // down is not it.
-    let mut runs = label("1", None, &["Kode Pengambilan"], slip("Sepatu", 1, Some(1)));
-    runs.push(run(5.8, 115.0, "AB1234"));
-    runs.push(run(146.3, 347.0, "WX1234"));
-    runs.push(run(250.0, 405.0, "GKS"));
-    let strip = ("bbbbbbbbbbbbbbbb", None);
-    let read = read_copies(
-        pages(vec![vec![page(runs, &[strip])]]),
-        &["a.pdf"],
-        &workflows(),
-    )
-    .unwrap();
-    let copy = &read.copies[0];
-    assert_eq!(copy.courier.as_ref().unwrap().as_str(), "gojek");
-    assert_eq!(copy.courier_clue.kind, CourierClueKind::Tag);
-    assert_eq!(copy.courier_clue.value.as_deref(), Some("GKS"));
-    assert_eq!(copy.pickup_code.as_deref(), Some("WX1234"));
-    assert_eq!(
-        read.unseen_logos.len(),
-        1,
-        "the channel strip is asked about"
-    );
-    assert_eq!(
-        read.unseen_logos[0].order_ids,
-        [OrderId::new("580000000000000001")]
-    );
+    let cases = [
+        ("GKS", TIKTOK_STRIP, Some("gojek")),
+        ("Sameday", TIKTOK_STRIP, Some("grab")),
+        ("GKS", "bbbbbbbbbbbbbbbb", Some("gojek")),
+        ("XYZ", TIKTOK_STRIP, None),
+    ];
+    for (tag, strip, courier) in cases {
+        // The code is printed in large type beside its caption; a Seller SKU of the same form
+        // further down is not it.
+        let mut runs = label("1", None, &["Kode Pengambilan"], slip("Sepatu", 1, Some(1)));
+        runs.push(run(5.8, 115.0, "AB1234"));
+        runs.push(run(146.3, 347.0, "WX1234"));
+        runs.push(run(250.0, 405.0, tag));
+        let read = read_copies(
+            pages(vec![vec![page(runs, &[(strip, None)])]]),
+            &["a.pdf"],
+            &workflows(),
+        )
+        .unwrap();
+        let copy = &read.copies[0];
+        assert_eq!(copy.courier.as_ref().map(|c| c.as_str()), courier, "{tag}");
+        if courier.is_some() {
+            assert_eq!(copy.courier_clue.kind, CourierClueKind::Tag);
+            assert_eq!(copy.courier_clue.value.as_deref(), Some(tag));
+        }
+        assert_eq!(copy.pickup_code.as_deref(), Some("WX1234"));
+        assert!(
+            read.unseen_logos.is_empty(),
+            "{tag}: an instant label's header image is a channel strip, never asked about"
+        );
+    }
 }
 
 #[test]

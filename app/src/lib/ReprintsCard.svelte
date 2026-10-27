@@ -2,6 +2,7 @@
   // The Day screen's Reprints card: one row per reprint of the date, like a group PDF's row —
   // its number, when it was made, its counts and **Open** — and *Orders ▸*, which lists its orders
   // as Search shows them. The state is `reprintList.svelte.ts`.
+  import Count from "./Count.svelte";
   import { ReprintList } from "./reprintList.svelte";
   import { itemsText } from "./search.svelte";
   import type { ReprintRow } from "./api/day";
@@ -30,7 +31,8 @@
     <div class="row">
       <span class="code">{texts.day.reprintCode(reprint.number)}</span>
       <span class="time">{texts.day.reprintMade(reprint.time)}</span>
-      <span class="counts">{texts.day.reprintCounts(reprint.orders, reprint.pages)}</span>
+      <Count n={reprint.orders} word={texts.day.orderWord(reprint.orders)} />
+      <Count n={reprint.pages} word={texts.day.pageWord(reprint.pages)} />
       <span class="grow"></span>
       <button
         class="link"
@@ -110,7 +112,6 @@
     min-width: 6rem;
   }
 
-  .counts,
   .muted {
     color: var(--text-muted);
   }

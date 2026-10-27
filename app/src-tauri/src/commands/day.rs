@@ -11,7 +11,7 @@ use packing_engine::record::PrintedMarked;
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 
-use crate::{APP_VERSION, AppState};
+use crate::{APP_VERSION, AppState, settings};
 
 pub use self::view::{BatchView, DayOverview, GroupPdfView, Totals};
 
@@ -42,11 +42,17 @@ pub(crate) fn mark_printed(state: &AppState, day: &str, mark: PrintedMarked) -> 
 /// Write the date's day summary from its journal and return its path.
 pub(crate) fn write_day_summary(state: &AppState, day: &str) -> Result<String, String> {
     let date = date_of(day)?;
+    let (_, workflows) = settings::workflows(state.program())?;
     state.with_data(|data| {
         let open = data.open_day(date)?;
         let path = state
             .with_worker(|worker| {
-                packing_batch::day_summary(worker, &open.folder, open.journal.fold())
+                packing_batch::day_summary(
+                    worker,
+                    &open.folder,
+                    open.journal.fold(),
+                    &workflows.couriers,
+                )
             })?
             .map_err(|error| error.to_string())?;
         Ok(path.display().to_string())
@@ -74,6 +80,7 @@ pub struct RestoreView {
 
 pub(crate) fn restore_file(state: &AppState, day: &str, file: &str) -> Result<RestoreView, String> {
     let date = date_of(day)?;
+    let (_, workflows) = settings::workflows(state.program())?;
     state.with_data(|data| {
         let open = data.open_day(date)?;
         let outcome = state
@@ -84,6 +91,7 @@ pub(crate) fn restore_file(state: &AppState, day: &str, file: &str) -> Result<Re
                         folder: &open.folder,
                         file,
                         app: APP_VERSION,
+                        couriers: &workflows.couriers,
                     },
                     &mut open.journal,
                 )

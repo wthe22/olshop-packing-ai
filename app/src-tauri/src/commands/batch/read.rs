@@ -74,7 +74,7 @@ pub(super) fn read_into_draft(
         };
         state
             .with_worker(|worker| {
-                let files = check_files(worker, &reading.paths, fold)?;
+                let files = check_files(worker, &reading.paths, fold, reading.redo)?;
                 let mut draft = read_draft(ReadRequest {
                     worker,
                     files,

@@ -4,12 +4,14 @@
 
 use std::collections::BTreeMap;
 
+use packing_engine::ids::CourierCode;
 use packing_engine::orders::display_name;
 use packing_engine::record::{BatchSaved, LeftOutReason, SCHEMA, SavedOrder};
 use packing_engine::sorting::{REST_CODE, REST_NAME};
+use packing_engine::workflows::Courier;
 
 use crate::PDFIUM_VERSION;
-use crate::facts::{Row, RowKind, Section, count};
+use crate::facts::{Row, Section};
 
 /// The header's counts: orders, units and group PDFs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -59,12 +61,12 @@ pub(crate) fn picks<'r>(records: impl IntoIterator<Item = &'r BatchSaved>) -> Ve
         .collect()
 }
 
-/// One group of the group pages: its bar's heading and counts, and its order contents in the order
+/// One group PDF of the batch: its code and name, its counts, and its order contents in the order
 /// the group PDF prints them.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct GroupSection {
-    /// `A  Sepatu`.
-    pub heading: String,
+    pub code: String,
+    pub name: String,
     pub orders: usize,
     pub units: u32,
     pub contents: Vec<ContentRow>,
@@ -105,7 +107,8 @@ pub(crate) fn group_sections(record: &BatchSaved) -> Vec<GroupSection> {
                 })
                 .sum();
             Some(GroupSection {
-                heading: format!("{code}  {}", group_name(record, code)),
+                code: code.clone(),
+                name: group_name(record, code).to_string(),
                 orders: contents.iter().map(|(_, orders)| orders).sum(),
                 units,
                 contents: contents
@@ -141,119 +144,91 @@ fn group_name<'r>(record: &'r BatchSaved, code: &str) -> &'r str {
         .map_or("", |group| group.name.as_str())
 }
 
-/// The facts pages: the group PDFs, the couriers, the instant orders, the warnings, the inputs with
-/// the ledger, the sort rule and the versions.
-pub(crate) fn facts(record: &BatchSaved, app: &str) -> Vec<Section> {
+/// The facts pages: the couriers, the warnings, the inputs with the ledger, the sort rule and the
+/// versions. `couriers` names the courier codes.
+pub(crate) fn facts(record: &BatchSaved, app: &str, couriers: &[Courier]) -> Vec<Section> {
+    let section = |heading: &str, rows: Vec<Row>| Section {
+        heading: heading.to_string(),
+        right: None,
+        rows,
+    };
     vec![
-        Section {
-            heading: "Groups",
-            rows: group_rows(record),
-        },
-        Section {
-            heading: "Couriers",
-            rows: courier_rows(&record.orders),
-        },
-        Section {
-            heading: "Instant orders",
-            rows: or_none(
-                record
-                    .orders
-                    .iter()
-                    .filter_map(|order| {
-                        let code = order.pickup_code.as_ref()?;
-                        let text = format!("{} · group {}", order.order_id, order.group);
-                        Some(Row::plain(text).count(2, format!("pickup code {code}")))
-                    })
-                    .collect(),
-            ),
-        },
-        Section {
-            heading: "Warnings",
-            rows: or_none(
+        section("Couriers", courier_rows(&record.orders, couriers)),
+        section(
+            "Warnings",
+            if record.warnings.is_empty() {
+                vec![Row::new("none")]
+            } else {
                 record
                     .warnings
                     .iter()
-                    .map(|w| Row::plain(w.text.clone()))
-                    .collect(),
-            ),
-        },
-        Section {
-            heading: "Inputs",
-            rows: record
+                    .map(|w| Row::new(w.text.clone()))
+                    .collect()
+            },
+        ),
+        section(
+            "Inputs",
+            record
                 .inputs
                 .iter()
                 .map(|input| {
                     let sha = input.sha256.as_str();
-                    Row::plain(input.filename.clone())
-                        .count(1, format!("{} pages", input.page_count))
-                        .count(2, &sha[..12.min(sha.len())])
+                    Row::new(input.filename.clone())
+                        .count(0, usize::from(input.page_count), "page", "pages")
+                        .tail(&sha[..12.min(sha.len())])
                 })
-                .chain([Row::new(RowKind::Head, ledger(record))])
+                .chain([Row::new(ledger(record)).bold()])
                 .collect(),
-        },
-        Section {
-            heading: "Sort rule",
-            rows: std::iter::once(Row::new(RowKind::Head, record.sort_rule.name.clone()))
-                .chain(record.sort_rule.label_groups.iter().map(|group| {
+        ),
+        section(
+            &format!("Sort rule · {}", record.sort_rule.name),
+            record
+                .sort_rule
+                .label_groups
+                .iter()
+                .map(|group| {
                     let filter = group.filter.as_deref().unwrap_or("every order left");
-                    let text = format!("{} {} · {filter}", group.code, group.name);
-                    Row::new(RowKind::Part, text)
-                }))
+                    Row::new(format!("{} · {filter}", group.name)).key(group.code.clone())
+                })
                 .collect(),
-        },
-        Section {
-            heading: "Versions",
-            rows: vec![Row::plain(format!(
+        ),
+        section(
+            "Versions",
+            vec![Row::new(format!(
                 "schema {SCHEMA} · Packing v{app} · PDFium {PDFIUM_VERSION}"
             ))],
-        },
+        ),
     ]
 }
 
-/// Each group PDF: its file name, then its orders, pages and order contents, which the verifier
-/// reads back.
-fn group_rows(record: &BatchSaved) -> Vec<Row> {
-    record
-        .outputs
-        .iter()
-        .filter_map(|output| {
-            let group = output.group.as_ref()?;
-            let orders: Vec<u16> = record
-                .orders
-                .iter()
-                .filter(|order| &order.group == group)
-                .map(|order| order.content)
-                .collect();
-            let mut contents = orders.clone();
-            contents.sort_unstable();
-            contents.dedup();
-            Some(
-                Row::plain(output.file.clone())
-                    .count(0, format!("{} orders", orders.len()))
-                    .count(1, format!("{} pages", output.pages))
-                    .count(2, format!("{} order contents", contents.len())),
-            )
-        })
-        .collect()
-}
-
-/// The orders per courier code, most first; the orders no clue named are *unknown*, last.
-pub(crate) fn courier_rows<'r>(orders: impl IntoIterator<Item = &'r SavedOrder>) -> Vec<Row> {
-    let mut known: BTreeMap<&str, usize> = BTreeMap::new();
+/// The orders per courier, by the courier's name in `couriers` (its code when the file no longer
+/// names it), most first; the orders no clue named are *Unknown*, last.
+pub(crate) fn courier_rows<'r>(
+    orders: impl IntoIterator<Item = &'r SavedOrder>,
+    couriers: &[Courier],
+) -> Vec<Row> {
+    let mut known: BTreeMap<&CourierCode, usize> = BTreeMap::new();
     let mut unknown = 0;
     for order in orders {
         match &order.courier {
-            Some(code) => *known.entry(code.as_str()).or_default() += 1,
+            Some(code) => *known.entry(code).or_default() += 1,
             None => unknown += 1,
         }
     }
-    let mut known: Vec<(&str, usize)> = known.into_iter().collect();
-    known.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(b.0)));
-    let unknown = (unknown > 0).then_some(("unknown", unknown));
+    let name = |code: &CourierCode| {
+        couriers
+            .iter()
+            .find(|courier| &courier.code == code)
+            .map_or_else(|| code.to_string(), |courier| courier.name.clone())
+    };
+    let mut known: Vec<(String, usize)> =
+        known.into_iter().map(|(code, n)| (name(code), n)).collect();
+    known.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+    let unknown = (unknown > 0).then(|| ("Unknown".to_string(), unknown));
     known
         .into_iter()
         .chain(unknown)
-        .map(|(code, n)| Row::plain(code).count(0, count(n, "order", "orders")))
+        .map(|(name, n)| Row::new(name).count(0, n, "order", "orders"))
         .collect()
 }
 
@@ -278,12 +253,4 @@ fn ledger(record: &BatchSaved) -> String {
         "{read} pages read = {written} written + {} left out ({repeats} repeats, {earlier} saved earlier)",
         repeats + earlier
     )
-}
-
-fn or_none(rows: Vec<Row>) -> Vec<Row> {
-    if rows.is_empty() {
-        vec![Row::plain("none")]
-    } else {
-        rows
-    }
 }

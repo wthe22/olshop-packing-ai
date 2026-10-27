@@ -8,6 +8,7 @@ use packing_engine::rules::parse_filter;
 use packing_engine::workflows::{Filter, GroupRule, SortRule, Workflows};
 use packing_store::{DateFolder, Fold, input_path};
 
+use crate::files::used_in;
 use crate::{BatchError, ChosenFile, Draft};
 
 pub struct Amend {
@@ -31,12 +32,7 @@ pub fn amend(folder: &DateFolder, fold: &Fold, workflows: &Workflows) -> Result<
             page_count: input.page_count,
             create_time: input.create_time.clone(),
             modify_time: input.modify_time.clone(),
-            used_in: fold
-                .live
-                .iter()
-                .filter(|(other, _)| **other != batch)
-                .find(|(_, live)| live.saved.inputs.iter().any(|i| i.sha256 == input.sha256))
-                .map(|(other, _)| *other),
+            used_in: used_in(fold, &input.sha256, Some(batch)),
         })
         .collect();
     let rule = match workflows.sort_rule(&saved.sort_rule.name) {

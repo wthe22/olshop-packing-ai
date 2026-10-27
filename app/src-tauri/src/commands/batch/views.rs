@@ -3,6 +3,7 @@
 
 use packing_batch::{ChosenFile, SaveProgress, SaveStage};
 use packing_engine::ids::BatchId;
+use packing_engine::record::Sha256;
 use serde::{Deserialize, Serialize};
 
 use super::repeats::RepeatsView;
@@ -12,6 +13,8 @@ use super::repeats::RepeatsView;
 pub struct FileCheckView {
     pub(super) path: String,
     pub(super) name: String,
+    /// The bytes' SHA-256: a file chosen again from another folder is the same file.
+    pub(super) sha256: Sha256,
     pub(super) size: u64,
     /// `HH:MM` of the file's modify time.
     pub(super) time: String,
@@ -24,6 +27,7 @@ pub(super) fn file_view(file: &ChosenFile) -> FileCheckView {
     FileCheckView {
         path: file.path.display().to_string(),
         name: file.filename.clone(),
+        sha256: file.sha256.clone(),
         size: file.size,
         time: file.modify_time.zoned().strftime("%H:%M").to_string(),
         pages: file.page_count,

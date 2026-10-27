@@ -107,6 +107,16 @@ creator handle, …) are not needed for packing.
   captions are one of the four courier styles, and every one of its pages prints `In transit by:
   14/10/2026 23:59`. Its 600 distinct 18-digit Order IDs cover the 604 pages exactly (596 orders on
   one page, 4 orders on two).
+- **A Grab instant label** (`2026-10-26 grab.pdf`, 1 page; the owner's word, 2026-10-27: Grab) is the
+  instant-service style again, with the `TikTok Shop` strip 326×59 — byte-identical to the Gojek page's —
+  and the pickup code, but its header tag reads **`Sameday`** where the Gojek pages read `GKS`, and its
+  `In transit by` is `23:59`. So the strip names the channel only; the tag names the courier.
+- **The Anteraja label** (page 2 of `anteraja.pdf`, 3 pages: J&T Express, Anteraja, SiCepat) is a boxed
+  layout like IDX: the `tokopedia | Shop` strip top left, the Anteraja logo (354×142, bytes
+  `556e376839c5805d`) in the middle, the service tag `INS` top right, the tracking ID **`TSA-` + 11
+  digits** under a wide barcode, sender and receiver boxes with a QR, `COD:`, `Print Time :` and
+  `Order ID :` over a second barcode, then the ordinary slip. Its order is the Grab page's order, printed
+  again after the owner changed its courier.
 - The **Shopee-style label** (`2026-10-15 spx.pdf`, 3 pages, one order each) is the fourth style,
   the only one that is neither a TikTok nor a Tokopedia page. Its header carries the `Shopee`
   wordmark (800×253, the marketplace's own brand, where the other styles put their platform strip)

@@ -4,31 +4,36 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-10-26)
+## Status (2026-10-27)
 
-- **Handoff of the session of 2026-10-26 (late night) — the owner tests the summaries and the exe's icon;
-  then the work is R6.4 and R9.** The owner's v0.2 review is built and pushed in three rounds; the task
-  file R10 is done and gone, its findings written into the design. Rounds one and two: the theme menu, the
-  new look, *Courier · is unknown*, the summary PDF's order, *workspace* everywhere (the journal's stored
-  field keeps `namespace`), the default data folder `packing-data`, *88 orders | 3 contents*, Search's head
-  row, the reprint bar and *Reprinted* marks, the Day screen's *Reprints* card, **Day summary**. Round
-  three, from the owner's words in chat: the summary PDF's order contents numbered `A-1`, `A-2`, …, its
-  first page laid out in columns with even gaps and with the couriers' counts, one layout for the summary
-  PDF and the day summary, the day summary without the reprints (the answer to Q-LABEL-12:
-  [D-LABEL-17](../../software-design/decisions/label.md), [D-LABEL-18](../../software-design/decisions/label.md)),
-  `—` no longer covering the space after it, and the new icon embedded in `Packing.exe` itself (the
-  build had kept Tauri's icon). `target/portable/Packing/` is rebuilt.
-  - **The owner may test now**: save a batch and open its summary PDF — the first page, the numbered
-    order contents, a group that runs over a page; **Day summary**; the icon of `Packing.exe` in Explorer
-    and in the taskbar. Explorer may show the old icon from its cache until it refreshes; signing out
-    and in again refreshes it. Earlier: Search with a scanned tracking ID, a reprint and *Reprinted*, the
-    *Reprints* card.
+- **Handoff of the session of 2026-10-27 — the owner tests the summaries, the Day screen, Grab and
+  Anteraja, and an amend that adds a file; then the work is R6.4 and R9.** Round four of the owner's
+  review, from the owner's words in chat, is built and pushed: the summary PDF's first page draws the rows
+  of the group pages, names the couriers, and lists no groups and no instant orders
+  ([D-LABEL-19](../../software-design/decisions/label.md); the verifier reads each group's counts from its
+  bar); the day summary draws each batch as its Day card with *contents* and no Printed ticks
+  ([D-LABEL-20](../../software-design/decisions/label.md)); the Day screen's counts stand in columns; an
+  item's `×` no longer covers the space before it when the same item is printed twice; numbers right-
+  aligned by their advance, so a `1` lines up. Grab is named by its tag `Sameday`, Anteraja by its logo and
+  `TSA-` + 11 digits, and an instant label's channel strip is never asked about
+  ([D-LABEL-21](../../software-design/decisions/label.md)). An amend's selection page no longer marks the
+  batch's own files *used in batch n* and lists a file added again by its bytes once.
+  `target/portable/Packing/` is rebuilt.
+  - **The owner's `packing-workflows.toml`** there was corrected: the logo the owner had named Grab
+    (`f2cf7019646c955b`) is the `TikTok Shop` strip on every TikTok instant label, so it named no Gojek or
+    Grab label; it is now under `not_courier` with `tokopedia PLUS` (`330b79a3b29d4646`), Grab has
+    `instant_tags = ["Sameday"]` and Anteraja `tracking_id = 'TSA-\d{11}'`. The file before is kept as
+    `work/packing-workflows.before-2026-10-27.toml`.
+  - **The owner may test now**: a batch's summary PDF (first page, group pages), **Day summary**, the Day
+    screen's columns; a Grab instant label and an Anteraja label read with their courier; **Amend** with
+    a label file of that batch added again.
   - No question is open.
   - A finding goes into [reviews/ui.md](../../reviews/ui.md), [reviews/label.md](../../reviews/label.md),
     [reviews/rules.md](../../reviews/rules.md) or [reviews/app.md](../../reviews/app.md) as the next
-    `R-<SCOPE>-n` (R-UI-20, R-LABEL-6, R-RULES-4, R-APP-6); the next session turns each into a task.
+    `R-<SCOPE>-n` (R-UI-21, R-LABEL-9, R-RULES-4, R-APP-7); the next session turns each into a task.
   - **Next without the owner:** **R6.4** ([R6-app-journal.md](R6-app-journal.md)), then **R9** (the full
-    check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff).
+    check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff). An instant
+    label's unknown tag is not asked about yet (W-9 of [workflow-audit.md](workflow-audit.md)).
   - The guide's pictures are the real program on the `testdata/` labels (`node tools/guide-pictures.mjs`
     drives a fresh copy over WebView2's DevTools port); the same run is a quick smoke test of the build.
 

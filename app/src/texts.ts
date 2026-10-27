@@ -76,9 +76,11 @@ export const texts = {
     printedLabel: (file: string) => `Printed ${file}`,
     openFolder: "Open folder",
     summaryPdf: "Summary PDF",
-    // "88 orders | 3 contents": a group PDF's orders and their order contents.
-    counts: (orders: number, contents: number) =>
-      `${count(orders, "order", "orders")} | ${count(contents, "content", "contents")}`,
+    // The words of a card's counts, each count in a column of its own after its number: a group
+    // PDF's orders and their order contents ("88 orders  3 contents"), a reprint's orders and pages.
+    orderWord: (n: number) => (n === 1 ? "order" : "orders"),
+    contentWord: (n: number) => (n === 1 ? "content" : "contents"),
+    pageWord: (n: number) => (n === 1 ? "page" : "pages"),
     // A batch's copies left out (repeats, orders saved earlier), expanding to one line each.
     leftOut: (n: number) => `Left out: ${n} ▸`,
     // "580000000000000042 · labels_3.pdf p. 12–13 · repeat in this batch: the copy in labels_1.pdf p. 4 stays".
@@ -95,13 +97,11 @@ export const texts = {
     restoreFailed: (file: string, errors: string[]) =>
       `${file} was not restored: the written file did not pass the check. ${errors.join(" ")}`,
     // The Reprints card: "Reprints · 2 files · 5 orders", then one row per reprint,
-    // "R1   made 09:40   3 orders | 3 pages", and its orders under *Orders ▸*.
+    // "R1   made 09:40   3 orders  3 pages", and its orders under *Orders ▸*.
     reprints: (files: number, orders: number) =>
       `Reprints · ${count(files, "file", "files")} · ${count(orders, "order", "orders")}`,
     reprintCode: (n: number) => `R${n}`,
     reprintMade: (time: string) => `made ${time}`,
-    reprintCounts: (orders: number, pages: number) =>
-      `${count(orders, "order", "orders")} | ${count(pages, "page", "pages")}`,
     reprintOrders: "Orders",
     // An order of a reprint whose batch was reverted since: only the record's facts are left.
     savedIn: (day: string, batch: number) => `saved ${day} in batch ${batch}`,
@@ -155,6 +155,8 @@ export const texts = {
     sortRuleFixed: (name: string) => `${name} (as now)`,
     pages: (n: number) => `${count(n, "page", "pages")}`,
     usedInBatch: (n: number) => `used in batch ${n}`,
+    // A file whose bytes equal a listed file: it is not listed again.
+    sameFile: (name: string, listed: string) => `${name} is the same file as ${listed}: listed once.`,
     remove: "×",
     removeTitle: "Remove this file",
     selected: (files: number, pages: number) =>

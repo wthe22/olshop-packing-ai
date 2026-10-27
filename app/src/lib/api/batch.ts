@@ -8,6 +8,8 @@ import { invoke } from "@tauri-apps/api/core";
 export interface FileCheck {
   path: string;
   name: string;
+  // The bytes' SHA-256: a file chosen again from another folder is the same file.
+  sha256: string;
   size: number;
   // `HH:MM` of the file's modified time (its download time).
   time: string;
@@ -195,8 +197,9 @@ export type PlanEdit =
   | { kind: "add"; at: number; code: string; name: string; condition: string }
   | { kind: "rename"; index: number; name: string };
 
-export const checkFiles = (paths: string[]): Promise<FileCheck[]> =>
-  invoke("check_files", { paths });
+// `redo` is the batch an amend's selection page redoes: a file is never *used in* it.
+export const checkFiles = (paths: string[], redo: number | null): Promise<FileCheck[]> =>
+  invoke("check_files", { paths, redo });
 
 // *Read labels*: read the chosen files and open the Plan screen. `sortRule` is the rule chosen on
 // the file list; `redo` is the batch being redone when the read comes from the amend's selection

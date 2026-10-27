@@ -150,7 +150,7 @@ fn summary_pdf(path: &Path, lines: &[String]) {
 fn right_summary() -> Vec<String> {
     vec![
         "3 orders - 3 units - 1 groups - printed 09:12".into(),
-        format!("{GROUP_FILE} - 3 orders - 4 pages - 3 order contents"),
+        "Z  Lainnya - 3 orders - 3 units".into(),
         "6 pages read = 4 written + 2 left out (2 repeats, 0 saved earlier)".into(),
     ]
 }
@@ -291,6 +291,13 @@ fn a_summary_that_prints_other_counts_is_found() {
     let mut no_group = right_summary();
     no_group.remove(1);
     let findings = verify("summary-group", &[1, 2, 3, 6], &no_group, |_| {});
+    assert!(
+        findings.errors.iter().any(|f| f.contains(GROUP_FILE)),
+        "{findings:?}"
+    );
+    let mut other_units = right_summary();
+    other_units[1] = "Z  Lainnya - 3 orders - 4 units".into();
+    let findings = verify("summary-units", &[1, 2, 3, 6], &other_units, |_| {});
     assert!(
         findings.errors.iter().any(|f| f.contains(GROUP_FILE)),
         "{findings:?}"

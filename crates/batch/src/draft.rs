@@ -16,7 +16,7 @@ use packing_engine::orders::{PageItem, UnseenLogo};
 use packing_engine::record::{Finding, InputPdf};
 use packing_engine::repeats::{Choices, Orders, sort_out};
 use packing_engine::sorting::{PlanGroup, SortedBatch, plan_groups, sort_batch};
-use packing_engine::workflows::{SortRule, Workflows};
+use packing_engine::workflows::{Courier, SortRule, Workflows};
 use packing_pdf::read;
 use packing_pdf::worker::{PdfWorker, Progress};
 use packing_store::Fold;
@@ -49,6 +49,8 @@ pub struct Draft {
     pub orders: Orders,
     pub rule_name: String,
     pub plan: Vec<PlanGroup>,
+    /// The couriers of the rules the copies were read with: the summary PDF names them.
+    pub couriers: Vec<Courier>,
     /// The batch an amend redoes.
     pub redo: Option<BatchId>,
 }
@@ -107,6 +109,7 @@ impl Draft {
         let read = read_copies(self.pages.clone(), &names, workflows)?;
         self.copies = read.copies;
         self.unseen_logos = read.unseen_logos;
+        self.couriers = workflows.couriers.clone();
         self.orders = match sort_out(&self.copies, &self.saved, &self.choices) {
             Ok(orders) => orders,
             Err(_) => {
@@ -161,6 +164,7 @@ pub fn read_draft(request: ReadRequest<'_>) -> Result<Draft, BatchError> {
         orders,
         rule_name: request.rule.name.clone(),
         plan: plan_groups(request.rule),
+        couriers: request.workflows.couriers.clone(),
         redo: request.redo,
     })
 }

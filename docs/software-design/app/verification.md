@@ -40,7 +40,7 @@ has a digest of its own.
 | V3 | **The ledger**: every page of every input lies in exactly one written copy or one left-out copy; *pages read = written + left out* | Error: a page in no copy (1:0), a page in two (1:N) |
 | V4 | Order IDs are unique in the record and in no other live batch of the date; each `repeat` names a kept copy that is written; each `saved_earlier` names a live batch that holds the order | Error |
 | V5 | Each group PDF has the record's SHA-256, size and page count, and its page *k* has the digest of the source page the record puts at *k* | Error: missing (1:0), doubled (1:N), a page of no input, an order split over two files. Warning: every page there once, in another order |
-| V6 | The summary PDF's printed counts (orders, units, pages read, written and left out, orders per group), read as text, equal the record's | Error |
+| V6 | The summary PDF's printed counts (orders, units, pages read, written and left out, each group bar's orders and units), read as text, equal the record's | Error |
 
 The checks of a **reprint** and a **restore** are V2, V5 and V6 for the files they write
 ([reprint](reprint.md)).

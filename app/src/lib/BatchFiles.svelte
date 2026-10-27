@@ -11,6 +11,7 @@
     totalPages,
     busy,
     error,
+    note,
     chips,
     onAdd,
     onRemove,
@@ -20,6 +21,8 @@
     totalPages: number;
     busy: boolean;
     error: string;
+    // The files just chosen that were already listed by their bytes, named with the listed one.
+    note: string;
     // A file's group chip and line when it holds a repeat, by its number in the list (from 1).
     chips: Map<number, { chip: string; line: string }>;
     onAdd: () => void;
@@ -35,6 +38,9 @@
 
 {#if error}
   <p class="error">{error}</p>
+{/if}
+{#if note}
+  <p class="note">{note}</p>
 {/if}
 
 <ul class="files">
@@ -68,6 +74,10 @@
 </div>
 
 <style>
+  .note {
+    color: var(--text-muted);
+  }
+
   .chip {
     color: var(--warn);
     font-weight: 600;

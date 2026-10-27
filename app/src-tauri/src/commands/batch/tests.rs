@@ -276,7 +276,7 @@ name = \"Harian\"
     read_with(&state, "harian").unwrap();
     save(&state);
     assert_eq!(sort_rules_of(&state).unwrap().preselected, "harian");
-    let files = checked(&state, &inputs()).unwrap();
+    let files = checked(&state, &inputs(), None).unwrap();
     assert!(
         files
             .iter()

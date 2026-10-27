@@ -23,7 +23,8 @@ pub use self::remember::{LogoIs, remember_logo};
 
 pub const WORKFLOWS_FILE: &str = "packing-workflows.toml";
 
-/// The copy the program carries: the six couriers and one rule `default` with one group.
+/// The copy the program carries: the eight couriers, the channel strips that are not couriers and
+/// one rule `default` with one group.
 pub const BUNDLED_WORKFLOWS: &str = include_str!("../../packing-workflows.toml");
 
 #[derive(Clone, Debug)]

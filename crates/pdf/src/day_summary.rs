@@ -1,15 +1,16 @@
 //! The day summary (day-summary.md): the open date of a workspace on A4, from its live batches —
-//! each batch with its group PDFs and their Printed ticks, the couriers' counts, then from a new
-//! page the pick pages of the whole day. Drawn in the summary PDF's layout. A view of the journal:
-//! nothing reads it back, so its counts read singular where they should.
+//! each batch as its Day card shows it, its groups with their orders and order contents; the
+//! couriers' counts; then from a new page the pick pages of the whole day. Drawn in the summary
+//! PDF's layout. A view of the journal: nothing reads it back, so its counts read singular where
+//! they should.
 
 mod content;
 
-use std::collections::BTreeSet;
 use std::path::Path;
 
 use jiff::civil::Date;
 use packing_engine::record::BatchSaved;
+use packing_engine::workflows::Courier;
 use pdfium_render::prelude::Pdfium;
 
 use crate::PdfError;
@@ -25,8 +26,6 @@ pub struct DayBatch<'a> {
     pub record: &'a BatchSaved,
     /// `hh:mm` of its newest save.
     pub time: String,
-    /// The group codes whose Printed tick is set.
-    pub printed: &'a BTreeSet<String>,
 }
 
 pub struct DayFacts<'a> {
@@ -36,6 +35,8 @@ pub struct DayFacts<'a> {
     pub batches: Vec<DayBatch<'a>>,
     /// `hh:mm`.
     pub printed: &'a str,
+    /// The couriers of `packing-workflows.toml`, which name the records' courier codes.
+    pub couriers: &'a [Courier],
 }
 
 /// Write the day summary and return its page count.

@@ -6,6 +6,7 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 
+use packing_engine::workflows::Courier;
 use packing_pdf::day_summary::{DayBatch, DayFacts, write_day_summary};
 use packing_pdf::worker::PdfWorker;
 use packing_store::{DateFolder, Fold, StoreError};
@@ -14,19 +15,20 @@ use crate::BatchError;
 
 pub const DAY_SUMMARY_PDF: &str = "day summary.pdf";
 
-/// Write the date's day summary and return its path. A day summary that a PDF viewer holds open
-/// stops the write with the file named; the old file stays.
+/// Write the date's day summary, its couriers named by `couriers`, and return its path. A day
+/// summary that a PDF viewer holds open stops the write with the file named; the old file stays.
 pub fn day_summary(
     worker: &PdfWorker,
     folder: &DateFolder,
     fold: &Fold,
+    couriers: &[Courier],
 ) -> Result<PathBuf, BatchError> {
     if fold.live.is_empty() {
         return Err(BatchError::NoBatch);
     }
     let target = folder.dir().join(DAY_SUMMARY_PDF);
     let partial = folder.dir().join(format!("{DAY_SUMMARY_PDF}.partial"));
-    let (fold, out) = (fold.clone(), partial.clone());
+    let (fold, out, couriers) = (fold.clone(), partial.clone(), couriers.to_vec());
     let printed = jiff::Zoned::now().strftime("%H:%M").to_string();
     let written = worker
         .run(move |pdfium| {
@@ -43,10 +45,10 @@ pub fn day_summary(
                     .map(|live| DayBatch {
                         record: &live.saved,
                         time: hh_mm(&live.modify_time),
-                        printed: &live.printed,
                     })
                     .collect(),
                 printed: &printed,
+                couriers: &couriers,
             };
             write_day_summary(pdfium, &out, &facts)
         })

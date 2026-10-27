@@ -33,6 +33,14 @@ name = "SPX"
 code = "gojek"
 name = "Gojek"
 
+[[couriers]]
+code = "grab"
+name = "Grab"
+
+[[couriers]]
+code = "anteraja"
+name = "Anteraja"
+
 [[courier_classifier]]
 courier_code = "jnt"
 logos = ["39b9b7b9f61d0e7f"]     # 975x377 px, the same asset in every sample file
@@ -57,15 +65,27 @@ tracking_id = 'TKP\d{10}'
 
 [[courier_classifier]]
 courier_code = "spx"
-logos = ["4583097ef370a670"]     # 68x27 px, masked: the small red SPX wordmark
+logos = ["4583097ef370a670", "7f0d33c143e2ab14"]     # 68x27 px, masked: the small red SPX wordmark
 tracking_id = 'SPXID\d{11}'
 
+[[courier_classifier]]
+courier_code = "anteraja"
+logos = ["556e376839c5805d"]     # 354x142 px
+tracking_id = 'TSA-\d{11}'
+
+# An instant-service label prints no logo and no tracking ID: its service tag names the courier.
 [[courier_classifier]]
 courier_code = "gojek"
 instant_tags = ["GKS"]
 
+[[courier_classifier]]
+courier_code = "grab"
+instant_tags = ["Sameday"]
+
+# The buying channels' strips: tokopedia | Shop 905x118, tokopedia | TikTok 527x73, the Shopee
+# wordmark 800x253, TikTok Shop 326x59, tokopedia PLUS 618x78.
 [not_courier]
-logos = []
+logos = ["6c1340227db55be4", "c2230c3c5d8c560d", "07fea99cbec66ae7", "f2cf7019646c955b", "330b79a3b29d4646"]
 
 # Sort rules: a batch is sorted by the rule chosen for it. Its label groups apply in order; an
 # order goes to the FIRST group whose filter matches. A group without a filter takes every order

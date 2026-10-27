@@ -1,10 +1,12 @@
-//! What the day summary prints, as text, from the date's live batches: the header's counts, the
-//! batches with their group PDFs, the couriers and the day's picks. Plain functions, so they are
-//! tested without PDFium.
+//! What the day summary prints, as text, from the date's live batches: the header's counts, each
+//! batch with its groups as its Day card shows them, the couriers and the day's picks. Plain
+//! functions, so they are tested without PDFium.
 
-use super::DayFacts;
-use crate::facts::{Row, RowKind, Section, count};
-use crate::summary_pdf::content::{counts as batch_counts, courier_rows, picks as batch_picks};
+use super::{DayBatch, DayFacts};
+use crate::facts::{Row, Section, count};
+use crate::summary_pdf::content::{
+    counts as batch_counts, courier_rows, group_sections, picks as batch_picks,
+};
 
 /// The header's counts line: `729 orders · 801 units · 2 batches · 5 groups`.
 pub(crate) fn header_counts(facts: &DayFacts<'_>) -> String {
@@ -23,61 +25,51 @@ pub(crate) fn header_counts(facts: &DayFacts<'_>) -> String {
     .join(" · ")
 }
 
-/// The batches, then the couriers of the whole day.
+/// Each batch, newest first, then the couriers of the whole day.
 pub(crate) fn sections(facts: &DayFacts<'_>) -> Vec<Section> {
-    vec![
-        Section {
-            heading: "Batches",
-            rows: batches(facts),
-        },
-        Section {
-            heading: "Couriers",
-            rows: courier_rows(facts.batches.iter().flat_map(|batch| &batch.record.orders)),
-        },
-    ]
+    facts
+        .batches
+        .iter()
+        .map(batch_section)
+        .chain([Section {
+            heading: "Couriers".to_string(),
+            right: None,
+            rows: courier_rows(
+                facts.batches.iter().flat_map(|batch| &batch.record.orders),
+                facts.couriers,
+            ),
+        }])
+        .collect()
 }
 
-/// Each batch, newest first, with its orders and pages; then its group PDFs with theirs and their
-/// Printed tick.
-fn batches(facts: &DayFacts<'_>) -> Vec<Row> {
-    let mut rows = Vec::new();
-    for batch in &facts.batches {
-        let record = batch.record;
-        let groups: Vec<_> = record
-            .outputs
-            .iter()
-            .filter_map(|output| Some((output, output.group.as_ref()?)))
-            .collect();
-        let pages = groups
-            .iter()
-            .map(|(output, _)| usize::from(output.pages))
-            .sum();
-        let amended = if record.amends { " · amended" } else { "" };
-        let head = format!(
-            "Batch {} · saved {} · sort rule {}{amended}",
-            record.batch, batch.time, record.sort_rule.name
-        );
-        rows.push(
-            Row::new(RowKind::Head, head)
-                .count(0, count(record.orders.len(), "order", "orders"))
-                .count(1, count(pages, "page", "pages")),
-        );
-        for (output, code) in groups {
-            let orders = record.orders.iter().filter(|o| &o.group == code).count();
-            let printed = if batch.printed.contains(code) {
-                "printed"
-            } else {
-                "not printed"
-            };
-            rows.push(
-                Row::new(RowKind::Part, output.file.clone())
-                    .count(0, count(orders, "order", "orders"))
-                    .count(1, count(usize::from(output.pages), "page", "pages"))
-                    .count(2, printed),
-            );
-        }
+/// A batch as its Day card: the batch, when it was saved and from how many files, its orders and
+/// units at the right; then each group with its orders and order contents.
+fn batch_section(batch: &DayBatch<'_>) -> Section {
+    let record = batch.record;
+    let counts = batch_counts(record);
+    let amended = if record.amends { " · amended" } else { "" };
+    Section {
+        heading: format!(
+            "Batch {} · saved {} · {}{amended}",
+            record.batch,
+            batch.time,
+            count(record.inputs.len(), "file", "files")
+        ),
+        right: Some(format!(
+            "{} · {}",
+            count(counts.orders, "order", "orders"),
+            count(counts.units as usize, "unit", "units")
+        )),
+        rows: group_sections(record)
+            .into_iter()
+            .map(|group| {
+                Row::new(group.name)
+                    .key(format!("{}-{}", record.batch, group.code))
+                    .count(0, group.orders, "order", "orders")
+                    .count(1, group.contents.len(), "content", "contents")
+            })
+            .collect(),
     }
-    rows
 }
 
 /// The units to take from stock per item over every batch of the day.

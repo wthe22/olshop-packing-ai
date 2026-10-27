@@ -1,8 +1,8 @@
 //! The summary PDF of a batch (summary-pdf.md), each part from a new page: the facts pages, which
 //! say what the batch is so the paper alone can be traced; each group with its numbered order
 //! contents; and the pick pages, what to take from stock. The verifier reads the header's counts,
-//! the ledger and each group's row back as text, so their words are fixed and their numbers have no
-//! thousands separator.
+//! the ledger and each group bar's counts back as text, so their words are fixed and their numbers
+//! have no thousands separator.
 
 pub(crate) mod content;
 
@@ -10,25 +10,23 @@ use std::path::Path;
 
 use jiff::civil::Date;
 use packing_engine::record::BatchSaved;
+use packing_engine::workflows::Courier;
 use pdfium_render::prelude::Pdfium;
 
 use crate::PdfError;
 use crate::facts::{
-    GAP_BELOW_SECTION, ROW_H, TEXT_RIGHT, TEXT_X, WIDTH, draw_bar, draw_section, keep_together,
-    new_page,
+    GAP_BELOW_SECTION, KEY_W, ROW_H, ROW_PT, RULE_GAP, TEXT_RIGHT, TEXT_X, draw_bar, draw_rule,
+    draw_section, keep_together, new_page,
 };
 use crate::packing_list::emit::{emit, header_ops};
 use crate::packing_list::fonts::{FONT_DIR, Font};
 use crate::packing_list::measure::Measure;
-use crate::packing_list::{Builder, CELL_MARGIN, Cell, Layout, MARGIN, Op};
+use crate::packing_list::{Builder, CELL_MARGIN, Cell, Layout, Op};
 
 use self::content::{ContentRow, GroupSection};
 
-/// Where an order content's items start, right of its number.
-const ITEMS_X: f32 = TEXT_X + 15.0;
 /// The width of an order content's count of orders, at the right edge.
 const COUNT_W: f32 = 20.0;
-const ITEM_PT: f32 = 10.5;
 
 pub struct SummaryFacts<'a> {
     /// The workspace's name.
@@ -40,6 +38,8 @@ pub struct SummaryFacts<'a> {
     pub printed: &'a str,
     /// The app version the journal's records carry.
     pub app: &'a str,
+    /// The couriers of `packing-workflows.toml`, which name the record's courier codes.
+    pub couriers: &'a [Courier],
 }
 
 /// Write the summary PDF and return its page count.
@@ -62,7 +62,7 @@ pub fn write_summary(
     let font_dir = Path::new(FONT_DIR);
     let measure = Measure::new(pdfium, font_dir)?;
     let mut builder = Builder::new(Layout::Pick, &measure);
-    for section in content::facts(record, facts.app) {
+    for section in content::facts(record, facts.app, facts.couriers) {
         draw_section(&mut builder, &section, &measure);
     }
     let groups = content::group_sections(record);
@@ -103,12 +103,14 @@ pub(crate) fn draw_picks(builder: &mut Builder<'_, '_>, picks: &[(i64, String)])
     builder.draw_summary_rows(picks);
 }
 
-/// A group's bar with its counts, then each of its order contents under a rule.
+/// A group's bar with its counts, which the verifier reads (always `orders` and `units`), then
+/// each of its order contents under a rule.
 fn draw_group(builder: &mut Builder<'_, '_>, group: &GroupSection, measure: &Measure<'_>) {
+    let heading = format!("{}  {}", group.code, group.name);
     let counts = format!("{} orders · {} units", group.orders, group.units);
-    draw_bar(builder, &group.heading, Some(&counts), ROW_H * 2.0);
+    draw_bar(builder, &heading, Some(&counts), ROW_H * 2.0);
     for content in &group.contents {
-        draw_content(builder, content, measure, &group.heading);
+        draw_content(builder, content, measure, &heading);
     }
     builder.y += GAP_BELOW_SECTION;
 }
@@ -121,28 +123,30 @@ fn draw_content(
     measure: &Measure<'_>,
     heading: &str,
 ) {
-    let width = TEXT_RIGHT - COUNT_W - ITEMS_X;
+    let x = TEXT_X + KEY_W;
+    let width = TEXT_RIGHT - COUNT_W - x;
     let lines: Vec<String> = content
         .items
         .iter()
-        .flat_map(|item| measure.wrap(item, width, Font::Arial, ITEM_PT))
+        .flat_map(|item| measure.wrap(item, width, Font::Arial, ROW_PT))
         .collect();
-    keep_together(builder, ROW_H * lines.len() as f32 + 1.2, heading);
+    let height = ROW_H * lines.len() as f32;
+    keep_together(builder, height + 2.0 * RULE_GAP, heading);
     let top = builder.y;
     builder.cell(Cell {
         x: TEXT_X,
         y: top,
         h: ROW_H,
-        size_pt: ITEM_PT,
+        size_pt: ROW_PT,
         font: Font::ArialBold,
         text: &content.number,
     });
     for (index, text) in lines.iter().enumerate() {
         builder.cell(Cell {
-            x: ITEMS_X,
+            x,
             y: top + ROW_H * index as f32,
             h: ROW_H,
-            size_pt: ITEM_PT,
+            size_pt: ROW_PT,
             font: Font::Arial,
             text,
         });
@@ -158,9 +162,7 @@ fn draw_content(
         },
         COUNT_W,
     );
-    let line_y = top + ROW_H * lines.len() as f32 + 0.6;
-    builder.horizontal_line(MARGIN, line_y, MARGIN + WIDTH);
-    builder.y = line_y + 0.6;
+    draw_rule(builder, top + height);
 }
 
 #[cfg(test)]

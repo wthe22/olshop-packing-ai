@@ -1,6 +1,6 @@
 //! V6: the summary PDF's printed counts, read back as text, equal the record's — the orders, units
-//! and groups of its header, the ledger of its facts page, and each group PDF's orders, in group
-//! order.
+//! and groups of its header, the ledger of its facts page, and each group bar's orders and units,
+//! in group order.
 
 use std::path::Path;
 use std::sync::OnceLock;
@@ -19,12 +19,13 @@ fn counts_re() -> &'static Regex {
     })
 }
 
-/// A group's line by its fixed tail: the file name before it is not read, because lopdf reads no
-/// text of a character the summary draws with its CID font (an `é` in a name).
+/// A group bar's counts, `<orders> orders · <units> units`. The page header's counts read the same
+/// and go on to `<groups> groups`, which tells the two apart. The group's name before them is not
+/// read: lopdf reads no text of a character the summary draws with its CID font (an `é` in a name).
 fn group_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
     R.get_or_init(|| {
-        Regex::new(r"(\d+) orders\D+\d+ pages\D+\d+ order contents").expect("built-in group regex")
+        Regex::new(r"(\d+) orders\D+(\d+) units(\D+\d+ groups)?").expect("built-in group regex")
     })
 }
 
@@ -109,29 +110,37 @@ pub(crate) fn check_summary(batch: &Batch, output_dir: &Path, findings: &mut Fin
     );
     compare("ledger", ledger_re(), [read, written, left]);
 
-    let printed: Vec<Option<usize>> = group_re()
+    let printed: Vec<Option<[u64; 2]>> = group_re()
         .captures_iter(&text)
-        .map(|caps| caps[1].parse().ok())
+        .filter(|caps| caps.get(3).is_none())
+        .map(|caps| Some([caps[1].parse().ok()?, caps[2].parse().ok()?]))
         .collect();
     let groups: Vec<_> = batch.outputs.iter().filter(|o| o.group.is_some()).collect();
     if printed.len() != groups.len() {
         findings.error(format!(
-            "{} prints {} group lines, the record has {} group PDFs",
+            "{} prints {} group bars, the record has {} group PDFs",
             summary.file,
             printed.len(),
             groups.len()
         ));
     }
     for (at, output) in groups.iter().enumerate() {
-        let want = batch
+        let orders: Vec<_> = batch
             .orders
             .iter()
             .filter(|order| Some(&order.group) == output.group.as_ref())
-            .count();
+            .collect();
+        let units: u64 = orders
+            .iter()
+            .filter_map(|order| batch.contents.get(order.content as usize))
+            .flat_map(|content| &content.items)
+            .map(|item| item.quantity as u64)
+            .sum();
+        let want = [orders.len() as u64, units];
         let printed = printed.get(at).copied().flatten();
         if printed != Some(want) {
             findings.error(format!(
-                "{} prints {printed:?} orders for {}, the record says {want}",
+                "{} prints the orders and units {printed:?} for {}, the record says {want:?}",
                 summary.file, output.file
             ));
         }

@@ -119,9 +119,10 @@ impl<'m, 'a> Builder<'m, 'a> {
         });
     }
 
-    /// Right-aligned text inside a cell of width `w`.
+    /// Right-aligned text inside a cell of width `w`: its advance, not its ink, ends at the edge,
+    /// so the digits of numbers right-aligned on one edge stand under each other.
     pub(crate) fn cell_right(&mut self, cell: Cell<'_>, w: f32) {
-        let width = self.measure.width_mm(cell.text, cell.font, cell.size_pt);
+        let width = self.measure.advance_mm(cell.text, cell.font, cell.size_pt);
         let baseline = Self::baseline(cell.y, cell.h, cell.size_pt);
         self.ops().push(Op::Text {
             x: cell.x + w - CELL_MARGIN - width,

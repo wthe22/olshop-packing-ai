@@ -144,7 +144,7 @@ fn pickup_re() -> &'static Regex {
 const PICKUP_REACH: f64 = 30.0;
 
 /// An instant-service label prints `Kode Pengambilan` (business-process 02).
-fn is_instant(text: &str) -> bool {
+pub(super) fn is_instant(text: &str) -> bool {
     whitespace_re()
         .replace_all(text, "")
         .contains("KodePengambilan")

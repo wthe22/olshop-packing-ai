@@ -1,5 +1,6 @@
 //! The files chosen for a batch (step 3): each one's SHA-256, size, times and page count, and the
-//! live batch of the date that read the same bytes. One file chosen twice is listed once.
+//! live batch of the date that read the same bytes — never the batch an amend redoes, whose own
+//! files they may be. One file chosen twice is listed once.
 
 use std::fs;
 use std::path::PathBuf;
@@ -25,14 +26,16 @@ pub struct ChosenFile {
     pub page_count: u16,
     pub create_time: Datetime,
     pub modify_time: Datetime,
-    /// The live batch of the date that read the same bytes.
+    /// The live batch of the date that read the same bytes, other than the one an amend redoes.
     pub used_in: Option<BatchId>,
 }
 
+/// The files at `paths` for a batch on `fold`'s date; `redo` is the batch an amend redoes.
 pub fn check_files(
     worker: &PdfWorker,
     paths: &[PathBuf],
     fold: &Fold,
+    redo: Option<BatchId>,
 ) -> Result<Vec<ChosenFile>, BatchError> {
     let mut files: Vec<ChosenFile> = Vec::new();
     for path in paths {
@@ -49,7 +52,7 @@ pub fn check_files(
             filename: path
                 .file_name()
                 .map_or_else(String::new, |name| name.to_string_lossy().into_owned()),
-            used_in: used_in(fold, &sha256),
+            used_in: used_in(fold, &sha256, redo),
             sha256,
             size: meta.len(),
             page_count: 0,
@@ -68,10 +71,11 @@ pub fn check_files(
     Ok(files)
 }
 
-/// The live batch whose inputs hold these bytes.
-pub(crate) fn used_in(fold: &Fold, sha256: &Sha256) -> Option<BatchId> {
+/// The live batch other than `redo` whose inputs hold these bytes.
+pub(crate) fn used_in(fold: &Fold, sha256: &Sha256, redo: Option<BatchId>) -> Option<BatchId> {
     fold.live
         .iter()
+        .filter(|(batch, _)| Some(**batch) != redo)
         .find(|(_, live)| live.saved.inputs.iter().any(|i| i.sha256 == *sha256))
         .map(|(batch, _)| *batch)
 }

@@ -141,6 +141,9 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
             .outputs
             .push(described(&out, Some("Z"), group_pages.len() as u16));
     }
+    // The group bar names the group with characters drawn in the CID font too; the verifier reads
+    // the bar's counts, not its name.
+    record.sort_rule.label_groups[0].name = "Kaca é ×".into();
     let summary_path = partial.join("1 summary.pdf");
     let summary_pages = write_summary(
         pdfium,
@@ -151,6 +154,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
             record: &record,
             printed: "07:00",
             app: "0.2.0",
+            couriers: &[],
         },
     )
     .unwrap();

@@ -9,8 +9,11 @@ import { texts } from "../src/texts.ts";
 
 test("the Day screen's counts read singular where they should", () => {
   assert.deepEqual(
-    [texts.day.counts(1, 1), texts.day.counts(88, 3)],
-    ["1 order | 1 content", "88 orders | 3 contents"],
+    [1, 88].map((n) => [texts.day.orderWord(n), texts.day.contentWord(n), texts.day.pageWord(n)]),
+    [
+      ["order", "content", "page"],
+      ["orders", "contents", "pages"],
+    ],
   );
   assert.equal(texts.day.leftOut(14), "Left out: 14 ▸");
   assert.deepEqual(
@@ -28,10 +31,8 @@ test("the Day screen's counts read singular where they should", () => {
       texts.day.problem("missing"),
       texts.day.reprints(1, 3),
       texts.day.reprints(2, 1),
-      texts.day.reprintCounts(3, 3),
-      texts.day.reprintCounts(1, 2),
     ],
-    ["⚠ missing", "Reprints · 1 file · 3 orders", "Reprints · 2 files · 1 order", "3 orders | 3 pages", "1 order | 2 pages"],
+    ["⚠ missing", "Reprints · 1 file · 3 orders", "Reprints · 2 files · 1 order"],
   );
   assert.equal(texts.day.saved(2, 1), "Batch 2 saved: 1 group PDF and the summary PDF.");
   assert.deepEqual(

@@ -59,6 +59,8 @@
   let progress = $state<{ page: number; pages: number } | null>(null);
   let stop = $state("");
   let error = $state("");
+  // The files of the last *Add files…* or drop already listed by their bytes.
+  let note = $state("");
   // Set while *Cancel* is pressed: the read then returns to the file list, not to a stop message.
   let cancelling = false;
 
@@ -103,14 +105,24 @@
     if (fresh.length === 0) return;
     busy = true;
     error = "";
+    note = "";
     try {
-      const checks = await batch.checkFiles(fresh);
-      const seen = new Set(files.map((file) => file.path.toLowerCase()));
-      const added = checks.filter((check) => {
-        if (seen.has(check.path.toLowerCase())) return false;
-        seen.add(check.path.toLowerCase());
-        return true;
-      });
+      const checks = await batch.checkFiles(fresh, amend);
+      // One file by its bytes: the same download chosen again from another folder — on an amend,
+      // a file the batch already reads from `input\` — is listed once, and a line names both.
+      const listedNames = new Map(files.map((file) => [file.sha256, file.name]));
+      const added: batch.FileCheck[] = [];
+      const same: string[] = [];
+      for (const check of checks) {
+        const listed = listedNames.get(check.sha256);
+        if (listed === undefined) {
+          listedNames.set(check.sha256, check.name);
+          added.push(check);
+        } else {
+          same.push(texts.newBatch.sameFile(check.name, listed));
+        }
+      }
+      note = same.join(" ");
       if (added.length > 0) onFiles([...files, ...added]);
     } catch (e) {
       error = String(e);
@@ -286,6 +298,7 @@
       {totalPages}
       {busy}
       {error}
+      {note}
       {chips}
       onAdd={pickFiles}
       onRemove={remove}

@@ -212,6 +212,7 @@ fn write_outputs(
     let (workspace, date, app) = (fold.workspace.clone(), fold.date, request.app.to_string());
     let printed = jiff::Zoned::now().strftime("%H:%M").to_string();
     let snapshot = record.clone();
+    let couriers = draft.couriers.clone();
     let pages = request.worker.run(move |pdfium| {
         write_summary(
             pdfium,
@@ -222,6 +223,7 @@ fn write_outputs(
                 record: &snapshot,
                 printed: &printed,
                 app: &app,
+                couriers: &couriers,
             },
         )
     })??;

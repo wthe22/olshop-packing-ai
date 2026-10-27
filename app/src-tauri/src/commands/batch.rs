@@ -40,22 +40,28 @@ fn open_date(state: &AppState) -> Result<Date, String> {
     })
 }
 
-/// *Add files…* / a drop: each file's page count, size, time and *used in batch n*.
+/// *Add files…* / a drop: each file's page count, size, time and *used in batch n*; on an amend's
+/// selection page (`redo`), never the batch being redone.
 #[tauri::command]
 pub fn check_files(
     state: State<'_, AppState>,
     paths: Vec<String>,
+    redo: Option<BatchId>,
 ) -> Result<Vec<FileCheckView>, String> {
     let paths: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
-    checked(&state, &paths)
+    checked(&state, &paths, redo)
 }
 
-pub(crate) fn checked(state: &AppState, paths: &[PathBuf]) -> Result<Vec<FileCheckView>, String> {
+pub(crate) fn checked(
+    state: &AppState,
+    paths: &[PathBuf],
+    redo: Option<BatchId>,
+) -> Result<Vec<FileCheckView>, String> {
     let date = open_date(state)?;
     state.with_data(|data| {
         let day = data.open_day(date)?;
         let files = state
-            .with_worker(|worker| check(worker, paths, day.journal.fold()))?
+            .with_worker(|worker| check(worker, paths, day.journal.fold(), redo))?
             .map_err(|error| error.to_string())?;
         Ok(files.iter().map(file_view).collect())
     })

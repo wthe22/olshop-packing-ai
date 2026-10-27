@@ -21,7 +21,8 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 - Each listed file shows its page count; its SHA-256 is taken at once
   ([02 Read](../workflow/02-read.md#3-choose-the-files)). A file whose bytes equal a listed file is not listed
   again: a line names both. A file that is an input of a live batch of this date shows *used in batch n*
-  in orange: it can be read, its orders are then found as already saved. **×** takes a file off the list.
+  in orange: it can be read, its orders are then found as already saved. On an amend's selection page the
+  batch being redone is never named so. **×** takes a file off the list.
 - Files are read in the order of the list, sorted by file name (= download time and part number). **Read
   labels** needs at least one file.
 - After a read, a file that holds an order appearing more than once is marked with its group chip (▌G1) and
@@ -81,4 +82,4 @@ QR never are. The picture is the image as printed, and the count says how many p
   Esc skips that one image. The prompt never blocks the work.
 - An instant-service label's **tag** that names no courier is asked the same way, *Which courier serves
   instant labels tagged `GRB`?*, without *Not a courier*; the answer goes to that courier's `instant_tags`
-  ([D-LABEL-7](../decisions/label.md)).
+  ([D-LABEL-21](../decisions/label.md)). An instant label's header images are never asked about.

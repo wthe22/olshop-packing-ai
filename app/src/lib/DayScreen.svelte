@@ -4,6 +4,7 @@
   // reprints; *New batch* starts the batch flow and *Day summary* writes the date's summary PDF.
   import { texts } from "../texts";
   import type { BatchView, DayOverview, FileProblem, GroupPdfView, LeftOutView } from "./api/day";
+  import Count from "./Count.svelte";
   import ReprintsCard from "./ReprintsCard.svelte";
 
   let {
@@ -127,7 +128,8 @@
           <div class="row">
             <span class="code">{batch.batch}-{pdf.group}</span>
             <span class="name">{pdf.name}</span>
-            <span class="counts">{texts.day.counts(pdf.orders, pdf.contents)}</span>
+            <Count n={pdf.orders} word={texts.day.orderWord(pdf.orders)} />
+            <Count n={pdf.contents} word={texts.day.contentWord(pdf.contents)} />
             <label class="printed">
               <input
                 type="checkbox"
@@ -317,12 +319,6 @@
 
   .name {
     flex: 1;
-  }
-
-  .counts {
-    min-width: 9.5rem;
-    color: var(--text-muted);
-    white-space: nowrap;
   }
 
   /* The **Printed** tick beside *Open*: a note only. It carries no word — the tick

@@ -41,25 +41,6 @@ both rasters, and the decode is paid only where the bytes named nothing.
 
 **Applies to.** [courier deduction](../labels/courier.md), item 2.
 
-## D-LABEL-7 — An instant-service label is named by its service tag
-
-**Decision.** A courier's `instant_tags` name the courier of an instant-service label, which has no logo and no
-tracking ID: `GKS` is Gojek. A tag in no list is asked about once in the logo prompt, like an unseen logo
-(Q-LABEL-2).
-
-**Why.** Nothing else on the page names the courier, and a new tag is a file edit, not a program change.
-
-**Applies to.** [courier deduction](../labels/courier.md), item 7; [rules file](../rules-file/README.md#couriers).
-
-## D-LABEL-8 — The pickup code is printed in the summary PDF
-
-**Decision.** An instant order's pickup code is read and kept with the order, and the summary PDF's facts page
-lists it beside the order (Q-LABEL-3).
-
-**Why.** The driver asks for the code; it belongs on the paper the owner carries.
-
-**Applies to.** [summary PDF](../labels/summary-pdf.md#the-facts-pages), [records](../data/records.md).
-
 ## D-LABEL-9 — The logo candidates are the images in the page's top 40 pt
 
 **Decision.** Only images whose box lies in the page's top 40 pt can be a logo, and the logo prompt has a **Not
@@ -121,7 +102,7 @@ repeat (Q-LABEL-10). Whether an output page is its source page is the verifier's
 name, variation, quantity) — are printed next to each other, and the screens call such a block an *order
 content* (Q-LABEL-11). The Seller SKU and the printed `Qty Total` are stored with the order, not with its
 content, so one order content is exactly one block. The screens list a group's order contents in printing
-order; the summary PDF numbers them ([D-LABEL-18](#d-label-18--the-summary-pdf-numbers-order-contents-and-counts-couriers)).
+order; the summary PDF numbers them ([D-LABEL-19](#d-label-19--the-summary-pdf-one-row-everywhere-couriers-by-name)).
 
 **Why.** It is the owner's own word and the data already names it (`order_contents`, `order-contents.toml`).
 
@@ -137,28 +118,45 @@ to take from stock.
 
 **Applies to.** [summary PDF](../labels/summary-pdf.md).
 
-## D-LABEL-17 — The day summary: batches, couriers, picks
+## D-LABEL-19 — The summary PDF: one row everywhere, couriers by name
 
-**Decision.** The day summary holds each live batch with its group PDFs and their Printed ticks, the orders per
-courier, and from a new page the day's pick pages. It does not list the reprints (Q-LABEL-12, option 1
-without the reprints).
+**Decision.** Every part of the summary PDF draws the same row: a bold key at the left, the text, the counts at
+the right with their numbers under each other, a thin rule under it. The group pages number each order
+content in its group, `A-1`, `A-2`, … (the group's code and the place). The facts pages list the orders per
+courier by the courier's **name**, then the warnings, the inputs with the ledger, the sort rule and the
+versions — not the group PDFs, which the group pages show, and not the instant orders' pickup codes, which
+their labels carry. It replaces D-LABEL-18 (one layout in three count columns) and D-LABEL-8 (the pickup codes
+on the facts page), and the rule of D-LABEL-15 that an order content has no number.
 
-**Why.** The owner's answer: the reprints are on the Day screen's *Reprints* card; the paper is for the end of
-the day — what is not printed yet, what each courier takes, what was taken from stock.
+**Why.** The owner's words (2026-10-27): the group pages and the pick pages read far better than the first
+page; the first page should take their spacing, name the couriers, and drop the groups and the instant
+orders. The verifier reads each group's counts from its bar instead.
+
+**Applies to.** [summary PDF](../labels/summary-pdf.md), [groups](../labels/groups.md#a-group-pdf),
+[verification](../app/verification.md).
+
+## D-LABEL-20 — The day summary: the batches as their Day cards
+
+**Decision.** The day summary draws each live batch as its Day card shows it — a bar with the batch, its save
+time and files, its orders and units; a row per group PDF with its orders and order contents (*3 contents*) —
+then the orders per courier by name, and from a new page the day's pick pages. No Printed ticks, no reprints.
+It replaces D-LABEL-17.
+
+**Why.** The owner's words (2026-10-27): the Day screen already reads well, the PDF of the same facts read
+worse; whether a group PDF is printed does not matter on this paper; *contents*, not *order contents*. The
+reprints stay on the Day screen's *Reprints* card (Q-LABEL-12).
 
 **Applies to.** [day summary](../labels/day-summary.md).
 
-## D-LABEL-18 — The summary PDF numbers order contents and counts couriers
+## D-LABEL-21 — An instant label is named by its tag; its header images are never asked about
 
-**Decision.** On the summary PDF's group pages each order content carries a number in its group, `A-1`, `A-2`,
-… (the group's code and the place). The facts pages list the batch's orders per courier after the groups. The
-summary PDF and the day summary share one layout: a bar per section, rows whose text starts in line with the
-bar's heading, the counts in three columns, the same gaps everywhere. It replaces the rule of D-LABEL-15 that
-an order content has no number.
+**Decision.** A courier's `instant_tags` name the courier of an instant-service label, which has no logo and no
+tracking ID: `GKS` is Gojek, `Sameday` is Grab. Its header images are the buying channel's strips: none of them
+is asked about in the logo prompt. A tag in no list is asked about once in the logo prompt. It replaces
+D-LABEL-7.
 
-**Why.** The owner asked for numbers to refer to an order content easily, for the couriers' counts on the
-batch's paper, and for a first page that reads cleanly: the old facts page had text out of line with the
-bars, uneven gaps and the counts inside the text; the day summary's columns read better.
+**Why.** Nothing else on the page names the courier, and a new tag is a file edit, not a program change. The
+prompt once showed an instant label's `TikTok Shop` strip, the owner answered *Grab*, and from then on no
+TikTok instant label of Gojek or Grab could be named (a courier logo on an instant label names nothing).
 
-**Applies to.** [summary PDF](../labels/summary-pdf.md), [day summary](../labels/day-summary.md),
-[groups](../labels/groups.md#a-group-pdf).
+**Applies to.** [courier deduction](../labels/courier.md), item 7; [rules file](../rules-file/README.md#couriers).

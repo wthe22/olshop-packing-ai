@@ -1,18 +1,40 @@
 use super::*;
 
 #[test]
-fn the_bundled_copy_holds_six_couriers_and_one_rule() {
+fn the_bundled_copy_holds_eight_couriers_and_one_rule() {
     let workflows = load_workflows(BUNDLED_WORKFLOWS).expect("the bundled copy is valid");
     let codes: Vec<&str> = workflows.couriers.iter().map(|c| c.code.as_str()).collect();
     assert_eq!(
         codes,
-        ["jnt", "sicepat", "jnt-cargo", "idx", "spx", "gojek"]
+        [
+            "jnt",
+            "sicepat",
+            "jnt-cargo",
+            "idx",
+            "spx",
+            "gojek",
+            "grab",
+            "anteraja"
+        ]
     );
-    assert_eq!(workflows.classifiers.len(), 6);
+    assert_eq!(workflows.classifiers.len(), 8);
     let jnt = &workflows.classifiers[0];
     assert!(jnt.tracking_id.as_ref().unwrap().matches("JY0000001234"));
     assert!(!jnt.tracking_id.as_ref().unwrap().matches("JY0000001234X"));
-    assert_eq!(workflows.classifiers[5].instant_tags, ["GKS"]);
+    let tags: Vec<(&str, &[String])> = workflows
+        .classifiers
+        .iter()
+        .filter(|c| !c.instant_tags.is_empty())
+        .map(|c| (c.courier.as_str(), c.instant_tags.as_slice()))
+        .collect();
+    assert_eq!(
+        tags,
+        [
+            ("gojek", ["GKS".to_string()].as_slice()),
+            ("grab", ["Sameday".to_string()].as_slice())
+        ]
+    );
+    assert_eq!(workflows.not_courier_logos.len(), 5);
 
     let rule = workflows.sort_rule("default").expect("rule default");
     assert_eq!(rule.groups.len(), 1);

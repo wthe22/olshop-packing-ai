@@ -5,6 +5,7 @@
 use std::path::PathBuf;
 
 use packing_engine::record::{OutputRestored, RecordBody};
+use packing_engine::workflows::Courier;
 use packing_pdf::summary_pdf::{SummaryFacts, write_summary};
 use packing_pdf::worker::PdfWorker;
 use packing_store::{
@@ -22,6 +23,8 @@ pub struct RestoreRequest<'a> {
     /// The output's name in `output/`.
     pub file: &'a str,
     pub app: &'a str,
+    /// The couriers of `packing-workflows.toml`: a summary PDF names them.
+    pub couriers: &'a [Courier],
 }
 
 #[derive(Debug)]
@@ -78,6 +81,7 @@ pub fn restore(
                 (fold.workspace.clone(), fold.date, request.app.to_string());
             let printed = jiff::Zoned::now().strftime("%H:%M").to_string();
             let (record, target) = (saved.clone(), out.clone());
+            let couriers = request.couriers.to_vec();
             request
                 .worker
                 .run(move |pdfium| {
@@ -90,6 +94,7 @@ pub fn restore(
                             record: &record,
                             printed: &printed,
                             app: &app,
+                            couriers: &couriers,
                         },
                     )
                 })

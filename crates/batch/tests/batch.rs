@@ -60,7 +60,7 @@ impl Day {
         rule: &SortRule,
         redo: Option<BatchId>,
     ) -> Result<Draft, BatchError> {
-        let files = check_files(&self.worker, paths, self.journal.fold())?;
+        let files = check_files(&self.worker, paths, self.journal.fold(), redo)?;
         let (progress, _) = mpsc::channel();
         read_draft(ReadRequest {
             worker: &self.worker,
@@ -221,6 +221,19 @@ fn an_amend_saves_the_newest_batch_again_under_its_number() {
     assert_eq!(amend.batch, first.batch);
     let paths: Vec<PathBuf> = amend.files.iter().map(|f| f.path.clone()).collect();
     assert!(paths.iter().all(|path| path.starts_with(day.folder.dir())));
+    assert!(amend.files.iter().all(|file| file.used_in.is_none()));
+
+    // The batch's own downloads chosen again: used in batch 1 for a new batch, not for its amend.
+    let downloads: Vec<PathBuf> = INPUTS.iter().map(|name| testdata(name)).collect();
+    let used_in = |redo| -> Vec<Option<BatchId>> {
+        check_files(&day.worker, &downloads, day.journal.fold(), redo)
+            .unwrap()
+            .iter()
+            .map(|file| file.used_in)
+            .collect()
+    };
+    assert_eq!(used_in(None), [Some(first.batch), Some(first.batch)]);
+    assert_eq!(used_in(Some(first.batch)), [None, None]);
     let mut draft = day.read(&paths, &amend.rule, Some(amend.batch)).unwrap();
     draft.keep_as_recorded(&first).unwrap();
     let again = saved(day.save(&draft, false)).record;
@@ -350,6 +363,7 @@ fn a_missing_output_is_restored_and_recorded() {
             folder: &day.folder,
             file,
             app: APP,
+            couriers: &day.workflows.couriers,
         };
         let restored = match restore(&request, &mut day.journal).unwrap() {
             RestoreOutcome::Restored(restored) => restored,
@@ -373,6 +387,7 @@ fn a_missing_output_is_restored_and_recorded() {
             folder: &day.folder,
             file: "nothing.pdf",
             app: APP,
+            couriers: &day.workflows.couriers,
         },
         &mut day.journal,
     );

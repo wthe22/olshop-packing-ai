@@ -48,22 +48,33 @@ impl<'a> Measure<'a> {
         }
     }
 
+    /// How far `text` advances, in millimetres: where a character after it would start. A text
+    /// object's width is its ink, which ends short of that by the last glyph's side bearing — a
+    /// `1` most — so text right-aligned by its ink would not line its digits up.
+    pub(crate) fn advance_mm(&self, text: &str, font: Font, size_pt: f32) -> f32 {
+        let probe = format!("{text}|");
+        self.origins(&probe, font, size_pt)
+            .and_then(|origins| Some(origins.last()? - origins.first()?))
+            .unwrap_or_else(|| self.width_mm(text, font, size_pt))
+    }
+
     pub(super) fn chunk_width_mm(&self, text: &str, font: Font, size_pt: f32, cid: bool) -> f32 {
-        let mut page = match self.doc.pages().get(0) {
-            Ok(page) => page,
-            Err(_) => return 0.0,
+        let Ok(mut page) = self.doc.pages().get(0) else {
+            return 0.0;
         };
         let objects = page.objects_mut();
-        match objects.create_text_object(
+        let Ok(object) = objects.create_text_object(
             PdfPoints::new(0.0),
             PdfPoints::new(0.0),
             text,
             self.token(font, cid),
             PdfPoints::new(size_pt),
-        ) {
-            Ok(object) => object.width().map(|w| w.value / PT_PER_MM).unwrap_or(0.0),
-            Err(_) => 0.0,
-        }
+        ) else {
+            return 0.0;
+        };
+        let width = object.width().map(|w| w.value / PT_PER_MM).unwrap_or(0.0);
+        let _ = objects.remove_object(object);
+        width
     }
 
     /// `text` as the runs to draw, each with its offset from the start of `text` in millimetres:
@@ -113,34 +124,36 @@ impl<'a> Measure<'a> {
 
     /// The x origin of every character of `text`, in millimetres from its start, drawn with the
     /// CID font; `None` when PDFium cannot report them.
+    ///
+    /// Every measured object is taken off the page again: PDFium's text layer merges a character
+    /// with an identical one at the same place, so a second measure of the same text would read
+    /// the origins of a merged run and draw its pieces too far left.
     pub(super) fn origins(&self, text: &str, font: Font, size_pt: f32) -> Option<Vec<f32>> {
         let mut page = self.doc.pages().get(0).ok()?;
-        let object = {
-            let objects = page.objects_mut();
-            objects
-                .create_text_object(
-                    PdfPoints::new(0.0),
-                    PdfPoints::new(0.0),
-                    text,
-                    self.token(font, true),
-                    PdfPoints::new(size_pt),
-                )
-                .ok()?
-        };
-        let textpage = page.text().ok()?;
-        let chars = object.as_text_object()?.chars(&textpage).ok()?;
-        if chars.len() != text.chars().count() {
-            return None;
-        }
-        Some(
-            chars
-                .iter()
-                .map(|character| match character.origin() {
-                    Ok((x, _)) => x.value / PT_PER_MM,
-                    Err(_) => 0.0,
-                })
-                .collect(),
-        )
+        let object = page
+            .objects_mut()
+            .create_text_object(
+                PdfPoints::new(0.0),
+                PdfPoints::new(0.0),
+                text,
+                self.token(font, true),
+                PdfPoints::new(size_pt),
+            )
+            .ok()?;
+        let origins = page.text().ok().and_then(|textpage| {
+            let chars = object.as_text_object()?.chars(&textpage).ok()?;
+            (chars.len() == text.chars().count()).then(|| {
+                chars
+                    .iter()
+                    .map(|character| match character.origin() {
+                        Ok((x, _)) => x.value / PT_PER_MM,
+                        Err(_) => 0.0,
+                    })
+                    .collect()
+            })
+        });
+        let _ = page.objects_mut().remove_object(object);
+        origins
     }
 
     /// Greedy word wrap to `width_mm`.
