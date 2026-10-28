@@ -1,13 +1,11 @@
 <script lang="ts">
-  // The window frame: the panel's switch, the program's name, the open workspace and date, the
-  // screens that open over the current one, and the theme menu.
+  // The window frame: the panel's switch, the program's name, the open workspace and date, and the
+  // screens that open over the current one.
   import { texts } from "../texts";
   import { formatDay } from "../dates";
   import type { OverlayId } from "./shell.svelte";
-  import type { Theme } from "./theme";
   import Icon, { type IconName } from "./Icon.svelte";
   import Logo from "./Logo.svelte";
-  import ThemeMenu from "./ThemeMenu.svelte";
 
   let {
     workspace,
@@ -16,19 +14,15 @@
     // The program's shown version (`v0.2`, from `StartInfo.version`): with the name it is the
     // same text as the OS window title.
     version,
-    theme,
     onTogglePanel,
     onNavigate,
-    onTheme,
   }: {
     workspace: string | null;
     day: string;
     overlay: OverlayId | null;
     version: string;
-    theme: Theme;
     onTogglePanel: () => void;
     onNavigate: (id: OverlayId) => void;
-    onTheme: (theme: Theme) => void;
   } = $props();
 
   const items: { id: OverlayId; label: string; icon: IconName }[] = [
@@ -63,8 +57,6 @@
       >
     {/each}
   </nav>
-  <span class="divider"></span>
-  <ThemeMenu {theme} onChoose={onTheme} />
 </header>
 
 <style>
@@ -133,11 +125,5 @@
     background: var(--accent-soft);
     color: var(--link);
     font-weight: 600;
-  }
-
-  .divider {
-    width: 1px;
-    height: 1.4rem;
-    background: var(--border);
   }
 </style>

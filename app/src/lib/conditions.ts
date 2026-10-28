@@ -3,6 +3,7 @@
 // `{"Group": …}` or `{"Row": …}` (serde's external tagging); the window uses a friendlier shape.
 
 import { conditionFields, type FieldType } from "../fields";
+import type { Courier } from "./api/rules";
 
 export type GroupKind = "all" | "any";
 
@@ -50,6 +51,21 @@ export function newRow(field = "name"): UiRow {
     operator: fieldType(field) === "text" ? "contains" : "=",
     value: "",
   };
+}
+
+// A Courier row's value when its operator changes from `from` to `to`: *equals* holds a picked
+// courier's code, the other operators typed text that a filter compares with the names. A picked
+// code becomes its courier's name; typed text picks the first courier whose name holds it.
+export function courierValue(value: string, from: string, to: string, couriers: Courier[]): string {
+  if (to === "equals" && from !== "equals") {
+    const typed = value.trim().toLowerCase();
+    const named = couriers.find((courier) => typed && courier.name.toLowerCase().includes(typed));
+    return (named ?? couriers[0])?.code ?? value;
+  }
+  if (from === "equals" && to !== "equals") {
+    return couriers.find((courier) => courier.code === value)?.name ?? value;
+  }
+  return value;
 }
 
 // The field's type; an unknown field reads as text.

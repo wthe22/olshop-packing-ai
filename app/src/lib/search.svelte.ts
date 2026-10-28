@@ -4,7 +4,7 @@
 // ticked order was printed again before. The markup is `SearchScreen.svelte`.
 
 import * as api from "./api/search";
-import { treeToFilter } from "./api/rules";
+import { rulesList, treeToFilter, type Courier } from "./api/rules";
 import { newRow, newTree, toRustTree, type UiTree } from "./conditions";
 import { texts } from "../texts";
 import { formatShortDay } from "../dates";
@@ -34,6 +34,10 @@ export class Search {
   made = $state<api.ReprintMade | null>(null);
   // The verifier's findings of a reprint that was not kept.
   findings = $state<string[]>([]);
+  // For the Courier box's list.
+  couriers = $state<Courier[]>([]);
+  // The row a single click just ticked or unticked, so the double click it starts can undo it.
+  private clicked: string | null = null;
 
   // The open date and today, which the choices of dates count from; and what lets the Day screen
   // and the panel recount after a reprint.
@@ -47,6 +51,14 @@ export class Search {
     this.onReprinted = onReprinted;
     this.range = { from: day(), to: day() };
   }
+
+  loadCouriers = async () => {
+    try {
+      this.couriers = (await rulesList()).couriers;
+    } catch (e) {
+      this.error = String(e);
+    }
+  };
 
   invalidate = () => {
     this.error = "";
@@ -100,6 +112,19 @@ export class Search {
 
   toggle = (row: api.SearchRow) => {
     this.ticked = flip(this.ticked, key(row));
+  };
+
+  // A click on a row's text ticks it. A drag or a double click selects text instead and leaves the
+  // tick as it was: `selecting` says the click ended a selection, and a double click's second
+  // click undoes its first.
+  clickRow = (row: api.SearchRow, clicks: number, selecting: boolean) => {
+    if (clicks === 1 && !selecting) {
+      this.toggle(row);
+      this.clicked = key(row);
+    } else if (clicks === 2 && this.clicked === key(row)) {
+      this.toggle(row);
+      this.clicked = null;
+    }
   };
 
   toggleTrace = (row: api.SearchRow) => {

@@ -150,6 +150,7 @@ fn counts(state: &AppState, rule: &SortRule) -> Option<Vec<usize>> {
                 &draft.orders.kept,
                 &plan_groups(rule),
                 BatchId::new(1),
+                &draft.couriers,
             );
             Ok(rule
                 .groups

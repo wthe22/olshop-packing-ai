@@ -10,7 +10,7 @@ use crate::ids::BatchId;
 use crate::record::{ItemPick, OrderContent};
 use crate::record::{LabelGroupRule, LabelSortRule};
 use crate::rules::evaluate_filter;
-use crate::workflows::{Filter, SortRule};
+use crate::workflows::{Courier, Filter, SortRule};
 
 /// The rest group when the last group has a filter or was skipped: Windows allows no `?` in a
 /// file name, so its file name has no code.
@@ -134,12 +134,13 @@ pub fn content_of(copy: &Copy) -> (OrderContent, Vec<Option<String>>) {
     (OrderContent { items }, skus)
 }
 
-/// Sort the kept copies of a batch by its plan.
+/// Sort the kept copies of a batch by its plan; `couriers` name the couriers a filter compares.
 pub fn sort_batch(
     copies: &[Copy],
     kept: &[usize],
     plan: &[PlanGroup],
     batch: BatchId,
+    couriers: &[Courier],
 ) -> SortedBatch {
     let mut remaining: Vec<usize> = kept.to_vec();
     remaining.sort_unstable();
@@ -149,7 +150,7 @@ pub fn sort_batch(
             group
                 .filter
                 .as_ref()
-                .is_none_or(|filter| evaluate_filter(&filter.condition, &copies[copy]))
+                .is_none_or(|filter| evaluate_filter(&filter.condition, &copies[copy], couriers))
         });
         remaining = rest;
         taken.push((&group.code, &group.name, group.file_name.as_deref(), mine));

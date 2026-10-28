@@ -34,3 +34,17 @@ courier's code only.
 word of its own reads plainly in the file and on screen.
 
 **Applies to.** [Filter language](../rules-file/conditions.md), [Sort rules](../ui/sort-rules.md).
+
+## D-RULES-4 — A typed courier is compared with the couriers' names, a picked one by code
+
+**Decision.** `courier contains` and `courier starts_with` compare the courier's **name** in
+`packing-workflows.toml` (the code when the rules no longer name it), so `courier contains "J&T"` takes J&T
+Express and J&T Cargo; `courier equals` compares the **code** (R-RULES-4). On screen *equals* picks one courier
+from the list by name and the other operators take typed text, in Sort rules, Search and the Plan screen's
+one-off group alike.
+
+**Why.** The owner's words: only *equals* needs the list; typing part of a name must find every courier of
+that name. The names are what the owner sees everywhere; the code stays the one exact key.
+
+**Applies to.** [Filter language](../rules-file/conditions.md#fields), [Sort rules](../ui/sort-rules.md),
+[Search](../ui/search.md).

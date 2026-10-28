@@ -30,7 +30,7 @@ What workspaces share is beside the program: `packing-workflows.toml` (couriers 
 - `labels` and `categories` are not names: they are the folders of a version 0.1 data folder.
 - The name is the folder's name and is written into the `started` record of each of its journals.
 
-## Listing, opening and creating
+## Listing, opening, creating, renaming and deleting
 
 - **The list** is every folder of the data folder whose name is a workspace name, read at start and when
   the window regains focus, so a folder added in Explorer shows up.
@@ -40,9 +40,16 @@ What workspaces share is beside the program: `packing-workflows.toml` (couriers 
 - **Another date** is opened from the [panel](../ui/panel.md): a download just after midnight that
   belongs to the evening before is saved under that evening's date.
 - **A date folder** is created at its first commit; today is listed before it exists.
-- **The app never renames or deletes** a workspace or a date. A workspace folder renamed in Explorer keeps
-  its journals, which name the old name: its dates open for viewing only, with a message that says so
-  ([journal › damage](../data/journal.md#a-torn-write-and-damage)).
+- **Rename** (Settings › Workspaces) renames the folder; everything in it stays. Its journals keep the name
+  they were started under, and a date opens whatever name its folder has now
+  ([D-APP-24](../decisions/app-features.md)); a folder renamed in Explorer works the same. A file of the
+  workspace open in another program stops the rename, which says so.
+- **Delete** (Settings › Workspaces, asked first) moves the workspace's folder, with all its dates, to the
+  Recycle Bin, where Explorer can restore it.
+- **The open workspace follows**: renamed, it stays open on the same date; deleted, the app opens the one it
+  opens at start, or asks for the first workspace's name when none is left. An open draft of it is dropped,
+  after asking.
+- **A date** is never renamed or deleted by the app.
 
 ## A version 0.1 data folder
 

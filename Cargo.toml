@@ -18,6 +18,7 @@ serde_json = "1"
 sha2 = "0.10"
 toml = "1"
 toml_edit = "0.25"
+trash = { version = "5.2", default-features = false, features = ["coinit_apartmentthreaded"] }
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 packing-batch = { path = "crates/batch" }
 packing-engine = { path = "crates/engine" }

@@ -52,7 +52,13 @@ fn draft(pdfium: &Pdfium, data: &Path) -> Draft {
     let orders = sort_out(&copies, &BTreeMap::new(), &Choices::default()).unwrap();
     let rule = workflows.sort_rule("default").unwrap();
     let plan = plan_groups(rule);
-    let sorted = sort_batch(&copies, &orders.kept, &plan, BatchId::new(1));
+    let sorted = sort_batch(
+        &copies,
+        &orders.kept,
+        &plan,
+        BatchId::new(1),
+        &workflows.couriers,
+    );
     let time = Datetime::parse("2026-10-08T07:00:00+07:00").unwrap();
     let inputs: Vec<InputPdf> = paths
         .iter()

@@ -160,6 +160,11 @@ try {
   await click("Sort rules");
   await until(shows("Order matters"));
   await picture("07-sort-rules.png");
+  await click("Close");
+
+  await click("Settings");
+  await until(shows("Open now"));
+  await picture("09-settings.png");
 } finally {
   socket.close();
   app.kill();

@@ -38,17 +38,6 @@ groups yet: all orders go into one PDF**; the Day screen does not (Q-UI-4).
 
 **Applies to.** [Sort rules](../ui/sort-rules.md), [Plan](../ui/plan.md).
 
-## D-UI-5 — A side panel of the workspace's dates
-
-**Decision.** A panel that can be hidden lists the open workspace's dates, newest first, months folded except the
-open and the current one (Q-UI-5); it replaces the title bar's day stepper (Q-UI-7). A row's menu offers **Open
-folder** only: a date has no name, and the app renames no workspace, whose name is in its journals (Q-UI-6 asked
-about renaming sessions, which D-APP-5 removed).
-
-**Why.** The sessions panel's defaults, carried over to workspaces and dates.
-
-**Applies to.** [Panel](../ui/panel.md).
-
 ## D-UI-6 — Repeats are looked for in the batch's label files only
 
 **Decision.** The Repeated orders screen and the file marks cover the label files of the batch being prepared;
@@ -58,12 +47,26 @@ there is no check of saved files for repeats (Q-UI-8).
 
 **Applies to.** [Repeated orders](../ui/duplicates.md).
 
-## D-UI-7 — The theme is the owner's choice
+## D-UI-8 — The theme is the owner's choice, in Settings
 
-**Decision.** The title bar's theme menu offers **Light**, **Dark** and **System** (Windows' own, the default). The
-choice is `theme` in `packing-settings.toml`; every screen and every control (text boxes, lists, ticks, radio
-buttons) follows it, and so does the OS title bar.
+**Decision.** Settings › **Theme** offers **Light**, **Dark** and **System** (Windows' own, the default); the
+title bar has no theme menu (R-UI-31). The choice is `theme` in `packing-settings.toml`; every screen and every
+control (text boxes, lists, ticks, radio buttons) follows it, and so does the OS title bar. It replaces D-UI-7,
+which put the menu in the title bar.
 
-**Why.** The owner asked for it (R-UI-12), and found the controls left light in dark mode (R-UI-11).
+**Why.** The owner asked for a theme (R-UI-12) and found the controls left light in dark mode (R-UI-11); a
+theme is chosen once, not every few minutes, so it belongs with the settings.
 
-**Applies to.** [Window frame](../ui/README.md#window-frame), [data](../data/README.md).
+**Applies to.** [Settings](../ui/settings.md), [data](../data/README.md).
+
+## D-UI-9 — A side panel of the workspace's dates
+
+**Decision.** A panel that can be hidden lists the open workspace's dates, newest first, months folded except the
+open and the current one (Q-UI-5); it replaces the title bar's day stepper (Q-UI-7). A row's menu offers **Open
+folder** only: a date has no name. A workspace is renamed or deleted in Settings
+([D-APP-24](app-features.md)). It replaces D-UI-5, under which the app renamed no workspace.
+
+**Why.** The sessions panel's defaults, carried over to workspaces and dates (Q-UI-6 asked about renaming
+sessions, which D-APP-5 removed).
+
+**Applies to.** [Panel](../ui/panel.md).

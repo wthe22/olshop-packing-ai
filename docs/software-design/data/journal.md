@@ -15,7 +15,9 @@ Crate `packing-store` owns it.
   and the `\n`.
 - Every record carries `seq` (1, 2, 3, … with no gap), `time`, `app` (the app version that wrote it) and
   `type`. The record types and their fields are in [records.md](records.md).
-- Seq 1 is `started`: the schema (`1.0`), the workspace and the date. They must equal the folder's names.
+- Seq 1 is `started`: the schema (`1.0`), the workspace and the date. The date must equal the folder's name;
+  the workspace is the name it had when the date started, which a rename does not change
+  ([D-APP-24](../decisions/app-features.md)).
 
 ## A commit
 
@@ -32,7 +34,7 @@ the journal as it is on disk, never from a view or the search index.
 
 | Record | Rule the fold checks |
 |---|---|
-| `started` | Seq 1, and only there; workspace and date equal the folder |
+| `started` | Seq 1, and only there; its date equals the folder's |
 | `batch_saved`, `amends: false` | `batch` = the highest live batch + 1 (1 on a date with none) |
 | `batch_saved`, `amends: true` | `batch` = the highest live batch |
 | `batch_reverted` | `batch` = the highest live batch |

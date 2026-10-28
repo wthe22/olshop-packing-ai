@@ -52,6 +52,14 @@ pub struct Courier {
     pub name: String,
 }
 
+/// The name of the courier with `code`, or the code when the rules no longer name it.
+pub fn courier_name<'a>(couriers: &'a [Courier], code: &'a str) -> &'a str {
+    couriers
+        .iter()
+        .find(|courier| courier.code.as_str() == code)
+        .map_or(code, |courier| courier.name.as_str())
+}
+
 /// The clues that name one courier (courier.md).
 #[derive(Clone, Debug)]
 pub struct Classifier {

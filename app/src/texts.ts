@@ -1,10 +1,10 @@
-// Every screen text of the PC app, in English. Components import from here; no screen text is written in a component.
+// Every screen text of the PC app, in English. Components import from here; no screen text is
+// written in a component. The Search and Settings screens' texts are their own files, joined here.
 
 import type { Question } from "./lib/confirm.svelte";
-
-function count(n: number, one: string, many: string): string {
-  return `${n} ${n === 1 ? one : many}`;
-}
+import { count } from "./count";
+import { searchTexts } from "./searchTexts";
+import { settingsTexts } from "./settingsTexts";
 
 // "1", "1 and 3", "1, 2 and 3".
 function listed(numbers: number[]): string {
@@ -29,14 +29,6 @@ export const texts = {
     // Closes a screen opened over the current one.
     close: "Close",
     togglePanel: "Show or hide the panel (Ctrl+B)",
-  },
-
-  // The title bar's theme menu.
-  theme: {
-    title: "Theme",
-    light: "Light",
-    dark: "Dark",
-    system: "System",
   },
 
   // The side panel: the workspace, its dates by month, **+ New workspace**.
@@ -302,24 +294,7 @@ export const texts = {
     review: "Review the repeats",
   },
 
-  settings: {
-    title: "Settings",
-    dataFolder: "Data folder",
-    change: "Change…",
-    open: "Open",
-    askChange: (folder: string, old: string): Question => ({
-      title: "Change the data folder?",
-      body: `New: ${folder}. The data in ${old} stays where it is.`,
-      ok: "Change",
-    }),
-    dataFolderHint: "Every workspace and its dates are kept in this folder.",
-    about: "About",
-    tagline:
-      "Sorts the day's label PDFs into group PDFs to print, with a summary PDF to pick and pack by.",
-    version: "Version",
-    pdfium: "PDFium",
-    schema: "Journal schema",
-  },
+  settings: settingsTexts,
 
   // The first workspace's name, asked once when the data folder holds none.
   workspace: {
@@ -388,65 +363,7 @@ export const texts = {
   },
 
   // Find saved orders by a filter made with the boxes; only **Reprint** writes a file.
-  search: {
-    title: "Search",
-    // The line above the rows, "N orders in M batches".
-    summary: (orders: number, batches: number) =>
-      `${count(orders, "order", "orders")} in ${count(batches, "batch", "batches")}`,
-    // The dates searched: the open date (the default), ranges that end today, a range of the
-    // owner's own, or every date. The range's two dates show under each choice but *All days*.
-    dates: "Dates",
-    ranges: {
-      day: "This day",
-      yesterday: "Yesterday",
-      week: "Last 7 days",
-      month: "Last 30 days",
-      custom: "Custom range",
-      all: "All days",
-    },
-    rangeTo: "to",
-    rangeFrom: "First date",
-    rangeUntil: "Last date",
-    search: "Search",
-    // The search index is still being built.
-    loading: "Loading…",
-    // One row's items, "name × quantity".
-    item: (name: string, quantity: number) => `${name} ×${quantity}`,
-    noMatch: "No saved order matches.",
-    // The head row; its tick selects every row the filter found.
-    columns: {
-      orderId: "Order ID",
-      trackingId: "Tracking ID",
-      courier: "Courier",
-      items: "Items",
-      saved: "Saved in",
-    },
-    selectAll: "Select all results",
-    tick: (order: string) => `Reprint ${order}`,
-    // An order printed again before, and its tooltip, one line per reprint.
-    reprinted: (n: number) => (n === 1 ? "Reprinted" : `Reprinted ${n}×`),
-    reprintOn: (n: number, day: string) => `Reprint ${n} on ${day}`,
-    // The reprint bar at the foot of the screen.
-    selected: (n: number, all: number) => `${n} of ${all} selected`,
-    clear: "Clear",
-    reprintedBefore: (n: number) => `${n} of them ${n === 1 ? "was" : "were"} reprinted before`,
-    // Asked before printing again an order that was reprinted before.
-    askAgain: (before: number, all: number): Question => ({
-      title: `Reprint ${count(all, "order", "orders")}?`,
-      body:
-        all === 1
-          ? "It was reprinted before."
-          : `${before} of them ${before === 1 ? "was" : "were"} reprinted before.`,
-      ok: `Reprint ${count(all, "order", "orders")}`,
-    }),
-    // The ▸ that opens a row's trace line.
-    trace: "Where it came from",
-    reprint: (n: number) => `Reprint ${count(n, "order", "orders")}`,
-    // "Reprint 1 written: 2 orders, 2 pages."
-    made: (n: number, orders: number, pages: number) =>
-      `Reprint ${n} written: ${count(orders, "order", "orders")}, ${count(pages, "page", "pages")}.`,
-    notKept: "The reprint was not kept: the written file did not match its sources.",
-  },
+  search: searchTexts,
 } as const;
 
 // The stage of a running save, from the `save-progress` event — the stage in plain words with the pages done. The Plan screen

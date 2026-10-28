@@ -6,7 +6,7 @@ use jiff::civil::date;
 use packing_engine::record::RecordBody;
 use packing_store::{
     DateFolder, Journal, StoreError, WorkspaceNameError, check_workspace_name, create_workspace,
-    dates, last_written, workspaces,
+    dates, delete_workspace, last_written, open_date, rename_workspace, workspaces,
 };
 use testkit::TempDir;
 
@@ -75,4 +75,61 @@ fn the_list_holds_the_workspace_folders_and_the_last_written_one_opens() {
         last_written(data.path()).unwrap().as_deref(),
         Some("Toko Contoh")
     );
+}
+
+#[test]
+fn a_renamed_workspace_keeps_its_dates_and_their_batches() {
+    let data = TempDir::new("rename");
+    create_workspace(data.path(), "Toko Contoh").unwrap();
+    create_workspace(data.path(), "Toko Lain").unwrap();
+    let folder = DateFolder::new(data.path(), "Toko Contoh", date(2026, 10, 7));
+    Journal::open(&folder)
+        .unwrap()
+        .commit(
+            vec![RecordBody::BatchSaved(batch(1, false, Vec::new()))],
+            APP,
+        )
+        .unwrap();
+
+    for (new_name, reason) in [
+        ("toko lain", "another workspace"),
+        ("Toko & Co", "1 to 40"),
+        ("labels", "Packing v0.1"),
+    ] {
+        match rename_workspace(data.path(), "Toko Contoh", new_name) {
+            Err(StoreError::BadName { reason: why, .. }) => assert!(why.contains(reason), "{why}"),
+            other => panic!("{new_name}: expected a refused name, got {other:?}"),
+        }
+    }
+    rename_workspace(data.path(), "Toko Contoh", "toko contoh").unwrap();
+    rename_workspace(data.path(), "toko contoh", "Toko Baru").unwrap();
+    assert_eq!(workspaces(data.path()).unwrap(), ["Toko Baru", "Toko Lain"]);
+    assert_eq!(
+        dates(data.path(), "Toko Baru").unwrap(),
+        [date(2026, 10, 7)]
+    );
+
+    let opened = open_date(&DateFolder::new(
+        data.path(),
+        "Toko Baru",
+        date(2026, 10, 7),
+    ))
+    .unwrap();
+    assert_eq!(
+        opened.journal.damage(),
+        None,
+        "its journal names the old name"
+    );
+    assert_eq!(opened.journal.fold().live.len(), 1);
+}
+
+#[test]
+fn a_deleted_workspace_leaves_the_list() {
+    let data = TempDir::new("delete");
+    create_workspace(data.path(), "Toko Contoh").unwrap();
+    create_workspace(data.path(), "Toko Lain").unwrap();
+    assert!(delete_workspace(data.path(), "Toko Tiada").is_err());
+    delete_workspace(data.path(), "Toko Lain").unwrap();
+    assert_eq!(workspaces(data.path()).unwrap(), ["Toko Contoh"]);
+    assert!(!data.path().join("Toko Lain").exists());
 }

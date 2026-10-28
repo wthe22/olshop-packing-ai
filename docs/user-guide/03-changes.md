@@ -33,7 +33,8 @@ order goes to the first group whose filter matches; the last group has no filter
   stays.
 - Each group has a **code** (1–3 letters or digits), a **name** and a filter made of boxes: a box is
   **All of these** (*and*) or **Any of these** (*or*) and holds rows of *field · operator · value* and
-  boxes inside; **not** reverses a row or a box. The Courier row lists the couriers by name.
+  boxes inside; **not** reverses a row or a box. **Courier · equals** lists the couriers by name;
+  **Courier · contains** takes typed text and matches the names (`J&T` takes J&T Express and J&T Cargo).
 - **Courier · is unknown** takes the orders whose courier the app could not name, and **Tracking ID · is
   unknown** those without a tracking ID (instant-service labels); with **not**, the others. *Is empty* does
   the same on the other text fields.
@@ -51,4 +52,5 @@ Four example filters (more in [the rules file](../software-design/rules-file/con
 | everything with "sepatu" in the product name | `name contains "sepatu"` |
 | orders of 3 items or more | `total_quantity >= 3` |
 | everything sent by J&T Express | `courier equals "jnt"` |
+| everything sent by any J&T courier | `courier contains "J&T"` |
 | spion or knalpot, but not sepatu | `not name contains "sepatu" and (name contains "spion" or name contains "knalpot")` |

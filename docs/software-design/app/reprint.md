@@ -10,7 +10,8 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
   ([journal](../data/journal.md#the-fold)); after each commit the new record is added. A year of dates
   folds in about a second; Search shows *Loading…* until it is ready.
 - One entry per order of a live batch: the fields a filter can use
-  ([conditions](../rules-file/conditions.md#fields)), its date, batch and label group, the output file,
+  ([conditions](../rules-file/conditions.md#fields)), its date, batch and label group, the output file and
+  the pages it fills there (the pages of the orders of its group before it, in printing order, plus one),
   and its **trace**: the input's file name and pages, and the courier's clue.
 - Each date's reprints: which orders (by the date they were saved on and their Order ID) each reprint
   printed. Search marks those orders *Reprinted*, and the Day screen lists a reprint's orders from the
@@ -22,10 +23,10 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
 The [Search](../ui/search.md) screen takes a filter made with the boxes of the Sort rules screen and the
 dates to search: a range (the open date by default) or all dates of the open workspace
 ([D-UI-3](../decisions/ui.md)); only the dates of the range are looked at. Each result row shows the order, its items, its date, batch and group
-file, a tick, and a trace line when opened:
+file and its page there, a tick, and a trace line when opened:
 
 ```
-from 10-07_07-00-00_Shipping label+Packing slip_1.pdf p. 12–13 · courier jnt by logo 39b9b7b9f61d0e7f + form J[XY]\d{10} · batch 2 · 2-A
+from 10-07_07-00-00_Shipping label+Packing slip_1.pdf p. 12–13 · courier J&T Express by logo 39b9b7b9f61d0e7f + form J[XY]\d{10} · batch 2 · 2-A
 ```
 
 The logo's hash and the tracking-ID form are set in monospace.

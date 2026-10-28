@@ -72,16 +72,23 @@ pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     })
 }
 
+/// The workspace the start opens: the one whose journal was written last, else the first one.
+pub(crate) fn workspace_to_open(data_dir: &Path) -> Result<Option<String>, String> {
+    Ok(
+        match last_written(data_dir).map_err(|error| error.to_string())? {
+            Some(workspace) => Some(workspace),
+            None => workspaces(data_dir)
+                .map_err(|error| error.to_string())?
+                .into_iter()
+                .next(),
+        },
+    )
+}
+
 /// Take `dir`'s lock and open its workspace; another copy holding it stops with the copy named.
 fn open_data(state: &AppState, dir: PathBuf) -> Result<(), String> {
     let mut data = Data::new(dir).map_err(|error| error.to_string())?;
-    data.workspace = match last_written(&data.dir).map_err(|error| error.to_string())? {
-        Some(workspace) => Some(workspace),
-        None => workspaces(&data.dir)
-            .map_err(|error| error.to_string())?
-            .into_iter()
-            .next(),
-    };
+    data.workspace = workspace_to_open(&data.dir)?;
     if let Some(workspace) = &data.workspace {
         state.index().rebuild(data.dir.clone(), workspace.clone());
     }

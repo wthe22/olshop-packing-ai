@@ -8,7 +8,7 @@ use packing_engine::ids::CourierCode;
 use packing_engine::orders::display_name;
 use packing_engine::record::{BatchSaved, LeftOutReason, SCHEMA, SavedOrder};
 use packing_engine::sorting::{REST_CODE, REST_NAME};
-use packing_engine::workflows::Courier;
+use packing_engine::workflows::{Courier, courier_name};
 
 use crate::PDFIUM_VERSION;
 use crate::facts::{Row, Section};
@@ -215,14 +215,10 @@ pub(crate) fn courier_rows<'r>(
             None => unknown += 1,
         }
     }
-    let name = |code: &CourierCode| {
-        couriers
-            .iter()
-            .find(|courier| &courier.code == code)
-            .map_or_else(|| code.to_string(), |courier| courier.name.clone())
-    };
-    let mut known: Vec<(String, usize)> =
-        known.into_iter().map(|(code, n)| (name(code), n)).collect();
+    let mut known: Vec<(String, usize)> = known
+        .into_iter()
+        .map(|(code, n)| (courier_name(couriers, code.as_str()).to_string(), n))
+        .collect();
     known.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
     let unknown = (unknown > 0).then(|| ("Unknown".to_string(), unknown));
     known

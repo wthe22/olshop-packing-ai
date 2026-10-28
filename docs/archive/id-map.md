@@ -83,6 +83,8 @@ namespaces.
 | Q-RULES-1, Q-RULES-2 | D-RULES-1, D-RULES-2 |
 | D-APP-2 (the read-back with the app's own reader) | replaced by D-APP-12 (the independent verifier) |
 | D-LABEL-1 (one courier file in the data folder) | replaced by D-APP-6 |
+| D-UI-5 (the panel; the app renamed no workspace) | replaced by D-UI-9 (a workspace is renamed in Settings, D-APP-24) |
+| D-UI-7 (the theme in the title bar's menu) | replaced by D-UI-8 (the theme in Settings) |
 | F-APP-6 (several sessions a day), F-UI-5 (the sessions panel) | F-APP-8 (namespaces), F-UI-7 (the panel) |
 | R-APP-1, R-LABEL-1, R-UI-4, R-UI-5, R-RULES-2 | resolved by the v0.2 design |
 | grouping, category, pick, saved PDF, packing list, condition | sort rule, label group, label group, group PDF, summary PDF, filter |

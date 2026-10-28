@@ -11,11 +11,13 @@ use packing_batch::{ReprintOutcome, ReprintRequest, reprint as write_reprint};
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::record::{CourierClue, CourierClueKind};
 use packing_engine::rules::parse_filter;
+use packing_engine::workflows::{Courier, courier_name};
 use packing_store::{IndexedOrder, SearchIndex};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, State};
 
 use crate::commands::day::date_of;
+use crate::settings;
 use crate::{APP_VERSION, AppState, today};
 
 /// The dates a search covers, both ends included, as `2026-10-07`.
@@ -52,7 +54,7 @@ pub struct OrderRow {
     day: String,
     order_id: String,
     tracking_id: Option<String>,
-    /// The courier's code; none when no courier was named.
+    /// The courier's name; none when no courier was named.
     courier: Option<String>,
     items: Vec<ItemView>,
     batch: BatchId,
@@ -60,6 +62,9 @@ pub struct OrderRow {
     group: String,
     /// The group PDF's file name, for *Open*.
     file: String,
+    /// The pages the order fills in that group PDF, counted from 1.
+    first_page: u16,
+    last_page: u16,
     trace: Vec<TracePart>,
     /// The reprints that printed it again, oldest first.
     reprints: Vec<ReprintMarkView>,
@@ -109,15 +114,17 @@ pub(crate) fn search(
     range: Option<&DateRange>,
 ) -> Result<SearchView, String> {
     let filter = parse_filter(filter).map_err(|error| error.to_string())?;
+    let (_, workflows) = settings::workflows(state.program())?;
+    let couriers = &workflows.couriers;
     let dates = match range {
         Some(range) => range.dates()?,
         None => Date::MIN..=Date::MAX,
     };
     let rows = state.index().with(|index| {
         index
-            .search(&filter, dates)
+            .search(&filter, dates, couriers)
             .into_iter()
-            .map(|order| row(index, order))
+            .map(|order| row(index, order, couriers))
             .collect::<Vec<_>>()
     })?;
     let Some(rows) = rows else {
@@ -140,13 +147,16 @@ pub(crate) fn search(
     })
 }
 
-fn row(index: &SearchIndex, order: &IndexedOrder) -> OrderRow {
+fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> OrderRow {
     let saved = &order.order;
     OrderRow {
         day: order.date.to_string(),
         order_id: saved.order_id.to_string(),
         tracking_id: saved.tracking_id.as_ref().map(ToString::to_string),
-        courier: saved.courier.as_ref().map(|code| code.as_str().to_string()),
+        courier: saved
+            .courier
+            .as_ref()
+            .map(|code| courier_name(couriers, code.as_str()).to_string()),
         items: order
             .items
             .iter()
@@ -158,7 +168,9 @@ fn row(index: &SearchIndex, order: &IndexedOrder) -> OrderRow {
         batch: order.batch,
         group: format!("{}-{}", order.batch, saved.group),
         file: order.file.clone(),
-        trace: trace_line(order),
+        first_page: *order.file_pages.start(),
+        last_page: *order.file_pages.end(),
+        trace: trace_line(order, couriers),
         reprints: index
             .reprints_of(order)
             .into_iter()
@@ -170,9 +182,9 @@ fn row(index: &SearchIndex, order: &IndexedOrder) -> OrderRow {
     }
 }
 
-/// `from <input> p. 12–13 · courier jnt by logo 39b9… + form J[XY]\d{10} · batch 2 · 2-A`, the
-/// hash and the form as `code`.
-pub(crate) fn trace_line(order: &IndexedOrder) -> Vec<TracePart> {
+/// `from <input> p. 12–13 · courier J&T Express by logo 39b9… + form J[XY]\d{10} · batch 2 · 2-A`,
+/// the hash and the form as `code`.
+pub(crate) fn trace_line(order: &IndexedOrder, couriers: &[Courier]) -> Vec<TracePart> {
     let saved = &order.order;
     let pages = if saved.page_start == saved.page_end {
         format!("p. {}", saved.page_start)
@@ -183,7 +195,10 @@ pub(crate) fn trace_line(order: &IndexedOrder) -> Vec<TracePart> {
     match &saved.courier {
         None => parts.push(TracePart::text("no courier named")),
         Some(code) => {
-            parts.push(TracePart::text(format!("courier {}", code.as_str())));
+            parts.push(TracePart::text(format!(
+                "courier {}",
+                courier_name(couriers, code.as_str())
+            )));
             parts.extend(clue_parts(&saved.courier_clue));
         }
     }
@@ -335,6 +350,7 @@ pub(crate) fn reprinted_orders(
     number: u8,
 ) -> Result<ReprintedOrdersView, String> {
     let date = date_of(day)?;
+    let (_, workflows) = settings::workflows(state.program())?;
     let printed = state.with_data(|data| {
         let open = data.open_day(date)?;
         open.journal
@@ -354,7 +370,7 @@ pub(crate) fn reprinted_orders(
                 batch: order.batch,
                 found: index
                     .find(order.date, &order.order_id)
-                    .map(|found| row(index, found)),
+                    .map(|found| row(index, found, &workflows.couriers)),
             })
             .collect()
     })?;

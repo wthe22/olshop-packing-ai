@@ -31,5 +31,5 @@ pub use outputs::{
 pub use views::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, views_current, write_views};
 pub use workspaces::{
     WORKSPACE_LIMIT, WorkspaceNameError, check_workspace_name, create_workspace, dates,
-    last_written, workspaces,
+    delete_workspace, last_written, rename_workspace, workspaces,
 };

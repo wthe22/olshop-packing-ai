@@ -11,7 +11,7 @@ use packing_engine::sorting::{
     FileNameError, PlanGroup, REST_CODE, check_file_names, content_of, default_file_name,
     plan_groups, sort_batch, suggested_file,
 };
-use packing_engine::workflows::{Filter, load_workflows};
+use packing_engine::workflows::{Courier, Filter, load_workflows};
 use serde_json::Value;
 use testkit::{copy, slip_line as line, testdata};
 
@@ -92,7 +92,7 @@ fn the_fixture_sorts_into_the_groups_and_order_contents_of_its_answer() {
     let workflows = load_workflows(FIXTURE_RULE).unwrap();
     let plan = plan_groups(&workflows.sort_rules[0]);
     let kept: Vec<usize> = (0..copies.len()).collect();
-    let sorted = sort_batch(&copies, &kept, &plan, BatchId::new(1));
+    let sorted = sort_batch(&copies, &kept, &plan, BatchId::new(1), &workflows.couriers);
 
     let answer: Value =
         serde_json::from_str(&fs::read_to_string(testdata("expected-picks.json")).unwrap())
@@ -166,7 +166,7 @@ fn a_group_that_takes_nothing_has_no_file_and_a_last_group_without_filter_leaves
             file_name: Some("Semua hari ini".into()),
         },
     ];
-    let sorted = sort_batch(&copies, &[0, 1], &plan, BatchId::new(2));
+    let sorted = sort_batch(&copies, &[0, 1], &plan, BatchId::new(2), &[]);
     assert_eq!(sorted.groups.len(), 1);
     assert_eq!(sorted.groups[0].code, "Z");
     assert_eq!(
@@ -311,11 +311,72 @@ fn each_filter_field_reads_its_value_of_the_order() {
     ];
     for (text, on_order, on_bare) in cases {
         let filter = parse_filter(text).expect(text);
-        assert_eq!(evaluate_filter(&filter, &order), on_order, "{text}");
+        assert_eq!(evaluate_filter(&filter, &order, &[]), on_order, "{text}");
         assert_eq!(
-            evaluate_filter(&filter, &bare),
+            evaluate_filter(&filter, &bare, &[]),
             on_bare,
             "{text} on an order without values"
+        );
+    }
+}
+
+#[test]
+fn a_typed_courier_is_found_by_name_and_a_picked_one_by_code() {
+    let couriers = [
+        ("jnt", "J&T Express"),
+        ("jnt-cargo", "J&T Cargo"),
+        ("sicepat", "SiCepat"),
+    ]
+    .map(|(code, name)| Courier {
+        code: CourierCode::new(code),
+        name: name.into(),
+    });
+    let with = |code: Option<&str>| {
+        let mut order = copy("580000000000000042", 0, 1, vec![line("Jok", "", "", 1)]);
+        order.courier = code.map(CourierCode::new);
+        order
+    };
+    let (express, cargo, sicepat, gone, none) = (
+        with(Some("jnt")),
+        with(Some("jnt-cargo")),
+        with(Some("sicepat")),
+        with(Some("idx")),
+        with(None),
+    );
+    let cases = [
+        (
+            "courier contains \"J&T\"",
+            [true, true, false, false, false],
+        ),
+        (
+            "courier contains \"cargo\"",
+            [false, true, false, false, false],
+        ),
+        (
+            "courier starts_with \"si\"",
+            [false, false, true, false, false],
+        ),
+        (
+            "courier contains \"jnt\"",
+            [false, false, false, false, false],
+        ),
+        ("courier equals \"jnt\"", [true, false, false, false, false]),
+        (
+            "courier contains \"idx\"",
+            [false, false, false, true, false],
+        ),
+        (
+            "not courier contains \"J&T\"",
+            [false, false, true, true, true],
+        ),
+    ];
+    for (text, want) in cases {
+        let filter = parse_filter(text).expect(text);
+        let found = [&express, &cargo, &sicepat, &gone, &none]
+            .map(|order| evaluate_filter(&filter, order, &couriers));
+        assert_eq!(
+            found, want,
+            "{text}: J&T Express, J&T Cargo, SiCepat, idx (no longer named), none"
         );
     }
 }

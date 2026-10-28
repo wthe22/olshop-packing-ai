@@ -70,10 +70,8 @@
       day={shell.day}
       overlay={shell.overlay}
       version={shell.version}
-      theme={shell.theme}
       onTogglePanel={shell.togglePanel}
       onNavigate={shell.navigate}
-      onTheme={shell.chooseTheme}
     />
     <div class="body">
       {#if shell.panelShown && shell.panel}

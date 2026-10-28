@@ -45,8 +45,12 @@ filter language: each filter is made from boxes. A text view is there for typing
     ([fields](../rules-file/conditions.md#fields)).
   - **Operator**: text — contains, equals, starts with, and *is unknown* (Courier, Tracking ID) or *is
     empty* (the other text fields), which takes no value; number and date — =, ≠, <, ≤, >, ≥.
-  - **Value**: typed without quotes; a whole number for a number field; `2026-10-07` for Ship by; Courier is
-    a list of the couriers by name, stored by code. A wrong value is red with the language's message.
+  - **Value**: typed without quotes; a whole number for a number field; `2026-10-07` for Ship by. Courier
+    *equals* is a list of the couriers by name, stored by code; Courier *contains* and *starts with* take
+    typed text, matched against the couriers' names (`J&T` takes J&T Express and J&T Cargo,
+    [D-RULES-4](../decisions/rules.md)). Switching between them carries the value over: a picked courier
+    becomes its name, typed text picks the first courier whose name holds it. A wrong value is red with the
+    language's message.
 - **not** (per row and per box) reverses it: the first row of B reads "name does not contain sepatu".
 - **Text view** switches one group between boxes and filter text, checked while typing with line and column;
   **Boxes** switches back once the text has no error. Every valid text can be shown as boxes: nested boxes

@@ -8,6 +8,7 @@
   import type { Courier } from "./api/rules";
   import {
     IS_EMPTY,
+    courierValue,
     fieldType,
     newGroup,
     newRow,
@@ -26,7 +27,8 @@
     // The field list to offer: every field of the rules, or a subset.
     //
     fields?: { value: string; label: string; type: FieldType }[];
-    // The Courier box shows these by name and stores the code; none: the code is typed.
+    // *Courier equals* picks one of these by name and stores its code; *contains* and *starts with*
+    // take typed text, which a filter compares with the names.
     couriers?: Courier[];
     onEdit: () => void;
   } = $props();
@@ -50,10 +52,22 @@
     onEdit();
   }
 
+  const picksCourier = (row: UiRow) =>
+    row.field === "courier" && row.operator === "equals" && couriers.length > 0;
+
   function setField(row: UiRow, field: string) {
     row.field = field;
-    row.operator = fieldType(field) === "text" ? "contains" : "=";
-    row.value = field === "courier" && couriers.length > 0 ? couriers[0].code : "";
+    row.operator = field === "courier" ? "equals" : fieldType(field) === "text" ? "contains" : "=";
+    row.value = field === "courier" ? (couriers[0]?.code ?? "") : "";
+    onEdit();
+  }
+
+  // On the Courier field the value follows the switch between a picked courier and typed text.
+  function setOperator(row: UiRow, operator: string) {
+    if (row.field === "courier") {
+      row.value = courierValue(row.value, row.operator, operator, couriers);
+    }
+    row.operator = operator;
     onEdit();
   }
 </script>
@@ -112,20 +126,14 @@
         <option value={field.value}>{field.label}</option>
       {/each}
     </select>
-    <select
-      value={row.operator}
-      onchange={(event) => {
-        row.operator = event.currentTarget.value;
-        onEdit();
-      }}
-    >
+    <select value={row.operator} onchange={(event) => setOperator(row, event.currentTarget.value)}>
       {#each operatorsFor(row.field) as op (op.value)}
         <option value={op.value}>{op.label}</option>
       {/each}
     </select>
     {#if row.operator === IS_EMPTY}
       <span class="value"></span>
-    {:else if row.field === "courier" && couriers.length > 0}
+    {:else if picksCourier(row)}
       <select
         class="value"
         value={row.value}

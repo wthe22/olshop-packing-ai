@@ -111,3 +111,16 @@ optional time).
 **Why.** A repeat is one order to pack once; a second label is printed by a reprint.
 
 **Applies to.** [duplicates](../app/duplicates.md#choosing).
+
+## D-APP-24 — A workspace can be renamed and deleted
+
+**Decision.** Settings › Workspaces renames or deletes a workspace (R-APP-8). **Rename** renames its folder;
+everything in it stays, and its journals keep the name in their `started` record, so the fold checks the date
+of `started` and no longer its workspace. **Delete** moves the folder, with all its dates, to the Recycle Bin.
+The open workspace follows: renamed, it stays open under the new name; deleted, the app opens the one it would
+open at start, or asks for a first workspace when none is left. An open draft of it is dropped, after asking.
+
+**Why.** The owner asked for it. The journal is never rewritten, so a rename cannot change what it recorded;
+the folder is the workspace's name. The Recycle Bin lets a delete by mistake be undone in Explorer.
+
+**Applies to.** [workspaces](../app/workspaces.md), [journal](../data/journal.md), [Settings](../ui/settings.md).

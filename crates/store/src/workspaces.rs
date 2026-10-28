@@ -1,5 +1,5 @@
 //! Workspaces (app/workspaces.md): one folder of the data folder per workspace, one folder per
-//! date inside it. The app lists, opens and creates them; it never renames or deletes one.
+//! date inside it. The app lists, opens, creates, renames and deletes them.
 
 use std::fmt;
 use std::fs;
@@ -10,6 +10,7 @@ use jiff::civil::Date;
 use packing_engine::sorting::default_file_name;
 
 use crate::StoreError;
+use crate::files::move_file;
 use crate::journal::JOURNAL;
 
 /// A workspace name is at most this many characters.
@@ -110,6 +111,38 @@ pub fn create_workspace(data_dir: &Path, name: &str) -> Result<(), StoreError> {
     })?;
     let dir = data_dir.join(name);
     fs::create_dir_all(&dir).map_err(|e| StoreError::io(&dir, e))
+}
+
+/// Give a workspace another name: its folder is renamed, everything in it stays. Its journals keep
+/// the name they were started under. The name may differ from the old one in case only.
+pub fn rename_workspace(data_dir: &Path, name: &str, new_name: &str) -> Result<(), StoreError> {
+    let others: Vec<String> = workspaces(data_dir)?
+        .into_iter()
+        .filter(|other| other != name)
+        .collect();
+    check_workspace_name(new_name, &others).map_err(|error| StoreError::BadName {
+        name: new_name.to_string(),
+        reason: error.to_string(),
+    })?;
+    move_file(&data_dir.join(name), &data_dir.join(new_name))
+}
+
+/// Move a workspace's folder, with all its dates, to the Recycle Bin.
+pub fn delete_workspace(data_dir: &Path, name: &str) -> Result<(), StoreError> {
+    let dir = data_dir.join(name);
+    if !workspaces(data_dir)?.iter().any(|known| known == name) {
+        return Err(StoreError::io(
+            &dir,
+            std::io::Error::from(std::io::ErrorKind::NotFound),
+        ));
+    }
+    // The Recycle Bin is a COM call; a thread of its own starts COM in the mode it asks for,
+    // whatever the calling thread started.
+    let target = dir.clone();
+    std::thread::spawn(move || trash::delete(&target))
+        .join()
+        .map_err(|_| StoreError::io(&dir, std::io::Error::other("the Recycle Bin call failed")))?
+        .map_err(|error| StoreError::io(&dir, std::io::Error::other(error.to_string())))
 }
 
 fn subfolders(dir: &Path) -> Result<Vec<String>, StoreError> {

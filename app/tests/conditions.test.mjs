@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 
 import "./tsModule.mjs";
 
-const { fromRustTree, toRustTree } = await import("../src/lib/conditions.ts");
+const { courierValue, fromRustTree, toRustTree } = await import("../src/lib/conditions.ts");
 
 const row = (field, operator, value, not = false) => ({ Row: { not, field, operator, value } });
 
@@ -50,4 +50,26 @@ test("an is-empty row sends no value, whatever was typed before", () => {
   });
   ui.root.children[0].operator = "is_empty";
   assert.equal(toRustTree(ui).root.children[0].Row.value, "no_value");
+});
+
+test("a Courier row switches between a picked courier and typed text", () => {
+  const couriers = [
+    { code: "jnt", name: "J&T Express" },
+    { code: "jnt-cargo", name: "J&T Cargo" },
+    { code: "sicepat", name: "SiCepat" },
+  ];
+  const cases = [
+    ["jnt-cargo", "equals", "contains", "J&T Cargo"],
+    ["sicepat", "equals", "starts_with", "SiCepat"],
+    ["cargo", "contains", "equals", "jnt-cargo"],
+    ["J&T", "starts_with", "equals", "jnt"],
+    ["anteraja", "contains", "equals", "jnt"],
+    ["", "is_empty", "equals", "jnt"],
+    ["J&T", "contains", "starts_with", "J&T"],
+    ["gone", "equals", "contains", "gone"],
+  ];
+  for (const [value, from, to, want] of cases) {
+    assert.equal(courierValue(value, from, to, couriers), want, `${value}: ${from} → ${to}`);
+  }
+  assert.equal(courierValue("J&T", "contains", "equals", []), "J&T", "no couriers loaded");
 });

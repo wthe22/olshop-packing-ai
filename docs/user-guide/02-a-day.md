@@ -6,13 +6,13 @@ app, then print.
 ## The window
 
 The title bar has the panel button at the left, the program and its version (**Packing v0.2**), the open
-workspace and the date everything is saved to, and at the right **Search**, **Sort rules**, **Settings** and
-the theme menu (**Light**, **Dark** or **System**, which follows Windows). `Esc` closes Search, Sort rules
-and Settings.
+workspace and the date everything is saved to, and at the right **Search**, **Sort rules** and **Settings**.
+`Esc` closes Search, Sort rules and Settings.
 
 The **panel** at the left lists your workspaces and the dates of the open one:
 
 - **Workspace** chooses another workspace; **+** beside it asks for a new name and opens it on today.
+  Settings › **Workspaces** renames or deletes one.
 - The dates, newest first, by month, each with its number of saved orders. Today is always there,
   marked *today*. Click a date to open it — for a download just after midnight that belongs to the
   evening before. A batch being prepared asks first.
@@ -153,12 +153,15 @@ the date is left out of every later batch of that date, so reading a file again 
   its order is found at once.
 - **Dates**: **This day** (the open date, the default), **Yesterday**, **Last 7 days**, **Last 30 days**,
   **Custom range** (pick the first and last date) or **All days** of the workspace, then **Search**:
-  "3 orders in 2 batches" and one row per order — Order ID, tracking ID, courier, items, date and group,
-  **Open** for its group PDF, and **▸** for where it came from (the label file and pages, and the clue
-  that named its courier).
+  "3 orders in 2 batches" and one row per order — Order ID, tracking ID, courier, items, date, the group
+  PDF and the **page** it is on there (to find the printed label in its stack), **Open** for that group
+  PDF, and the arrow for where it came from (the label file and pages, and the clue that named its courier).
+- **Courier**: *equals* picks one courier from the list; *contains* or *starts with* takes typed text, so
+  `J&T` finds J&T Express and J&T Cargo.
 - An order printed again before carries **Reprinted**; point at it to see which reprint and when.
 - Tick the orders to print again: click a row, or its tick; the tick above the ticks selects every row
-  or none. A search that finds one order ticks it.
+  or none. A search that finds one order ticks it. A double click or a drag selects text to copy (an Order
+  ID, a tracking ID) and leaves the tick alone.
 - The bar at the foot says how many are selected and has **Reprint 2 orders**: one PDF of their label
   pages, in their original printing order, checked like a save, written into today: "Reprint 1 written:
   2 orders, 2 pages." with **Open**. When one of them was reprinted before, the app asks first. The

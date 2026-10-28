@@ -16,7 +16,7 @@ export interface SearchRow {
   order_id: string;
   // `null` when the label printed none.
   tracking_id: string | null;
-  // The courier's code; `null` when no courier was named.
+  // The courier's name; `null` when no courier was named.
   courier: string | null;
   items: SearchItem[];
   batch: number;
@@ -24,6 +24,9 @@ export interface SearchRow {
   group: string;
   // The group PDF's file name, for *Open*.
   file: string;
+  // The pages the order fills in that group PDF, counted from 1.
+  first_page: number;
+  last_page: number;
   // Its input and pages, and the clue that named its courier.
   trace: TracePart[];
   // The reprints that printed it again, oldest first.

@@ -118,6 +118,7 @@ function typescriptCoverage() {
   const run = spawnSync(
     process.execPath,
     [
+      "--import=./tests/tsModule.mjs",
       "--test",
       "--experimental-test-coverage",
       "--test-coverage-include-all",

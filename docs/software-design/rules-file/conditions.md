@@ -9,6 +9,7 @@ name contains "sepatu"
 total_quantity = 1
 tracking_id starts_with "JY"
 courier equals "jnt"
+courier contains "J&T"
 courier is_empty
 not tracking_id is_empty
 ship_by < "2026-10-08"
@@ -41,8 +42,10 @@ date       = '"' digit digit digit digit "-" digit digit "-" digit digit '"'
   does not ignore accents.
 - `is_empty` is true when the field has no value; spaces count as none. On an item field it is true when
   one line has none (`seller_sku is_empty`). It is how a filter takes the orders whose courier was not
-  named (`courier is_empty`) or that have no tracking ID ([D-RULES-3](../decisions/rules.md)); a
-  `courier equals` value must be a courier's code.
+  named (`courier is_empty`) or that have no tracking ID ([D-RULES-3](../decisions/rules.md)).
+- `courier equals` compares the courier's **code** and its value must be a courier's code; `courier contains`
+  and `courier starts_with` compare the courier's **name**, so `courier contains "J&T"` takes J&T Express and
+  J&T Cargo ([D-RULES-4](../decisions/rules.md)). A courier the rules no longer name is compared by its code.
 - A date is written year-month-day ([D-APP-21](../decisions/app-features.md)).
 - Errors give line and column and say what is expected, e.g.
   `line 2, col 18: expected a text operator (contains, equals, starts_with, is_empty) after "name"`. Inside
@@ -59,7 +62,7 @@ date       = '"' digit digit digit digit "-" digit digit "-" digit digit '"'
 | `line_quantity` | number | item | slip | Quantity of one line |
 | `total_quantity` | number | order | slip | The printed `Qty Total`; none on the Shopee-style slip, so a comparison on it is false there |
 | `distinct_items` | number | order | — | Number of lines of the order |
-| `courier` | text | order | label | The courier's **code** in `packing-workflows.toml` (`jnt`); empty when no courier is named ([courier](../labels/courier.md)) |
+| `courier` | text | order | label | The courier's **code** in `packing-workflows.toml` (`jnt`) for `equals`, its **name** (`J&T Express`) for `contains` and `starts_with`; empty when no courier is named ([courier](../labels/courier.md)) |
 | `order_id` | text | order | label | The Order ID |
 | `tracking_id` | text | order | label | The tracking ID (also the barcode and QR value) |
 | `ship_by` | date | order | label | `ship_by_date` ([reading](../labels/reading.md)) |
@@ -78,6 +81,7 @@ An order has several lines. A comparison on an **item** field is true when **at 
 ## How the app edits filters
 
 The app shows a filter as rows of `field · operator · value` inside AND / OR boxes, picked from lists, so
-the owner rarely types ([Sort rules](../ui/sort-rules.md)); a courier is picked by name and stored by code.
+the owner rarely types ([Sort rules](../ui/sort-rules.md)); for *equals* a courier is picked by name and
+stored by code, for *contains* and *starts with* part of a name is typed.
 The text above is what is stored. Printing a filter always uses lowercase keywords, one space around
 operators and parentheses only where needed, so the same filter always gives the same text.

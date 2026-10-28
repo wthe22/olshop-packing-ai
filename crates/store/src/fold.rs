@@ -35,9 +35,8 @@ pub enum DamageReason {
         expected: u32,
         found: u32,
     },
-    /// `started` names another workspace or date than the folder.
-    OtherFolder {
-        workspace: String,
+    /// `started` names another date than the folder.
+    OtherDate {
         date: Date,
     },
     /// A record that breaks its rule of the fold.
@@ -52,12 +51,7 @@ impl fmt::Display for DamageReason {
             DamageReason::SeqGap { expected, found } => {
                 write!(f, "seq {found} where {expected} was due")
             }
-            DamageReason::OtherFolder { workspace, date } => {
-                write!(
-                    f,
-                    "it names the workspace {workspace:?} and the date {date}"
-                )
-            }
+            DamageReason::OtherDate { date } => write!(f, "it names the date {date}"),
             DamageReason::Rule(rule) => f.write_str(rule),
         }
     }
@@ -181,11 +175,9 @@ impl Fold {
                 if started.schema != SCHEMA {
                     return Err(rule(format!("schema {} is not {SCHEMA}", started.schema)));
                 }
-                if started.workspace != self.workspace || started.date != self.date {
-                    return Err(DamageReason::OtherFolder {
-                        workspace: started.workspace.clone(),
-                        date: started.date,
-                    });
+                // The workspace may have been renamed since: `started` keeps the name it had.
+                if started.date != self.date {
+                    return Err(DamageReason::OtherDate { date: started.date });
                 }
             }
             RecordBody::BatchSaved(saved) => self.save_batch(saved, &record.time)?,

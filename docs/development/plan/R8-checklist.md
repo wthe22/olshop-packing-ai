@@ -26,11 +26,14 @@ with real downloads, in this order. A finding goes into [reviews/ui.md](../../re
    **Back** to its files, **Cancel amend**) and **Revert** on the newest batch. Delete a group PDF in
    Explorer, reopen the date: *⚠ missing* and **Open**, which writes it again.
 9. **Search and reprint.** By tracking ID on *This day*, *Last 7 days* and *All days*, by product name and quantity;
-   **▸** shows where an order came from; tick two orders, **Reprint 2 orders**, **Open**; today's Day
-   screen lists the reprint.
+   by Courier *equals* (the list) and *contains* `J&T` (typed); each row's group PDF and **page**; the arrow
+   shows where an order came from; a double click or a drag on an Order ID selects it without a tick; tick
+   two orders, **Reprint 2 orders**, **Open**; today's Day screen lists the reprint.
 10. **Sort rules.** **+ New rule** (empty and as a copy), **Rename…**, **Delete rule**; a group's
     filter in boxes and in the text view; the counts *In batch n* with a batch open; **Save**, then
     `packing-workflows.toml` keeps its comments; **Edit file as text**.
-11. **Settings.** The data folder, **Change…**, *About* reads *Version v0.2*.
+11. **Settings.** **Theme** (Light, Dark, System); the data folder, **Change…**; **Workspaces**: rename one,
+    rename the open one (the date stays open), delete one (it is in the Recycle Bin); *About* reads
+    *Version v0.2*.
 12. **The words.** Whether *workspace*, *label group*, *order content*, *group PDF* and *summary PDF*
     read well on the screens and the printed summary ([D-LABEL-15](../../software-design/decisions/label.md)).

@@ -1,5 +1,5 @@
 <script lang="ts" module>
-  // The line icons of the title bar, the panel and the dialogs (24 × 24, drawn with the text colour).
+  // The line icons of the title bar, the panel, the dialogs and Settings (24 × 24, drawn with the text colour).
   const paths = {
     panel: "M3 5h18v14H3zM9 5v14",
     search: "M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM15.5 15.5 21 21",
@@ -14,6 +14,7 @@
     close: "M6 6l12 12M18 6 6 18",
     check: "M5 12.5l4.5 4.5L19 7",
     folder: "M3 6h6l2 2h10v11H3z",
+    chevron: "M9 6l6 6-6 6",
   } as const;
 
   export type IconName = keyof typeof paths;

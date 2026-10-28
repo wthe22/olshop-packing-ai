@@ -3,7 +3,7 @@
   // (the same as Sort rules) with a text view toggle.
   import { onMount } from "svelte";
   import { checkCondition as validateCondition } from "./api/batch";
-  import { filterToTree, treeToFilter } from "./api/rules";
+  import { filterToTree, rulesList, treeToFilter, type Courier } from "./api/rules";
   import { texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
   import { fromRustTree, newTree, toRustTree, type UiTree } from "./conditions";
@@ -25,9 +25,18 @@
   let error = $state("");
   let mode = $state<"boxes" | "text">("boxes");
   let tree = $state<UiTree>(newTree());
+  // For the Courier box's list.
+  let couriers = $state<Courier[]>([]);
 
   // The form opens on the boxes editor: its condition is what the empty tree reads as.
-  onMount(treeChanged);
+  onMount(async () => {
+    treeChanged();
+    try {
+      couriers = (await rulesList()).couriers;
+    } catch (e) {
+      error = String(e);
+    }
+  });
 
   // The boxes editor changed: turn the tree into the condition text (the printer's form).
   async function treeChanged() {
@@ -96,7 +105,7 @@
   <div class="add-condition">
     <span class="label">{texts.plan.addCondition}</span>
     {#if mode === "boxes"}
-      <BoxesEditor tree={tree} onEdit={treeChanged} />
+      <BoxesEditor {tree} {couriers} onEdit={treeChanged} />
       <button class="link" onclick={() => (mode = "text")}
         >{texts.sortRules.textView}</button
       >

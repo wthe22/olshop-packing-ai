@@ -96,7 +96,13 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
 
     let rule = workflows.sort_rule("default").unwrap();
     let plan = plan_groups(rule);
-    let sorted = sort_batch(&copies, &orders.kept, &plan, BatchId::new(1));
+    let sorted = sort_batch(
+        &copies,
+        &orders.kept,
+        &plan,
+        BatchId::new(1),
+        &workflows.couriers,
+    );
     let inputs = [input(1, names[0], 6), input(2, names[1], 2)];
     let saved = batch_saved(BatchFacts {
         batch: BatchId::new(1),

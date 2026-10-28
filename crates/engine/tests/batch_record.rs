@@ -130,7 +130,7 @@ fn an_amend_records_the_copies_saved_earlier_and_its_contents_once() {
         filter: None,
         file_name: None,
     }];
-    let sorted = sort_batch(&copies, &orders.kept, &plan, BatchId::new(2));
+    let sorted = sort_batch(&copies, &orders.kept, &plan, BatchId::new(2), &[]);
     let inputs = [input(1)];
     let record = batch_saved(BatchFacts {
         batch: BatchId::new(2),

@@ -20,7 +20,7 @@ packing-workflows.toml     couriers, courier clues, sort rules
 
 - `packing-settings.toml`: `schema`, `data_dir` (an absolute path or one relative to the program's
   folder) and `theme`. Written at the first start ([Start](../ui/start.md)), by Settings › **Change…** and
-  by the title bar's theme menu; each keeps the other's value.
+  by Settings › **Theme**; each keeps the other's value.
 - `packing-workflows.toml`: the owner's rules ([rules file](../rules-file/README.md)). Written from the copy
   bundled in the program when it is missing; from then on it is the owner's.
 
@@ -28,7 +28,7 @@ packing-workflows.toml     couriers, courier clues, sort rules
 Root {
   schema: String // X.Y version, starts at 1.0
   data_dir: Path // absolute, or relative to the program's folder
-  theme: Theme   // system (missing: system) | light | dark ([D-UI-7](../decisions/ui.md))
+  theme: Theme   // system (missing: system) | light | dark ([D-UI-8](../decisions/ui.md))
 }
 ```
 

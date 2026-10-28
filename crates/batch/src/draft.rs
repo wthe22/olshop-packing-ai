@@ -69,7 +69,13 @@ impl Draft {
     }
 
     pub fn sorted(&self, batch: BatchId) -> SortedBatch {
-        sort_batch(&self.copies, &self.orders.kept, &self.plan, batch)
+        sort_batch(
+            &self.copies,
+            &self.orders.kept,
+            &self.plan,
+            batch,
+            &self.couriers,
+        )
     }
 
     /// The inputs as a save on `fold`'s date numbers them: bytes the date knows keep their

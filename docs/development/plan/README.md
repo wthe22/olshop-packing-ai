@@ -4,32 +4,29 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-10-27)
+## Status (2026-10-28)
 
-- **Handoff of the second session of 2026-10-27 — the owner tests round five; then the work is R6.4 and
-  R9.** Round five of the owner's review, from the owner's words in chat, is built and pushed: every
-  yes-or-no question is the app's own dialog with a title and one short line (Amend, Revert, a draft
-  dropped, the data folder, a reprint again, a sort rule or group deleted); **Save batch** reads the same
-  on an amend; Search's **Dates** are *This day*, *Yesterday*, *Last 7 days*, *Last 30 days*, *Custom
-  range* or *All days* ([D-UI-3](../../software-design/decisions/ui.md)), and the index looks only at the
-  dates of the range; dates read *Tue, 27 Oct*; the file list says *downloaded 11:02*; a logo's hash and a
-  tracking-ID form are in monospace; **Open** on a group PDF or summary PDF that is not there writes it
-  again first (an old batch's summary in today's layout: delete it in Explorer, press **Open**), and a
-  missing path no longer opens Explorer's home page; **Day summary** shows *Writing the day summary …*
-  and is written once however often it is clicked ([ui/README](../../software-design/ui/README.md)).
-  - **Amend → Back → a file of the batch dropped again** was driven in the built program: the file is
-    listed once (*labels (1).pdf is the same file as …*), no *used in batch*, and the batch saves. The run
-    found that the inputs read again from `input/` were recorded under their hash instead of the
-    download's name (the trace and the summary PDF showed `5cd1….pdf`); they now keep the recorded name
-    ([02 Read, step 3](../../software-design/workflow/02-read.md)).
-  - `target/portable/Packing/` is rebuilt. **The owner may test now**: **Amend** and **Revert** (the
-    dialog), Search's **Dates**, the panel's dates, the New batch file list, a summary PDF deleted in
-    Explorer then **Open**, **Day summary** (one click, the dialog); and from the round before, a Grab
-    instant label and an Anteraja label read with their courier, and the summary PDFs' row style.
+- **Handoff of 2026-10-28 — the owner tests round six; then the work is R6.4 and R9.** Round six of the
+  owner's review, from the owner's words in chat, is built and pushed:
+  - **The Courier box** works the same in Search, Sort rules and the Plan screen's one-off group: *equals*
+    picks one courier from the list; *contains* and *starts with* take typed text matched against the
+    couriers' names, so `J&T` finds J&T Express and J&T Cargo
+    ([D-RULES-4](../../software-design/decisions/rules.md)). The owner's own filter `courier contains
+    "gojek" or courier contains "grab"` still takes the same orders (the names hold those words).
+  - **Search** is one box for the filter and the dates, then a table: Order ID, tracking ID, the courier's
+    name, the items one per line, the date, the group PDF and the **page** the order is on there, a small
+    **Open** and an arrow for the trace line ([ui/search](../../software-design/ui/search.md)). A double
+    click or a drag selects an Order ID or a tracking ID without ticking the row.
+  - **Settings** is one page of full-width rows: **Theme** (moved out of the title bar,
+    [D-UI-8](../../software-design/decisions/ui.md)), **Data folder**, **Workspaces** with **Rename…** and
+    **Delete…** (to the Recycle Bin, [D-APP-24](../../software-design/decisions/app-features.md)), *About*.
+    A journal keeps the workspace name it was started under; the fold now checks only its date.
+  - `target/portable/Packing/` is rebuilt. **The owner may test now**: the points above, in the order of
+    [R8-checklist.md](R8-checklist.md) items 9 and 11; and from round five whatever is not tried yet.
   - No question is open.
   - A finding goes into [reviews/ui.md](../../reviews/ui.md), [reviews/label.md](../../reviews/label.md),
     [reviews/rules.md](../../reviews/rules.md) or [reviews/app.md](../../reviews/app.md) as the next
-    `R-<SCOPE>-n` (R-UI-28, R-LABEL-9, R-RULES-4, R-APP-8); the next session turns each into a task.
+    `R-<SCOPE>-n` (R-UI-32, R-LABEL-9, R-RULES-5, R-APP-9); the next session turns each into a task.
   - **Next without the owner:** **R6.4** ([R6-app-journal.md](R6-app-journal.md)), then **R9** (the full
     check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff). An instant
     label's unknown tag is not asked about yet (W-9 of [workflow-audit.md](workflow-audit.md)).

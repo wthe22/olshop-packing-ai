@@ -106,7 +106,7 @@ export class Shell {
     this.ready = true;
   };
 
-  // The theme menu: shown at once (the window follows `theme`), then stored.
+  // Settings › Theme: shown at once (the window follows `theme`), then stored.
   chooseTheme = async (theme: Theme) => {
     this.theme = theme;
     try {
@@ -214,7 +214,7 @@ export class Shell {
   };
 
   // Ask to discard the open batch before leaving it.
-  private leaveBatch = async (): Promise<boolean> => {
+  leaveBatch = async (): Promise<boolean> => {
     if (this.draftOpen) {
       if (!(await confirmBox.ask(texts.day.askDiscardDraft))) return false;
       await batch.discardDraft();
@@ -330,6 +330,22 @@ export class Shell {
     this.overlay = null;
     this.screen = "day";
     await Promise.all([this.refreshPanel(), this.refreshOverview()]);
+  };
+
+  // Settings renamed the open workspace: the open date shows again under the new name.
+  workspaceRenamed = async (name: string) => {
+    this.workspace = name;
+    this.screen = "day";
+    await Promise.all([this.refreshPanel(), this.refreshOverview()]);
+  };
+
+  // Settings deleted the open workspace and the back end opened `name`; with none left the first
+  // workspace's name is asked.
+  workspaceDeleted = async (name: string | null) => {
+    this.workspace = name;
+    this.needsWorkspace = name === null;
+    if (name !== null) await this.openToday();
+    else this.overlay = null;
   };
 
   togglePanel = () => {

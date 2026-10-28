@@ -195,3 +195,37 @@ test("one order found is ticked; an order reprinted before is printed again only
   search.clear();
   assert.deepEqual(search.ticked, []);
 });
+
+test("a click ticks a row, a drag or a double click selects its text instead", async () => {
+  useBackend({ tree_to_filter: () => "", search_orders: () => found });
+  const search = new Search(() => "2026-10-07", () => "2026-10-07", () => {});
+  await search.run();
+  const [first, second] = search.result.rows;
+  search.clickRow(first, 1, false);
+  assert.equal(search.isTicked(first), true, "a click ticks");
+  search.clickRow(first, 1, true);
+  assert.equal(search.isTicked(first), true, "a drag that selected text leaves the tick");
+  search.clickRow(second, 1, false);
+  search.clickRow(second, 2, true);
+  assert.equal(search.isTicked(second), false, "a double click undoes its first click");
+  search.clickRow(second, 3, true);
+  assert.equal(search.isTicked(second), false, "a triple click changes nothing");
+  search.clickRow(first, 2, true);
+  assert.equal(search.isTicked(first), true, "a second click on another row's double click undoes nothing");
+});
+
+test("the Courier box lists the couriers of the rules, and a row names its page", async () => {
+  const couriers = [{ code: "jnt", name: "J&T Express" }];
+  useBackend({ rules_list: () => ({ rules: ["default"], text: "", couriers, draft_rule: null }) });
+  const search = new Search(() => "2026-10-07", () => "2026-10-07", () => {});
+  await search.loadCouriers();
+  assert.deepEqual(search.couriers, couriers);
+  assert.deepEqual(
+    [texts.search.pages(14, 14), texts.search.pages(14, 15), texts.search.noCourier],
+    ["14", "14–15", "Unknown"],
+  );
+
+  useBackend({});
+  await search.loadCouriers();
+  assert.match(search.error, /rules_list/, "a failed load is shown");
+});

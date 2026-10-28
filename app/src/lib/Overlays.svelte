@@ -6,9 +6,12 @@
   import SearchScreen from "./SearchScreen.svelte";
   import SortRulesScreen from "./SortRulesScreen.svelte";
   import SettingsScreen from "./SettingsScreen.svelte";
+  import { WorkspaceSettings } from "./workspaceSettings.svelte";
   import { texts } from "../texts";
 
   let { shell }: { shell: Shell } = $props();
+
+  const workspaces = $derived(new WorkspaceSettings(shell));
 </script>
 
 {#if shell.overlay === "search"}
@@ -34,6 +37,9 @@
     <SettingsScreen
       about={shell.about}
       dataFolder={shell.dataFolder}
+      theme={shell.theme}
+      {workspaces}
+      onTheme={shell.chooseTheme}
       onChangeFolder={shell.changeFolder}
       onOpenFolder={() => shell.dataFolder && shell.openFolder(shell.dataFolder)}
     />

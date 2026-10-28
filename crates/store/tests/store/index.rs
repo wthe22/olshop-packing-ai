@@ -26,7 +26,7 @@ fn ids(index: &SearchIndex, filter: &str, days: Option<(i8, i8)>) -> Vec<String>
         date(2026, 10, from)..=date(2026, 10, to)
     });
     index
-        .search(&filter, dates)
+        .search(&filter, dates, &[])
         .iter()
         .map(|order| format!("{} {}", order.date.day(), order.order.order_id))
         .collect()
@@ -105,15 +105,28 @@ fn every_live_order_of_the_workspace_is_found_by_its_fields() {
     assert_eq!(index.counts().get(&date(2026, 10, 7)), Some(&3));
     assert_eq!(index.counts().get(&date(2026, 10, 8)), Some(&6));
 
-    let found = &index.search(
-        &parse_filter("order_id equals \"580000000000000002\"").unwrap(),
-        date(2026, 10, 7)..=date(2026, 10, 7),
-    )[0];
+    let seventh = |filter: &str| {
+        index.search(
+            &parse_filter(filter).unwrap(),
+            date(2026, 10, 7)..=date(2026, 10, 7),
+            &[],
+        )
+    };
+    let found = seventh("order_id equals \"580000000000000002\"")[0];
     assert_eq!(
         (found.file.as_str(), found.input.as_str()),
         ("", "labels_1.pdf")
     );
     assert_eq!(found.items[0].name, "Spion Beat");
+    let pages: Vec<_> = seventh("distinct_items >= 1")
+        .iter()
+        .map(|order| (order.order.group.as_str(), order.file_pages.clone()))
+        .collect();
+    assert_eq!(
+        pages,
+        [("A", 1..=1), ("A", 2..=2), ("Z", 1..=1)],
+        "each order's pages in its group PDF follow the orders of its group before it"
+    );
 
     let mut eighth =
         Journal::open(&DateFolder::new(data.path(), WORKSPACE, date(2026, 10, 8))).unwrap();

@@ -235,6 +235,20 @@ test("the panel opens another date and workspace, and a new workspace on today",
   assert.equal(shell.panelShown, true, "the panel is shown at every start");
   shell.togglePanel();
   assert.equal(shell.panelShown, false);
+
+
+  // Settings renamed the open workspace: the same date under the new name.
+  useBackend(backend());
+  shell.day = "2026-10-05";
+  shell.screen = "new-batch";
+  await shell.workspaceRenamed("Toko Satu");
+  assert.deepEqual([shell.workspace, shell.day, shell.screen], ["Toko Satu", "2026-10-05", "day"]);
+  // Settings deleted it: today of the workspace the back end opened, or the first name asked.
+  await shell.workspaceDeleted("Toko Lain");
+  assert.deepEqual([shell.workspace, shell.day, shell.needsWorkspace], ["Toko Lain", "2026-10-07", false]);
+  shell.overlay = "settings";
+  await shell.workspaceDeleted(null);
+  assert.deepEqual([shell.workspace, shell.needsWorkspace, shell.overlay], [null, true, null]);
 });
 
 

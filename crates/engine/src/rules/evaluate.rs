@@ -8,6 +8,7 @@ use jiff::civil::{Date, DateTime};
 use super::condition::{Condition, NumberOp, TextOp};
 use super::parser::{is_clock_form, is_date_form, is_datetime_form};
 use crate::ids::TrackingId;
+use crate::workflows::{Courier, courier_name};
 
 fn text_match(field_value: &str, op: TextOp, literal: &str) -> bool {
     let value = field_value.trim().to_lowercase();
@@ -184,7 +185,8 @@ pub struct FilterLine<'a> {
     pub quantity: i64,
 }
 
-/// Whether a text field passes `test`: an order-level field, or an item field on one line.
+/// Whether a text field passes `test`: an order-level field, or an item field on one line. The
+/// courier is its code; [`evaluate_filter`] gives `contains` and `starts_with` its name.
 fn filter_text(order: &dyn FilterFields, field: &str, test: impl Fn(&str) -> bool) -> bool {
     let single = match field {
         "courier" => Some(order.courier()),
@@ -208,12 +210,18 @@ fn filter_text(order: &dyn FilterFields, field: &str, test: impl Fn(&str) -> boo
 }
 
 /// Evaluate a filter of `packing-workflows.toml`, a one-off group or a search: an item field is
-/// true when one line matches; a field with no value matches no comparison.
-pub fn evaluate_filter(cond: &Condition, order: &dyn FilterFields) -> bool {
+/// true when one line matches; a field with no value matches no comparison. `courier equals`
+/// compares the code; `contains` and `starts_with` compare the courier's name in `couriers`, so
+/// "J&T" finds J&T Express and J&T Cargo.
+pub fn evaluate_filter(cond: &Condition, order: &dyn FilterFields, couriers: &[Courier]) -> bool {
     match cond {
-        Condition::Not(operand) => !evaluate_filter(operand, order),
-        Condition::And(operands) => operands.iter().all(|o| evaluate_filter(o, order)),
-        Condition::Or(operands) => operands.iter().any(|o| evaluate_filter(o, order)),
+        Condition::Not(operand) => !evaluate_filter(operand, order, couriers),
+        Condition::And(operands) => operands.iter().all(|o| evaluate_filter(o, order, couriers)),
+        Condition::Or(operands) => operands.iter().any(|o| evaluate_filter(o, order, couriers)),
+        Condition::Text { field, op, value } if field == "courier" && *op != TextOp::Equals => {
+            let code = order.courier();
+            !code.is_empty() && text_match(courier_name(couriers, code), *op, value)
+        }
         Condition::Text { field, op, value } => {
             filter_text(order, field, |text| text_match(text, *op, value))
         }

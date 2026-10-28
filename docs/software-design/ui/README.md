@@ -14,7 +14,7 @@ IDs and counts.
 | [Messages](messages.md) | Every stop message and warning, and what to do |
 | [Sort rules](sort-rules.md) | The boxes editor for the sort rules of `packing-workflows.toml` |
 | [Search](search.md) | Finding saved orders, their trace, and **Reprint** |
-| [Settings](settings.md) | The data folder and *About* |
+| [Settings](settings.md) | The theme, the data folder, the workspaces (rename, delete) and *About* |
 | [Start](start.md) | The first start, the lock, the first workspace |
 
 ## Daily use in one picture
@@ -35,7 +35,7 @@ A normal batch: **New batch** → **Add files…** → **Read labels** → (the 
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [▯] ◈ Packing (v0.2) │ Toko Contoh › Mon, 26 Oct 2026   🔍 Search  ≡ Sort rules  ⚙ Settings │ [☀]│
+│ [▯] ◈ Packing (v0.2) │ Toko Contoh › Mon, 26 Oct 2026       🔍 Search  ≡ Sort rules  ⚙ Settings │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                               (the current screen)                                     │
 └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -48,8 +48,7 @@ A normal batch: **New batch** → **Add files…** → **Read labels** → (the 
   date while a draft is open asks first ("Discard the batch being prepared?").
 - **Search**, **Sort rules** and **Settings** open over the current screen; the **×**, a click beside it or
   `Esc` returns to it (an open draft is kept and recounted).
-- **[☀]** is the theme menu: **Light**, **Dark** or **System** (Windows' own choice, the default), stored in
-  `packing-settings.toml` ([D-UI-7](../decisions/ui.md)). The button shows the theme in use.
+- The theme (**Light**, **Dark** or **System**) is chosen in [Settings](settings.md) ([D-UI-8](../decisions/ui.md)).
 
 ## Questions, waits and how things are written
 

@@ -26,15 +26,21 @@ A reprint or a restore that the checker refuses keeps nothing and says why.
 
 ## Settings
 
-Open **Settings** in the title bar.
+![Settings](images/09-settings.png)
 
-- **Data folder** — where the workspaces and their dates are kept (the default is `data` beside the
-  program). **Change…** asks "Use `<folder>` for the data from now on? The data in `<old>` stays where it
-  is." and opens that folder; nothing is moved. **Open** shows it in Explorer.
+Open **Settings** in the title bar. Each row is a setting at the left and its control at the right.
+
+- **Theme** — **Light**, **Dark** or **System** (follows Windows).
+- **Data folder** — where the workspaces and their dates are kept (the default is `packing-data` beside
+  the program). **Change…** asks "Use `<folder>` for the data from now on? The data in `<old>` stays where
+  it is." and opens that folder; nothing is moved. **Open** shows it in Explorer.
+- **Workspaces** — every workspace with its number of dates. **Rename…** changes the name in place
+  (Enter renames, `Esc` cancels); every date and batch stays. **Delete…** asks first, then moves the
+  workspace's folder with all its dates to the **Recycle Bin**, where Explorer can restore it. Renaming or
+  deleting the open workspace asks first about a batch being prepared; after a delete the app opens another
+  workspace, or asks for a new first one.
 - **About** — what the program does, its version (**v0.2**), the PDFium version and the journal's
   schema version.
-
-The theme is not here: it is the menu at the right of the title bar (**Light**, **Dark**, **System**).
 
 There are no other settings: the sort rule of your newest batch is preselected, the summary PDF is
 always written, and the couriers and sort rules live in `packing-workflows.toml` beside the program.

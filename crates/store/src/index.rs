@@ -10,6 +10,7 @@ use jiff::civil::Date;
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::record::{BatchSaved, ItemPick, ReprintMade, SavedOrder};
 use packing_engine::rules::{Condition, FilterFields, FilterLine, evaluate_filter};
+use packing_engine::workflows::Courier;
 
 use crate::StoreError;
 use crate::date::DateFolder;
@@ -27,6 +28,8 @@ pub struct IndexedOrder {
     pub items: Vec<ItemPick>,
     /// The group PDF that holds it.
     pub file: String,
+    /// The pages it fills in that group PDF, counted from 1.
+    pub file_pages: RangeInclusive<u16>,
     /// The name its input had when it was chosen.
     pub input: String,
 }
@@ -153,12 +156,17 @@ impl SearchIndex {
     }
 
     /// The orders a filter matches on the dates of `dates`, in printing order; only those dates
-    /// are looked at.
-    pub fn search(&self, filter: &Condition, dates: RangeInclusive<Date>) -> Vec<&IndexedOrder> {
+    /// are looked at. `couriers` name the couriers the filter compares.
+    pub fn search(
+        &self,
+        filter: &Condition,
+        dates: RangeInclusive<Date>,
+        couriers: &[Courier],
+    ) -> Vec<&IndexedOrder> {
         self.dates
             .range(dates)
             .flat_map(|(_, orders)| orders)
-            .filter(|order| evaluate_filter(filter, *order))
+            .filter(|order| evaluate_filter(filter, *order, couriers))
             .collect()
     }
 
@@ -171,11 +179,20 @@ impl SearchIndex {
     }
 }
 
+/// The orders of a batch; they are in printing order, so each one's pages in its group PDF follow
+/// the pages of the orders of its group before it.
 fn indexed(date: Date, batch: BatchId, saved: &BatchSaved) -> Vec<IndexedOrder> {
+    let mut written: BTreeMap<&str, u16> = BTreeMap::new();
     saved
         .orders
         .iter()
-        .map(|order| IndexedOrder {
+        .map(|order| {
+            let before = written.entry(order.group.as_str()).or_default();
+            let first = *before + 1;
+            *before += order.page_end - order.page_start + 1;
+            (order, first..=*before)
+        })
+        .map(|(order, file_pages)| IndexedOrder {
             date,
             batch,
             items: saved
@@ -188,6 +205,7 @@ fn indexed(date: Date, batch: BatchId, saved: &BatchSaved) -> Vec<IndexedOrder> 
                 .iter()
                 .find(|output| output.group.as_deref() == Some(order.group.as_str()))
                 .map_or_else(String::new, |output| output.file.clone()),
+            file_pages,
             input: saved
                 .inputs
                 .iter()

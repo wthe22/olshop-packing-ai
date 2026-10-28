@@ -1,6 +1,7 @@
 // Runs an `app/src` module under Node's own test runner. Node strips the types of a `.ts` file but
 // does not complete an extensionless import the way the bundler does, so a resolver hook adds the
-// extension the module meant.
+// extension the module meant. `npm test` loads this file with `--import`, so the hook is in place
+// before a test's own imports are resolved.
 //
 // The Tauri bridge is replaced by a fake, so a screen's state and commands run with no window: a
 // test fakes the commands it needs and reads back the calls the module made.
