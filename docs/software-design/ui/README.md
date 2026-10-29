@@ -48,7 +48,9 @@ A normal batch: **New batch** → **Add files…** → **Read labels** → (the 
 - **The workspace › the date** in the title bar: where everything is saved. Changing the workspace or the
   date while a draft is open asks first ("Discard the batch being prepared?").
 - **Search**, **Sort rules** and **Settings** open over the current screen; the **×**, a click beside it or
-  `Esc` returns to it (an open draft is kept and recounted).
+  `Esc` returns to it (an open draft is kept and recounted). In a window under 56 rem (a window well under
+  full width) the three show their icons only, their names as tooltips; a long workspace name is cut short
+  with *…* before the date is.
 - The theme (**Light**, **Dark** or **System**) is chosen in [Settings](settings.md) ([D-UI-8](../decisions/ui.md)).
 
 ## The look

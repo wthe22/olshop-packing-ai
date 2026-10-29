@@ -30,11 +30,11 @@ The **Day** screen shows what has been saved on the open date and is the way to 
 - **+ New batch** starts a new batch.
 - **Day summary** writes one PDF of the whole date and opens it: each batch as its card shows it, with
   its group PDFs, their orders and contents; the orders per courier (the count to hand over at each
-  pickup); then the pick list of the whole day; last, every order content of the day with its orders,
-  the single items first (`Sepatu ×1`, `Sepatu ×2`, …) and the mixed ones after, so you see how many
-  orders are one item, two items or a mix. It is laid out like a batch's summary PDF. It is written
-  again each time you press it, so press it after the last batch of the day. A day summary still open in a PDF viewer may have to be closed
-  first.
+  pickup); each batch's label files with their pages and the pages read, written and left out; then the
+  pick list of the whole day; last, every order content of the day with its orders, the most orders
+  first, so you see how many orders are one item, two items or a mix. It is laid out like a batch's
+  summary PDF. It is written again each time you press it, so press it after the last batch of the day.
+  A day summary still open in a PDF viewer may have to be closed first.
 - Each batch is a card: "Batch 2", "saved 09:12 · 2 files · 129 orders", one line per group PDF
   (`2-A`, its name, "88 orders", "3 contents") with **Open**, and a line for the batch's summary PDF.
 - **Reprints**, under the batches, lists each reprint made on the date: `R1`, when it was made, its

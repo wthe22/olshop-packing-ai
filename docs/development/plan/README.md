@@ -6,30 +6,34 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-10-29)
 
-- **Handoff of 2026-10-29 — the owner tests round seven; then the work is R6.4 and R9.** Round seven of
+- **Handoff of 2026-10-29 — the owner tests round eight; then the work is R6.4 and R9.** Round eight of
   the owner's review, from the owner's words in chat, is built and pushed:
-  - **Search** shows each order as a **card**, in as many columns as the window holds: tick, Order ID and
-    date; tracking ID and courier; the items on a shaded panel; the group PDF's code, its name and the
-    **page**, **Open** and the trace arrow. The filter and the dates share one box side by side. The first
-    box is now *Tracking ID contains* ([D-UI-10](../../software-design/decisions/ui.md)).
-  - **The look**: warm neutrals after Claude Code's window (charcoal and cream in dark, ivory and white in
-    light), a clay-orange accent, the group codes as blue chips, cards with a soft shadow, drawn ticks, the
-    Day screen's counts as pills ([D-UI-11](../../software-design/decisions/ui.md)). A navy dark set was
-    tried first and turned down.
-  - **The day summary** ends, from a new page, with every order content of the day and its orders: the
-    single items first (`×1`, `×2` of an item together), the mixed ones after
-    ([D-LABEL-22](../../software-design/decisions/summaries.md)). The summary PDF and day summary decisions
-    moved to [decisions/summaries.md](../../software-design/decisions/summaries.md).
-  - Checked on screenshots of the built program at the owner's workstation size (1920 × 1080 at 125 %,
-    about 1536 × 800 points) and at 1366 × 768 at 125 %, in both themes
-    ([ui/README](../../software-design/ui/README.md)).
-  - `target/portable/Packing/` is rebuilt. **The owner may test now**: Search on the small screen (a long
-    product name, ticking cards, **Select all**, **Reprint**), the colours in both themes on each screen,
-    and **Day summary**'s last pages; then [R8-checklist.md](R8-checklist.md) items 9 and 11 if not tried.
+  - **Search** shows one compact **row** per order again: the Order ID over the tracking ID; the items,
+    with the rest of the row; the group PDF's code, name and **page** over the courier and the date;
+    **Open**, the trace arrow and the *Reprinted* mark ([D-UI-12](../../software-design/decisions/ui.md)).
+    The ID and group PDF columns are only as wide as their longest entry. In a window much less than full
+    width the items take a line of their own under the IDs and the dates and **Search** a line under the
+    filter; the note of a reprint just written sits in the reprint bar's line.
+  - **The day summary** lists the day's order contents with the most orders first (the pick pages keep
+    their order) and, after the couriers, each batch's input PDFs with their pages and SHA-256 and the
+    batch's ledger, as a batch's summary PDF does
+    ([D-LABEL-23](../../software-design/decisions/summaries.md)).
+  - In a window under 56 rem the title bar's **Search**, **Sort rules** and **Settings** keep their icons
+    only, so the bar no longer wraps ([ui/README](../../software-design/ui/README.md#window-frame)).
+  - Round seven's look ([D-UI-11](../../software-design/decisions/ui.md)) and *Tracking ID contains* stay.
+  - **Found while checking, not fixed**: the PDF viewer of WebView2 (Edge's) draws the `·` of the summary
+    PDFs and the day summary as `¥`; the text layer reads `·`. `·` is drawn with the non-CID font
+    (`packing_list/fonts.rs`), and the verifier reads the header's `·` line as text, so a fix touches both.
+  - Checked on screenshots of the built program at 1536 × 800, 1093 × 580 (the owner's two screens at
+    125 %) and at 960, 768 and 600 points wide, in both themes, with long made-up product names.
+  - `target/portable/Packing/` is rebuilt. **The owner may test now**: Search on the small screen and in a
+    window less than full width (a long product name, ticking rows, **Select all**, **Reprint**), and
+    **Day summary**'s first and last pages; then [R8-checklist.md](R8-checklist.md) items 9 and 11 if not
+    tried.
   - No question is open.
   - A finding goes into [reviews/ui.md](../../reviews/ui.md), [reviews/label.md](../../reviews/label.md),
     [reviews/rules.md](../../reviews/rules.md) or [reviews/app.md](../../reviews/app.md) as the next
-    `R-<SCOPE>-n` (R-UI-35, R-LABEL-10, R-RULES-5, R-APP-9); the next session turns each into a task.
+    `R-<SCOPE>-n` (R-UI-36, R-LABEL-12, R-RULES-5, R-APP-9); the next session turns each into a task.
   - **Next without the owner:** **R6.4** ([R6-app-journal.md](R6-app-journal.md)), then **R9** (the full
     check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff). An instant
     label's unknown tag is not asked about yet (W-9 of [workflow-audit.md](workflow-audit.md)).

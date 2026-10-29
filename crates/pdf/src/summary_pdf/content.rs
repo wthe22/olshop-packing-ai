@@ -166,20 +166,7 @@ pub(crate) fn facts(record: &BatchSaved, app: &str, couriers: &[Courier]) -> Vec
                     .collect()
             },
         ),
-        section(
-            "Inputs",
-            record
-                .inputs
-                .iter()
-                .map(|input| {
-                    let sha = input.sha256.as_str();
-                    Row::new(input.filename.clone())
-                        .count(0, usize::from(input.page_count), "page", "pages")
-                        .tail(&sha[..12.min(sha.len())])
-                })
-                .chain([Row::new(ledger(record)).bold()])
-                .collect(),
-        ),
+        section("Inputs", input_rows(record)),
         section(
             &format!("Sort rule · {}", record.sort_rule.name),
             record
@@ -199,6 +186,22 @@ pub(crate) fn facts(record: &BatchSaved, app: &str, couriers: &[Courier]) -> Vec
             ))],
         ),
     ]
+}
+
+/// Each input: the name it had, its pages and the first 12 characters of its SHA-256; then the
+/// ledger in bold.
+pub(crate) fn input_rows(record: &BatchSaved) -> Vec<Row> {
+    record
+        .inputs
+        .iter()
+        .map(|input| {
+            let sha = input.sha256.as_str();
+            Row::new(input.filename.clone())
+                .count(0, usize::from(input.page_count), "page", "pages")
+                .tail(&sha[..12.min(sha.len())])
+        })
+        .chain([Row::new(ledger(record)).bold()])
+        .collect()
 }
 
 /// The orders per courier, by the courier's name in `couriers` (its code when the file no longer

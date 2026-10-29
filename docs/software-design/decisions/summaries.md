@@ -43,13 +43,16 @@ reprints stay on the Day screen's *Reprints* card (Q-LABEL-12).
 
 **Applies to.** [day summary](../labels/day-summary.md).
 
-## D-LABEL-22 — The day summary ends with the day's order contents
+## D-LABEL-23 — The day summary: its inputs after the couriers, its order contents by most orders
 
-**Decision.** After the pick pages, the day summary lists each order content of the whole day once, over every
-batch and group, with its orders: the one-line contents first, by item and quantity, then the mixed ones
-(R-LABEL-9).
+**Decision.** After the couriers, the day summary lists each live batch's inputs and ledger as the summary
+PDF's facts pages do, keyed by the batch's number (R-LABEL-11). After the pick pages it lists each order
+content of the whole day once, over every batch and group, with its orders, most orders first; contents with
+as many orders keep the one-line ones before the mixed ones (R-LABEL-10). The pick pages keep their order, by
+display name. It replaces D-LABEL-22, under which the one-line contents came first, by item and quantity.
 
-**Why.** The owner's words (2026-10-29): to know how many orders are one item, two items or mixed items. The
-list is long, so it is the last part.
+**Why.** The owner's words (2026-10-29): to know how many orders are one item, two items or mixed items, the
+contents the most orders share read first, as in a group PDF; the day's paper should name its input PDFs as a
+batch's summary does. The order contents list is long, so it is the last part.
 
 **Applies to.** [day summary](../labels/day-summary.md).

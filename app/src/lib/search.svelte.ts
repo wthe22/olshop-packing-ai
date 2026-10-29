@@ -131,7 +131,7 @@ export class Search {
     this.traced = flip(this.traced, key(row));
   };
 
-  // The head row's tick: every row the filter found, or none.
+  // **Select all**: every row the filter found, or none.
   selectAll = (all: boolean) => {
     this.ticked = all && this.result ? this.result.rows.map(key) : [];
   };
@@ -196,7 +196,7 @@ export function itemsText(row: api.SearchRow): string {
   return row.items.map((item) => texts.search.item(item.name, item.quantity)).join(", ");
 }
 
-// A card's group PDF beside its code's chip: the file name without `.pdf` and without the code it
+// A row's group PDF beside its code's chip: the file name without `.pdf` and without the code it
 // starts with, "Sepatu x88" for "2-A Sepatu x88.pdf"; a name the owner changed stays whole.
 export function fileLabel(row: api.SearchRow): string {
   const name = row.file.replace(/\.pdf$/i, "");

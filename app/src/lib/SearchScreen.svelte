@@ -1,7 +1,7 @@
 <script lang="ts">
   // Search: saved orders of the open workspace found by a filter made with the boxes, over a range
-  // of dates or all of them. Each order is a card that names the group PDF and the page the order
-  // is on, opens its trace line and carries its *Reprinted* mark; the ticked cards are reprinted
+  // of dates or all of them. Each order is a row that names the group PDF and the page the order
+  // is on, opens its trace line and carries its *Reprinted* mark; the ticked rows are reprinted
   // into one PDF from the bar at the foot. Enter in a box searches, so a scanned tracking ID finds
   // its order at once. The state and the commands are `search.svelte.ts`.
   import { onMount } from "svelte";
@@ -11,7 +11,7 @@
   import { conditionFields } from "../fields";
   import BoxesEditor from "./BoxesEditor.svelte";
   import Icon from "./Icon.svelte";
-  import SearchCard from "./SearchCard.svelte";
+  import SearchRow from "./SearchRow.svelte";
 
   let {
     day,
@@ -26,7 +26,7 @@
     today: string;
     // The reprint just written.
     onOpen: (path: string) => void;
-    // A card's group PDF, by the date it was saved on and its file name.
+    // A row's group PDF, by the date it was saved on and its file name.
     onOpenOutput: (day: string, file: string) => void;
     onReprinted: () => void;
   } = $props();
@@ -127,18 +127,27 @@
           {words.selectAll}
         </label>
       </div>
-      <div class="cards">
-        {#each search.result.rows as row (row.day + row.order_id)}
-          <SearchCard
-            {row}
-            ticked={search.isTicked(row)}
-            traced={search.isTraced(row)}
-            onToggle={() => search.toggle(row)}
-            onTrace={() => search.toggleTrace(row)}
-            onClickText={(clicks, selecting) => search.clickRow(row, clicks, selecting)}
-            onOpenOutput={() => onOpenOutput(row.day, row.file)}
-          />
-        {/each}
+      <div class="results">
+        <div class="rows">
+          <div class="head" aria-hidden="true">
+            <span></span>
+            <span>{words.columns.ids}</span>
+            <span class="head-items">{words.columns.items}</span>
+            <span>{words.columns.where}</span>
+            <span></span>
+          </div>
+          {#each search.result.rows as row (row.day + row.order_id)}
+            <SearchRow
+              {row}
+              ticked={search.isTicked(row)}
+              traced={search.isTraced(row)}
+              onToggle={() => search.toggle(row)}
+              onTrace={() => search.toggleTrace(row)}
+              onClickText={(clicks, selecting) => search.clickRow(row, clicks, selecting)}
+              onOpenOutput={() => onOpenOutput(row.day, row.file)}
+            />
+          {/each}
+        </div>
       </div>
       {#if search.findings.length > 0}
         <div class="error">
@@ -182,16 +191,16 @@
 
 <style>
   .search {
+    container: search / inline-size;
     display: flex;
     flex-direction: column;
     min-height: 100%;
   }
 
-  /* The filter at the left, the dates and **Search** at the right; one above the other when the
-     window is narrow. The boxes editor's outer box is this one. */
+  /* The filter at the left, the dates and **Search** at the right. The boxes editor's outer box is
+     this one. */
   .query {
     display: flex;
-    flex-wrap: wrap;
     gap: 0.75rem 1.25rem;
     padding: 0.75rem 0.9rem;
     border: 1px solid var(--border);
@@ -201,7 +210,7 @@
   }
 
   .filter {
-    flex: 1 1 34rem;
+    flex: 1;
     min-width: 0;
   }
 
@@ -248,11 +257,33 @@
     margin-top: auto;
   }
 
+  /* A narrow window: the dates and **Search** in one line under the filter, so the box stays low
+     and the rows keep the height. */
+  @container search (max-width: 60rem) {
+    .query {
+      flex-direction: column;
+    }
+
+    .scope {
+      flex-flow: row wrap;
+      align-items: center;
+      gap: 0.5rem 0.75rem;
+      padding: 0.65rem 0 0;
+      border-top: 1px solid var(--border-soft);
+      border-left: none;
+    }
+
+    .go {
+      margin-top: 0;
+      padding-inline: 1.5rem;
+    }
+  }
+
   .found {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin: 1rem 0 0.6rem;
+    margin: 0.8rem 0 0.5rem;
   }
 
   .summary {
@@ -282,21 +313,68 @@
     color: var(--text-muted);
   }
 
-  /* As many columns of cards as fit: three on a wide window, one on a narrow one. */
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 23rem), 1fr));
-    gap: 0.75rem;
-    align-items: start;
+  /* One row per order. The IDs and the group PDF are as wide as their longest; the items take the
+     rest (`SearchRow` moves them under the IDs on a narrow window). */
+  .results {
+    container: results / inline-size;
     margin-bottom: 1rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow);
   }
 
-  /* The reprint bar stays at the foot of the overlay while the cards scroll under it. */
+  .rows {
+    display: grid;
+    grid-template-columns: auto max-content minmax(0, 1fr) max-content auto;
+    column-gap: 0.9rem;
+  }
+
+  .head {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    padding: 0.35rem 0.75rem;
+    background: var(--surface-2);
+    color: var(--text-faint);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* A head's words never widen its column. */
+  .head span {
+    contain: inline-size;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The items go under the IDs (`SearchRow`), so the group PDF's head takes their column. */
+  @container results (max-width: 54rem) {
+    .head-items {
+      display: none;
+    }
+  }
+
+  @container results (max-width: 34rem) {
+    .head {
+      display: none;
+    }
+  }
+
+  /* The reprint bar stays at the foot of the overlay while the rows scroll under it: the reprint
+     just written at its left, the selection and **Reprint** at its right, one line while they fit. */
   .bar {
     position: sticky;
     bottom: -1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
     margin: auto -1.25rem -1rem;
-    padding: 0.6rem 1.25rem 0.75rem;
+    padding: 0.55rem 1.25rem 0.65rem;
     border-top: 1px solid var(--border);
     background: var(--surface);
     box-shadow: 0 -6px 16px var(--bar-shadow);
@@ -304,6 +382,7 @@
 
   .actions {
     display: flex;
+    flex: 1 1 24rem;
     align-items: center;
     gap: 0.8rem;
   }
@@ -316,11 +395,16 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    margin: 0 0 0.5rem;
-    padding: 0.35rem 0.75rem;
+    margin: 0;
+    padding: 0.2rem 0.25rem 0.2rem 0.75rem;
     border: 1px solid var(--ok-border);
     border-radius: var(--radius);
     background: var(--ok-bg);
     color: var(--ok);
+  }
+
+  .made button {
+    padding: 0.05rem 0.6rem;
+    font-size: 0.88rem;
   }
 </style>

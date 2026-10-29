@@ -1,8 +1,9 @@
 //! The day summary (day-summary.md): the open date of a workspace on A4, from its live batches —
 //! each batch as its Day card shows it, its groups with their orders and order contents; the
-//! couriers' counts; then from a new page the pick pages of the whole day, and from another the
-//! day's order contents with their orders. Drawn in the summary PDF's layout. A view of the
-//! journal: nothing reads it back, so its counts read singular where they should.
+//! couriers' counts; each batch's inputs with its ledger; then from a new page the pick pages of
+//! the whole day, and from another the day's order contents with their orders, most orders first.
+//! Drawn in the summary PDF's layout. A view of the journal: nothing reads it back, so its counts
+//! read singular where they should.
 
 mod content;
 

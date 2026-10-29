@@ -94,6 +94,7 @@ fn the_day_reads_its_batches_as_their_cards_and_its_couriers() {
             ),
             ("Batch 1 · saved 07:40 · 1 file", Some("3 orders · 4 units")),
             ("Couriers", None),
+            ("Inputs", None),
         ]
     );
     assert_eq!(
@@ -107,6 +108,22 @@ fn the_day_reads_its_batches_as_their_cards_and_its_couriers() {
             Row::new("Unknown").count(0, 1, "order", "orders"),
         ]
     );
+    let inputs = |batch: &str| {
+        [
+            Row::new("labels_1.pdf")
+                .count(0, 4, "page", "pages")
+                .tail("aaaaaaaaaaaa")
+                .key(batch),
+            Row::new("4 pages read = 3 written + 1 left out (1 repeats, 0 saved earlier)")
+                .bold()
+                .key(batch),
+        ]
+    };
+    assert_eq!(
+        shown[3].rows,
+        [inputs("2"), inputs("1")].concat(),
+        "each batch's inputs and ledger, newest batch first"
+    );
     assert_eq!(
         picks(&day),
         vec![
@@ -118,7 +135,7 @@ fn the_day_reads_its_batches_as_their_cards_and_its_couriers() {
 }
 
 #[test]
-fn the_order_contents_are_the_days_one_line_ones_first_then_the_mixed_ones() {
+fn the_order_contents_are_the_days_most_orders_first_one_line_ones_before_mixed() {
     let (first, mut second) = records();
     let item = |name: &str, quantity| ItemPick {
         name: name.into(),
@@ -146,11 +163,11 @@ fn the_order_contents_are_the_days_one_line_ones_first_then_the_mixed_ones() {
         contents,
         [
             row("1", &["Sepatu Standar Samping Motor — honda ×1"], 2),
-            row("2", &["Spion Beat ×1"], 1),
-            row("3", &["Spion Beat ×2"], 2),
+            row("2", &["Spion Beat ×2"], 2),
+            row("3", &["Spion Beat ×1"], 1),
             row("4", &["Kaca Spion ×1", "Spion Beat ×1"], 1),
         ],
-        "the same content over both batches is one row"
+        "the same content over both batches is one row; most orders first"
     );
     assert_eq!(contents_counts(&contents), "4 contents · 6 orders");
 }
@@ -177,7 +194,9 @@ fn the_batches_then_the_picks_then_the_order_contents_from_new_pages() {
         .map(|page| page.text().expect("the page's text").all())
         .collect();
     assert!(
-        texts[0].contains("Day summary") && texts[0].contains("Couriers"),
+        texts[0].contains("Day summary")
+            && texts[0].contains("Couriers")
+            && texts[0].contains("labels_1.pdf"),
         "{}",
         texts[0]
     );

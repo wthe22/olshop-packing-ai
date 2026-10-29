@@ -10,15 +10,16 @@
   its order is found at once.
 - **Dates**: **This day** (the open date, the default), **Yesterday**, **Last 7 days**, **Last 30 days**,
   **Custom range** (pick the first and last date) or **All days** of the workspace, then **Search**:
-  "3 orders in 2 batches" and one card per order, as many side by side as the window holds — Order ID
-  and date, tracking ID and courier, the items, the group PDF and the **page** it is on there (to find the
-  printed label in its stack), **Open** for that group PDF, and the arrow for where it came from (the label
-  file and pages, and the clue that named its courier).
+  "3 orders in 2 batches" and one row per order: the Order ID over the tracking ID; the items, with the
+  most room; the group PDF and the **page** it is on there (to find the printed label in its stack) over
+  the courier and the date; **Open** for that group PDF, and the arrow for where it came from (the label
+  file and pages, and the clue that named its courier). In a narrow window the items move under the IDs.
 - **Courier**: *equals* picks one courier from the list; *contains* or *starts with* takes typed text, so
   `J&T` finds J&T Express and J&T Cargo.
-- An order printed again before carries **Reprinted**; point at it to see which reprint and when.
-- Tick the orders to print again: click a card, or its tick; **Select all** ticks every card or none. A search that finds one order ticks it. A double click or a drag selects text to copy (an Order
-  ID, a tracking ID) and leaves the tick alone.
+- An order printed again before carries **Reprinted** under **Open**; point at it to see which reprint and when.
+- Tick the orders to print again: click a row, or its tick; **Select all** ticks every order or none. A
+  search that finds one order ticks it. A double click or a drag selects text to copy (an Order ID, a
+  tracking ID) and leaves the tick alone.
 - The bar at the foot says how many are selected and has **Reprint 2 orders**: one PDF of their label
   pages, in their original printing order, checked like a save, written into today: "Reprint 1 written:
   2 orders, 2 pages." with **Open**. When one of them was reprinted before, the app asks first. The

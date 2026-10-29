@@ -53,7 +53,9 @@
       <button
         class="ghost"
         class:active={overlay === item.id}
-        onclick={() => onNavigate(item.id)}><Icon name={item.icon} size={16} />{item.label}</button
+        title={item.label}
+        onclick={() => onNavigate(item.id)}
+        ><Icon name={item.icon} size={16} /><span class="label">{item.label}</span></button
       >
     {/each}
   </nav>
@@ -72,6 +74,7 @@
 
   .brand {
     display: inline-flex;
+    flex: none;
     align-items: center;
     gap: 0.4rem;
     font-weight: 650;
@@ -88,8 +91,10 @@
     font-weight: 600;
   }
 
+  /* A long workspace name is cut short before the date or the buttons are. */
   .where {
     display: inline-flex;
+    min-width: 0;
     align-items: center;
     gap: 0.45rem;
     margin-left: 0.75rem;
@@ -100,7 +105,10 @@
   }
 
   .workspace {
+    min-width: 0;
+    overflow: hidden;
     font-weight: 600;
+    text-overflow: ellipsis;
   }
 
   .sep {
@@ -108,6 +116,7 @@
   }
 
   .day {
+    flex: none;
     color: var(--text-muted);
   }
 
@@ -117,7 +126,19 @@
 
   nav {
     display: flex;
+    flex: none;
     gap: 0.2rem;
+  }
+
+  nav button {
+    white-space: nowrap;
+  }
+
+  /* A window well under full width: the buttons keep their icons, their names in the tooltip. */
+  @media (max-width: 56rem) {
+    nav .label {
+      display: none;
+    }
   }
 
   nav button.active {

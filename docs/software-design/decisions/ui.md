@@ -71,19 +71,6 @@ sessions, which D-APP-5 removed).
 
 **Applies to.** [Panel](../ui/panel.md).
 
-## D-UI-10 — Search shows each order as a card; its first box is *Tracking ID contains*
-
-**Decision.** Search's results are cards in as many columns as the window holds, each with the order's tick, IDs,
-courier, items and the group PDF and page (R-UI-32); the filter and the dates share one box side by side. The
-first box is *Tracking ID contains*, not *starts with* (R-UI-33). It replaces the table of R-UI-30.
-
-**Why.** The owner tested Search on a smaller screen at 125 % scaling (2026-10-29): the table's eight columns
-squeezed the items into narrow wraps and the filter took half the height. A card keeps its fields readable at
-any width. *Starts with* surprised the owner: a part of a tracking ID typed or pasted from the middle found
-nothing.
-
-**Applies to.** [Search](../ui/search.md).
-
 ## D-UI-11 — The look: warm neutrals, a clay accent, cards with depth
 
 **Decision.** The colours follow Claude Code's own window: warm charcoal surfaces in layers with cream text in
@@ -97,3 +84,21 @@ the flat grey sets gave every surface the same weight, so nothing led the eye. A
 and turned down the same day; the owner named Zed and Claude Code as the look to follow.
 
 **Applies to.** [Screens](../ui/README.md#the-look), every screen.
+
+## D-UI-12 — Search shows each order as a compact row; its first box is *Tracking ID contains*
+
+**Decision.** Search's results are one row per order (R-UI-35): the tick; the Order ID over the tracking ID;
+the items, which take the width the other columns leave; the group PDF's code, name and page over the courier
+and the date; **Open**, the trace chevron and the *Reprinted* mark. The ID column and the group PDF column are
+as wide as their longest entry and no wider. On a narrower window the items move to a line of their own under
+the IDs; narrower still, the group PDF line goes under the IDs too. The filter and the dates share one box
+side by side. The first box is *Tracking ID contains*, not *starts with* (R-UI-33). It replaces D-UI-10, which
+showed the results as cards.
+
+**Why.** The owner found the cards hard to search through (2026-10-29): rows read down one column, cards
+scatter the same field over a grid. The table before the cards (R-UI-30) gave each long ID a column of its own
+and squeezed the items between eight columns on the owner's 15-inch screen at 125 %, often a window less than
+full width; two IDs over each other and the group PDF over the courier leave the items most of a row.
+*Starts with* surprised the owner: a part of a tracking ID typed or pasted from the middle found nothing.
+
+**Applies to.** [Search](../ui/search.md).

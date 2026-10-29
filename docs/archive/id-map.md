@@ -85,6 +85,8 @@ namespaces.
 | D-LABEL-1 (one courier file in the data folder) | replaced by D-APP-6 |
 | D-UI-5 (the panel; the app renamed no workspace) | replaced by D-UI-9 (a workspace is renamed in Settings, D-APP-24) |
 | D-UI-7 (the theme in the title bar's menu) | replaced by D-UI-8 (the theme in Settings) |
+| D-UI-10 (Search's results as cards) | replaced by D-UI-12 (one compact row per order) |
+| D-LABEL-22 (the day's order contents, the one-line ones first) | replaced by D-LABEL-23 (most orders first; the inputs after the couriers) |
 | F-APP-6 (several sessions a day), F-UI-5 (the sessions panel) | F-APP-8 (namespaces), F-UI-7 (the panel) |
 | R-APP-1, R-LABEL-1, R-UI-4, R-UI-5, R-RULES-2 | resolved by the v0.2 design |
 | grouping, category, pick, saved PDF, packing list, condition | sort rule, label group, label group, group PDF, summary PDF, filter |

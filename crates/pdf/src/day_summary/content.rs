@@ -1,6 +1,6 @@
 //! What the day summary prints, as text, from the date's live batches: the header's counts, each
-//! batch with its groups as its Day card shows them, the couriers, the day's picks and the day's
-//! order contents. Plain functions, so they are tested without PDFium.
+//! batch with its groups as its Day card shows them, the couriers, the inputs, the day's picks and
+//! the day's order contents. Plain functions, so they are tested without PDFium.
 
 use std::collections::BTreeMap;
 
@@ -10,7 +10,8 @@ use packing_engine::record::OrderContent;
 use super::{DayBatch, DayFacts};
 use crate::facts::{Row, Section, count};
 use crate::summary_pdf::content::{
-    ContentRow, counts as batch_counts, courier_rows, group_sections, picks as batch_picks,
+    ContentRow, counts as batch_counts, courier_rows, group_sections, input_rows,
+    picks as batch_picks,
 };
 
 /// The header's counts line: `729 orders · 801 units · 2 batches · 5 groups`.
@@ -30,20 +31,36 @@ pub(crate) fn header_counts(facts: &DayFacts<'_>) -> String {
     .join(" · ")
 }
 
-/// Each batch, newest first, then the couriers of the whole day.
+/// Each batch, newest first, then the couriers of the whole day, then each batch's inputs with
+/// its ledger, keyed by the batch's number.
 pub(crate) fn sections(facts: &DayFacts<'_>) -> Vec<Section> {
+    let records = || facts.batches.iter().map(|batch| batch.record);
+    let section = |heading: &str, rows: Vec<Row>| Section {
+        heading: heading.to_string(),
+        right: None,
+        rows,
+    };
     facts
         .batches
         .iter()
         .map(batch_section)
-        .chain([Section {
-            heading: "Couriers".to_string(),
-            right: None,
-            rows: courier_rows(
-                facts.batches.iter().flat_map(|batch| &batch.record.orders),
-                facts.couriers,
+        .chain([
+            section(
+                "Couriers",
+                courier_rows(records().flat_map(|record| &record.orders), facts.couriers),
             ),
-        }])
+            section(
+                "Inputs",
+                records()
+                    .flat_map(|record| {
+                        let key = record.batch.to_string();
+                        input_rows(record)
+                            .into_iter()
+                            .map(move |row| row.key(key.clone()))
+                    })
+                    .collect(),
+            ),
+        ])
         .collect()
 }
 
@@ -86,9 +103,9 @@ pub(crate) fn picks(facts: &DayFacts<'_>) -> Vec<(i64, String)> {
 type Lines = Vec<(String, u16)>;
 
 /// Each order content of the day once, over every batch and group, numbered from 1, with its
-/// orders: how many orders are one item, two of it, or a mix. The contents of one line come first,
-/// by display name and then quantity, so an item's `×1` and `×2` stand together; the mixed ones
-/// follow, by their lines.
+/// orders: how many orders are one item, two of it, or a mix. Most orders first; among contents
+/// with as many orders, the one-line ones by display name and then quantity, then the mixed ones by
+/// their lines.
 pub(crate) fn order_contents(facts: &DayFacts<'_>) -> Vec<ContentRow> {
     let mut orders: BTreeMap<&OrderContent, usize> = BTreeMap::new();
     for record in facts.batches.iter().map(|batch| batch.record) {
@@ -109,7 +126,11 @@ pub(crate) fn order_contents(facts: &DayFacts<'_>) -> Vec<ContentRow> {
             (lines, orders)
         })
         .collect();
-    contents.sort_by(|(a, _), (b, _)| (a.len() > 1, a).cmp(&(b.len() > 1, b)));
+    contents.sort_by(|(a, a_orders), (b, b_orders)| {
+        b_orders
+            .cmp(a_orders)
+            .then_with(|| (a.len() > 1, a).cmp(&(b.len() > 1, b)))
+    });
     contents
         .into_iter()
         .enumerate()
