@@ -2,9 +2,9 @@
 
 One per batch, `output/{batch} summary.pdf`, written with the group PDFs and checked by the verifier
 ([D-APP-16](../decisions/app-features.md)). There is no other packing list and no layout or scope to choose.
-Three parts, each starting on a new page, in this order ([D-LABEL-16](../decisions/label.md)): the **facts
+Three parts, each starting on a new page, in this order ([D-LABEL-16](../decisions/summaries.md)): the **facts
 pages**, the **group pages**, the **pick pages**. Every page has the same header and every part the same
-rows ([D-LABEL-19](../decisions/label.md)). The [day summary](day-summary.md) is drawn in the same layout.
+rows ([D-LABEL-19](../decisions/summaries.md)). The [day summary](day-summary.md) is drawn in the same layout.
 
 ```
 Summary · Toko Contoh · 2026-10-07 · batch 2                                           page 1/3

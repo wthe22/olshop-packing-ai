@@ -180,12 +180,10 @@ export class Search {
   };
 }
 
-// One row: the tracking ID, the box the owner fills first.
+// One row: the tracking ID, the box the owner fills first; *contains*, so part of an ID finds it.
 function firstTree(): UiTree {
   const tree = newTree();
-  const row = newRow("tracking_id");
-  row.operator = "starts_with";
-  tree.root.children.push(row);
+  tree.root.children.push(newRow("tracking_id"));
   return tree;
 }
 
@@ -196,6 +194,13 @@ function flip(list: string[], item: string): string[] {
 // One row's items: "Sepatu ×2, Spion Beat ×1".
 export function itemsText(row: api.SearchRow): string {
   return row.items.map((item) => texts.search.item(item.name, item.quantity)).join(", ");
+}
+
+// A card's group PDF beside its code's chip: the file name without `.pdf` and without the code it
+// starts with, "Sepatu x88" for "2-A Sepatu x88.pdf"; a name the owner changed stays whole.
+export function fileLabel(row: api.SearchRow): string {
+  const name = row.file.replace(/\.pdf$/i, "");
+  return name.startsWith(`${row.group} `) ? name.slice(row.group.length + 1) : name;
 }
 
 // The mark of an order printed again before, and its tooltip naming each reprint:

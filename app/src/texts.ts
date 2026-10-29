@@ -56,15 +56,22 @@ export const texts = {
   },
 
   day: {
-    // "This day: 2 batches · 729 orders · 5 group PDFs · 1 reprint".
-    summary: (batches: number, orders: number, pdfs: number, reprints: number) =>
-      `This day: ${count(batches, "batch", "batches")} · ${count(orders, "order", "orders")} · ${count(pdfs, "group PDF", "group PDFs")}` +
-      (reprints > 0 ? ` · ${count(reprints, "reprint", "reprints")}` : ""),
+    // The title and its counts beside it, "This day  2 batches  729 orders  5 group PDFs  1 reprint";
+    // a day with no reprint shows no count of them.
+    thisDay: "This day",
+    stats: (batches: number, orders: number, pdfs: number, reprints: number) =>
+      [
+        { n: batches, word: batches === 1 ? "batch" : "batches" },
+        { n: orders, word: orders === 1 ? "order" : "orders" },
+        { n: pdfs, word: pdfs === 1 ? "group PDF" : "group PDFs" },
+        { n: reprints, word: reprints === 1 ? "reprint" : "reprints" },
+      ].filter((stat, i) => i < 3 || stat.n > 0),
     nothing: "Nothing saved on this day yet.",
     newBatch: "+ New batch",
-    // "Batch 2 · saved 09:12 · 2 files · 129 orders".
-    batch: (n: number, time: string, files: number, orders: number) =>
-      `Batch ${n} · saved ${time} · ${count(files, "file", "files")} · ${count(orders, "order", "orders")}`,
+    // A batch card's title, "Batch 2", and what follows it, "saved 09:12 · 2 files · 129 orders".
+    batch: (n: number) => `Batch ${n}`,
+    batchFacts: (time: string, files: number, orders: number) =>
+      `saved ${time} · ${count(files, "file", "files")} · ${count(orders, "order", "orders")}`,
     open: "Open",
     // The **Printed** tick beside *Open* on each group PDF. The tick carries no word, so this is
     // its accessible name and tooltip; it names the file, so a screen reader reads one row's tick

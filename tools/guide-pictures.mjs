@@ -143,10 +143,10 @@ try {
 
   await click("Search");
   await until(shows("This day"));
-  await click("Search", ".search .controls button");
+  await click("Search", ".search .scope button");
   await until(shows("orders in 1 batch"));
-  await run(`document.querySelector(".search tbody input[type=checkbox]").click()`);
-  await run(`document.querySelectorAll(".search td.tools button")[1].click()`);
+  await run(`document.querySelector(".search .card input[type=checkbox]").click()`);
+  await run(`document.querySelector(".search .card button.chevron").click()`);
   await wait(400);
   await picture("06-search.png");
   await click("Reprint 1 order");

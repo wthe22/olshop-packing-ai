@@ -1,8 +1,8 @@
 //! The day summary (day-summary.md): the open date of a workspace on A4, from its live batches —
 //! each batch as its Day card shows it, its groups with their orders and order contents; the
-//! couriers' counts; then from a new page the pick pages of the whole day. Drawn in the summary
-//! PDF's layout. A view of the journal: nothing reads it back, so its counts read singular where
-//! they should.
+//! couriers' counts; then from a new page the pick pages of the whole day, and from another the
+//! day's order contents with their orders. Drawn in the summary PDF's layout. A view of the
+//! journal: nothing reads it back, so its counts read singular where they should.
 
 mod content;
 
@@ -14,12 +14,12 @@ use packing_engine::workflows::Courier;
 use pdfium_render::prelude::Pdfium;
 
 use crate::PdfError;
-use crate::facts::draw_section;
+use crate::facts::{ROW_H, draw_bar, draw_section, new_page};
 use crate::packing_list::emit::{emit, header_ops};
 use crate::packing_list::fonts::FONT_DIR;
 use crate::packing_list::measure::Measure;
 use crate::packing_list::{Builder, Layout, Op};
-use crate::summary_pdf::draw_picks;
+use crate::summary_pdf::{draw_content, draw_picks};
 
 /// One live batch of the date.
 pub struct DayBatch<'a> {
@@ -59,6 +59,16 @@ pub fn write_day_summary(
         draw_section(&mut builder, &section, &measure);
     }
     draw_picks(&mut builder, &content::picks(facts));
+    let contents = content::order_contents(facts);
+    if !contents.is_empty() {
+        new_page(&mut builder);
+        let heading = "Order contents (orders per content)";
+        let right = content::contents_counts(&contents);
+        draw_bar(&mut builder, heading, Some(&right), ROW_H * 2.0);
+        for row in &contents {
+            draw_content(&mut builder, row, &measure, heading);
+        }
+    }
 
     let body = builder.pages;
     let count = body.len();

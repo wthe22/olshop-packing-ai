@@ -140,7 +140,7 @@
     width: 16rem;
     flex: none;
     border-right: 1px solid var(--border);
-    background: var(--surface-2);
+    background: var(--panel-bg);
     overflow-y: auto;
     padding: 0.9rem 0.6rem;
   }
@@ -269,9 +269,13 @@
   }
 
   .today {
-    margin-left: 0.2rem;
-    color: var(--link);
-    font-size: 0.85rem;
+    margin-left: 0.35rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    font-size: 0.75rem;
+    font-weight: 600;
   }
 
   .count {

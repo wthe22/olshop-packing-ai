@@ -1,8 +1,9 @@
 # PC app screens
 
-The screens of the PC app ([app/](../app/README.md)). One window, designed for a laptop screen of
-1366 × 768 or larger (smallest usable size 1024 × 640). Sketches show the English texts and made-up names,
-IDs and counts.
+The screens of the PC app ([app/](../app/README.md)). One window, designed for the owner's workstation: a
+15-inch 1920 × 1080 screen at 125 % scaling, so a full window is about 1536 × 800 points. Every screen also
+works on a 1366 × 768 screen at 125 % (about 1093 × 580): it wraps and stacks rather than squeezing a
+column. Sketches show the English texts and made-up names, IDs and counts.
 
 | Screen | Content |
 |---|---|
@@ -49,6 +50,16 @@ A normal batch: **New batch** → **Add files…** → **Read labels** → (the 
 - **Search**, **Sort rules** and **Settings** open over the current screen; the **×**, a click beside it or
   `Esc` returns to it (an open draft is kept and recounted).
 - The theme (**Light**, **Dark** or **System**) is chosen in [Settings](settings.md) ([D-UI-8](../decisions/ui.md)).
+
+## The look
+
+Warm neutrals in a light and a dark set, after Claude Code's own window ([D-UI-11](../decisions/ui.md)):
+charcoal layers and cream text in the dark set, ivory and white in the light one. A clay-orange accent marks
+the main button, the open date and the ticks; the logo's blue marks the group codes (`2-A`, `A`) and the
+links; green is what is done (the **Printed** tick, a saved line); amber a warning or a *Reprinted* mark;
+red an error.
+Content sits in **cards**: rounded, with a soft shadow, a shaded head where a card has one, a thin rule
+between its rows. The title bar and the panel are the darkest layer (in the light set, the ivory one).
 
 ## Questions, waits and how things are written
 

@@ -76,16 +76,19 @@
 
 <style>
   .card {
+    margin-bottom: 0.9rem;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     background: var(--surface);
-    margin-bottom: 0.75rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
   }
 
   .head {
-    padding: 0.5rem 0.75rem;
+    padding: 0.55rem 0.75rem;
     border-bottom: 1px solid var(--border-soft);
-    font-weight: 600;
+    background: var(--surface-2);
+    font-weight: 700;
   }
 
   .row {
@@ -103,9 +106,14 @@
   /* The reprint's number, as wide as a group PDF's code on the batch cards. */
   .code {
     min-width: 3.5rem;
-    white-space: nowrap;
-    font-weight: 600;
+    padding: 0.05rem 0.5rem;
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .time {

@@ -85,9 +85,13 @@
 
 <style>
   td {
-    padding: 0.35rem 0.4rem;
+    padding: 0.45rem 0.4rem;
     border-bottom: 1px solid var(--border-soft);
     vertical-align: top;
+  }
+
+  td:first-child {
+    padding-left: 0.75rem;
   }
 
   .c-orders,
@@ -107,9 +111,14 @@
 
   .code {
     display: inline-block;
-    min-width: 1.4rem;
+    min-width: 1.6rem;
+    padding: 0 0.4rem;
+    border-radius: var(--radius);
+    background: var(--chip);
+    color: var(--chip-text);
+    font-weight: 700;
+    text-align: center;
     white-space: nowrap;
-    font-weight: 600;
   }
 
   .tag {

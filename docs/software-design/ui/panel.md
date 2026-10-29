@@ -8,9 +8,9 @@ another date or workspace. It sits at the left of every screen; the owner of the
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │ [▯] ◈ Packing (v0.2) │ Toko Contoh › Wed, 21 Oct 2026       Search  Sort rules  Settings │
 ├──────────────────────────┬─────────────────────────────────────────────────────────────┤
-│ WORKSPACE                │  This day: 2 batches · 729 orders · 5 group PDFs            │
+│ WORKSPACE                │  This day (2 batches) (729 orders) (5 group PDFs)           │
 │ [Toko Contoh      ▾] [+] │                                         [ + New batch ]     │
-│                          │  ┌ Batch 2 · saved 09:12 · 129 orders ─ [Amend] ┐           │
+│                          │  ┌ Batch 2  saved 09:12 · 129 orders ── [Amend] ┐           │
 │ ▾ October 2026           │  │  2-A  Sepatu         88 orders  [✓] [Open]   │           │
 │ ▌ Wed, 21 Oct · today 729│  │  2-Z  Lainnya        41 orders  [ ] [Open]   │           │
 │   Tue, 20 Oct        530 │  └──────────────────────────────────────────────┘           │

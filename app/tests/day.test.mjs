@@ -35,16 +35,14 @@ test("the Day screen's counts read singular where they should", () => {
     ["⚠ missing", "Reprints · 1 file · 3 orders", "Reprints · 2 files · 1 order"],
   );
   assert.equal(texts.day.saved(2, 1), "Batch 2 saved: 1 group PDF and the summary PDF.");
+  const stats = (...counts) => texts.day.stats(...counts).map(({ n, word }) => `${n} ${word}`);
   assert.deepEqual(
-    [texts.day.summary(1, 2, 3, 0), texts.day.summary(2, 729, 5, 1)],
+    [stats(1, 2, 3, 0), stats(2, 729, 5, 1)],
     [
-      "This day: 1 batch · 2 orders · 3 group PDFs",
-      "This day: 2 batches · 729 orders · 5 group PDFs · 1 reprint",
+      ["1 batch", "2 orders", "3 group PDFs"],
+      ["2 batches", "729 orders", "5 group PDFs", "1 reprint"],
     ],
   );
-  assert.equal(
-    texts.day.batch(2, "09:12", 1, 129),
-    "Batch 2 · saved 09:12 · 1 file · 129 orders",
-  );
+  assert.equal(texts.day.batchFacts("09:12", 1, 129), "saved 09:12 · 1 file · 129 orders");
   assert.equal(texts.plan.duplicate("A"), "Same name as group A");
 });

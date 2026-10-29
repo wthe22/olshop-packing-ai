@@ -12,7 +12,7 @@ import { searchSummary, texts } from "../src/texts.ts";
 import { answerQuestions } from "./answers.mjs";
 
 useRunes();
-const { Search, itemsText, reprintedMark } = await import("../src/lib/search.svelte.ts");
+const { Search, fileLabel, itemsText, reprintedMark } = await import("../src/lib/search.svelte.ts");
 
 const row = (order_id, group = "1-A") => ({
   day: "2026-10-07",
@@ -77,7 +77,8 @@ test("a search finds rows, ticks choose them and Reprint writes them into today"
         : { made: { number: 1, file: "reprint 1 x2.pdf", path: "C:/r.pdf", orders: args.orders.length, pages: 2 }, errors: [] },
   });
   const search = new Search(() => "2026-10-07", () => "2026-10-27", () => (reprinted += 1));
-  assert.equal(search.tree.root.children[0].field, "tracking_id", "the first box is the tracking ID");
+  const [first] = search.tree.root.children;
+  assert.deepEqual([first.field, first.operator], ["tracking_id", "contains"], "the first box: tracking ID contains");
 
   await search.run();
   assert.deepEqual(calls[1], {
@@ -222,7 +223,16 @@ test("the Courier box lists the couriers of the rules, and a row names its page"
   assert.deepEqual(search.couriers, couriers);
   assert.deepEqual(
     [texts.search.pages(14, 14), texts.search.pages(14, 15), texts.search.noCourier],
-    ["14", "14–15", "Unknown"],
+    ["page 14", "pages 14–15", "Unknown"],
+  );
+  assert.deepEqual(
+    [
+      fileLabel({ group: "2-A", file: "2-A Sepatu x88.pdf" }),
+      fileLabel({ group: "2-A", file: "sepatu pagi.pdf" }),
+      fileLabel({ group: "2-A", file: "2-AB x3.pdf" }),
+    ],
+    ["Sepatu x88", "sepatu pagi", "2-AB x3"],
+    "the code the name starts with is on the chip",
   );
 
   useBackend({});

@@ -70,3 +70,30 @@ folder** only: a date has no name. A workspace is renamed or deleted in Settings
 sessions, which D-APP-5 removed).
 
 **Applies to.** [Panel](../ui/panel.md).
+
+## D-UI-10 — Search shows each order as a card; its first box is *Tracking ID contains*
+
+**Decision.** Search's results are cards in as many columns as the window holds, each with the order's tick, IDs,
+courier, items and the group PDF and page (R-UI-32); the filter and the dates share one box side by side. The
+first box is *Tracking ID contains*, not *starts with* (R-UI-33). It replaces the table of R-UI-30.
+
+**Why.** The owner tested Search on a smaller screen at 125 % scaling (2026-10-29): the table's eight columns
+squeezed the items into narrow wraps and the filter took half the height. A card keeps its fields readable at
+any width. *Starts with* surprised the owner: a part of a tracking ID typed or pasted from the middle found
+nothing.
+
+**Applies to.** [Search](../ui/search.md).
+
+## D-UI-11 — The look: warm neutrals, a clay accent, cards with depth
+
+**Decision.** The colours follow Claude Code's own window: warm charcoal surfaces in layers with cream text in
+the dark theme, ivory and white in the light one, a clay-orange accent for the main button, the open date and
+the ticks, and the logo's blue for the group codes (`2-A`). Cards have rounded corners and a soft shadow; a
+card's head is shaded; the Day screen's counts are pills beside its title; the **Printed** tick is green.
+Every colour is a token of `app.css` (R-UI-34).
+
+**Why.** The owner found the app "too dull even with decent layout, especially in dark mode" (2026-10-29):
+the flat grey sets gave every surface the same weight, so nothing led the eye. A navy dark theme was tried
+and turned down the same day; the owner named Zed and Claude Code as the look to follow.
+
+**Applies to.** [Screens](../ui/README.md#the-look), every screen.

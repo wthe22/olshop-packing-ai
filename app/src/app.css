@@ -1,36 +1,52 @@
 /* Base styles of the PC app: one window, plain CSS, no component library. Every colour is a token
    below; `data-theme` on <html> picks the light or dark set, and `color-scheme` makes the native
-   controls (text boxes, lists, ticks, radio buttons, scroll bars) follow it. */
+   controls (text boxes, lists, radio buttons, scroll bars) follow it. Ticks are drawn here, so
+   they read the same in both sets. */
 
 :root {
   color-scheme: light;
-  --bg: #f3f4f6;
+  --bg: #faf9f5;
   --surface: #ffffff;
-  --surface-2: #f7f8fa;
-  --surface-hover: #eef1f5;
-  --border: #d9dde3;
-  --border-strong: #b9c0ca;
-  --border-soft: #eceef2;
-  --text: #1c1f24;
-  --text-muted: #5b636e;
-  --text-faint: #8d949e;
-  --accent: #1f6feb;
-  --accent-hover: #1a5fce;
-  --accent-soft: #e6effc;
-  --accent-border: #7aa7e6;
+  --surface-2: #f5f4ef;
+  --surface-hover: #efede6;
+  --panel-bg: #f3f2ec;
+  --header-bg: #f3f2ec;
+  --input-bg: #ffffff;
+  --button-bg: #ffffff;
+  --border: #e2e0d8;
+  --border-strong: #c8c5ba;
+  --border-soft: #ecebe5;
+  --text: #1f1e1d;
+  --text-muted: #5e5c57;
+  --text-faint: #8f8c85;
+  --accent: #c96442;
+  --accent-hover: #b4583a;
+  --accent-soft: #f7e8e1;
+  --accent-border: #dfa38d;
+  --accent-text: #a64f31;
   --on-accent: #ffffff;
-  --link: #1f6feb;
-  --danger: #a12626;
-  --danger-bg: #fdeeee;
-  --danger-border: #e3a3a3;
-  --ok: #1f6f2f;
-  --ok-bg: #eaf7ea;
-  --ok-border: #a6d8a6;
-  --warn: #a35d00;
-  --backdrop: rgba(15, 18, 24, 0.4);
-  --shadow: 0 1px 2px rgba(15, 18, 24, 0.06);
-  --shadow-lg: 0 12px 40px rgba(15, 18, 24, 0.22);
+  --link: #2c6bb3;
+  /* A ticked card or row. */
+  --selected: #fcf3ee;
+  /* A group's code (`2-A`): the blue of the logo beside the clay accent. */
+  --chip: #e6eefa;
+  --chip-text: #23558f;
+  --danger: #b42318;
+  --danger-bg: #fff1ef;
+  --danger-border: #efb3ab;
+  --ok: #2e7038;
+  --ok-bg: #edf6ea;
+  --ok-border: #a9d3a6;
+  --ok-solid: #3f8f4a;
+  --warn: #8f5b00;
+  --warn-bg: #fdf3dc;
+  --warn-border: #e5c37a;
+  --backdrop: rgba(31, 30, 29, 0.4);
+  --bar-shadow: rgba(31, 30, 29, 0.05);
+  --shadow: 0 1px 2px rgba(31, 30, 29, 0.05), 0 1px 3px rgba(31, 30, 29, 0.06);
+  --shadow-lg: 0 24px 60px rgba(31, 30, 29, 0.22);
   --radius: 6px;
+  --radius-lg: 10px;
   --font-mono: Consolas, "Cascadia Mono", monospace;
 
   font-family: "Segoe UI", Inter, Avenir, Helvetica, Arial, sans-serif;
@@ -46,32 +62,44 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #1b1c1f;
-  --surface: #25272b;
-  --surface-2: #2c2e33;
-  --surface-hover: #33363c;
-  --border: #3d4047;
-  --border-strong: #565a63;
-  --border-soft: #33353a;
-  --text: #eceef1;
-  --text-muted: #a9afb8;
-  --text-faint: #7d838c;
-  --accent: #2f7cf6;
-  --accent-hover: #4a8ef8;
-  --accent-soft: #22344f;
-  --accent-border: #4c78b8;
+  --bg: #262624;
+  --surface: #30302e;
+  --surface-2: #2a2a28;
+  --surface-hover: #3a3936;
+  --panel-bg: #1f1e1d;
+  --header-bg: #1f1e1d;
+  --input-bg: #262624;
+  --button-bg: #353532;
+  --border: #3e3d3a;
+  --border-strong: #55534f;
+  --border-soft: #383735;
+  --text: #f5f4ef;
+  --text-muted: #c2c0b6;
+  --text-faint: #8e8c85;
+  --accent: #d97757;
+  --accent-hover: #e38a6c;
+  --accent-soft: #42302a;
+  --accent-border: #a65c44;
+  --accent-text: #eea084;
   --on-accent: #ffffff;
-  --link: #6ea8ff;
-  --danger: #f0b0b0;
-  --danger-bg: #3a2222;
-  --danger-border: #8a4a4a;
-  --ok: #a6d8a6;
-  --ok-bg: #1f3320;
-  --ok-border: #4a7a4a;
-  --warn: #e8a85a;
+  --link: #8ab8f0;
+  --selected: #3a2f2a;
+  --chip: #2c3a4a;
+  --chip-text: #9cc6f5;
+  --danger: #f2948b;
+  --danger-bg: #3d2523;
+  --danger-border: #7a3d37;
+  --ok: #9bd394;
+  --ok-bg: #28362a;
+  --ok-border: #466b45;
+  --ok-solid: #5a9e5f;
+  --warn: #e8c063;
+  --warn-bg: #3b3322;
+  --warn-border: #74602f;
   --backdrop: rgba(0, 0, 0, 0.55);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --bar-shadow: rgba(0, 0, 0, 0.3);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 1px rgba(0, 0, 0, 0.18);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
 }
 
 * {
@@ -96,9 +124,12 @@ button {
   padding: 0.35rem 0.8rem;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--button-bg);
   color: var(--text);
   cursor: pointer;
+  transition:
+    background-color 0.12s,
+    border-color 0.12s;
 }
 
 button:hover:not(:disabled) {
@@ -112,19 +143,22 @@ button:disabled {
 }
 
 button.primary {
-  background: var(--accent);
   border-color: var(--accent);
+  background: var(--accent);
   color: var(--on-accent);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 button.primary:hover:not(:disabled) {
-  background: var(--accent-hover);
   border-color: var(--accent-hover);
+  background: var(--accent-hover);
 }
 
 button.primary:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   color: var(--on-accent);
+  box-shadow: none;
 }
 
 input:where(:not([type="checkbox"], [type="radio"])),
@@ -134,7 +168,7 @@ textarea {
   padding: 0.3rem 0.5rem;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--input-bg);
   color: var(--text);
 }
 
@@ -151,11 +185,53 @@ textarea::placeholder {
   color: var(--text-faint);
 }
 
-input[type="checkbox"],
 input[type="radio"] {
   width: 1rem;
   height: 1rem;
   vertical-align: middle;
+}
+
+/* A tick: a rounded box, filled with the accent and a white check (a dash when only some of what
+   it stands for are ticked). */
+input[type="checkbox"] {
+  appearance: none;
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--input-bg) center / 72% no-repeat;
+  vertical-align: middle;
+  cursor: pointer;
+  transition:
+    background-color 0.1s,
+    border-color 0.1s;
+}
+
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+input[type="checkbox"]:checked,
+input[type="checkbox"]:indeterminate {
+  border-color: var(--accent);
+  background-color: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+input[type="checkbox"]:indeterminate {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8h8' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 1px;
+}
+
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .error {
@@ -188,4 +264,9 @@ button.ghost:hover:not(:disabled) {
   border-color: transparent;
   background: var(--surface-hover);
   color: var(--text);
+}
+
+/* Scroll bars in the theme's colours, thin enough to leave the cards their room. */
+* {
+  scrollbar-color: var(--border-strong) transparent;
 }

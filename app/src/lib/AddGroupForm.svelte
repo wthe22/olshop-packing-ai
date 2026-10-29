@@ -134,8 +134,9 @@
     padding: 0.75rem;
     margin-bottom: 0.75rem;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     background: var(--surface);
+    box-shadow: var(--shadow);
   }
 
   .add-top {

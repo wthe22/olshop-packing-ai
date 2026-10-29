@@ -4,8 +4,9 @@ One file for the whole open date of a workspace, made on request: **Day summary*
 [Day screen](../ui/day.md) writes `{workspace}/{date}/day summary.pdf` from the date's journal and opens
 it in the PC's default PDF viewer. It is a view of the journal ([views](../data/views.md)): written again
 on every request, never read for a decision, not recorded and not checked by the verifier. It holds the
-batches as their Day cards show them, the couriers and the day's picks, not the reprints, and is drawn in
-the [summary PDF](summary-pdf.md#the-layout)'s layout ([D-LABEL-20](../decisions/label.md)).
+batches as their Day cards show them, the couriers, the day's picks and the day's order contents, not the
+reprints, and is drawn in the [summary PDF](summary-pdf.md#the-layout)'s layout
+([D-LABEL-20](../decisions/summaries.md), [D-LABEL-22](../decisions/summaries.md)).
 
 ```
 Day summary · Toko Contoh · 2026-10-07                                                 page 1/2
@@ -21,6 +22,16 @@ Day summary · Toko Contoh · 2026-10-07                                        
   J&T Express                                                 412 orders
   ─────────────────────────────────────────────────────────────────────────────────────────────
   Unknown                                                       3 orders
+
+  (from a new page: the pick pages; then from another new page:)
+▓ Order contents (orders per content)                               212 contents · 729 orders ▓
+  1       Sepatu Standar Samping Motor — honda ×1                                        301
+  ─────────────────────────────────────────────────────────────────────────────────────────────
+  2       Sepatu Standar Samping Motor — honda ×2                                         42
+  ─────────────────────────────────────────────────────────────────────────────────────────────
+  …
+  212     Kaca Spion ×1                                                                    3
+          Spion Beat ×1
 ```
 
 - Header `Day summary · <workspace> · <date>`, then `<orders> orders · <units> units · <batches> batches ·
@@ -33,6 +44,13 @@ Day summary · Toko Contoh · 2026-10-07                                        
   *Unknown*, last. The count the owner hands over to each courier's pickup.
 - Then, from a new page, the **pick pages** of the whole day: the units per item over every live batch, as
   the summary PDF's pick pages, under the bar *Pick summary (units to take from stock)*.
+- Last, from a new page, the day's **order contents** under the bar *Order contents (orders per content)*,
+  with `<n> contents · <orders> orders` at its right: each order content of every live batch and group
+  once, numbered from 1 as its key, its items as `display name ×quantity`, one per line, and its orders at
+  the right in bold, as the summary PDF's group pages draw a content. The contents of one line come first,
+  by display name and then quantity, so an item's `×1`, `×2` and `×3` stand together; the mixed ones
+  (two lines or more) follow, by their lines. It shows how many orders are one of an item, two of it, or a
+  mix; it is the longest part, so it comes last.
 - A date with no live batch has no day summary: the button is off.
 - The file is written to `day summary.pdf.partial` and renamed over the old one. A day summary open in a
   PDF viewer that locks it stops the write with the file named; the old file stays.

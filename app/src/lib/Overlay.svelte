@@ -40,14 +40,15 @@
     z-index: 10;
   }
 
+  /* Closer to the window's edges on a small screen, so the screen keeps its room. */
   .panel {
     position: fixed;
-    inset: 3.5rem 2rem 2rem;
+    inset: 3.6rem clamp(0.6rem, 2.5vw, 2.5rem) clamp(0.6rem, 2.5vw, 2rem);
     display: flex;
     flex-direction: column;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     z-index: 11;
     overflow: hidden;
@@ -56,14 +57,15 @@
   header {
     display: flex;
     align-items: center;
-    padding: 0.6rem 0.75rem 0.6rem 1.25rem;
+    padding: 0.45rem 0.75rem 0.45rem 1.25rem;
     border-bottom: 1px solid var(--border);
-    background: var(--surface);
+    background: var(--header-bg);
   }
 
   h2 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
+    font-weight: 700;
   }
 
   .grow {

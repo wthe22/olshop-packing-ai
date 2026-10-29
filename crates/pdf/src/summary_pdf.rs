@@ -116,8 +116,8 @@ fn draw_group(builder: &mut Builder<'_, '_>, group: &GroupSection, measure: &Mea
 }
 
 /// One order content: its number, its items, each wrapped at spaces, and its number of orders at
-/// the right; a content that does not fit starts on the next page under its group's bar.
-fn draw_content(
+/// the right; a content that does not fit starts on the next page under its section's bar.
+pub(crate) fn draw_content(
     builder: &mut Builder<'_, '_>,
     content: &ContentRow,
     measure: &Measure<'_>,

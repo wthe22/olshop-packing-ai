@@ -296,7 +296,8 @@
 
   h2 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
+    font-weight: 700;
   }
 
   .grow {
@@ -328,19 +329,37 @@
     cursor: pointer;
   }
 
+  /* The groups as one card: a head row, then a ruled row per group. */
   table {
     width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.9rem;
+    border: 1px solid var(--border);
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  table :global(tbody tr:last-child td) {
+    border-bottom: none;
   }
 
   th {
-    text-align: left;
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    padding: 0.3rem 0.4rem;
+    padding: 0.4rem 0.4rem;
     border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  th:first-child {
+    padding-left: 0.75rem;
   }
 
   /* The column widths sit on the header cells; a row's cells line up under them. */

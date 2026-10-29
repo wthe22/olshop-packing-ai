@@ -76,14 +76,13 @@
 
 <main>
   <div class="bar">
-    <span class="summary">
+    <h1>{texts.day.thisDay}</h1>
+    <span class="stats">
       {#if overview}
-        {texts.day.summary(
-          overview.totals.batches,
-          overview.totals.orders,
-          overview.totals.pdfs,
-          overview.reprints.length,
-        )}
+        {@const { batches, orders, pdfs } = overview.totals}
+        {#each texts.day.stats(batches, orders, pdfs, overview.reprints.length) as stat (stat.word)}
+          <span class="stat"><b>{stat.n}</b> {stat.word}</span>
+        {/each}
       {/if}
     </span>
     <button
@@ -123,8 +122,11 @@
       <section class="batch">
         <div class="batch-head">
           <span class="head-text">
-            {texts.day.batch(batch.batch, batch.time, batch.files, batch.orders)}
-            {#if batch.amended}{texts.day.amended}{/if}
+            <span class="batch-name">{texts.day.batch(batch.batch)}</span>
+            <span class="facts"
+              >{texts.day.batchFacts(batch.time, batch.files, batch.orders)}{#if batch.amended}{texts
+                  .day.amended}{/if}</span
+            >
           </span>
           {#if i === 0}
             <span class="grow"></span>
@@ -219,14 +221,39 @@
 
   .bar {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.9rem;
   }
 
-  .summary {
+  h1 {
+    margin: 0 0.35rem 0 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  /* The day's counts as pills beside the title, each number in bold. */
+  .stats {
+    display: flex;
     flex: 1;
-    font-weight: 600;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .stat {
+    padding: 0.1rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .stat b {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
   }
 
   .muted {
@@ -237,7 +264,7 @@
     margin: 0 0 0.75rem;
     padding: 0.4rem 0.75rem;
     border: 1px solid var(--ok-border);
-    border-radius: 4px;
+    border-radius: var(--radius);
     background: var(--ok-bg);
     color: var(--ok);
   }
@@ -282,19 +309,38 @@
   }
 
   .batch {
+    margin-bottom: 0.9rem;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     background: var(--surface);
-    margin-bottom: 0.75rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
   }
 
   .batch-head {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
     border-bottom: 1px solid var(--border-soft);
-    font-weight: 600;
+    background: var(--surface-2);
+  }
+
+  .head-text {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+  }
+
+  .batch-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .facts {
+    color: var(--text-muted);
   }
 
   .batch-head .grow {
@@ -306,6 +352,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.35rem 0.75rem;
+    border-bottom: 1px solid var(--border-soft);
     /* The row's *Open* button and the **Printed** tick share this height, so the tick is as large
        as the button beside it. The value is the button's own box: its text line,
        its padding and its border. */
@@ -320,13 +367,19 @@
   /* The batch and group code (`2-SN`) on one line, codes of several letters included. */
   .code {
     min-width: 3.5rem;
-    white-space: nowrap;
-    font-weight: 600;
+    padding: 0.05rem 0.5rem;
+    border-radius: var(--radius);
+    background: var(--chip);
+    color: var(--chip-text);
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
+    text-align: center;
+    white-space: nowrap;
   }
 
   .name {
     flex: 1;
+    font-weight: 600;
   }
 
   /* The **Printed** tick beside *Open*: a note only. It carries no word — the tick
@@ -338,16 +391,20 @@
 
   .printed input {
     width: var(--control-height);
-    /* No default margin: the tick is exactly as tall as the button, so the row keeps its height. */
-    margin: 0;
+    border-radius: var(--radius);
+  }
+
+  .printed input:checked {
+    border-color: var(--ok-solid);
+    background-color: var(--ok-solid);
   }
 
   .batch-foot {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem 1rem;
     padding: 0.5rem 0.75rem;
-    border-top: 1px solid var(--border-soft);
   }
 
   .packing {

@@ -6,14 +6,14 @@ The start screen: what has been saved on the open date of the open workspace, an
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │ Packing v0.2  ·  [☰]  Toko Contoh · Wed, 7 Oct 2026    [Search]  [Sort rules] [Settings]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  This day: 2 batches · 729 orders · 5 group PDFs · 1 reprint  [Day summary] [+ New batch]│
+│  This day (2 batches) (729 orders) (5 group PDFs) (1 reprint)   [Day summary] [+ New batch]│
 │                                                                                        │
-│  ┌ Batch 2 · saved 09:12 · 2 files · 129 orders · rule default ── [Amend] [Revert] ──┐ │
+│  ┌ Batch 2  saved 09:12 · 2 files · 129 orders ────────────────── [Amend] [Revert] ──┐ │
 │  │  2-A  Sepatu             88 orders    3 contents    [✓]  [Open]                   │ │
 │  │  2-Z  Lainnya            41 orders   12 contents    [ ]  [Open]                   │ │
 │  │  Summary [Open]   Saved with 2 errors ▸   Warnings: 1 ▸        [Open folder]      │ │
 │  └───────────────────────────────────────────────────────────────────────────────────┘ │
-│  ┌ Batch 1 · saved 07:40 · 3 files · 600 orders · rule default ──────────────────────┐ │
+│  ┌ Batch 1  saved 07:40 · 3 files · 600 orders ──────────────────────────────────────┐ │
 │  │  1-A  Sepatu            172 orders    4 contents    [ ]  [Open]                   │ │
 │  │  1-B  Spion & Knalpot    35 orders    4 contents    [ ]  ⚠ missing  [Open]        │ │
 │  │  1-Z  Lainnya           393 orders   38 contents    [ ]  [Open]                   │ │
@@ -28,8 +28,10 @@ The start screen: what has been saved on the open date of the open workspace, an
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- Newest batch on top. Each group PDF: `<batch>-<code>`, the group's name, its orders and their order
-  contents (*88 orders*, *3 contents*). Each count is a column of its own, its number right-aligned in a
+- **This day** is the title; its counts stand beside it as pills (no reprint, no pill for them).
+- Newest batch on top, each a card whose shaded head is *Batch 2* in bold and its save time, files and
+  orders. Each group PDF: `<batch>-<code>`, the group's name, its orders and their order
+  contents (*88 orders*, *3 contents*); the code is a chip in the logo's blue. Each count is a column of its own, its number right-aligned in a
   fixed width and its word after it in the muted colour, so the numbers of a card stand under each other.
 - **The printed tick** beside each group PDF, as large as **Open**, says it has been printed. It carries no
   word; its tooltip and screen-reader name say *Printed* and name the file. A click is saved at once as a

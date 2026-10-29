@@ -6,7 +6,8 @@ app, then print.
 ## The window
 
 The title bar has the panel button at the left, the program and its version (**Packing v0.2**), the open
-workspace and the date everything is saved to, and at the right **Search**, **Sort rules** and **Settings**.
+workspace and the date everything is saved to, and at the right **Search** ([finding a saved
+order](05-search.md)), **Sort rules** and **Settings**.
 `Esc` closes Search, Sort rules and Settings.
 
 The **panel** at the left lists your workspaces and the dates of the open one:
@@ -25,14 +26,16 @@ The **panel** at the left lists your workspaces and the dates of the open one:
 
 The **Day** screen shows what has been saved on the open date and is the way to the next batch.
 
-- The top line counts the date: "This day: 2 batches · 729 orders · 5 group PDFs".
+- The title **This day** has the date's counts beside it: "2 batches", "729 orders", "5 group PDFs".
 - **+ New batch** starts a new batch.
 - **Day summary** writes one PDF of the whole date and opens it: each batch as its card shows it, with
   its group PDFs, their orders and contents; the orders per courier (the count to hand over at each
-  pickup); then the pick list of the whole day. It is laid out like a batch's summary PDF. It is written
+  pickup); then the pick list of the whole day; last, every order content of the day with its orders,
+  the single items first (`Sepatu ×1`, `Sepatu ×2`, …) and the mixed ones after, so you see how many
+  orders are one item, two items or a mix. It is laid out like a batch's summary PDF. It is written
   again each time you press it, so press it after the last batch of the day. A day summary still open in a PDF viewer may have to be closed
   first.
-- Each batch is a card: "Batch 2 · saved 09:12 · 2 files · 129 orders", one line per group PDF
+- Each batch is a card: "Batch 2", "saved 09:12 · 2 files · 129 orders", one line per group PDF
   (`2-A`, its name, "88 orders", "3 contents") with **Open**, and a line for the batch's summary PDF.
 - **Reprints**, under the batches, lists each reprint made on the date: `R1`, when it was made, its
   orders and pages, **Open**, and **Orders ▸** for the orders in it.
@@ -141,30 +144,3 @@ stock.
 
 Do the same for each download; the batches of a date are numbered 1, 2, 3. An order saved in a batch of
 the date is left out of every later batch of that date, so reading a file again saves nothing twice.
-
-## Find and reprint a saved order (Search)
-
-![Search with a trace line open](images/06-search.png)
-
-**Search** opens over the screen; **Close** returns. Searching changes nothing.
-
-- Build the filter with the same boxes as the sort rules, e.g. *Tracking ID starts with JY00000012*.
-  The first box has the cursor when Search opens, and **Enter** searches: scan a parcel's barcode and
-  its order is found at once.
-- **Dates**: **This day** (the open date, the default), **Yesterday**, **Last 7 days**, **Last 30 days**,
-  **Custom range** (pick the first and last date) or **All days** of the workspace, then **Search**:
-  "3 orders in 2 batches" and one row per order — Order ID, tracking ID, courier, items, date, the group
-  PDF and the **page** it is on there (to find the printed label in its stack), **Open** for that group
-  PDF, and the arrow for where it came from (the label file and pages, and the clue that named its courier).
-- **Courier**: *equals* picks one courier from the list; *contains* or *starts with* takes typed text, so
-  `J&T` finds J&T Express and J&T Cargo.
-- An order printed again before carries **Reprinted**; point at it to see which reprint and when.
-- Tick the orders to print again: click a row, or its tick; the tick above the ticks selects every row
-  or none. A search that finds one order ticks it. A double click or a drag selects text to copy (an Order
-  ID, a tracking ID) and leaves the tick alone.
-- The bar at the foot says how many are selected and has **Reprint 2 orders**: one PDF of their label
-  pages, in their original printing order, checked like a save, written into today: "Reprint 1 written:
-  2 orders, 2 pages." with **Open**. When one of them was reprinted before, the app asks first. The
-  orders stay in their batches; today's Day screen lists it under **Reprints**.
-
-![The Reprints card with a reprint's orders open](images/08-reprints.png)

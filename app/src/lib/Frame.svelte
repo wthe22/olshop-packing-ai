@@ -67,7 +67,7 @@
     height: 3rem;
     padding: 0 0.75rem;
     border-bottom: 1px solid var(--border);
-    background: var(--surface);
+    background: var(--header-bg);
   }
 
   .brand {
@@ -80,13 +80,12 @@
 
   .version {
     margin-left: 0.15rem;
-    padding: 0 0.4rem;
+    padding: 0 0.45rem;
     border-radius: 999px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text-muted);
+    background: var(--accent-soft);
+    color: var(--accent-text);
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .where {
@@ -123,7 +122,7 @@
 
   nav button.active {
     background: var(--accent-soft);
-    color: var(--link);
+    color: var(--accent-text);
     font-weight: 600;
   }
 </style>

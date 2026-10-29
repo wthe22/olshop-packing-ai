@@ -43,24 +43,26 @@
   <p class="note">{note}</p>
 {/if}
 
-<ul class="files">
-  {#each listed as file, i (file.path)}
-    {@const chip = chips.get(i + 1)}
-    <li>
-      {#if chip}<span class="chip">▌{chip.chip}</span>{/if}
-      <span class="name">{file.name}</span>
-      <span class="pages">{texts.newBatch.pages(file.pages)}</span>
-      <span class="time">{texts.newBatch.downloaded(file.time)}</span>
-      {#if file.used_in_batch !== null}
-        <span class="used">{texts.newBatch.usedInBatch(file.used_in_batch)}</span>
-      {/if}
-      {#if chip}<span class="used">{chip.line}</span>{/if}
-      <button class="remove" title={texts.newBatch.removeTitle} onclick={() => onRemove(file.path)}
-        >{texts.newBatch.remove}</button
-      >
-    </li>
-  {/each}
-</ul>
+{#if listed.length > 0}
+  <ul class="files">
+    {#each listed as file, i (file.path)}
+      {@const chip = chips.get(i + 1)}
+      <li>
+        {#if chip}<span class="chip">▌{chip.chip}</span>{/if}
+        <span class="name">{file.name}</span>
+        <span class="pages">{texts.newBatch.pages(file.pages)}</span>
+        <span class="time">{texts.newBatch.downloaded(file.time)}</span>
+        {#if file.used_in_batch !== null}
+          <span class="used">{texts.newBatch.usedInBatch(file.used_in_batch)}</span>
+        {/if}
+        {#if chip}<span class="used">{chip.line}</span>{/if}
+        <button class="remove" title={texts.newBatch.removeTitle} onclick={() => onRemove(file.path)}
+          >{texts.newBatch.remove}</button
+        >
+      </li>
+    {/each}
+  </ul>
+{/if}
 
 <div class="foot">
   <span class="selected">
@@ -90,8 +92,9 @@
     gap: 0.75rem;
     padding: 1.5rem;
     margin-bottom: 1rem;
-    border: 2px dashed var(--border-strong);
-    border-radius: 8px;
+    border: 2px dashed var(--accent-border);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
     color: var(--text-muted);
   }
 
@@ -99,14 +102,23 @@
     list-style: none;
     margin: 0 0 1rem;
     padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    overflow: hidden;
   }
 
   .files li {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 0.35rem 0.25rem;
+    padding: 0.45rem 0.75rem;
     border-bottom: 1px solid var(--border-soft);
+  }
+
+  .files li:last-child {
+    border-bottom: none;
   }
 
   .name {

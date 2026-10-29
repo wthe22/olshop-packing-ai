@@ -1,12 +1,13 @@
 use jiff::civil::date;
 use packing_engine::ids::CourierCode;
-use packing_engine::record::{BatchSaved, OutputFile};
+use packing_engine::record::{BatchSaved, ItemPick, OrderContent, OutputFile};
 use packing_engine::workflows::Courier;
 use testkit::{TempDir, batch, sha, vendor_dir};
 
-use super::content::{header_counts, picks, sections};
+use super::content::{contents_counts, header_counts, order_contents, picks, sections};
 use super::{DayBatch, DayFacts, write_day_summary};
 use crate::facts::Row;
+use crate::summary_pdf::content::ContentRow;
 
 fn output(file: &str, group: Option<&str>, pages: u16) -> OutputFile {
     OutputFile {
@@ -117,7 +118,45 @@ fn the_day_reads_its_batches_as_their_cards_and_its_couriers() {
 }
 
 #[test]
-fn the_batches_then_the_picks_from_a_new_page() {
+fn the_order_contents_are_the_days_one_line_ones_first_then_the_mixed_ones() {
+    let (first, mut second) = records();
+    let item = |name: &str, quantity| ItemPick {
+        name: name.into(),
+        variant: String::new(),
+        quantity,
+    };
+    second.contents.push(OrderContent {
+        items: vec![item("Kaca Spion", 1), item("Spion Beat", 1)],
+    });
+    second.contents.push(OrderContent {
+        items: vec![item("Spion Beat", 1)],
+    });
+    second.orders[0].content = 2;
+    second.orders[1].content = 3;
+    let couriers = couriers();
+    let day = facts(&first, &second, &couriers);
+
+    let row = |number: &str, items: &[&str], orders| ContentRow {
+        number: number.into(),
+        items: items.iter().map(|item| item.to_string()).collect(),
+        orders,
+    };
+    let contents = order_contents(&day);
+    assert_eq!(
+        contents,
+        [
+            row("1", &["Sepatu Standar Samping Motor — honda ×1"], 2),
+            row("2", &["Spion Beat ×1"], 1),
+            row("3", &["Spion Beat ×2"], 2),
+            row("4", &["Kaca Spion ×1", "Spion Beat ×1"], 1),
+        ],
+        "the same content over both batches is one row"
+    );
+    assert_eq!(contents_counts(&contents), "4 contents · 6 orders");
+}
+
+#[test]
+fn the_batches_then_the_picks_then_the_order_contents_from_new_pages() {
     let Some(vendor) = vendor_dir() else {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
@@ -130,7 +169,7 @@ fn the_batches_then_the_picks_from_a_new_page() {
     let couriers = couriers();
     let pages = write_day_summary(&pdfium, &path, &facts(&first, &second, &couriers))
         .expect("write the day summary");
-    assert_eq!(pages, 2);
+    assert_eq!(pages, 3);
     let doc = pdfium.load_pdf_from_file(&path, None).expect("open it");
     let texts: Vec<String> = doc
         .pages()
@@ -143,4 +182,5 @@ fn the_batches_then_the_picks_from_a_new_page() {
         texts[0]
     );
     assert!(texts[1].contains("Pick summary"), "{}", texts[1]);
+    assert!(texts[2].contains("Order contents"), "{}", texts[2]);
 }

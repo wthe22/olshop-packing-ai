@@ -356,7 +356,7 @@
   .stop {
     padding: 1rem;
     border: 1px solid var(--danger-border);
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     background: var(--danger-bg);
     color: var(--danger);
   }

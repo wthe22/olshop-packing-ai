@@ -25,24 +25,20 @@ export const searchTexts = {
   search: "Search",
   // The search index is still being built.
   loading: "Loading…",
-  // One line of a row's items, "name × quantity".
+  // One line of an order's items, "name × quantity".
   item: (name: string, quantity: number) => `${name} ×${quantity}`,
   noMatch: "No saved order matches.",
-  // The head row; its tick selects every row the filter found.
-  columns: {
-    orderId: "Order ID",
-    trackingId: "Tracking ID",
-    courier: "Courier",
-    items: "Items",
-    date: "Date",
-    file: "Group PDF",
-    page: "Page",
-  },
+  // The word before a card's tracking ID, and the ID of a label that printed none.
+  trackingId: "Tracking",
+  none: "none",
   // The courier of an order whose label named none.
   noCourier: "Unknown",
-  // The pages an order fills in its group PDF: "14", or "14–15" for a label with a second page.
-  pages: (first: number, last: number) => (first === last ? `${first}` : `${first}–${last}`),
-  selectAll: "Select all results",
+  // The pages an order fills in its group PDF: "page 14", or "pages 14–15" for a label with a
+  // second page.
+  pages: (first: number, last: number) =>
+    first === last ? `page ${first}` : `pages ${first}–${last}`,
+  // Ticks every card the filter found, or none.
+  selectAll: "Select all",
   tick: (order: string) => `Reprint ${order}`,
   // An order printed again before, and its tooltip, one line per reprint.
   reprinted: (n: number) => (n === 1 ? "Reprinted" : `Reprinted ${n}×`),
@@ -63,7 +59,7 @@ export const searchTexts = {
   // A row's **Open**, named for its group PDF.
   open: "Open",
   openFile: (file: string) => `Open ${file}`,
-  // The chevron that opens a row's trace line.
+  // The chevron that opens a card's trace line.
   trace: "Where it came from",
   reprint: (n: number) => `Reprint ${count(n, "order", "orders")}`,
   // "Reprint 1 written: 2 orders, 2 pages."

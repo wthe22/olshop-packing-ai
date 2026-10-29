@@ -335,7 +335,7 @@
     margin-top: 0.75rem;
     padding: 0.5rem 0.75rem;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     background: var(--surface-2);
   }
 

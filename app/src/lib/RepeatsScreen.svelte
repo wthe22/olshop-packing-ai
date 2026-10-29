@@ -192,9 +192,11 @@
 
   .group {
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-lg);
     padding: 0.5rem 0.75rem;
     margin-bottom: 0.75rem;
+    background: var(--surface);
+    box-shadow: var(--shadow);
   }
 
   .group h3 {
