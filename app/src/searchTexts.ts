@@ -8,11 +8,12 @@ export const searchTexts = {
   // The line above the rows, "N orders in M batches".
   summary: (orders: number, batches: number) =>
     `${count(orders, "order", "orders")} in ${count(batches, "batch", "batches")}`,
-  // The dates searched: the open date (the default), ranges that end today, a range of the
-  // owner's own, or every date. The range's two dates show under each choice but *All days*.
+  // The dates searched: the date the Day screen shows (the default), ranges that end today, a range
+  // of the owner's own, or every date. The range's two dates show beside each choice but *All days*.
   dates: "Dates",
   ranges: {
-    day: "This day",
+    viewed: "Viewed day",
+    today: "Today",
     yesterday: "Yesterday",
     week: "Last 7 days",
     month: "Last 30 days",
@@ -28,12 +29,12 @@ export const searchTexts = {
   // One line of an order's items, "name × quantity".
   item: (name: string, quantity: number) => `${name} ×${quantity}`,
   noMatch: "No saved order matches.",
-  // The heads of the results' columns: the Order ID over the tracking ID, the items, the group PDF
-  // and page over the courier and date.
+  // The heads of the results' columns: the Order ID over the courier and tracking ID, the items,
+  // the date and group code over the group's name and page.
   columns: {
-    ids: "Order ID · Tracking ID",
+    order: "Order",
     items: "Items",
-    where: "Group PDF · Courier",
+    label: "Label",
   },
   // In place of the tracking ID of a label that printed none.
   noTracking: "no tracking ID",
@@ -65,8 +66,11 @@ export const searchTexts = {
   // A row's **Open**, named for its group PDF.
   open: "Open",
   openFile: (file: string) => `Open ${file}`,
-  // The chevron that opens a row's trace line.
+  // The chevron that opens a row's details: its batch and the input PDF it was read from.
   trace: "Where it came from",
+  batch: (n: number, time: string) => `Batch ${n} · saved ${time}`,
+  from: "from",
+  inputPages: (first: number, last: number) => (first === last ? `p. ${first}` : `p. ${first}–${last}`),
   reprint: (n: number) => `Reprint ${count(n, "order", "orders")}`,
   // "Reprint 1 written: 2 orders, 2 pages."
   made: (n: number, orders: number, pages: number) =>

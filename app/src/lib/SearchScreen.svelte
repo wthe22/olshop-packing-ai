@@ -1,12 +1,12 @@
 <script lang="ts">
   // Search: saved orders of the open workspace found by a filter made with the boxes, over a range
   // of dates or all of them. Each order is a row that names the group PDF and the page the order
-  // is on, opens its trace line and carries its *Reprinted* mark; the ticked rows are reprinted
+  // is on, opens its details and carries its *Reprinted* mark; the ticked rows are reprinted
   // into one PDF from the bar at the foot. Enter in a box searches, so a scanned tracking ID finds
   // its order at once. The state and the commands are `search.svelte.ts`.
   import { onMount } from "svelte";
   import { Search } from "./search.svelte";
-  import { RANGE_PRESETS, type RangePreset } from "./searchRange";
+  import type { RangePreset } from "./searchRange";
   import { searchSummary, texts } from "../texts";
   import { conditionFields } from "../fields";
   import BoxesEditor from "./BoxesEditor.svelte";
@@ -20,7 +20,7 @@
     onOpenOutput,
     onReprinted,
   }: {
-    // The open date: *This day*.
+    // The date the Day screen shows: *Viewed day*.
     day: string;
     // The other choices of dates end today.
     today: string;
@@ -76,7 +76,7 @@
           value={search.preset}
           onchange={(event) => search.setPreset(event.currentTarget.value as RangePreset)}
         >
-          {#each RANGE_PRESETS as preset (preset)}
+          {#each search.presets() as preset (preset)}
             <option value={preset}>{words.ranges[preset]}</option>
           {/each}
         </select>
@@ -131,9 +131,9 @@
         <div class="rows">
           <div class="head" aria-hidden="true">
             <span></span>
-            <span>{words.columns.ids}</span>
+            <span>{words.columns.order}</span>
             <span class="head-items">{words.columns.items}</span>
-            <span>{words.columns.where}</span>
+            <span>{words.columns.label}</span>
             <span></span>
           </div>
           {#each search.result.rows as row (row.day + row.order_id)}

@@ -8,13 +8,13 @@ use std::path::Path;
 
 use jiff::civil::Date;
 use packing_engine::ids::{BatchId, OrderId};
-use packing_engine::record::{BatchSaved, ItemPick, ReprintMade, SavedOrder};
+use packing_engine::record::{Datetime, ItemPick, ReprintMade, SavedOrder};
 use packing_engine::rules::{Condition, FilterFields, FilterLine, evaluate_filter};
 use packing_engine::workflows::Courier;
 
 use crate::StoreError;
 use crate::date::DateFolder;
-use crate::fold::{Damage, Fold};
+use crate::fold::{Damage, Fold, LiveBatch};
 use crate::journal::Journal;
 use crate::workspaces::dates;
 
@@ -23,6 +23,8 @@ use crate::workspaces::dates;
 pub struct IndexedOrder {
     pub date: Date,
     pub batch: BatchId,
+    /// Its batch's last save, as the Day screen's *saved 09:12*.
+    pub batch_time: Datetime,
     pub order: SavedOrder,
     /// Its content's items, in their order.
     pub items: Vec<ItemPick>,
@@ -114,7 +116,7 @@ impl SearchIndex {
         let orders: Vec<IndexedOrder> = fold
             .live
             .iter()
-            .flat_map(|(batch, live)| indexed(fold.date, *batch, &live.saved))
+            .flat_map(|(batch, live)| indexed(fold.date, *batch, live))
             .collect();
         self.damaged.remove(&fold.date);
         if orders.is_empty() {
@@ -181,7 +183,8 @@ impl SearchIndex {
 
 /// The orders of a batch; they are in printing order, so each one's pages in its group PDF follow
 /// the pages of the orders of its group before it.
-fn indexed(date: Date, batch: BatchId, saved: &BatchSaved) -> Vec<IndexedOrder> {
+fn indexed(date: Date, batch: BatchId, live: &LiveBatch) -> Vec<IndexedOrder> {
+    let saved = &live.saved;
     let mut written: BTreeMap<&str, u16> = BTreeMap::new();
     saved
         .orders
@@ -195,6 +198,7 @@ fn indexed(date: Date, batch: BatchId, saved: &BatchSaved) -> Vec<IndexedOrder> 
         .map(|(order, file_pages)| IndexedOrder {
             date,
             batch,
+            batch_time: live.modify_time.clone(),
             items: saved
                 .contents
                 .get(order.content as usize)

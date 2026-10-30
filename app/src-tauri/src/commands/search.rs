@@ -1,5 +1,5 @@
 //! Search and Reprint (search.md, reprint.md): saved orders of the open workspace found by a
-//! filter on the search index, each with its trace line and the reprints that printed it again;
+//! filter on the search index, each with where it came from and the reprints that printed it again;
 //! one PDF of the chosen orders' pages written into today's date; and a reprint's orders as Search
 //! shows them.
 
@@ -9,7 +9,6 @@ use std::ops::RangeInclusive;
 use jiff::civil::Date;
 use packing_batch::{ReprintOutcome, ReprintRequest, reprint as write_reprint};
 use packing_engine::ids::{BatchId, OrderId};
-use packing_engine::record::{CourierClue, CourierClueKind};
 use packing_engine::rules::parse_filter;
 use packing_engine::workflows::{Courier, courier_name};
 use packing_store::{IndexedOrder, SearchIndex};
@@ -65,33 +64,14 @@ pub struct OrderRow {
     /// The pages the order fills in that group PDF, counted from 1.
     first_page: u16,
     last_page: u16,
-    trace: Vec<TracePart>,
+    /// The batch's last save, `09:12`.
+    batch_time: String,
+    /// The input PDF it was read from, by the name it had when it was chosen, and its pages there.
+    input: String,
+    input_first_page: u16,
+    input_last_page: u16,
     /// The reprints that printed it again, oldest first.
     reprints: Vec<ReprintMarkView>,
-}
-
-/// A piece of a row's trace line; a logo's hash or a tracking-ID form is `code`, which the window
-/// sets in monospace.
-#[derive(Debug, PartialEq, Eq, Serialize)]
-pub struct TracePart {
-    text: String,
-    code: bool,
-}
-
-impl TracePart {
-    fn text(text: impl Into<String>) -> Self {
-        TracePart {
-            text: text.into(),
-            code: false,
-        }
-    }
-
-    fn code(text: impl Into<String>) -> Self {
-        TracePart {
-            text: text.into(),
-            code: true,
-        }
-    }
 }
 
 #[derive(Serialize)]
@@ -170,7 +150,10 @@ fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> Order
         file: order.file.clone(),
         first_page: *order.file_pages.start(),
         last_page: *order.file_pages.end(),
-        trace: trace_line(order, couriers),
+        batch_time: order.batch_time.zoned().strftime("%H:%M").to_string(),
+        input: order.input.clone(),
+        input_first_page: saved.page_start,
+        input_last_page: saved.page_end,
         reprints: index
             .reprints_of(order)
             .into_iter()
@@ -180,51 +163,6 @@ fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> Order
             })
             .collect(),
     }
-}
-
-/// `from <input> p. 12–13 · courier J&T Express by logo 39b9… + form J[XY]\d{10} · batch 2 · 2-A`,
-/// the hash and the form as `code`.
-pub(crate) fn trace_line(order: &IndexedOrder, couriers: &[Courier]) -> Vec<TracePart> {
-    let saved = &order.order;
-    let pages = if saved.page_start == saved.page_end {
-        format!("p. {}", saved.page_start)
-    } else {
-        format!("p. {}–{}", saved.page_start, saved.page_end)
-    };
-    let mut parts = vec![TracePart::text(format!("from {} {pages} · ", order.input))];
-    match &saved.courier {
-        None => parts.push(TracePart::text("no courier named")),
-        Some(code) => {
-            parts.push(TracePart::text(format!(
-                "courier {}",
-                courier_name(couriers, code.as_str())
-            )));
-            parts.extend(clue_parts(&saved.courier_clue));
-        }
-    }
-    parts.push(TracePart::text(format!(
-        " · batch {} · {}-{}",
-        order.batch, order.batch, saved.group
-    )));
-    parts
-}
-
-/// ` by logo 39b9… + form J[XY]\d{10}`: what named the courier; nothing when no clue is kept.
-fn clue_parts(clue: &CourierClue) -> Vec<TracePart> {
-    let mut parts = Vec::new();
-    if let Some(value) = &clue.value {
-        parts.push(TracePart::text(format!(" by {} ", clue.kind.as_str())));
-        parts.push(match clue.kind {
-            CourierClueKind::Logo | CourierClueKind::Shape => TracePart::code(value),
-            _ => TracePart::text(value),
-        });
-    }
-    if let Some(form) = &clue.form {
-        let joint = if parts.is_empty() { " by" } else { " +" };
-        parts.push(TracePart::text(format!("{joint} form ")));
-        parts.push(TracePart::code(form));
-    }
-    parts
 }
 
 #[tauri::command]

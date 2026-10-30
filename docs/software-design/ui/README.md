@@ -36,7 +36,7 @@ A normal batch: **New batch** → **Add files…** → **Read labels** → (the 
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [▯] ◈ Packing (v0.2) │ Toko Contoh › Mon, 26 Oct 2026       🔍 Search  ≡ Sort rules  ⚙ Settings │
+│ [▯] ◈ Packing (v0.2) │ Toko Contoh                          🔍 Search  ≡ Sort rules  ⚙ Settings │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                               (the current screen)                                     │
 └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -45,8 +45,8 @@ A normal batch: **New batch** → **Add files…** → **Read labels** → (the 
 - **[▯]** shows or hides the [panel](panel.md) (also `Ctrl+B`).
 - **Packing v0.2** is the window title and the title bar of every screen: the program's name and its version
   from the one place ([Settings › The version](settings.md#the-version)).
-- **The workspace › the date** in the title bar: where everything is saved. Changing the workspace or the
-  date while a draft is open asks first ("Discard the batch being prepared?").
+- **The workspace** in the title bar; the open date is the [Day](day.md) screen's title. Together they say
+  where everything is saved. Changing the workspace or the date while a draft is open asks first ("Discard the batch being prepared?").
 - **Search**, **Sort rules** and **Settings** open over the current screen; the **×**, a click beside it or
   `Esc` returns to it (an open draft is kept and recounted). In a window under 56 rem (a window well under
   full width) the three show their icons only, their names as tooltips; a long workspace name is cut short

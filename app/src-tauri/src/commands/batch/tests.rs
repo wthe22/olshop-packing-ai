@@ -393,16 +393,10 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     let row = &found["rows"][0];
     assert_eq!(row["group"], "1-Z");
     assert_eq!(row["file"], GROUP_FILE);
-    let trace: String = row["trace"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|part| part["text"].as_str().unwrap())
-        .collect();
-    assert!(
-        trace.starts_with("from labels-repeat-1.pdf p. ") && trace.ends_with("batch 1 · 1-Z"),
-        "{trace}"
-    );
+    assert_eq!(row["input"], "labels-repeat-1.pdf");
+    assert!(row["input_first_page"].as_u64().unwrap() >= 1);
+    let time = row["batch_time"].as_str().unwrap();
+    assert!(time.len() == 5 && time.as_bytes()[2] == b':', "{time}");
     let range = |from: &str, to: &str| DateRange {
         from: from.into(),
         to: to.into(),

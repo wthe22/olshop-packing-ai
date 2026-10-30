@@ -4,9 +4,9 @@ The start screen: what has been saved on the open date of the open workspace, an
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ Packing v0.2  ·  [☰]  Toko Contoh · Wed, 7 Oct 2026    [Search]  [Sort rules] [Settings]│
+│ Packing v0.2  ·  [☰]  Toko Contoh                      [Search]  [Sort rules] [Settings]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  This day (2 batches) (729 orders) (5 group PDFs) (1 reprint)   [Day summary] [+ New batch]│
+│  Wed, 7 Oct 2026 (today) (2 batches) (729 orders) (5 group PDFs)  [Day summary] [+ New batch]│
 │                                                                                        │
 │  ┌ Batch 2  saved 09:12 · 2 files · 129 orders ────────────────── [Amend] [Revert] ──┐ │
 │  │  2-A  Sepatu             88 orders    3 contents    [✓]  [Open]                   │ │
@@ -28,7 +28,8 @@ The start screen: what has been saved on the open date of the open workspace, an
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **This day** is the title; its counts stand beside it as pills (no reprint, no pill for them).
+- **The open date** is the title, *Wed, 7 Oct 2026*, with a *today* pill when it is today; the title bar
+  does not repeat it (R-UI-37). Its counts stand beside it as pills (no reprint, no pill for them).
 - Newest batch on top, each a card whose shaded head is *Batch 2* in bold and its save time, files and
   orders. Each group PDF: `<batch>-<code>`, the group's name, its orders and their order
   contents (*88 orders*, *3 contents*); the code is a chip in the logo's blue. Each count is a column of its own, its number right-aligned in a
@@ -67,6 +68,6 @@ The start screen: what has been saved on the open date of the open workspace, an
   use it ([Messages](messages.md)).
 - A data folder that also holds v0.1 data shows one line: *This folder also holds data of Packing v0.1
   (`labels\`). It is not read.* [Open folder] ([workspaces](../app/workspaces.md#a-version-01-data-folder)).
-- A date with nothing saved shows "Nothing saved on this day yet." and **New batch**.
+- A date with nothing saved shows "Nothing saved on this date yet." and **New batch**.
 - After **Save batch**, the new batch is on top with a green line "Batch 3 saved: 3 group PDFs and the
   summary." for a few seconds.

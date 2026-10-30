@@ -56,9 +56,9 @@ export const texts = {
   },
 
   day: {
-    // The title and its counts beside it, "This day  2 batches  729 orders  5 group PDFs  1 reprint";
-    // a day with no reprint shows no count of them.
-    thisDay: "This day",
+    // The title is the date, "Wed, 7 Oct 2026", marked *today* when it is; its counts stand beside
+    // it, "2 batches  729 orders  5 group PDFs  1 reprint"; a day with no reprint shows no count of them.
+    today: "today",
     stats: (batches: number, orders: number, pdfs: number, reprints: number) =>
       [
         { n: batches, word: batches === 1 ? "batch" : "batches" },
@@ -66,7 +66,7 @@ export const texts = {
         { n: pdfs, word: pdfs === 1 ? "group PDF" : "group PDFs" },
         { n: reprints, word: reprints === 1 ? "reprint" : "reprints" },
       ].filter((stat, i) => i < 3 || stat.n > 0),
-    nothing: "Nothing saved on this day yet.",
+    nothing: "Nothing saved on this date yet.",
     newBatch: "+ New batch",
     // A batch card's title, "Batch 2", and what follows it, "saved 09:12 · 2 files · 129 orders".
     batch: (n: number) => `Batch ${n}`,

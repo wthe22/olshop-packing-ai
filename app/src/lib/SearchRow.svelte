@@ -1,10 +1,11 @@
 <script lang="ts">
   // One order of Search's results as a row of the results' grid: its tick; its Order ID over its
-  // tracking ID; its items, which take the room left; the group PDF and the page it is on there
-  // over its courier and date; **Open**, the chevron of its trace line and its *Reprinted* mark.
-  // The IDs and the group PDF take only their own width, so a long product name keeps the rest; on
-  // a narrow window the items go under them. A click on the row's text ticks it, for the mouse only:
-  // the tick is the keyboard's way.
+  // courier and tracking ID; its items, which take the room left; the date and group code over the
+  // group's name and the page the label is on; **Open**, the chevron of its details and its
+  // *Reprinted* mark. The details are what the row does not show: its batch's save time and the
+  // input PDF it was read from. The order and label columns take only their own width, so a long
+  // product name keeps the rest; on a narrow window the items go under them. A click on the row's
+  // text ticks it, for the mouse only: the tick is the keyboard's way.
   import type { SearchRow } from "./api/search";
   import { fileLabel, reprintedMark } from "./search.svelte";
   import { texts } from "../texts";
@@ -48,7 +49,10 @@
   <input type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
   <div class="ids">
     <span class="order">{row.order_id}</span>
-    <span class="tracking" class:faint={!row.tracking_id}>{row.tracking_id ?? words.noTracking}</span>
+    <span class="line">
+      <span class="courier" class:unknown={!row.courier}>{row.courier ?? words.noCourier}</span>
+      <span class="tracking" class:faint={!row.tracking_id}>{row.tracking_id ?? words.noTracking}</span>
+    </span>
   </div>
   <ul class="items">
     {#each row.items as item, i (i)}
@@ -57,13 +61,12 @@
   </ul>
   <div class="where">
     <span class="line">
+      <span class="date">{formatShortDay(row.day)}</span>
       <span class="group">{row.group}</span>
-      <span class="file" title={row.file}>{fileLabel(row)}</span>
-      <span class="page">{words.pages(row.first_page, row.last_page)}</span>
     </span>
     <span class="line">
-      <span class="courier" class:unknown={!row.courier}>{row.courier ?? words.noCourier}</span>
-      <span class="date">{formatShortDay(row.day)}</span>
+      <span class="file" title={row.file}>{fileLabel(row)}</span>
+      <span class="page">{words.pages(row.first_page, row.last_page)}</span>
     </span>
   </div>
   <div class="tools">
@@ -82,7 +85,12 @@
   </div>
   {#if traced}
     <p class="trace">
-      {#each row.trace as part, i (i)}{#if part.code}<code>{part.text}</code>{:else}{part.text}{/if}{/each}
+      <span class="batch">{words.batch(row.batch, row.batch_time)}</span>
+      <span class="source"
+        >{words.from}
+        <span class="input"><Icon name="file" size={14} />{row.input}</span>
+        {words.inputPages(row.input_first_page, row.input_last_page)}</span
+      >
     </p>
   {/if}
 </div>
@@ -142,7 +150,7 @@
   .where {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 0.2rem;
     white-space: nowrap;
   }
 
@@ -211,7 +219,7 @@
 
   /* The group's name only hints; its code and the page find the label. */
   .file {
-    max-width: 8rem;
+    max-width: 10rem;
     overflow: hidden;
     color: var(--text-muted);
     text-overflow: ellipsis;
@@ -282,17 +290,54 @@
   }
 
   .trace {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem 1.25rem;
     grid-column: 2 / -1;
     margin: 0;
-    padding-top: 0.35rem;
+    padding-top: 0.4rem;
     border-top: 1px solid var(--border-soft);
     color: var(--text-muted);
     font-size: 0.84rem;
+  }
+
+  .batch {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .source {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  /* The input's file name, set apart as a file: its icon, a box, monospace. */
+  .input {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.05rem 0.45rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
     overflow-wrap: anywhere;
   }
 
-  /* Too narrow for the items beside the IDs and the group PDF: the group PDF stands next to the IDs
-     and the items go under both, full width. */
+  .input :global(svg) {
+    flex: none;
+    color: var(--text-faint);
+  }
+
+  /* Too narrow for the items beside the order and the label: the label stands next to the order and
+     the items go under both, full width. */
   @container results (max-width: 54rem) {
     .where {
       grid-column: 3;
@@ -304,10 +349,11 @@
     }
   }
 
-  /* Narrower still: the group PDF, the courier and the date in one line under the IDs. */
+  /* Narrower still: the label's date, code, name and page in one line under the order. */
   @container results (max-width: 34rem) {
     .where {
       flex-flow: row wrap;
+      align-items: center;
       gap: 0.2rem 0.9rem;
       grid-column: 2 / -1;
       grid-row: 2;

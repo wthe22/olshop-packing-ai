@@ -67,7 +67,6 @@
   <div class="window">
     <Frame
       workspace={shell.workspace}
-      day={shell.day}
       overlay={shell.overlay}
       version={shell.version}
       onTogglePanel={shell.togglePanel}
@@ -91,6 +90,8 @@
         {/if}
         {#if shell.screen === "day"}
           <DayScreen
+            day={shell.day}
+            today={shell.today}
             overview={shell.overview}
             saved={shell.savedMessage}
             reading={shell.amendReading}

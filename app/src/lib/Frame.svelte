@@ -1,15 +1,13 @@
 <script lang="ts">
-  // The window frame: the panel's switch, the program's name, the open workspace and date, and the
-  // screens that open over the current one.
+  // The window frame: the panel's switch, the program's name, the open workspace, and the screens
+  // that open over the current one. The open date is the Day screen's title, not repeated here.
   import { texts } from "../texts";
-  import { formatDay } from "../dates";
   import type { OverlayId } from "./shell.svelte";
   import Icon, { type IconName } from "./Icon.svelte";
   import Logo from "./Logo.svelte";
 
   let {
     workspace,
-    day,
     overlay,
     // The program's shown version (`v0.2`, from `StartInfo.version`): with the name it is the
     // same text as the OS window title.
@@ -18,7 +16,6 @@
     onNavigate,
   }: {
     workspace: string | null;
-    day: string;
     overlay: OverlayId | null;
     version: string;
     onTogglePanel: () => void;
@@ -42,8 +39,6 @@
   <span class="brand"><Logo size={22} />{texts.title}<span class="version">{version}</span></span>
   <span class="where">
     <span class="workspace">{workspace ?? ""}</span>
-    <span class="sep">›</span>
-    <span class="day">{formatDay(day)}</span>
   </span>
 
   <span class="grow"></span>
@@ -91,7 +86,7 @@
     font-weight: 600;
   }
 
-  /* A long workspace name is cut short before the date or the buttons are. */
+  /* A long workspace name is cut short before the buttons are. */
   .where {
     display: inline-flex;
     min-width: 0;
@@ -100,7 +95,6 @@
     margin-left: 0.75rem;
     padding-left: 0.9rem;
     border-left: 1px solid var(--border);
-    font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
 
@@ -109,15 +103,6 @@
     overflow: hidden;
     font-weight: 600;
     text-overflow: ellipsis;
-  }
-
-  .sep {
-    color: var(--text-faint);
-  }
-
-  .day {
-    flex: none;
-    color: var(--text-muted);
   }
 
   .grow {

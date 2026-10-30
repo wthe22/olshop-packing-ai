@@ -25,7 +25,7 @@ Every message says what happened and what to do. A **stop** ends the step with n
 | Stop | A file to replace or delete is open in another program | **`<file>` is open in another program.** Close it (e.g. the PDF viewer) and press `<button>` again. Nothing was changed. |
 | Stop | Disk full or folder not writable | **Cannot write to `<folder>`:** `<reason>`. Nothing was saved. |
 | Stop | The verifier found something | The dialog of [Plan › Saving](plan.md#saving): **Save anyway** or **Cancel — nothing is saved**. A reprint or a restore has no *anyway*: **The reprint does not match its orders:** `<finding>`. Nothing was kept. |
-| Note | Saved, but a file could not be moved into place | **Batch `<b>` is saved, but `<file>` is open in another program.** Close it; the file is put in place when this day is opened again. |
+| Note | Saved, but a file could not be moved into place | **Batch `<b>` is saved, but `<file>` is open in another program.** Close it; the file is put in place when this date is opened again. |
 | Stop | An input an amend, reprint or restore needs is missing or changed | **`<file>` (batch `<b>`) is missing from the day's inputs, or has changed.** It cannot be used. |
 
 ## Opening

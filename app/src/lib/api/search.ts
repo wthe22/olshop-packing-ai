@@ -27,16 +27,14 @@ export interface SearchRow {
   // The pages the order fills in that group PDF, counted from 1.
   first_page: number;
   last_page: number;
-  // Its input and pages, and the clue that named its courier.
-  trace: TracePart[];
+  // The batch's last save, `09:12`.
+  batch_time: string;
+  // The input PDF it was read from, by the name it had when it was chosen, and its pages there.
+  input: string;
+  input_first_page: number;
+  input_last_page: number;
   // The reprints that printed it again, oldest first.
   reprints: ReprintMark[];
-}
-
-// A piece of a row's trace line: a logo's hash or a tracking-ID form is `code`, set in monospace.
-export interface TracePart {
-  text: string;
-  code: boolean;
 }
 
 // A reprint that printed an order again.

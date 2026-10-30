@@ -6,6 +6,19 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-10-30)
 
+- **Handoff of 2026-10-30 — Search's dates and rows, the date as the Day screen's title.** The owner's
+  words in chat, built and pushed:
+  - **R-UI-37**: no *This day* anywhere. Search's Dates are *Viewed day* (the date the Day screen shows,
+    the default; not listed when it is today), *Today*, *Yesterday* and the rest
+    ([D-UI-3](../../software-design/decisions/ui.md)). The Day screen's title is the date itself with a
+    *today* pill; the title bar names only the workspace ([ui/day](../../software-design/ui/day.md)).
+  - **R-UI-38**: a Search row is *Order* (the Order ID over the courier and tracking ID), *Items*, *Label*
+    (the date and group code over the group's name and page); its details show only the batch's save
+    time and the input PDF, its file name boxed with a file icon, no courier clue
+    ([D-UI-12](../../software-design/decisions/ui.md)).
+  - **The owner may test now**: Search on both screens, a row's arrow, the Dates list on an older date
+    and on today. A finding goes into [reviews/ui.md](../../reviews/ui.md) as R-UI-39.
+
 - **Handoff of 2026-10-30 — the sort rules: the rule used last, a rule switched off, a new page.** The
   owner's words in chat, built and pushed:
   - **R-RULES-5**: New batch preselects the rule of the workspace's newest batch **on whichever date**, so

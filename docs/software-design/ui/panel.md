@@ -6,9 +6,9 @@ another date or workspace. It sits at the left of every screen; the owner of the
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [▯] ◈ Packing (v0.2) │ Toko Contoh › Wed, 21 Oct 2026       Search  Sort rules  Settings │
+│ [▯] ◈ Packing (v0.2) │ Toko Contoh                          Search  Sort rules  Settings │
 ├──────────────────────────┬─────────────────────────────────────────────────────────────┤
-│ WORKSPACE                │  This day (2 batches) (729 orders) (5 group PDFs)           │
+│ WORKSPACE                │  Wed, 21 Oct 2026 (today) (2 batches) (729 orders)          │
 │ [Toko Contoh      ▾] [+] │                                         [ + New batch ]     │
 │                          │  ┌ Batch 2  saved 09:12 · 129 orders ── [Amend] ┐           │
 │ ▾ October 2026           │  │  2-A  Sepatu         88 orders  [✓] [Open]   │           │
@@ -35,7 +35,7 @@ another date or workspace. It sits at the left of every screen; the owner of the
 - **Row menu** (**⋯**, on hover): **Open folder**. A workspace is renamed or deleted in
   [Settings](settings.md); a date never is.
 - **[▯]** in the title bar (or `Ctrl+B`) hides and shows the panel. Hidden, the screen takes the full width and
-  the title bar still names the workspace and the date. It is shown at every start, and below the smallest
+  the title bar still names the workspace and the Day screen's title the date. It is shown at every start, and below the smallest
   window width it hides on its own.
 - The list is read again when the window regains focus, so a folder added in Explorer shows up.
 

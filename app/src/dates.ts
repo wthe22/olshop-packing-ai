@@ -13,7 +13,7 @@ export function formatShortDay(day: string): string {
   return `${weekdayFormat.format(date)}, ${dayMonthFormat.format(date)}`;
 }
 
-// The title bar's date, "Wed, 7 Oct 2026".
+// The Day screen's title, "Wed, 7 Oct 2026".
 export function formatDay(day: string): string {
   return `${formatShortDay(day)} ${dateOf(day).getFullYear()}`;
 }

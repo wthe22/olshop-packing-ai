@@ -26,7 +26,8 @@ The **panel** at the left lists your workspaces and the dates of the open one:
 
 The **Day** screen shows what has been saved on the open date and is the way to the next batch.
 
-- The title **This day** has the date's counts beside it: "2 batches", "729 orders", "5 group PDFs".
+- The title is the open date, "Wed, 7 Oct 2026" (with *today* when it is), and its counts beside it:
+  "2 batches", "729 orders", "5 group PDFs".
 - **+ New batch** starts a new batch.
 - **Day summary** writes one PDF of the whole date and opens it: each batch as its card shows it, with
   its group PDFs, their orders and contents; the orders per courier (the count to hand over at each
@@ -43,7 +44,7 @@ The **Day** screen shows what has been saved on the open date and is the way to 
   blocked — and it is saved the moment you click it. A batch you amend starts with its ticks cleared.
 - **Open folder** opens the date's `output` folder in Explorer.
 - On the newest batch only: **Amend** and **Revert** ([Changes](03-changes.md)).
-- A date with nothing saved shows "Nothing saved on this day yet."
+- A date with nothing saved shows "Nothing saved on this date yet."
 
 ### New batch
 

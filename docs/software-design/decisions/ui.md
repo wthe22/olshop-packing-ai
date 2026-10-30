@@ -18,11 +18,13 @@ Where a record names a former question (`Q-…`), the owner accepted its default
 
 **Applies to.** [Settings](../ui/settings.md).
 
-## D-UI-3 — Search: this day by default, a range of dates, or all days of the workspace
+## D-UI-3 — Search: the viewed day by default, a range of dates, or all days of the workspace
 
-**Decision.** Search covers *This day* (the default), *Yesterday*, *Last 7 days*, *Last 30 days*, a *Custom
-range* or *All days* of the open workspace (Q-UI-3); the ranges other than *This day* end today. Every saved
-order is found by every field, since the journals keep them all.
+**Decision.** Search covers *Viewed day* (the date the Day screen shows, the default), *Today*, *Yesterday*,
+*Last 7 days*, *Last 30 days*, a *Custom range* or *All days* of the open workspace (Q-UI-3); the ranges other
+than *Viewed day* end today. *Viewed day* is left out while the viewed date is today. Never *This day*: the
+owner found it could mean many things (R-UI-37). Every saved order is found by every field, since the
+journals keep them all.
 
 **Why.** The open date covers daily use; a reprint of an older label needs the other dates, and a short range
 keeps a search of a workspace with months of data small.
@@ -87,11 +89,13 @@ and turned down the same day; the owner named Zed and Claude Code as the look to
 
 ## D-UI-12 — Search shows each order as a compact row; its first box is *Tracking ID contains*
 
-**Decision.** Search's results are one row per order (R-UI-35): the tick; the Order ID over the tracking ID;
-the items, which take the width the other columns leave; the group PDF's code, name and page over the courier
-and the date; **Open**, the trace chevron and the *Reprinted* mark. The ID column and the group PDF column are
+**Decision.** Search's results are one row per order (R-UI-35, R-UI-38) under the heads *Order*, *Items* and
+*Label*: the tick; the Order ID over the courier and the tracking ID; the items, which take the width the other
+columns leave; the date and group code over the group's name and page; **Open**, the details chevron and the
+*Reprinted* mark. The details show only what the row does not: the batch's save time and the input PDF, its
+file name set apart as a file; not the clue that named the courier. The order column and the label column are
 as wide as their longest entry and no wider. On a narrower window the items move to a line of their own under
-the IDs; narrower still, the group PDF line goes under the IDs too. The filter and the dates share one box
+the order; narrower still, the label goes under the order too. The filter and the dates share one box
 side by side. The first box is *Tracking ID contains*, not *starts with* (R-UI-33). It replaces D-UI-10, which
 showed the results as cards.
 

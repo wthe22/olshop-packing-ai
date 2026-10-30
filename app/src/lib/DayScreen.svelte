@@ -3,11 +3,14 @@
   // with its warnings and each group PDF with its **Printed** tick (a note), then the date's
   // reprints; *New batch* starts the batch flow and *Day summary* writes the date's summary PDF.
   import { texts } from "../texts";
+  import { formatDay } from "../dates";
   import type { BatchView, DayOverview, FileProblem, GroupPdfView, LeftOutView } from "./api/day";
   import Count from "./Count.svelte";
   import ReprintsCard from "./ReprintsCard.svelte";
 
   let {
+    day,
+    today,
     overview,
     saved,
     reading,
@@ -22,6 +25,9 @@
     onRevert,
     onRestore,
   }: {
+    // The open date, the screen's title, and today, which it is marked as.
+    day: string;
+    today: string;
     overview: DayOverview | null;
     saved: string | null;
     // *Amend*'s read of the batch's own files (`read-progress`): its page progress is shown until
@@ -76,7 +82,8 @@
 
 <main>
   <div class="bar">
-    <h1>{texts.day.thisDay}</h1>
+    <h1>{formatDay(day)}</h1>
+    {#if day === today}<span class="today">{texts.day.today}</span>{/if}
     <span class="stats">
       {#if overview}
         {@const { batches, orders, pdfs } = overview.totals}
@@ -231,6 +238,16 @@
     margin: 0 0.35rem 0 0;
     font-size: 1.3rem;
     font-weight: 700;
+  }
+
+  .today {
+    margin-right: 0.35rem;
+    padding: 0.05rem 0.55rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    font-size: 0.8rem;
+    font-weight: 600;
   }
 
   /* The day's counts as pills beside the title, each number in bold. */

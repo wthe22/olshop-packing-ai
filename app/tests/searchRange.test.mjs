@@ -1,4 +1,4 @@
-// The dates a search covers: each choice of the Dates list, counted from the open date or today.
+// The dates a search covers: each choice of the Dates list, counted from the viewed date or today.
 //
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
@@ -6,12 +6,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import "./tsModule.mjs";
-const { presetRange, shiftDay, RANGE_PRESETS } = await import("../src/lib/searchRange.ts");
+const { presetRange, rangePresets, shiftDay } = await import("../src/lib/searchRange.ts");
 
 test("each choice of dates stands for its range", () => {
   const shown = { from: "2026-09-01", to: "2026-09-15" };
   const cases = [
-    ["day", { from: "2026-10-20", to: "2026-10-20" }],
+    ["viewed", { from: "2026-10-20", to: "2026-10-20" }],
+    ["today", { from: "2026-10-27", to: "2026-10-27" }],
     ["yesterday", { from: "2026-10-26", to: "2026-10-26" }],
     ["week", { from: "2026-10-21", to: "2026-10-27" }],
     ["month", { from: "2026-09-28", to: "2026-10-27" }],
@@ -21,7 +22,22 @@ test("each choice of dates stands for its range", () => {
   for (const [preset, want] of cases) {
     assert.deepEqual(presetRange(preset, "2026-10-20", "2026-10-27", shown), want, preset);
   }
-  assert.deepEqual(RANGE_PRESETS, cases.map(([preset]) => preset), "the list shows every choice");
+  assert.deepEqual(
+    rangePresets("2026-10-20", "2026-10-27"),
+    cases.map(([preset]) => preset),
+    "the list shows every choice, the viewed date first",
+  );
+});
+
+test("the viewed date is not offered twice when it is today", () => {
+  assert.deepEqual(rangePresets("2026-10-27", "2026-10-27"), [
+    "today",
+    "yesterday",
+    "week",
+    "month",
+    "custom",
+    "all",
+  ]);
 });
 
 test("a date moves across a month and a year", () => {

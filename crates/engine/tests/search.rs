@@ -230,7 +230,7 @@ fn this_day_does_not_see_another_days_order_but_all_days_does() {
     );
     let cond = parse_condition("tracking_id starts_with \"JY\"").expect("condition");
 
-    // *This day*: one day state only.
+    // *Viewed day*: one day state only.
     let this_day = search(&cond, &[("2026-10-07", &day_1)]);
     assert_eq!(this_day.orders, 1);
     assert_eq!(this_day.rows[0].order_id.as_str(), "580000000000000001");

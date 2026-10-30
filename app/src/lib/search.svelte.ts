@@ -9,7 +9,7 @@ import { newRow, newTree, toRustTree, type UiTree } from "./conditions";
 import { texts } from "../texts";
 import { formatShortDay } from "../dates";
 import { confirmBox } from "./confirm.svelte";
-import { presetRange, type DateRange, type RangePreset } from "./searchRange";
+import { presetRange, rangePresets, type DateRange, type RangePreset } from "./searchRange";
 
 // While the index is being built the search is asked again after this many milliseconds.
 const LOADING_RETRY_MS = 500;
@@ -18,7 +18,7 @@ const key = (row: { day: string; order_id: string }) => `${row.day} ${row.order_
 
 export class Search {
   tree = $state<UiTree>(firstTree());
-  preset = $state<RangePreset>("day");
+  preset = $state<RangePreset>("viewed");
   // The range's two dates as shown; kept under *All days*, so *Custom range* finds them again.
   range = $state<DateRange>({ from: "", to: "" });
   busy = $state(false);
@@ -29,7 +29,7 @@ export class Search {
   // always match the boxes and the scope shown.
   result = $state<api.SearchResults | null>(null);
   ticked = $state<string[]>([]);
-  // The rows whose trace line is open.
+  // The rows whose details are open.
   traced = $state<string[]>([]);
   made = $state<api.ReprintMade | null>(null);
   // The verifier's findings of a reprint that was not kept.
@@ -39,7 +39,7 @@ export class Search {
   // The row a single click just ticked or unticked, so the double click it starts can undo it.
   private clicked: string | null = null;
 
-  // The open date and today, which the choices of dates count from; and what lets the Day screen
+  // The viewed date and today, which the choices of dates count from; and what lets the Day screen
   // and the panel recount after a reprint.
   private readonly day: () => string;
   private readonly today: () => string;
@@ -49,8 +49,12 @@ export class Search {
     this.day = day;
     this.today = today;
     this.onReprinted = onReprinted;
+    this.preset = this.presets()[0];
     this.range = { from: day(), to: day() };
   }
+
+  // The Dates list.
+  presets = () => rangePresets(this.day(), this.today());
 
   loadCouriers = async () => {
     try {

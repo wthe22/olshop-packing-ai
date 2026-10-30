@@ -25,7 +25,7 @@ with real downloads, in this order. A finding goes into [reviews/ui.md](../../re
 8. **Day.** The printed tick survives a restart; **Left out ▸**; **Amend** (Plan titled *Redo batch n*,
    **Back** to its files, **Cancel amend**) and **Revert** on the newest batch. Delete a group PDF in
    Explorer, reopen the date: *⚠ missing* and **Open**, which writes it again.
-9. **Search and reprint.** By tracking ID on *This day*, *Last 7 days* and *All days*, by product name and quantity;
+9. **Search and reprint.** By tracking ID on *Viewed day*, *Today*, *Last 7 days* and *All days*, by product name and quantity;
    by Courier *equals* (the list) and *contains* `J&T` (typed); each row's group PDF and **page**; the arrow
    shows where an order came from; a double click or a drag on an Order ID selects it without a tick; tick
    two orders, **Reprint 2 orders**, **Open**; today's Day screen lists the reprint.

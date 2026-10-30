@@ -21,15 +21,14 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
 ## Search
 
 The [Search](../ui/search.md) screen takes a filter made with the boxes of the Sort rules screen and the
-dates to search: a range (the open date by default) or all dates of the open workspace
+dates to search: a range (the viewed date by default) or all dates of the open workspace
 ([D-UI-3](../decisions/ui.md)); only the dates of the range are looked at. Each result row shows the order, its items, its date, batch and group
-file and its page there, a tick, and a trace line when opened:
+file and its page there, a tick, and when opened its details: the batch's save time and the input PDF and
+pages it was read from:
 
 ```
-from 10-07_07-00-00_Shipping label+Packing slip_1.pdf p. 12–13 · courier J&T Express by logo 39b9b7b9f61d0e7f + form J[XY]\d{10} · batch 2 · 2-A
+Batch 2 · saved 09:12    from [10-07_07-00-00_Shipping label+Packing slip_1.pdf] p. 12–13
 ```
-
-The logo's hash and the tracking-ID form are set in monospace.
 
 Orders of an open draft are not searched: they are not saved.
 

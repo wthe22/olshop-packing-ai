@@ -14,6 +14,7 @@
     close: "M6 6l12 12M18 6 6 18",
     check: "M5 12.5l4.5 4.5L19 7",
     folder: "M3 6h6l2 2h10v11H3z",
+    file: "M6 3h8l4 4v14H6zM14 3v4h4",
     chevron: "M9 6l6 6-6 6",
     up: "M12 19V5M6 11l6-6 6 6",
     down: "M12 5v14M6 13l6 6 6-6",

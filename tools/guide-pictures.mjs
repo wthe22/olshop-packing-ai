@@ -118,7 +118,7 @@ try {
     input.dispatchEvent(new Event("input", { bubbles: true }));
   })()`);
   await click("Create");
-  await until(shows("Nothing saved on this day yet."));
+  await until(shows("Nothing saved on this date yet."));
 
   await click("+ New batch");
   // A drop on the window, as Explorer sends it.
@@ -142,7 +142,7 @@ try {
   await picture("05-day.png");
 
   await click("Search");
-  await until(shows("This day"));
+  await until(shows("Last 7 days"));
   await click("Search", ".search .scope button");
   await until(shows("orders in 1 batch"));
   await run(`document.querySelector(".search .rows .row input[type=checkbox]").click()`);
