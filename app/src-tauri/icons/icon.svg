@@ -1,34 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- The parcel alone on a clear background, as other programs draw theirs: the taskbar and the
+       Start menu already put every icon on a tile of their own. -->
   <defs>
-    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#3b86f7"/>
-      <stop offset="1" stop-color="#1a5fce"/>
+    <clipPath id="parcel">
+      <path d="M230.96 36.52 Q256 24 281.04 36.52 L462.96 127.48 Q488 140 488 168 L488 344
+               Q488 372 462.96 384.52 L281.04 475.48 Q256 488 230.96 475.48 L49.04 384.52
+               Q24 372 24 344 L24 168 Q24 140 49.04 127.48 Z"/>
+    </clipPath>
+    <linearGradient id="top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbe3b6"/>
+      <stop offset="1" stop-color="#f3cd8e"/>
+    </linearGradient>
+    <linearGradient id="left" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eeb569"/>
+      <stop offset="1" stop-color="#e2a352"/>
+    </linearGradient>
+    <linearGradient id="right" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cf8d40"/>
+      <stop offset="1" stop-color="#bd7c33"/>
     </linearGradient>
   </defs>
-  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#tile)"/>
-  <!-- The parcel: top, left and right faces of an isometric box. -->
-  <polygon points="256,92 418,173 256,254 94,173" fill="#f8d9a4"/>
-  <polygon points="94,173 256,254 256,436 94,355" fill="#eab36a"/>
-  <polygon points="256,254 418,173 418,355 256,436" fill="#d4964a"/>
-  <!-- The tape across the top and down the right face. -->
-  <polygon points="158,141 192,124 354,205 320,222" fill="#c98a3e" opacity="0.55"/>
-  <polygon points="320,222 354,205 354,387 320,404" fill="#b97a32" opacity="0.6"/>
-  <!-- The shipping label on the left face. -->
-  <polygon points="118,226 232,283 232,395 118,338" fill="#ffffff"/>
-  <g fill="#1c1f24">
-    <polygon points="130,248 136,251 136,295 130,292"/>
-    <polygon points="141,253.5 151,258.5 151,302.5 141,297.5"/>
-    <polygon points="156,261 160,263 160,307 156,305"/>
-    <polygon points="165,265.5 173,269.5 173,313.5 165,309.5"/>
-    <polygon points="178,272 182,274 182,318 178,316"/>
-    <polygon points="187,276.5 197,281.5 197,325.5 187,320.5"/>
-    <polygon points="202,284 206,286 206,330 202,328"/>
-    <polygon points="211,288.5 220,293 220,337 211,332.5"/>
+  <g clip-path="url(#parcel)">
+    <polygon points="256,24 488,140 256,256 24,140" fill="url(#top)"/>
+    <polygon points="24,140 256,256 256,488 24,372" fill="url(#left)"/>
+    <polygon points="256,256 488,140 488,372 256,488" fill="url(#right)"/>
+    <!-- The tape along the flaps' seam and down the right face. -->
+    <polygon points="121.44,91.28 158.56,72.72 390.56,188.72 353.44,207.28" fill="#d9a65e"/>
+    <polygon points="353.44,207.28 390.56,188.72 390.56,420.72 353.44,439.28" fill="#a96a26"/>
+    <!-- The shipping label on the left face, its barcode bars and two lines of address. -->
+    <polygon points="55,192 225,277 225,425 55,340" fill="#ffffff"/>
+    <g fill="#23262b">
+      <polygon points="74,214 84,219 84,283 74,278"/>
+      <polygon points="92,223 98,226 98,290 92,287"/>
+      <polygon points="106,230 120,237 120,301 106,294"/>
+      <polygon points="128,241 134,244 134,308 128,305"/>
+      <polygon points="142,248 154,254 154,318 142,312"/>
+      <polygon points="162,258 168,261 168,325 162,322"/>
+      <polygon points="176,265 190,272 190,336 176,329"/>
+      <polygon points="198,276 206,280 206,344 198,340"/>
+    </g>
+    <g fill="#8e97a3">
+      <polygon points="74,300 190,358 190,370 74,312"/>
+      <polygon points="74,324 156,365 156,377 74,336"/>
+    </g>
   </g>
-  <g fill="#9aa3ae">
-    <polygon points="130,306 200,341 200,349 130,314"/>
-    <polygon points="130,322 180,347 180,355 130,330"/>
-  </g>
-  <!-- Edge light on the box's top ridge. -->
-  <polyline points="94,173 256,254 418,173" fill="none" stroke="#fff3dc" stroke-width="5" stroke-linejoin="round" opacity="0.7"/>
+  <!-- Light on the two front edges of the top. -->
+  <polyline points="24,140 256,256 488,140" fill="none" stroke="#fff4de" stroke-width="5"
+            stroke-linejoin="round" opacity="0.8" clip-path="url(#parcel)"/>
 </svg>
