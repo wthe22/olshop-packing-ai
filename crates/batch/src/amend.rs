@@ -63,6 +63,7 @@ fn snapshot_rule(snapshot: &LabelSortRule) -> Result<SortRule, BatchError> {
         .collect::<Result<_, BatchError>>()?;
     Ok(SortRule {
         name: snapshot.name.clone(),
+        enabled: true,
         groups,
     })
 }

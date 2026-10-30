@@ -16,7 +16,8 @@ use crate::record::{LabelGroupRule, LabelSortRule};
 use crate::rules::Condition;
 
 pub use self::edit::{
-    EditError, GroupEdit, NewRule, add_rule, delete_rule, rename_rule, write_groups,
+    EditError, GroupEdit, NewRule, add_rule, delete_rule, rename_rule, set_rule_enabled,
+    write_groups,
 };
 pub use self::load::load_workflows;
 pub use self::remember::{LogoIs, remember_logo};
@@ -102,6 +103,8 @@ impl TrackingForm {
 #[derive(Clone, Debug)]
 pub struct SortRule {
     pub name: String,
+    /// Offered on New batch. A rule that is off is kept, and an amend still reads with it.
+    pub enabled: bool,
     pub groups: Vec<GroupRule>,
 }
 

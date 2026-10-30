@@ -1,23 +1,17 @@
 <script lang="ts">
-  // The shown set's file as text: the whole
-  // `packing-workflows.toml`, checked as it is typed and saved as it stands, comments and all.
+  // The whole `packing-workflows.toml` as text, comments and all, checked as it is typed. The
+  // screen's foot holds *Cancel* and *Save*.
   import { texts } from "../texts";
 
   let {
     text,
     error,
-    busy,
     onText,
-    onCancel,
-    onSave,
   }: {
     text: string;
     // What the last check of the text said, in plain words; empty when the file reads.
     error: string;
-    busy: boolean;
     onText: (text: string) => void;
-    onCancel: () => void;
-    onSave: () => void;
   } = $props();
 </script>
 
@@ -25,20 +19,14 @@
   <label for="file-text">{texts.sortRules.fileText}</label>
   <textarea
     id="file-text"
-    rows="18"
+    rows="22"
+    spellcheck="false"
     value={text}
     oninput={(event) => onText(event.currentTarget.value)}
   ></textarea>
   {#if error}
     <p class="error">{error}</p>
   {/if}
-  <div class="actions">
-    <span class="grow"></span>
-    <button onclick={onCancel}>{texts.sortRules.cancel}</button>
-    <button class="primary" disabled={!!error || busy} onclick={onSave}
-      >{texts.sortRules.save}</button
-    >
-  </div>
 </div>
 
 <style>
@@ -54,15 +42,7 @@
     font-size: 0.9rem;
   }
 
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .grow {
-    flex: 1;
+  .error {
+    margin: 0.5rem 0 0;
   }
 </style>

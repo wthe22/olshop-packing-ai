@@ -10,6 +10,7 @@ use packing_engine::ids::BatchId;
 use packing_engine::orders::LogoAnswer;
 use packing_engine::rules::parse_filter;
 use packing_pdf::worker::Progress;
+use packing_store::newest_batch_rule;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -67,12 +68,15 @@ pub(crate) fn checked(
     })
 }
 
-/// The sort rules of `packing-workflows.toml`, and the one to preselect: the rule of the workspace's
-/// newest batch while it exists, else the first.
+/// The sort rules New batch offers — those that are on, in file order — and the one to preselect:
+/// the open draft's rule (the Plan screen's *Back*), else the rule of the workspace's newest batch
+/// on whichever date, else the first. A rule that is off is never preselected.
 #[derive(Serialize)]
 pub struct SortRulesView {
     rules: Vec<String>,
     preselected: String,
+    /// The rule of the workspace's newest batch, on or off; none before its first batch.
+    last_used: Option<String>,
 }
 
 #[tauri::command]
@@ -85,25 +89,33 @@ pub(crate) fn sort_rules_of(state: &AppState) -> Result<SortRulesView, String> {
     let rules: Vec<String> = workflows
         .sort_rules
         .iter()
-        .map(|r| r.name.clone())
+        .filter(|rule| rule.enabled)
+        .map(|rule| rule.name.clone())
         .collect();
-    let newest = state
+    let draft = state
+        .with_draft(|open| Ok(open.draft.rule_name.clone()))
+        .ok();
+    let last_used = state
         .with_data(|data| {
-            Ok(data.day.as_ref().and_then(|day| {
-                let fold = day.journal.fold();
-                fold.live
-                    .values()
-                    .next_back()
-                    .map(|live| live.saved.sort_rule.name.clone())
-            }))
+            let Some(workspace) = &data.workspace else {
+                return Ok(None);
+            };
+            newest_batch_rule(&data.dir, workspace).map_err(|error| error.to_string())
         })
         .ok()
         .flatten();
-    let preselected = newest
-        .filter(|name| rules.contains(name))
-        .or_else(|| rules.first().cloned())
+    let preselected = draft
+        .iter()
+        .chain(&last_used)
+        .find(|name| rules.contains(name))
+        .or(rules.first())
+        .cloned()
         .unwrap_or_default();
-    Ok(SortRulesView { rules, preselected })
+    Ok(SortRulesView {
+        rules,
+        preselected,
+        last_used,
+    })
 }
 
 /// *Read labels*: read on a blocking thread, emitting `read-progress {page, pages}`. A read

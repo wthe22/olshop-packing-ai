@@ -6,7 +6,8 @@ use jiff::civil::date;
 use packing_engine::record::RecordBody;
 use packing_store::{
     DateFolder, Journal, StoreError, WorkspaceNameError, check_workspace_name, create_workspace,
-    dates, delete_workspace, last_written, open_date, rename_workspace, workspaces,
+    dates, delete_workspace, last_written, newest_batch_rule, open_date, rename_workspace,
+    workspaces,
 };
 use testkit::TempDir;
 
@@ -74,6 +75,48 @@ fn the_list_holds_the_workspace_folders_and_the_last_written_one_opens() {
     assert_eq!(
         last_written(data.path()).unwrap().as_deref(),
         Some("Toko Contoh")
+    );
+}
+
+#[test]
+fn the_newest_batchs_rule_is_found_on_whichever_date_it_was_saved() {
+    let data = TempDir::new("newest-rule");
+    create_workspace(data.path(), "Toko Contoh").unwrap();
+    assert_eq!(newest_batch_rule(data.path(), "Toko Contoh").unwrap(), None);
+    let save = |workspace: &str, day: i8, number: u8, rule: &str| {
+        let mut saved = batch(number, false, Vec::new());
+        saved.sort_rule.name = rule.into();
+        Journal::open(&DateFolder::new(
+            data.path(),
+            workspace,
+            date(2026, 10, day),
+        ))
+        .unwrap()
+        .commit(vec![RecordBody::BatchSaved(saved)], APP)
+        .unwrap();
+    };
+    save("Toko Contoh", 7, 1, "default");
+    save("Toko Contoh", 7, 2, "harian");
+    fs::create_dir_all(data.path().join("Toko Contoh").join("2026-10-08")).unwrap();
+    let damaged = data.path().join("Toko Contoh").join("2026-10-09");
+    fs::create_dir_all(&damaged).unwrap();
+    fs::write(damaged.join("journal.jsonl"), b"not a record\n").unwrap();
+    assert_eq!(
+        newest_batch_rule(data.path(), "Toko Contoh")
+            .unwrap()
+            .as_deref(),
+        Some("harian"),
+        "a later date with no batch, or a damaged journal, is passed over"
+    );
+
+    save("Toko Lain", 10, 1, "promo");
+    save("Toko Contoh", 6, 1, "lama");
+    assert_eq!(
+        newest_batch_rule(data.path(), "Toko Contoh")
+            .unwrap()
+            .as_deref(),
+        Some("harian"),
+        "another workspace and an older date do not count"
     );
 }
 

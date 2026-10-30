@@ -2,14 +2,16 @@
 
 Where a record names a former question (`Q-…`), the owner accepted its default.
 
-## D-RULES-1 — A batch chooses its sort rule; the newest batch's rule is preselected
+## D-RULES-1 — A batch chooses its sort rule; the rule used last is preselected
 
-**Decision.** The sort rule is chosen per batch on New batch, before **Read labels**; the rule of the owner's
-newest batch is preselected (Q-RULES-1 (a)). The rules live in `packing-workflows.toml` (D-APP-13), which
-answers Q-RULES-1 (b).
+**Decision.** The sort rule is chosen per batch on New batch, before **Read labels**; the rule of the
+workspace's newest batch is preselected, on whichever date it was saved, so a new day starts on the rule
+used last (Q-RULES-1 (a), R-RULES-5). While a batch is being prepared, its own rule is preselected, so
+the Plan screen's **Back** keeps the rule just read. A rule that is off is never preselected (D-RULES-5).
+The rules live in `packing-workflows.toml` (D-APP-13), which answers Q-RULES-1 (b).
 
 **Why.** An owner who always uses one rule never touches the control, and nothing new is stored to remember
-the last choice: the journal already says it.
+the last choice: the journal of each date already says it.
 
 **Applies to.** [New batch › The sort rule](../ui/new-batch.md#the-sort-rule), [rules file](../rules-file/README.md#sort-rules).
 
@@ -48,3 +50,16 @@ that name. The names are what the owner sees everywhere; the code stays the one 
 
 **Applies to.** [Filter language](../rules-file/conditions.md#fields), [Sort rules](../ui/sort-rules.md),
 [Search](../ui/search.md).
+
+## D-RULES-5 — A sort rule can be switched off
+
+**Decision.** A sort rule is **on** or **off** (R-RULES-6): `enabled = false` in `packing-workflows.toml`,
+no key when on. New batch offers only the rules that are on; a rule that is off keeps its groups, can be
+edited, renamed and deleted, and an amend of a batch saved with it still reads with it. At least one rule
+is on: the only one cannot be switched off or deleted, and a file with every rule off fails its check.
+
+**Why.** The owner asked for it: a rule not in use leaves the New batch list without being deleted, so it
+can be switched on again as it was, and an old batch saved with it can still be amended.
+
+**Applies to.** [rules file](../rules-file/README.md#sort-rules), [Sort rules](../ui/sort-rules.md),
+[New batch › The sort rule](../ui/new-batch.md#the-sort-rule).

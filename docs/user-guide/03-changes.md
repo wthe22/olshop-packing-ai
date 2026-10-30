@@ -27,10 +27,15 @@ Only the newest batch of a date can be changed — a later batch depends on the 
 `packing-workflows.toml`, the file beside the program. A sort rule is a list of label groups in order: an
 order goes to the first group whose filter matches; the last group has no filter and takes the rest.
 
-- **Rule** chooses the rule shown (from the Plan screen: the batch's rule). **+ New rule** asks for a
-  name and starts with one group *Z Lainnya*, or as *a copy of* the rule shown. **Rename…** changes the
-  name; saved batches keep the name they were saved with. **Delete rule** asks first; the last rule
-  stays.
+- **The tabs** at the top are your rules; click one to show it (from the Plan screen it opens on the
+  batch's rule). *last used* marks the rule of your newest batch, the one **New batch** starts on; *off*
+  marks a rule that is switched off. **+ New rule** asks for a name and starts with one group
+  *Z Lainnya*, or as *a copy of* the rule shown.
+- **The switch** at the top of the rule: **On**, New batch offers the rule; **Off**, the rule is kept as
+  it is but New batch does not list it. Switch it on again whenever it is needed; a batch saved with it
+  can still be amended. One rule always stays on.
+- **Rename…** changes the name in place; saved batches keep the name they were saved with. **Delete
+  rule** asks first; the last rule, and the only rule that is on, stay.
 - Each group has a **code** (1–3 letters or digits), a **name** and a filter made of boxes: a box is
   **All of these** (*and*) or **Any of these** (*or*) and holds rows of *field · operator · value* and
   boxes inside; **not** reverses a row or a box. **Courier · equals** lists the couriers by name;
@@ -40,10 +45,12 @@ order goes to the first group whose filter matches; the last group has no filter
   the same on the other text fields.
 - **In batch 3** is the count each group takes in the batch being prepared, so a change can be judged
   before saving.
-- **Text view** types one group's filter as text; **Boxes** switches back. **Edit file as text** shows
-  the whole file, comments included. **Help: examples ▸** lists examples.
+- **Boxes | Text** beside a group switches its filter between the boxes and typed text; **Help:
+  examples ▸** under the text lists examples. **Edit file as text** shows the whole file, comments
+  included.
 - **Save** writes the file, keeping your comments and every filter you did not change; the batch being
-  prepared follows the new rule, and its skips and file names stay where they still apply.
+  prepared follows the new rule, and its skips and file names stay where they still apply. *Unsaved
+  changes* beside it says there is something to save; another tab asks first before it drops them.
 
 Four example filters (more in [the rules file](../software-design/rules-file/conditions.md)):
 

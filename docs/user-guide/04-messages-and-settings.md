@@ -42,7 +42,7 @@ Open **Settings** in the title bar. Each row is a setting at the left and its co
 - **About** — what the program does, its version (**v0.2**), the PDFium version and the journal's
   schema version.
 
-There are no other settings: the sort rule of your newest batch is preselected, the summary PDF is
+There are no other settings: the sort rule you used last is preselected, the summary PDF is
 always written, and the couriers and sort rules live in `packing-workflows.toml` beside the program.
 
 The app is in English. Every screen text is in one file, so another language can be added.

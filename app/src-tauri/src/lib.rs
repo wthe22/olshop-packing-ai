@@ -311,6 +311,7 @@ pub fn run() {
             commands::rules::rules_save,
             commands::rules::rule_new,
             commands::rules::rule_rename,
+            commands::rules::rule_enable,
             commands::rules::rule_delete,
             commands::rules::rules_check_text,
             commands::rules::rules_save_text,

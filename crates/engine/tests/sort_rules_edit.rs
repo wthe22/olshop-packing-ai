@@ -4,7 +4,7 @@
 
 use packing_engine::workflows::{
     BUNDLED_WORKFLOWS, EditError, GroupEdit, NewRule, Workflows, add_rule, delete_rule,
-    load_workflows, rename_rule, write_groups,
+    load_workflows, rename_rule, set_rule_enabled, write_groups,
 };
 
 const HARIAN: &str = r#"
@@ -139,6 +139,46 @@ fn a_rule_is_added_renamed_and_deleted_and_the_last_one_stays() {
         EditError::Check(error) => assert!(error.message.contains("a name of its own"), "{error}"),
         other => panic!("{other:?}"),
     }
+}
+
+#[test]
+fn a_rule_is_switched_off_and_on_and_one_always_stays_on() {
+    let text = file();
+    let on = |workflows: &Workflows, rule: &str| workflows.sort_rule(rule).unwrap().enabled;
+
+    let (off, workflows) = set_rule_enabled(&text, "default", false).unwrap();
+    assert!(!on(&workflows, "default"));
+    assert!(on(&workflows, "harian"));
+    assert!(
+        off.contains("name = \"default\"\nenabled = false\n"),
+        "{off}"
+    );
+    assert!(off.contains("# The rule for the usual days."));
+    assert_eq!(codes(&workflows, "default"), ["Z"], "its groups stay");
+
+    assert_eq!(
+        set_rule_enabled(&off, "harian", false).unwrap_err(),
+        EditError::LastOn
+    );
+    assert_eq!(delete_rule(&off, "harian").unwrap_err(), EditError::LastOn);
+    let (copied, workflows) = add_rule(&off, "promo", NewRule::CopyOf("default")).unwrap();
+    assert!(on(&workflows, "promo"), "a copy starts on");
+    let (_, workflows) = delete_rule(&copied, "default").unwrap();
+    assert!(
+        workflows.sort_rule("default").is_none(),
+        "a rule that is off can go"
+    );
+
+    let (again, workflows) = set_rule_enabled(&off, "default", true).unwrap();
+    assert!(on(&workflows, "default"));
+    assert!(
+        !again.contains("name = \"default\"\nenabled"),
+        "on is written as no key at all"
+    );
+    assert_eq!(
+        set_rule_enabled(&text, "minggu", true).unwrap_err(),
+        EditError::NoRule("minggu".into())
+    );
 }
 
 #[test]

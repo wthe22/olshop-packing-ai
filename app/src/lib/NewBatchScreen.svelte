@@ -64,7 +64,7 @@
   // Set while *Cancel* is pressed: the read then returns to the file list, not to a stop message.
   let cancelling = false;
 
-  // The sort rules of `packing-workflows.toml`, the newest batch's preselected, so an owner who
+  // The sort rules that are on, the one used last preselected (on whichever date), so an owner who
   // always uses one rule never touches the choice.
   let rules = $state<string[]>([]);
   let chosenRule = $state("");

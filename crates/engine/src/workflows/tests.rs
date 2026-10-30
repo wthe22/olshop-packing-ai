@@ -70,6 +70,22 @@ fn a_rule_file_with_filters_reads_its_groups_in_order() {
 }
 
 #[test]
+fn a_rule_is_on_unless_the_file_says_it_is_off() {
+    let rest = "[[label_sort_rules.label_groups]]\ncode = \"Z\"\nname = \"Lainnya\"\n";
+    let text = format!(
+        "{}[[label_sort_rules]]\nname = \"promo\"\nenabled = false\n{rest}",
+        with_rule(rest)
+    );
+    let workflows = load_workflows(&text).unwrap();
+    let on: Vec<(&str, bool)> = workflows
+        .sort_rules
+        .iter()
+        .map(|rule| (rule.name.as_str(), rule.enabled))
+        .collect();
+    assert_eq!(on, [("r", true), ("promo", false)]);
+}
+
+#[test]
 fn every_check_names_its_line_and_column() {
     let group = |code: &str, name: &str, filter: &str| {
         format!("[[label_sort_rules.label_groups]]\ncode = \"{code}\"\nname = \"{name}\"\n{filter}")
@@ -120,6 +136,12 @@ fn every_check_names_its_line_and_column() {
             "not a regex",
         ),
         ("no sort rule", HEAD.to_string(), (1, 1), "no sort rule"),
+        (
+            "every sort rule off",
+            with_rule(&format!("enabled = false\n{rest}")),
+            (6, 8),
+            "every sort rule is off",
+        ),
         (
             "a group without a filter before the last",
             with_rule(&format!("{}{rest}", group("A", "Sepatu", ""))),

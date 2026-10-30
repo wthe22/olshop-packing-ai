@@ -1,10 +1,11 @@
 <script lang="ts">
-  // One label group of the rule: its code and name, its filter built in the
-  // boxes editor or typed in a text view, the count it takes in the open batch, and the buttons to
-  // move, delete and mark it as the one that takes the rest. Every change recounts through
+  // One label group of the rule, as a row of the rule's card: its code and name, its filter built
+  // in the boxes editor or typed as text, the count it takes in the open batch, and the buttons to
+  // move and delete it; the last group can instead take the rest. Every change recounts through
   // `onChange`; the entry itself is the entry the screen holds.
   import { texts } from "../texts";
   import BoxesEditor from "./BoxesEditor.svelte";
+  import Icon from "./Icon.svelte";
   import type { Courier } from "./api/rules";
   import { boxesToFilter, textToTree, type GroupEntry } from "./groupEntry";
   import { newTree } from "./conditions";
@@ -19,10 +20,9 @@
     onChange,
     onMove,
     onRemove,
-    onHelp,
   }: {
     entry: GroupEntry;
-    // The batch being prepared, for *In batch `<b>`: n*; `null` when no draft is open.
+    // The batch being prepared, for its count; `null` when no draft is open.
     draftBatch: number | null;
     // The Courier box's list.
     couriers: Courier[];
@@ -34,9 +34,10 @@
     onChange: () => void;
     onMove: (delta: number) => void;
     onRemove: () => void;
-    // *Examples*: show the help box at the foot of the screen.
-    onHelp: () => void;
   } = $props();
+
+  // The filter language's examples, under a typed filter.
+  let showHelp = $state(false);
 
   async function onBoxes() {
     if (await boxesToFilter(entry)) await onChange();
@@ -49,6 +50,7 @@
   }
 
   async function toText() {
+    if (entry.mode === "text") return;
     entry.text = entry.filter ?? "";
     entry.mode = "text";
     entry.boxesError = "";
@@ -56,6 +58,7 @@
   }
 
   async function toBoxes() {
+    if (entry.mode === "boxes") return;
     if (await textToTree(entry)) await onChange();
   }
 
@@ -76,8 +79,8 @@
   }
 </script>
 
-<section class="group">
-  <div class="cat-head">
+<div class="group">
+  <div class="head">
     <input
       class="code"
       aria-label={texts.sortRules.code}
@@ -90,45 +93,71 @@
       bind:value={entry.name}
       oninput={onChange}
     />
-    <span class="grow"></span>
-    {#if entry.error}
-      <span class="count mark">✗</span>
-    {:else if draftBatch !== null && entry.count !== null}
-      <span class="count">{texts.sortRules.inBatch(draftBatch, entry.count)}</span>
+    {#if entry.filter !== null}
+      <div class="mode" role="group">
+        <button
+          class:chosen={entry.mode === "boxes"}
+          disabled={entry.mode === "text" && entry.error !== ""}
+          onclick={toBoxes}>{texts.sortRules.boxes}</button
+        >
+        <button class:chosen={entry.mode === "text"} onclick={toText}
+          >{texts.sortRules.textMode}</button
+        >
+      </div>
     {/if}
-    <button
-      title={texts.sortRules.moveUp}
-      disabled={!canUp}
-      onclick={() => onMove(-1)}>↑</button
-    >
-    <button
-      title={texts.sortRules.moveDown}
-      disabled={!canDown}
-      onclick={() => onMove(1)}>↓</button
-    >
-    <button title={texts.sortRules.delete} onclick={onRemove}>🗑</button>
+    <span class="grow"></span>
+    <span class="count">
+      {#if entry.error}
+        <span class="mark">✗</span>
+      {:else if draftBatch !== null && entry.count !== null}
+        {entry.count}
+      {/if}
+    </span>
+    <span class="tools">
+      <button
+        class="icon"
+        title={texts.sortRules.moveUp}
+        aria-label={texts.sortRules.moveUp}
+        disabled={!canUp}
+        onclick={() => onMove(-1)}><Icon name="up" size={16} /></button
+      >
+      <button
+        class="icon"
+        title={texts.sortRules.moveDown}
+        aria-label={texts.sortRules.moveDown}
+        disabled={!canDown}
+        onclick={() => onMove(1)}><Icon name="down" size={16} /></button
+      >
+      <button
+        class="icon"
+        title={texts.sortRules.delete}
+        aria-label={texts.sortRules.delete}
+        onclick={onRemove}><Icon name="trash" size={16} /></button
+      >
+    </span>
   </div>
 
-  {#if entry.filter === null}
-    <p class="rest">{texts.sortRules.takesRest}</p>
-  {:else if entry.mode === "boxes"}
-    <BoxesEditor tree={entry.tree} {couriers} onEdit={onBoxes} />
-  {:else}
-    <textarea
-      class="condition-text"
-      rows="3"
-      bind:value={entry.text}
-      oninput={onText}
-    ></textarea>
-  {/if}
+  <div class="body">
+    {#if entry.filter !== null && entry.mode === "boxes"}
+      <BoxesEditor tree={entry.tree} {couriers} onEdit={onBoxes} />
+    {:else if entry.filter !== null}
+      <textarea class="filter-text" rows="3" bind:value={entry.text} oninput={onText}></textarea>
+      <button class="link" onclick={() => (showHelp = !showHelp)}>{texts.sortRules.helpExamples}</button>
+      {#if showHelp}
+        <ul class="help">
+          {#each texts.sortRules.examples as example (example)}
+            <li><code>{example}</code></li>
+          {/each}
+        </ul>
+      {/if}
+    {/if}
 
-  {#if entry.error}
-    <p class="error">{entry.error}</p>
-  {/if}
+    {#if entry.error}
+      <p class="error">{entry.error}</p>
+    {/if}
 
-  <div class="cat-foot">
     {#if last}
-      <label class="rest-toggle">
+      <label class="rest">
         <input
           type="checkbox"
           checked={entry.filter === null}
@@ -137,82 +166,131 @@
         {texts.sortRules.takesRest}
       </label>
     {/if}
-    {#if entry.filter !== null}
-      {#if entry.mode === "boxes"}
-        <button onclick={toText}>{texts.sortRules.textView}</button>
-      {:else}
-        <button disabled={!!entry.error} onclick={toBoxes}
-          >{texts.sortRules.boxes}</button
-        >
-        <button class="link" onclick={onHelp}
-          >{texts.sortRules.helpExamples}</button
-        >
-      {/if}
-    {/if}
   </div>
-</section>
+</div>
 
 <style>
+  /* A row of the rule's card, under a thin rule. */
   .group {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 0.5rem 0.75rem;
-    margin-bottom: 0.75rem;
-    background: var(--surface);
-    box-shadow: var(--shadow);
+    padding: 0.7rem 1rem 0.8rem;
+    border-top: 1px solid var(--border-soft);
   }
 
-  .cat-head {
+  .head {
     display: flex;
     align-items: center;
     gap: 0.5rem;
   }
 
-  .cat-head .code {
-    width: 3.5rem;
+  /* The code as the group chips of the Plan and Day screens draw it. */
+  .code {
+    width: 3rem;
+    flex: none;
+    border-color: transparent;
+    background: var(--chip);
+    color: var(--chip-text);
+    font-weight: 700;
+    text-align: center;
   }
 
-  .cat-head .name {
-    width: 14rem;
+  .name {
+    width: 18rem;
+    min-width: 6rem;
+    flex: 0 1 18rem;
+    font-weight: 600;
   }
 
   .grow {
     flex: 1;
   }
 
-  .count {
+  /* Boxes or Text, side by side; the one shown is raised. */
+  .mode {
+    display: inline-flex;
+    flex: none;
+    margin-left: 0.25rem;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+  }
+
+  .mode button {
+    padding: 0.1rem 0.6rem;
+    border: 1px solid transparent;
+    background: transparent;
     color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  .mode button:hover:not(.chosen) {
+    border-color: transparent;
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  .mode button.chosen,
+  .mode button.chosen:hover {
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 600;
+    box-shadow: var(--shadow);
+  }
+
+  /* As wide as the card head's *In batch n* (the screen sets both widths), so the numbers stand
+     in one column under it. */
+  .count {
+    flex: none;
+    width: var(--count-width);
+    text-align: right;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
 
-  .count.mark {
+  .mark {
     color: var(--danger);
-    font-weight: 600;
   }
 
-  .rest {
-    margin: 0.3rem 0;
-    color: var(--text-muted);
-    font-style: italic;
+  .tools {
+    display: inline-flex;
+    flex: none;
+    justify-content: flex-end;
+    gap: 0.1rem;
+    width: var(--tools-width);
   }
 
-  .condition-text {
-    width: 100%;
+  /* Under the name, so the code stands alone at the left edge. */
+  .body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin: 0.5rem 0 0 3.5rem;
+  }
+
+  /* As wide as the row up to a line's reading length, so a value box does not run the width of a
+     full window. */
+  .body > :global(.boxes),
+  .filter-text,
+  .error {
+    align-self: stretch;
+    max-width: 58rem;
+  }
+
+  .filter-text {
     font-family: var(--font-mono);
   }
 
-  .cat-foot {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.35rem;
+  .error {
+    margin: 0;
   }
 
-  .rest-toggle {
+  .rest {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: 0.9rem;
+    gap: 0.4rem;
     color: var(--text-muted);
   }
 
@@ -222,5 +300,22 @@
     background: none;
     color: var(--link);
     cursor: pointer;
+  }
+
+  .link:hover:not(:disabled) {
+    background: none;
+    text-decoration: underline;
+  }
+
+  .help {
+    margin: 0;
+    padding: 0.5rem 0.75rem 0.5rem 1.8rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+  }
+
+  .help code {
+    font-family: var(--font-mono);
   }
 </style>

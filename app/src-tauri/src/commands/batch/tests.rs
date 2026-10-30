@@ -28,7 +28,7 @@ use crate::commands::day::{
 };
 use crate::commands::panel::{open_workspace, panel};
 use crate::commands::rules::{
-    GroupInput, check, new_rule, renamed, rule_groups, rules_view, save_groups,
+    GroupInput, check, new_rule, renamed, rule_groups, rules_view, save_groups, switched,
 };
 use crate::commands::search::{DateRange, ReprintChoice, reprint_orders, reprinted_orders, search};
 use crate::commands::start::{new_workspace, start_information, use_folder};
@@ -285,6 +285,46 @@ name = \"Harian\"
             .all(|file| file.used_in_batch == Some(BatchId::new(1)))
     );
     assert_eq!(files[0].pages, 6);
+
+    overview(&state, "2026-10-09").unwrap();
+    let next_day = sort_rules_of(&state).unwrap();
+    assert_eq!(
+        next_day.preselected, "harian",
+        "a new date starts on the rule used last"
+    );
+    assert_eq!(next_day.last_used.as_deref(), Some("harian"));
+
+    switched(&state, "harian", false).unwrap();
+    let off = sort_rules_of(&state).unwrap();
+    assert_eq!(off.rules, ["default"], "a rule that is off is not offered");
+    assert_eq!(off.preselected, "default");
+    assert_eq!(off.last_used.as_deref(), Some("harian"));
+    assert!(
+        switched(&state, "default", false).is_err(),
+        "the only rule that is on stays on"
+    );
+    let view = serde_json::to_value(rules_view(&state).unwrap()).unwrap();
+    assert_eq!(
+        view["rules"],
+        serde_json::json!([
+            { "name": "default", "enabled": true },
+            { "name": "harian", "enabled": false },
+        ])
+    );
+    switched(&state, "harian", true).unwrap();
+
+    let reading = Reading {
+        paths: inputs(),
+        rule: "default".into(),
+        redo: None,
+        date: "2026-10-09".parse().unwrap(),
+    };
+    read_into_draft(&state, reading, |_| {}).unwrap();
+    assert_eq!(
+        sort_rules_of(&state).unwrap().preselected,
+        "default",
+        "the Plan screen's Back keeps the rule just read"
+    );
 }
 
 #[test]
@@ -602,7 +642,13 @@ fn a_saved_sort_rule_keeps_the_files_comments_and_the_open_plan_follows_it() {
     new_rule(&state, "harian", Some("default")).unwrap();
     renamed(&state, "default", "biasa").unwrap();
     let view = serde_json::to_value(rules_view(&state).unwrap()).unwrap();
-    assert_eq!(view["rules"], serde_json::json!(["biasa", "harian"]));
+    assert_eq!(
+        view["rules"],
+        serde_json::json!([
+            { "name": "biasa", "enabled": true },
+            { "name": "harian", "enabled": true },
+        ])
+    );
     assert_eq!(
         view["draft_rule"], "biasa",
         "the draft's rule takes the new name"

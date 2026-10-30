@@ -1,7 +1,7 @@
 <script lang="ts">
-  // The sort rule a batch uses: the choice of a new batch's file list, with the newest batch's
-  // rule preselected, or the amend's selection page's fixed line (an amend reads with the batch's
-  // own rule). The screen keeps the chosen rule and passes it to `read_labels`.
+  // The sort rule a batch uses: the choice of a new batch's file list among the rules that are on,
+  // the one used last preselected, or the amend's selection page's fixed line (an amend reads with
+  // the batch's own rule). The screen keeps the chosen rule and passes it to `read_labels`.
   import { texts } from "../texts";
 
   let {

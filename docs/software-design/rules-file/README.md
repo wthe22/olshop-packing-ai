@@ -37,6 +37,7 @@ NotCourier {
 
 LabelSortRule {
   name: String // unique
+  enabled: bool // default true; false: kept, not offered on New batch; at least one rule is on
   label_groups: List<LabelGroupRule>
 }
 
@@ -103,14 +104,26 @@ and (name contains "spion" or name contains "knalpot")
 [[label_sort_rules.label_groups]]
 code = "Z"
 name = "Lainnya"
+
+[[label_sort_rules]]
+name = "promo 11.11"
+enabled = false
+
+[[label_sort_rules.label_groups]]
+code = "Z"
+name = "Lainnya"
 ```
 
 - A sort rule's groups apply in file order; an order goes to the **first** group whose filter matches
   ([groups](../labels/groups.md)). `'…'` is a TOML literal string and `'''…'''` spans lines, so the
   filter's double quotes need no escaping.
 - The bundled copy holds one rule, `default`, with one group `Z Lainnya` and no filter.
-- **Which rule a batch uses** is chosen on [New batch](../ui/new-batch.md#the-sort-rule); the rule of the
-  workspace's newest batch is preselected ([D-RULES-1](../decisions/rules.md)).
+- **Which rule a batch uses** is chosen on [New batch](../ui/new-batch.md#the-sort-rule) among the rules
+  that are on; the rule of the workspace's newest batch, on whichever date, is preselected
+  ([D-RULES-1](../decisions/rules.md)).
+- **A rule that is off** (`enabled = false`) is kept with its groups and is not offered on New batch; an
+  amend of a batch saved with it still uses it. The Sort rules screen switches it; on is written as no key
+  ([D-RULES-5](../decisions/rules.md)).
 - **A saved batch keeps a snapshot** of its rule in its journal record, so its outputs stay traceable
   whatever the file says later. An **amend** uses the rule of the same name as it is now, so a corrected
   filter applies; when no rule has that name any more, it uses the snapshot ([D-RULES-2](../decisions/rules.md)).
@@ -128,6 +141,6 @@ Unknown key; a missing required field; another schema than `1.0`; a courier code
 letters, digits and `-`; a duplicate courier code, classifier, rule name, or group code or name within a
 rule; a group code that is not 1–3 letters or digits; a classifier, a `courier equals` value or a logo
 answer naming no courier; a hash that is not 16 lower-case hex characters; a tracking-ID regex that does
-not compile; no sort rule, or a rule with no group; a group with no `filter` that is not last; a filter
-error. Each names its line and column of this file. A file that does not parse stops the
+not compile; no sort rule, or a rule with no group; every rule off; a group with no `filter` that is
+not last; a filter error. Each names its line and column of this file. A file that does not parse stops the
 start; a check that fails names the rule and opens the Sort rules screen on it.

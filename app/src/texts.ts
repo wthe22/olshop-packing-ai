@@ -316,9 +316,30 @@ export const texts = {
     title: "Sort rules",
     hint: "Order matters: an order goes to the first group whose filter matches.",
     rule: "Rule",
-    newRule: "+ New rule",
+    // Drawn after a plus icon.
+    newRule: "New rule",
     rename: "Rename…",
     deleteRule: "Delete rule",
+    // A rule's tab: the one the newest batch was sorted by, and one that is switched off.
+    lastUsed: "last used",
+    off: "off",
+    // The switch on the shown rule's card, and the line beside it.
+    offer: "Offer on New batch",
+    on: "On",
+    offWord: "Off",
+    offered: "New batch offers this rule.",
+    notOffered: "Kept, but New batch does not offer it.",
+    // Why the switch or **Delete rule** cannot be used.
+    keptOnlyOn: "The only rule that is on: a new batch needs one.",
+    keptLast: "The last rule cannot be deleted.",
+    askDiscard: (rule: string): Question => ({
+      title: `Discard the changes to ${rule}?`,
+      body: "They are not saved yet.",
+      ok: "Discard",
+    }),
+    // The groups card's head: the groups, and the count column while a batch is open.
+    groups: "Group",
+    inBatchHead: (n: number) => `In batch ${n}`,
     ruleName: "Rule name",
     // **+ New rule** starts with one group `Z Lainnya`, or copies the rule shown.
     copyOf: (rule: string) => `a copy of ${rule}`,
@@ -333,13 +354,16 @@ export const texts = {
     }),
     code: "Code",
     name: "Name",
-    // "In batch 3: 130", in order from what is left.
-    inBatch: (n: number, taken: number) => `In batch ${n}: ${taken}`,
+    // A filter shown as boxes or as text: the Plan screen's one-off group switches with a button,
+    // a group of the rule with two side by side.
     boxes: "Boxes",
     textView: "Text view",
-    takesRest: "no filter: takes the rest",
-    addGroup: "+ Add group",
+    textMode: "Text",
+    takesRest: "No filter: takes the rest",
+    // Drawn after a plus icon.
+    addGroup: "Add group",
     editFile: "Edit file as text",
+    unsaved: "Unsaved changes",
     fileText: "File text",
     cancel: "Cancel",
     save: "Save",
@@ -356,7 +380,6 @@ export const texts = {
     not: "not",
     boxEmpty: "This group is empty",
     helpExamples: "Help: examples ▸",
-    helpTitle: "Examples",
     // The filter language examples shown by *Help: examples ▸*.
     examples: [
       "name contains \"sepatu\"",

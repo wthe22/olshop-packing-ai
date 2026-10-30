@@ -33,9 +33,12 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 
 ## The sort rule
 
-**Sort rule** lists the rules of `packing-workflows.toml` ([rules file](../rules-file/README.md)). The rule
-of the owner's newest batch is preselected, so an owner who always uses one rule never touches it
-([D-RULES-1](../decisions/rules.md)). The batch's record keeps a snapshot of the rule it was saved with.
+**Sort rule** lists the rules of `packing-workflows.toml` that are on ([rules file](../rules-file/README.md);
+a rule switched off on the Sort rules screen is not listed, [D-RULES-5](../decisions/rules.md)). The rule
+of the workspace's newest batch is preselected, on whichever date it was saved, so an owner who always
+uses one rule never touches it, and a new day starts on the rule used last. **Back** from the Plan screen
+keeps the rule just read. A rule that is off, or gone, is never preselected: the first rule that is on
+is ([D-RULES-1](../decisions/rules.md)). The batch's record keeps a snapshot of the rule it was saved with.
 
 ## The amend's file list
 

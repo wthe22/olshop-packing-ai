@@ -1,6 +1,7 @@
 // The sort rule a screen starts on and a new rule's name: the newest batch's rule preselected, the
-// open batch's rule on the Sort rules screen, a name refused when blank or taken. Pure logic; no
-// window opens and nothing is read or written.
+// open batch's rule on the Sort rules screen, a name refused when blank or taken, and the rule
+// that must stay (the last one, the only one that is on). Pure logic; no window opens and nothing
+// is read or written.
 //
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
@@ -8,7 +9,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { openingRule, preselectRule, ruleNameProblem } from "../src/lib/sortRules.ts";
+import {
+  deleteProblem,
+  openingRule,
+  preselectRule,
+  ruleNameProblem,
+  switchOffProblem,
+} from "../src/lib/sortRules.ts";
 import { texts } from "../src/texts.ts";
 
 const rules = ["default", "harian", "ramadhan"];
@@ -43,6 +50,21 @@ test("the Amend question names the batch's sort rule, in the words the guide quo
   );
 });
 
+test("the Sort rules screen asks in the words its design quotes", () => {
+  const ask = texts.sortRules.askDiscard("harian");
+  assert.deepEqual(ask, {
+    title: "Discard the changes to harian?",
+    body: "They are not saved yet.",
+    ok: "Discard",
+  });
+  const doc = readFileSync(
+    new URL("../../docs/software-design/ui/sort-rules.md", import.meta.url),
+    "utf8",
+  ).replace(/\s+/g, " ");
+  assert.ok(doc.includes(`*${ask.title}*`), "sort-rules.md must quote the question as texts.ts writes it");
+  assert.equal(texts.sortRules.inBatchHead(3), "In batch 3");
+});
+
 test("the newest batch's rule is preselected, the first when it is gone", () => {
   assert.equal(preselectRule(rules, "harian"), "harian");
   assert.equal(preselectRule(rules, "lebaran"), "default");
@@ -59,4 +81,18 @@ test("a rule's name is refused when blank or taken, upper and lower case alike",
   assert.equal(ruleNameProblem("  ", rules), "empty");
   assert.equal(ruleNameProblem("Harian", rules), "exists");
   assert.equal(ruleNameProblem(" lebaran ", rules), null);
+});
+
+test("the only rule that is on stays on, and the last rule stays", () => {
+  const summary = (name, enabled) => ({ name, enabled });
+  const twoOn = [summary("default", true), summary("harian", true), summary("promo", false)];
+  assert.equal(switchOffProblem(twoOn, "default"), null);
+  assert.equal(deleteProblem(twoOn, "default"), null);
+  assert.equal(deleteProblem(twoOn, "promo"), null, "a rule that is off can go");
+
+  const oneOn = [summary("default", true), summary("promo", false)];
+  assert.equal(switchOffProblem(oneOn, "default"), "only-on");
+  assert.equal(deleteProblem(oneOn, "default"), "only-on");
+  assert.equal(switchOffProblem(oneOn, "promo"), null);
+  assert.equal(deleteProblem([summary("default", true)], "default"), "last");
 });

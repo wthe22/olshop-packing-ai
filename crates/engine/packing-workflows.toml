@@ -89,7 +89,7 @@ logos = ["6c1340227db55be4", "c2230c3c5d8c560d", "07fea99cbec66ae7", "f2cf701964
 
 # Sort rules: a batch is sorted by the rule chosen for it. Its label groups apply in order; an
 # order goes to the FIRST group whose filter matches. A group without a filter takes every order
-# left and must be last.
+# left and must be last. A rule with `enabled = false` is kept but not offered on New batch.
 
 [[label_sort_rules]]
 name = "default"

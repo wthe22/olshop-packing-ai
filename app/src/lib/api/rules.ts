@@ -3,11 +3,13 @@
 
 import { invoke } from "@tauri-apps/api/core";
 
-// The sort rules of `packing-workflows.toml`, and the one to preselect: the rule of the
-// workspace's newest batch while it exists, else the first.
+// The sort rules New batch offers (those that are on) and the one to preselect: the open draft's
+// rule, else the rule of the workspace's newest batch on whichever date, else the first.
 export interface SortRules {
   rules: string[];
   preselected: string;
+  // The rule of the workspace's newest batch, on or off; `null` before its first batch.
+  last_used: string | null;
 }
 
 export const sortRules = (): Promise<SortRules> => invoke("sort_rules");
@@ -17,9 +19,15 @@ export interface Courier {
   name: string;
 }
 
+// A sort rule of the file and whether New batch offers it.
+export interface RuleSummary {
+  name: string;
+  enabled: boolean;
+}
+
 // The Sort rules screen's first load.
 export interface RulesView {
-  rules: string[];
+  rules: RuleSummary[];
   // The whole file, for *Edit file as text*.
   text: string;
   // For the Courier box: shown by name, stored by code.
@@ -68,6 +76,10 @@ export const ruleNew = (name: string, copyFrom: string | null): Promise<void> =>
 
 export const ruleRename = (rule: string, name: string): Promise<void> =>
   invoke("rule_rename", { rule, name });
+
+// The rule's switch: offered on New batch or not. The only rule that is on stays on.
+export const ruleEnable = (rule: string, enabled: boolean): Promise<void> =>
+  invoke("rule_enable", { rule, enabled });
 
 export const ruleDelete = (rule: string): Promise<void> => invoke("rule_delete", { rule });
 

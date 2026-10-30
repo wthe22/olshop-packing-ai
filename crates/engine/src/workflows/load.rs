@@ -61,7 +61,13 @@ struct RawNotCourier {
 #[serde(deny_unknown_fields)]
 struct RawSortRule {
     name: Spanned<String>,
+    #[serde(default = "on")]
+    enabled: bool,
     label_groups: Vec<RawGroup>,
+}
+
+fn on() -> bool {
+    true
 }
 
 #[derive(Deserialize)]
@@ -250,8 +256,15 @@ impl File<'_> {
             }
             rules.push(SortRule {
                 name: name.clone(),
+                enabled: entry.enabled,
                 groups,
             });
+        }
+        if !rules.iter().any(|rule| rule.enabled) {
+            return Err(self.error(
+                &raw[0].name.span(),
+                "every sort rule is off: a new batch needs one that is on".to_string(),
+            ));
         }
         Ok(rules)
     }

@@ -1,7 +1,8 @@
 //! The Sort rules screen (sort-rules.md): the sort rules of `packing-workflows.toml`, one rule's
 //! groups, the live check with the counts each group takes in the open draft, and the writes — a
-//! rule's groups, a new rule, a rename, a delete, the whole file as text. After a write the open
-//! draft's plan follows the file, keeping its per-batch changes where they still apply.
+//! rule's groups, a new rule, a rename, a rule switched on or off, a delete, the whole file as
+//! text. After a write the open draft's plan follows the file, keeping its per-batch changes where
+//! they still apply.
 
 use packing_engine::ids::BatchId;
 use packing_engine::rules::parse_filter;
@@ -9,7 +10,7 @@ use packing_engine::rules_edit::{self, Tree};
 use packing_engine::sorting::{plan_groups, sort_batch};
 use packing_engine::workflows::{
     GroupEdit, NewRule, SortRule, Workflows, add_rule, delete_rule, load_workflows, rename_rule,
-    write_groups,
+    set_rule_enabled, write_groups,
 };
 use serde::{Deserialize, Serialize};
 use tauri::State;
@@ -18,13 +19,20 @@ use crate::{AppState, OpenDraft, PlanEntry, settings};
 
 #[derive(Serialize)]
 pub struct RulesView {
-    rules: Vec<String>,
+    rules: Vec<RuleView>,
     /// The whole file, for *Edit file as text*.
     text: String,
     /// The couriers by code and name, for the Courier box.
     couriers: Vec<CourierView>,
     /// The open draft's rule, so the screen opens on it; none without a draft.
     draft_rule: Option<String>,
+}
+
+/// A sort rule of the file and whether New batch offers it.
+#[derive(Serialize)]
+pub struct RuleView {
+    name: String,
+    enabled: bool,
 }
 
 #[derive(Serialize)]
@@ -82,7 +90,10 @@ pub(crate) fn rules_view(state: &AppState) -> Result<RulesView, String> {
         rules: workflows
             .sort_rules
             .iter()
-            .map(|r| r.name.clone())
+            .map(|rule| RuleView {
+                name: rule.name.clone(),
+                enabled: rule.enabled,
+            })
             .collect(),
         text,
         couriers: workflows
@@ -298,7 +309,20 @@ pub(crate) fn renamed(state: &AppState, rule: &str, name: &str) -> Result<(), St
     write(state, &written, &workflows, Some((rule, name)))
 }
 
-/// **Delete rule**; the last rule cannot be deleted.
+/// The rule's switch: offered on New batch or not; the only rule that is on stays on. Nothing a
+/// batch is sorted by changes, so the open draft's plan is left as the owner arranged it.
+#[tauri::command]
+pub fn rule_enable(state: State<'_, AppState>, rule: String, enabled: bool) -> Result<(), String> {
+    switched(&state, &rule, enabled)
+}
+
+pub(crate) fn switched(state: &AppState, rule: &str, enabled: bool) -> Result<(), String> {
+    let (text, _) = settings::workflows(state.program())?;
+    let (written, _) = set_rule_enabled(&text, rule, enabled).map_err(|e| e.to_string())?;
+    settings::write_workflows(state.program(), &written)
+}
+
+/// **Delete rule**; the last rule, and the only one that is on, cannot be deleted.
 #[tauri::command]
 pub fn rule_delete(state: State<'_, AppState>, rule: String) -> Result<(), String> {
     let (text, _) = settings::workflows(state.program())?;

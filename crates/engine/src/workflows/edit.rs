@@ -1,8 +1,8 @@
 //! The Sort rules screen's edits written into `packing-workflows.toml` (rules-file/README.md): a
-//! rule's groups replaced, a rule added, renamed or deleted. The file is edited through
-//! `toml_edit`, so the owner's comments stay with their tables and a filter that was not changed
-//! keeps its text exactly; every edit is loaded again before it is returned, so a file that fails
-//! a check is never written.
+//! rule's groups replaced, a rule added, renamed, switched on or off, or deleted. The file is
+//! edited through `toml_edit`, so the owner's comments stay with their tables and a filter that
+//! was not changed keeps its text exactly; every edit is loaded again before it is returned, so a
+//! file that fails a check is never written.
 
 use std::fmt;
 use std::str::FromStr;
@@ -77,6 +77,7 @@ pub fn add_rule(
             NewRule::CopyOf(rule) => {
                 let mut copy = rule_table(rules, rule)?.clone();
                 copy.decor_mut().clear();
+                copy.remove("enabled");
                 copy
             }
             NewRule::Empty => {
@@ -104,7 +105,28 @@ pub fn rename_rule(text: &str, rule: &str, name: &str) -> Result<(String, Workfl
     })
 }
 
-/// The file without rule `rule`; the last rule cannot go.
+/// The file with rule `rule` offered on New batch or not. On is the default, so it is written as
+/// no key; off as `enabled = false`. The only rule that is on stays on.
+pub fn set_rule_enabled(
+    text: &str,
+    rule: &str,
+    enabled: bool,
+) -> Result<(String, Workflows), EditError> {
+    edit(text, |rules| {
+        if !enabled && only_one_on(rules, rule) {
+            return Err(EditError::LastOn);
+        }
+        let table = rule_table(rules, rule)?;
+        if enabled {
+            table.remove("enabled");
+        } else {
+            table.insert("enabled", toml_edit::value(false));
+        }
+        Ok(())
+    })
+}
+
+/// The file without rule `rule`; the last rule, and the only one that is on, cannot go.
 pub fn delete_rule(text: &str, rule: &str) -> Result<(String, Workflows), EditError> {
     edit(text, |rules| {
         let at = rules
@@ -114,9 +136,22 @@ pub fn delete_rule(text: &str, rule: &str) -> Result<(String, Workflows), EditEr
         if rules.len() == 1 {
             return Err(EditError::LastRule);
         }
+        if only_one_on(rules, rule) {
+            return Err(EditError::LastOn);
+        }
         rules.remove(at);
         Ok(())
     })
+}
+
+/// Whether `rule` is the one rule that is on.
+fn only_one_on(rules: &ArrayOfTables, rule: &str) -> bool {
+    let on = |table: &Table| table.get("enabled").and_then(Item::as_bool) != Some(false);
+    let mut on_names = rules
+        .iter()
+        .filter(|table| on(table))
+        .map(|table| table.get("name").and_then(Item::as_str));
+    on_names.next() == Some(Some(rule)) && on_names.next().is_none()
 }
 
 /// Load, change the sort rules, write, and load again: the edit is kept only when the whole file
@@ -181,6 +216,8 @@ pub enum EditError {
     Check(WorkflowsError),
     NoRule(String),
     LastRule,
+    /// The rule is the only one that is on: New batch would have none to offer.
+    LastOn,
 }
 
 impl From<WorkflowsError> for EditError {
@@ -195,6 +232,9 @@ impl fmt::Display for EditError {
             EditError::Check(error) => error.fmt(f),
             EditError::NoRule(rule) => write!(f, "There is no sort rule {rule:?}."),
             EditError::LastRule => f.write_str("The last sort rule cannot be deleted."),
+            EditError::LastOn => f.write_str(
+                "A new batch needs a sort rule that is on: switch another one on first.",
+            ),
         }
     }
 }

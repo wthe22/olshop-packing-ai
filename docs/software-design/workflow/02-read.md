@@ -13,8 +13,9 @@
   name its record gives it, so the record, the trace and the summary PDF name the download.
 - The list is **sorted by file name**: the download's name starts with its time and part number, so name
   order is download order. This is the **reading order** of the batch.
-- The **sort rule** is chosen here: the rule of the workspace's newest batch is preselected
-  ([D-RULES-1](../decisions/rules.md)).
+- The **sort rule** is chosen here, among the rules that are on: the rule of the workspace's newest batch,
+  on whichever date, is preselected; the Plan screen's **Back** keeps the rule just read
+  ([D-RULES-1](../decisions/rules.md), [D-RULES-5](../decisions/rules.md)).
 
 **Stops:** a file that cannot be opened as a PDF.
 

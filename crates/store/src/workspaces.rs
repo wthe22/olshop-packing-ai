@@ -10,8 +10,9 @@ use jiff::civil::Date;
 use packing_engine::sorting::default_file_name;
 
 use crate::StoreError;
+use crate::date::DateFolder;
 use crate::files::move_file;
-use crate::journal::JOURNAL;
+use crate::journal::{JOURNAL, Journal};
 
 /// A workspace name is at most this many characters.
 pub const WORKSPACE_LIMIT: usize = 40;
@@ -100,6 +101,21 @@ pub fn last_written(data_dir: &Path) -> Result<Option<String>, StoreError> {
         }
     }
     Ok(newest.map(|(_, workspace)| workspace))
+}
+
+/// The sort rule of the workspace's newest batch: the newest live batch of the newest date that
+/// has one. A damaged journal is passed over, as Search passes it over.
+pub fn newest_batch_rule(data_dir: &Path, workspace: &str) -> Result<Option<String>, StoreError> {
+    for date in dates(data_dir, workspace)?.into_iter().rev() {
+        let journal = Journal::open(&DateFolder::new(data_dir, workspace, date))?;
+        if journal.damage().is_some() {
+            continue;
+        }
+        if let Some(live) = journal.fold().live.values().next_back() {
+            return Ok(Some(live.saved.sort_rule.name.clone()));
+        }
+    }
+    Ok(None)
 }
 
 /// Make a new workspace's folder, empty.

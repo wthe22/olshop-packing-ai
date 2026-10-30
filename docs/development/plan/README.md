@@ -4,7 +4,25 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-10-29)
+## Status (2026-10-30)
+
+- **Handoff of 2026-10-30 — the sort rules: the rule used last, a rule switched off, a new page.** The
+  owner's words in chat, built and pushed:
+  - **R-RULES-5**: New batch preselects the rule of the workspace's newest batch **on whichever date**, so
+    a new day starts on the rule used last; **Back** from the Plan screen keeps the rule just read
+    ([D-RULES-1](../../software-design/decisions/rules.md)). Nothing new is stored: the journals say it.
+  - **R-RULES-6**: a sort rule is **On** or **Off** (`enabled = false` in `packing-workflows.toml`); New
+    batch lists only the rules that are on; the only rule that is on cannot be switched off or deleted
+    ([D-RULES-5](../../software-design/decisions/rules.md)).
+  - **The Sort rules page** in the look of Settings and the Plan screen
+    ([ui/sort-rules](../../software-design/ui/sort-rules.md)): a tab per rule (*last used*, *off*), the
+    rule as one card — its head the switch, **Rename…** in place and **Delete rule**, a row per group with
+    its code as the blue chip, **Boxes | Text**, the count under *In batch n* and icon buttons — and a foot
+    that stays in view with *Unsaved changes*, **Cancel** and **Save**; another tab asks before it drops
+    unsaved changes. The doubled *no filter: takes the rest* is one tick.
+  - **The owner may test now**: [R8-checklist.md](R8-checklist.md) item 10. A finding goes into
+    [reviews/rules.md](../../reviews/rules.md) or [reviews/ui.md](../../reviews/ui.md) as the next
+    `R-<SCOPE>-n` (R-RULES-7, R-UI-36).
 
 - **Handoff of 2026-10-29 — the owner tests round eight; then the work is R6.4 and R9.** Round eight of
   the owner's review, from the owner's words in chat, is built and pushed:
@@ -33,7 +51,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - No question is open.
   - A finding goes into [reviews/ui.md](../../reviews/ui.md), [reviews/label.md](../../reviews/label.md),
     [reviews/rules.md](../../reviews/rules.md) or [reviews/app.md](../../reviews/app.md) as the next
-    `R-<SCOPE>-n` (R-UI-36, R-LABEL-12, R-RULES-5, R-APP-9); the next session turns each into a task.
+    `R-<SCOPE>-n` (R-UI-36, R-LABEL-12, R-RULES-7, R-APP-9); the next session turns each into a task.
   - **Next without the owner:** **R6.4** ([R6-app-journal.md](R6-app-journal.md)), then **R9** (the full
     check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff). An instant
     label's unknown tag is not asked about yet (W-9 of [workflow-audit.md](workflow-audit.md)).
