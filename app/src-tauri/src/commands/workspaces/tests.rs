@@ -30,7 +30,7 @@ fn a_workspace_is_renamed_or_deleted_and_the_open_one_follows() {
         .unwrap()
         .commit(
             vec![RecordBody::BatchSaved(batch(1, false, Vec::new()))],
-            "0.2.0",
+            "0.3.1",
         )
         .unwrap();
     new_workspace(&state, "Toko Lain").unwrap();

@@ -81,7 +81,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   repeats and the copies left out, the plan with order contents, the `batch_saved` record — and the 2.32
   fix; `crates/verify` checks a batch's outputs by page digest with `lopdf` alone (every page of the
   samples that PDFium copies keeps its digest). **R6 is under way** ([R6-app-journal.md](R6-app-journal.md)):
-  R6.1 to R6.3 are done, R6.4 follows the owner's test of v0.2. **The program the owner runs is v0.2.0**: it
+  R6.1 to R6.3 are done, R6.4 follows the owner's test of v0.2. **The program the owner runs is v0.3.1**: it
   saves through `crates/batch` and the journal into `{data_dir}/{workspace}/{date}/` and writes the summary
   PDF. A task gets its own file in this folder when it starts; until then its row in the order of work is
   the task.

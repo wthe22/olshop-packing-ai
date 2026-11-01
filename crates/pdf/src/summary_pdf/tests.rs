@@ -99,7 +99,7 @@ fn the_facts_page_says_what_the_batch_is() {
     let mut record = record();
     record.orders[2].courier = None;
     assert_eq!(
-        facts(&record, "0.2.0", &couriers()),
+        facts(&record, "0.3.1", &couriers()),
         vec![
             section(
                 "Couriers",
@@ -134,7 +134,7 @@ fn the_facts_page_says_what_the_batch_is() {
             section(
                 "Versions",
                 vec![Row::new(
-                    "schema 1.0 · Packing v0.2.0 · PDFium chromium/7881"
+                    "schema 1.0 · Packing v0.3.1 · PDFium chromium/7881"
                 )]
             ),
         ]
@@ -143,7 +143,7 @@ fn the_facts_page_says_what_the_batch_is() {
 
 #[test]
 fn a_courier_the_rules_no_longer_name_shows_its_code() {
-    let rows = &facts(&record(), "0.2.0", &[])[0].rows;
+    let rows = &facts(&record(), "0.3.1", &[])[0].rows;
     assert_eq!(rows, &[Row::new("jnt").count(0, 3, "order", "orders")]);
 }
 
@@ -166,7 +166,7 @@ fn written(tag: &str, record: &BatchSaved, check: impl FnOnce(&Pdfium, &std::pat
             date: date(2026, 10, 7),
             record,
             printed: "09:12",
-            app: "0.2.0",
+            app: "0.3.1",
             couriers: &couriers,
         },
     )

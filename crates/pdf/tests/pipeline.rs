@@ -180,7 +180,7 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
     let line = Record {
         seq: 2,
         time: Datetime::parse("2026-10-08T09:00:00+07:00").unwrap(),
-        app: "0.2.0".into(),
+        app: "0.3.1".into(),
         body: RecordBody::BatchSaved(saved.clone()),
     };
     let json = serde_json::to_string(&line).unwrap();

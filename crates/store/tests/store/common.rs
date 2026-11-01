@@ -11,7 +11,7 @@ use testkit::TempDir;
 pub use testkit::{batch, sha, time};
 
 pub const WORKSPACE: &str = "Toko Contoh";
-pub const APP: &str = "0.2.0";
+pub const APP: &str = "0.3.1";
 
 /// A fresh data folder and the date 2026-10-07 of the workspace `Toko Contoh` in it.
 pub fn date_folder(tag: &str) -> (TempDir, DateFolder) {

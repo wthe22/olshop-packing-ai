@@ -159,7 +159,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
             date: folder.date(),
             record: &record,
             printed: "07:00",
-            app: "0.2.0",
+            app: "0.3.1",
             couriers: &[],
         },
     )
@@ -173,7 +173,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
     let started = packing_engine::record::Record {
         seq: 1,
         time: Datetime::now(),
-        app: "0.2.0".into(),
+        app: "0.3.1".into(),
         body: RecordBody::Started(packing_engine::record::Started {
             schema: "1.0".into(),
             workspace: "Toko Contoh".into(),
@@ -183,7 +183,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
     let saved = packing_engine::record::Record {
         seq: 2,
         time: Datetime::now(),
-        app: "0.2.0".into(),
+        app: "0.3.1".into(),
         body: RecordBody::BatchSaved(record),
     };
     let append: Vec<u8> = [encode_line(&started), encode_line(&saved)].concat();

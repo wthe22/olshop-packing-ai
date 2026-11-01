@@ -24,7 +24,7 @@ use packing_store::{DateFolder, Journal, Settled, input_path, open_date, partial
 use testkit::{PdfiumGuard, TempDir, testdata, vendor_dir};
 
 const INPUTS: [&str; 2] = ["labels-repeat-1.pdf", "labels-repeat-2.pdf"];
-const APP: &str = "0.2.0";
+const APP: &str = "0.3.1";
 const GROUP_FILE: &str = "1-Z Lainnya x4.pdf";
 
 /// A date of a fresh data folder, opened, with the worker and the bundled rules.

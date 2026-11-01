@@ -12,7 +12,7 @@ fn round_trip(json: &str) -> Record {
 
 #[test]
 fn the_numbering_comes_first_then_the_type_and_its_fields() {
-    let json = r#"{"seq":2,"time":"2026-10-07T07:40:12+07:00","app":"0.2.0","type":"batch_reverted","batch":3}"#;
+    let json = r#"{"seq":2,"time":"2026-10-07T07:40:12+07:00","app":"0.3.1","type":"batch_reverted","batch":3}"#;
     let record = round_trip(json);
     assert_eq!(record.seq, 2);
     assert_eq!(
@@ -51,10 +51,10 @@ fn a_left_out_copy_stores_its_reason_and_what_was_kept() {
 #[test]
 fn a_started_record_and_a_recovered_one_read_back() {
     round_trip(
-        r#"{"seq":1,"time":"2026-10-07T07:40:12+07:00","app":"0.2.0","type":"started","schema":"1.0","namespace":"Toko Contoh","date":"2026-10-07"}"#,
+        r#"{"seq":1,"time":"2026-10-07T07:40:12+07:00","app":"0.3.1","type":"started","schema":"1.0","namespace":"Toko Contoh","date":"2026-10-07"}"#,
     );
     round_trip(
-        r#"{"seq":4,"time":"2026-10-07T09:00:00+07:00","app":"0.2.0","type":"recovered","dropped_bytes":5,"dropped_text":"3f9a0"}"#,
+        r#"{"seq":4,"time":"2026-10-07T09:00:00+07:00","app":"0.3.1","type":"recovered","dropped_bytes":5,"dropped_text":"3f9a0"}"#,
     );
 }
 

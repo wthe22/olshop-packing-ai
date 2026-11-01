@@ -64,7 +64,7 @@ fn line(value: &Value) -> String {
 fn record(input_sha: &str, group: (String, u64), summary: (String, u64)) -> Value {
     let order = |id: &str, content: u16, start: u16, end: u16| json!({"order_id": id, "content": content, "pdf": 1, "page_start": start, "page_end": end, "group": "Z"});
     json!({
-        "seq": 2, "time": "2026-10-08T09:00:00+07:00", "app": "0.2.0", "type": "batch_saved",
+        "seq": 2, "time": "2026-10-08T09:00:00+07:00", "app": "0.3.1", "type": "batch_saved",
         "batch": 1, "amends": false,
         "inputs": [{"pdf": 1, "sha256": input_sha, "filename": INPUT, "page_count": 6}],
         "contents": [{"items": [{"quantity": 1}]}, {"items": [{"quantity": 1}]}, {"items": [{"quantity": 1}]}],
@@ -83,7 +83,7 @@ fn record(input_sha: &str, group: (String, u64), summary: (String, u64)) -> Valu
 }
 
 fn started() -> Value {
-    json!({"seq": 1, "time": "2026-10-08T09:00:00+07:00", "app": "0.2.0", "type": "started",
+    json!({"seq": 1, "time": "2026-10-08T09:00:00+07:00", "app": "0.3.1", "type": "started",
            "schema": "1.0", "namespace": "Toko Contoh", "date": "2026-10-08"})
 }
 
@@ -309,7 +309,7 @@ fn a_journal_that_changed_is_found() {
     let folder = Folder::new("journal");
     let first = line(&started());
     let mut changed = first.clone().replace("Toko Contoh", "Toko Lain");
-    changed.push_str(&line(&json!({"seq": 2, "time": "2026-10-08T09:00:00+07:00", "app": "0.2.0", "type": "recovered", "dropped_bytes": 0, "dropped_text": ""})));
+    changed.push_str(&line(&json!({"seq": 2, "time": "2026-10-08T09:00:00+07:00", "app": "0.3.1", "type": "recovered", "dropped_bytes": 0, "dropped_text": ""})));
     let next = json!({"seq": 9, "type": "batch_saved"});
     let findings = verify_batch(&BatchCheck {
         journal: changed.as_bytes(),
@@ -410,7 +410,7 @@ fn verify_a_reprint(tag: &str, order: &[u32], tamper: impl Fn(&Folder)) -> Findi
     let (sha, size) = sha_and_size(&file);
     let reprinted = |id: &str, page: u16| json!({"order_id": id, "date": "2026-10-08", "batch": 1, "sha256": input_sha, "page_start": page, "page_end": page});
     let record = json!({
-        "seq": 2, "time": "2026-10-09T10:00:00+07:00", "app": "0.2.0", "type": "reprint_made",
+        "seq": 2, "time": "2026-10-09T10:00:00+07:00", "app": "0.3.1", "type": "reprint_made",
         "number": 1, "file": REPRINT_FILE, "pages": 2, "size": size, "sha256": sha,
         "orders": [reprinted("580000000000000103", 6), reprinted("580000000000000101", 1)],
     });
@@ -480,7 +480,7 @@ fn verify_a_restore(tag: &str, file: &str, batch: u8, write: impl Fn(&Path)) -> 
     write(&path);
     let (sha, size) = sha_and_size(&path);
     let pages = page_digests(&path).map_or(0, |pages| pages.len());
-    let restored = json!({"seq": 3, "time": "2026-10-08T11:00:00+07:00", "app": "0.2.0", "type": "output_restored",
+    let restored = json!({"seq": 3, "time": "2026-10-08T11:00:00+07:00", "app": "0.3.1", "type": "output_restored",
                           "batch": batch, "file": file, "pages": pages, "size": size, "sha256": sha});
     verify_restore(&RestoreCheck {
         journal: journal.as_bytes(),

@@ -56,4 +56,4 @@ the title bar of every screen and *About*, all fed from that one place.
   version from `app/src-tauri/Cargo.toml`, which inherits the workspace's. `app/package.json`'s own
   `version` is npm's field: nothing shows it, and it is kept equal to the workspace's.
 - The `v` + major.minor text is made in one place in the app crate. The journal's `app` field is the full
-  workspace version (`0.2.0`).
+  workspace version (`0.3.1`).
