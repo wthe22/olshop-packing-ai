@@ -136,8 +136,7 @@ creator handle, …) are not needed for packing.
 - **The `No. Resi` layout of the Shopee-style label** (`2026-11-02 spx std.pdf`, 1 page) prints the
   whole ID after `No. Resi:` and the service tag `STD`; its SPX logo is another asset
   (`7f0d33c143e2ab14`), and in its text an empty box's `-` comes between `Batas Kirim:` and the date.
-  A product name the platform cuts short ends in a bare `|` on the slip, on both layouts; the name is
-  read as printed.
+  A product name can end in a bare `|`: it is the shop's own name, printed whole on the slip.
 - The courier is not always readable text: J&T Express labels print `www.jet.co.id` and J&T Cargo
   labels print `FastTrack` (their service tag) and caption the order ID `TT Order ID :`, but
   **SiCepat, iD Express and the Shopee-style label print no courier name and no web address** — the
