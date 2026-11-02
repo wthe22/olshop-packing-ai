@@ -19,7 +19,7 @@ packing-workflows.toml     couriers, courier clues, sort rules
 ```
 
 - `packing-settings.toml`: `schema`, `data_dir` (an absolute path or one relative to the program's
-  folder) and `theme`. Written at the first start ([Start](../ui/start.md)), by Settings › **Change…** and
+  folder) and `theme`. Written at the first start ([Start](../ui/start.md)), by Settings › **Change** and
   by Settings › **Theme**; each keeps the other's value.
 - `packing-workflows.toml`: the owner's rules ([rules file](../rules-file/README.md)). Written from the copy
   bundled in the program when it is missing; from then on it is the owner's.
@@ -36,7 +36,7 @@ Root {
 
 ```
 {data_dir}/
-  .lock  .lock-holder                     one copy of the app at a time
+  .lock  .lock-holder                     held by the copy of the app that writes
   {workspace}/                            one per workspace
     {date}/                               2026-10-07
       journal.jsonl                       the truth
@@ -68,10 +68,17 @@ read. An output is reproducible from `input/` and the journal ([reprint](../app/
 
 ## One writer
 
-The data folder holds `.lock`, locked with `File::try_lock` while the app runs. The app that holds it writes
-its computer name, process and start time into `.lock-holder` (Windows refuses to read a locked file, so
-the holder is written beside it). A second copy that finds `.lock` locked reads `.lock-holder` and says
-which copy has the folder ([Messages](../ui/messages.md)); it reads and writes nothing else.
+Several copies of the app may use the data folder at once ([program › Several copies](../app/program.md#several-copies)).
+The data folder holds `.lock`, locked with `File::try_lock` only while a copy writes: a commit with the file
+moves around it, opening a date that settles `.partial/` or writes the views, the day summary, a workspace
+made, renamed or deleted. The copy that holds it writes its computer name, process and the time into
+`.lock-holder` (Windows refuses to read a locked file, so the holder is written beside it). Another copy's
+write waits for the lock, a minute at most, then names the holder ([Messages](../ui/messages.md)).
+
+Reading needs no lock. A copy finds another's commit by the journal's length on disk (the journal only
+grows) and folds it again; a write does so under the lock before it decides, and the append refuses a
+journal that grew meanwhile. A date opened while another copy holds the lock is opened for viewing only —
+`.partial/` and the views are that copy's — and opened again once the lock is free.
 
 ## Types, versions and names
 

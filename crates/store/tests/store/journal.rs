@@ -60,6 +60,26 @@ fn prepared_lines_are_what_the_commit_appends_and_go_stale_after_another_commit(
 }
 
 #[test]
+fn another_copys_commit_is_seen_on_disk_and_a_stale_fold_appends_nothing() {
+    let (_data, folder) = date_folder("two-copies");
+    let mut mine = Journal::open(&folder).unwrap();
+    let mut theirs = Journal::open(&folder).unwrap();
+    assert!(!mine.changed_on_disk());
+    let saved = |number| RecordBody::BatchSaved(batch(number, false, Vec::new()));
+    theirs.commit(vec![saved(1)], APP).unwrap();
+    assert!(mine.changed_on_disk() && !theirs.changed_on_disk());
+
+    let before = journal_text(&folder);
+    assert!(matches!(
+        mine.commit(vec![saved(1)], APP),
+        Err(StoreError::JournalChanged { .. })
+    ));
+    assert_eq!(journal_text(&folder), before, "nothing appended");
+    let mut reopened = Journal::open(&folder).unwrap();
+    reopened.commit(vec![saved(2)], APP).unwrap();
+}
+
+#[test]
 fn printed_marks_revert_amend_and_reprints_fold_by_their_rules() {
     let (_data, folder) = date_folder("fold-rules");
     let mut journal = Journal::open(&folder).unwrap();

@@ -6,6 +6,25 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-02)
 
+- **Handoff of 2026-11-02 — several copies on one data folder; version 0.3.3.** The owner's words in
+  chat, built and pushed:
+  - **R-APP-9**: a second copy of the program no longer stops at *Packing is already open*. The data
+    folder's lock is held only while a copy writes; another copy's write waits for it, a minute at most
+    ([D-APP-9](../../software-design/decisions/app.md), [data › One writer](../../software-design/data/README.md#one-writer)).
+  - Each copy looks every 3 seconds for what the others wrote: the Day screen, the panel and Search
+    follow. A write reads the date's journal again first; a save whose orders another copy saved after
+    the labels were read stops with *read the labels again*; **Revert** and **Amend** refuse a batch that
+    is no longer the newest; a workspace another copy renamed or deleted is followed
+    ([program › Several copies](../../software-design/app/program.md#several-copies)).
+  - Version **0.3.3**. The commit also holds the earlier session's 0.3.2 work that was left uncommitted
+    (the whole version shown, *About*'s build time, the buttons without `…`).
+  - **The owner may test now**: start `target/portable/Packing/Packing.exe` twice, or on two PCs with one
+    shared data folder. Save a batch in one: the other shows it within a few seconds. Tick Printed in
+    both, save in both at once, rename the workspace in one. A finding goes into
+    [reviews/app.md](../../reviews/app.md) as R-APP-10.
+  - Not covered: `packing-workflows.toml` is beside the program, not in the data folder. Copies started
+    from one program folder share it, and the last save of a sort rule wins.
+
 - **Handoff of 2026-11-02 — Shopee orders: the tracking ID's letter, `total_quantity` on every slip.**
   The owner's words in chat, built and pushed:
   - **R-LABEL-12**: an SPX tracking ID is `SPXID` + 11 digits + a capital letter, and the letter was
@@ -103,7 +122,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   repeats and the copies left out, the plan with order contents, the `batch_saved` record — and the 2.32
   fix; `crates/verify` checks a batch's outputs by page digest with `lopdf` alone (every page of the
   samples that PDFium copies keeps its digest). **R6 is under way** ([R6-app-journal.md](R6-app-journal.md)):
-  R6.1 to R6.3 are done, R6.4 follows the owner's test of v0.2. **The program the owner runs is v0.3.1**: it
+  R6.1 to R6.3 are done, R6.4 follows the owner's test of v0.2. **The program the owner runs is v0.3.3**: it
   saves through `crates/batch` and the journal into `{data_dir}/{workspace}/{date}/` and writes the summary
   PDF. A task gets its own file in this folder when it starts; until then its row in the order of work is
   the task.

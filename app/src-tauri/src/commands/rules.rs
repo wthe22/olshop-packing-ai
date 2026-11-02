@@ -297,7 +297,7 @@ pub(crate) fn new_rule(
     write(state, &written, &workflows, None)
 }
 
-/// **Rename…**: saved batches keep the name they recorded.
+/// **Rename**: saved batches keep the name they recorded.
 #[tauri::command]
 pub fn rule_rename(state: State<'_, AppState>, rule: String, name: String) -> Result<(), String> {
     renamed(&state, &rule, &name)

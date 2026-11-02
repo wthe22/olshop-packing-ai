@@ -14,7 +14,7 @@ use packing_store::newest_batch_rule;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State};
 
-use crate::commands::day::date_of;
+use crate::commands::day::{check_newest, date_of};
 use crate::{AppState, settings, today};
 
 mod logo;
@@ -41,7 +41,7 @@ fn open_date(state: &AppState) -> Result<Date, String> {
     })
 }
 
-/// *Add files…* / a drop: each file's page count, size, time and *used in batch n*; on an amend's
+/// *Add files* / a drop: each file's page count, size, time and *used in batch n*; on an amend's
 /// selection page (`redo`), never the batch being redone.
 #[tauri::command]
 pub fn check_files(
@@ -238,14 +238,18 @@ pub fn discard_draft(state: State<'_, AppState>) {
     state.clear_draft();
 }
 
-/// *Amend* the newest batch: its inputs from `input/` read again with its rule and its kept
-/// copies, the draft open; the file list comes back for the amend's *Back*.
+/// *Amend* `batch`, which must still be the newest: its inputs from `input/` read again with its
+/// rule and its kept copies, the draft open; the file list comes back for the amend's *Back*.
 #[tauri::command]
-pub async fn start_amend(app: AppHandle, day: String) -> Result<AmendStart, String> {
+pub async fn start_amend(
+    app: AppHandle,
+    day: String,
+    batch: BatchId,
+) -> Result<AmendStart, String> {
     let date = date_of(&day)?;
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<AppState>();
-        amend_start(&state, date, progress_to(app.clone()))
+        amend_start(&state, date, batch, progress_to(app.clone()))
     })
     .await
     .map_err(|error| format!("the amend task stopped: {error}"))?
@@ -254,14 +258,16 @@ pub async fn start_amend(app: AppHandle, day: String) -> Result<AmendStart, Stri
 pub(crate) fn amend_start(
     state: &AppState,
     date: Date,
+    batch: BatchId,
     on_progress: impl Fn(Progress) + Send + 'static,
 ) -> Result<AmendStart, String> {
-    let (batch, files) = state.with_data(|data| {
+    let files = state.with_data(|data| {
         let open = data.open_day(date)?;
+        check_newest(open.journal.fold(), batch)?;
         let (_, workflows) = settings::workflows(state.program())?;
         let redo = packing_batch::amend(&open.folder, open.journal.fold(), &workflows)
             .map_err(|error| error.to_string())?;
-        Ok((redo.batch, redo.files))
+        Ok(redo.files)
     })?;
     let reading = Reading {
         paths: files.iter().map(|file| file.path.clone()).collect(),

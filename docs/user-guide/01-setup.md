@@ -28,11 +28,18 @@ The first time, the app asks **Where should Packing keep its data?**
 
 - **Use this folder** keeps the data in `packing-data` beside the program (*Next to the program*).
   Choose this for a normal setup.
-- **Choose a folder…** picks another folder, e.g. when the program folder cannot be written.
+- **Choose a folder** picks another folder, e.g. when the program folder cannot be written.
 
 Then it asks to **name the first workspace**. A workspace keeps its batches and dates apart from every
 other workspace — for example one per shop owner. Type a name (e.g. *Toko Contoh*) and press
 **Create**; the Day screen of today opens. More workspaces are added in the panel.
+
+## Several PCs on one data folder
+
+More than one person can work at the same time: start Packing on each PC with the same data folder
+(e.g. a shared network folder chosen with **Choose a folder**, or the same program folder). Each copy
+shows what the others save within a few seconds. When two save at the same moment, one waits for the
+other; if the other saved some of the same orders, Packing asks to read the labels again.
 
 ## A new version of the program
 

@@ -8,7 +8,7 @@ use std::process::Command;
 use packing_pdf::PDFIUM_VERSION;
 use packing_store::{create_workspace, last_written, workspaces};
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 use crate::settings::{self, DEFAULT_DATA_DIR, Theme};
 use crate::{AppState, Data, today};
@@ -16,14 +16,14 @@ use crate::{AppState, Data, today};
 /// The program's name as the window title and the title bar show it.
 pub(crate) const PROGRAM_NAME: &str = "Packing";
 
-/// The shown form of the program's version: `v` + the first two numbers of the workspace
-/// `version` (`0.2.0` → `v0.2`). The app inherits the workspace version, so the root `Cargo.toml`
-/// is the one place; the window title, the title bar and *About* all take this text.
+/// When the program was compiled, `2026-10-30 09:15` in the PC's time zone (set by `build.rs`).
+pub(crate) const BUILT: &str = env!("PACKING_BUILT");
+
+/// The shown form of the program's version: `v` + the workspace `version` (`0.3.3` → `v0.3.3`). The
+/// app inherits the workspace version, so the root `Cargo.toml` is the one place; the window title,
+/// the title bar and *About* all take this text.
 pub(crate) fn version_text() -> String {
-    let mut numbers = crate::APP_VERSION.split('.');
-    let major = numbers.next().unwrap_or_default();
-    let minor = numbers.next().unwrap_or_default();
-    format!("v{major}.{minor}")
+    format!("v{}", crate::APP_VERSION)
 }
 
 /// The OS window title and the title bar's brand text.
@@ -85,7 +85,7 @@ pub(crate) fn workspace_to_open(data_dir: &Path) -> Result<Option<String>, Strin
     )
 }
 
-/// Take `dir`'s lock and open its workspace; another copy holding it stops with the copy named.
+/// Open `dir` and its workspace; a folder that cannot be written stops here.
 fn open_data(state: &AppState, dir: PathBuf) -> Result<(), String> {
     let mut data = Data::new(dir).map_err(|error| error.to_string())?;
     data.workspace = workspace_to_open(&data.dir)?;
@@ -108,7 +108,7 @@ pub(crate) fn use_folder(state: &AppState, dir: &Path) -> Result<String, String>
 
 /// Name a workspace: the folder is made at once and opened.
 pub(crate) fn new_workspace(state: &AppState, name: &str) -> Result<String, String> {
-    state.with_data(|data| {
+    state.write_data(|data, _| {
         create_workspace(&data.dir, name).map_err(|error| error.to_string())?;
         data.workspace = Some(name.to_string());
         data.day = None;
@@ -129,16 +129,19 @@ pub fn use_program_folder(state: State<'_, AppState>) -> Result<String, String> 
     use_folder(&state, &dir)
 }
 
-/// *Choose a folder…* / Settings *Change…*.
+/// *Choose a folder* / Settings *Change*.
 #[tauri::command]
 pub fn choose_data_folder(state: State<'_, AppState>, path: String) -> Result<String, String> {
     use_folder(&state, Path::new(&path))
 }
 
-/// The first workspace's name, or **+ New workspace**.
+/// The first workspace's name, or **+ New workspace**; on its own thread, as it may wait for
+/// another copy of the app to finish writing.
 #[tauri::command]
-pub fn workspace_new(state: State<'_, AppState>, name: String) -> Result<String, String> {
-    new_workspace(&state, &name)
+pub async fn workspace_new(app: AppHandle, name: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || new_workspace(&app.state::<AppState>(), &name))
+        .await
+        .map_err(|error| format!("the new workspace task stopped: {error}"))?
 }
 
 /// The OS title bar's theme; `None` follows Windows.
@@ -168,6 +171,7 @@ pub fn set_theme(
 #[derive(Serialize)]
 pub struct About {
     version: String,
+    built: String,
     pdfium: String,
     schema: String,
 }
@@ -176,6 +180,7 @@ pub struct About {
 pub fn about() -> About {
     About {
         version: version_text(),
+        built: BUILT.to_string(),
         pdfium: PDFIUM_VERSION.to_string(),
         schema: packing_engine::record::SCHEMA.to_string(),
     }

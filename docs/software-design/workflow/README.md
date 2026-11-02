@@ -19,7 +19,7 @@ each step against what the shop needs; a step that is wrong is a review item
 
 | Steps | File | In → out |
 |---|---|---|
-| 1–2 | [01 Start and open](01-start-and-open.md) | Program folder → data folder, rules, lock → a folded date |
+| 1–2 | [01 Start and open](01-start-and-open.md) | Program folder → data folder, rules → a folded date |
 | 3–6 | [02 Read](02-read.md) | Chosen files → pages → copies → orders, warnings, courier names |
 | 7–10 | [03 Plan](03-plan.md) | Orders → one copy each → label groups → order contents and file names |
 | 11–15 | [04 Save](04-save.md) | Plan → inputs stored, outputs written and verified, the record committed |

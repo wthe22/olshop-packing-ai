@@ -9,7 +9,7 @@
   let {
     workspace,
     overlay,
-    // The program's shown version (`v0.2`, from `StartInfo.version`): with the name it is the
+    // The program's shown version (`v0.3.3`, from `StartInfo.version`): with the name it is the
     // same text as the OS window title.
     version,
     onTogglePanel,

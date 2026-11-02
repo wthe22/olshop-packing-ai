@@ -2,7 +2,7 @@
 
 ## 3. Choose the files
 
-- **Add files…** or a drop gives paths. Each file is read quickly: name, size, times, **page count** and
+- **Add files** or a drop gives paths. Each file is read quickly: name, size, times, **page count** and
   **SHA-256** of its bytes.
 - One file chosen twice — the same path, or the same bytes under another name — is listed once, with a
   note naming the other ([D-APP-10](../decisions/app.md)).

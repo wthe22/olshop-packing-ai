@@ -4,15 +4,14 @@ use std::fs;
 
 use packing_engine::record::RecordBody;
 use packing_store::{
-    DataLock, InputState, Journal, StoreError, check_inputs, input_path, open_date, sha256_of,
-    store_input,
+    DataLock, InputState, Journal, check_inputs, input_path, open_date, sha256_of, store_input,
 };
 use testkit::TempDir;
 
 use crate::common::*;
 
 #[test]
-fn a_second_copy_finds_the_folder_held_and_by_whom() {
+fn one_copy_at_a_time_holds_the_lock_and_says_so() {
     let data = TempDir::new("lock");
     let lock = DataLock::acquire(data.path()).unwrap();
     let holder = fs::read_to_string(data.path().join(".lock-holder")).unwrap();
@@ -21,13 +20,13 @@ fn a_second_copy_finds_the_folder_held_and_by_whom() {
         "{holder}"
     );
 
-    match DataLock::acquire(data.path()) {
-        Err(StoreError::LockHeld { holder: named }) => assert_eq!(named, holder.trim()),
-        other => panic!("expected the lock to be held, got {:?}", other.err()),
-    }
+    assert!(
+        DataLock::try_acquire(data.path()).unwrap().is_none(),
+        "held by another handle"
+    );
     drop(lock);
     assert!(
-        DataLock::acquire(data.path()).is_ok(),
+        DataLock::try_acquire(data.path()).unwrap().is_some(),
         "free again once dropped"
     );
 }

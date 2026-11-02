@@ -150,7 +150,7 @@ test("the file and printed commands reach the back end", async () => {
   const before = calls.filter((call) => call.command === "day_overview").length;
   await shell.revert(row);
   assert.equal(calls.filter((call) => call.command === "revert_last").length, 1);
-  assert.deepEqual(calls.find((call) => call.command === "revert_last").args, { day: "2026-10-07" });
+  assert.deepEqual(calls.find((call) => call.command === "revert_last").args, { day: "2026-10-07", batch: 2 });
   assert.equal(calls.filter((call) => call.command === "day_overview").length, before + 1, "the day is recounted");
 
   // A failure of any of them shows the error line and keeps the day screen.

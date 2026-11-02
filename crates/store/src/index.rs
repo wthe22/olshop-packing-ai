@@ -96,15 +96,22 @@ impl SearchIndex {
     pub fn build(data_dir: &Path, workspace: &str) -> Result<Self, StoreError> {
         let mut index = SearchIndex::default();
         for date in dates(data_dir, workspace)? {
-            let journal = Journal::open(&DateFolder::new(data_dir, workspace, date))?;
-            match journal.damage() {
-                Some(damage) => {
-                    index.damaged.insert(date, damage.clone());
-                }
-                None => index.refresh(journal.fold()),
-            }
+            index.take_in(&Journal::open(&DateFolder::new(data_dir, workspace, date))?);
         }
         Ok(index)
+    }
+
+    /// Take a date in from its journal as read: its fold, or the damage that leaves it out.
+    pub fn take_in(&mut self, journal: &Journal) {
+        match journal.damage() {
+            Some(damage) => {
+                let date = journal.fold().date;
+                self.dates.remove(&date);
+                self.reprints.remove(&date);
+                self.damaged.insert(date, damage.clone());
+            }
+            None => self.refresh(journal.fold()),
+        }
     }
 
     /// Take a date's orders from its fold as it is now: after a commit, or when it opens.

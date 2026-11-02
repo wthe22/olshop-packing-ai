@@ -16,7 +16,7 @@ column. Sketches show the English texts and made-up names, IDs and counts.
 | [Sort rules](sort-rules.md) | The boxes editor for the sort rules of `packing-workflows.toml` |
 | [Search](search.md) | Finding saved orders, their trace, and **Reprint** |
 | [Settings](settings.md) | The theme, the data folder, the workspaces (rename, delete) and *About* |
-| [Start](start.md) | The first start, the lock, the first workspace |
+| [Start](start.md) | The first start, the first workspace |
 
 ## Daily use in one picture
 
@@ -29,7 +29,7 @@ column. Sketches show the English texts and made-up names, IDs and counts.
  Between (reading…) and Plan: the logo prompt, and Repeated orders when an order appears twice.
 ```
 
-A normal batch: **New batch** → **Add files…** → **Read labels** → (the plan is the sort rule, as every day)
+A normal batch: **New batch** → **Add files** → **Read labels** → (the plan is the sort rule, as every day)
 **Save batch** → **Open** each group PDF and the summary PDF to print.
 
 ## Window frame

@@ -158,7 +158,11 @@ fn printed_amend_and_revert_go_through_the_journal() {
     mark_printed(&state, DAY, mark).unwrap();
     assert_eq!(day(&state)["batches"][0]["pdfs"][0]["printed"], true);
 
-    let start = amend_start(&state, date(), |_| {}).unwrap();
+    assert!(
+        amend_start(&state, date(), BatchId::new(2), |_| {}).is_err(),
+        "only the newest batch is amended"
+    );
+    let start = amend_start(&state, date(), BatchId::new(1), |_| {}).unwrap();
     assert_eq!(
         (start.batch, start.read.amend),
         (BatchId::new(1), Some(BatchId::new(1)))
@@ -175,7 +179,8 @@ fn printed_amend_and_revert_go_through_the_journal() {
     assert_eq!(amended["batches"][0]["amended"], true);
     assert_eq!(amended["batches"][0]["pdfs"][0]["printed"], false);
 
-    assert_eq!(revert(&state, DAY).unwrap(), BatchId::new(1));
+    assert!(revert(&state, DAY, BatchId::new(2)).is_err());
+    revert(&state, DAY, BatchId::new(1)).unwrap();
     assert_eq!(day(&state)["batches"], Value::Array(Vec::new()));
 }
 

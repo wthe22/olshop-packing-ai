@@ -1,9 +1,10 @@
 //! The packing app window back end: the app state and setup. The window commands live in
 //! [`commands`]; the batch steps they call are `packing-batch`'s.
 //!
-//! The data folder is the one `packing-settings.toml` beside the program names, locked while the
-//! app runs. The open date (its journal folded) and the open draft are app state, never stored:
-//! the journal is the only truth.
+//! The data folder is the one `packing-settings.toml` beside the program names. Other copies of the
+//! app, on this PC or another, may use the same folder: every write holds its lock, and every read
+//! checks the journal on disk first. The open date (its journal folded) and the open draft are app
+//! state, never stored: the journal is the only truth.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -15,7 +16,7 @@ use packing_batch::Draft;
 use packing_engine::sorting::PlanGroup;
 use packing_pdf::worker::PdfWorker;
 use packing_store::{
-    DataLock, DateFolder, InputProblem, Journal, OutputProblem, StoreError, open_date,
+    DataLock, DateFolder, InputProblem, Journal, OutputProblem, StoreError, open_date, view_date,
 };
 use tauri::Manager;
 
@@ -28,46 +29,96 @@ pub(crate) use index::Index;
 /// The app version the journal's records carry.
 pub(crate) const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// The data folder in use, locked; the workspace open in it and that workspace's open date.
+/// The data folder in use; the workspace open in it and that workspace's open date.
 pub(crate) struct Data {
     pub dir: PathBuf,
-    _lock: DataLock,
     pub workspace: Option<String>,
     pub day: Option<OpenDay>,
+    /// The data folder's workspaces as the last look for other copies' changes found them.
+    pub workspaces: Vec<String>,
 }
 
 impl Data {
+    /// A folder that cannot be written stops here, at its lock file; another copy of the app may
+    /// be writing to it meanwhile.
     pub(crate) fn new(dir: PathBuf) -> Result<Self, StoreError> {
-        let lock = DataLock::acquire(&dir)?;
+        DataLock::try_acquire(&dir)?;
         Ok(Self {
             dir,
-            _lock: lock,
             workspace: None,
             day: None,
+            workspaces: Vec::new(),
         })
     }
 
-    /// The workspace's `date`, opened (folded and checked) unless it is the one open.
+    /// The workspace's `date` to read: folded and checked again unless it is the one open and no
+    /// other copy of the app has written to it since. While another copy writes, it opens for
+    /// viewing only and the next read opens it again.
     pub(crate) fn open_day(&mut self, date: Date) -> Result<&mut OpenDay, String> {
-        let workspace = self
-            .workspace
-            .clone()
-            .ok_or_else(|| "No workspace is open yet.".to_string())?;
-        let open = self
-            .day
-            .as_ref()
-            .is_some_and(|day| day.folder.workspace() == workspace && day.folder.date() == date);
-        if !open {
-            let folder = DateFolder::new(&self.dir, &workspace, date);
-            let opened = open_date(&folder).map_err(|error| error.to_string())?;
-            self.day = Some(OpenDay {
-                folder,
-                journal: opened.journal,
-                inputs: opened.inputs,
-                outputs: opened.outputs,
-            });
+        let workspace = self.workspace_name()?;
+        if !self.is_open(&workspace, date) {
+            let lock = DataLock::try_acquire(&self.dir).map_err(|error| error.to_string())?;
+            self.open(workspace, date, lock.as_ref())?;
         }
         Ok(self.day.as_mut().expect("opened above"))
+    }
+
+    /// The workspace's `date` for a write under `lock`: opened again when another copy wrote to it
+    /// since, so the write decides on the journal as it is on disk. A workspace another copy
+    /// renamed or deleted is not made again.
+    pub(crate) fn day_to_write(
+        &mut self,
+        date: Date,
+        lock: &DataLock,
+    ) -> Result<&mut OpenDay, String> {
+        let workspace = self.workspace_name()?;
+        if !self.dir.join(&workspace).is_dir() {
+            return Err(format!(
+                "Workspace {workspace} is no longer in the data folder: another copy of the app renamed or deleted it."
+            ));
+        }
+        if !self.is_open(&workspace, date) {
+            self.open(workspace, date, Some(lock))?;
+        }
+        Ok(self.day.as_mut().expect("opened above"))
+    }
+
+    fn workspace_name(&self) -> Result<String, String> {
+        self.workspace
+            .clone()
+            .ok_or_else(|| "No workspace is open yet.".to_string())
+    }
+
+    fn is_open(&self, workspace: &str, date: Date) -> bool {
+        self.day.as_ref().is_some_and(|day| {
+            day.folder.workspace() == workspace
+                && day.folder.date() == date
+                && day.settled
+                && !day.journal.changed_on_disk()
+        })
+    }
+
+    /// Fold and check `date`; holding the lock, `.partial/` is settled and the views written too.
+    fn open(
+        &mut self,
+        workspace: String,
+        date: Date,
+        lock: Option<&DataLock>,
+    ) -> Result<(), String> {
+        let folder = DateFolder::new(&self.dir, &workspace, date);
+        let opened = match lock {
+            Some(_) => open_date(&folder),
+            None => view_date(&folder),
+        }
+        .map_err(|error| error.to_string())?;
+        self.day = Some(OpenDay {
+            folder,
+            journal: opened.journal,
+            inputs: opened.inputs,
+            outputs: opened.outputs,
+            settled: lock.is_some(),
+        });
+        Ok(())
     }
 }
 
@@ -77,6 +128,9 @@ pub(crate) struct OpenDay {
     pub journal: Journal,
     pub inputs: Vec<InputProblem>,
     pub outputs: Vec<OutputProblem>,
+    /// Opened while no other copy of the app wrote: `.partial/` settled and the outputs checked
+    /// after that copy's moves.
+    pub settled: bool,
 }
 
 /// One group of the open draft's plan as the owner left it.
@@ -142,7 +196,7 @@ impl AppState {
         self.data.lock().unwrap().is_some()
     }
 
-    /// Use `data` from now on; the old folder's lock is released.
+    /// Use `data` from now on.
     pub(crate) fn set_data(&self, data: Data) {
         *self.data.lock().unwrap() = Some(data);
     }
@@ -157,6 +211,39 @@ impl AppState {
             .as_mut()
             .ok_or_else(|| "No data folder is set yet.".to_string())?;
         f(data)
+    }
+
+    /// Run `f` with the data folder unless another command is using it now, or none is set:
+    /// `None` then.
+    pub(crate) fn try_with_data<R>(
+        &self,
+        f: impl FnOnce(&mut Data) -> Result<R, String>,
+    ) -> Result<Option<R>, String> {
+        let Ok(mut guard) = self.data.try_lock() else {
+            return Ok(None);
+        };
+        guard.as_mut().map(f).transpose()
+    }
+
+    /// Run `write` holding the data folder's lock. The lock is taken before the data folder's
+    /// state, so while another copy of the app writes, this one waits without holding up the
+    /// window's other commands.
+    pub(crate) fn write_data<R>(
+        &self,
+        write: impl FnOnce(&mut Data, &DataLock) -> Result<R, String>,
+    ) -> Result<R, String> {
+        let dir = self.with_data(|data| Ok(data.dir.clone()))?;
+        let lock = DataLock::acquire(&dir).map_err(|error| error.to_string())?;
+        self.with_data(|data| write(data, &lock))
+    }
+
+    /// Run `write` on the open workspace's `date` holding the data folder's lock.
+    pub(crate) fn write_day<R>(
+        &self,
+        date: Date,
+        write: impl FnOnce(&mut OpenDay) -> Result<R, String>,
+    ) -> Result<R, String> {
+        self.write_data(|data, lock| write(data.day_to_write(date, lock)?))
     }
 
     /// Spawn the PDFium worker on first use, binding `pdfium.dll` from [`pdfium_dir`]. Returns
@@ -293,6 +380,7 @@ pub fn run() {
             commands::day::day_summary,
             commands::panel::workspaces_list,
             commands::panel::workspace_open,
+            commands::changes::data_changes,
             commands::workspaces::workspaces_overview,
             commands::workspaces::workspace_rename,
             commands::workspaces::workspace_delete,

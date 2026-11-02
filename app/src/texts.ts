@@ -52,7 +52,7 @@ export const texts = {
     nextToProgram: "Next to the program",
     folder: (exeDir: string) => `${exeDir}\\packing-data`,
     useThisFolder: "Use this folder",
-    chooseFolder: "Choose another folder…",
+    chooseFolder: "Choose another folder",
   },
 
   day: {
@@ -115,6 +115,9 @@ export const texts = {
     // that *Open* found missing.
     writingDaySummary: "Writing the day summary …",
     writingAgain: (file: string) => `Writing ${file} again …`,
+    // Another copy of the app, sharing the data folder, renamed or deleted the open workspace.
+    workspaceGone: (name: string) =>
+      `Workspace ${name} was renamed or deleted in another copy of Packing.`,
     amended: " · amended",
     // The data folder also holds files of Packing v0.1.
     oldData: "This folder also holds data of Packing v0.1 (labels\\). It is not read.",
@@ -158,7 +161,7 @@ export const texts = {
     amendTitle: (n: number) => `Redo batch ${n}`,
     cancel: "Cancel",
     dropHint: "Drop label PDFs here, or",
-    addFiles: "Add files…",
+    addFiles: "Add files",
     // The sort rule before *Read labels*; on the amend's selection page the batch's own rule is
     // shown, not chosen.
     sortRule: "Sort rule",
@@ -207,7 +210,7 @@ export const texts = {
       `Batch ${batch} · sort rule ${sortRule} · ${count(files, "file", "files")} · ${count(pages, "page", "pages")} · ${count(orders, "order", "orders")} · ${alreadySaved} already saved`,
     // After the header when the batch held repeats: "14 copies left out ▸".
     leftOut: (n: number) => `${count(n, "copy", "copies")} left out ▸`,
-    changeRepeats: "Change…",
+    changeRepeats: "Change",
     warnings: (n: number) => `Warnings: ${n} ▸`,
     warningsNone: "Warnings: none",
     use: "Use",
@@ -318,7 +321,7 @@ export const texts = {
     rule: "Rule",
     // Drawn after a plus icon.
     newRule: "New rule",
-    rename: "Rename…",
+    rename: "Rename",
     deleteRule: "Delete rule",
     // A rule's tab: the one the newest batch was sorted by, and one that is switched off.
     lastUsed: "last used",

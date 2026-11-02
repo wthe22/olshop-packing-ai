@@ -8,11 +8,19 @@ use crate::settings::SETTINGS_FILE;
 
 #[test]
 fn the_shown_version_comes_from_one_place() {
-    let mut numbers = env!("CARGO_PKG_VERSION").split('.');
-    let shown = format!("v{}.{}", numbers.next().unwrap(), numbers.next().unwrap());
+    let shown = format!("v{}", env!("CARGO_PKG_VERSION"));
     assert_eq!(version_text(), shown);
     assert_eq!(window_title(), format!("Packing {shown}"));
     assert_eq!(about().version, shown);
+}
+
+#[test]
+fn the_build_time_is_a_local_date_and_minute() {
+    let built = about().built;
+    assert!(
+        jiff::civil::DateTime::strptime("%Y-%m-%d %H:%M", &built).is_ok(),
+        "{built}"
+    );
 }
 
 #[test]
@@ -46,13 +54,7 @@ fn a_first_start_writes_the_two_files_and_names_the_first_workspace() {
     );
 
     let second = AppState::new(program.path().to_path_buf());
-    let held = start_information(&second).err().unwrap_or_default();
-    assert!(
-        held.contains("in use"),
-        "the first copy holds the folder: {held}"
-    );
-    drop(state);
-    let info = start_information(&second).unwrap();
+    let info = start_information(&second).expect("a second copy shares the folder");
     assert_eq!(info.workspace.as_deref(), Some("Toko Contoh"));
     assert_eq!(info.data_folder.as_deref(), Some(dir.as_str()));
 }

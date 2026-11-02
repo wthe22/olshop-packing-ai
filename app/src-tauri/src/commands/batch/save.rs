@@ -13,8 +13,7 @@ pub(super) fn save_draft(
     on_progress: &dyn Fn(SaveProgress),
 ) -> Result<SaveResultView, String> {
     let (batch, outcome) = state.with_draft(|open| {
-        state.with_data(|data| {
-            let day = data.open_day(open.date)?;
+        state.write_day(open.date, |day| {
             let batch = open.draft.batch(day.journal.fold());
             let outcome = state
                 .with_worker(|worker| {

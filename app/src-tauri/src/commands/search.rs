@@ -205,9 +205,9 @@ pub(crate) fn reprint_orders(
         .iter()
         .map(|choice| Ok((date_of(&choice.day)?, OrderId::new(&choice.order_id))))
         .collect::<Result<Vec<_>, String>>()?;
-    state.with_data(|data| {
+    state.write_data(|data, lock| {
         let data_dir = data.dir.clone();
-        let day = data.open_day(today())?;
+        let day = data.day_to_write(today(), lock)?;
         let outcome = state
             .with_worker(|worker| {
                 write_reprint(

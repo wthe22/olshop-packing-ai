@@ -10,6 +10,7 @@ use jiff::civil::Date;
 use packing_batch::{RestoreOutcome, RestoreRequest, restore};
 use packing_engine::ids::BatchId;
 use packing_engine::record::PrintedMarked;
+use packing_store::Fold;
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 
@@ -33,10 +34,20 @@ pub(crate) fn overview(state: &AppState, day: &str) -> Result<DayOverview, Strin
     })
 }
 
+/// `batch` must still be the date's newest: another copy of the app may have saved one since the
+/// Day screen showed it.
+pub(crate) fn check_newest(fold: &Fold, batch: BatchId) -> Result<(), String> {
+    if fold.newest_live() == Some(batch) {
+        return Ok(());
+    }
+    Err(format!(
+        "Batch {batch} is no longer the newest batch of this date: another copy of the app changed the date. It now shows as it is."
+    ))
+}
+
 pub(crate) fn mark_printed(state: &AppState, day: &str, mark: PrintedMarked) -> Result<(), String> {
     let date = date_of(day)?;
-    state.with_data(|data| {
-        let open = data.open_day(date)?;
+    state.write_day(date, |open| {
         packing_batch::set_printed(&open.folder, &mut open.journal, mark, APP_VERSION)
             .map_err(|error| error.to_string())
     })
@@ -46,8 +57,7 @@ pub(crate) fn mark_printed(state: &AppState, day: &str, mark: PrintedMarked) -> 
 pub(crate) fn write_day_summary(state: &AppState, day: &str) -> Result<String, String> {
     let date = date_of(day)?;
     let (_, workflows) = settings::workflows(state.program())?;
-    state.with_data(|data| {
-        let open = data.open_day(date)?;
+    state.write_day(date, |open| {
         let path = state
             .with_worker(|worker| {
                 packing_batch::day_summary(
@@ -62,15 +72,15 @@ pub(crate) fn write_day_summary(state: &AppState, day: &str) -> Result<String, S
     })
 }
 
-pub(crate) fn revert(state: &AppState, day: &str) -> Result<BatchId, String> {
+pub(crate) fn revert(state: &AppState, day: &str, batch: BatchId) -> Result<(), String> {
     let date = date_of(day)?;
-    state.with_data(|data| {
-        let open = data.open_day(date)?;
-        let batch = packing_batch::revert(&open.folder, &mut open.journal, APP_VERSION)
+    state.write_day(date, |open| {
+        check_newest(open.journal.fold(), batch)?;
+        packing_batch::revert(&open.folder, &mut open.journal, APP_VERSION)
             .map_err(|error| error.to_string())?;
         open.outputs.retain(|problem| problem.batch != batch);
         state.index().refresh(open.journal.fold());
-        Ok(batch)
+        Ok(())
     })
 }
 
@@ -84,8 +94,7 @@ pub struct RestoreView {
 pub(crate) fn restore_file(state: &AppState, day: &str, file: &str) -> Result<RestoreView, String> {
     let date = date_of(day)?;
     let (_, workflows) = settings::workflows(state.program())?;
-    state.with_data(|data| {
-        let open = data.open_day(date)?;
+    state.write_day(date, |open| {
         let outcome = state
             .with_worker(|worker| {
                 restore(
@@ -166,10 +175,11 @@ pub fn day_overview(state: State<'_, AppState>, day: String) -> Result<DayOvervi
     overview(&state, &day)
 }
 
-/// The **Printed** tick of a group PDF: a note only.
+/// The **Printed** tick of a group PDF: a note only. On its own thread, as each write: it may wait
+/// for another copy of the app to finish writing.
 #[tauri::command]
-pub fn set_printed(
-    state: State<'_, AppState>,
+pub async fn set_printed(
+    app: AppHandle,
     day: String,
     batch: BatchId,
     group: String,
@@ -180,14 +190,18 @@ pub fn set_printed(
         group,
         printed,
     };
-    mark_printed(&state, &day, mark)
+    tauri::async_runtime::spawn_blocking(move || mark_printed(&app.state::<AppState>(), &day, mark))
+        .await
+        .map_err(|error| format!("the Printed task stopped: {error}"))?
 }
 
-/// *Revert* the newest batch. A file open in a PDF viewer stops it with the file named, and the
-/// date is as before.
+/// *Revert* `batch`, which must still be the newest. A file open in a PDF viewer stops it with the
+/// file named, and the date is as before.
 #[tauri::command]
-pub fn revert_last(state: State<'_, AppState>, day: String) -> Result<(), String> {
-    revert(&state, &day).map(|_| ())
+pub async fn revert_last(app: AppHandle, day: String, batch: BatchId) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || revert(&app.state::<AppState>(), &day, batch))
+        .await
+        .map_err(|error| format!("the revert task stopped: {error}"))?
 }
 
 /// **Day summary**: the date's summary PDF, written on its own thread; its path comes back.

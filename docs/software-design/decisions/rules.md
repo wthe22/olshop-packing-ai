@@ -17,7 +17,7 @@ the last choice: the journal of each date already says it.
 
 ## D-RULES-2 — A sort rule can be renamed; a saved batch keeps its snapshot
 
-**Decision.** **Rename…** changes the name in `packing-workflows.toml` only. An amend uses the rule of the batch's
+**Decision.** **Rename** changes the name in `packing-workflows.toml` only. An amend uses the rule of the batch's
 recorded name as it is now; when no rule has that name any more, the snapshot in the batch's record.
 
 **Why.** Q-RULES-2's default — the rename follows the batches, so an old batch can always be amended — needs a

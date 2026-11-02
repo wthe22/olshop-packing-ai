@@ -27,12 +27,15 @@ Every message says what happened and what to do. A **stop** ends the step with n
 | Stop | The verifier found something | The dialog of [Plan › Saving](plan.md#saving): **Save anyway** or **Cancel — nothing is saved**. A reprint or a restore has no *anyway*: **The reprint does not match its orders:** `<finding>`. Nothing was kept. |
 | Note | Saved, but a file could not be moved into place | **Batch `<b>` is saved, but `<file>` is open in another program.** Close it; the file is put in place when this date is opened again. |
 | Stop | An input an amend, reprint or restore needs is missing or changed | **`<file>` (batch `<b>`) is missing from the day's inputs, or has changed.** It cannot be used. |
+| Stop | Another copy of the app kept writing to the data folder for a minute | **Another copy of the app is still writing to the data folder** (`<computer>`, process `<pid>`, since `<time>`); try again in a moment. |
+| Stop | Another copy saved or reverted a batch with this batch's orders after the labels were read | **Another copy of the app saved or reverted a batch of this date after these labels were read.** Nothing was saved: read the labels again. |
+| Stop | **Revert** or **Amend** of a batch another copy has since followed with a newer one | **Batch `<b>` is no longer the newest batch of this date:** another copy of the app changed the date. It now shows as it is. |
+| Note | Another copy renamed or deleted the open workspace | **Workspace `<name>` was renamed or deleted in another copy of Packing.** The workspace the start would open opens. |
 
 ## Opening
 
 | Kind | When | Message |
 |---|---|---|
-| Stop | Another copy of the app holds the data folder | **Packing is already open on `<computer>` (since `<time>`).** Close it there, then **Try again**. |
 | Stop | `packing-workflows.toml` does not parse | **The rules file has an error:** `<line, col: message>`. Fix `packing-workflows.toml` beside the program. [Open folder] |
 | Stop | A sort rule's filter has an error | **Sort rule `<name>` has an error:** `<line, col: message>`. The Sort rules screen opens on it. |
 | Damage | The journal of a date is damaged, or names another workspace or date | **`<date>` of `<workspace>` cannot be changed:** line `<n>` of its journal `<is damaged / names another workspace>`. It can be viewed; nothing is written to it. |

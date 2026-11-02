@@ -1,5 +1,5 @@
 //! `output/.partial/` settled by the journal's last record when a date opens: an operation that
-//! committed moves forward, one that did not goes back.
+//! committed moves forward, one that did not goes back; a date only viewed leaves it alone.
 
 use std::fs;
 
@@ -7,6 +7,7 @@ use packing_engine::ids::BatchId;
 use packing_engine::record::{BatchReverted, RecordBody};
 use packing_store::{
     Journal, OutputState, Settled, move_aside, move_forward, open_date, partial_dir, replaced_dir,
+    view_date,
 };
 
 use crate::common::*;
@@ -64,6 +65,23 @@ fn a_crash_between_the_commit_and_the_moves_is_settled_forward() {
     );
     assert!(opened.outputs.is_empty(), "{:?}", opened.outputs);
     assert!(opened.views_written);
+}
+
+#[test]
+fn a_date_viewed_while_another_copy_writes_leaves_partial_and_the_views_alone() {
+    let (_data, folder) = date_folder("view-only");
+    let mut journal = Journal::open(&folder).unwrap();
+    let files = outputs(&partial_dir(folder.dir()), 1, "one");
+    journal
+        .commit(vec![RecordBody::BatchSaved(batch(1, false, files))], APP)
+        .unwrap();
+    // The other copy has committed and not yet moved its files in.
+
+    let viewed = view_date(&folder).unwrap();
+    assert_eq!(viewed.settled, Settled::Nothing);
+    assert!(!viewed.views_written);
+    assert!(partial_dir(folder.dir()).exists());
+    assert_eq!(viewed.outputs.len(), 3, "not in output/ yet");
 }
 
 #[test]

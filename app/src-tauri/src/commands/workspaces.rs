@@ -4,7 +4,7 @@
 
 use packing_store::{dates, delete_workspace, rename_workspace, workspaces};
 use serde::Serialize;
-use tauri::State;
+use tauri::{AppHandle, Manager, State};
 
 use crate::AppState;
 use crate::commands::start::workspace_to_open;
@@ -37,7 +37,7 @@ pub(crate) fn overview(state: &AppState) -> Result<Vec<WorkspaceView>, String> {
 
 /// Rename `name`; the open workspace stays open under its new name, an open draft is dropped.
 pub(crate) fn rename(state: &AppState, name: &str, new_name: &str) -> Result<(), String> {
-    let was_open = state.with_data(|data| {
+    let was_open = state.write_data(|data, _| {
         let open = data.workspace.as_deref() == Some(name);
         if open {
             data.day = None;
@@ -60,7 +60,7 @@ pub(crate) fn rename(state: &AppState, name: &str, new_name: &str) -> Result<(),
 /// Move `name` to the Recycle Bin. The workspace open afterwards: the same one, or, when `name`
 /// was open, the one the start would open; none when no workspace is left.
 pub(crate) fn delete(state: &AppState, name: &str) -> Result<Option<String>, String> {
-    let (was_open, now_open) = state.with_data(|data| {
+    let (was_open, now_open) = state.write_data(|data, _| {
         let open = data.workspace.as_deref() == Some(name);
         if open {
             data.day = None;
@@ -85,21 +85,23 @@ pub fn workspaces_overview(state: State<'_, AppState>) -> Result<Vec<WorkspaceVi
     overview(&state)
 }
 
+/// On its own thread, as each write: it may wait for another copy of the app to finish writing.
 #[tauri::command]
-pub fn workspace_rename(
-    state: State<'_, AppState>,
+pub async fn workspace_rename(
+    app: AppHandle,
     name: String,
     new_name: String,
 ) -> Result<(), String> {
-    rename(&state, &name, &new_name)
+    tauri::async_runtime::spawn_blocking(move || rename(&app.state::<AppState>(), &name, &new_name))
+        .await
+        .map_err(|error| format!("the rename task stopped: {error}"))?
 }
 
 #[tauri::command]
-pub fn workspace_delete(
-    state: State<'_, AppState>,
-    name: String,
-) -> Result<Option<String>, String> {
-    delete(&state, &name)
+pub async fn workspace_delete(app: AppHandle, name: String) -> Result<Option<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || delete(&app.state::<AppState>(), &name))
+        .await
+        .map_err(|error| format!("the delete task stopped: {error}"))?
 }
 
 #[cfg(test)]

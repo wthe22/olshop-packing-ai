@@ -1,6 +1,7 @@
 //! Workspaces (app/workspaces.md): one folder of the data folder per workspace, one folder per
 //! date inside it. The app lists, opens, creates, renames and deletes them.
 
+use std::collections::BTreeMap;
 use std::fmt;
 use std::fs;
 use std::path::Path;
@@ -101,6 +102,27 @@ pub fn last_written(data_dir: &Path) -> Result<Option<String>, StoreError> {
         }
     }
     Ok(newest.map(|(_, workspace)| workspace))
+}
+
+/// Each date of a workspace with its journal's length (0 before its first commit): a date another
+/// copy of the app committed to has a new one, as the journal only grows.
+pub fn journal_lengths(
+    data_dir: &Path,
+    workspace: &str,
+) -> Result<BTreeMap<Date, u64>, StoreError> {
+    let mut lengths = BTreeMap::new();
+    for date in dates(data_dir, workspace)? {
+        let journal = DateFolder::new(data_dir, workspace, date)
+            .dir()
+            .join(JOURNAL);
+        let length = match fs::metadata(&journal) {
+            Ok(meta) => meta.len(),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => 0,
+            Err(error) => return Err(StoreError::io(&journal, error)),
+        };
+        lengths.insert(date, length);
+    }
+    Ok(lengths)
 }
 
 /// The sort rule of the workspace's newest batch: the newest live batch of the newest date that

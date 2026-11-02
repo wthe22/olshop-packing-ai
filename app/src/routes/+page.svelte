@@ -20,6 +20,7 @@
   import ConfirmDialog from "../lib/ConfirmDialog.svelte";
   import WorkingDialog from "../lib/WorkingDialog.svelte";
   import { applyTheme } from "../lib/theme";
+  import { followChanges } from "../lib/changes";
 
   // Below the smallest window width the panel hides on its own.
   const SMALLEST_WIDTH = 1024;
@@ -43,7 +44,10 @@
     window.addEventListener("keydown", onKey);
     window.addEventListener("focus", onFocus);
     window.addEventListener("resize", onResize);
+    // Another copy of the app may write to the same data folder.
+    const stopFollowing = followChanges(shell);
     return () => {
+      stopFollowing();
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("resize", onResize);

@@ -33,7 +33,7 @@
     // selection page — with the files still listed and the draft kept (a new *Read labels*
     // replaces it). Never asks and writes nothing.
     onBack: () => void;
-    // *Change…* beside the copies left out: back to Repeated orders.
+    // *Change* beside the copies left out: back to Repeated orders.
     onChangeRepeats: () => void;
     // *Edit sort rule*: the Sort rules screen on this batch's rule; a save rebuilds the plan.
     onEditRule: () => void;

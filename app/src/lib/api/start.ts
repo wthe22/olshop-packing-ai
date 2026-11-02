@@ -12,7 +12,7 @@ export interface StartInfo {
   workspace: string | null;
   pdfium_ready: boolean;
   today: string;
-  // The program's shown version (`v` + major.minor); the title bar's brand text is the program's
+  // The program's shown version (`v` + the version); the title bar's brand text is the program's
   // name and this.
   version: string;
   // The theme `packing-settings.toml` names.
@@ -22,6 +22,7 @@ export interface StartInfo {
 // Settings › *About*.
 export interface About {
   version: string;
+  built: string;
   pdfium: string;
   schema: string;
 }

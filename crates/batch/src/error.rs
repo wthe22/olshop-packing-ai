@@ -29,6 +29,9 @@ pub enum BatchError {
     NoBatch,
     /// The draft amends a batch that is no longer the newest live one.
     NotNewest,
+    /// Another copy of the app saved or reverted a batch of the date after the draft was read,
+    /// and the draft's orders would differ.
+    DateChanged,
     /// A filter of the sort rule an amend takes from the batch's record does not parse.
     Rule(RulesError),
     /// A reprint names an order no live batch of that date holds.
@@ -67,6 +70,9 @@ impl fmt::Display for BatchError {
             BatchError::NotNewest => {
                 f.write_str("The batch being amended is no longer the newest one.")
             }
+            BatchError::DateChanged => f.write_str(
+                "Another copy of the app saved or reverted a batch of this date after these labels were read. Nothing was saved: read the labels again.",
+            ),
             BatchError::Rule(error) => write!(f, "the batch's sort rule: {error}"),
             BatchError::NotSaved { order_id, date } => {
                 write!(f, "Order {order_id} is not saved on {date}.")

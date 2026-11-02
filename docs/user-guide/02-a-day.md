@@ -54,7 +54,7 @@ The **Day** screen shows what has been saved on the open date and is the way to 
 2. **Sort rule** is already set to the rule you used last, also on a new day; change it only for a batch
    that is sorted another way ([Sort rules](03-changes.md#sort-rules)). Only the rules that are on are
    listed.
-3. Add the label files: **Add files…** and choose the *Shipping label + Packing slip* PDFs of this
+3. Add the label files: **Add files** and choose the *Shipping label + Packing slip* PDFs of this
    download, or drop them onto the window.
    - Each file shows its page count and time. A file read in an earlier batch of this date shows
      *used in batch n* in orange: its orders are found as already saved.
@@ -100,7 +100,7 @@ Which orders go into which group PDF. It opens with the sort rule applied in ord
 check the counts and press **Save batch**.
 
 - The header: "Batch 3 · sort rule default · 2 files · 257 pages · 256 orders · 0 already saved". When
-  copies were left out: "14 copies left out ▸" lists them, **Change…** returns to Repeated orders.
+  copies were left out: "14 copies left out ▸" lists them, **Change** returns to Repeated orders.
 - **Rows** are the groups of the sort rule, in order; each takes its orders from what the rows above
   left. **Use** unticked skips a group for this batch only. **↑ ↓** move a group for this batch.
 - **▸** lists a group's order contents: "Sepatu Standar ×1 · 96 orders".

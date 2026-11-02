@@ -9,7 +9,7 @@ filter language: each filter is made from boxes. A text view is there for typing
 │ │ default │ harian  last used  │ promo 11.11  off  │  + New rule                        │
 │ └─────────┴────────────────────┴───────────────────┘                                    │
 │ ┌────────────────────────────────────────────────────────────────────────────────────┐ │
-│ │ (●━) On  New batch offers this rule.                       [Rename…]  [Delete rule] │ │
+│ │ (●━) On  New batch offers this rule.                       [Rename]   [Delete rule] │ │
 │ │ GROUP  Order matters: an order goes to the first group …            IN BATCH 3      │ │
 │ ├────────────────────────────────────────────────────────────────────────────────────┤ │
 │ │ [A] [Sepatu          ] [Boxes|Text]                                    130   ↑ ↓ 🗑 │ │
@@ -49,7 +49,7 @@ The rule shown is one card: its head is the rule, its rows the groups.
   does not offer it.* It writes the file at once, and leaves the groups being edited as they are. The
   only rule that is on cannot be switched off, so New batch always has one
   ([D-RULES-5](../decisions/rules.md)); its switch is greyed with that reason as its tooltip.
-- **Rename…** turns the head into the name, edited in place, with **Rename** and **Cancel** (Enter and
+- **Rename** turns the head into the name, edited in place, with **Rename** and **Cancel** (Enter and
   Esc); the groups being edited stay. Saved batches keep the name they recorded, and an amend of one whose
   name is gone uses its snapshot ([D-RULES-2](../decisions/rules.md)).
 - **Delete rule** asks first. The last rule cannot be deleted, nor the only rule that is on: the button

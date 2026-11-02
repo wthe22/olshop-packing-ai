@@ -24,7 +24,7 @@ on a normal day the owner checks the counts and presses **Save batch**.
 - **Rows** are the groups of the batch's sort rule ([New batch › The sort rule](new-batch.md#the-sort-rule)),
   in order; each takes its orders from what the rows above left ([03 Plan](../workflow/03-plan.md#9-the-plan)).
   The header names the rule. When the batch held repeats it also says `· 14 copies left out ▸`, with
-  **Change…** back to [Repeated orders](duplicates.md).
+  **Change** back to [Repeated orders](duplicates.md).
 - **Use** unticked skips the group for this batch only: its orders fall to the rows below. Unticking the
   rest row sends its orders to a new last row `? Uncategorised`, so every order is still saved
   ([D-UI-1](../decisions/ui.md)).

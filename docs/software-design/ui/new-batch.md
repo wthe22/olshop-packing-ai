@@ -6,7 +6,7 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │  New batch 3   Sort rule: [default ▾]                                   [Cancel]       │
 │  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐       │
-│     Drop label PDFs here, or  [Add files…]                                             │
+│     Drop label PDFs here, or  [Add files]                                              │
 │  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘       │
 │  1  10-07_11-02-10_Shipping label+Packing slip_1.pdf 200 pages downloaded 11:02    [×] │
 │  2  10-07_11-02-21_Shipping label+Packing slip_2.pdf  57 pages downloaded 11:02    [×] │
@@ -16,7 +16,7 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Add files…** opens the Windows file dialog (several files at once, in the folder used last). Dropping
+- **Add files** opens the Windows file dialog (several files at once, in the folder used last). Dropping
   files onto the window does the same.
 - Each listed file shows its page count and *downloaded* with its modify time; its SHA-256 is taken at once
   ([02 Read](../workflow/02-read.md#3-choose-the-files)). A file whose bytes equal a listed file is not listed
@@ -47,7 +47,7 @@ is ([D-RULES-1](../decisions/rules.md)). The batch's record keeps a snapshot of 
 - The batch's own inputs are listed first, from `input/`, in their recorded order, then what the owner added.
 - The sort rule is shown, not chosen: *Sort rule: default (as now)*, or *default (as saved)* when no rule
   has that name any more ([D-RULES-2](../decisions/rules.md)).
-- **Add files…** and a drop add any PDF on the PC; **×** takes a file off, and its orders stay unsaved for a
+- **Add files** and a drop add any PDF on the PC; **×** takes a file off, and its orders stay unsaved for a
   later batch ([D-APP-19](../decisions/app-features.md)).
 - **Read labels** reads the list as an amend and opens the Plan screen again. **Cancel** returns to the Day
   screen and writes nothing.

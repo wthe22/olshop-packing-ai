@@ -14,7 +14,7 @@ Only the newest batch of a date can be changed — a later batch depends on the 
   saved, when no rule has that name any more), the same copies of repeated orders kept, and the **Plan**
   screen opens titled *Redo batch 2*; **Save batch** writes it again. Print it again after saving.
   - **Back** (top) shows the batch's files, its rule fixed ("Sort rule: default (as now)"); add files
-    with **Add files…**, take one off with **×** (its orders stay unsaved for a later batch), then
+    with **Add files**, take one off with **×** (its orders stay unsaved for a later batch), then
     **Read labels** again.
   - **Cancel amend** or **Cancel** on the file list leaves the batch as it was, and asks nothing.
   - The batch written again starts with its printed ticks cleared.
@@ -34,7 +34,7 @@ order goes to the first group whose filter matches; the last group has no filter
 - **The switch** at the top of the rule: **On**, New batch offers the rule; **Off**, the rule is kept as
   it is but New batch does not list it. Switch it on again whenever it is needed; a batch saved with it
   can still be amended. One rule always stays on.
-- **Rename…** changes the name in place; saved batches keep the name they were saved with. **Delete
+- **Rename** changes the name in place; saved batches keep the name they were saved with. **Delete
   rule** asks first; the last rule, and the only rule that is on, stay.
 - Each group has a **code** (1–3 letters or digits), a **name** and a filter made of boxes: a box is
   **All of these** (*and*) or **Any of these** (*or*) and holds rows of *field · operator · value* and

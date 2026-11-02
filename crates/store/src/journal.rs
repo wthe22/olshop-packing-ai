@@ -3,7 +3,7 @@
 
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use packing_engine::record::{Datetime, Record, RecordBody, Recovered, SCHEMA, Started};
 
@@ -31,6 +31,9 @@ pub struct Journal {
     /// The bytes of a torn last line, cut and recorded by the next commit.
     torn: Option<Vec<u8>>,
     damage: Option<Damage>,
+    /// The file's length as last read or written: the journal only grows, so another copy's
+    /// commit changes it.
+    disk_len: u64,
 }
 
 impl Journal {
@@ -44,12 +47,14 @@ impl Journal {
             good_len: 0,
             torn: None,
             damage: None,
+            disk_len: 0,
         };
         let bytes = match fs::read(&journal.path) {
             Ok(bytes) => bytes,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(journal),
             Err(error) => return Err(StoreError::io(&journal.path, error)),
         };
+        journal.disk_len = bytes.len() as u64;
         let parsed = match parse(&bytes) {
             Ok(parsed) => parsed,
             Err(damage) => {
@@ -82,6 +87,13 @@ impl Journal {
     /// The bytes of a torn last line, if the journal ends in one.
     pub fn torn(&self) -> Option<&[u8]> {
         self.torn.as_deref()
+    }
+
+    /// Whether the file on disk is no longer the one folded: another copy of the app committed to
+    /// it, or the date's folder went. A file that cannot be looked at counts as changed, so the
+    /// open that follows names the error.
+    pub fn changed_on_disk(&self) -> bool {
+        disk_len(&self.path).is_none_or(|len| len != self.disk_len)
     }
 
     /// The journal as on disk up to the end of its last good line: what a check of the next
@@ -165,15 +177,26 @@ impl Journal {
         self.append(&pending.bytes)?;
         self.fold = pending.fold;
         self.good_len += pending.bytes.len() as u64;
+        self.disk_len = self.good_len;
         self.torn = None;
         Ok(pending.records)
     }
 
+    /// Append `bytes` to the file as it was folded; a file another copy of the app wrote to
+    /// meanwhile is left as it is.
     fn append(&self, bytes: &[u8]) -> Result<(), StoreError> {
         let path = &self.path;
         let io = |error| StoreError::io(path, error);
         if let Some(dir) = path.parent() {
             fs::create_dir_all(dir).map_err(|e| StoreError::io(dir, e))?;
+        }
+        let mut file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+            .map_err(io)?;
+        if file.metadata().map_err(io)?.len() != self.disk_len {
+            return Err(StoreError::JournalChanged { path: path.clone() });
         }
         if self.torn.is_some() {
             // A handle opened for appending may not truncate on Windows.
@@ -181,12 +204,16 @@ impl Journal {
             cut.set_len(self.good_len).map_err(io)?;
             cut.sync_all().map_err(io)?;
         }
-        let mut file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-            .map_err(io)?;
         file.write_all(bytes).map_err(io)?;
         file.sync_all().map_err(io)
+    }
+}
+
+/// The length of the file at `path`: 0 when there is none, `None` when it cannot be looked at.
+fn disk_len(path: &Path) -> Option<u64> {
+    match fs::metadata(path) {
+        Ok(meta) => Some(meta.len()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Some(0),
+        Err(_) => None,
     }
 }

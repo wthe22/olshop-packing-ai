@@ -70,14 +70,18 @@ commit, never read for a decision, and rebuilt when missing or when `journal_seq
 
 **Applies to.** [views](../data/views.md).
 
-## D-APP-9 — One copy of the app per data folder
+## D-APP-9 — Copies of the app share a data folder; one writes at a time
 
-**Decision.** The data folder's `.lock` is held with `File::try_lock` while the app runs; a second copy says
-which one has it and writes nothing.
+**Decision.** Several copies of the app may use one data folder at once. The data folder's `.lock` is held
+with `File::try_lock` only for a write; another copy's write waits for it. A write folds the journal again
+when it grew since it was read, and the append refuses a journal that grew meanwhile. Each copy looks for
+the others' writes every few seconds and shows them.
 
-**Why.** Two writers of one journal would interleave their commits.
+**Why.** The owner wants several people to work on one data folder at the same time. Two writers of one
+journal would interleave their commits; one at a time, each deciding on the journal as it is on disk,
+cannot.
 
-**Applies to.** [data › One writer](../data/README.md#one-writer), [Start](../ui/start.md).
+**Applies to.** [data › One writer](../data/README.md#one-writer), [program › Several copies](../app/program.md#several-copies).
 
 ## D-APP-10 — Inputs are stored once, by content
 

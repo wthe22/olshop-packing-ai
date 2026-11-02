@@ -108,6 +108,19 @@ impl Draft {
         read_findings(&self.copies, &self.orders.kept, &self.inputs(fold))
     }
 
+    /// Whether the draft still holds the orders it would hold if read now: another copy of the
+    /// app may have saved or reverted a batch of the date since it was read.
+    pub fn check_current(&self, fold: &Fold) -> Result<(), BatchError> {
+        let saved = saved_on(fold, self.redo);
+        if saved == self.saved {
+            return Ok(());
+        }
+        match sort_out(&self.copies, &saved, &self.choices) {
+            Ok(orders) if orders == self.orders => Ok(()),
+            _ => Err(BatchError::DateChanged),
+        }
+    }
+
     /// Read the copies again with `workflows` (a logo answered): the owner's choices stay where
     /// they still apply.
     pub fn reclassify(&mut self, workflows: &Workflows) -> Result<(), BatchError> {
@@ -146,14 +159,7 @@ pub fn read_draft(request: ReadRequest<'_>) -> Result<Draft, BatchError> {
     })??;
     let names: Vec<&str> = request.files.iter().map(|f| f.filename.as_str()).collect();
     let read = read_copies(pages.clone(), &names, request.workflows)?;
-    let saved = saved_orders(
-        request
-            .fold
-            .live
-            .iter()
-            .filter(|(batch, _)| Some(**batch) != request.redo)
-            .map(|(_, live)| &live.saved),
-    );
+    let saved = saved_on(request.fold, request.redo);
     let choices = Choices::default();
     let orders = sort_out(&read.copies, &saved, &choices)?;
     if orders.kept.is_empty() {
@@ -173,4 +179,14 @@ pub fn read_draft(request: ReadRequest<'_>) -> Result<Draft, BatchError> {
         couriers: request.workflows.couriers.clone(),
         redo: request.redo,
     })
+}
+
+/// The orders of the date's live batches other than the one an amend redoes.
+fn saved_on(fold: &Fold, redo: Option<BatchId>) -> BTreeMap<OrderId, BatchId> {
+    saved_orders(
+        fold.live
+            .iter()
+            .filter(|(batch, _)| Some(**batch) != redo)
+            .map(|(_, live)| &live.saved),
+    )
 }

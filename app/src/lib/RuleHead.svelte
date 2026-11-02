@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The head of the shown rule's card: its switch (offered on New batch or not), **Rename…**
+  // The head of the shown rule's card: its switch (offered on New batch or not), **Rename**
   // (the name edited in place) and **Delete rule**. The only rule that is on keeps its switch on
   // and cannot be deleted; the last rule cannot be deleted either. The screen does the writing
   // and the asking; a refusal of its call is shown in the head.

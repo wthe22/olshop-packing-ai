@@ -91,7 +91,7 @@
         </div>
       </div>
       {#if about}
-        {#each [[words.version, about.version], [words.pdfium, about.pdfium], [words.schema, about.schema]] as [label, value] (label)}
+        {#each [[words.version, about.version], [words.built, about.built], [words.pdfium, about.pdfium], [words.schema, about.schema]] as [label, value] (label)}
           <div class="row fact">
             <span class="what">{label}</span>
             <span class="value">{value}</span>

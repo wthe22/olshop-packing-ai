@@ -1,6 +1,6 @@
 <script lang="ts">
-  // Settings › Workspaces: one row per workspace with its dates, **Rename…** (the name field in
-  // place, a refused name told beside it) and **Delete…** (asks first; the folder goes to the
+  // Settings › Workspaces: one row per workspace with its dates, **Rename** (the name field in
+  // place, a refused name told beside it) and **Delete** (asks first; the folder goes to the
   // Recycle Bin). What the commands do is `workspaceSettings.svelte.ts`.
   import { texts } from "../texts";
   import type { WorkspaceSettings } from "./workspaceSettings.svelte";

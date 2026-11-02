@@ -258,7 +258,7 @@ test("Amend reads the batch's own files and opens the Plan with that batch", asy
   const calls = useBackend(
     backend({
       start_amend: (args) => {
-        assert.equal(args.day, "2026-10-07");
+        assert.deepEqual(args, { day: "2026-10-07", batch: 3 });
         // The read reports its progress while it runs; the shell shows it on the day screen.
         emitEvent("read-progress", { page: 3, pages: 24 });
         during = shell.amendReading;
@@ -341,7 +341,7 @@ test("a batch with a repeat opens Repeated orders before the plan, and comes bac
   shell.continueToPlan();
   assert.equal(shell.screen, "plan");
   shell.reviewRepeats();
-  assert.equal(shell.screen, "repeats", "Change… on the Plan screen");
+  assert.equal(shell.screen, "repeats", "Change on the Plan screen");
   shell.backToFiles();
   assert.equal(shell.screen, "new-batch");
   assert.equal(shell.draftOpen, true, "Back keeps the draft");

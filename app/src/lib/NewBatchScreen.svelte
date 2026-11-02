@@ -59,7 +59,7 @@
   let progress = $state<{ page: number; pages: number } | null>(null);
   let stop = $state("");
   let error = $state("");
-  // The files of the last *Add files…* or drop already listed by their bytes.
+  // The files of the last *Add files* or drop already listed by their bytes.
   let note = $state("");
   // Set while *Cancel* is pressed: the read then returns to the file list, not to a stop message.
   let cancelling = false;
@@ -232,7 +232,7 @@
         })
         .catch((e) => (error = String(e)));
     }
-    // Dropping PDFs on the window does the same as *Add files…*.
+    // Dropping PDFs on the window does the same as *Add files*.
     let unlisten: (() => void) | undefined;
     getCurrentWebview()
       .onDragDropEvent((event) => {

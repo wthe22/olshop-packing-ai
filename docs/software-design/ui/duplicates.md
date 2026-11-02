@@ -56,7 +56,7 @@ only when the batch holds a repeat → [Plan](plan.md).
 ## After the choice
 
 - The Plan header counts the copies left out: `… · 242 orders · 0 already saved · 14 copies left out ▸`;
-  **▸** lists them (order, file, page, the copy kept); **Change…** returns here (plan edits are lost).
+  **▸** lists them (order, file, page, the copy kept); **Change** returns here (plan edits are lost).
 - The file list of [New batch](new-batch.md) marks each file that holds a repeat with its group chip (▌G1,
   an amber bar and the label, never colour alone) and the text "10 orders also in file 3".
 - The saved batch's record keeps every copy left out; its Day card shows **Left out: 14 ▸**, and an amend

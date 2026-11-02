@@ -51,14 +51,25 @@ pub struct OpenedDate {
     pub views_written: bool,
 }
 
-/// Open a date. A damaged journal opens for viewing: the checks that only read still run, and
-/// nothing is written — no `.partial/` settled, no view written.
+/// Open a date while no other copy of the app writes to the data folder (the caller holds its
+/// lock). A damaged journal opens for viewing: the checks that only read still run, and nothing is
+/// written — no `.partial/` settled, no view written.
 pub fn open_date(folder: &DateFolder) -> Result<OpenedDate, StoreError> {
+    open(folder, true)
+}
+
+/// Open a date for viewing while another copy of the app may be writing to it: the checks that
+/// only read run, and `.partial/` and the views are left to the copy that writes.
+pub fn view_date(folder: &DateFolder) -> Result<OpenedDate, StoreError> {
+    open(folder, false)
+}
+
+fn open(folder: &DateFolder, may_write: bool) -> Result<OpenedDate, StoreError> {
     let journal = Journal::open(folder)?;
     let dir = folder.dir();
     let fold = journal.fold();
-    let writable = journal.damage().is_none();
-    if writable && fold.last_seq == 0 {
+    let writable = may_write && journal.damage().is_none();
+    if journal.damage().is_none() && fold.last_seq == 0 {
         return Ok(OpenedDate {
             journal,
             inputs: Vec::new(),

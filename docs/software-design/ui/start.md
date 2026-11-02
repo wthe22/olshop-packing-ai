@@ -15,24 +15,17 @@ When `packing-settings.toml` is missing beside the program, or names no data fol
 │  ┌ 🗀 Next to the program ─────────────────────────────────────────────────────────┐   │
 │  │   D:\Packing\packing-data                                                      │   │
 │  └─────────────────────────────────────────────────────────────────────────────────┘   │
-│                                       [ Choose another folder… ]  [ Use this folder ]  │
+│                                       [ Choose another folder ]  [ Use this folder ]   │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - Both questions of a first start are a card in the middle of the window, under the program's name and
   version.
 - **Use this folder** writes `data_dir = "packing-data"` (beside the program, so the folder can be copied whole).
-- **Choose another folder…** writes the chosen path, relative when it is inside the program's folder.
+- **Choose another folder** writes the chosen path, relative when it is inside the program's folder.
 - A folder that cannot be written (e.g. under `Program Files`) is refused with the reason.
 - `packing-workflows.toml` is written from the bundled copy when it is missing: the couriers, their clues
   and one sort rule `default` whose only group takes every order ([rules file](../rules-file/README.md)).
-
-## Another copy is open
-
-```
-│  Packing is already open on PC-GUDANG (since 08:12).                                   │
-│  Close it there, then try again.                                    [ Try again ]      │
-```
 
 ## The first workspace
 

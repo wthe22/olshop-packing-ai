@@ -24,7 +24,7 @@ use packing_store::{DateFolder, Journal, Settled, input_path, open_date, partial
 use testkit::{PdfiumGuard, TempDir, testdata, vendor_dir};
 
 const INPUTS: [&str; 2] = ["labels-repeat-1.pdf", "labels-repeat-2.pdf"];
-const APP: &str = "0.3.1";
+const APP: &str = "0.3.3";
 const GROUP_FILE: &str = "1-Z Lainnya x4.pdf";
 
 /// A date of a fresh data folder, opened, with the worker and the bundled rules.
@@ -199,6 +199,44 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
         numbers(&first),
         "an input keeps its number"
     );
+}
+
+#[test]
+fn a_draft_saves_after_another_copys_batch_unless_that_batch_took_its_orders() {
+    let Some(mut day) = day("batch-two-copies") else {
+        return skipped();
+    };
+    let mine = day.read_inputs().unwrap();
+    let late = day.read_inputs().unwrap();
+    let rule = day.workflows.sort_rule("default").unwrap().clone();
+    let other = day
+        .read(&[testdata("labels-slip.pdf")], &rule, None)
+        .unwrap();
+
+    assert_eq!(saved(day.save(&other, false)).record.batch, BatchId::new(1));
+    let record = saved(day.save(&mine, false)).record;
+    assert_eq!(
+        record.batch,
+        BatchId::new(2),
+        "numbered on the date as it is now"
+    );
+    let refused = save(
+        &SaveRequest {
+            worker: &day.worker,
+            folder: &day.folder,
+            draft: &late,
+            save_anyway: false,
+            app: APP,
+            progress: &|_| {},
+        },
+        &mut day.journal,
+    );
+    assert!(
+        matches!(refused, Err(BatchError::DateChanged)),
+        "its orders were saved after it was read: {refused:?}"
+    );
+    assert_eq!(day.journal.fold().live.len(), 2);
+    assert!(!partial_dir(day.folder.dir()).exists());
 }
 
 #[test]

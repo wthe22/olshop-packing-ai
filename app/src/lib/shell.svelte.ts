@@ -128,7 +128,7 @@ export class Shell {
     }
   };
 
-  private refreshOverview = async () => {
+  refreshOverview = async () => {
     try {
       this.overview = await dayData.dayOverview(this.day);
     } catch (e) {
@@ -255,7 +255,7 @@ export class Shell {
     this.readResult = result;
   };
 
-  // *Review the repeats* on the file list and *Change…* on the Plan screen.
+  // *Review the repeats* on the file list and *Change* on the Plan screen.
   reviewRepeats = () => {
     this.screen = "repeats";
   };
@@ -422,7 +422,7 @@ export class Shell {
   revert = async (row: dayData.BatchView) => {
     if (!(await confirmBox.ask(texts.day.askRevert(row.batch, row.pdfs.length)))) return;
     try {
-      await dayData.revertLast(this.day);
+      await dayData.revertLast(this.day, row.batch);
       await Promise.all([this.refreshOverview(), this.refreshPanel()]);
     } catch (e) {
       this.error = String(e);
@@ -442,7 +442,7 @@ export class Shell {
       this.amendReading = event.payload;
     });
     try {
-      const begin = await batch.startAmend(this.day);
+      const begin = await batch.startAmend(this.day, row.batch);
       this.readResult = begin.read;
       this.files = begin.files;
       this.amendBatch = begin.batch;

@@ -1,4 +1,4 @@
-//! The data folder (data/README.md): the one-writer lock, each date's journal and its fold, the
+//! The data folder (data/README.md): the write lock, each date's journal and its fold, the
 //! inputs stored by content, the outputs settled by the journal, and the views written from it.
 //! The journal is the only truth; every decision is taken from its fold as it is on disk.
 
@@ -15,7 +15,7 @@ mod outputs;
 mod views;
 mod workspaces;
 
-pub use date::{DateFolder, OpenedDate, open_date};
+pub use date::{DateFolder, OpenedDate, open_date, view_date};
 pub use error::StoreError;
 pub use files::sha256_of;
 pub use fold::{Damage, DamageReason, Fold, LastWrites, LiveBatch, Reprint};
@@ -31,5 +31,6 @@ pub use outputs::{
 pub use views::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, views_current, write_views};
 pub use workspaces::{
     WORKSPACE_LIMIT, WorkspaceNameError, check_workspace_name, create_workspace, dates,
-    delete_workspace, last_written, newest_batch_rule, rename_workspace, workspaces,
+    delete_workspace, journal_lengths, last_written, newest_batch_rule, rename_workspace,
+    workspaces,
 };

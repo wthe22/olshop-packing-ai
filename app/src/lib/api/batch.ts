@@ -236,9 +236,10 @@ export const saveBatch = (saveAnyway = false): Promise<SaveResult> =>
 
 export const discardDraft = (): Promise<void> => invoke("discard_draft");
 
-// *Amend* the newest batch: read the batch's own inputs (`input\`) again and return
+// *Amend* `batch`, the newest (one that no longer is, because another copy of the app saved since,
+// is refused): read the batch's own inputs (`input\`) again and return
 // its file list with the read, so the Plan screen opens at once with the draft open. Nothing is
 // written until **Save batch `<b>` again** (`saveBatch`); the list is what the Plan screen's
 // *Back* shows on the selection page.
-export const startAmend = (day: string): Promise<AmendStart> =>
-  invoke("start_amend", { day });
+export const startAmend = (day: string, batch: number): Promise<AmendStart> =>
+  invoke("start_amend", { day, batch });

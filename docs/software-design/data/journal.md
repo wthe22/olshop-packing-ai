@@ -57,7 +57,8 @@ never given twice within a date.
 
 ## When a date opens
 
-In this order, before the date is shown:
+In this order, before the date is shown (steps 3 and 5 write, and run only while this copy holds the data
+folder's lock: [data › One writer](README.md#one-writer)):
 
 1. **Fold** the journal (above).
 2. **Inputs**: every input of a live batch must exist in `input/` and have the `sha256` its record names.
