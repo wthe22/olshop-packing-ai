@@ -13,7 +13,7 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    **encoded bytes** (PDFium's `FPDFImageObj_GetImageDataRaw`, not the decoded pixels) are hashed with
    XXH3-64 (seed 0) and looked up in `logos`; a hash in `not_courier.logos` is not a logo. Measured stable
    across every sample export: J&T Express `39b9b7b9f61d0e7f`, SiCepat `cf33ed60daa291b1`, iD Express (IDX)
-   `9131c1f94ad363d4`, SPX `4583097ef370a670`, Anteraja `556e376839c5805d` (354×142, one sample page). The
+   `9131c1f94ad363d4`, SPX `4583097ef370a670` (and `7f0d33c143e2ab14` on its `No. Resi` layout), Anteraja `556e376839c5805d` (354×142, one sample page). The
    buying channels' strips are in the bundled `not_courier.logos`: `tokopedia | Shop` `6c1340227db55be4`,
    `tokopedia | TikTok` `c2230c3c5d8c560d`, the Shopee wordmark `07fea99cbec66ae7`, `TikTok Shop`
    `f2cf7019646c955b`, `tokopedia PLUS` `330b79a3b29d4646`. About 0.5 µs a page.
@@ -28,8 +28,9 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    both give `753ccbd14749befa`. The decode is paid only where the bytes matched nothing (about 1 page in 600).
 3. **The tracking-ID form** ([business-process 02](../../business-process/02-data-sources.md)): `JY` or
    `JX` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo; `TKP` + 10
-   digits → IDX; `SPXID` + 11 digits → SPX (the Shopee-style label prints a check letter around the number:
-   `Resi:` without it, `SPXID…A` with it); `TSA-` + 11 digits → Anteraja (one sample page). The form must match a token, or a match in the
+   digits → IDX; `SPXID` + 11 digits + a capital letter → SPX (the letter is part of the ID and differs per
+   order; one layout prints it on the line under `Resi:`, so only the ID printed whole along the edges
+   names it); `TSA-` + 11 digits → Anteraja (one sample page). The form must match a token, or a match in the
    whitespace-collapsed text, **fully**; it need not be repeated (the boxed layouts print it once). A form
    the platform adds is a line of `packing-workflows.toml`, not a program change.
 4. **Named only when the two agree.** The form gives the *candidate* couriers; the courier is named when the
@@ -52,7 +53,8 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    style is known from three pages: each of these marks is re-checked on the next instant labels before it
    is relied on.
 8. **The Shopee-style label carries both clues**: the small red `SPX` wordmark (68×27, masked, bytes
-   `4583097ef370a670`) and `SPXID` + 11 digits, which no other courier uses
+   `4583097ef370a670`, or `7f0d33c143e2ab14` on the `No. Resi` layout) and `SPXID` + 11 digits + a letter,
+   which no other courier uses
    ([D-LABEL-5](../decisions/label.md)).
 
 ## The logo prompt, and what is remembered

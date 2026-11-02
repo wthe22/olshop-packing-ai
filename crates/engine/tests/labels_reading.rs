@@ -123,7 +123,9 @@ fn shopee_page(rows: &[Row]) -> PageText {
     runs.push(run(8.5, y, "Pesan:"));
     runs.push(run(35.1, y, "261014ABCD1234"));
     PageText {
-        text: "No.Pesanan: 261014ABCD1234\nSPXID00000000002A\nBatas Kirim: 15-10-2026".to_string(),
+        // `Resi:` prints the digits with the letter on the line under them; the edges print the
+        // whole ID.
+        text: "Resi: SPXID00000000002\nB\nNo.Pesanan: 261014ABCD1234\nSPXID00000000002B SPXID00000000002B\nBatas Kirim: 15-10-2026".to_string(),
         runs,
         width: 297.12,
         height: 420.0,
@@ -157,7 +159,7 @@ fn the_shopee_style_page_reads_into_one_order_keyed_by_its_own_number() {
     assert_eq!(order.order.order_id.as_str(), "261014ABCD1234");
     assert_eq!(
         order.order.tracking_id.as_ref().map(TrackingId::as_str),
-        Some("SPXID00000000002")
+        Some("SPXID00000000002B")
     );
     assert_eq!(order.order.courier.as_deref(), Some("SPX"));
     assert_eq!(

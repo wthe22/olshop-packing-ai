@@ -4,7 +4,29 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-10-30)
+## Status (2026-11-02)
+
+- **Handoff of 2026-11-02 — Shopee orders: the tracking ID's letter, `total_quantity` on every slip.**
+  The owner's words in chat, built and pushed:
+  - **R-LABEL-12**: an SPX tracking ID is `SPXID` + 11 digits + a capital letter, and the letter was
+    dropped. The bundled form is `SPXID\d{11}[A-Z]`; the `No. Resi` layout's `Batas Kirim` date is read
+    too ([labels/courier](../../software-design/labels/courier.md)). The owner's files are in `samples/`
+    as `2026-11-02 spx eco.pdf` and `2026-11-02 spx std.pdf`.
+  - **R-RULES-7**: a filter's `total_quantity` is the units of the order's lines on every slip. It was
+    the printed `Qty Total`, which the Shopee-style slip does not print, so `total_quantity = 2` never
+    matched there and the order fell to the next sepatu group
+    ([conditions](../../software-design/rules-file/conditions.md)).
+  - **The owner's step first**: the program reads the owner's own `packing-workflows.toml` beside
+    `Packing.exe`, never the bundled copy, and does not rewrite it (D-APP-3). In its
+    `courier_code = "spx"` entry the owner changes `tracking_id = 'SPXID\d{11}'` to
+    `tracking_id = 'SPXID\d{11}[A-Z]'`, saves and starts the program again. Without that line the
+    tracking ID still loses its letter; the `total_quantity` fix needs no change to the file.
+  - **The owner may test now**: read the two 2026-11-02 Shopee PDFs with `main-v2.0`: the sepatu
+    orders of 2 go to *Sepatu Hitam x2*, and each tracking ID ends in its letter. A batch already saved
+    keeps what it read until it is amended. A finding goes into [reviews/label.md](../../reviews/label.md)
+    or [reviews/rules.md](../../reviews/rules.md) as R-LABEL-13 or R-RULES-8.
+  - `target/portable/Packing/` is built from the working tree, which also holds another session's
+    uncommitted work (as the build of 2026-11-01 did); that work stays uncommitted.
 
 - **Handoff of 2026-10-30 — Search's dates and rows, the date as the Day screen's title.** The owner's
   words in chat, built and pushed:

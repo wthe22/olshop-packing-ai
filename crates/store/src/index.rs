@@ -67,10 +67,6 @@ impl FilterFields for IndexedOrder {
         self.order.tracking_id.as_ref().map_or("", |id| id.as_str())
     }
 
-    fn total_quantity(&self) -> Option<i64> {
-        self.order.total_quantity.map(i64::from)
-    }
-
     fn ship_by(&self) -> Option<Date> {
         self.order.ship_by_date
     }

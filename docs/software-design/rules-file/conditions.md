@@ -60,7 +60,7 @@ date       = '"' digit digit digit digit "-" digit digit "-" digit digit '"'
 | `variation` | text | item | slip | The variation (empty for `Default`) |
 | `seller_sku` | text | item | slip | The Seller SKU; often empty |
 | `line_quantity` | number | item | slip | Quantity of one line |
-| `total_quantity` | number | order | slip | The printed `Qty Total`; none on the Shopee-style slip, so a comparison on it is false there |
+| `total_quantity` | number | order | slip | The units of the order: the sum of its lines' quantities, on every slip (the Shopee-style slip prints no `Qty Total`; the printed total is only checked against this sum) |
 | `distinct_items` | number | order | — | Number of lines of the order |
 | `courier` | text | order | label | The courier's **code** in `packing-workflows.toml` (`jnt`) for `equals`, its **name** (`J&T Express`) for `contains` and `starts_with`; empty when no courier is named ([courier](../labels/courier.md)) |
 | `order_id` | text | order | label | The Order ID |

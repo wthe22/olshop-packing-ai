@@ -35,7 +35,7 @@
 | Column | Use |
 |---|---|
 | `Order ID` | 18 digits, printed as text on the TikTok and Tokopedia labels. **The Shopee-style label prints none** (below): it keys the order by its own `No.Pesanan` value |
-| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` or `JX` + 10 digits; SiCepat 12 digits starting `00`; iD Express (the platform's name: IDX) `TKP` + 10 digits; J&T Cargo 12 digits starting `57`; SPX Express `SPXID` + 11 digits (the Shopee-style label; this export has no row for it). Both sample CSVs agree row for row: `Shipping Provider Name` J&T Express on all 2,086 `JY` rows, SiCepat on all 291 `00` rows, IDX on all 14 `TK…` rows, J&T Cargo on both `57` rows (their `Delivery Option` is `Kargo`). A J&T Express page of the 2026-10-21 file prints `JX` + 10 digits instead, under the same logo and beside the same `www.jet.co.id` line; the 2026-10-06 exports hold no `JX` row (they are four days older) |
+| `Tracking ID` | Encoded in the label barcodes. J&T Express `JY` or `JX` + 10 digits; SiCepat 12 digits starting `00`; iD Express (the platform's name: IDX) `TKP` + 10 digits; J&T Cargo 12 digits starting `57`; SPX Express `SPXID` + 11 digits + a capital letter (the Shopee-style label; this export has no row for it). Both sample CSVs agree row for row: `Shipping Provider Name` J&T Express on all 2,086 `JY` rows, SiCepat on all 291 `00` rows, IDX on all 14 `TK…` rows, J&T Cargo on both `57` rows (their `Delivery Option` is `Kargo`). A J&T Express page of the 2026-10-21 file prints `JX` + 10 digits instead, under the same logo and beside the same `www.jet.co.id` line; the 2026-10-06 exports hold no `JX` row (they are four days older) |
 | `Package ID` | 19 digits. Exactly one per order in the samples |
 | `SKU ID` | 19 digits, always filled. The only stable item identifier |
 | `Product Name` | Long (up to ~80 characters). The part before the first `\|` is the short product name, e.g. `Spion Beat \| Kaca Spion Motor …` → `Spion Beat` |
@@ -121,8 +121,9 @@ creator handle, …) are not needed for packing.
   the only one that is neither a TikTok nor a Tokopedia page. Its header carries the `Shopee`
   wordmark (800×253, the marketplace's own brand, where the other styles put their platform strip)
   with the service tag `ECO` beside it and the courier's logo — the red `SPX` wordmark — at the top
-  right. Rows, top to bottom: the tracking ID (with a check letter: `SPXID…A`) repeated along the
-  top and side edges, `Resi:` with the tracking ID, a bare `A`, the wide barcode, two routing codes
+  right. Rows, top to bottom: the tracking ID (`SPXID` + 11 digits + a letter, `A` or `B` in the
+  samples) repeated along the top and side edges, `Resi:` with its digits and the letter alone on
+  the line under them, the wide barcode, two routing codes
   that differ per page, the receiver and sender blocks, a routing band, `Berat:`, `COD Cek Dulu:`,
   `Batas Kirim: dd-mm-yyyy` (**a date, no time**), `No.Pesanan:`, a second barcode, a box with `-`,
   a QR code — then the slip: `# Nama Produk SKU Variasi Qty` with the item row and
@@ -132,6 +133,11 @@ creator handle, …) are not needed for packing.
   holds the seller SKU and its `Variasi` column the variation — the same two values the Tokopedia
   slip prints as `SKU` and `Seller SKU`. Its barcodes and QR are **images** (693×231, 594×100,
   300×300), not drawn paths, and it has no page-wide frame image.
+- **The `No. Resi` layout of the Shopee-style label** (`2026-11-02 spx std.pdf`, 1 page) prints the
+  whole ID after `No. Resi:` and the service tag `STD`; its SPX logo is another asset
+  (`7f0d33c143e2ab14`), and in its text an empty box's `-` comes between `Batas Kirim:` and the date.
+  A product name the platform cuts short ends in a bare `|` on the slip, on both layouts; the name is
+  read as printed.
 - The courier is not always readable text: J&T Express labels print `www.jet.co.id` and J&T Cargo
   labels print `FastTrack` (their service tag) and caption the order ID `TT Order ID :`, but
   **SiCepat, iD Express and the Shopee-style label print no courier name and no web address** — the
@@ -226,7 +232,8 @@ creator handle, …) are not needed for packing.
   the whitespace is dropped, and it is then glued to the text beside it. A candidate form that
   appears once is therefore normal on the boxed layouts and must not be dropped for that reason;
   the courier data decides which form names a courier. The Shopee-style label prints it once as
-  `Resi:` **without** its check letter and eight times **with** it (`SPXID…A`, along the page's
+  `Resi:` **without** its letter (printed on the line under it) and eight times **with** it
+  (`SPXID…A`, along the page's
   edges and in `Pesan:`), so on that style the letter is around the number rather than the number
   alone.
 
@@ -251,12 +258,15 @@ are usually a day apart (a download in the small hours or at 08:41 is the day be
 | `2026-10-15 spx.pdf` | — * | 3 | `Batas Kirim` 15/10/2026 | **SPX Express 3** — the Shopee-style label, one order a page |
 | `2026-10-15 tp-instant.pdf` | — * | 1 | `In transit by` 15/10/2026 10:00 | **instant-service 1** — a Tokopedia order |
 | `2026-10-21 JX.pdf` | — * | 63 | `Estimated Date` 22/10/2026 | J&T Express 59 (one page printing `JX` + 10 digits, the rest `JY`) · SiCepat 4 |
+| `2026-11-02 spx eco.pdf` | — * | 2 | `Batas Kirim` 02/11/2026 | **SPX Express 2** — the Shopee-style label, tag `ECO`, letter `B` |
+| `2026-11-02 spx std.pdf` | — * | 1 | `Batas Kirim` 02/11/2026 | **SPX Express 1** — the `No. Resi` layout, tag `STD`, letter `B` |
 | `2026-10-06_14-26-17_orders-export_1of2.csv` | — | 957 rows | orders created 02–06/10/2026 | — |
 | `2026-10-06_16-29-15_orders-export_2of2.csv` | — | 1,436 rows | orders created 02–06/10/2026 | — |
 
-\* the three files the owner named by hand (`2026-10-15 spx.pdf`, `2026-10-15 tp-instant.pdf`,
-`2026-10-21 JX.pdf`) carry no platform stamp; the file's own timestamp stands in (2026-10-15 12:20
-and 08:35, 2026-10-21 08:02).
+\* the files the owner named by hand (`2026-10-15 spx.pdf`, `2026-10-15 tp-instant.pdf`,
+`2026-10-21 JX.pdf`, the two `2026-11-02 spx` files) carry no platform stamp; the file's own timestamp
+stands in (2026-10-15 12:20 and 08:35, 2026-10-21 08:02; the 2026-11-02 pair 09:08, the PDFs' own
+creation time, saved from a browser).
 
 "Labels' own date" is what the pages print — the day the parcels were to go out, from
 `Estimated Date`, or from the deadline (`In transit by`, `Batas Kirim`) on the styles that print no

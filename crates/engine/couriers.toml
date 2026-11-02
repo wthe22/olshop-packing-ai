@@ -53,6 +53,6 @@ tracking = "TKP\\d{10}"
 
 [[courier]]
 name = "SPX"
-logo = ["4583097ef370a670"]   # 68x27 px, 1,495 bytes, masked: the small red SPX wordmark
+logo = ["4583097ef370a670", "7f0d33c143e2ab14"]   # masked: the small red SPX wordmark
 shape = []
-tracking = "SPXID\\d{11}"     # the ID carries a check letter around it on the page
+tracking = "SPXID\\d{11}[A-Z]"   # the letter after the digits is part of the ID

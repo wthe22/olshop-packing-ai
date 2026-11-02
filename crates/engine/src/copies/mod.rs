@@ -290,10 +290,6 @@ impl FilterFields for Copy {
         self.tracking_id.as_ref().map_or("", TrackingId::as_str)
     }
 
-    fn total_quantity(&self) -> Option<i64> {
-        self.total_quantity
-    }
-
     fn ship_by(&self) -> Option<Date> {
         self.ship_by_date
     }

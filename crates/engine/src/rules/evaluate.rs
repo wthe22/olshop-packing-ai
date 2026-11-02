@@ -172,8 +172,6 @@ pub trait FilterFields {
     fn order_id(&self) -> &str;
     /// Empty when the label printed none.
     fn tracking_id(&self) -> &str;
-    /// The printed `Qty Total`; none on the Shopee-style slip.
-    fn total_quantity(&self) -> Option<i64>;
     fn ship_by(&self) -> Option<Date>;
 }
 
@@ -231,9 +229,12 @@ pub fn evaluate_filter(cond: &Condition, order: &dyn FilterFields, couriers: &[C
                 .lines()
                 .iter()
                 .any(|line| number_match(line.quantity, *op, *value)),
-            "total_quantity" => order
-                .total_quantity()
-                .is_some_and(|total| number_match(total, *op, *value)),
+            // The units of the lines, not the printed `Qty Total`, which the Shopee-style slip
+            // does not print.
+            "total_quantity" => {
+                let total = order.lines().iter().map(|line| line.quantity).sum();
+                number_match(total, *op, *value)
+            }
             "distinct_items" => number_match(order.lines().len() as i64, *op, *value),
             _ => false,
         },

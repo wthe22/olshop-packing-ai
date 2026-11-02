@@ -250,7 +250,7 @@ fn the_built_in_table_names_the_measured_logos_and_the_text_clue() {
         ),
         (
             "no clue",
-            Some("SPXID00000000002"),
+            Some("SPXID00000000002A"),
             vec![logo("4583097ef370a670")],
             Some("SPX"),
         ),
@@ -328,6 +328,13 @@ fn ship_by_is_read_from_the_label_and_from_a_spaced_page() {
         .join(" ");
     assert_eq!(
         find_ship_by(&spaced_day).unwrap().to_string(),
+        "2026-10-15T00:00:00"
+    );
+    // The `No. Resi` layout's text puts the empty box's `-` between the caption and the date.
+    assert_eq!(
+        find_ship_by("Berat:\nBatas Kirim:\n-\n15-10-2026\n300 gr")
+            .unwrap()
+            .to_string(),
         "2026-10-15T00:00:00"
     );
 }

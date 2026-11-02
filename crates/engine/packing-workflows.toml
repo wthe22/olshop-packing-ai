@@ -66,7 +66,7 @@ tracking_id = 'TKP\d{10}'
 [[courier_classifier]]
 courier_code = "spx"
 logos = ["4583097ef370a670", "7f0d33c143e2ab14"]     # 68x27 px, masked: the small red SPX wordmark
-tracking_id = 'SPXID\d{11}'
+tracking_id = 'SPXID\d{11}[A-Z]'   # the letter after the digits is part of the ID
 
 [[courier_classifier]]
 courier_code = "anteraja"

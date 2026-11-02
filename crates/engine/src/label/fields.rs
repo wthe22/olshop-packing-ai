@@ -62,9 +62,11 @@ fn ship_by_collapsed_re() -> &'static Regex {
 fn ship_by_day_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
     // The Shopee-style label's deadline: a date with no time. The `\s*` lets the one pattern read
-    // both the raw text and a spaced-out page's collapsed text.
+    // both the raw text and a spaced-out page's collapsed text; the `-` of an empty box can come
+    // between the caption and the date in the text's order.
     R.get_or_init(|| {
-        Regex::new(r"Batas\s*Kirim:\s*(\d{2})-(\d{2})-(\d{4})").expect("built-in ship_by day regex")
+        Regex::new(r"Batas\s*Kirim:[\s-]*(\d{2})-(\d{2})-(\d{4})")
+            .expect("built-in ship_by day regex")
     })
 }
 

@@ -320,6 +320,58 @@ fn each_filter_field_reads_its_value_of_the_order() {
     }
 }
 
+/// The Shopee-style slip prints no `Qty Total`: `total_quantity` counts the units of the lines, so
+/// such an order sorts by its quantity like any other, and a printed total that differs is not read.
+#[test]
+fn total_quantity_is_the_units_of_the_lines() {
+    let rule = r#"schema = "1.0"
+[[label_sort_rules]]
+name = "quantities"
+[[label_sort_rules.label_groups]]
+code = "S1"
+name = "Sepatu x1"
+filter = 'distinct_items = 1 and name contains "sepatu" and total_quantity = 1'
+[[label_sort_rules.label_groups]]
+code = "S2"
+name = "Sepatu x2"
+filter = 'distinct_items = 1 and name contains "sepatu" and total_quantity = 2'
+[[label_sort_rules.label_groups]]
+code = "SN"
+name = "Sepatu x3+"
+filter = 'distinct_items = 1 and name contains "sepatu"'
+"#;
+    let shopee = copy(
+        "261102ABCD1234",
+        0,
+        1,
+        vec![line("Cover Sepatu Motor |", "", "", 2)],
+    );
+    let mut printed_other = copy(
+        "580000000000000044",
+        0,
+        2,
+        vec![line("Cover Sepatu Motor |", "", "", 1)],
+    );
+    printed_other.total_quantity = Some(3);
+    let copies = [shopee, printed_other];
+    let workflows = load_workflows(rule).unwrap();
+    let plan = plan_groups(&workflows.sort_rules[0]);
+    let sorted = sort_batch(&copies, &[0, 1], &plan, BatchId::new(1), &[]);
+    let orders = |code: &str| -> Vec<&str> {
+        sorted
+            .groups
+            .iter()
+            .filter(|group| group.code == code)
+            .flat_map(|group| &group.contents)
+            .flat_map(|block| &block.orders)
+            .map(|&at| copies[at].order_id.as_str())
+            .collect()
+    };
+    assert_eq!(orders("S1"), ["580000000000000044"]);
+    assert_eq!(orders("S2"), ["261102ABCD1234"]);
+    assert!(orders("SN").is_empty());
+}
+
 #[test]
 fn a_typed_courier_is_found_by_name_and_a_picked_one_by_code() {
     let couriers = [

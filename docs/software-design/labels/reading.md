@@ -10,7 +10,7 @@
 | `ship_by_date` | The date of the label's `In transit by: dd/mm/yyyy hh:mm`, or of the Shopee-style label's `Batas Kirim: dd-mm-yyyy` ([D-APP-21](../decisions/app-features.md)) |
 | `pickup_code` | The instant-service label's code: the run of two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together) (kept in the record; its label prints it) |
 | item lines | The slip table: product name, variation, Seller SKU, quantity |
-| `total_quantity` | The slip's `Qty Total`; none on the Shopee-style slip |
+| `total_quantity` | The slip's printed `Qty Total`; none on the Shopee-style slip (a filter counts the lines instead: [conditions](../rules-file/conditions.md)) |
 
 An item is identified by its product name and variation ([D-APP-20](../decisions/app-features.md)); the platform's
 `SKU ID` is not on the label PDFs.
