@@ -6,8 +6,8 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-06)
 
-- **Handoff of 2026-11-06 — a workspace's shops; Print in the app.** The owner's words in chat, built
-  and pushed:
+- **Handoff of 2026-11-06 — a workspace's shops; Print in the app; version 0.4.0.** The owner's words in
+  chat, built and pushed:
   - **D-APP-25**: a workspace lists its shops (Settings › Workspaces › **Shops**, kept in
     `{workspace}/settings.toml`). A read whose labels show another sender, or none, asks first:
     **Back**, or **Read anyway**. Names are compared whole, spaces and case ignored, so the Shopee
@@ -21,8 +21,8 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     Print or Cancel was pressed.
   - **Update every copy together**: the journal now holds `print_sent` records, and an older copy of the
     program reads such a date as damaged ([records](../../software-design/data/records.md)).
-  - **The owner may test now**: list the shops of each workspace, then read one day's real downloads, a
-    file of another shop among them. Print a group PDF, cancel once (✕ the mark), print again, tick
+  - **The owner may test now** with `target/portable/Packing/Packing.exe`: list the shops of each
+    workspace, then read one day's real downloads, a file of another shop among them. Print a group PDF, cancel once (✕ the mark), print again, tick
     Printed. A finding goes into [reviews/app.md](../../reviews/app.md) as R-APP-10, a screen finding into
     [reviews/ui.md](../../reviews/ui.md) as R-UI-39, a sender read wrong into
     [reviews/label.md](../../reviews/label.md) as R-LABEL-13.
