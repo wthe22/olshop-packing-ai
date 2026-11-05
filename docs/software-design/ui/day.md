@@ -34,8 +34,8 @@ The start screen: what has been saved on the open date of the open workspace, an
   orders. Each group PDF: `<batch>-<code>`, the group's name, its orders and their order
   contents (*88 orders*, *3 contents*); the code is a chip in the logo's blue. Each count is a column of its own, its number right-aligned in a
   fixed width and its word after it in the muted colour, so the numbers of a card stand under each other.
-- **Print** opens the group PDF, the summary PDF or a reprint in the app's print window with its print
-  preview, the one Chrome shows: printer, pages, copies, paper size, scale, margins, two-sided
+- **Print** opens the print preview of the group PDF, the summary PDF or a reprint over the app's window,
+  the one Chrome shows: printer, pages, copies, paper size, scale, margins, two-sided
   ([D-APP-26](../decisions/app-features.md)).
 - **Sent hh:mm** stands before the tick of a group PDF from the moment its **Print** opens the preview: the
   app remembers that the print was sent. The preview does not tell the app whether Print or Cancel was

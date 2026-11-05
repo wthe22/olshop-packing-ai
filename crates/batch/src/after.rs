@@ -1,13 +1,25 @@
-//! Steps 16 and 17 (05-after-save.md): the Printed tick and the revert of the newest live batch,
-//! each one append; the views follow.
+//! Steps 16 and 17 (05-after-save.md): the Sent mark, the Printed tick and the revert of the
+//! newest live batch, each one append; the views follow.
 
 use packing_engine::ids::BatchId;
-use packing_engine::record::{BatchReverted, PrintedMarked, RecordBody};
+use packing_engine::record::{BatchReverted, PrintSent, PrintedMarked, RecordBody};
 use packing_store::{
     DateFolder, Journal, discard_partial, move_aside, settle_partial, write_views,
 };
 
 use crate::BatchError;
+
+/// Mark a label group of a live batch as sent to the printer, or take the mark back. A note only.
+pub fn set_sent(
+    folder: &DateFolder,
+    journal: &mut Journal,
+    mark: PrintSent,
+    app: &str,
+) -> Result<(), BatchError> {
+    journal.commit(vec![RecordBody::PrintSent(mark)], app)?;
+    write_views(folder.dir(), journal.fold())?;
+    Ok(())
+}
 
 /// Mark a label group of a live batch as printed, or not. A note only: nothing depends on it.
 pub fn set_printed(

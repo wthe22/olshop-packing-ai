@@ -1,6 +1,6 @@
 //! The fold (journal.md): the records applied in order, each checked by its rule. It gives the
-//! live batches, the inputs of the date, the printed marks, the reprints and the next numbers;
-//! every decision is taken from it.
+//! live batches, the inputs of the date, the sent and printed marks, the reprints and the next
+//! numbers; every decision is taken from it.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
@@ -65,6 +65,8 @@ pub struct LiveBatch {
     /// The batch's first `batch_saved`, and its newest.
     pub create_time: Datetime,
     pub modify_time: Datetime,
+    /// The label groups marked as sent, each with the time of its `print_sent`.
+    pub sent: BTreeMap<String, Datetime>,
     /// The label groups marked as printed.
     pub printed: BTreeSet<String>,
     /// The newest `output_restored` of each output.
@@ -192,19 +194,16 @@ impl Fold {
                 let files = batch.saved.outputs.iter().map(|o| o.file.clone()).collect();
                 self.last_writes = LastWrites::Reverted(files);
             }
-            RecordBody::PrintedMarked(marked) => {
-                let batch = self.live_batch(marked.batch)?;
-                let has_group = batch
-                    .saved
-                    .outputs
-                    .iter()
-                    .any(|output| output.group.as_deref() == Some(marked.group.as_str()));
-                if !has_group {
-                    return Err(rule(format!(
-                        "batch {} has no label group {}",
-                        marked.batch, marked.group
-                    )));
+            RecordBody::PrintSent(sent) => {
+                let batch = self.group_batch(sent.batch, &sent.group)?;
+                if sent.sent {
+                    batch.sent.insert(sent.group.clone(), record.time.clone());
+                } else {
+                    batch.sent.remove(&sent.group);
                 }
+            }
+            RecordBody::PrintedMarked(marked) => {
+                let batch = self.group_batch(marked.batch, &marked.group)?;
                 if marked.printed {
                     batch.printed.insert(marked.group.clone());
                 } else {
@@ -287,6 +286,7 @@ impl Fold {
                 saved: saved.clone(),
                 create_time,
                 modify_time: time.clone(),
+                sent: BTreeMap::new(),
                 printed: BTreeSet::new(),
                 restored: BTreeMap::new(),
             },
@@ -305,6 +305,20 @@ impl Fold {
         self.live
             .get_mut(&batch)
             .ok_or_else(|| rule(format!("batch {batch} is not live")))
+    }
+
+    /// The live batch that has label group `group`.
+    fn group_batch(&mut self, batch: BatchId, group: &str) -> Result<&mut LiveBatch, DamageReason> {
+        let live = self.live_batch(batch)?;
+        let has_group = live
+            .saved
+            .outputs
+            .iter()
+            .any(|output| output.group.as_deref() == Some(group));
+        if !has_group {
+            return Err(rule(format!("batch {batch} has no label group {group}")));
+        }
+        Ok(live)
     }
 }
 

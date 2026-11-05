@@ -20,7 +20,7 @@
       day={shell.day}
       today={shell.today}
       onOpen={shell.openFile}
-      onOpenOutput={shell.openOutput}
+      onOpenOutput={shell.outputs.open}
       onReprinted={shell.afterReprint}
     />
   </Overlay>

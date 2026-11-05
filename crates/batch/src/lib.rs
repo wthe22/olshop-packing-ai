@@ -14,7 +14,7 @@ mod restore;
 mod save;
 mod written;
 
-pub use after::{revert, set_printed};
+pub use after::{revert, set_printed, set_sent};
 pub use amend::{Amend, amend};
 pub use day_summary::{DAY_SUMMARY_PDF, day_summary};
 pub use draft::{Draft, ReadRequest, read_draft};

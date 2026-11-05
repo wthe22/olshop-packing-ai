@@ -1,7 +1,9 @@
 //! The journal: a commit read back, the torn tail, damage by line, a record the fold refuses.
 
 use packing_engine::ids::BatchId;
-use packing_engine::record::{BatchReverted, PrintedMarked, RecordBody, Recovered, ReprintMade};
+use packing_engine::record::{
+    BatchReverted, PrintSent, PrintedMarked, RecordBody, Recovered, ReprintMade,
+};
 use packing_store::{DamageReason, Journal, StoreError, open_date};
 
 use crate::common::*;
@@ -80,7 +82,7 @@ fn another_copys_commit_is_seen_on_disk_and_a_stale_fold_appends_nothing() {
 }
 
 #[test]
-fn printed_marks_revert_amend_and_reprints_fold_by_their_rules() {
+fn sent_and_printed_marks_revert_amend_and_reprints_fold_by_their_rules() {
     let (_data, folder) = date_folder("fold-rules");
     let mut journal = Journal::open(&folder).unwrap();
     let out = folder.dir().join("output");
@@ -99,6 +101,21 @@ fn printed_marks_revert_amend_and_reprints_fold_by_their_rules() {
         )
         .unwrap();
     assert!(journal.fold().live[&BatchId::new(1)].printed.contains("A"));
+    let sent = |sent| {
+        RecordBody::PrintSent(PrintSent {
+            batch: BatchId::new(1),
+            group: "A".into(),
+            sent,
+        })
+    };
+    journal.commit(vec![sent(true)], APP).unwrap();
+    assert!(journal.fold().live[&BatchId::new(1)].sent.contains_key("A"));
+    journal.commit(vec![sent(false)], APP).unwrap();
+    assert!(
+        journal.fold().live[&BatchId::new(1)].sent.is_empty(),
+        "the mark taken back"
+    );
+    journal.commit(vec![sent(true)], APP).unwrap();
 
     let amended = batch(1, true, outputs(&out, 1, "amended"));
     journal
@@ -106,6 +123,7 @@ fn printed_marks_revert_amend_and_reprints_fold_by_their_rules() {
         .unwrap();
     let live = &journal.fold().live[&BatchId::new(1)];
     assert!(live.printed.is_empty(), "an amend starts unticked");
+    assert!(live.sent.is_empty(), "and not sent");
     assert_ne!(live.create_time.to_string(), "");
 
     journal
@@ -156,6 +174,11 @@ fn a_record_the_fold_refuses_writes_nothing() {
             batch: BatchId::new(1),
             group: "Q".into(),
             printed: true,
+        }),
+        RecordBody::PrintSent(PrintSent {
+            batch: BatchId::new(2),
+            group: "A".into(),
+            sent: true,
         }),
         started(),
     ];

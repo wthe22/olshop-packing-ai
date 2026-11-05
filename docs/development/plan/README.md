@@ -4,19 +4,28 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-05)
+## Status (2026-11-06)
 
-- **Next: [shops-and-print.md](shops-and-print.md)**, designed from the owner's words in chat, not built:
-  - **D-APP-25**: a workspace lists its shops in `{workspace}/settings.toml` (Settings › Workspaces ›
-    **Shops**). Reading looks for them in each label's `Pengirim` name, spaces and case ignored. Labels of
-    another shop, or with no sender, are asked about before the plan, with **Read anyway** and **Back**
-    ([workspaces › Its shops](../../software-design/app/workspaces.md#its-shops)).
-  - **D-APP-26**: **Print** opens the output in the app's print window with the web view's print preview
-    (Chrome's options). A group PDF is then marked *Sent hh:mm*, and the mark's ✕ takes it back. The
-    **Printed** tick is the second check and can be ticked with or without *Sent*
-    ([Day](../../software-design/ui/day.md)).
-  - Every label style prints the sender as text; the Shopee shop's name differs from the TikTok one, so
-    the owner lists both names.
+- **Handoff of 2026-11-06 — a workspace's shops; Print in the app.** The owner's words in chat, built
+  and pushed:
+  - **D-APP-25**: a workspace lists its shops (Settings › Workspaces › **Shops**, kept in
+    `{workspace}/settings.toml`). A read whose labels show another sender, or none, asks first:
+    **Back**, or **Read anyway**. Names are compared whole, spaces and case ignored, so the Shopee
+    spelling is listed beside the TikTok one
+    ([workspaces › Its shops](../../software-design/app/workspaces.md#its-shops)). A workspace with no shop
+    listed asks nothing.
+  - **D-APP-26**: **Print** on a group PDF, a summary PDF or a reprint opens the print preview Chrome shows
+    over the app's window. A group PDF is then marked *Sent hh:mm*; its ✕ takes the mark back when the
+    print was cancelled or failed. The **Printed** tick is the second check and can be ticked with or
+    without *Sent* ([Day](../../software-design/ui/day.md)). The preview does not tell the app whether
+    Print or Cancel was pressed.
+  - **Update every copy together**: the journal now holds `print_sent` records, and an older copy of the
+    program reads such a date as damaged ([records](../../software-design/data/records.md)).
+  - **The owner may test now**: list the shops of each workspace, then read one day's real downloads, a
+    file of another shop among them. Print a group PDF, cancel once (✕ the mark), print again, tick
+    Printed. A finding goes into [reviews/app.md](../../reviews/app.md) as R-APP-10, a screen finding into
+    [reviews/ui.md](../../reviews/ui.md) as R-UI-39, a sender read wrong into
+    [reviews/label.md](../../reviews/label.md) as R-LABEL-13.
 
 - **Handoff of 2026-11-02 — several copies on one data folder; version 0.3.3.** The owner's words in
   chat, built and pushed:

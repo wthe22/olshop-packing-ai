@@ -1,6 +1,7 @@
 //! The Day screen's data from a date's fold: the live batches, newest first, each with its group
-//! PDFs, Printed ticks and summary PDF, the copies left out, its warnings and errors; the outputs
-//! the open-time checks found missing, the inputs that cannot be used, and a damaged journal.
+//! PDFs, Sent marks, Printed ticks and summary PDF, the copies left out, its warnings and errors;
+//! the outputs the open-time checks found missing, the inputs that cannot be used, and a damaged
+//! journal.
 
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -21,6 +22,8 @@ pub struct GroupPdfView {
     file: String,
     orders: usize,
     contents: usize,
+    /// When **Print** opened its preview, `hh:mm`; none once the mark is taken back.
+    sent: Option<String>,
     printed: bool,
     problem: Option<FileProblem>,
 }
@@ -204,6 +207,10 @@ fn batch_view(day: &OpenDay, batch: BatchId, live: &LiveBatch, output: &Path) ->
                 file: file.file.clone(),
                 orders: orders.len(),
                 contents: contents.len(),
+                sent: live
+                    .sent
+                    .get(group)
+                    .map(|time| time.zoned().strftime("%H:%M").to_string()),
                 printed: live.printed.contains(group),
                 problem: problem(&file.file),
             })

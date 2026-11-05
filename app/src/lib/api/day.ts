@@ -10,6 +10,8 @@ export interface GroupPdfView {
   file: string;
   orders: number;
   contents: number;
+  // When **Print** opened its preview, "09:14"; `null` once the mark is taken back.
+  sent: string | null;
   printed: boolean;
   problem: FileProblem | null;
 }
@@ -106,6 +108,19 @@ export type OpenResult =
 
 export const openOutput = (day: string, file: string): Promise<OpenResult> =>
   invoke("open_output", { day, file });
+
+// **Print**: the output made ready like *Open* (written again when it is not there); the preview
+// is the front end's, over `outputPdf`.
+export const printOutput = (day: string, file: string): Promise<OpenResult> =>
+  invoke("print_output", { day, file });
+
+// The bytes of an output that is there.
+export const outputPdf = (day: string, file: string): Promise<ArrayBuffer> =>
+  invoke("output_pdf", { day, file });
+
+// The *Sent* mark of a group PDF: set as its preview opens, taken back by its ✕.
+export const setSent = (day: string, batch: number, group: string, sent: boolean): Promise<void> =>
+  invoke("set_sent", { day, batch, group, sent });
 
 // *Day summary*: write the date's summary PDF from its journal; the file's path comes back. A day
 // summary open in a PDF viewer that locks it stops the write with the file named.

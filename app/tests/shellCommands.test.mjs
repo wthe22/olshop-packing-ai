@@ -126,9 +126,9 @@ test("the file and printed commands reach the back end", async () => {
     { group: "B", name: "Spion", file: "2-B Spion x2.pdf", orders: 2, contents: 1, printed: true, problem: "missing" },
   ];
   const row = { batch: 2, time: "09:00", amended: false, sort_rule: "default", files: 2, orders: 4, left_out: [], pdfs, summary: "2 summary.pdf", summary_problem: null, warnings: [], errors: [], folder: "C:/Data/Toko Contoh/2026-10-07/output" };
-  await shell.setPrinted(row, pdfs[0], true);
+  await shell.outputs.setPrinted(row, pdfs[0], true);
   assert.deepEqual(pdfs.map((pdf) => pdf.printed), [true, true], "the tick is set");
-  await shell.setPrinted(row, pdfs[1], false);
+  await shell.outputs.setPrinted(row, pdfs[1], false);
   assert.deepEqual(pdfs.map((pdf) => pdf.printed), [true, false], "and cleared");
   assert.deepEqual(calls.filter((call) => call.command === "set_printed").map((call) => call.args), [
     { day: "2026-10-07", batch: 2, group: "A", printed: true },
@@ -137,11 +137,11 @@ test("the file and printed commands reach the back end", async () => {
 
   // **Restore** writes a lost output again and recounts the day; a finding is shown, nothing kept.
   const counted = calls.filter((call) => call.command === "day_overview").length;
-  await shell.restore("2-A Sepatu x2.pdf");
+  await shell.outputs.restore("2-A Sepatu x2.pdf");
   assert.deepEqual(calls.find((call) => call.command === "restore_output").args, { day: "2026-10-07", file: "2-A Sepatu x2.pdf" });
   assert.equal(shell.error, "");
   assert.equal(calls.filter((call) => call.command === "day_overview").length, counted + 1);
-  await shell.restore("2-B Spion x2.pdf");
+  await shell.outputs.restore("2-B Spion x2.pdf");
   assert.equal(shell.error, texts.day.restoreFailed("2-B Spion x2.pdf", ["page 3 of labels_1.pdf is in no output."]));
   assert.equal(shell.busy, false);
   shell.error = "";
@@ -156,10 +156,10 @@ test("the file and printed commands reach the back end", async () => {
   // A failure of any of them shows the error line and keeps the day screen.
   for (const command of ["open_path", "show_in_folder", "set_printed", "restore_output", "revert_last"]) {
     fail = command;
-    if (command === "restore_output") await shell.restore("2-A Sepatu x2.pdf");
+    if (command === "restore_output") await shell.outputs.restore("2-A Sepatu x2.pdf");
     if (command === "open_path") await shell.openFile("C:/gone.pdf");
     if (command === "show_in_folder") await shell.openFolder("C:/gone");
-    if (command === "set_printed") await shell.setPrinted(row, pdfs[0], true);
+    if (command === "set_printed") await shell.outputs.setPrinted(row, pdfs[0], true);
     if (command === "revert_last") await shell.revert(row);
     assert.notEqual(shell.error, "", `${command} reports its failure`);
     assert.equal(shell.screen, "day");
@@ -239,11 +239,11 @@ test("*Open* writes a missing output again, and a write the owner waits for runs
   shell.day = "2026-10-07";
 
   // A file that is there opens; one written again recounts the day; a finding is shown.
-  await shell.openOutput("2026-10-07", "1-A Sepatu x2.pdf");
+  await shell.outputs.open("2026-10-07", "1-A Sepatu x2.pdf");
   assert.equal(calls.some((call) => call.command === "day_overview"), false, "nothing changed");
-  await shell.openOutput("2026-10-07", "1 summary.pdf");
+  await shell.outputs.open("2026-10-07", "1 summary.pdf");
   assert.deepEqual(calls.at(-1), { command: "day_overview", args: { day: "2026-10-07" } });
-  await shell.openOutput("2026-10-06", "1-B Spion x2.pdf");
+  await shell.outputs.open("2026-10-06", "1-B Spion x2.pdf");
   assert.equal(shell.error, texts.day.restoreFailed("1-B Spion x2.pdf", ["page 3 of labels_1.pdf is in no output."]));
   assert.equal(calls.at(-1).command, "open_output", "another date's Day screen is not shown");
   shell.error = "";

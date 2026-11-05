@@ -65,6 +65,7 @@ struct LabelBatch<'a> {
 struct LabelGroup<'a> {
     code: &'a str,
     output_path: String,
+    is_marked_as_sent: bool,
     is_marked_as_printed: bool,
     order_contents: Vec<OrderContentSummary>,
 }
@@ -195,6 +196,7 @@ fn label_batch<'a>(
             Some(LabelGroup {
                 code,
                 output_path: output_path(&output.file),
+                is_marked_as_sent: live.sent.contains_key(code),
                 is_marked_as_printed: live.printed.contains(code),
                 order_contents: order_contents(batch, code, &orders, ids),
             })

@@ -1,8 +1,10 @@
 # Journal records
 
 The records of [the journal](journal.md), in the notation of the owner's draft. Every record also carries
-`seq: u32`, `time: Datetime`, `app: String` and `type`. A field may be added to a record without a new
-schema version; a field that changes meaning may not.
+`seq: u32`, `time: Datetime`, `app: String` and `type`. A field may be added to a record, and a record type
+to the journal, without a new schema version; a field that changes meaning may not. An older copy of the
+program reads a journal holding a record type it does not know as damaged, so every copy on a shared data
+folder is updated together.
 
 ```
 Started {                       // type "started", seq 1

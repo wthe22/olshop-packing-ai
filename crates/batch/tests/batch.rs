@@ -14,10 +14,10 @@ use jiff::civil::date;
 use packing_batch::{
     BatchError, Draft, ReadRequest, ReprintOutcome, ReprintRequest, RestoreOutcome, RestoreRequest,
     SaveOutcome, SaveRequest, Saved, amend, check_files, read_draft, reprint, restore, revert,
-    save, set_printed,
+    save, set_printed, set_sent,
 };
 use packing_engine::ids::{BatchId, OrderId};
-use packing_engine::record::{BatchSaved, PrintedMarked};
+use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked};
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, SortRule, Workflows, load_workflows};
 use packing_pdf::worker::PdfWorker;
 use packing_store::{DateFolder, Journal, Settled, input_path, open_date, partial_dir};
@@ -252,7 +252,15 @@ fn an_amend_saves_the_newest_batch_again_under_its_number() {
         printed: true,
     };
     set_printed(&day.folder, &mut day.journal, mark, APP).unwrap();
-    assert!(day.journal.fold().live[&first.batch].printed.contains("Z"));
+    let sent = PrintSent {
+        batch: first.batch,
+        group: "Z".into(),
+        sent: true,
+    };
+    set_sent(&day.folder, &mut day.journal, sent, APP).unwrap();
+    let live = &day.journal.fold().live[&first.batch];
+    assert!(live.printed.contains("Z"));
+    assert!(live.sent.contains_key("Z"));
 
     let amend = amend(&day.folder, day.journal.fold(), &day.workflows).unwrap();
     assert_eq!(amend.batch, first.batch);
@@ -298,7 +306,8 @@ fn an_amend_saves_the_newest_batch_again_under_its_number() {
     );
     let live = &day.journal.fold().live[&first.batch];
     assert!(live.printed.is_empty(), "an amend starts its ticks empty");
-    assert_eq!(day.journal.fold().last_seq, 4);
+    assert!(live.sent.is_empty(), "and its sent marks");
+    assert_eq!(day.journal.fold().last_seq, 5);
     assert!(day.output(GROUP_FILE).is_file());
 }
 

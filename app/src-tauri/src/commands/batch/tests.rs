@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use jiff::civil::Date;
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::orders::{LogoAnswer, UnseenLogo};
-use packing_engine::record::PrintedMarked;
+use packing_engine::record::{PrintSent, PrintedMarked};
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, WORKFLOWS_FILE};
 use serde_json::{Value, json};
 use testkit::{PdfiumGuard, TempDir, testdata, vendor_dir};
@@ -24,7 +24,8 @@ use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
 use super::{amend_start, checked, plan_view, resolve, sort_rules_of};
 use crate::AppState;
 use crate::commands::day::{
-    OpenView, mark_printed, overview, ready_to_open, restore_file, revert, write_day_summary,
+    OpenView, mark_printed, mark_sent, output_bytes, overview, ready_to_open, restore_file, revert,
+    write_day_summary,
 };
 use crate::commands::panel::{open_workspace, panel};
 use crate::commands::rules::{
@@ -145,7 +146,7 @@ fn a_saved_batch_shows_the_same_day_after_a_restart() {
 }
 
 #[test]
-fn printed_amend_and_revert_go_through_the_journal() {
+fn sent_printed_amend_and_revert_go_through_the_journal() {
     let Some((_program, state, _guard)) = started("app-amend") else {
         return skipped();
     };
@@ -158,6 +159,21 @@ fn printed_amend_and_revert_go_through_the_journal() {
     };
     mark_printed(&state, DAY, mark).unwrap();
     assert_eq!(day(&state)["batches"][0]["pdfs"][0]["printed"], true);
+    let sent = |sent| PrintSent {
+        batch: BatchId::new(1),
+        group: "Z".into(),
+        sent,
+    };
+    mark_sent(&state, DAY, sent(true)).unwrap();
+    let time = day(&state)["batches"][0]["pdfs"][0]["sent"].clone();
+    assert!(
+        time.as_str()
+            .is_some_and(|time| time.len() == 5 && time.as_bytes()[2] == b':'),
+        "sent at hh:mm: {time}"
+    );
+    mark_sent(&state, DAY, sent(false)).unwrap();
+    assert_eq!(day(&state)["batches"][0]["pdfs"][0]["sent"], Value::Null);
+    mark_sent(&state, DAY, sent(true)).unwrap();
 
     assert!(
         amend_start(&state, date(), BatchId::new(2), |_| {}).is_err(),
@@ -179,6 +195,7 @@ fn printed_amend_and_revert_go_through_the_journal() {
     let amended = day(&state);
     assert_eq!(amended["batches"][0]["amended"], true);
     assert_eq!(amended["batches"][0]["pdfs"][0]["printed"], false);
+    assert_eq!(amended["batches"][0]["pdfs"][0]["sent"], Value::Null);
 
     assert!(revert(&state, DAY, BatchId::new(2)).is_err());
     revert(&state, DAY, BatchId::new(1)).unwrap();
@@ -498,6 +515,12 @@ fn open_writes_a_deleted_summary_again_from_the_journal() {
         ready_to_open(&state, DAY, "1 summary.pdf").unwrap().1,
         OpenView::Opened
     );
+    let bytes = output_bytes(&state, DAY, "1 summary.pdf").unwrap();
+    assert_eq!(
+        (bytes.len() as u64, &bytes[..5]),
+        (fs::metadata(&summary).unwrap().len(), &b"%PDF-"[..])
+    );
+    assert!(output_bytes(&state, DAY, "9 summary.pdf").is_err());
     assert!(ready_to_open(&state, DAY, "..\\1 summary.pdf").is_err());
     assert!(
         ready_to_open(&state, DAY, "9 summary.pdf").is_err(),

@@ -101,14 +101,16 @@
             reading={shell.amendReading}
             writing={shell.writing}
             onOpen={shell.openFile}
-            onOpenOutput={(file) => shell.openOutput(shell.day, file)}
+            onOpenOutput={(file) => shell.outputs.open(shell.day, file)}
+            onPrint={(file, mark) => shell.outputs.print(shell.day, file, mark)}
             onOpenFolder={shell.openFolder}
-            onSetPrinted={shell.setPrinted}
+            onUnsend={shell.outputs.unsend}
+            onSetPrinted={shell.outputs.setPrinted}
             onNewBatch={shell.startBatch}
             onDaySummary={shell.daySummary}
             onAmend={shell.amend}
             onRevert={shell.revert}
-            onRestore={shell.restore}
+            onRestore={shell.outputs.restore}
           />
         {:else if shell.screen === "new-batch"}
           <NewBatchScreen

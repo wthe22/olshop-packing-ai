@@ -1,10 +1,13 @@
 <script lang="ts">
   // The Day screen: what has been saved on the date. Batches come from the date's journal, each
-  // with its warnings and each group PDF with its **Printed** tick (a note), then the date's
-  // reprints; *New batch* starts the batch flow and *Day summary* writes the date's summary PDF.
+  // with its warnings and each group PDF with its *Sent* mark and **Printed** tick (notes), then the
+  // date's reprints; *New batch* starts the batch flow and *Day summary* writes the date's summary
+  // PDF.
   import { texts } from "../texts";
   import { formatDay } from "../dates";
   import type { BatchView, DayOverview, FileProblem, GroupPdfView, LeftOutView } from "./api/day";
+  import type { SentMark } from "./dayOutputs.svelte";
+  import Icon from "./Icon.svelte";
   import Count from "./Count.svelte";
   import ReprintsCard from "./ReprintsCard.svelte";
 
@@ -17,7 +20,9 @@
     writing,
     onOpen,
     onOpenOutput,
+    onPrint,
     onOpenFolder,
+    onUnsend,
     onSetPrinted,
     onNewBatch,
     onDaySummary,
@@ -40,7 +45,12 @@
     // A group PDF or summary PDF of the date, by its file name: one that is not there any more is
     // written again first.
     onOpenOutput: (file: string) => void;
+    // **Print** an output of the date, by its file name; a group PDF names the group it marks
+    // *Sent*.
+    onPrint: (file: string, mark: SentMark | null) => void;
     onOpenFolder: (path: string) => void;
+    // The *Sent* mark's ✕.
+    onUnsend: (batch: BatchView, pdf: GroupPdfView) => void;
     // The **Printed** tick of one group PDF: the owner ticks it to note that the file has been
     // printed; it is written to the date's journal the moment it is clicked.
     onSetPrinted: (batch: BatchView, pdf: GroupPdfView, printed: boolean) => void;
@@ -69,13 +79,16 @@
   }
 </script>
 
-{#snippet fileButton(file: string, problem: FileProblem | null)}
+{#snippet fileButtons(file: string, problem: FileProblem | null, mark: SentMark | null)}
   {#if problem}
     <span class="problem">{texts.day.problem(problem)}</span>
   {/if}
   {#if problem === "changed"}
     <button onclick={() => onRestore(file)}>{texts.day.restore}</button>
   {:else}
+    <button title={texts.day.printTitle(file)} onclick={() => onPrint(file, mark)}
+      >{texts.day.print}</button
+    >
     <button onclick={() => onOpenOutput(file)}>{texts.day.open}</button>
   {/if}
 {/snippet}
@@ -147,6 +160,17 @@
             <span class="name">{pdf.name}</span>
             <Count n={pdf.orders} word={texts.day.orderWord(pdf.orders)} />
             <Count n={pdf.contents} word={texts.day.contentWord(pdf.contents)} />
+            <span class="sent">
+              {#if pdf.sent && !pdf.printed}
+                {texts.day.sent(pdf.sent)}
+                <button
+                  class="icon"
+                  title={texts.day.unsend(pdf.file)}
+                  aria-label={texts.day.unsend(pdf.file)}
+                  onclick={() => onUnsend(batch, pdf)}><Icon name="close" size={16} /></button
+                >
+              {/if}
+            </span>
             <label class="printed">
               <input
                 type="checkbox"
@@ -156,13 +180,13 @@
                 onchange={(event) => onSetPrinted(batch, pdf, event.currentTarget.checked)}
               />
             </label>
-            {@render fileButton(pdf.file, pdf.problem)}
+            {@render fileButtons(pdf.file, pdf.problem, { batch: batch.batch, group: pdf.group })}
           </div>
         {/each}
         <div class="batch-foot">
           <span class="packing">
             {texts.day.summaryPdf}
-            {@render fileButton(batch.summary, batch.summary_problem)}
+            {@render fileButtons(batch.summary, batch.summary_problem, null)}
           </span>
           {#if batch.left_out.length > 0}
             <button class="link" onclick={() => (openLeftOut = toggled(openLeftOut, batch.batch))}>
@@ -216,7 +240,12 @@
 
   {#if overview && overview.reprints.length > 0}
     {#key overview.day}
-      <ReprintsCard day={overview.day} reprints={overview.reprints} {onOpen} />
+      <ReprintsCard
+        day={overview.day}
+        reprints={overview.reprints}
+        {onOpen}
+        onPrint={(file) => onPrint(file, null)}
+      />
     {/key}
   {/if}
 </main>
@@ -404,6 +433,19 @@
   .printed {
     display: flex;
     align-items: center;
+  }
+
+  /* *Sent 09:14* and its ✕ before the tick: the preview opened, the labels not yet ticked. Every
+     group row keeps its room, so the counts of a card stay under each other. */
+  .sent {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 6.5rem;
+    gap: 0.2rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
   }
 
   .printed input {

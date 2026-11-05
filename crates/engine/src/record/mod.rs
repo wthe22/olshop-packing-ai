@@ -34,6 +34,7 @@ pub enum RecordBody {
     BatchSaved(BatchSaved),
     BatchReverted(BatchReverted),
     PrintedMarked(PrintedMarked),
+    PrintSent(PrintSent),
     OutputRestored(OutputRestored),
     ReprintMade(ReprintMade),
     Recovered(Recovered),
@@ -47,6 +48,7 @@ impl RecordBody {
             RecordBody::BatchSaved(_) => "batch_saved",
             RecordBody::BatchReverted(_) => "batch_reverted",
             RecordBody::PrintedMarked(_) => "printed_marked",
+            RecordBody::PrintSent(_) => "print_sent",
             RecordBody::OutputRestored(_) => "output_restored",
             RecordBody::ReprintMade(_) => "reprint_made",
             RecordBody::Recovered(_) => "recovered",
@@ -251,6 +253,14 @@ pub struct PrintedMarked {
     pub batch: BatchId,
     pub group: String,
     pub printed: bool,
+}
+
+/// **Print** opened the preview of a group PDF (`sent: true`), or its *Sent* mark was taken back.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PrintSent {
+    pub batch: BatchId,
+    pub group: String,
+    pub sent: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

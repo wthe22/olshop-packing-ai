@@ -18,8 +18,9 @@
 | `save_batch(save_anyway)` | Write, verify, commit, move ([04 Save](../workflow/04-save.md)). Emits `save-progress {stage, page, pages}` | The saved batch, or the verifier's findings (nothing saved until *Save anyway*) |
 | `revert_last(day, batch)` / `start_amend(day, batch)` | Revert the newest batch / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)); a `batch` that is no longer the newest is refused | The date / the amend's file list and read |
 | `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
-| `print_output(day, file)` | **Print**: the print window with the print preview; one not there is written again first, like `open_output`; a group PDF appends `print_sent` | Opened, written again, or not kept with the verifier's findings |
-| `set_sent(day, batch, group, sent)` | The **Sent** mark's ✕: appends `print_sent` | — |
+| `print_output(day, file)` | **Print**: the output made ready, one not there written again first, like `open_output`; the preview is the front end's | Opened, written again, or not kept with the verifier's findings |
+| `output_pdf(day, file)` | The bytes of an output that is there, for the preview | The PDF's bytes |
+| `set_sent(day, batch, group, sent)` | Appends `print_sent`: `true` once a group PDF's preview is open, `false` from the **Sent** mark's ✕ | — |
 | `restore_output(day, file)` | Write a changed output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
 | `open_output(day, file)` | **Open** a group PDF or summary PDF; one that is not there is written again first, like `restore_output` | Opened, written again, or not kept with the verifier's findings |
 | `day_summary(day)` | Write the date's [day summary](../labels/day-summary.md) on its own thread, then the window opens it | Its path |

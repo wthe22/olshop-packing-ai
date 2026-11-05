@@ -3,7 +3,7 @@
 use std::fs;
 
 use packing_engine::ids::BatchId;
-use packing_engine::record::{PrintedMarked, RecordBody};
+use packing_engine::record::{PrintSent, PrintedMarked, RecordBody};
 use packing_store::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, open_date, partial_dir};
 
 use crate::common::*;
@@ -17,12 +17,18 @@ fn opened_batch(tag: &str) -> (testkit::TempDir, packing_store::DateFolder) {
         group: "A".into(),
         printed: true,
     });
+    let sent = RecordBody::PrintSent(PrintSent {
+        batch: BatchId::new(1),
+        group: "A".into(),
+        sent: true,
+    });
     write_journal(
         &folder,
         &[
             record(1, started()),
             record(2, RecordBody::BatchSaved(batch(1, false, files))),
             record(3, printed),
+            record(4, sent),
         ],
         b"",
     );
@@ -63,13 +69,13 @@ fn a_missing_or_stale_view_is_written_again_and_a_current_one_is_left() {
     assert!(open_date(&folder).unwrap().views_written, "a missing view");
     assert!(folder.dir().join(ORDERS_CSV).is_file());
 
-    let stale = view(&folder, SESSION_TOML).replace("journal_seq = 3", "journal_seq = 2");
+    let stale = view(&folder, SESSION_TOML).replace("journal_seq = 4", "journal_seq = 3");
     fs::write(folder.dir().join(SESSION_TOML), stale).unwrap();
     assert!(
         open_date(&folder).unwrap().views_written,
         "a stale session.toml"
     );
-    assert!(view(&folder, SESSION_TOML).contains("journal_seq = 3"));
+    assert!(view(&folder, SESSION_TOML).contains("journal_seq = 4"));
 
     fs::write(folder.dir().join(SESSION_TOML), "not toml [").unwrap();
     assert!(

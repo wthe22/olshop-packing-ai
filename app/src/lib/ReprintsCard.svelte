@@ -1,6 +1,6 @@
 <script lang="ts">
   // The Day screen's Reprints card: one row per reprint of the date, like a group PDF's row —
-  // its number, when it was made, its counts and **Open** — and *Orders ▸*, which lists its orders
+  // its number, when it was made, its counts, **Print** and **Open** — and *Orders ▸*, which lists its orders
   // as Search shows them. The state is `reprintList.svelte.ts`.
   import Count from "./Count.svelte";
   import { ReprintList } from "./reprintList.svelte";
@@ -13,11 +13,14 @@
     day,
     reprints,
     onOpen,
+    onPrint,
   }: {
     // The date the reprints were made on.
     day: string;
     reprints: ReprintRow[];
     onOpen: (path: string) => void;
+    // **Print** a reprint, by its file name.
+    onPrint: (file: string) => void;
   } = $props();
 
   const list = new ReprintList(() => day);
@@ -39,6 +42,9 @@
         aria-expanded={list.isOpen(reprint.number)}
         onclick={() => list.toggle(reprint.number)}
         >{texts.day.reprintOrders} {list.isOpen(reprint.number) ? "▾" : "▸"}</button
+      >
+      <button title={texts.day.printTitle(reprint.file)} onclick={() => onPrint(reprint.file)}
+        >{texts.day.print}</button
       >
       <button onclick={() => onOpen(reprint.path)}>{texts.day.open}</button>
     </div>

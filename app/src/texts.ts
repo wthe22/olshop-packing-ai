@@ -73,6 +73,12 @@ export const texts = {
     batchFacts: (time: string, files: number, orders: number) =>
       `saved ${time} · ${count(files, "file", "files")} · ${count(orders, "order", "orders")}`,
     open: "Open",
+    // **Print** opens the print preview over the app; a group PDF is then marked *Sent 09:14*,
+    // whose ✕ takes the mark back when the print was cancelled or failed.
+    print: "Print",
+    printTitle: (file: string) => `Print ${file}`,
+    sent: (time: string) => `Sent ${time}`,
+    unsend: (file: string) => `Not sent: take back the Sent mark of ${file}`,
     // The **Printed** tick beside *Open* on each group PDF. The tick carries no word, so this is
     // its accessible name and tooltip; it names the file, so a screen reader reads one row's tick
     // apart from another's.

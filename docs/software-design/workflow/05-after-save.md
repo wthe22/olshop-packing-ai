@@ -6,7 +6,7 @@ with `<n>` errors ▸* where they apply. **Open** opens a file in the PC's PDF v
 
 ## 16. Print, Sent and Printed
 
-**Print** opens an output in the app's print window and its print preview. For a group PDF it appends
+**Print** opens the print preview of an output over the app's window. For a group PDF it appends
 `print_sent {batch, group, sent: true}` and `sync_all` as the preview opens; the preview does not say
 whether Print or Cancel was pressed, so the *Sent* mark's ✕ appends `sent: false`. The tick beside a group
 PDF says it has really been printed: a click appends `printed_marked {batch, group, printed}` and

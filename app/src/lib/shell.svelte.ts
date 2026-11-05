@@ -13,7 +13,7 @@ import * as start from "./api/start";
 import * as dayData from "./api/day";
 import * as panelData from "./api/panel";
 import * as batch from "./api/batch";
-import { togglePrinted } from "./printed";
+import { DayOutputs } from "./dayOutputs.svelte";
 import { texts } from "../texts";
 import { amendOpens } from "./planFlow";
 import { confirmBox } from "./confirm.svelte";
@@ -78,6 +78,8 @@ export class Shell {
   working = $state<string | null>(null);
   // Such a write is running: a second click starts nothing.
   writing = $state(false);
+  // **Print**, *Sent*, the **Printed** tick, *Open* and **Restore** on the Day screen's outputs.
+  readonly outputs = new DayOutputs(this);
 
   // The batch number the next save will get (continuing the day).
   nextBatch = $derived((this.overview?.totals.batches ?? 0) + 1);
@@ -380,7 +382,7 @@ export class Shell {
 
   // Run a write the owner waits for: its dialog shows after a moment and a second one is not
   // started while it runs. `null` when it did not run or failed (the failure is shown).
-  private waitFor = async <T>(text: string, job: () => Promise<T>): Promise<T | null> => {
+  waitFor = async <T>(text: string, job: () => Promise<T>): Promise<T | null> => {
     if (this.writing) return null;
     this.writing = true;
     const shown = setTimeout(() => (this.working = text), WORKING_DELAY_MS);
@@ -394,28 +396,6 @@ export class Shell {
       this.working = null;
       this.writing = false;
     }
-  };
-
-  // **Restore** an output found changed: written again from the stored inputs and checked like
-  // the original; a finding keeps nothing and is shown.
-  restore = async (file: string) => {
-    const result = await this.waitFor(texts.day.writingAgain(file), () =>
-      dayData.restoreOutput(this.day, file),
-    );
-    if (!result) return;
-    if (!result.restored) this.error = texts.day.restoreFailed(file, result.errors);
-    await this.refreshOverview();
-  };
-
-  // *Open* on a group PDF or a summary PDF of `day`: one that is not there any more is written
-  // again first, checked like a **Restore**, so an old batch's summary shows today's layout.
-  openOutput = async (day: string, file: string) => {
-    const opened = await this.waitFor(texts.day.writingAgain(file), () =>
-      dayData.openOutput(day, file),
-    );
-    if (!opened) return;
-    if (opened.kind === "not_kept") this.error = texts.day.restoreFailed(file, opened.errors);
-    if (opened.kind !== "opened" && day === this.day) await this.refreshOverview();
   };
 
   // *Revert* the newest batch: confirm, then revert it.
@@ -479,19 +459,5 @@ export class Shell {
     await this.waitFor(texts.day.writingDaySummary, async () =>
       start.openPath(await dayData.writeDaySummary(this.day)),
     );
-  };
-
-  // The **Printed** tick of one group PDF: write it and update the batch's rows in place, without
-  // reloading the whole overview. The tick rule is the pure [`togglePrinted`]; a failed write
-  // shows the usual error.
-  setPrinted = async (row: dayData.BatchView, pdf: dayData.GroupPdfView, printed: boolean) => {
-    try {
-      await dayData.setPrinted(this.day, row.batch, pdf.group, printed);
-      const ticked = row.pdfs.filter((item) => item.printed).map((item) => item.group);
-      const groups = togglePrinted(ticked, pdf.group, printed);
-      for (const item of row.pdfs) item.printed = groups.includes(item.group);
-    } catch (e) {
-      this.error = String(e);
-    }
   };
 }

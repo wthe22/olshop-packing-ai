@@ -142,8 +142,8 @@ another platform, so each name is listed as printed.
 
 ## D-APP-26 — Print in the app; a group PDF is marked Sent, then Printed
 
-**Decision.** **Print** opens an output in the app's print window with its web view's print preview (the
-one Chrome shows). For a group PDF, opening the preview marks it **Sent** in the journal (`print_sent`);
+**Decision.** **Print** opens the web view's print preview of an output (the one Chrome shows) over the
+app's window. For a group PDF, opening the preview marks it **Sent** in the journal (`print_sent`);
 the mark's ✕ takes it back. The **Printed** tick stays the owner's mark that the labels came out, and can
 be ticked with or without *Sent*. **Open** stays, and marks nothing.
 
@@ -151,7 +151,8 @@ be ticked with or without *Sent*. **Open** stays, and marks nothing.
 second check that it really came out; a print that failed or was cancelled is taken back, and a small amend
 whose labels were all printed is ticked at once. The preview does not tell the app whether Print or Cancel
 was pressed, so *Sent* is set as it opens. The web view's own preview gives Chrome's options for little
-code; the app's own print dialog would take weeks for fewer.
+code; the app's own print dialog would take weeks for fewer. The PDF is printed from a hidden frame of the
+app's own page: a PDF opened as a page of its own prints the viewer's empty page, one blank sheet.
 
 **Applies to.** [Day](../ui/day.md), [05 After the save](../workflow/05-after-save.md#16-print-sent-and-printed),
 [journal](../data/journal.md), [records](../data/records.md), [program](../app/program.md).

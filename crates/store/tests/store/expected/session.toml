@@ -1,7 +1,7 @@
 schema = "1.0"
 workspace = "Toko Contoh"
 date = "2026-10-07"
-journal_seq = 3
+journal_seq = 4
 reprints = []
 
 [input_pdfs.1]
@@ -47,6 +47,7 @@ summary_pdf_path = "output/1 summary.pdf"
 [[label_batches.result_groups]]
 code = "A"
 output_path = "output/1-A Sepatu x2.pdf"
+is_marked_as_sent = true
 is_marked_as_printed = true
 
 [[label_batches.result_groups.order_contents]]
@@ -56,6 +57,7 @@ order_count = 2
 [[label_batches.result_groups]]
 code = "Z"
 output_path = "output/1-Z Lainnya x1.pdf"
+is_marked_as_sent = false
 is_marked_as_printed = false
 
 [[label_batches.result_groups.order_contents]]
