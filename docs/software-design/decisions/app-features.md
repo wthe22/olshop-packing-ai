@@ -124,3 +124,34 @@ open at start, or asks for a first workspace when none is left. An open draft of
 the folder is the workspace's name. The Recycle Bin lets a delete by mistake be undone in Explorer.
 
 **Applies to.** [workspaces](../app/workspaces.md), [journal](../data/journal.md), [Settings](../ui/settings.md).
+
+## D-APP-25 — A workspace may list its shops; a label of another shop is asked about
+
+**Decision.** `{workspace}/settings.toml` lists shop names. Reading looks for them in each copy's sender
+(the `Pengirim` name), spaces and case ignored. Copies of another shop, or with no sender, are asked about
+once per read, a line per file, with **Read anyway** and **Back**. No list, no check. The sender is not kept
+in the record.
+
+**Why.** The owner's words (2026-11-05): a workspace takes its own shops' PDFs, with a warning and not a
+stop. The file in the workspace's folder moves with it and is shared by every copy on the data folder. Only
+the sender is looked at, since a product name can carry a shop's name. A shop may print another name on
+another platform, so each name is listed as printed.
+
+**Applies to.** [workspaces](../app/workspaces.md#its-shops), [reading](../labels/reading.md#the-sender),
+[02 Read](../workflow/02-read.md), [New batch](../ui/new-batch.md#the-shop-prompt), [Settings](../ui/settings.md).
+
+## D-APP-26 — Print in the app; a group PDF is marked Sent, then Printed
+
+**Decision.** **Print** opens an output in the app's print window with its web view's print preview (the
+one Chrome shows). For a group PDF, opening the preview marks it **Sent** in the journal (`print_sent`);
+the mark's ✕ takes it back. The **Printed** tick stays the owner's mark that the labels came out, and can
+be ticked with or without *Sent*. **Open** stays, and marks nothing.
+
+**Why.** The owner's words (2026-11-05): the app remembers that a print was sent, and *Printed* is the
+second check that it really came out; a print that failed or was cancelled is taken back, and a small amend
+whose labels were all printed is ticked at once. The preview does not tell the app whether Print or Cancel
+was pressed, so *Sent* is set as it opens. The web view's own preview gives Chrome's options for little
+code; the app's own print dialog would take weeks for fewer.
+
+**Applies to.** [Day](../ui/day.md), [05 After the save](../workflow/05-after-save.md#16-print-sent-and-printed),
+[journal](../data/journal.md), [records](../data/records.md), [program](../app/program.md).

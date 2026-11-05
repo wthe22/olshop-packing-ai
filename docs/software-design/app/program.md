@@ -7,9 +7,9 @@
 | `workspaces_list()` | The workspaces of the data folder, and the open one's dates from the search index ([workspaces](workspaces.md)) | Names; per date its orders, whether it is damaged, its folder |
 | `workspace_new(name)` | **+ New workspace**: make the workspace's folder and open it on today's date | The name, or why it is refused |
 | `workspace_open(name)` | Open another workspace on today's date; its search index is built beside it | — |
-| `day_open(workspace, date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, printed marks, reprints, findings; or the damage message |
+| `day_open(workspace, date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, sent and printed marks, reprints, findings; or the damage message |
 | `check_files(paths)` | SHA-256 and page count of each chosen file; *used in batch n*; one file chosen twice is listed once | The file list |
-| `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, repeats, the plan; or the stop |
+| `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, the files with labels of other shops, repeats, the plan; or the stop |
 | `sort_rules()` | New batch's **Sort rule**: the rules that are on, and the one to preselect ([New batch](../ui/new-batch.md#the-sort-rule)) | The names, the preselected one, the rule used last |
 | `cancel_read()` | Stop reading | — |
 | `name_logo(hash, answer)` | The logo prompt's answer: a courier, *Not a courier*, *I don't know* ([New batch](../ui/new-batch.md#the-logo-prompt)) | The recount |
@@ -18,9 +18,12 @@
 | `save_batch(save_anyway)` | Write, verify, commit, move ([04 Save](../workflow/04-save.md)). Emits `save-progress {stage, page, pages}` | The saved batch, or the verifier's findings (nothing saved until *Save anyway*) |
 | `revert_last(day, batch)` / `start_amend(day, batch)` | Revert the newest batch / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)); a `batch` that is no longer the newest is refused | The date / the amend's file list and read |
 | `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
+| `print_output(day, file)` | **Print**: the print window with the print preview; one not there is written again first, like `open_output`; a group PDF appends `print_sent` | Opened, written again, or not kept with the verifier's findings |
+| `set_sent(day, batch, group, sent)` | The **Sent** mark's ✕: appends `print_sent` | — |
 | `restore_output(day, file)` | Write a changed output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
 | `open_output(day, file)` | **Open** a group PDF or summary PDF; one that is not there is written again first, like `restore_output` | Opened, written again, or not kept with the verifier's findings |
 | `day_summary(day)` | Write the date's [day summary](../labels/day-summary.md) on its own thread, then the window opens it | Its path |
+| `workspace_shops(name)` / `set_workspace_shops(name, shops)` | Settings › Workspaces › **Shops**: read / write `{workspace}/settings.toml` under the lock | The names, or why they are refused |
 | `rules_list()` / `rules_load(rule)` / `rules_check(rule, groups)` / `rules_save(rule, groups)` | The Sort rules screen ([rules file](../rules-file/README.md)); a save rebuilds the open draft's plan | Rules on or off, the file and the couriers; groups; errors with line and column; live counts on the open draft |
 | `rules_check_text(text)` / `rules_save_text(text)` | *Edit file as text* | The first check that fails, with its line and column |
 | `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_enable(rule, enabled)` / `rule_delete(rule)` | **+ New rule**, **Rename**, the rule's switch (the draft's plan stays as it is), **Delete rule** | — |

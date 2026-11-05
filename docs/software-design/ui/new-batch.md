@@ -86,3 +86,25 @@ QR never are. The picture is the image as printed, and the count says how many p
 - An instant-service label's **tag** that names no courier is asked the same way, *Which courier serves
   instant labels tagged `GRB`?*, without *Not a courier*; the answer goes to that courier's `instant_tags`
   ([D-LABEL-21](../decisions/label.md)). An instant label's header images are never asked about.
+
+## The shop prompt
+
+When the workspace lists its shops ([workspaces](../app/workspaces.md#its-shops)) and some labels show
+another sender or none, one question comes before the Plan screen, after the logo prompt, with a line per
+input file that holds such labels:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  Not this workspace's shop                                                             │
+│  Toko Contoh takes the labels of Toko Contoh, Toko Contoh Official.                    │
+│    [10-07_07-00-00_Shipping label_1.pdf]   40 of 40 orders   a shop of Toko Lain        │
+│    [10-07_09-12-00_Shipping label_1.pdf]    2 of 85 orders   no sender found            │
+│                                                             [Back]  [Read anyway]      │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- The count is the file's orders whose first copy is not a listed shop's. *a shop of Toko Lain* names the
+  workspace that lists the sender found; otherwise *another shop*, or *no sender found*.
+- **Read anyway** goes on to the plan; those orders are planned like any other. **Back** (the default, and
+  `Esc`) returns to the file list, where the file can be taken off.
+- Nothing is remembered: the question comes at every read that finds such labels, an amend's too.

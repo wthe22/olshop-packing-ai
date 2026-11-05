@@ -60,8 +60,8 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
 - **F-APP-7** Every output is checked before it is saved by code independent of the code that wrote it: every
   input page appears exactly once — written or left out on purpose — and every output page is its source page
   unchanged ([verification](app/verification.md)).
-- **F-APP-8** Workspaces, each with its own dates, batches, numbers and guard
-  ([workspaces](app/workspaces.md)).
+- **F-APP-8** Workspaces, each with its own dates, batches, numbers and guard, and the shops whose labels it
+  takes: a label of another shop is asked about before the plan ([workspaces](app/workspaces.md)).
 - **F-APP-9** Every saved fact is kept once, in the journal, and every order is traceable to its input, pages
   and courier clue; the files a person reads are written from it ([data](data/README.md)).
 - **F-APP-10** Saved orders can be found and their labels printed again in one verified PDF; a lost output is
@@ -74,7 +74,8 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
   can be changed for this batch only — skip, move, add a one-off group, rename a file — before anything is
   written.
 - **F-UI-3** The Day screen lists every batch of the open date with its group PDFs and summary PDF, each with
-  an **Open** button for printing and a printed tick.
+  **Print** (the print preview inside the app) and **Open**; a group PDF has a *Sent* mark that **Print**
+  sets and a printed tick ([Day](ui/day.md)).
 - **F-UI-4** The sort rules are edited in the app with live checks and counts.
 - **F-UI-6** The files that hold repeated orders are marked; a screen shows how many repeats there are, groups
   the files that repeat each other and lets the owner choose which copy stays ([Repeated orders](ui/duplicates.md)).

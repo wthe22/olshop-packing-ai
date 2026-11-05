@@ -38,6 +38,7 @@ Root {
 {data_dir}/
   .lock  .lock-holder                     held by the copy of the app that writes
   {workspace}/                            one per workspace
+    settings.toml                         the workspace's shops
     {date}/                               2026-10-07
       journal.jsonl                       the truth
       session.toml  orders.csv  order-contents.toml       views of the journal
@@ -62,6 +63,7 @@ holds its work of one date. Batch numbers run through a workspace and date.
 | `output/` | Outputs | At save: written aside, verified, moved in after the commit | Printing |
 | `packing-workflows.toml` | The owner's rules | The owner, the Sort rules screen, the logo prompt | Reading and planning; a saved batch keeps its own copy of the rule it used |
 | `packing-settings.toml` | Setting | First start, Settings | Finding the data folder |
+| `{workspace}/settings.toml` | The owner's shops | Settings › Workspaces | The shop check when labels are read ([workspaces](../app/workspaces.md#its-shops)) |
 
 Every saved fact has one home, the journal; a view and the search index are rebuilt from it and are only
 read. An output is reproducible from `input/` and the journal ([reprint](../app/reprint.md)).

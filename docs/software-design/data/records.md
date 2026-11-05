@@ -93,6 +93,7 @@ Finding {
 
 BatchReverted { batch: BatchID }                              // type "batch_reverted"
 PrintedMarked { batch: BatchID, group: String, printed: bool } // type "printed_marked"
+PrintSent { batch: BatchID, group: String, sent: bool }       // type "print_sent"
 OutputRestored { batch: BatchID, file: String, pages: u16, size: u64, sha256: String }
 
 ReprintMade {                   // type "reprint_made"

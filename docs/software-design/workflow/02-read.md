@@ -69,4 +69,9 @@ Order ID; a page that starts a copy and has no slip table (plain labels). Each n
   before the plan. A courier or *Not a courier* is written into `packing-workflows.toml` at once, so it is
   asked once ever; *I don't know* writes nothing ([New batch](../ui/new-batch.md#the-logo-prompt)).
 
+- **A shop not of this workspace**: when the workspace lists its shops, the copies whose sender shows none
+  of them, or that have no sender, open *Not this workspace's shop* after the logo prompt
+  ([New batch](../ui/new-batch.md#the-shop-prompt)). **Read anyway** goes on to the plan; **Back** returns to
+  the file list. Nothing is written either way ([D-APP-25](../decisions/app-features.md)).
+
 **Check:** these are warnings, not stops; the owner may disagree for *no tracking ID*.

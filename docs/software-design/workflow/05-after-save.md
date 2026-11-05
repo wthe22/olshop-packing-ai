@@ -4,11 +4,15 @@ The [Day](../ui/day.md) screen shows the live batches of the open date, newest f
 group PDF with **Open** and its printed tick, the summary PDF, and *Left out ▸*, *Warnings ▸* and *Saved
 with `<n>` errors ▸* where they apply. **Open** opens a file in the PC's PDF viewer for printing.
 
-## 16. Printed
+## 16. Print, Sent and Printed
 
-The tick beside a group PDF says that it has been printed. A click appends `printed_marked {batch, group,
-printed}` and `sync_all`; the views are written again. It is a note only: nothing is enforced or blocked.
-An amend writes the batch afresh, so its ticks start empty.
+**Print** opens an output in the app's print window and its print preview. For a group PDF it appends
+`print_sent {batch, group, sent: true}` and `sync_all` as the preview opens; the preview does not say
+whether Print or Cancel was pressed, so the *Sent* mark's ✕ appends `sent: false`. The tick beside a group
+PDF says it has really been printed: a click appends `printed_marked {batch, group, printed}` and
+`sync_all`, with or without *Sent*. The views are written again after each. Both are notes only: nothing is
+enforced or blocked ([D-APP-26](../decisions/app-features.md)). An amend writes the batch afresh, so its
+marks start empty.
 
 **Keeps:** I8.
 
@@ -38,7 +42,7 @@ For "a filter was wrong, do the last batch again":
 3. **Save batch** runs steps 11–15 with `amends: true` and the same number; step 14 moves the old
    outputs aside first. **Cancel amend** writes nothing.
 
-**Check:** printed labels may no longer match the amended files; the batch's printed ticks start empty.
+**Check:** printed labels may no longer match the amended files; the batch's sent and printed marks start empty.
 
 ## 19. Search and reprint
 

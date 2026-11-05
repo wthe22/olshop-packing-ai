@@ -9,7 +9,7 @@ reused. A decision that changes gets a new record that names the one it replaces
 | File | Records |
 |---|---|
 | [app.md](app.md) | D-APP-1, D-APP-3 to D-APP-12: PDFium, the schema version, order data from the labels, the workspace, the courier list, the journal, views, one writer, inputs by content, outputs, the verifier |
-| [app-features.md](app-features.md) | D-APP-13 to D-APP-24: the rules file's place, reprint, the search index, the summary PDF, one workspace per shop owner, findings stop the save, amend, item identity, ship-by date, repeats, renaming and deleting a workspace |
+| [app-features.md](app-features.md) | D-APP-13 to D-APP-26: the rules file's place, reprint, the search index, the summary PDF, one workspace per shop owner, findings stop the save, amend, item identity, ship-by date, repeats, renaming and deleting a workspace, a workspace's shops, Print and the Sent mark |
 | [label.md](label.md) | D-LABEL-2, D-LABEL-4 to D-LABEL-6, D-LABEL-9 to D-LABEL-15, D-LABEL-21: two clues, remembered images, the Shopee-style label, appearance hash, the header band, copies, page identities, the courier clue, order contents, instant labels by their tag |
 | [summaries.md](summaries.md) | D-LABEL-16, D-LABEL-19, D-LABEL-20, D-LABEL-23: the summary PDF's parts, one row everywhere and couriers by name, the day summary as the Day cards, its inputs and its order contents by most orders |
 | [rules.md](rules.md) | D-RULES-1 to D-RULES-5: choosing (the rule used last preselected) and renaming a sort rule, *is empty*, a courier typed by name or picked by code, switching a rule off |

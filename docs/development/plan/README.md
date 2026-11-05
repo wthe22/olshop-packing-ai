@@ -4,7 +4,19 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-02)
+## Status (2026-11-05)
+
+- **Next: [shops-and-print.md](shops-and-print.md)**, designed from the owner's words in chat, not built:
+  - **D-APP-25**: a workspace lists its shops in `{workspace}/settings.toml` (Settings › Workspaces ›
+    **Shops**). Reading looks for them in each label's `Pengirim` name, spaces and case ignored. Labels of
+    another shop, or with no sender, are asked about before the plan, with **Read anyway** and **Back**
+    ([workspaces › Its shops](../../software-design/app/workspaces.md#its-shops)).
+  - **D-APP-26**: **Print** opens the output in the app's print window with the web view's print preview
+    (Chrome's options). A group PDF is then marked *Sent hh:mm*, and the mark's ✕ takes it back. The
+    **Printed** tick is the second check and can be ticked with or without *Sent*
+    ([Day](../../software-design/ui/day.md)).
+  - Every label style prints the sender as text; the Shopee shop's name differs from the TikTok one, so
+    the owner lists both names.
 
 - **Handoff of 2026-11-02 — several copies on one data folder; version 0.3.3.** The owner's words in
   chat, built and pushed:

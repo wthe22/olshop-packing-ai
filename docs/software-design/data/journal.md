@@ -28,7 +28,7 @@ append. Outputs move into `output/` only after the commit ([04 Save](../workflow
 ## The fold
 
 Opening a date reads the journal top to bottom and applies the records in order — the **fold**. It gives
-the live batches, the inputs of the date, the printed marks, the reprints and the next numbers. Every
+the live batches, the inputs of the date, the sent and printed marks, the reprints and the next numbers. Every
 decision (the already-saved guard, the next batch number, what may be reverted) is taken from a fold of
 the journal as it is on disk, never from a view or the search index.
 
@@ -39,6 +39,7 @@ the journal as it is on disk, never from a view or the search index.
 | `batch_saved`, `amends: true` | `batch` = the highest live batch |
 | `batch_reverted` | `batch` = the highest live batch |
 | `printed_marked` | The batch is live and has that label group |
+| `print_sent` | The batch is live and has that label group |
 | `output_restored` | The batch is live and the file is one of its outputs |
 | `reprint_made` | `number` = the date's reprints so far + 1 |
 | `recovered` | — |

@@ -19,9 +19,30 @@ for is the owner's choice; it was made for one shop owner of the
   other: the same labels read under another workspace are new orders there.
 - The *used in batch n* hint, revert and amend: each date has its own newest batch.
 - The search index and the reprints ([reprint](reprint.md)).
+- Its **shops**: the senders its labels may show, in `settings.toml` ([below](#its-shops)).
 
 What workspaces share is beside the program: `packing-workflows.toml` (couriers and sort rules) and
 `packing-settings.toml`.
+
+## Its shops
+
+`{workspace}/settings.toml` lists the shops whose labels belong in the workspace
+([D-APP-25](../decisions/app-features.md)):
+
+```toml
+schema = "1.0"
+shops = ["Toko Contoh", "Toko Contoh Official"]
+```
+
+- A label belongs when a listed name is found in its **sender**, the name printed with its `Pengirim`
+  caption ([reading](../labels/reading.md#the-sender)), with spaces and upper and lower case ignored. A
+  shop that goes by another name on another platform is listed once per name.
+- **No file, or no names**: nothing is checked.
+- The owner's file, written by Settings › Workspaces › **Shops** under the data folder's lock and read when
+  labels are read; never by the fold. It is in the data folder, so every copy of the program on that
+  folder uses the same list; a rename keeps it and a delete moves it with the folder.
+- A label of another shop, or with no sender, is a question before the plan, never a stop
+  ([New batch](../ui/new-batch.md#the-shop-prompt)).
 
 ## Names
 

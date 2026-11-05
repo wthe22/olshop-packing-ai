@@ -64,6 +64,7 @@ LabelBatch {
 LabelGroup {
   code: String                  // LabelGroupRule.code
   output_path: Path             // output/{batch}-{code} {name} x{count}.pdf
+  is_marked_as_sent: bool
   is_marked_as_printed: bool
   order_contents: List<OrderContentSummary>   // in printing order
 }

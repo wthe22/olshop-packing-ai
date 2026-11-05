@@ -78,3 +78,23 @@ The slip is read by text position, not by reading order: each text run of the pa
 - **Cross-check**: when the slip prints `Qty Total:` and it differs from the sum of the copy's `Qty`, a
   warning names the Order ID, the printed total and the sum. The Shopee-style slip prints no total and
   raises none.
+
+## The sender
+
+Read only for the shop check ([workspaces](../app/workspaces.md#its-shops)); it is not kept in the record.
+Every style prints it with the caption `Pengirim` (`Pengirim :` or `Pengirim:`), in one of four places:
+
+| Style | Where the name is |
+|---|---|
+| J&T Express, SiCepat, IDX, J&T Cargo | Right of the caption on its baseline, or in the caption's own run |
+| Anteraja | Under the caption, about 11 pt lower |
+| Instant service | After the caption in its line of the page text (its run comes before the caption's) |
+| Shopee-style | Right of the caption on its baseline, a run of its own |
+
+- **The text looked in**: the caption's line of the page text, and the runs right of the caption on its
+  baseline (±3 pt) or under it (to 12 pt lower, about its x).
+- **A match**: a listed name, spaces and upper and lower case taken out of both, is found in that text with
+  its spaces taken out. The page text's spaces are not reliable (`Tok o Cont oh`), and a digit of the
+  vertical tracking ID can stick to the name's run (`TokoContoh7`), so a name is found inside the text, not
+  compared with it.
+- **No caption** on the copy's first page: the copy has **no sender**.
