@@ -13,6 +13,7 @@ use std::sync::{Arc, Mutex};
 
 use jiff::civil::Date;
 use packing_batch::Draft;
+use packing_engine::shops::OtherShopFile;
 use packing_engine::sorting::PlanGroup;
 use packing_pdf::worker::PdfWorker;
 use packing_store::{
@@ -151,6 +152,9 @@ pub(crate) struct OpenDraft {
     pub logo_pictures: HashMap<String, Option<String>>,
     /// Unseen logos answered *I don't know*: the prompt asks no more about them.
     pub skipped_logos: Vec<String>,
+    /// The workspace's shops, and the files with labels none of them sent.
+    pub shops: Vec<String>,
+    pub other_shops: Vec<OtherShopFile>,
 }
 
 impl OpenDraft {
@@ -383,6 +387,7 @@ pub fn run() {
             commands::changes::data_changes,
             commands::workspaces::workspaces_overview,
             commands::workspaces::workspace_rename,
+            commands::workspaces::workspace_set_shops,
             commands::workspaces::workspace_delete,
             commands::search::search_orders,
             commands::search::reprint,

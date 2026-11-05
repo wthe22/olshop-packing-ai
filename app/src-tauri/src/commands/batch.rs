@@ -22,6 +22,7 @@ mod plan_view;
 mod read;
 mod repeats;
 mod save;
+mod shops;
 mod views;
 
 use self::read::{Reading, read_into_draft, read_result};

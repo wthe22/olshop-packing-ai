@@ -5,9 +5,9 @@ use std::fs;
 use jiff::civil::date;
 use packing_engine::record::RecordBody;
 use packing_store::{
-    DateFolder, Journal, StoreError, WorkspaceNameError, check_workspace_name, create_workspace,
-    dates, delete_workspace, last_written, newest_batch_rule, open_date, rename_workspace,
-    workspaces,
+    DateFolder, Journal, StoreError, WORKSPACE_SETTINGS, WorkspaceNameError, check_workspace_name,
+    create_workspace, dates, delete_workspace, last_written, newest_batch_rule, open_date,
+    other_workspace_shops, rename_workspace, set_workspace_shops, workspace_shops, workspaces,
 };
 use testkit::TempDir;
 
@@ -175,4 +175,49 @@ fn a_deleted_workspace_leaves_the_list() {
     delete_workspace(data.path(), "Toko Lain").unwrap();
     assert_eq!(workspaces(data.path()).unwrap(), ["Toko Contoh"]);
     assert!(!data.path().join("Toko Lain").exists());
+}
+
+#[test]
+fn a_workspace_lists_its_shops_in_its_settings_file() {
+    let temp = TempDir::new("shops");
+    let data = temp.path();
+    create_workspace(data, "Toko Contoh").unwrap();
+    create_workspace(data, "Toko Lain").unwrap();
+    assert_eq!(
+        workspace_shops(data, "Toko Contoh").unwrap(),
+        Vec::<String>::new()
+    );
+
+    let listed = vec![
+        " Toko Contoh ".to_string(),
+        "Toko Contoh Official".to_string(),
+    ];
+    let written = set_workspace_shops(data, "Toko Contoh", &listed).unwrap();
+    assert_eq!(written, ["Toko Contoh", "Toko Contoh Official"]);
+    assert_eq!(workspace_shops(data, "Toko Contoh").unwrap(), written);
+    let file = fs::read_to_string(data.join("Toko Contoh").join(WORKSPACE_SETTINGS)).unwrap();
+    assert!(file.starts_with("schema = \"1.0\""), "{file}");
+
+    for refused in [
+        vec!["".to_string()],
+        vec!["Toko A".into(), "toko  a".into()],
+    ] {
+        match set_workspace_shops(data, "Toko Contoh", &refused) {
+            Err(StoreError::BadName { .. }) => {}
+            other => panic!("{refused:?} must be refused, got {other:?}"),
+        }
+    }
+    assert_eq!(workspace_shops(data, "Toko Contoh").unwrap(), written);
+
+    set_workspace_shops(data, "Toko Lain", &["Toko Lain".to_string()]).unwrap();
+    let others = other_workspace_shops(data, "Toko Contoh").unwrap();
+    assert_eq!(others.len(), 1);
+    assert_eq!(others[0].workspace, "Toko Lain");
+    assert_eq!(others[0].shops, ["Toko Lain"]);
+
+    fs::write(data.join("Toko Lain").join(WORKSPACE_SETTINGS), "shops = 3").unwrap();
+    assert!(matches!(
+        workspace_shops(data, "Toko Lain"),
+        Err(StoreError::BadFile { .. })
+    ));
 }

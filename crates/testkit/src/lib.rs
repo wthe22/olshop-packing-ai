@@ -161,6 +161,7 @@ pub fn copy(order_id: &str, input: usize, page: u16, lines: Vec<SlipLine>) -> Co
         lines,
         total_quantity: None,
         fingerprints: vec![0],
+        sender: None,
     }
 }
 

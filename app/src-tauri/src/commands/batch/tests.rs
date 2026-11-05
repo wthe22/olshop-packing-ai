@@ -1,7 +1,7 @@
 //! The app over `packing-batch` on the repeat fixture: a batch read and saved shows the same Day
 //! screen to a second copy of the app, and writes its day summary; Printed, amend and revert through the commands; the plan's
 //! edits for this batch; the sort rule preselected and *used in batch n*; the logo prompt's answers;
-//! the Repeated orders choices; search, reprint, restore and the panel.
+//! the Repeated orders choices; the shop check; search, reprint, restore and the panel.
 //!
 //! Skipped with a message when `pdfium.dll` has not been downloaded (tools/get-pdfium.sh).
 
@@ -13,7 +13,7 @@ use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::orders::{LogoAnswer, UnseenLogo};
 use packing_engine::record::PrintedMarked;
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, WORKFLOWS_FILE};
-use serde_json::Value;
+use serde_json::{Value, json};
 use testkit::{PdfiumGuard, TempDir, testdata, vendor_dir};
 
 use super::logo::{answer_logo, read_pictures};
@@ -32,6 +32,7 @@ use crate::commands::rules::{
 };
 use crate::commands::search::{DateRange, ReprintChoice, reprint_orders, reprinted_orders, search};
 use crate::commands::start::{new_workspace, start_information, use_folder};
+use crate::commands::workspaces::set_shops;
 
 const DAY: &str = "2026-10-08";
 const GROUP_FILE: &str = "1-Z Lainnya x4.pdf";
@@ -654,4 +655,32 @@ fn a_saved_sort_rule_keeps_the_files_comments_and_the_open_plan_follows_it() {
     );
     assert_eq!(plan(&state).unwrap().sort_rule, "biasa");
     assert_eq!(rule_groups(&state, "harian").unwrap().len(), 2);
+}
+
+#[test]
+fn a_read_names_the_file_with_a_label_of_another_workspaces_shop() {
+    let Some((program, state, _guard)) = started("app-shops") else {
+        return skipped();
+    };
+    let unchecked = serde_json::to_value(read(&state)).unwrap();
+    assert_eq!(
+        unchecked["other_shops"],
+        json!([]),
+        "no shops listed, nothing checked"
+    );
+
+    packing_store::create_workspace(&program.path().join("data"), "Toko Lain").unwrap();
+    set_shops(&state, "Toko Lain", &["Toko Lain".to_string()]).unwrap();
+    set_shops(&state, "Toko Contoh", &["toko contoh".to_string()]).unwrap();
+    let checked = serde_json::to_value(read(&state)).unwrap();
+    assert_eq!(checked["shops"], json!(["toko contoh"]));
+    assert_eq!(
+        checked["other_shops"],
+        json!([{
+            "file": "labels-repeat-2.pdf",
+            "orders": 1,
+            "of_orders": 2,
+            "sender": { "kind": "of_workspace", "workspace": "Toko Lain" },
+        }])
+    );
 }

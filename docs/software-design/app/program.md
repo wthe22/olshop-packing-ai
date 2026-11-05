@@ -23,7 +23,7 @@
 | `restore_output(day, file)` | Write a changed output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
 | `open_output(day, file)` | **Open** a group PDF or summary PDF; one that is not there is written again first, like `restore_output` | Opened, written again, or not kept with the verifier's findings |
 | `day_summary(day)` | Write the date's [day summary](../labels/day-summary.md) on its own thread, then the window opens it | Its path |
-| `workspace_shops(name)` / `set_workspace_shops(name, shops)` | Settings › Workspaces › **Shops**: read / write `{workspace}/settings.toml` under the lock | The names, or why they are refused |
+| `workspaces_overview()` / `workspace_set_shops(name, shops)` | Settings › Workspaces: each workspace with its dates and shops / **Shops** writes `{workspace}/settings.toml` under the lock | The rows / the names as written, or why they are refused |
 | `rules_list()` / `rules_load(rule)` / `rules_check(rule, groups)` / `rules_save(rule, groups)` | The Sort rules screen ([rules file](../rules-file/README.md)); a save rebuilds the open draft's plan | Rules on or off, the file and the couriers; groups; errors with line and column; live counts on the open draft |
 | `rules_check_text(text)` / `rules_save_text(text)` | *Edit file as text* | The first check that fails, with its line and column |
 | `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_enable(rule, enabled)` / `rule_delete(rule)` | **+ New rule**, **Rename**, the rule's switch (the draft's plan stays as it is), **Delete rule** | — |

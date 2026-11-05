@@ -17,6 +17,7 @@
   import { preselectRule } from "./sortRules";
   import { LogoPrompt, needsLogoPrompt } from "../lib/logoPrompt";
   import LogoPromptDialog from "./LogoPrompt.svelte";
+  import ShopPrompt from "./ShopPrompt.svelte";
   import BatchFiles from "./BatchFiles.svelte";
   import { fileChips } from "./repeats";
   import SortRuleControl from "./SortRuleControl.svelte";
@@ -75,6 +76,10 @@
   let asking = $state<batch.LogoView | null>(null);
   let couriers = $state<string[]>([]);
   let answering = $state(false);
+
+  // The shop prompt: the read whose files hold labels of another shop, until the owner reads on or
+  // goes back to the file list.
+  let shopCheck = $state<batch.ReadResult | null>(null);
 
   const totalPages = $derived(files.reduce((sum, file) => sum + file.pages, 0));
   // A new batch lists (and reads) its files by name = download time and part number; an amend
@@ -170,10 +175,11 @@
     if (result) begin(result);
   }
 
-  // A read ended: ask about the unseen logos first, or open the Plan screen at once.
+  // A read ended: ask about the unseen logos first, then about other shops' labels, then open the
+  // Plan screen.
   function begin(result: batch.ReadResult) {
     if (!needsLogoPrompt(result)) {
-      onPlan(result);
+      toPlan(result);
       return;
     }
     prompt = new LogoPrompt(result, batch.answerLogo);
@@ -197,7 +203,7 @@
       // The list is done: the Plan screen opens with the latest result.
       const done = prompt.latest;
       prompt = null;
-      onPlan(done);
+      toPlan(done);
     }
     answering = false;
   }
@@ -210,7 +216,18 @@
     const done = prompt.latest;
     prompt = null;
     asking = null;
-    onPlan(done);
+    toPlan(done);
+  }
+
+  function toPlan(result: batch.ReadResult) {
+    if (result.other_shops.length > 0) shopCheck = result;
+    else onPlan(result);
+  }
+
+  function readAnyway() {
+    const result = shopCheck;
+    shopCheck = null;
+    if (result) onPlan(result);
   }
 
   async function cancel() {
@@ -241,11 +258,17 @@
         }
       })
       .then((fn) => (unlisten = fn));
-    // Esc skips only the logo shown: the next unseen logo still asks.
+    // Esc skips only the logo shown: the next unseen logo still asks. On the shop prompt it is
+    // Back.
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || !asking) return;
-      event.preventDefault();
-      answer({ kind: "skip" });
+      if (event.key !== "Escape") return;
+      if (shopCheck) {
+        event.preventDefault();
+        shopCheck = null;
+      } else if (asking) {
+        event.preventDefault();
+        answer({ kind: "skip" });
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => {
@@ -313,6 +336,15 @@
       busy={answering}
       onAnswer={answer}
       onSkipAll={skipAll}
+    />
+  {/if}
+
+  {#if shopCheck}
+    <ShopPrompt
+      shops={shopCheck.shops}
+      files={shopCheck.other_shops}
+      onBack={() => (shopCheck = null)}
+      onReadAnyway={readAnyway}
     />
   {/if}
 

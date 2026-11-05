@@ -12,6 +12,7 @@ mod journal;
 mod line;
 mod lock;
 mod outputs;
+mod shops;
 mod views;
 mod workspaces;
 
@@ -28,6 +29,7 @@ pub use outputs::{
     OutputProblem, OutputState, Settled, check_outputs, discard_partial, move_aside, move_forward,
     partial_dir, replaced_dir, settle_partial,
 };
+pub use shops::{WORKSPACE_SETTINGS, other_workspace_shops, set_workspace_shops, workspace_shops};
 pub use views::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, views_current, write_views};
 pub use workspaces::{
     WORKSPACE_LIMIT, WorkspaceNameError, check_workspace_name, create_workspace, dates,

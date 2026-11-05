@@ -6,13 +6,14 @@
 //! on it.
 
 use crate::metrics::{Font, text_width};
-use crate::orders::{Label, Slip, Style};
+use crate::orders::{Label, Sender, Slip, Style};
 
 pub const PAGE_WIDTH: f64 = 298.0;
 pub const PAGE_HEIGHT: f64 = 420.0;
 pub const FONT_SIZE: f64 = 9.0;
 
 const LEFT: f64 = 5.8;
+const SENDER_TOP: f64 = 145.0;
 const SLIP_HEADER_Y: f64 = 290.0;
 /// A wrapped line sits this much lower than the line above.
 const LINE_STEP: f64 = 8.2;
@@ -111,7 +112,28 @@ fn label_part(label: &Label) -> Vec<Text> {
     if label.prints_jet_site {
         texts.push(put(130.0, "www.jet.co.id".into()));
     }
+    texts.extend(sender(label.sender));
     texts
+}
+
+fn sender(sender: Sender) -> Vec<Text> {
+    let caption = "Pengirim :";
+    match sender {
+        Sender::Right(name) => vec![
+            regular(LEFT, SENDER_TOP, caption),
+            regular(
+                LEFT + text_width(Font::Regular, caption) + 12.0,
+                SENDER_TOP,
+                name,
+            ),
+        ],
+        Sender::Joined(name) => vec![regular(LEFT, SENDER_TOP, format!("{caption} {name}"))],
+        Sender::Under(name) => vec![
+            regular(LEFT, SENDER_TOP, "Pengirim"),
+            regular(LEFT, SENDER_TOP + 11.0, name),
+        ],
+        Sender::None => Vec::new(),
+    }
 }
 
 fn spaced(value: &str) -> String {

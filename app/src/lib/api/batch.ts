@@ -83,9 +83,27 @@ export interface ReadResult {
   // The header-band images the courier data does not know; empty when every logo is
   // known and no prompt is needed.
   logos: LogoView[];
+  // The workspace's shops; empty when it lists none and nothing was checked.
+  shops: string[];
+  // The files with labels none of `shops` sent: the shop prompt, after the logo prompt.
+  other_shops: OtherShopView[];
   // The orders that appear more than once; `null` when every order has one copy.
   repeats: RepeatsView | null;
   plan: PlanView;
+}
+
+// Who sent a file's labels that are not the workspace's.
+export type SenderView =
+  | { kind: "of_workspace"; workspace: string }
+  | { kind: "unlisted" }
+  | { kind: "not_found" };
+
+export interface OtherShopView {
+  file: string;
+  // The file's orders with a label none of the workspace's shops sent, of all its orders.
+  orders: number;
+  of_orders: number;
+  sender: SenderView;
 }
 
 // Repeated orders: the groups of files that repeat each other, and the copy of each order that

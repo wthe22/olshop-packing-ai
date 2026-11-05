@@ -1,8 +1,10 @@
-//! Settings › Workspaces (workspaces.md): every workspace of the data folder with its dates, and
-//! renaming or deleting one. The open one follows its new name; deleting it opens the workspace
+//! Settings › Workspaces (workspaces.md): every workspace of the data folder with its dates and
+//! shops, listing its shops, and renaming or deleting one. The open one follows its new name; deleting it opens the workspace
 //! the start would open, or none.
 
-use packing_store::{dates, delete_workspace, rename_workspace, workspaces};
+use packing_store::{
+    dates, delete_workspace, rename_workspace, set_workspace_shops, workspace_shops, workspaces,
+};
 use serde::Serialize;
 use tauri::{AppHandle, Manager, State};
 
@@ -15,6 +17,8 @@ pub struct WorkspaceView {
     /// Its dates that have a folder.
     dates: usize,
     open: bool,
+    /// The shops whose labels belong in it; none when nothing is checked.
+    shops: Vec<String>,
 }
 
 pub(crate) fn overview(state: &AppState) -> Result<Vec<WorkspaceView>, String> {
@@ -26,12 +30,24 @@ pub(crate) fn overview(state: &AppState) -> Result<Vec<WorkspaceView>, String> {
                         Ok(WorkspaceView {
                             dates: dates(&data.dir, &name)?.len(),
                             open: data.workspace.as_ref() == Some(&name),
+                            shops: workspace_shops(&data.dir, &name)?,
                             name,
                         })
                     })
                     .collect()
             })
             .map_err(|error| error.to_string())
+    })
+}
+
+/// List the shops of `name`: the names as written.
+pub(crate) fn set_shops(
+    state: &AppState,
+    name: &str,
+    shops: &[String],
+) -> Result<Vec<String>, String> {
+    state.write_data(|data, _| {
+        set_workspace_shops(&data.dir, name, shops).map_err(|error| error.to_string())
     })
 }
 
@@ -95,6 +111,17 @@ pub async fn workspace_rename(
     tauri::async_runtime::spawn_blocking(move || rename(&app.state::<AppState>(), &name, &new_name))
         .await
         .map_err(|error| format!("the rename task stopped: {error}"))?
+}
+
+#[tauri::command]
+pub async fn workspace_set_shops(
+    app: AppHandle,
+    name: String,
+    shops: Vec<String>,
+) -> Result<Vec<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || set_shops(&app.state::<AppState>(), &name, &shops))
+        .await
+        .map_err(|error| format!("the shops task stopped: {error}"))?
 }
 
 #[tauri::command]

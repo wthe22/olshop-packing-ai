@@ -26,7 +26,7 @@ name and a line under it) and its control at the right.
 |---|---|---|
 | Appearance | Theme | **Light**, **Dark** or **System** (Windows' own, the default), side by side; the chosen one raised ([D-UI-8](../decisions/ui.md)) |
 | Data | Data folder | The folder of `packing-settings.toml` + **Open** + **Change** |
-| Workspaces | One row per workspace: its name, *Open now* on the open one, its dates, how many shops it lists or *No shops* (nothing is checked) | **Shops** + **Rename** + **Delete** |
+| Workspaces | One row per workspace: its name, *Open now* on the open one, its dates and how many shops it lists (*No shops: labels are not checked*), then the shops' names | **Shops** + **Rename** + **Delete** |
 | About | The program's name, version and what it does; then Version (`v0.3.3`), Built (the time the program was compiled, `2026-10-30 09:15`), PDFium and Journal schema (`1.0`) | — |
 
 There are no other settings: every other choice has one fixed default, shown where it acts
@@ -47,8 +47,9 @@ asks "Delete workspace Toko Lain?" — "Its 3 dates, with their labels and files
 what follows is in [workspaces](../app/workspaces.md#listing-opening-creating-renaming-and-deleting).
 
 **Shops** opens the workspace's list in the row: one field per shop name, a ✕ per name, **+ Add shop**,
-**Cancel** and **Save**. Save writes `{workspace}/settings.toml`; an empty name or a name listed twice is
-told under its field ([workspaces › Its shops](../app/workspaces.md#its-shops)).
+**Cancel** and **Save**. Save writes `{workspace}/settings.toml`. A name listed twice (spaces and case
+ignored) is told under its field; it, or an empty field, keeps **Save** off with the reason as its tooltip
+([workspaces › Its shops](../app/workspaces.md#its-shops)).
 
 ## The version
 

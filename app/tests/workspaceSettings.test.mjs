@@ -1,4 +1,4 @@
-// Settings › Workspaces against a faked back end and a stand-in for the shell: the list, a rename
+// Settings › Workspaces against a faked back end and a stand-in for the shell: the list, its shops, a rename
 // (refused, of another workspace, of the open one), a delete (asked first, of the open one, the
 // last one). No window opens and nothing is written.
 //
@@ -88,5 +88,32 @@ test("a delete asks first and the shell opens what the back end opened", async (
   assert.deepEqual(
     [texts.settings.askDelete("Toko Lain", 0).body, texts.settings.dates(0), texts.settings.dates(1)],
     ["Its folder goes to the Recycle Bin.", "No dates yet", "1 date"],
+  );
+});
+
+test("a workspace's shops are checked before they are saved, and a refusal is told", async () => {
+  const { shopProblems } = await import("../src/lib/shops.ts");
+  assert.deepEqual(shopProblems([]), []);
+  assert.deepEqual(
+    shopProblems(["Toko Contoh", " ", "toko  CONTOH", "Toko Contoh Official"]),
+    [null, "empty", "twice", null],
+  );
+
+  const written = [];
+  useBackend({
+    workspaces_overview: () => list,
+    workspace_set_shops: ({ name, shops }) => {
+      if (shops.includes("Toko Rusak")) throw new Error('"Toko Rusak": that shop is listed twice');
+      written.push([name, shops]);
+      return shops;
+    },
+  });
+  const settings = new WorkspaceSettings(fakeShell("Toko Contoh"));
+  assert.equal(await settings.setShops("Toko Lain", ["Toko Lain"]), null);
+  assert.match(await settings.setShops("Toko Lain", ["Toko Rusak"]), /listed twice/);
+  assert.deepEqual(written, [["Toko Lain", ["Toko Lain"]]]);
+  assert.deepEqual(
+    [texts.settings.shopsCount(0), texts.settings.shopsCount(2)],
+    ["No shops: labels are not checked", "2 shops"],
   );
 });

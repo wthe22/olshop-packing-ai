@@ -1,8 +1,10 @@
 <script lang="ts">
-  // Settings › Workspaces: one row per workspace with its dates, **Rename** (the name field in
-  // place, a refused name told beside it) and **Delete** (asks first; the folder goes to the
-  // Recycle Bin). What the commands do is `workspaceSettings.svelte.ts`.
+  // Settings › Workspaces: one row per workspace with its dates and shops, **Shops** (the list in
+  // place), **Rename** (the name field in place, a refused name told beside it) and **Delete**
+  // (asks first; the folder goes to the Recycle Bin). What the commands do is
+  // `workspaceSettings.svelte.ts`.
   import { texts } from "../texts";
+  import ShopsEditor from "./ShopsEditor.svelte";
   import type { WorkspaceSettings } from "./workspaceSettings.svelte";
 
   let { workspaces }: { workspaces: WorkspaceSettings } = $props();
@@ -13,6 +15,14 @@
   let renaming = $state<string | null>(null);
   let name = $state("");
   let refused = $state("");
+  // The workspace whose shops are being listed.
+  let listing = $state<string | null>(null);
+
+  async function saveShops(workspace: string, shops: string[]): Promise<string | null> {
+    const why = await workspaces.setShops(workspace, shops);
+    if (why === null) listing = null;
+    return why;
+  }
 
   function startRename(current: string) {
     renaming = current;
@@ -38,7 +48,14 @@
 <div class="group">
   {#each workspaces.list as row (row.name)}
     <div class="row">
-      {#if renaming === row.name}
+      {#if listing === row.name}
+        <ShopsEditor
+          workspace={row.name}
+          shops={row.shops}
+          onCancel={() => (listing = null)}
+          onSave={(shops) => saveShops(row.name, shops)}
+        />
+      {:else if renaming === row.name}
         <form
           class="naming"
           onsubmit={(event) => {
@@ -71,9 +88,11 @@
             {row.name}
             {#if row.open}<span class="badge">{words.openNow}</span>{/if}
           </span>
-          <span class="hint">{words.dates(row.dates)}</span>
+          <span class="hint">{words.dates(row.dates)} · {words.shopsCount(row.shops.length)}</span>
+          {#if row.shops.length > 0}<span class="hint">{row.shops.join(", ")}</span>{/if}
         </div>
         <div class="controls">
+          <button onclick={() => (listing = row.name)}>{words.shops}</button>
           <button onclick={() => startRename(row.name)}>{words.rename}</button>
           <button class="danger" onclick={() => workspaces.remove(row)}>{words.delete}</button>
         </div>

@@ -11,7 +11,9 @@ use std::fmt;
 use jiff::civil::Date;
 
 use crate::ids::{CourierCode, OrderId, TrackingId};
-use crate::label::{Form, find_order_id, find_ship_by, find_tracking_id_in};
+use crate::label::{
+    Form, SenderText, find_order_id, find_sender, find_ship_by, find_tracking_id_in,
+};
 use crate::orders::{NoSlip, NoSlipFile, PageItem, UnseenLogo};
 use crate::record::CourierClue;
 use crate::rules::{FilterFields, FilterLine};
@@ -40,6 +42,8 @@ pub struct Copy {
     pub total_quantity: Option<i64>,
     /// One page fingerprint per page, in page order.
     pub fingerprints: Vec<u64>,
+    /// The text around its first page's `Pengirim` caption, for the shop check.
+    pub sender: Option<SenderText>,
 }
 
 impl Copy {
@@ -168,6 +172,7 @@ where
                 lines: slip.as_ref().map(|s| s.lines.clone()).unwrap_or_default(),
                 total_quantity: slip.as_ref().and_then(|s| s.qty_total),
                 fingerprints: vec![page_fingerprint(&page)],
+                sender: find_sender(&page),
             });
             current = Some(copies.len() - 1);
             continue;

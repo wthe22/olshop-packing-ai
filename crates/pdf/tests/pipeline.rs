@@ -68,6 +68,10 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
                 "input": copy.input,
                 "page_start": copy.page_start,
                 "page_end": copy.page_end,
+                // The fixtures' two shops: the one the copy's sender shows.
+                "sender": copy.sender.as_ref().and_then(|sender| {
+                    ["Toko Contoh", "Toko Lain"].into_iter().find(|name| sender.shows(name))
+                }),
                 "lines": copy.lines.iter().map(|l| serde_json::json!([l.name, l.variation, l.seller_sku, l.quantity])).collect::<Vec<_>>(),
             })
         })

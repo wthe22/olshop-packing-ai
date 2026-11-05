@@ -107,4 +107,5 @@ input file that holds such labels:
   workspace that lists the sender found; otherwise *another shop*, or *no sender found*.
 - **Read anyway** goes on to the plan; those orders are planned like any other. **Back** (the default, and
   `Esc`) returns to the file list, where the file can be taken off.
-- Nothing is remembered: the question comes at every read that finds such labels, an amend's too.
+- Nothing is remembered: the question comes at every read of New batch that finds such labels, on an
+  amend's selection page too. *Amend*'s first read of the batch's own inputs, read before, does not ask.

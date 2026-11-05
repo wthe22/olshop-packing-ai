@@ -186,6 +186,18 @@ export const texts = {
   // One unseen logo of the batch, asked about before the
   // Plan screen. The buttons are the courier names, then *Not a courier*, *I don't know* and
   // *Skip all*; Esc skips only the one logo shown.
+  // The shop prompt: the files with labels none of the workspace's shops sent.
+  shops: {
+    title: "Not this workspace's shop",
+    listed: (shops: string[]) => `This workspace takes the labels of ${shops.join(", ")}.`,
+    orders: (n: number, of: number) => `${n} of ${count(of, "order", "orders")}`,
+    ofWorkspace: (workspace: string) => `a shop of ${workspace}`,
+    unlisted: "another shop",
+    notFound: "no sender found",
+    back: "Back",
+    readAnyway: "Read anyway",
+  },
+
   logo: {
     title: "Which courier is this logo?",
     // The doc's counts line: "4 pages · 4 orders".

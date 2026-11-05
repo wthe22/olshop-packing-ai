@@ -1,4 +1,5 @@
-// Settings › Workspaces: the list with each workspace's dates, renaming and deleting one. Renaming
+// Settings › Workspaces: the list with each workspace's dates and shops, listing its shops, renaming
+// and deleting one. Renaming
 // or deleting the open workspace asks about an open draft first; the shell then follows: the same
 // date under the new name, or today's date of the workspace the back end opened (none left: the
 // first workspace's name is asked).
@@ -39,6 +40,17 @@ export class WorkspaceSettings {
     }
     if (open) await this.shell.workspaceRenamed(newName);
     else await this.shell.refreshPanel();
+    await this.load();
+    return null;
+  };
+
+  // Resolves to why the list was refused, or `null` when it was written.
+  setShops = async (name: string, shops: string[]): Promise<string | null> => {
+    try {
+      await api.workspaceSetShops(name, shops);
+    } catch (e) {
+      return String(e);
+    }
     await this.load();
     return null;
   };

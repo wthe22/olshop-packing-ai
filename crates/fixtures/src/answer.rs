@@ -41,6 +41,7 @@ fn entry(label: &Label) -> Vec<(&'static str, Value)> {
                 .as_deref()
                 .map_or(Value::Null, |s| json!(iso(s))),
         ),
+        ("sender", json!(label.sender.name())),
         ("has_slip", json!(label.slip.is_some())),
         ("lines", Value::Array(lines)),
         ("qty_total", qty_total),
@@ -110,6 +111,7 @@ pub fn expected_repeat(inputs: &[Vec<Label>], names: &[&str]) -> String {
                 "input": input,
                 "page_start": page,
                 "page_end": page + pages - 1,
+                "sender": label.sender.name(),
                 "lines": lines,
             }));
             page += pages;

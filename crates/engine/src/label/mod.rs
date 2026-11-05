@@ -13,6 +13,7 @@ use regex::Regex;
 
 mod deduce;
 mod fields;
+mod sender;
 
 pub use self::deduce::{
     candidates, deduce_courier, deduce_courier_in, form_names_courier_in, is_unseen_logo,
@@ -20,6 +21,7 @@ pub use self::deduce::{
 };
 pub(crate) use self::fields::whitespace_re;
 pub use self::fields::{Form, find_order_id, find_ship_by, find_tracking_id, find_tracking_id_in};
+pub use self::sender::{SenderText, find_sender};
 
 /// The courier data built into the program, written into a new data folder.
 pub const COURIERS_TOML: &str = include_str!("../../couriers.toml");

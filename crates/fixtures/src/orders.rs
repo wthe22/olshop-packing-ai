@@ -9,6 +9,30 @@ pub enum Style {
     Words,
 }
 
+/// The shop the fixtures' labels are sent by, and the one shop of another workspace.
+pub const SHOP: &str = "Toko Contoh";
+pub const OTHER_SHOP: &str = "Toko Lain";
+
+/// Where a label prints its sender beside the `Pengirim` caption: three of the places the downloads
+/// use, or no caption at all.
+#[derive(Clone, Copy)]
+pub enum Sender {
+    Right(&'static str),
+    /// In the caption's own text: `Pengirim : <name>`.
+    Joined(&'static str),
+    Under(&'static str),
+    None,
+}
+
+impl Sender {
+    pub fn name(self) -> Option<&'static str> {
+        match self {
+            Sender::Right(name) | Sender::Joined(name) | Sender::Under(name) => Some(name),
+            Sender::None => None,
+        }
+    }
+}
+
 /// One row of a packing slip. A `*_lines` list fixes where the cell wraps; without one the cell
 /// wraps on spaces at its column's width.
 pub struct Row {
@@ -44,6 +68,7 @@ pub struct Label {
     pub ship_by: Option<String>,
     /// Every character followed by a space, as some labels print their text.
     pub spaced: bool,
+    pub sender: Sender,
     pub slip: Option<Slip>,
     pub style: Style,
 }
@@ -272,6 +297,12 @@ pub fn slip_labels() -> Vec<Label> {
                 prints_jet_site: matches!(courier, Courier::Jnt),
                 ship_by: Some(format!("07/10/2026 {:02}:15", 10 + number % 6)),
                 spaced: false,
+                sender: match suffix {
+                    "003" => Sender::Under(SHOP),
+                    "022" => Sender::None,
+                    _ if number % 5 == 1 => Sender::Joined(SHOP),
+                    _ => Sender::Right(SHOP),
+                },
                 slip: Some(Slip {
                     rows,
                     qty_total,
@@ -289,6 +320,7 @@ pub fn slip_labels() -> Vec<Label> {
         prints_jet_site: true,
         ship_by: Some("07/10/2026 12:45".into()),
         spaced: false,
+        sender: Sender::Right(SHOP),
         slip: Some(Slip {
             rows: vec![
                 Row {
@@ -323,6 +355,7 @@ pub fn slip_labels() -> Vec<Label> {
         prints_jet_site: false,
         ship_by: None,
         spaced: false,
+        sender: Sender::Joined(SHOP),
         slip: Some(Slip {
             rows: vec![row(
                 &Product {
@@ -350,6 +383,7 @@ pub fn plain_labels() -> Vec<Label> {
         prints_jet_site: courier == "J&T Express",
         ship_by: ship_by.map(str::to_string),
         spaced: false,
+        sender: Sender::Right(SHOP),
         slip: None,
         style: Style::Glyphs,
     };
@@ -383,6 +417,7 @@ pub fn repeat_inputs() -> [Vec<Label>; 2] {
         prints_jet_site: courier == "J&T Express",
         ship_by: Some("08/10/2026 23:59".into()),
         spaced: false,
+        sender: Sender::Right(SHOP),
         slip: Some(Slip {
             rows: vec![row(product, quantity, "Default")],
             qty_total: quantity,
@@ -403,6 +438,7 @@ pub fn repeat_inputs() -> [Vec<Label>; 2] {
     let last = || label("103", "000000000203", "", &JOK, 1, None);
     let mut split = label("104", "TKP0000000204", "IDX", &SPLIT, 2, None);
     split.style = Style::Words;
+    split.sender = Sender::Right(OTHER_SHOP);
     if let Some(slip) = split.slip.as_mut() {
         slip.rows[0].bold_tail = Some("ariasi");
     }
