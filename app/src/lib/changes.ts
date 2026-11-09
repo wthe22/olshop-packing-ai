@@ -1,12 +1,11 @@
-// Other copies of the app, on this PC or another, may use the same data folder. Every few seconds
-// the back end looks for what they wrote, and the shell reads again what it shows: the Day screen,
-// the panel, or the workspace opened instead of one another copy renamed or deleted.
+// Other copies of the app, on this PC or another, may use the same data folder. Each time the
+// window gets the focus the back end looks for what they wrote, and the shell reads again what it
+// shows: the Day screen, the panel, or the workspace opened instead of one another copy renamed or
+// deleted.
 
 import { dataChanges } from "./api/changes";
 import { texts } from "../texts";
 import type { Shell } from "./shell.svelte";
-
-const LOOK_EVERY_MS = 3000;
 
 // One look, and what the shell reads again.
 export const lookForChanges = async (shell: Shell): Promise<void> => {
@@ -21,24 +20,22 @@ export const lookForChanges = async (shell: Shell): Promise<void> => {
   if (found.panel) await shell.refreshPanel();
 };
 
-// Look every few seconds while a workspace is open, until the returned function is called. A
-// look that fails (the folder out of reach for a moment) is tried again at the next.
+// Look each time the window gets the focus while a workspace is open, until the returned function
+// is called. A look that fails (the folder out of reach for a moment) is tried again at the next
+// focus; a focus during a look does not start a second.
 export const followChanges = (shell: Shell): (() => void) => {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  let stopped = false;
+  let looking = false;
   const look = async () => {
-    if (shell.workspace !== null) {
-      try {
-        await lookForChanges(shell);
-      } catch {
-        // Nothing to do: the next look tries again.
-      }
+    if (looking || shell.workspace === null) return;
+    looking = true;
+    try {
+      await lookForChanges(shell);
+    } catch {
+      // Nothing to do: the next focus looks again.
+    } finally {
+      looking = false;
     }
-    if (!stopped) timer = setTimeout(look, LOOK_EVERY_MS);
   };
-  timer = setTimeout(look, LOOK_EVERY_MS);
-  return () => {
-    stopped = true;
-    clearTimeout(timer);
-  };
+  window.addEventListener("focus", look);
+  return () => window.removeEventListener("focus", look);
 };

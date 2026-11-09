@@ -75,7 +75,7 @@ commit, never read for a decision, and rebuilt when missing or when `journal_seq
 **Decision.** Several copies of the app may use one data folder at once. The data folder's `.lock` is held
 with `File::try_lock` only for a write; another copy's write waits for it. A write folds the journal again
 when it grew since it was read, and the append refuses a journal that grew meanwhile. Each copy looks for
-the others' writes every few seconds and shows them.
+the others' writes each time the window gets the focus and shows them.
 
 **Why.** The owner wants several people to work on one data folder at the same time. Two writers of one
 journal would interleave their commits; one at a time, each deciding on the journal as it is on disk,

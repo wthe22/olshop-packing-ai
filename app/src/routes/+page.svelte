@@ -35,21 +35,17 @@
         shell.togglePanel();
       }
     };
-    // A folder added in Explorer shows up when the window regains focus.
-    const onFocus = () => shell.workspace && shell.refreshPanel();
     const onResize = () => {
       if (window.innerWidth < SMALLEST_WIDTH) shell.panelShown = false;
     };
     onResize();
     window.addEventListener("keydown", onKey);
-    window.addEventListener("focus", onFocus);
     window.addEventListener("resize", onResize);
-    // Another copy of the app may write to the same data folder.
+    // Another copy of the app may write to the same data folder; a folder added in Explorer too.
     const stopFollowing = followChanges(shell);
     return () => {
       stopFollowing();
       window.removeEventListener("keydown", onKey);
-      window.removeEventListener("focus", onFocus);
       window.removeEventListener("resize", onResize);
     };
   });

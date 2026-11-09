@@ -1,5 +1,5 @@
 //! What other copies of the app wrote to the data folder since the window last looked
-//! (program.md, *Several copies*): the window looks every few seconds and reads again what changed.
+//! (program.md, *Several copies*): the window looks each time it gets the focus and reads again what changed.
 //! Every changed date is taken into the search index, and the open workspace is followed when
 //! another copy renamed or deleted it.
 
