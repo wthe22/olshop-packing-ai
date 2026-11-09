@@ -140,6 +140,26 @@ pub fn newest_batch_rule(data_dir: &Path, workspace: &str) -> Result<Option<Stri
     Ok(None)
 }
 
+/// Whether a date has a group PDF of a live batch that is not marked Printed yet: the panel's mark
+/// of its workspace. A damaged journal, or a date with no journal, has none.
+pub fn has_unprinted_groups(
+    data_dir: &Path,
+    workspace: &str,
+    date: Date,
+) -> Result<bool, StoreError> {
+    let journal = Journal::open(&DateFolder::new(data_dir, workspace, date))?;
+    if journal.damage().is_some() {
+        return Ok(false);
+    }
+    Ok(journal.fold().live.values().any(|live| {
+        live.saved
+            .outputs
+            .iter()
+            .filter_map(|output| output.group.as_deref())
+            .any(|code| !live.printed.contains(code))
+    }))
+}
+
 /// Make a new workspace's folder, empty.
 pub fn create_workspace(data_dir: &Path, name: &str) -> Result<(), StoreError> {
     let existing = workspaces(data_dir)?;

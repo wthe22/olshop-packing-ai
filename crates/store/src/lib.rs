@@ -33,6 +33,6 @@ pub use shops::{WORKSPACE_SETTINGS, other_workspace_shops, set_workspace_shops, 
 pub use views::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, views_current, write_views};
 pub use workspaces::{
     WORKSPACE_LIMIT, WorkspaceNameError, check_workspace_name, create_workspace, dates,
-    delete_workspace, journal_lengths, last_written, newest_batch_rule, rename_workspace,
-    workspaces,
+    delete_workspace, has_unprinted_groups, journal_lengths, last_written, newest_batch_rule,
+    rename_workspace, workspaces,
 };

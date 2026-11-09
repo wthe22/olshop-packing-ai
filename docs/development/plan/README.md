@@ -4,7 +4,17 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-06)
+## Status (2026-11-09)
+
+- **Handoff of 2026-11-09 — the panel marks a workspace with unprinted groups today; version 0.4.2.** The
+  owner's words in chat, built and pushed:
+  - The workspace list of the panel shows **`· not printed yet`** after a workspace whose live batches of
+    today have a group PDF not marked **Printed** ([panel](../../software-design/ui/panel.md)). The mark is
+    read from each workspace's journal when the panel is read, so it clears on the next read after a tick.
+  - Not in this change: the dates list of the open workspace has no mark, and a summary PDF does not count.
+  - `target/portable/Packing/` is rebuilt. **The owner may test now**: tick Printed on every group PDF of
+    today in one workspace, then open the workspace list; the mark goes when no group is left. A finding goes
+    into [reviews/ui.md](../../reviews/ui.md) as the next `R-UI-<n>`.
 
 - **Handoff of 2026-11-06 — a workspace's shops; Print in the app; version 0.4.0.** The owner's words in
   chat, built and pushed:

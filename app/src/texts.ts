@@ -39,6 +39,7 @@ export const texts = {
     cancel: "Cancel",
     today: "today",
     damaged: "damaged",
+    notPrinted: "not printed yet",
     menu: "More",
     openFolder: "Open folder",
   },

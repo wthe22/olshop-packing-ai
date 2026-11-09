@@ -1,8 +1,10 @@
 //! The side panel (panel.md): the workspaces of the data folder, the open one's dates with their
 //! orders from the search index, and opening another workspace.
 
+use std::path::Path;
+
 use jiff::civil::Date;
-use packing_store::{dates, workspaces};
+use packing_store::{dates, has_unprinted_groups, workspaces};
 use serde::Serialize;
 use tauri::State;
 
@@ -11,6 +13,8 @@ use crate::{AppState, today};
 #[derive(Serialize)]
 pub struct PanelView {
     workspaces: Vec<String>,
+    /// The workspaces with a group PDF of today not marked Printed yet.
+    unprinted: Vec<String>,
     open: Option<String>,
     /// Newest first; today is always listed.
     dates: Vec<DateRow>,
@@ -31,16 +35,23 @@ pub struct DateRow {
 }
 
 pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
-    let (list, open, mut folders, workspace_dir) = state.with_data(|data| {
+    let (list, open, mut folders, workspace_dir, data_dir) = state.with_data(|data| {
         let list = workspaces(&data.dir).map_err(|error| error.to_string())?;
         let folders = match &data.workspace {
             Some(workspace) => dates(&data.dir, workspace).map_err(|error| error.to_string())?,
             None => Vec::new(),
         };
         let workspace_dir = data.workspace.as_ref().map(|name| data.dir.join(name));
-        Ok((list, data.workspace.clone(), folders, workspace_dir))
+        Ok((
+            list,
+            data.workspace.clone(),
+            folders,
+            workspace_dir,
+            data.dir.clone(),
+        ))
     })?;
     let today = today();
+    let unprinted = unprinted_workspaces(&data_dir, &list, today)?;
     let today_has_folder = folders.contains(&today);
     if !today_has_folder {
         folders.push(today);
@@ -72,10 +83,26 @@ pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
         .collect();
     Ok(PanelView {
         workspaces: list,
+        unprinted,
         open,
         dates,
         loading,
     })
+}
+
+/// The workspaces whose today has a group PDF not marked Printed, read from each journal as it is.
+fn unprinted_workspaces(
+    data_dir: &Path,
+    list: &[String],
+    today: Date,
+) -> Result<Vec<String>, String> {
+    let mut names = Vec::new();
+    for name in list {
+        if has_unprinted_groups(data_dir, name, today).map_err(|error| error.to_string())? {
+            names.push(name.clone());
+        }
+    }
+    Ok(names)
 }
 
 /// Open another workspace of the data folder on today's date; an open draft is dropped.

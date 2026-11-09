@@ -57,7 +57,9 @@
         onchange={(event) => onOpenWorkspace(event.currentTarget.value)}
       >
         {#each panel.workspaces as known (known)}
-          <option value={known}>{known}</option>
+          <option value={known}
+            >{known}{panel.unprinted.includes(known) ? ` · ${texts.panel.notPrinted}` : ""}</option
+          >
         {/each}
       </select>
       <button

@@ -3,15 +3,17 @@
 use std::fs;
 
 use jiff::civil::date;
-use packing_engine::record::RecordBody;
+use packing_engine::ids::BatchId;
+use packing_engine::record::{PrintedMarked, RecordBody};
 use packing_store::{
     DateFolder, Journal, StoreError, WORKSPACE_SETTINGS, WorkspaceNameError, check_workspace_name,
-    create_workspace, dates, delete_workspace, last_written, newest_batch_rule, open_date,
-    other_workspace_shops, rename_workspace, set_workspace_shops, workspace_shops, workspaces,
+    create_workspace, dates, delete_workspace, has_unprinted_groups, last_written,
+    newest_batch_rule, open_date, other_workspace_shops, rename_workspace, set_workspace_shops,
+    workspace_shops, workspaces,
 };
 use testkit::TempDir;
 
-use crate::common::{APP, batch};
+use crate::common::{APP, batch, outputs};
 
 #[test]
 fn a_workspace_name_follows_the_file_name_rule_and_is_unique() {
@@ -118,6 +120,43 @@ fn the_newest_batchs_rule_is_found_on_whichever_date_it_was_saved() {
         Some("harian"),
         "another workspace and an older date do not count"
     );
+}
+
+#[test]
+fn a_date_is_unprinted_until_every_group_is_marked_printed() {
+    let data = TempDir::new("unprinted");
+    create_workspace(data.path(), "Toko Contoh").unwrap();
+    let folder = DateFolder::new(data.path(), "Toko Contoh", date(2026, 10, 7));
+    let unprinted =
+        |day: i8| has_unprinted_groups(data.path(), "Toko Contoh", date(2026, 10, day)).unwrap();
+    assert!(!unprinted(7), "no journal yet: nothing to print");
+
+    let mut journal = Journal::open(&folder).unwrap();
+    let saved = batch(1, false, outputs(&folder.dir().join("output"), 1, "one"));
+    journal
+        .commit(vec![RecordBody::BatchSaved(saved)], APP)
+        .unwrap();
+    assert!(unprinted(7), "groups A and Z are not printed");
+
+    let mark = |group: &str| {
+        RecordBody::PrintedMarked(PrintedMarked {
+            batch: BatchId::new(1),
+            group: group.into(),
+            printed: true,
+        })
+    };
+    journal.commit(vec![mark("A")], APP).unwrap();
+    assert!(unprinted(7), "group Z is still not printed");
+    journal.commit(vec![mark("Z")], APP).unwrap();
+    assert!(
+        !unprinted(7),
+        "the summary PDF has no tick: its group is none"
+    );
+
+    let damaged = data.path().join("Toko Contoh").join("2026-10-09");
+    fs::create_dir_all(&damaged).unwrap();
+    fs::write(damaged.join("journal.jsonl"), b"not a record\n").unwrap();
+    assert!(!unprinted(9), "a damaged journal is passed over");
 }
 
 #[test]

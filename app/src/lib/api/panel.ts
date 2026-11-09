@@ -18,6 +18,8 @@ export interface DateRow {
 export interface PanelView {
   // Every workspace of the data folder, in name order.
   workspaces: string[];
+  // The workspaces with a group PDF of today not marked Printed yet.
+  unprinted: string[];
   open: string | null;
   // Newest first; today is always listed.
   dates: DateRow[];

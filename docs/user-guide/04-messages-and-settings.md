@@ -41,7 +41,7 @@ Open **Settings** in the title bar. Each row is a setting at the left and its co
   workspace's folder with all its dates to the **Recycle Bin**, where Explorer can restore it. Renaming or
   deleting the open workspace asks first about a batch being prepared; after a delete the app opens another
   workspace, or asks for a new first one.
-- **About** — what the program does, its version (**v0.4.1**), the time it was built, the PDFium version
+- **About** — what the program does, its version (**v0.4.2**), the time it was built, the PDFium version
   and the journal's schema version.
 
 There are no other settings: the sort rule you used last is preselected, the summary PDF is

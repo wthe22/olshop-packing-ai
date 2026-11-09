@@ -26,6 +26,9 @@ another date or workspace. It sits at the left of every screen; the owner of the
   one opens it on today's date. **+ New workspace** asks for a name ([workspaces › Names](../app/workspaces.md#names))
   and opens the new workspace on today's date; a name taken is refused beside the field. It is the **[+]** beside
   the list, which opens the name field with **Cancel** and **Create**.
+- **`· not printed yet`** after a workspace's name in the list (and in the box, while it is the open one) when
+  one of its live batches of today has a group PDF not marked **Printed** ([Day](../ui/day.md)). Today's
+  journal of each workspace is read when the panel is read; a summary PDF has no tick and does not count.
 - **Dates** of the workspace, newest first (*Wed, 21 Oct*), each with its number of orders from the search index. Today is
   always listed, with *· today*, even before it has a folder. The open date is marked ▌ and shaded.
 - **Months fold**: the month of the open date and the current month start open, the others closed.
