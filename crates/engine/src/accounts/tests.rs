@@ -164,3 +164,65 @@ fn a_shop_goes_to_a_listed_account_or_a_new_one() {
     }
     assert_eq!(accounts, before, "nothing changes when a name is refused");
 }
+
+#[test]
+fn an_account_is_made_renamed_given_its_shops_and_deleted() {
+    let mut accounts = vec![account("Toko Alfa", &["Toko Alfa"])];
+    create_account(&mut accounts, "Toko Beta").unwrap();
+    assert_eq!(accounts[1], account("Toko Beta", &[]));
+    assert_eq!(
+        create_account(&mut accounts, "toko beta"),
+        Err(NameError::AccountTaken)
+    );
+
+    rename_account(&mut accounts, "Toko Beta", "TOKO BETA").unwrap();
+    assert_eq!(accounts[1].name, "TOKO BETA", "a change of case only");
+    assert_eq!(
+        rename_account(&mut accounts, "TOKO BETA", "Toko Alfa"),
+        Err(NameError::AccountTaken)
+    );
+    assert_eq!(
+        rename_account(&mut accounts, "Toko Gamma", "Toko Delta"),
+        Err(NameError::NoAccount)
+    );
+
+    let shops = |names: &[&str]| -> Vec<String> { names.iter().map(|n| n.to_string()).collect() };
+    set_shops(
+        &mut accounts,
+        "TOKO BETA",
+        &shops(&[" Toko Beta ", "Beta Official"]),
+    )
+    .unwrap();
+    assert_eq!(accounts[1].shops, ["Toko Beta", "Beta Official"]);
+    let refused = [
+        (shops(&["Toko Beta", "toko  beta"]), 1, "TOKO BETA"),
+        (shops(&["Beta", "TokoAlfa"]), 1, "Toko Alfa"),
+    ];
+    for (names, at, account) in refused {
+        assert_eq!(
+            set_shops(&mut accounts, "TOKO BETA", &names),
+            Err((
+                at,
+                NameError::ShopListed {
+                    account: account.into()
+                }
+            ))
+        );
+    }
+    assert_eq!(
+        set_shops(&mut accounts, "TOKO BETA", &shops(&[""])),
+        Err((0, NameError::NotAName))
+    );
+    assert_eq!(
+        accounts[1].shops,
+        ["Toko Beta", "Beta Official"],
+        "unchanged"
+    );
+
+    delete_account(&mut accounts, "Toko Alfa").unwrap();
+    assert_eq!(accounts.len(), 1);
+    assert_eq!(
+        delete_account(&mut accounts, "Toko Alfa"),
+        Err(NameError::NoAccount)
+    );
+}

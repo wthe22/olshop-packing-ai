@@ -68,6 +68,15 @@ export function courierValue(value: string, from: string, to: string, couriers: 
   return value;
 }
 
+// An Account row's value when its operator changes to `to`: *equals* holds a picked account's name,
+// so typed text becomes the first account whose name holds it; the other operators keep the text.
+export function accountValue(value: string, to: string, accounts: string[]): string {
+  if (to !== "equals" || accounts.includes(value)) return value;
+  const typed = value.trim().toLowerCase();
+  const named = accounts.find((account) => typed && account.toLowerCase().includes(typed));
+  return named ?? accounts[0] ?? value;
+}
+
 // The field's type; an unknown field reads as text.
 export function fieldType(field: string): FieldType {
   return conditionFields.find((entry) => entry.value === field)?.type ?? "text";

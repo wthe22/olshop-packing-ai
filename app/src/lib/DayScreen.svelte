@@ -5,16 +5,19 @@
   // PDF.
   import { texts } from "../texts";
   import { formatDay } from "../dates";
-  import type { BatchView, DayOverview, FileProblem, GroupPdfView, LeftOutView } from "./api/day";
+  import type { BatchView, DayOverview, GroupPdfView, LeftOutView } from "./api/day";
   import type { SentMark } from "./dayOutputs.svelte";
-  import Icon from "./Icon.svelte";
-  import Count from "./Count.svelte";
+  import GroupPdfRow from "./GroupPdfRow.svelte";
+  import OutputButtons from "./OutputButtons.svelte";
   import ReprintsCard from "./ReprintsCard.svelte";
+  import DaySummaryButton from "./DaySummaryButton.svelte";
+  import { accountsOf } from "./dayAccounts";
 
   let {
     day,
     today,
     overview,
+    dataFolder,
     saved,
     reading,
     writing,
@@ -26,6 +29,7 @@
     onSetPrinted,
     onNewBatch,
     onDaySummary,
+    onAccountSummary,
     onAmend,
     onRevert,
     onRestore,
@@ -34,6 +38,8 @@
     day: string;
     today: string;
     overview: DayOverview | null;
+    // The data folder, for the note about data of an older version.
+    dataFolder: string | null;
     saved: string | null;
     // *Amend*'s read of the batch's own files (`read-progress`): its page progress is shown until
     // the Plan screen opens; `null` when nothing reads.
@@ -55,7 +61,10 @@
     // printed; it is written to the date's journal the moment it is clicked.
     onSetPrinted: (batch: BatchView, pdf: GroupPdfView, printed: boolean) => void;
     onNewBatch: () => void;
-    onDaySummary: () => void;
+    // `null`: the summary of every account.
+    onDaySummary: (account: string | null) => void;
+    // One account's summary of a batch, written and opened.
+    onAccountSummary: (batch: BatchView, account: string) => void;
     onAmend: (batch: BatchView) => void;
     onRevert: (batch: BatchView) => void;
     // **Restore** an output the open-time check found changed.
@@ -79,20 +88,6 @@
   }
 </script>
 
-{#snippet fileButtons(file: string, problem: FileProblem | null, mark: SentMark | null)}
-  {#if problem}
-    <span class="problem">{texts.day.problem(problem)}</span>
-  {/if}
-  {#if problem === "changed"}
-    <button onclick={() => onRestore(file)}>{texts.day.restore}</button>
-  {:else}
-    <button title={texts.day.printTitle(file)} onclick={() => onPrint(file, mark)}
-      >{texts.day.print}</button
-    >
-    <button onclick={() => onOpenOutput(file)}>{texts.day.open}</button>
-  {/if}
-{/snippet}
-
 <main>
   <div class="bar">
     <h1>{formatDay(day)}</h1>
@@ -105,11 +100,11 @@
         {/each}
       {/if}
     </span>
-    <button
-      title={texts.day.daySummaryTitle}
+    <DaySummaryButton
+      accounts={accountsOf(overview?.batches ?? [])}
       disabled={writing || !overview || overview.batches.length === 0}
-      onclick={onDaySummary}>{texts.day.daySummary}</button
-    >
+      onWrite={onDaySummary}
+    />
     <button class="primary" onclick={onNewBatch}>{texts.day.newBatch}</button>
   </div>
 
@@ -121,9 +116,14 @@
     {#each overview.problems as problem}
       <p class="problem">{problem}</p>
     {/each}
-    {#if overview.old_data}
-      <p class="muted">{texts.day.oldData}</p>
-    {/if}
+    {#each overview.older as older (older.version)}
+      <p class="muted">
+        {texts.day.older(older.version, older.names)}
+        {#if dataFolder}
+          <button onclick={() => onOpenFolder(dataFolder)}>{texts.day.openFolder}</button>
+        {/if}
+      </p>
+    {/each}
   {/if}
 
   {#if reading}
@@ -144,8 +144,9 @@
           <span class="head-text">
             <span class="batch-name">{texts.day.batch(batch.batch)}</span>
             <span class="facts"
-              >{texts.day.batchFacts(batch.time, batch.files, batch.orders)}{#if batch.amended}{texts
-                  .day.amended}{/if}</span
+              >{texts.day.batchFacts(batch.time, batch.files, batch.orders)} · {texts.day.batchAccounts(
+                batch.accounts,
+              )}{#if batch.amended}{texts.day.amended}{/if}</span
             >
           </span>
           {#if i === 0}
@@ -155,38 +156,37 @@
           {/if}
         </div>
         {#each batch.pdfs as pdf (pdf.group)}
-          <div class="row">
-            <span class="code">{batch.batch}-{pdf.group}</span>
-            <span class="name">{pdf.name}</span>
-            <Count n={pdf.orders} word={texts.day.orderWord(pdf.orders)} />
-            <Count n={pdf.contents} word={texts.day.contentWord(pdf.contents)} />
-            <span class="sent">
-              {#if pdf.sent && !pdf.printed}
-                {texts.day.sent(pdf.sent)}
-                <button
-                  class="icon"
-                  title={texts.day.unsend(pdf.file)}
-                  aria-label={texts.day.unsend(pdf.file)}
-                  onclick={() => onUnsend(batch, pdf)}><Icon name="close" size={16} /></button
-                >
-              {/if}
-            </span>
-            <label class="printed">
-              <input
-                type="checkbox"
-                checked={pdf.printed}
-                aria-label={texts.day.printedLabel(pdf.file)}
-                title={texts.day.printedLabel(pdf.file)}
-                onchange={(event) => onSetPrinted(batch, pdf, event.currentTarget.checked)}
-              />
-            </label>
-            {@render fileButtons(pdf.file, pdf.problem, { batch: batch.batch, group: pdf.group })}
-          </div>
+          <GroupPdfRow
+            {batch}
+            {pdf}
+            {onRestore}
+            {onPrint}
+            {onOpenOutput}
+            {onUnsend}
+            {onSetPrinted}
+          />
         {/each}
         <div class="batch-foot">
           <span class="packing">
             {texts.day.summaryPdf}
-            {@render fileButtons(batch.summary, batch.summary_problem, null)}
+            <OutputButtons
+              file={batch.summary}
+              problem={batch.summary_problem}
+              mark={null}
+              printable={false}
+              {onRestore}
+              {onPrint}
+              {onOpenOutput}
+            />
+            {#if batch.accounts.length > 1}
+              {#each batch.accounts as { account } (account)}
+                <button
+                  title={texts.day.accountSummaryTitle(account)}
+                  disabled={writing}
+                  onclick={() => onAccountSummary(batch, account)}>{account}</button
+                >
+              {/each}
+            {/if}
           </span>
           {#if batch.left_out.length > 0}
             <button class="link" onclick={() => (openLeftOut = toggled(openLeftOut, batch.batch))}>
@@ -391,71 +391,6 @@
 
   .batch-head .grow {
     flex: 1;
-  }
-
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.35rem 0.75rem;
-    border-bottom: 1px solid var(--border-soft);
-    /* The row's *Open* button and the **Printed** tick share this height, so the tick is as large
-       as the button beside it. The value is the button's own box: its text line,
-       its padding and its border. */
-    --control-height: calc(1.45rem + 0.7rem + 2px);
-  }
-
-  .row button,
-  .printed input {
-    height: var(--control-height);
-  }
-
-  /* The batch and group code (`2-SN`) on one line, codes of several letters included. */
-  .code {
-    min-width: 3.5rem;
-    padding: 0.05rem 0.5rem;
-    border-radius: var(--radius);
-    background: var(--chip);
-    color: var(--chip-text);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    text-align: center;
-    white-space: nowrap;
-  }
-
-  .name {
-    flex: 1;
-    font-weight: 600;
-  }
-
-  /* The **Printed** tick beside *Open*: a note only. It carries no word — the tick
-     alone says the saved PDF is printed — and it is as large as the button beside it. */
-  .printed {
-    display: flex;
-    align-items: center;
-  }
-
-  /* *Sent 09:14* and its ✕ before the tick: the preview opened, the labels not yet ticked. Every
-     group row keeps its room, so the counts of a card stay under each other. */
-  .sent {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    min-width: 6.5rem;
-    gap: 0.2rem;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .printed input {
-    width: var(--control-height);
-    border-radius: var(--radius);
-  }
-
-  .printed input:checked {
-    border-color: var(--ok-solid);
-    background-color: var(--ok-solid);
   }
 
   .batch-foot {

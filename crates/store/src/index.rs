@@ -36,6 +36,14 @@ pub struct IndexedOrder {
     pub input: String,
 }
 
+/// A date with orders of one account: how many, and in how many batches.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AccountDate {
+    pub date: Date,
+    pub orders: usize,
+    pub batches: usize,
+}
+
 impl FilterFields for IndexedOrder {
     fn lines(&self) -> Vec<FilterLine<'_>> {
         self.items
@@ -180,6 +188,28 @@ impl SearchIndex {
             .range(dates)
             .flat_map(|(_, orders)| orders)
             .filter(|order| evaluate_filter(filter, *order, couriers))
+            .collect()
+    }
+
+    /// The dates with saved orders of `account`, newest first: its orders and the batches that
+    /// hold them.
+    pub fn account_dates(&self, account: &str) -> Vec<AccountDate> {
+        self.dates
+            .iter()
+            .rev()
+            .filter_map(|(date, orders)| {
+                let mine: Vec<&IndexedOrder> = orders
+                    .iter()
+                    .filter(|order| order.order.account == account)
+                    .collect();
+                let mut batches: Vec<BatchId> = mine.iter().map(|order| order.batch).collect();
+                batches.dedup();
+                (!mine.is_empty()).then_some(AccountDate {
+                    date: *date,
+                    orders: mine.len(),
+                    batches: batches.len(),
+                })
+            })
             .collect()
     }
 

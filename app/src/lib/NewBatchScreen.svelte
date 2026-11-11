@@ -18,6 +18,7 @@
   import { LogoPrompt, needsLogoPrompt } from "../lib/logoPrompt";
   import LogoPromptDialog from "./LogoPrompt.svelte";
   import ShopPrompt from "./ShopPrompt.svelte";
+  import { needsShopPrompt } from "./shopPrompt";
   import BatchFiles from "./BatchFiles.svelte";
   import { fileChips } from "./repeats";
   import SortRuleControl from "./SortRuleControl.svelte";
@@ -77,7 +78,7 @@
   let couriers = $state<string[]>([]);
   let answering = $state(false);
 
-  // The shop prompt: the read whose files hold labels of another shop, until the owner reads on or
+  // The shop prompt: the read with orders that have no account yet, until the owner answers or
   // goes back to the file list.
   let shopCheck = $state<batch.ReadResult | null>(null);
 
@@ -175,7 +176,7 @@
     if (result) begin(result);
   }
 
-  // A read ended: ask about the unseen logos first, then about other shops' labels, then open the
+  // A read ended: ask about the unseen logos first, then about the shops no account lists, then open the
   // Plan screen.
   function begin(result: batch.ReadResult) {
     if (!needsLogoPrompt(result)) {
@@ -220,14 +221,20 @@
   }
 
   function toPlan(result: batch.ReadResult) {
-    if (result.other_shops.length > 0) shopCheck = result;
+    if (needsShopPrompt(result.shops)) shopCheck = result;
     else onPlan(result);
   }
 
-  function readAnyway() {
-    const result = shopCheck;
-    shopCheck = null;
-    if (result) onPlan(result);
+  // *Continue* on the shop prompt: the answers are written and the read goes on to the plan.
+  async function answerShops(answer: batch.ShopAnswer): Promise<string | null> {
+    try {
+      const result = await batch.answerShop(answer);
+      shopCheck = null;
+      onPlan(result);
+      return null;
+    } catch (e) {
+      return String(e);
+    }
   }
 
   async function cancel() {
@@ -341,10 +348,9 @@
 
   {#if shopCheck}
     <ShopPrompt
-      shops={shopCheck.shops}
-      files={shopCheck.other_shops}
+      prompt={shopCheck.shops}
       onBack={() => (shopCheck = null)}
-      onReadAnyway={readAnyway}
+      onContinue={answerShops}
     />
   {/if}
 

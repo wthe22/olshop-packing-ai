@@ -5,6 +5,7 @@ import type { Question } from "./lib/confirm.svelte";
 import { count } from "./count";
 import { searchTexts } from "./searchTexts";
 import { settingsTexts } from "./settingsTexts";
+import { accountsTexts } from "./accountsTexts";
 
 // "1", "1 and 3", "1, 2 and 3".
 function listed(numbers: number[]): string {
@@ -24,6 +25,7 @@ export const texts = {
 
   nav: {
     search: "Search",
+    accounts: "Accounts",
     sortRules: "Sort rules",
     settings: "Settings",
     // Closes a screen opened over the current one.
@@ -31,12 +33,9 @@ export const texts = {
     togglePanel: "Show or hide the panel (Ctrl+B)",
   },
 
-  // The side panel: the workspace, its dates by month, **+ New workspace**.
+  // The side panel: the dates by month.
   panel: {
-    workspace: "Workspace",
-    newWorkspace: "New workspace",
-    create: "Create",
-    cancel: "Cancel",
+    dates: "Dates",
     today: "today",
     damaged: "damaged",
     notPrinted: "not printed yet",
@@ -48,7 +47,7 @@ export const texts = {
     welcome: "Welcome to Packing",
     ask: "Where should Packing keep its data?",
     explain:
-      "Each workspace's labels, group PDFs and summary PDFs are kept there, one folder per workspace and date.",
+      "The labels, group PDFs and summary PDFs are kept there, one folder per date.",
     // The suggested folder: `packing-data` beside the program, so the program folder can be copied whole.
     nextToProgram: "Next to the program",
     folder: (exeDir: string) => `${exeDir}\\packing-data`,
@@ -73,6 +72,11 @@ export const texts = {
     batch: (n: number) => `Batch ${n}`,
     batchFacts: (time: string, files: number, orders: number) =>
       `saved ${time} · ${count(files, "file", "files")} · ${count(orders, "order", "orders")}`,
+    // The batch's accounts: one by its name, several each with its orders, most first.
+    batchAccounts: (accounts: { account: string; orders: number }[]) =>
+      accounts.length === 1
+        ? accounts[0].account
+        : accounts.map((a) => `${a.account} ${a.orders}`).join(", "),
     open: "Open",
     // **Print** opens the print preview over the app; a group PDF is then marked *Sent 09:14*,
     // whose ✕ takes the mark back when the print was cancelled or failed.
@@ -118,16 +122,18 @@ export const texts = {
     // *Day summary*: the day summary PDF of the open date, written and opened.
     daySummary: "Day summary",
     daySummaryTitle: "Write the summary of the whole day as a PDF and open it",
+    allAccounts: "All accounts",
+    // The summary button of one account of a batch.
+    accountSummaryTitle: (account: string) => `Write the summary of ${account} for this batch and open it`,
+    writingAccountSummary: (account: string) => `Writing the summary of ${account} …`,
     // The dialog while a file is written that the owner waits for: the day summary, or an output
     // that *Open* found missing.
     writingDaySummary: "Writing the day summary …",
     writingAgain: (file: string) => `Writing ${file} again …`,
-    // Another copy of the app, sharing the data folder, renamed or deleted the open workspace.
-    workspaceGone: (name: string) =>
-      `Workspace ${name} was renamed or deleted in another copy of Packing.`,
     amended: " · amended",
-    // The data folder also holds files of Packing v0.1.
-    oldData: "This folder also holds data of Packing v0.1 (labels\\). It is not read.",
+    // The data folder also holds data of an older version, which is not read.
+    older: (version: string, names: string[]) =>
+      `This folder also holds data of Packing ${version} (${names.join(", ")}). It is not read.`,
     // The batch's stored warnings, expanding to the texts.
     warnings: (n: number) => `Warnings: ${n} ▸`,
     warningsNone: "Warnings: none",
@@ -193,16 +199,24 @@ export const texts = {
   // One unseen logo of the batch, asked about before the
   // Plan screen. The buttons are the courier names, then *Not a courier*, *I don't know* and
   // *Skip all*; Esc skips only the one logo shown.
-  // The shop prompt: the files with labels none of the workspace's shops sent.
+  // The shop prompt: an account for each sender no account lists, and for the labels with no sender.
   shops: {
-    title: "Not this workspace's shop",
-    listed: (shops: string[]) => `This workspace takes the labels of ${shops.join(", ")}.`,
-    orders: (n: number, of: number) => `${n} of ${count(of, "order", "orders")}`,
-    ofWorkspace: (workspace: string) => `a shop of ${workspace}`,
-    unlisted: "another shop",
-    notFound: "no sender found",
+    title: "Which account?",
+    shopsIntro: "These shops are not listed yet. Each is asked about once.",
+    noSenderIntro: "These labels show no sender. Choose for this read.",
+    shop: "Shop",
+    shopField: (read: string) => `Shop name as printed: ${read}`,
+    shopOrders: (orders: number, files: number) =>
+      `${count(orders, "order", "orders")} in ${count(files, "file", "files")}`,
+    noSenderOrders: (n: number, of: number) => `${n} of ${count(of, "order", "orders")}`,
+    choose: "Choose an account",
+    newAccount: "New account",
+    listedAccount: "A listed account",
+    accountOf: (shop: string) => `Account of ${shop}`,
+    accountOfFile: (file: string) => `Account of the labels of ${file} with no sender`,
+    newAccountName: (shop: string) => `Name of the new account for ${shop}`,
     back: "Back",
-    readAnyway: "Read anyway",
+    continue: "Continue",
   },
 
   logo: {
@@ -324,14 +338,7 @@ export const texts = {
   },
 
   settings: settingsTexts,
-
-  // The first workspace's name, asked once when the data folder holds none.
-  workspace: {
-    title: "Name the first workspace",
-    ask: "Each workspace keeps its own batches and dates apart from the others. One is enough for one shop owner; more can be added in the panel.",
-    placeholder: "Workspace name, e.g. Toko Contoh",
-    create: "Create",
-  },
+  accounts: accountsTexts,
 
   // The Sort rules screen: the rule row, the label groups with their boxes, and the file editor.
   sortRules: {

@@ -8,6 +8,7 @@
   import type { Courier } from "./api/rules";
   import {
     IS_EMPTY,
+    accountValue,
     courierValue,
     fieldType,
     newGroup,
@@ -21,6 +22,7 @@
     tree,
     fields = conditionFields,
     couriers = [],
+    accounts = [],
     onEdit,
   }: {
     tree: UiTree;
@@ -30,6 +32,9 @@
     // *Courier equals* picks one of these by name and stores its code; *contains* and *starts with*
     // take typed text, which a filter compares with the names.
     couriers?: Courier[];
+    // *Account equals* picks one of these names; with none (the Sort rules screen) it is typed
+    // text like the other operators.
+    accounts?: string[];
     onEdit: () => void;
   } = $props();
 
@@ -55,6 +60,9 @@
   const picksCourier = (row: UiRow) =>
     row.field === "courier" && row.operator === "equals" && couriers.length > 0;
 
+  const picksAccount = (row: UiRow) =>
+    row.field === "account" && row.operator === "equals" && accounts.length > 0;
+
   function setField(row: UiRow, field: string) {
     row.field = field;
     row.operator = field === "courier" ? "equals" : fieldType(field) === "text" ? "contains" : "=";
@@ -66,6 +74,8 @@
   function setOperator(row: UiRow, operator: string) {
     if (row.field === "courier") {
       row.value = courierValue(row.value, row.operator, operator, couriers);
+    } else if (row.field === "account") {
+      row.value = accountValue(row.value, operator, accounts);
     }
     row.operator = operator;
     onEdit();
@@ -144,6 +154,19 @@
       >
         {#each couriers as courier (courier.code)}
           <option value={courier.code}>{courier.name}</option>
+        {/each}
+      </select>
+    {:else if picksAccount(row)}
+      <select
+        class="value"
+        value={row.value}
+        onchange={(event) => {
+          row.value = event.currentTarget.value;
+          onEdit();
+        }}
+      >
+        {#each accounts as account (account)}
+          <option value={account}>{account}</option>
         {/each}
       </select>
     {:else}

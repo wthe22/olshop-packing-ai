@@ -83,27 +83,44 @@ export interface ReadResult {
   // The header-band images the courier data does not know; empty when every logo is
   // known and no prompt is needed.
   logos: LogoView[];
-  // The workspace's shops; empty when it lists none and nothing was checked.
-  shops: string[];
-  // The files with labels none of `shops` sent: the shop prompt, after the logo prompt.
-  other_shops: OtherShopView[];
+  // The shop prompt, asked after the logos; no rows when every order has an account.
+  shops: ShopPromptView;
   // The orders that appear more than once; `null` when every order has one copy.
   repeats: RepeatsView | null;
   plan: PlanView;
 }
 
-// Who sent a file's labels that are not the workspace's.
-export type SenderView =
-  | { kind: "of_workspace"; workspace: string }
-  | { kind: "unlisted" }
-  | { kind: "not_found" };
+// The shop prompt: each sender no account lists and each file with labels that show no sender.
+export interface ShopPromptView {
+  // The accounts the lists offer, in the order they were made.
+  accounts: string[];
+  shops: ShopRowView[];
+  no_sender: NoSenderRowView[];
+}
 
-export interface OtherShopView {
+// A sender no account lists: the name as first read, its orders and the files that hold them.
+export interface ShopRowView {
+  name: string;
+  orders: number;
+  files: number;
+}
+
+// A file whose labels show no sender: its place in the reading order, its name, and how many of
+// its orders show none.
+export interface NoSenderRowView {
+  input: number;
   file: string;
-  // The file's orders with a label none of the workspace's shops sent, of all its orders.
   orders: number;
   of_orders: number;
-  sender: SenderView;
+}
+
+// Where the owner puts a shop: an account already listed, or a new one by this name.
+export type ShopAccount = { listed: string } | { new: string };
+
+// *Continue*: every row's answer. `no_sender` maps a file's place to its account, for this read only.
+export interface ShopAnswer {
+  shops: { read: string; name: string; account: ShopAccount }[];
+  no_sender: Record<number, string>;
 }
 
 // Repeated orders: the groups of files that repeat each other, and the copy of each order that
@@ -236,6 +253,11 @@ export const cancelRead = (): Promise<void> => invoke("cancel_read");
 // applies it to the open draft and returns the refreshed read result.
 export const answerLogo = (hash: string, answer: LogoAnswer): Promise<ReadResult> =>
   invoke("answer_logo", { hash, answer });
+
+// *Continue* on the shop prompt: the shops are written into the accounts and the draft's orders
+// get their accounts; the refreshed read result.
+export const answerShop = (answer: ShopAnswer): Promise<ReadResult> =>
+  invoke("answer_shop", { answer });
 
 export const checkCondition = (condition: string): Promise<void> =>
   invoke("check_condition", { condition });

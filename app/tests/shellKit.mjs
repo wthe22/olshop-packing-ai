@@ -41,7 +41,7 @@ export function read(overrides = {}) {
 export function backend(extra = {}) {
   answerQuestions(() => true);
   return {
-    workspaces_list: () => ({ dates: [{ date: "2026-10-07" }] }),
+    panel_dates: () => ({ dates: [{ date: "2026-10-07" }] }),
     day_overview: () => overview(),
     about: () => ({ version: "0.2", pdfium: "140.0", schema: "1.0" }),
     "plugin:event|listen": () => 1,

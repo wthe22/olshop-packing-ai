@@ -12,17 +12,16 @@ import { answerQuestions } from "./answers.mjs";
 import { texts } from "../src/texts.ts";
 
 
-test("starting the shell loads the folder, the workspace, the day and the day's overview", async () => {
+test("starting the shell loads the folder, today and the day's overview", async () => {
   const calls = useBackend(
     backend({
       start_info: () => ({
         today: "2026-10-07",
         exe_dir: "C:/Packing",
         data_folder: "C:/Data",
-        workspace: "Toko Contoh",
         version: "0.1",
       }),
-      workspaces_list: () => ({ dates: [{ date: "2026-10-07" }, { date: "2026-10-06" }] }),
+      panel_dates: () => ({ dates: [{ date: "2026-10-07" }, { date: "2026-10-06" }] }),
       about: () => ({ version: "0.1", pdfium: "140.0", schema: "1.0" }),
     }),
   );
@@ -40,14 +39,12 @@ test("starting the shell loads the folder, the workspace, the day and the day's 
   assert.equal(shell.needsFolder, false, "the start prompt is gone");
   assert.deepEqual(shell.panel.dates.map((row) => row.date), ["2026-10-07", "2026-10-06"]);
   assert.equal(shell.overview.totals.batches, 2, "the overview is today's");
-  assert.equal(shell.workspace, "Toko Contoh");
-  assert.equal(shell.needsWorkspace, false);
   assert.equal(shell.about.pdfium, "140.0");
   assert.equal(shell.error, "");
   assert.equal(shell.overlay, null);
   assert.deepEqual(
     calls.map((call) => call.command),
-    ["start_info", "workspaces_list", "day_overview", "about"],
+    ["start_info", "panel_dates", "day_overview", "about"],
   );
   assert.deepEqual(calls[2].args, { day: "2026-10-07" });
 
@@ -59,38 +56,6 @@ test("starting the shell loads the folder, the workspace, the day and the day's 
   assert.equal(prompt.dataFolder, null);
   assert.equal(prompt.day, "2026-10-08");
   assert.equal(noFolder.length, 1, "no folder: only `start_info` was asked");
-
-  // A folder without a workspace: the first workspace's name is asked, then the day opens.
-  const named = useBackend(
-    backend({
-      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", workspace: null, version: "0.2" }),
-      workspace_new: (args) => args.name,
-    }),
-  );
-  const first = new Shell();
-  await first.load();
-  assert.equal(first.needsWorkspace, true, "the workspace prompt shows");
-  assert.deepEqual(named.map((call) => call.command), ["start_info"], "and no day is loaded");
-  await first.nameWorkspace("Toko Contoh");
-  assert.equal(first.needsWorkspace, false);
-  assert.equal(first.workspace, "Toko Contoh");
-  assert.deepEqual(named[1], { command: "workspace_new", args: { name: "Toko Contoh" } });
-  assert.equal(first.overview.totals.batches, 2, "the day opens");
-
-  // A name the folder cannot take keeps the prompt and says why.
-  useBackend(
-    backend({
-      start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", workspace: null, version: "0.2" }),
-      workspace_new: () => {
-        throw "the name is taken";
-      },
-    }),
-  );
-  const refused = new Shell();
-  await refused.load();
-  await refused.nameWorkspace("Toko Contoh");
-  assert.equal(refused.needsWorkspace, true);
-  assert.equal(refused.error, "the name is taken");
 });
 
 
@@ -189,66 +154,24 @@ test("leaving an open batch asks before dropping it, and a refused answer stays"
 });
 
 
-test("the panel opens another date and workspace, and a new workspace on today", async () => {
-  const calls = useBackend(
-    backend({
-      workspace_open: () => undefined,
-      workspace_new: (args) => {
-        if (args.name === "Toko Contoh") throw "A workspace Toko Contoh is already there.";
-        return args.name;
-      },
-    }),
-  );
+test("the panel can be hidden and shown", () => {
   const shell = new Shell();
-  shell.workspace = "Toko Contoh";
-  shell.today = "2026-10-07";
-  shell.day = "2026-10-05";
-
-  await shell.openWorkspace("Toko Contoh");
-  assert.equal(calls.length, 0, "the open workspace is not opened again");
-  await shell.openWorkspace("Toko Lain");
-  assert.equal(shell.workspace, "Toko Lain");
-  assert.equal(shell.day, "2026-10-07", "another workspace opens on today");
-  assert.deepEqual(
-    calls.map((call) => call.command).sort(),
-    ["day_overview", "workspace_open", "workspaces_list"],
-  );
-
-  assert.equal(await shell.newWorkspace("Toko Contoh"), "A workspace Toko Contoh is already there.");
-  assert.equal(shell.workspace, "Toko Lain", "a refused name changes nothing");
-  shell.day = "2026-10-05";
-  assert.equal(await shell.newWorkspace("Toko Baru"), null);
-  assert.equal(shell.workspace, "Toko Baru");
-  assert.equal(shell.day, "2026-10-07");
-
-  useBackend(
-    backend({
-      workspace_open: () => {
-        throw "Toko Hilang is not a workspace of this data folder.";
-      },
-    }),
-  );
-  await shell.openWorkspace("Toko Hilang");
-  assert.equal(shell.workspace, "Toko Baru", "a workspace that cannot open changes nothing");
-  assert.equal(shell.error, "Toko Hilang is not a workspace of this data folder.");
-
   assert.equal(shell.panelShown, true, "the panel is shown at every start");
   shell.togglePanel();
   assert.equal(shell.panelShown, false);
+  shell.togglePanel();
+  assert.equal(shell.panelShown, true);
+});
 
 
-  // Settings renamed the open workspace: the same date under the new name.
+test("an Accounts overlay opens over the batch, and a date of it opens the Day screen", async () => {
   useBackend(backend());
-  shell.day = "2026-10-05";
-  shell.screen = "new-batch";
-  await shell.workspaceRenamed("Toko Satu");
-  assert.deepEqual([shell.workspace, shell.day, shell.screen], ["Toko Satu", "2026-10-05", "day"]);
-  // Settings deleted it: today of the workspace the back end opened, or the first name asked.
-  await shell.workspaceDeleted("Toko Lain");
-  assert.deepEqual([shell.workspace, shell.day, shell.needsWorkspace], ["Toko Lain", "2026-10-07", false]);
-  shell.overlay = "settings";
-  await shell.workspaceDeleted(null);
-  assert.deepEqual([shell.workspace, shell.needsWorkspace, shell.overlay], [null, true, null]);
+  answerQuestions(() => true);
+  const shell = new Shell();
+  shell.navigate("accounts");
+  assert.equal(shell.overlay, "accounts");
+  await shell.openDate("2026-10-05");
+  assert.deepEqual([shell.overlay, shell.screen, shell.day], [null, "day", "2026-10-05"]);
 });
 
 
@@ -275,7 +198,8 @@ test("Amend reads the batch's own files and opens the Plan with that batch", asy
     sort_rule: "ramadhan",
     files: 2,
     orders: 23,
-    left_out: 0,
+    accounts: [{ account: "Toko Alfa", orders: 23 }],
+    left_out: [],
     pdfs: [],
     summary: "3 summary.pdf",
     summary_missing: false,
@@ -316,7 +240,8 @@ test("Amend reads the batch's own files and opens the Plan with that batch", asy
     sort_rule: "ramadhan",
     files: 2,
     orders: 23,
-    left_out: 0,
+    accounts: [{ account: "Toko Alfa", orders: 23 }],
+    left_out: [],
     pdfs: [],
     summary: "3 summary.pdf",
     summary_missing: false,

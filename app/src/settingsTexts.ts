@@ -1,7 +1,6 @@
 // The Settings screen's texts, part of `texts` (`texts.settings`).
 
 import type { Question } from "./lib/confirm.svelte";
-import { count } from "./count";
 
 export const settingsTexts = {
   title: "Settings",
@@ -23,33 +22,6 @@ export const settingsTexts = {
     title: "Change the data folder?",
     body: `New: ${folder}. The data in ${old} stays where it is.`,
     ok: "Change",
-  }),
-
-  workspaces: "Workspaces",
-  workspacesHint:
-    "Each workspace keeps its own dates and batches. A new one is made with the + in the panel.",
-  openNow: "Open now",
-  dates: (n: number) => (n === 0 ? "No dates yet" : count(n, "date", "dates")),
-  shopsCount: (n: number) => (n === 0 ? "No shops: labels are not checked" : count(n, "shop", "shops")),
-  shops: "Shops",
-  shopLabel: (n: number) => `Shop ${n}`,
-  removeShop: (name: string) => (name ? `Take off ${name}` : "Take off this shop"),
-  addShop: "+ Add shop",
-  saveShops: "Save",
-  shopEmpty: "A shop needs a name.",
-  shopTwice: "This shop is listed twice.",
-  rename: "Rename",
-  renameLabel: (name: string) => `New name for ${name}`,
-  save: "Rename",
-  cancel: "Cancel",
-  delete: "Delete",
-  askDelete: (name: string, dates: number): Question => ({
-    title: `Delete workspace ${name}?`,
-    body:
-      dates === 0
-        ? "Its folder goes to the Recycle Bin."
-        : `Its ${count(dates, "date", "dates")}, with their labels and files, go to the Recycle Bin.`,
-    ok: "Delete workspace",
   }),
 
   about: "About",

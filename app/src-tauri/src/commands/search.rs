@@ -52,6 +52,9 @@ pub struct SearchView {
 pub struct OrderRow {
     day: String,
     order_id: String,
+    account: String,
+    /// The listed shop its label shows; none when the label printed no sender.
+    shop: Option<String>,
     tracking_id: Option<String>,
     /// The courier's name; none when no courier was named.
     courier: Option<String>,
@@ -132,6 +135,8 @@ fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> Order
     OrderRow {
         day: order.date.to_string(),
         order_id: saved.order_id.to_string(),
+        account: saved.account.clone(),
+        shop: saved.shop.clone(),
         tracking_id: saved.tracking_id.as_ref().map(ToString::to_string),
         courier: saved
             .courier

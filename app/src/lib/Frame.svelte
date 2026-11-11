@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The window frame: the panel's switch, the program's name, the open workspace, and the screens
+  // The window frame: the panel's switch, the program's name, and the screens
   // that open over the current one. The open date is the Day screen's title, not repeated here.
   import { texts } from "../texts";
   import type { OverlayId } from "./shell.svelte";
@@ -7,7 +7,6 @@
   import Logo from "./Logo.svelte";
 
   let {
-    workspace,
     overlay,
     // The program's shown version (`v0.3.3`, from `StartInfo.version`): with the name it is the
     // same text as the OS window title.
@@ -15,7 +14,6 @@
     onTogglePanel,
     onNavigate,
   }: {
-    workspace: string | null;
     overlay: OverlayId | null;
     version: string;
     onTogglePanel: () => void;
@@ -24,6 +22,7 @@
 
   const items: { id: OverlayId; label: string; icon: IconName }[] = [
     { id: "search", label: texts.nav.search, icon: "search" },
+    { id: "accounts", label: texts.nav.accounts, icon: "accounts" },
     { id: "sort-rules", label: texts.nav.sortRules, icon: "rules" },
     { id: "settings", label: texts.nav.settings, icon: "settings" },
   ];
@@ -37,10 +36,6 @@
     onclick={onTogglePanel}><Icon name="panel" /></button
   >
   <span class="brand"><Logo size={22} />{texts.title}<span class="version">{version}</span></span>
-  <span class="where">
-    <span class="workspace">{workspace ?? ""}</span>
-  </span>
-
   <span class="grow"></span>
 
   <nav>
@@ -84,25 +79,6 @@
     color: var(--accent-text);
     font-size: 0.75rem;
     font-weight: 600;
-  }
-
-  /* A long workspace name is cut short before the buttons are. */
-  .where {
-    display: inline-flex;
-    min-width: 0;
-    align-items: center;
-    gap: 0.45rem;
-    margin-left: 0.75rem;
-    padding-left: 0.9rem;
-    border-left: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  .workspace {
-    min-width: 0;
-    overflow: hidden;
-    font-weight: 600;
-    text-overflow: ellipsis;
   }
 
   .grow {

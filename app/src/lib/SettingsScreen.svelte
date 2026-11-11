@@ -1,21 +1,17 @@
 <script lang="ts">
-  // Settings: the theme, the data folder, the workspaces and *About*, as full-width groups of
+  // Settings: the theme, the data folder and *About*, as full-width groups of
   // rows (the setting at the left, its control at the right). Every other choice has one fixed
   // default, shown where it acts.
-  import { onMount } from "svelte";
   import { texts } from "../texts";
   import type { About } from "./api/start";
   import { themes, type Theme } from "./theme";
-  import type { WorkspaceSettings } from "./workspaceSettings.svelte";
   import Icon from "./Icon.svelte";
   import Logo from "./Logo.svelte";
-  import WorkspaceList from "./WorkspaceList.svelte";
 
   let {
     about,
     dataFolder,
     theme,
-    workspaces,
     onTheme,
     onChangeFolder,
     onOpenFolder,
@@ -23,15 +19,12 @@
     about: About | null;
     dataFolder: string | null;
     theme: Theme;
-    workspaces: WorkspaceSettings;
     onTheme: (theme: Theme) => void;
     onChangeFolder: () => void;
     onOpenFolder: () => void;
   } = $props();
 
   const words = texts.settings;
-
-  onMount(() => workspaces.load());
 </script>
 
 <div class="settings">
@@ -75,12 +68,6 @@
   </section>
 
   <section>
-    <h3>{words.workspaces}</h3>
-    <p class="intro">{words.workspacesHint}</p>
-    <WorkspaceList {workspaces} />
-  </section>
-
-  <section>
     <h3>{words.about}</h3>
     <div class="group">
       <div class="row">
@@ -119,12 +106,7 @@
     text-transform: uppercase;
   }
 
-  .intro {
-    margin: -0.2rem 0 0.6rem;
-    color: var(--text-muted);
-  }
-
-  /* A group of rows: one box, a line between rows. The workspace list draws the same. */
+  /* A group of rows: one box, a line between rows.  */
   .group {
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);

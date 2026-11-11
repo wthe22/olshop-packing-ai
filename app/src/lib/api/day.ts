@@ -31,6 +31,12 @@ export type LeftOutView = {
   | { reason: "saved_earlier"; batch: number }
 );
 
+// An account of a batch and its orders there.
+export interface AccountOrders {
+  account: string;
+  orders: number;
+}
+
 export interface BatchView {
   batch: number;
   time: string;
@@ -39,6 +45,8 @@ export interface BatchView {
   sort_rule: string;
   files: number;
   orders: number;
+  // Its accounts, most orders first.
+  accounts: AccountOrders[];
   left_out: LeftOutView[];
   pdfs: GroupPdfView[];
   summary: string;
@@ -58,14 +66,21 @@ export interface Totals {
 
 export interface DayOverview {
   day: string;
-  workspace: string;
   batches: BatchView[];
   totals: Totals;
   // A damaged journal, an input missing or changed.
   problems: string[];
-  // The data folder also holds files of Packing v0.1, which are not read.
-  old_data: boolean;
+  // Data of older versions in the data folder, which is not read.
+  older: OlderData[];
   reprints: ReprintRow[];
+}
+
+// One older version's data as the Day screen's note names it.
+export interface OlderData {
+  // `v0.1` or `v0.4`.
+  version: string;
+  // The files and folders that show it; a folder's name ends in `\`.
+  names: string[];
 }
 
 // One reprint made on the date.
@@ -122,9 +137,23 @@ export const outputPdf = (day: string, file: string): Promise<ArrayBuffer> =>
 export const setSent = (day: string, batch: number, group: string, sent: boolean): Promise<void> =>
   invoke("set_sent", { day, batch, group, sent });
 
-// *Day summary*: write the date's summary PDF from its journal; the file's path comes back. A day
-// summary open in a PDF viewer that locks it stops the write with the file named.
-export const writeDaySummary = (day: string): Promise<string> => invoke("day_summary", { day });
+// *Day summary*: write the date's summary PDF from its journal, of every account or of one; the
+// file's path comes back. A day summary open in a PDF viewer that locks it stops the write with the
+// file named.
+export const writeDaySummary = (day: string, account: string | null): Promise<string> =>
+  invoke("day_summary", { day, account });
+
+// An account's summary of a batch: its path when kept, else the verifier's findings (nothing kept).
+export interface AccountSummary {
+  path: string | null;
+  errors: string[];
+}
+
+export const accountSummaryPdf = (
+  day: string,
+  batch: number,
+  account: string,
+): Promise<AccountSummary> => invoke("account_summary_pdf", { day, batch, account });
 
 // *Revert* `batch`, the newest; one that is no longer the newest (another copy of the app saved
 // since) is refused. A file open in a PDF viewer stops it with the file named.

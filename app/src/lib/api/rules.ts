@@ -4,11 +4,11 @@
 import { invoke } from "@tauri-apps/api/core";
 
 // The sort rules New batch offers (those that are on) and the one to preselect: the open draft's
-// rule, else the rule of the workspace's newest batch on whichever date, else the first.
+// rule, else the rule of the newest batch on whichever date, else the first.
 export interface SortRules {
   rules: string[];
   preselected: string;
-  // The rule of the workspace's newest batch, on or off; `null` before its first batch.
+  // The rule of the newest batch, on or off; `null` before its first batch.
   last_used: string | null;
 }
 

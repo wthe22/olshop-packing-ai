@@ -21,7 +21,7 @@ pub use dates::{dates, has_unprinted_groups, journal_lengths, newest_batch_rule}
 pub use error::StoreError;
 pub use files::sha256_of;
 pub use fold::{Damage, DamageReason, Fold, LastWrites, LiveBatch, Reprint};
-pub use index::{IndexedOrder, ReprintMark, SearchIndex};
+pub use index::{AccountDate, IndexedOrder, ReprintMark, SearchIndex};
 pub use inputs::{InputProblem, InputState, StoredInput, check_inputs, input_path, store_input};
 pub use journal::{Journal, Pending};
 pub use line::{encode_line, seal};

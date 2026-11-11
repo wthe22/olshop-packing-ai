@@ -18,7 +18,7 @@
     onCreate,
   }: {
     rules: RuleSummary[];
-    // The rule of the workspace's newest batch; `null` before its first batch.
+    // The rule of the newest batch; `null` before its first batch.
     lastUsed: string | null;
     current: string;
     busy: boolean;

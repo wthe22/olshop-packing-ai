@@ -14,6 +14,8 @@ export const conditionFields: { value: string; label: string; type: FieldType }[
   { value: "total_quantity", label: "Total quantity", type: "number" },
   { value: "distinct_items", label: "Different items", type: "number" },
   { value: "courier", label: "Courier", type: "text" },
+  { value: "account", label: "Account", type: "text" },
+  { value: "shop", label: "Shop", type: "text" },
   { value: "order_id", label: "Order ID", type: "text" },
   { value: "tracking_id", label: "Tracking ID", type: "text" },
   { value: "ship_by", label: "Ship by", type: "time" },

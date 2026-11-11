@@ -127,6 +127,67 @@ pub fn add_shop(
     Ok(())
 }
 
+/// Make an account with no shop, after the names it is checked against.
+pub fn create_account(accounts: &mut Vec<Account>, name: &str) -> Result<(), NameError> {
+    check_account_name(name, accounts, None)?;
+    accounts.push(Account {
+        name: name.to_string(),
+        shops: Vec::new(),
+    });
+    Ok(())
+}
+
+/// Give the account `from` the name `to`; its orders saved before keep the old name.
+pub fn rename_account(accounts: &mut [Account], from: &str, to: &str) -> Result<(), NameError> {
+    check_account_name(to, accounts, Some(from))?;
+    find(accounts, from)?.name = to.to_string();
+    Ok(())
+}
+
+/// Replace the shops of the account `name`. Each shop is checked against the other accounts and
+/// the shops before it: nothing changes when one is refused, and the error names its place.
+pub fn set_shops(
+    accounts: &mut [Account],
+    name: &str,
+    shops: &[String],
+) -> Result<(), (usize, NameError)> {
+    find(accounts, name).map_err(|error| (0, error))?;
+    let mut checked: Vec<Account> = accounts
+        .iter()
+        .filter(|account| account.name != name)
+        .cloned()
+        .collect();
+    checked.push(Account {
+        name: name.to_string(),
+        shops: Vec::new(),
+    });
+    for (at, shop) in shops.iter().enumerate() {
+        check_shop_name(shop, &checked).map_err(|error| (at, error))?;
+        checked
+            .last_mut()
+            .expect("the account pushed above")
+            .shops
+            .push(shop.trim().to_string());
+    }
+    let shops = checked.pop().expect("the account pushed above").shops;
+    find(accounts, name).map_err(|error| (0, error))?.shops = shops;
+    Ok(())
+}
+
+/// Delete the account `name`: its shops are asked about again, its saved orders keep its name.
+pub fn delete_account(accounts: &mut Vec<Account>, name: &str) -> Result<(), NameError> {
+    find(accounts, name)?;
+    accounts.retain(|account| account.name != name);
+    Ok(())
+}
+
+fn find<'a>(accounts: &'a mut [Account], name: &str) -> Result<&'a mut Account, NameError> {
+    accounts
+        .iter_mut()
+        .find(|account| account.name == name)
+        .ok_or(NameError::NoAccount)
+}
+
 /// The account whose listed shop a label shows: the longest name found, then the one listed first.
 pub fn account_of(sender: &SenderText, accounts: &[Account]) -> Option<OrderAccount> {
     let mut found: Option<(usize, &Account, &String)> = None;

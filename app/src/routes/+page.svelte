@@ -11,7 +11,6 @@
   import Frame from "../lib/Frame.svelte";
   import Panel from "../lib/Panel.svelte";
   import StartPrompt from "../lib/StartPrompt.svelte";
-  import WorkspacePrompt from "../lib/WorkspacePrompt.svelte";
   import DayScreen from "../lib/DayScreen.svelte";
   import NewBatchScreen from "../lib/NewBatchScreen.svelte";
   import PlanScreen from "../lib/PlanScreen.svelte";
@@ -61,12 +60,9 @@
     onUse={shell.useProgramFolder}
     onChoose={shell.chooseFolder}
   />
-{:else if shell.needsWorkspace}
-  <WorkspacePrompt version={shell.version} busy={shell.busy} error={shell.error} onName={shell.nameWorkspace} />
 {:else}
   <div class="window">
     <Frame
-      workspace={shell.workspace}
       overlay={shell.overlay}
       version={shell.version}
       onTogglePanel={shell.togglePanel}
@@ -79,8 +75,6 @@
           day={shell.day}
           today={shell.today}
           onOpenDate={shell.openDate}
-          onOpenWorkspace={shell.openWorkspace}
-          onNewWorkspace={shell.newWorkspace}
           onOpenFolder={shell.openFolder}
         />
       {/if}
@@ -93,6 +87,7 @@
             day={shell.day}
             today={shell.today}
             overview={shell.overview}
+            dataFolder={shell.dataFolder}
             saved={shell.savedMessage}
             reading={shell.amendReading}
             writing={shell.writing}
@@ -104,6 +99,7 @@
             onSetPrinted={shell.outputs.setPrinted}
             onNewBatch={shell.startBatch}
             onDaySummary={shell.daySummary}
+            onAccountSummary={(batch, account) => shell.accountSummary(batch.batch, account)}
             onAmend={shell.amend}
             onRevert={shell.revert}
             onRestore={shell.outputs.restore}

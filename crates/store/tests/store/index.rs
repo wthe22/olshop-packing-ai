@@ -104,6 +104,13 @@ fn every_live_order_of_the_data_folder_is_found_by_its_fields() {
     assert_eq!(ids(&index, "distinct_items >= 1", None).len(), 9);
     assert_eq!(index.counts().get(&date(2026, 10, 7)), Some(&3));
     assert_eq!(index.counts().get(&date(2026, 10, 8)), Some(&6));
+    let mine: Vec<(i8, usize, usize)> = index
+        .account_dates("Toko Alfa")
+        .iter()
+        .map(|day| (day.date.day(), day.orders, day.batches))
+        .collect();
+    assert_eq!(mine, [(8, 6, 2), (7, 3, 1)], "newest first");
+    assert!(index.account_dates("Toko Beta").is_empty());
 
     let seventh = |filter: &str| {
         index.search(

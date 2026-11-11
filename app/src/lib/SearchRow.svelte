@@ -48,7 +48,14 @@
 <div class="row" class:ticked {@attach textClicks}>
   <input type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
   <div class="ids">
-    <span class="order">{row.order_id}</span>
+    <span class="line">
+      <span class="order">{row.order_id}</span>
+      {#if row.shop}
+        <span class="shop">{row.shop}</span>
+      {:else}
+        <span class="shop account">{row.account}</span>
+      {/if}
+    </span>
     <span class="line">
       <span class="courier" class:unknown={!row.courier}>{row.courier ?? words.noCourier}</span>
       <span class="tracking" class:faint={!row.tracking_id}>{row.tracking_id ?? words.noTracking}</span>
@@ -158,6 +165,16 @@
     font-weight: 650;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em;
+  }
+
+  .shop {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* The label printed no sender: the account stands in the shop's place. */
+  .shop.account {
+    font-style: italic;
   }
 
   .tracking {

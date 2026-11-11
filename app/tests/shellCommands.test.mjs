@@ -18,7 +18,7 @@ test("the data folder: the start prompt, the program folder and a change", async
   let failChoose = false;
   const calls = useBackend({
     ...backend(),
-    start_info: () => ({ today: "2026-10-07", exe_dir: "C:/Packing", data_folder: null, workspace: "Toko Contoh", version: "0.1" }),
+    start_info: () => ({ today: "2026-10-07", exe_dir: "C:/Packing", data_folder: null, version: "0.1" }),
     "plugin:dialog|open": () => picked,
     use_program_folder: () => "C:/Packing",
     choose_data_folder: (args) => {
@@ -39,14 +39,13 @@ test("the data folder: the start prompt, the program folder and a change", async
   assert.equal(shell.busy, false, "a dismissed dialog leaves nothing busy");
   assert.equal(calls.some((call) => call.command === "choose_data_folder"), false, "a dismissed dialog chooses nothing");
 
-  // *Use the program's folder*: the folder is taken, its workspace, the day and About load.
+  // *Use the program's folder*: the folder is taken, the day and About load.
   await shell.useProgramFolder();
   assert.equal(shell.dataFolder, "C:/Packing");
   assert.equal(shell.needsFolder, false);
   assert.equal(shell.busy, false);
   assert.deepEqual(shell.panel.dates, [{ date: "2026-10-07" }]);
   assert.equal(shell.overview.totals.batches, 2);
-  assert.equal(shell.workspace, "Toko Contoh");
   assert.equal(shell.about.version, "0.2");
   assert.deepEqual(calls.find((call) => call.command === "use_program_folder").args, {}, "no argument is sent");
 
@@ -88,7 +87,7 @@ test("the file and printed commands reach the back end", async () => {
   let fail = "";
   const calls = useBackend({
     ...backend(),
-    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", workspace: "Toko Contoh", version: "0.1" }),
+    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", version: "0.1" }),
     open_path: (args) => {
       if (fail === "open_path") throw "the file is gone";
       return { ...args };
@@ -186,8 +185,8 @@ test("a command that fails while loading shows the error and still opens the day
   const partial = new Shell();
   useBackend({
     ...backend(),
-    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", workspace: "Toko Contoh", version: "0.1" }),
-    workspaces_list: () => {
+    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", version: "0.1" }),
+    panel_dates: () => {
       throw "the day folder is unreadable";
     },
     about: () => {
@@ -250,8 +249,8 @@ test("*Open* writes a missing output again, and a write the owner waits for runs
 
   // *Day summary*: a second click while it is written starts nothing; its dialog shows after a
   // moment and goes when the file opens.
-  const first = shell.daySummary();
-  await shell.daySummary();
+  const first = shell.daySummary(null);
+  await shell.daySummary(null);
   assert.equal(shell.writing, true);
   assert.equal(calls.filter((call) => call.command === "day_summary").length, 1, "written once");
   await new Promise((resolve) => setTimeout(resolve, 250));
@@ -264,4 +263,40 @@ test("*Open* writes a missing output again, and a write the owner waits for runs
     command: "open_path",
     args: { path: "C:/Data/Toko Contoh/2026-10-07/output/day summary.pdf" },
   });
+  assert.deepEqual(calls.find((call) => call.command === "day_summary").args, { day: "2026-10-07", account: null });
+});
+
+test("an account's summary of a batch is written and opened, or its findings shown", async () => {
+  let kept = true;
+  const calls = useBackend({
+    ...backend(),
+    account_summary_pdf: () =>
+      kept
+        ? { path: "C:/Data/2026-10-07/output/2 summary Toko Alfa.pdf", errors: [] }
+        : { path: null, errors: ["page 3 of labels_1.pdf is in no output."] },
+    day_summary: () => "C:/Data/2026-10-07/output/day summary Toko Beta.pdf",
+    open_path: () => undefined,
+  });
+  const shell = new Shell();
+  shell.day = "2026-10-07";
+
+  await shell.accountSummary(2, "Toko Alfa");
+  assert.deepEqual(calls.find((call) => call.command === "account_summary_pdf").args, {
+    day: "2026-10-07",
+    batch: 2,
+    account: "Toko Alfa",
+  });
+  assert.deepEqual(calls.at(-1), { command: "open_path", args: { path: "C:/Data/2026-10-07/output/2 summary Toko Alfa.pdf" } });
+  assert.equal(shell.error, "");
+
+  kept = false;
+  calls.length = 0;
+  await shell.accountSummary(2, "Toko Alfa");
+  assert.equal(calls.some((call) => call.command === "open_path"), false, "nothing kept, nothing opened");
+  assert.equal(shell.error, "page 3 of labels_1.pdf is in no output.");
+  assert.equal(shell.writing, false);
+
+  await shell.daySummary("Toko Beta");
+  assert.deepEqual(calls.find((call) => call.command === "day_summary").args, { day: "2026-10-07", account: "Toko Beta" });
+  assert.equal(texts.day.writingAccountSummary("Toko Alfa"), "Writing the summary of Toko Alfa …");
 });

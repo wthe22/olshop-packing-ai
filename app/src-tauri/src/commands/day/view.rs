@@ -1,5 +1,5 @@
 //! The Day screen's data from a date's fold: the live batches, newest first, each with its group
-//! PDFs, Sent marks, Printed ticks and summary PDF, the copies left out, its warnings and errors;
+//! PDFs, accounts, Sent marks, Printed ticks and summary PDF, the copies left out, its warnings and errors;
 //! the outputs the open-time checks found missing, the inputs that cannot be used, and a damaged
 //! journal.
 
@@ -7,7 +7,7 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use packing_engine::ids::{BatchId, PdfId};
-use packing_engine::record::{BatchSaved, LeftOutReason};
+use packing_engine::record::{BatchSaved, LeftOutReason, account_counts};
 use packing_engine::sorting::{REST_CODE, REST_NAME};
 use packing_store::{InputState, LiveBatch, OlderData, OlderVersion, OutputState};
 use serde::Serialize;
@@ -61,6 +61,13 @@ pub enum LeftOutBecause {
     },
 }
 
+/// An account of a batch and its orders there.
+#[derive(Serialize)]
+pub struct AccountOrders {
+    account: String,
+    orders: usize,
+}
+
 #[derive(Serialize)]
 pub struct BatchView {
     batch: BatchId,
@@ -71,6 +78,8 @@ pub struct BatchView {
     sort_rule: String,
     files: usize,
     orders: usize,
+    /// Its accounts, most orders first.
+    accounts: Vec<AccountOrders>,
     left_out: Vec<LeftOutView>,
     pdfs: Vec<GroupPdfView>,
     summary: String,
@@ -226,6 +235,13 @@ fn batch_view(day: &OpenDay, batch: BatchId, live: &LiveBatch, output: &Path) ->
         sort_rule: saved.sort_rule.name.clone(),
         files: saved.inputs.len(),
         orders: saved.orders.len(),
+        accounts: account_counts([saved])
+            .into_iter()
+            .map(|count| AccountOrders {
+                account: count.account,
+                orders: count.orders,
+            })
+            .collect(),
         left_out: left_out(saved),
         pdfs,
         summary_problem: problem(&summary),

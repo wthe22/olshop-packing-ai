@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The side panel: the open workspace, its dates by month with their saved orders, and the way to
-  // another date or workspace. What a click does (asking about an open draft first) is the shell's.
+  // The side panel: the dates of the data folder by month with their saved orders of every account,
+  // and the way to another date. What a click does (asking about an open draft first) is the shell's.
   import type { PanelView } from "./api/panel";
   import { months } from "./panel";
   import { texts } from "../texts";
@@ -12,17 +12,12 @@
     day,
     today,
     onOpenDate,
-    onOpenWorkspace,
-    onNewWorkspace,
     onOpenFolder,
   }: {
     panel: PanelView;
     day: string;
     today: string;
     onOpenDate: (date: string) => void;
-    onOpenWorkspace: (name: string) => void;
-    // Resolves to why the name is refused, or `null` when the workspace was made.
-    onNewWorkspace: (name: string) => Promise<string | null>;
     onOpenFolder: (path: string) => void;
   } = $props();
 
@@ -31,64 +26,12 @@
   let toggled = $state<Record<string, boolean>>({});
   // The date whose row menu is open.
   let menuFor = $state<string | null>(null);
-  // **+ New workspace**'s field, and why a name was refused.
-  let naming = $state(false);
-  let name = $state("");
-  let refused = $state("");
 
   const isOpen = (key: string, startsOpen: boolean) => toggled[key] ?? startsOpen;
-
-  async function create() {
-    refused = (await onNewWorkspace(name.trim())) ?? "";
-    if (!refused) {
-      naming = false;
-      name = "";
-    }
-  }
 </script>
 
 <aside>
-  <div class="head">
-    <label for="panel-workspace">{texts.panel.workspace}</label>
-    <div class="pick">
-      <select
-        id="panel-workspace"
-        value={panel.open ?? ""}
-        onchange={(event) => onOpenWorkspace(event.currentTarget.value)}
-      >
-        {#each panel.workspaces as known (known)}
-          <option value={known}
-            >{known}{panel.unprinted.includes(known) ? ` · ${texts.panel.notPrinted}` : ""}</option
-          >
-        {/each}
-      </select>
-      <button
-        class="add"
-        title={texts.panel.newWorkspace}
-        aria-label={texts.panel.newWorkspace}
-        onclick={() => ((naming = !naming), (refused = ""))}><Icon name="plus" size={16} /></button
-      >
-    </div>
-    {#if naming}
-      <form
-        class="naming"
-        onsubmit={(event) => {
-          event.preventDefault();
-          if (name.trim()) create();
-        }}
-      >
-        <input bind:value={name} placeholder={texts.workspace.placeholder} maxlength="40" />
-        <div class="naming-buttons">
-          <button type="button" onclick={() => (naming = false)}>{texts.panel.cancel}</button>
-          <button class="primary" type="submit" disabled={name.trim() === ""}
-            >{texts.panel.create}</button
-          >
-        </div>
-      </form>
-      {#if refused}<p class="refused">{refused}</p>{/if}
-    {/if}
-  </div>
-
+  <h2>{texts.panel.dates}</h2>
   <ul class="months">
     {#each list as month (month.key)}
       {@const open = isOpen(month.key, month.startsOpen)}
@@ -111,6 +54,9 @@
                     {#if row.damaged}{texts.panel.damaged}{:else}{row.orders ?? ""}{/if}
                   </span>
                 </button>
+                {#if row.today && panel.today_unprinted}
+                  <span class="unprinted">· {texts.panel.notPrinted}</span>
+                {/if}
                 {#if row.folder}
                   <button
                     class="menu"
@@ -147,14 +93,8 @@
     padding: 0.9rem 0.6rem;
   }
 
-  .head {
-    padding: 0 0.2rem 0.9rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .head label {
-    display: block;
-    margin-bottom: 0.3rem;
+  h2 {
+    margin: 0 0.2rem 0.4rem;
     color: var(--text-faint);
     font-size: 0.75rem;
     font-weight: 600;
@@ -162,52 +102,10 @@
     text-transform: uppercase;
   }
 
-  .pick {
-    display: flex;
-    gap: 0.35rem;
-  }
-
-  .pick select {
-    flex: 1;
-    min-width: 0;
-    font-weight: 600;
-  }
-
-  button.add {
-    display: inline-flex;
-    align-items: center;
-    padding: 0 0.45rem;
-  }
-
-  .naming {
-    margin-top: 0.5rem;
-  }
-
-  .naming input {
-    width: 100%;
-  }
-
-  .naming-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.35rem;
-    margin-top: 0.4rem;
-  }
-
-  .refused {
-    margin: 0.3rem 0 0;
-    color: var(--danger);
-    font-size: 0.85rem;
-  }
-
   ul {
     list-style: none;
     margin: 0;
     padding: 0;
-  }
-
-  .months {
-    margin-top: 0.6rem;
   }
 
   button.month {
@@ -238,6 +136,7 @@
   .date {
     position: relative;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     margin: 1px 0;
     border-radius: var(--radius);
@@ -283,6 +182,14 @@
   .count {
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Under today's row. */
+  .unprinted {
+    flex-basis: 100%;
+    padding: 0 0.5rem 0.3rem 1.4rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
   }
 
   button.menu {

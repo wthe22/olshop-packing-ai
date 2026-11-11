@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Search: saved orders of the open workspace found by a filter made with the boxes, over a range
+  // Search: saved orders found by a filter made with the boxes, over a range
   // of dates or all of them. Each order is a row that names the group PDF and the page the order
   // is on, opens its details and carries its *Reprinted* mark; the ticked rows are reprinted
   // into one PDF from the bar at the foot. Enter in a box searches, so a scanned tracking ID finds
@@ -65,6 +65,7 @@
         tree={search.tree}
         fields={conditionFields}
         couriers={search.couriers}
+        accounts={search.accounts}
         onEdit={search.invalidate}
       />
     </div>

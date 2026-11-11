@@ -5,6 +5,7 @@
 
 import * as api from "./api/search";
 import { rulesList, treeToFilter, type Courier } from "./api/rules";
+import { accountsList } from "./api/accounts";
 import { newRow, newTree, toRustTree, type UiTree } from "./conditions";
 import { texts } from "../texts";
 import { formatShortDay } from "../dates";
@@ -34,8 +35,9 @@ export class Search {
   made = $state<api.ReprintMade | null>(null);
   // The verifier's findings of a reprint that was not kept.
   findings = $state<string[]>([]);
-  // For the Courier box's list.
+  // For the Courier and Account boxes' lists.
   couriers = $state<Courier[]>([]);
+  accounts = $state<string[]>([]);
   // The row a single click just ticked or unticked, so the double click it starts can undo it.
   private clicked: string | null = null;
 
@@ -59,6 +61,7 @@ export class Search {
   loadCouriers = async () => {
     try {
       this.couriers = (await rulesList()).couriers;
+      this.accounts = (await accountsList()).map((account) => account.name);
     } catch (e) {
       this.error = String(e);
     }

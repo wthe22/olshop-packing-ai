@@ -1,17 +1,15 @@
 <script lang="ts">
-  // The screens that open over the current one: Search, Sort rules and Settings, in the shared frame with
+  // The screens that open over the current one: Search, Accounts, Sort rules and Settings, in the shared frame with
   // their titles. An open draft is kept; whether it shows is the shell's own state.
   import type { Shell } from "./shell.svelte";
   import Overlay from "./Overlay.svelte";
   import SearchScreen from "./SearchScreen.svelte";
   import SortRulesScreen from "./SortRulesScreen.svelte";
   import SettingsScreen from "./SettingsScreen.svelte";
-  import { WorkspaceSettings } from "./workspaceSettings.svelte";
+  import AccountsScreen from "./AccountsScreen.svelte";
   import { texts } from "../texts";
 
   let { shell }: { shell: Shell } = $props();
-
-  const workspaces = $derived(new WorkspaceSettings(shell));
 </script>
 
 {#if shell.overlay === "search"}
@@ -23,6 +21,10 @@
       onOpenOutput={shell.outputs.open}
       onReprinted={shell.afterReprint}
     />
+  </Overlay>
+{:else if shell.overlay === "accounts"}
+  <Overlay title={texts.accounts.title} onClose={shell.closeOverlay}>
+    <AccountsScreen today={shell.today} onOpenDate={shell.openDate} />
   </Overlay>
 {:else if shell.overlay === "sort-rules"}
   <Overlay title={texts.sortRules.title} onClose={shell.closeOverlay}>
@@ -38,7 +40,6 @@
       about={shell.about}
       dataFolder={shell.dataFolder}
       theme={shell.theme}
-      {workspaces}
       onTheme={shell.chooseTheme}
       onChangeFolder={shell.changeFolder}
       onOpenFolder={() => shell.dataFolder && shell.openFolder(shell.dataFolder)}

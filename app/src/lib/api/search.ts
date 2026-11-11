@@ -16,6 +16,10 @@ export interface SearchRow {
   order_id: string;
   // `null` when the label printed none.
   tracking_id: string | null;
+  // The account the order was saved under, and the listed shop its label shows; `null` when the
+  // label printed no sender.
+  account: string;
+  shop: string | null;
   // The courier's name; `null` when no courier was named.
   courier: string | null;
   items: SearchItem[];
@@ -53,7 +57,7 @@ export interface SearchResults {
 }
 
 // The saved orders the filter matches on the dates of `range`, both ends included; `null` searches
-// every date of the open workspace.
+// every date.
 export const searchOrders = (filter: string, range: DateRange | null): Promise<SearchResults> =>
   invoke("search_orders", { filter, range });
 

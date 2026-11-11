@@ -1,4 +1,4 @@
-// The app shell's state and commands: it finds the data folder and the workspace, keeps the current
+// The app shell's state and commands: it finds the data folder, keeps the current
 // day and screen, routes the Tauri commands, and decides which overlay opens over the current
 // screen (an open draft is kept). The markup is `+page.svelte` and the overlay dialogs are
 // `Overlays.svelte`; nothing is decided there.
@@ -21,7 +21,7 @@ import type { Theme } from "./theme";
 
 // The screens the shell routes between; the batch flow's screens are not in the nav.
 export type Screen = "day" | "new-batch" | "repeats" | "plan";
-export type OverlayId = "search" | "sort-rules" | "settings";
+export type OverlayId = "search" | "accounts" | "sort-rules" | "settings";
 
 // A write the owner waits for shows its dialog only when it takes longer than this, so an *Open*
 // of a file that is there does not flash one.
@@ -30,8 +30,6 @@ const WORKING_DELAY_MS = 200;
 export class Shell {
   ready = $state(false);
   needsFolder = $state(true);
-  // The data folder holds no workspace yet: the first workspace's name is asked.
-  needsWorkspace = $state(false);
   busy = $state(false);
   error = $state("");
 
@@ -39,7 +37,6 @@ export class Shell {
   day = $state("");
   exeDir = $state("");
   dataFolder = $state<string | null>(null);
-  workspace = $state<string | null>(null);
   // The theme `packing-settings.toml` names; `+page.svelte` shows it.
   theme = $state<Theme>("system");
   // The program's shown version, for the title bar's brand text; the OS
@@ -47,7 +44,7 @@ export class Shell {
   version = $state("");
   overview = $state<dayData.DayOverview | null>(null);
   about = $state<start.About | null>(null);
-  // The side panel: the workspaces and the open one's dates. It is shown at every start.
+  // The side panel: the dates of the data folder. It is shown at every start.
   panel = $state<panelData.PanelView | null>(null);
   panelShown = $state(true);
   private panelTimer: ReturnType<typeof setTimeout> | undefined;
@@ -89,7 +86,7 @@ export class Shell {
     this.amendBatch !== null && this.readResult !== null ? this.readResult.plan.sort_rule : null,
   );
 
-  // Start the shell: the data folder, the workspace, the day and About.
+  // Start the shell: the data folder, today's date and About.
   load = async () => {
     try {
       const info = await start.startInfo();
@@ -97,7 +94,6 @@ export class Shell {
       this.day = info.today;
       this.exeDir = info.exe_dir;
       this.dataFolder = info.data_folder;
-      this.workspace = info.workspace;
       this.version = info.version;
       this.theme = info.theme;
       this.needsFolder = info.data_folder === null;
@@ -119,8 +115,6 @@ export class Shell {
   };
 
   private afterFolder = async () => {
-    this.needsWorkspace = this.workspace === null;
-    if (this.needsWorkspace) return;
     await this.refreshPanel();
     await this.refreshOverview();
     try {
@@ -143,7 +137,7 @@ export class Shell {
   refreshPanel = async () => {
     clearTimeout(this.panelTimer);
     try {
-      this.panel = await panelData.workspacesList();
+      this.panel = await panelData.panelDates();
     } catch (e) {
       this.error = String(e);
       return;
@@ -151,16 +145,10 @@ export class Shell {
     if (this.panel.loading) this.panelTimer = setTimeout(this.refreshPanel, 500);
   };
 
-  // The data folder's workspace, after a folder is chosen: the one the start opened, if any.
-  private workspaceOfFolder = async () => {
-    this.workspace = (await start.startInfo()).workspace ?? null;
-  };
-
   useProgramFolder = async () => {
     this.busy = true;
     try {
       this.dataFolder = await start.useProgramFolder();
-      await this.workspaceOfFolder();
       this.needsFolder = false;
       await this.afterFolder();
     } catch (e) {
@@ -175,21 +163,7 @@ export class Shell {
     this.busy = true;
     try {
       this.dataFolder = await start.chooseDataFolder(picked);
-      await this.workspaceOfFolder();
       this.needsFolder = false;
-      await this.afterFolder();
-    } catch (e) {
-      this.error = String(e);
-    }
-    this.busy = false;
-  };
-
-  // The first workspace's name: its folder is made and today's date opens.
-  nameWorkspace = async (name: string) => {
-    this.busy = true;
-    try {
-      this.workspace = await start.workspaceNew(name);
-      this.error = "";
       await this.afterFolder();
     } catch (e) {
       this.error = String(e);
@@ -203,7 +177,6 @@ export class Shell {
     if (!(await confirmBox.ask(texts.settings.askChange(picked, this.dataFolder ?? "")))) return;
     try {
       this.dataFolder = await start.chooseDataFolder(picked);
-      await this.workspaceOfFolder();
       await this.afterFolder();
     } catch (e) {
       this.error = String(e);
@@ -301,60 +274,11 @@ export class Shell {
     await this.refreshOverview();
   };
 
-  // Another workspace of the panel, opened on today's date.
-  openWorkspace = async (name: string) => {
-    if (name === this.workspace || !(await this.leaveBatch())) return;
-    try {
-      await panelData.workspaceOpen(name);
-    } catch (e) {
-      this.error = String(e);
-      return;
-    }
-    this.workspace = name;
-    await this.openToday();
-  };
-
-  // **+ New workspace**: its folder is made and it opens on today's date. A refused name returns
-  // why, for the line beside the field.
-  newWorkspace = async (name: string): Promise<string | null> => {
-    if (!(await this.leaveBatch())) return null;
-    try {
-      this.workspace = await start.workspaceNew(name);
-    } catch (e) {
-      return String(e);
-    }
-    await this.openToday();
-    return null;
-  };
-
-  private openToday = async () => {
-    this.day = this.today;
-    this.overlay = null;
-    this.screen = "day";
-    await Promise.all([this.refreshPanel(), this.refreshOverview()]);
-  };
-
-  // Settings renamed the open workspace: the open date shows again under the new name.
-  workspaceRenamed = async (name: string) => {
-    this.workspace = name;
-    this.screen = "day";
-    await Promise.all([this.refreshPanel(), this.refreshOverview()]);
-  };
-
-  // Settings deleted the open workspace and the back end opened `name`; with none left the first
-  // workspace's name is asked.
-  workspaceDeleted = async (name: string | null) => {
-    this.workspace = name;
-    this.needsWorkspace = name === null;
-    if (name !== null) await this.openToday();
-    else this.overlay = null;
-  };
-
   togglePanel = () => {
     this.panelShown = !this.panelShown;
   };
 
-  // *Search* and *Settings* open over the current screen.
+  // *Search*, *Accounts*, *Sort rules* and *Settings* open over the current screen.
   navigate = (id: OverlayId) => {
     this.overlay = id;
   };
@@ -454,10 +378,21 @@ export class Shell {
     }
   };
 
-  // *Day summary*: the open date's summary PDF, written from its journal, then opened.
-  daySummary = async () => {
+  // *Day summary*: the open date's summary PDF of every account or of one, written from its
+  // journal, then opened.
+  daySummary = async (account: string | null) => {
     await this.waitFor(texts.day.writingDaySummary, async () =>
-      start.openPath(await dayData.writeDaySummary(this.day)),
+      start.openPath(await dayData.writeDaySummary(this.day, account)),
     );
+  };
+
+  // An account's summary of a batch: written and checked, then opened; the findings of a check
+  // that kept nothing are shown.
+  accountSummary = async (batch: number, account: string) => {
+    await this.waitFor(texts.day.writingAccountSummary(account), async () => {
+      const result = await dayData.accountSummaryPdf(this.day, batch, account);
+      if (result.path !== null) await start.openPath(result.path);
+      else this.error = result.errors.join(" ");
+    });
   };
 }

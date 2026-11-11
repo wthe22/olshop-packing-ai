@@ -1,4 +1,4 @@
-// Typed wrappers around the Tauri commands for the start, the first workspace's name, the shell's file
+// Typed wrappers around the Tauri commands for the start, the shell's file
 // opens and *About*. The Rust side sends snake_case fields; the interfaces here match it.
 
 import { invoke } from "@tauri-apps/api/core";
@@ -8,8 +8,6 @@ export interface StartInfo {
   exe_dir: string;
   // The data folder `packing-settings.toml` names; null until one is chosen.
   data_folder: string | null;
-  // The workspace open; null until the first one is named.
-  workspace: string | null;
   pdfium_ready: boolean;
   today: string;
   // The program's shown version (`v` + the version); the title bar's brand text is the program's
@@ -34,10 +32,6 @@ export const useProgramFolder = (): Promise<string> =>
 
 export const chooseDataFolder = (path: string): Promise<string> =>
   invoke("choose_data_folder", { path });
-
-// The first workspace's name: its folder is made at once and opened.
-export const workspaceNew = (name: string): Promise<string> =>
-  invoke("workspace_new", { name });
 
 export const openPath = (path: string): Promise<void> =>
   invoke("open_path", { path });
