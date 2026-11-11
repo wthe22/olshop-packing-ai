@@ -5,16 +5,13 @@ app, then print.
 
 ## The window
 
-The title bar has the panel button at the left, the program and its version (**Packing v0.2**), the open
-workspace and the date everything is saved to, and at the right **Search** ([finding a saved
-order](05-search.md)), **Sort rules** and **Settings**.
-`Esc` closes Search, Sort rules and Settings.
+The title bar has the panel button at the left, the program and its version (**Packing v0.5**), and at
+the right **Search** ([finding a saved order](05-search.md)), **Accounts** ([Accounts](03-changes.md#accounts)),
+**Sort rules** and **Settings**. `Esc` closes Search, Accounts, Sort rules and Settings.
 
-The **panel** at the left lists your workspaces and the dates of the open one:
+The **panel** at the left lists the dates of the data folder, for every account together:
 
-- **Workspace** chooses another workspace; **+** beside it asks for a new name and opens it on today.
-  Settings › **Workspaces** renames or deletes one.
-- The dates, newest first, by month, each with its number of saved orders. Today is always there,
+- The dates, newest first, by month, each with its number of saved orders of every account. Today is always there,
   marked *today*. Click a date to open it — for a download just after midnight that belongs to the
   evening before. A batch being prepared asks first.
 - **⋯** on a date opens its folder in Explorer. A date marked **⚠ damaged** opens for viewing only.
@@ -29,15 +26,18 @@ The **Day** screen shows what has been saved on the open date and is the way to 
 - The title is the open date, "Wed, 7 Oct 2026" (with *today* when it is), and its counts beside it:
   "2 batches", "729 orders", "5 group PDFs".
 - **+ New batch** starts a new batch.
-- **Day summary** writes one PDF of the whole date and opens it: each batch as its card shows it, with
-  its group PDFs, their orders and contents; the orders per courier (the count to hand over at each
-  pickup); each batch's label files with their pages and the pages read, written and left out; then the
-  pick list of the whole day; last, every order content of the day with its orders, the most orders
-  first, so you see how many orders are one item, two items or a mix. It is laid out like a batch's
-  summary PDF. It is written again each time you press it, so press it after the last batch of the day.
-  A day summary still open in a PDF viewer may have to be closed first.
-- Each batch is a card: "Batch 2", "saved 09:12 · 2 files · 129 orders", one line per group PDF
-  (`2-A`, its name, "88 orders", "3 contents") with **Open**, and a line for the batch's summary PDF.
+- **Day summary** writes one PDF of the whole date and opens it: each batch as its card shows it; the
+  orders per courier (the count to hand over at each pickup); each batch's label files with their pages;
+  the pick list of the whole day; last, every order content of the day with its orders, the most orders
+  first. It is written again each time you press it, so press it after the last batch of the day. When the
+  date holds more than one account it is a menu: **All accounts**, then each account for that account's
+  orders alone. A day summary still open in a PDF viewer may have to be closed first.
+- Each batch is a card: "Batch 2", "saved 09:12 · 2 files · 129 orders · Toko Alfa 88, Toko Beta 41" (the
+  accounts of the batch, the one with most orders first), one line per group PDF (`2-A`, its name,
+  "88 orders", "3 contents") with **Print** and **Open**, and a line for the batch's summary PDF with
+  **Open** (a summary PDF is opened and printed from the PDF viewer, so it has no **Print**). A batch
+  with several accounts has one more button per account on that line: **Toko Alfa** writes the summary of
+  that account's orders in the batch and opens it.
 - **Reprints**, under the batches, lists each reprint made on the date: `R1`, when it was made, its
   orders and pages, **Open**, and **Orders ▸** for the orders in it.
 - The tick beside **Open** notes that you have printed that group PDF. It is only a note — nothing is
@@ -55,7 +55,8 @@ The **Day** screen shows what has been saved on the open date and is the way to 
    that is sorted another way ([Sort rules](03-changes.md#sort-rules)). Only the rules that are on are
    listed.
 3. Add the label files: **Add files** and choose the *Shipping label + Packing slip* PDFs of this
-   download, or drop them onto the window.
+   download, or drop them onto the window. Add the files of every shop at once: the account of each order
+   is found from the shop name printed on its label.
    - Each file shows its page count and time. A file read in an earlier batch of this date shows
      *used in batch n* in orange: its orders are found as already saved.
    - **×** takes a file off the list.
@@ -76,6 +77,24 @@ courier, **Not a courier**, **I don't know** and **Skip all**.
   Gojek, `Sameday` Grab), so its strip is never asked about.
 - **I don't know** (or **Esc**) writes nothing: the orders save without a courier and the logo is asked
   about again next batch. **Skip all** does that for the rest of the batch.
+
+### The shop prompt
+
+![The shop prompt](images/10-shop-prompt.png)
+
+An order belongs to the account that lists the shop name on its label. A shop name no account lists is
+asked about once, after the logo prompt and before the plan: **Which account?**, "These shops are not
+listed yet.", and one row per shop name read.
+
+- A row shows the **Shop** name as read, how many orders in how many files carry it, and its account:
+  choose one from the list, or press **New account** to make an account named after the shop. The new
+  name is a field, put right in place (as in the picture); **A listed account** returns to the list. The
+  shop name is a field too, so a name read with a stray space can be put right; it must stay a name found
+  on those labels.
+- Labels that show no shop name are listed by file ("2 of 85 orders") with an account for this read only.
+- **Continue** is off until every row has an account, then remembers every answered shop in
+  `packing-settings.toml`: it is never asked again. **Back** (or `Esc`) returns to the file list and
+  remembers nothing.
 
 ### Repeated orders
 
@@ -112,37 +131,4 @@ check the counts and press **Save batch**.
 - **Back** returns to the file list with the files still there; only **Cancel** there throws the batch
   away.
 
-### Saving and the check
-
-**Save batch** copies the label files into the date's `input` folder, writes the group PDFs and the
-summary PDF, and then a separate checker reads every written page back and compares it with the
-source pages and the plan: a doubled, missing, swapped or foreign page is caught before you print.
-The stage and a progress bar show while it runs (*Copying inputs*, *Writing*, *Verifying*, *Saving*).
-
-When the checker finds something, a dialog lists the errors and the warnings apart:
-
-- **Save anyway** saves the batch; its card then shows "Saved with 2 errors ▸" until it is amended or
-  reverted.
-- **Cancel — nothing is saved** keeps the batch on the Plan screen.
-
-### After saving
-
-![The Day screen after saving](images/05-day.png)
-
-The new batch is on top with a green line "Batch 3 saved: 3 group PDFs and the summary PDF." **Open**
-each group PDF and the summary PDF and print them. The summary PDF's first page lists the orders per
-courier by name, the warnings, the label files read and the sort rule; then each group's order
-contents, numbered `A-1`, `A-2`, … in the order the group PDF prints them; then what to take from
-stock.
-
-- **Left out: 3 ▸** on a card lists each copy left out and why: a repeat (and the copy that stays) or
-  an order saved earlier in another batch.
-- **Open** on a file that is gone from `output` writes it again from the stored labels, checks it like
-  the original, then opens it. To see an old batch's summary PDF in the current layout, delete it in
-  Explorer and press **Open**. **⚠ missing** before **Open** says the file was gone when the date opened;
-  **⚠ changed** with **Restore** says it is not as saved, and **Restore** writes it again.
-
-## Several batches a day
-
-Do the same for each download; the batches of a date are numbered 1, 2, 3. An order saved in a batch of
-the date is left out of every later batch of that date, so reading a file again saves nothing twice.
+Next: [Saving, printing and several batches](02b-saving.md).

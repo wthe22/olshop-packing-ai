@@ -16,7 +16,7 @@ The app is one folder, not an installed program.
 3. Make a shortcut to `Packing.exe` on the Desktop or the taskbar: right-click `Packing.exe` →
    *Show more options* → *Send to* → *Desktop (create shortcut)*. Start the program from the shortcut.
 
-Beside the program the app keeps two files of yours: `packing-settings.toml` (where the data is kept)
+Beside the program the app keeps two files of yours: `packing-settings.toml` (where the data is kept, and the accounts with their shops)
 and `packing-workflows.toml` (the couriers and the sort rules). Copying the whole folder to another PC
 moves the program and all its data along.
 
@@ -30,9 +30,10 @@ The first time, the app asks **Where should Packing keep its data?**
   Choose this for a normal setup.
 - **Choose a folder** picks another folder, e.g. when the program folder cannot be written.
 
-Then it asks to **name the first workspace**. A workspace keeps its batches and dates apart from every
-other workspace — for example one per shop owner. Type a name (e.g. *Toko Contoh*) and press
-**Create**; the Day screen of today opens. More workspaces are added in the panel.
+Nothing more is asked: the Day screen of today opens. An **account** is one shop owner's shops: a name and
+the shop names its labels are sent by. The app learns them when labels are first read
+([The shop prompt](02-a-day.md#the-shop-prompt)); they can also be made ahead on the **Accounts** screen
+([Accounts](03-changes.md#accounts)). The data folder holds one folder per date, for every account.
 
 ## Several PCs on one data folder
 
@@ -46,5 +47,6 @@ other; if the other saved some of the same orders, Packing asks to read the labe
 Close the app, then copy the new `Packing.exe` and `pdfium.dll` over the old ones. Your two files and
 the `packing-data` folder stay as they are.
 
-A data folder used by version 0.1 (with `labels\`, `state.json`, `categories.toml`) is not read by this
-version and never deleted: the Day screen says so with **Open folder**.
+A data folder used by version 0.1 (with `labels\`, `state.json`, `categories.toml`) or by version 0.4
+(one folder per shop owner) is not read by this version and never deleted: the Day screen says so with
+**Open folder**.

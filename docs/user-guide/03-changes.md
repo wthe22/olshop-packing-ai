@@ -1,4 +1,4 @@
-# Changing the last batch or the sort rules
+# Changing the last batch, the sort rules or the accounts
 
 ## Revert and amend the last batch
 
@@ -61,3 +61,23 @@ Four example filters (more in [the rules file](../software-design/rules-file/con
 | everything sent by J&T Express | `courier equals "jnt"` |
 | everything sent by any J&T courier | `courier contains "J&T"` |
 | spion or knalpot, but not sepatu | `not name contains "sepatu" and (name contains "spion" or name contains "knalpot")` |
+
+## Accounts
+
+![The Accounts screen](images/11-accounts.png)
+
+**Accounts** in the title bar opens one account at a time: its shops, its dates and its name. **×**, a
+click beside it or `Esc` closes it.
+
+- **The tabs** are the accounts, in the order they were made; **+ New account** asks for a name. A name
+  that is taken is refused under the field. With no account yet, the first read of labels asks
+  ([The shop prompt](02-a-day.md#the-shop-prompt)).
+- **Rename…** changes the name for the orders read from then on; orders saved before keep the name they
+  were saved with. **Delete account** asks first: its saved orders stay under its name and Search still
+  finds them; its shops are asked about again at the next read.
+- **Shops** are the names its labels are sent by: one field each, **×** takes one off, **+ Add shop**
+  adds one. A name another account lists, or listed twice, is told under its field and **Save** stays off.
+  **Save** (with **Cancel** and *Unsaved changes* at the foot) writes the shops to `packing-settings.toml`;
+  another tab asks first before it drops unsaved changes.
+- **Dates** lists the dates with orders of this account, newest first, by month, with its orders and
+  batches on each; a click opens that date on the Day screen.

@@ -19,11 +19,10 @@ can still be saved. The full list is in [the screens' messages](../software-desi
 | **The rules file has an error:** `<line, col: message>` | Fix `packing-workflows.toml` beside the program, or the rule in **Sort rules**. |
 | **Another copy of the app is still writing to the data folder** | Another PC is saving a big batch: try again in a moment. |
 | **Another copy of the app saved or reverted a batch of this date after these labels were read** | Someone else saved some of the same orders: read the labels again. |
-| **Workspace `<name>` was renamed or deleted in another copy of Packing** | Someone renamed or deleted it on another PC; the app opened another workspace. |
 | **This folder also holds data of Packing v0.1** | The data of the old version stays where it is and is not read. |
 
 When the checker finds something while saving, a dialog lists the errors and the warnings apart, with
-**Save anyway** and **Cancel — nothing is saved** ([Saving and the check](02-a-day.md#saving-and-the-check)).
+**Save anyway** and **Cancel — nothing is saved** ([Saving and the check](02b-saving.md#saving-and-the-check)).
 A reprint or a restore that the checker refuses keeps nothing and says why.
 
 ## Settings
@@ -33,15 +32,11 @@ A reprint or a restore that the checker refuses keeps nothing and says why.
 Open **Settings** in the title bar. Each row is a setting at the left and its control at the right.
 
 - **Theme** — **Light**, **Dark** or **System** (follows Windows).
-- **Data folder** — where the workspaces and their dates are kept (the default is `packing-data` beside
+- **Data folder** — where the dates of every account are kept (the default is `packing-data` beside
   the program). **Change** asks "Use `<folder>` for the data from now on? The data in `<old>` stays where
   it is." and opens that folder; nothing is moved. **Open** shows it in Explorer.
-- **Workspaces** — every workspace with its number of dates. **Rename** changes the name in place
-  (Enter renames, `Esc` cancels); every date and batch stays. **Delete** asks first, then moves the
-  workspace's folder with all its dates to the **Recycle Bin**, where Explorer can restore it. Renaming or
-  deleting the open workspace asks first about a batch being prepared; after a delete the app opens another
-  workspace, or asks for a new first one.
-- **About** — what the program does, its version (**v0.4.2**), the time it was built, the PDFium version
+- The accounts and their shops are on the **Accounts** screen ([Accounts](03-changes.md#accounts)), not here.
+- **About** — what the program does, its version (**v0.5.0**), the time it was built, the PDFium version
   and the journal's schema version.
 
 There are no other settings: the sort rule you used last is preselected, the summary PDF is

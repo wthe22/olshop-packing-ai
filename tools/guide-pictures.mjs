@@ -111,13 +111,6 @@ try {
   await until(shows("Where should Packing keep its data?"));
   await picture("01-start.png");
   await click("Use this folder");
-  await until(shows("Name the first workspace"));
-  await run(`(() => {
-    const input = document.querySelector("input");
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(input, "Toko Contoh");
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-  })()`);
-  await click("Create");
   await until(shows("Nothing saved on this date yet."));
 
   await click("+ New batch");
@@ -129,6 +122,14 @@ try {
   await until(shows("labels-repeat-2.pdf"));
   await picture("02-new-batch.png");
   await click("Read labels");
+  // The first read asks which account each shop belongs to: each becomes an account of its own.
+  await until(shows("Which account?"));
+  await run(`[...document.querySelectorAll("button")]
+    .filter((button) => button.textContent.trim() === "New account")
+    .forEach((button) => button.click())`);
+  await wait(400);
+  await picture("10-shop-prompt.png");
+  await click("Continue");
   await until(shows("Repeated orders in this batch"));
   await click("▸");
   await picture("03-repeats.png");
@@ -157,13 +158,19 @@ try {
   await wait(800);
   await picture("08-reprints.png");
 
+  await click("Accounts");
+  await until(shows("+ Add shop"));
+  await wait(800);
+  await picture("11-accounts.png");
+  await click("Close");
+
   await click("Sort rules");
   await until(shows("Order matters"));
   await picture("07-sort-rules.png");
   await click("Close");
 
   await click("Settings");
-  await until(shows("Open now"));
+  await until(shows("Light, dark, or the same as Windows."));
   await picture("09-settings.png");
 } finally {
   socket.close();
