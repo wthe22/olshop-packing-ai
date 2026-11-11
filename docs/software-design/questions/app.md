@@ -36,7 +36,7 @@ batch numbers) cannot be read as one journal.
 
 ## Q-APP-15 — The summary PDFs of one account
 
-**Clarified 2026-11-11 at the owner's question; still open.**
+**Answered 2026-11-11: A, made on request from the record (the owner's words: "data only, final summary generated on demand, derived from data").**
 
 Today each batch writes one summary PDF at save. It is verified and recorded in the journal, and the Day screen
 shows it with **Open** and **Print**. The day summary is a file made on request from the journal and is not
@@ -50,7 +50,8 @@ document of the same batch. The two options differ in how an account's summary i
   all-accounts summary. Each batch then has one summary per account plus the all-accounts one: the current
   behaviour, with more files and records.
 
-Until the owner answers, the work uses A.
+The all-accounts batch summary stays stored and recorded, as today. An account's summary is derived, so a
+request rewrites it from the record; the journal stays the only truth.
 
 ## Q-APP-16 — A shop name no account lists
 

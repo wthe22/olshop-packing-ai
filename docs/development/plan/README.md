@@ -11,7 +11,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   it first (V5.1), then builds it in the order that file gives. The owner's open choices are Q-APP-12 to
   Q-APP-17, Q-UI-9, Q-UI-10 and Q-RULES-3 ([software-design/questions/](../../software-design/questions/README.md)),
   each with the default the work uses until the owner answers. Answered 2026-11-11: Q-APP-12, Q-APP-14 and
-  Q-APP-16, and the owner's other answers are in the plan's *owner's answers* section. Q-APP-15 is still open. R6.4 and R9 stay open and are placed in that
+  Q-APP-16 and Q-APP-15 (A), and the owner's other answers are in the plan's *owner's answers* section. R6.4 and R9 stay open and are placed in that
   file's order. `target/portable/Packing/` is still the 0.4.2 build. Files left uncommitted by another
   session (`docs/development/README.md`, `docs/development/app.md`, `tools/dev.bat`) are not part of this.
 - **Handoff of 2026-11-09 — the panel marks a workspace with unprinted groups today; version 0.4.2.** The
