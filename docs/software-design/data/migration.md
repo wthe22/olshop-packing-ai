@@ -1,10 +1,10 @@
 # From a v0.4 data folder
 
-v0.4 kept each workspace's dates in a folder of its own, `{data_dir}/{workspace}/{date}/`, with its shops in
-`{workspace}/settings.toml`. The program does not read them ([accounts](../app/accounts.md#data-of-older-versions)).
-`tools/migrate-v0.4.py`, a script apart from the program, copies them once into the layout of
-[the data folder](README.md#the-data-folder) ([D-APP-27](../decisions/accounts.md)). It is never built
-into `Packing.exe`.
+v0.4 kept each workspace's dates in a folder of its own, `{data_dir}/{workspace}/{date}/`, with its shops
+in `{workspace}/settings.toml`. The program does not read them
+([accounts](../app/accounts.md#data-of-older-versions)). `tools/migrate-v0.4.py`, a script apart from the
+program, copies them once into the layout of [the data folder](README.md#the-data-folder)
+([D-APP-27](../decisions/accounts.md)). It is never built into `Packing.exe`.
 
 ```
 py tools\migrate-v0.4.py D:\Packing          the program folder: packing-settings.toml names the data folder
@@ -26,13 +26,15 @@ It needs Python 3.11 or later and the `xxhash` package (`py -m pip install xxhas
    `packing-settings.toml` as `[[accounts]]` tables; the rest of the file is left as it is.
 4. **Each date** found in any workspace becomes one `{data_dir}/{date}/`:
    - **Batches**: the live batches of every workspace's journal of that date, each as its newest
-     `batch_saved`, numbered 1, 2, 3, … in the order of their first save time.
+     `batch_saved`, numbered 1, 2, 3, … in the order of their first save time, each written as a new save
+     (`amends: false`).
    - **Inputs**: the files of `input/` copied (one file of the same SHA-256 once); `PdfID` numbered again in
      order of first use, and every `pdf` of a record changed to match.
    - **Orders**: each `account` is the workspace's name; `shop` is none, since v0.4 never kept the sender.
    - **Outputs**: each group PDF copied under its new batch number (`3-A Sepatu x88.pdf`), its `file` in the
      record changed to match, with the size and SHA-256 of its newest `batch_saved` or `output_restored`. The
-     summary PDFs are not copied: they print the old number, and **Open** writes each again from its record
+     summary PDFs are not copied, and their `file` takes the new number too: they print the old number, and
+     **Open** writes each again from its record
      ([reprint › Restore](../app/reprint.md#restore)).
    - **Marks**: a `print_sent` and a `printed_marked` for each group PDF whose mark is set.
    - **Reprints**: each `reprint_made`, in time order across the workspaces, numbered again per date; its file
@@ -41,7 +43,8 @@ It needs Python 3.11 or later and the `xxhash` package (`py -m pip install xxhas
    - **The journal**: `started` (schema `2.0`, the date), then the batches, the marks and the reprints, each
      with the next `seq`, its own `time` and `app`, as one compact JSON line sealed with XXH3-64
      ([journal](journal.md#a-line)). The views are written by the program when the date is first opened.
-5. **Report** each date with its batches, orders and accounts, and what was left out.
+5. **Report** each date with its batches, orders and accounts, and what was left out (an input or output file
+   the journal names but the folder lacks is reported and left out; the program reports it again on opening).
 
 ## What it keeps
 
