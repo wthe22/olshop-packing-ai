@@ -29,8 +29,6 @@ use self::content::{ContentRow, GroupSection};
 const COUNT_W: f32 = 20.0;
 
 pub struct SummaryFacts<'a> {
-    /// The workspace's name.
-    pub workspace: &'a str,
     pub date: Date,
     /// The batch's record, its group PDFs already in `outputs`.
     pub record: &'a BatchSaved,
@@ -51,8 +49,8 @@ pub fn write_summary(
     let record = facts.record;
     let counts = content::counts(record);
     let title = format!(
-        "Summary · {} · {} · batch {}",
-        facts.workspace, facts.date, record.batch
+        "Summary · All accounts · {} · batch {}",
+        facts.date, record.batch
     );
     let subtitle = format!(
         "{} orders · {} units · {} groups · printed {}",

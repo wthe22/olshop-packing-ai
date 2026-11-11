@@ -7,7 +7,6 @@ use packing_engine::record::Sha256;
 use serde::{Deserialize, Serialize};
 
 use super::repeats::RepeatsView;
-use super::shops::OtherShopView;
 
 /// One chosen file as the file list shows it.
 #[derive(Serialize)]
@@ -91,10 +90,7 @@ pub struct ReadResult {
     pub(super) couriers: Vec<String>,
     /// The header images the rules do not know and the owner has not passed over.
     pub(super) logos: Vec<LogoView>,
-    /// The workspace's shops; none when it lists none and nothing was checked.
-    pub(super) shops: Vec<String>,
-    /// The files with labels none of `shops` sent: the shop prompt, after the logo prompt.
-    pub(super) other_shops: Vec<OtherShopView>,
+
     /// The orders that appear more than once; none when every order has one copy.
     pub(super) repeats: Option<RepeatsView>,
     pub(super) plan: PlanView,

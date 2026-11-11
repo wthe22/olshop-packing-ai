@@ -1,4 +1,4 @@
-//! Search and Reprint (search.md, reprint.md): saved orders of the open workspace found by a
+//! Search and Reprint (search.md, reprint.md): saved orders of every date found by a
 //! filter on the search index, each with where it came from and the reprints that printed it again;
 //! one PDF of the chosen orders' pages written into today's date; and a reprint's orders as Search
 //! shows them.

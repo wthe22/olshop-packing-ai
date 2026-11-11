@@ -162,7 +162,6 @@ fn written(tag: &str, record: &BatchSaved, check: impl FnOnce(&Pdfium, &std::pat
         &pdfium,
         &path,
         &SummaryFacts {
-            workspace: "Toko Contoh",
             date: date(2026, 10, 7),
             record,
             printed: "09:12",

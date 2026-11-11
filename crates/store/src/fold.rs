@@ -8,8 +8,8 @@ use std::fmt;
 use jiff::civil::Date;
 use packing_engine::ids::{BatchId, PdfId};
 use packing_engine::record::{
-    BatchSaved, Datetime, OutputFile, OutputRestored, Record, RecordBody, ReprintMade, SCHEMA,
-    Sha256,
+    BatchSaved, Datetime, JOURNAL_SCHEMA, OutputFile, OutputRestored, Record, RecordBody,
+    ReprintMade, Sha256,
 };
 
 /// Where a journal is damaged: the line, counted from 1, and why.
@@ -94,7 +94,6 @@ pub enum LastWrites {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Fold {
-    pub workspace: String,
     pub date: Date,
     /// The last record's `seq`; 0 for a date with no journal.
     pub last_seq: u32,
@@ -113,9 +112,8 @@ pub struct Reprint {
 }
 
 impl Fold {
-    pub fn new(workspace: impl Into<String>, date: Date) -> Self {
+    pub fn new(date: Date) -> Self {
         Self {
-            workspace: workspace.into(),
             date,
             last_seq: 0,
             live: BTreeMap::new(),
@@ -174,10 +172,12 @@ impl Fold {
     fn apply_body(&mut self, record: &Record) -> Result<(), DamageReason> {
         match &record.body {
             RecordBody::Started(started) => {
-                if started.schema != SCHEMA {
-                    return Err(rule(format!("schema {} is not {SCHEMA}", started.schema)));
+                if started.schema != JOURNAL_SCHEMA {
+                    return Err(rule(format!(
+                        "schema {} is not {JOURNAL_SCHEMA}",
+                        started.schema
+                    )));
                 }
-                // The workspace may have been renamed since: `started` keeps the name it had.
                 if started.date != self.date {
                     return Err(DamageReason::OtherDate { date: started.date });
                 }

@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 
 use jiff::civil::Date;
 use packing_batch::Draft;
-use packing_engine::shops::OtherShopFile;
+
 use packing_engine::sorting::PlanGroup;
 use packing_pdf::worker::PdfWorker;
 use packing_store::{
@@ -30,13 +30,12 @@ pub(crate) use index::Index;
 /// The app version the journal's records carry.
 pub(crate) const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// The data folder in use; the workspace open in it and that workspace's open date.
+/// The data folder in use and its open date.
 pub(crate) struct Data {
     pub dir: PathBuf,
-    pub workspace: Option<String>,
     pub day: Option<OpenDay>,
-    /// The data folder's workspaces as the last look for other copies' changes found them.
-    pub workspaces: Vec<String>,
+    /// The data folder's dates as the last look for other copies' changes found them.
+    pub dates: Vec<Date>,
 }
 
 impl Data {
@@ -46,67 +45,44 @@ impl Data {
         DataLock::try_acquire(&dir)?;
         Ok(Self {
             dir,
-            workspace: None,
             day: None,
-            workspaces: Vec::new(),
+            dates: Vec::new(),
         })
     }
 
-    /// The workspace's `date` to read: folded and checked again unless it is the one open and no
+    /// The `date` to read: folded and checked again unless it is the one open and no
     /// other copy of the app has written to it since. While another copy writes, it opens for
     /// viewing only and the next read opens it again.
     pub(crate) fn open_day(&mut self, date: Date) -> Result<&mut OpenDay, String> {
-        let workspace = self.workspace_name()?;
-        if !self.is_open(&workspace, date) {
+        if !self.is_open(date) {
             let lock = DataLock::try_acquire(&self.dir).map_err(|error| error.to_string())?;
-            self.open(workspace, date, lock.as_ref())?;
+            self.open(date, lock.as_ref())?;
         }
         Ok(self.day.as_mut().expect("opened above"))
     }
 
-    /// The workspace's `date` for a write under `lock`: opened again when another copy wrote to it
-    /// since, so the write decides on the journal as it is on disk. A workspace another copy
-    /// renamed or deleted is not made again.
+    /// The `date` for a write under `lock`: opened again when another copy wrote to it since, so the
+    /// write decides on the journal as it is on disk.
     pub(crate) fn day_to_write(
         &mut self,
         date: Date,
         lock: &DataLock,
     ) -> Result<&mut OpenDay, String> {
-        let workspace = self.workspace_name()?;
-        if !self.dir.join(&workspace).is_dir() {
-            return Err(format!(
-                "Workspace {workspace} is no longer in the data folder: another copy of the app renamed or deleted it."
-            ));
-        }
-        if !self.is_open(&workspace, date) {
-            self.open(workspace, date, Some(lock))?;
+        if !self.is_open(date) {
+            self.open(date, Some(lock))?;
         }
         Ok(self.day.as_mut().expect("opened above"))
     }
 
-    fn workspace_name(&self) -> Result<String, String> {
-        self.workspace
-            .clone()
-            .ok_or_else(|| "No workspace is open yet.".to_string())
-    }
-
-    fn is_open(&self, workspace: &str, date: Date) -> bool {
+    fn is_open(&self, date: Date) -> bool {
         self.day.as_ref().is_some_and(|day| {
-            day.folder.workspace() == workspace
-                && day.folder.date() == date
-                && day.settled
-                && !day.journal.changed_on_disk()
+            day.folder.date() == date && day.settled && !day.journal.changed_on_disk()
         })
     }
 
     /// Fold and check `date`; holding the lock, `.partial/` is settled and the views written too.
-    fn open(
-        &mut self,
-        workspace: String,
-        date: Date,
-        lock: Option<&DataLock>,
-    ) -> Result<(), String> {
-        let folder = DateFolder::new(&self.dir, &workspace, date);
+    fn open(&mut self, date: Date, lock: Option<&DataLock>) -> Result<(), String> {
+        let folder = DateFolder::new(&self.dir, date);
         let opened = match lock {
             Some(_) => open_date(&folder),
             None => view_date(&folder),
@@ -123,7 +99,7 @@ impl Data {
     }
 }
 
-/// A date of the open workspace, folded, and what its open-time checks found.
+/// A date of the data folder, folded, and what its open-time checks found.
 pub(crate) struct OpenDay {
     pub folder: DateFolder,
     pub journal: Journal,
@@ -152,9 +128,6 @@ pub(crate) struct OpenDraft {
     pub logo_pictures: HashMap<String, Option<String>>,
     /// Unseen logos answered *I don't know*: the prompt asks no more about them.
     pub skipped_logos: Vec<String>,
-    /// The workspace's shops, and the files with labels none of them sent.
-    pub shops: Vec<String>,
-    pub other_shops: Vec<OtherShopFile>,
 }
 
 impl OpenDraft {
@@ -241,7 +214,7 @@ impl AppState {
         self.with_data(|data| write(data, &lock))
     }
 
-    /// Run `write` on the open workspace's `date` holding the data folder's lock.
+    /// Run `write` on `date` holding the data folder's lock.
     pub(crate) fn write_day<R>(
         &self,
         date: Date,
@@ -305,7 +278,7 @@ impl AppState {
         *self.cancel.lock().unwrap() = None;
     }
 
-    /// The search index of the open workspace.
+    /// The search index of the data folder.
     pub(crate) fn index(&self) -> &Index {
         &self.index
     }
@@ -371,7 +344,6 @@ pub fn run() {
             commands::start::start_info,
             commands::start::use_program_folder,
             commands::start::choose_data_folder,
-            commands::start::workspace_new,
             commands::start::about,
             commands::start::set_theme,
             commands::start::open_path,
@@ -385,13 +357,8 @@ pub fn run() {
             commands::day::print_output,
             commands::day::output_pdf,
             commands::day::day_summary,
-            commands::panel::workspaces_list,
-            commands::panel::workspace_open,
+            commands::panel::panel_dates,
             commands::changes::data_changes,
-            commands::workspaces::workspaces_overview,
-            commands::workspaces::workspace_rename,
-            commands::workspaces::workspace_set_shops,
-            commands::workspaces::workspace_delete,
             commands::search::search_orders,
             commands::search::reprint,
             commands::search::reprint_orders_of,

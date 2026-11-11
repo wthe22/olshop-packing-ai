@@ -13,7 +13,7 @@ use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::orders::{LogoAnswer, UnseenLogo};
 use packing_engine::record::{PrintSent, PrintedMarked};
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, WORKFLOWS_FILE};
-use serde_json::{Value, json};
+use serde_json::Value;
 use testkit::{PdfiumGuard, TempDir, testdata, vendor_dir};
 
 use super::logo::{answer_logo, read_pictures};
@@ -27,19 +27,18 @@ use crate::commands::day::{
     OpenView, mark_printed, mark_sent, output_bytes, overview, ready_to_open, restore_file, revert,
     write_day_summary,
 };
-use crate::commands::panel::{open_workspace, panel};
+use crate::commands::panel::panel;
 use crate::commands::rules::{
     GroupInput, check, new_rule, renamed, rule_groups, rules_view, save_groups, switched,
 };
 use crate::commands::search::{DateRange, ReprintChoice, reprint_orders, reprinted_orders, search};
-use crate::commands::start::{new_workspace, start_information, use_folder};
-use crate::commands::workspaces::set_shops;
+use crate::commands::start::{start_information, use_folder};
 
 const DAY: &str = "2026-10-08";
 const GROUP_FILE: &str = "1-Z Lainnya x4.pdf";
 
-/// A program folder whose first start chose its `data` folder and named a workspace; the guard keeps
-/// this test the only one using PDFium.
+/// A program folder whose first start chose its `data` folder; the guard keeps this test the only
+/// one using PDFium.
 fn started(tag: &str) -> Option<(TempDir, AppState, PdfiumGuard)> {
     vendor_dir()?;
     let guard = testkit::pdfium_lock();
@@ -47,7 +46,6 @@ fn started(tag: &str) -> Option<(TempDir, AppState, PdfiumGuard)> {
     let state = AppState::new(program.path().to_path_buf());
     start_information(&state).unwrap();
     use_folder(&state, &program.path().join("data")).unwrap();
-    new_workspace(&state, "Toko Contoh").unwrap();
     overview(&state, DAY).unwrap();
     Some((program, state, guard))
 }
@@ -475,11 +473,7 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     assert_eq!(listed["orders"][1]["found"]["group"], "1-Z");
     assert!(reprinted_orders(&state, &today, 2).is_err(), "no reprint 2");
 
-    let output = program
-        .path()
-        .join("data/Toko Contoh")
-        .join(DAY)
-        .join("output");
+    let output = program.path().join("data").join(DAY).join("output");
     fs::remove_file(output.join(GROUP_FILE)).unwrap();
     let missing = day(&state);
     assert_eq!(
@@ -498,11 +492,7 @@ fn open_writes_a_deleted_summary_again_from_the_journal() {
     };
     read(&state);
     save(&state);
-    let output = program
-        .path()
-        .join("data/Toko Contoh")
-        .join(DAY)
-        .join("output");
+    let output = program.path().join("data").join(DAY).join("output");
     let summary = output.join("1 summary.pdf");
     fs::remove_file(&summary).unwrap();
     let (path, view) = ready_to_open(&state, DAY, "1 summary.pdf").unwrap();
@@ -529,22 +519,18 @@ fn open_writes_a_deleted_summary_again_from_the_journal() {
 }
 
 #[test]
-fn the_panel_lists_the_workspaces_and_the_dates_with_their_orders() {
+fn the_panel_lists_the_dates_with_their_orders() {
     let Some((_program, state, _guard)) = started("app-panel") else {
         return skipped();
     };
     read(&state);
     save(&state);
-    new_workspace(&state, "Toko Lain").unwrap();
-    open_workspace(&state, "Toko Contoh").unwrap();
-    assert!(open_workspace(&state, "Toko Ketiga").is_err());
     state.index().wait();
     let shown = serde_json::to_value(panel(&state).unwrap()).unwrap();
     assert_eq!(
-        shown["workspaces"],
-        serde_json::json!(["Toko Contoh", "Toko Lain"])
+        shown["today_unprinted"], false,
+        "the batch was saved on another date"
     );
-    assert_eq!(shown["open"], "Toko Contoh");
     let dates = shown["dates"].as_array().unwrap();
     assert!(dates.iter().any(|row| row["today"] == true));
     let saved = dates.iter().find(|row| row["date"] == DAY).unwrap();
@@ -678,32 +664,4 @@ fn a_saved_sort_rule_keeps_the_files_comments_and_the_open_plan_follows_it() {
     );
     assert_eq!(plan(&state).unwrap().sort_rule, "biasa");
     assert_eq!(rule_groups(&state, "harian").unwrap().len(), 2);
-}
-
-#[test]
-fn a_read_names_the_file_with_a_label_of_another_workspaces_shop() {
-    let Some((program, state, _guard)) = started("app-shops") else {
-        return skipped();
-    };
-    let unchecked = serde_json::to_value(read(&state)).unwrap();
-    assert_eq!(
-        unchecked["other_shops"],
-        json!([]),
-        "no shops listed, nothing checked"
-    );
-
-    packing_store::create_workspace(&program.path().join("data"), "Toko Lain").unwrap();
-    set_shops(&state, "Toko Lain", &["Toko Lain".to_string()]).unwrap();
-    set_shops(&state, "Toko Contoh", &["toko contoh".to_string()]).unwrap();
-    let checked = serde_json::to_value(read(&state)).unwrap();
-    assert_eq!(checked["shops"], json!(["toko contoh"]));
-    assert_eq!(
-        checked["other_shops"],
-        json!([{
-            "file": "labels-repeat-2.pdf",
-            "orders": 1,
-            "of_orders": 2,
-            "sender": { "kind": "of_workspace", "workspace": "Toko Lain" },
-        }])
-    );
 }

@@ -1,14 +1,13 @@
-//! Start (program.md): the data folder `packing-settings.toml` names, its lock, the rules beside
-//! the program and the workspace opened; the first workspace's name; *About*, the version, and opening a
-//! file or folder in Explorer.
+//! Start (program.md): the data folder `packing-settings.toml` names, its lock and the rules beside
+//! the program; *About*, the version, and opening a file or folder in Explorer.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use packing_pdf::PDFIUM_VERSION;
-use packing_store::{create_workspace, last_written, workspaces};
+
 use serde::Serialize;
-use tauri::{AppHandle, Manager, State};
+use tauri::State;
 
 use crate::settings::{self, DEFAULT_DATA_DIR, Theme};
 use crate::{AppState, Data, today};
@@ -19,8 +18,8 @@ pub(crate) const PROGRAM_NAME: &str = "Packing";
 /// When the program was compiled, `2026-10-30 09:15` in the PC's time zone (set by `build.rs`).
 pub(crate) const BUILT: &str = env!("PACKING_BUILT");
 
-/// The shown form of the program's version: `v` + the workspace `version` (`0.3.3` → `v0.3.3`). The
-/// app inherits the workspace version, so the root `Cargo.toml` is the one place; the window title,
+/// The shown form of the program's version: `v` + the Cargo workspace's `version` (`0.3.3` → `v0.3.3`). The
+/// app inherits that version, so the root `Cargo.toml` is the one place; the window title,
 /// the title bar and *About* all take this text.
 pub(crate) fn version_text() -> String {
     format!("v{}", crate::APP_VERSION)
@@ -31,15 +30,14 @@ pub(crate) fn window_title() -> String {
     format!("{PROGRAM_NAME} {}", version_text())
 }
 
-/// What the window needs to open the Start prompt, the first workspace's name or the Day screen.
+/// What the window needs to open the Start prompt or the Day screen.
 #[derive(Serialize)]
 pub struct StartInfo {
     /// Where the program is: a first start offers its `data` folder.
     exe_dir: String,
     /// The data folder in use; none until `packing-settings.toml` names one.
     data_folder: Option<String>,
-    /// The workspace open; none until the first one is named.
-    workspace: Option<String>,
+
     /// Whether the PDFium worker started (its dll was found).
     pdfium_ready: bool,
     /// Today's date on the PC (`YYYY-MM-DD`); the Day screen opens there.
@@ -49,7 +47,7 @@ pub struct StartInfo {
 }
 
 /// Open the data folder `packing-settings.toml` names, as at start: the rules checked, the lock
-/// taken, the workspace whose journal was written last (else the first one) opened.
+/// taken, the search index built.
 pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     let program = state.program();
     settings::workflows(program)?;
@@ -58,13 +56,12 @@ pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     {
         open_data(state, dir)?;
     }
-    let (data_folder, workspace) = state
-        .with_data(|data| Ok((Some(data.dir.display().to_string()), data.workspace.clone())))
-        .unwrap_or((None, None));
+    let data_folder = state
+        .with_data(|data| Ok(data.dir.display().to_string()))
+        .ok();
     Ok(StartInfo {
         exe_dir: program.display().to_string(),
         data_folder,
-        workspace,
         pdfium_ready: state.ensure_worker(),
         today: today().to_string(),
         version: version_text(),
@@ -72,26 +69,10 @@ pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     })
 }
 
-/// The workspace the start opens: the one whose journal was written last, else the first one.
-pub(crate) fn workspace_to_open(data_dir: &Path) -> Result<Option<String>, String> {
-    Ok(
-        match last_written(data_dir).map_err(|error| error.to_string())? {
-            Some(workspace) => Some(workspace),
-            None => workspaces(data_dir)
-                .map_err(|error| error.to_string())?
-                .into_iter()
-                .next(),
-        },
-    )
-}
-
-/// Open `dir` and its workspace; a folder that cannot be written stops here.
+/// Open `dir`; a folder that cannot be written stops here.
 fn open_data(state: &AppState, dir: PathBuf) -> Result<(), String> {
-    let mut data = Data::new(dir).map_err(|error| error.to_string())?;
-    data.workspace = workspace_to_open(&data.dir)?;
-    if let Some(workspace) = &data.workspace {
-        state.index().rebuild(data.dir.clone(), workspace.clone());
-    }
+    let data = Data::new(dir).map_err(|error| error.to_string())?;
+    state.index().rebuild(data.dir.clone());
     state.set_data(data);
     Ok(())
 }
@@ -104,17 +85,6 @@ pub(crate) fn use_folder(state: &AppState, dir: &Path) -> Result<String, String>
         open_data(state, dir.clone())?;
     }
     Ok(dir.display().to_string())
-}
-
-/// Name a workspace: the folder is made at once and opened.
-pub(crate) fn new_workspace(state: &AppState, name: &str) -> Result<String, String> {
-    state.write_data(|data, _| {
-        create_workspace(&data.dir, name).map_err(|error| error.to_string())?;
-        data.workspace = Some(name.to_string());
-        data.day = None;
-        state.index().rebuild(data.dir.clone(), name.to_string());
-        Ok(name.to_string())
-    })
 }
 
 #[tauri::command]
@@ -133,15 +103,6 @@ pub fn use_program_folder(state: State<'_, AppState>) -> Result<String, String> 
 #[tauri::command]
 pub fn choose_data_folder(state: State<'_, AppState>, path: String) -> Result<String, String> {
     use_folder(&state, Path::new(&path))
-}
-
-/// The first workspace's name, or **+ New workspace**; on its own thread, as it may wait for
-/// another copy of the app to finish writing.
-#[tauri::command]
-pub async fn workspace_new(app: AppHandle, name: String) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(move || new_workspace(&app.state::<AppState>(), &name))
-        .await
-        .map_err(|error| format!("the new workspace task stopped: {error}"))?
 }
 
 /// The OS title bar's theme; `None` follows Windows.
@@ -182,7 +143,7 @@ pub fn about() -> About {
         version: version_text(),
         built: BUILT.to_string(),
         pdfium: PDFIUM_VERSION.to_string(),
-        schema: packing_engine::record::SCHEMA.to_string(),
+        schema: packing_engine::record::JOURNAL_SCHEMA.to_string(),
     }
 }
 

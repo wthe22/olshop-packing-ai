@@ -229,9 +229,12 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
     let (_data, folder) = date_folder("damage");
     let saved = |n| RecordBody::BatchSaved(batch(n, false, Vec::new()));
     let other = RecordBody::Started(packing_engine::record::Started {
-        schema: "1.0".into(),
-        workspace: WORKSPACE.into(),
+        schema: packing_engine::record::JOURNAL_SCHEMA.into(),
         date: folder.date().tomorrow().unwrap(),
+    });
+    let v0_4 = RecordBody::Started(packing_engine::record::Started {
+        schema: "1.0".into(),
+        date: folder.date(),
     });
     let mut changed_line = String::from_utf8(packing_store::encode_line(&record(2, saved(1))))
         .unwrap()
@@ -271,6 +274,7 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
         ),
         ("no started first", vec![record(1, saved(1))], Vec::new(), 1),
         ("another date", vec![record(1, other)], Vec::new(), 1),
+        ("a v0.4 journal", vec![record(1, v0_4)], Vec::new(), 1),
     ];
     for (what, records, tail, line) in cases {
         write_journal(&folder, &records, &tail);

@@ -37,7 +37,7 @@ struct Draft {
 }
 
 fn draft(pdfium: &Pdfium, data: &Path) -> Draft {
-    let folder = DateFolder::new(data, "Toko Contoh", date(2026, 10, 8));
+    let folder = DateFolder::new(data, date(2026, 10, 8));
     let paths: Vec<PathBuf> = INPUTS.iter().map(|name| testdata(name)).collect();
     let pages = read::read_all(
         pdfium,
@@ -155,7 +155,6 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
         pdfium,
         &summary_path,
         &SummaryFacts {
-            workspace: folder.workspace(),
             date: folder.date(),
             record: &record,
             printed: "07:00",
@@ -175,8 +174,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
         time: Datetime::now(),
         app: "0.3.3".into(),
         body: RecordBody::Started(packing_engine::record::Started {
-            schema: "1.0".into(),
-            workspace: "Toko Contoh".into(),
+            schema: packing_engine::record::JOURNAL_SCHEMA.into(),
             date: folder.date(),
         }),
     };

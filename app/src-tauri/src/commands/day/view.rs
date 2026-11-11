@@ -9,7 +9,7 @@ use std::path::Path;
 use packing_engine::ids::{BatchId, PdfId};
 use packing_engine::record::{BatchSaved, LeftOutReason};
 use packing_engine::sorting::{REST_CODE, REST_NAME};
-use packing_store::{InputState, LiveBatch, OutputState};
+use packing_store::{InputState, LiveBatch, OlderData, OlderVersion, OutputState};
 use serde::Serialize;
 
 use crate::OpenDay;
@@ -93,14 +93,13 @@ pub struct Totals {
 #[derive(Serialize)]
 pub struct DayOverview {
     day: String,
-    workspace: String,
     batches: Vec<BatchView>,
     totals: Totals,
     /// What keeps a part of the date from being used: a damaged journal, an input missing or
     /// changed.
     problems: Vec<String>,
-    /// The data folder also holds a v0.1 data folder's files, which are not read.
-    old_data: bool,
+    /// Data of older versions in the data folder, which is not read.
+    older: Vec<OlderView>,
     /// The reprints made on this date.
     reprints: Vec<ReprintRow>,
 }
@@ -116,7 +115,7 @@ pub struct ReprintRow {
     path: String,
 }
 
-pub(super) fn overview(day: &OpenDay, old_data: bool) -> DayOverview {
+pub(super) fn overview(day: &OpenDay, older: Vec<OlderView>) -> DayOverview {
     let fold = day.journal.fold();
     let output = day.folder.dir().join("output");
     let batches: Vec<BatchView> = fold
@@ -144,7 +143,6 @@ pub(super) fn overview(day: &OpenDay, old_data: bool) -> DayOverview {
     }
     DayOverview {
         day: fold.date.to_string(),
-        workspace: fold.workspace.clone(),
         totals: Totals {
             batches: batches.len(),
             orders: batches.iter().map(|b| b.orders).sum(),
@@ -152,7 +150,7 @@ pub(super) fn overview(day: &OpenDay, old_data: bool) -> DayOverview {
         },
         batches,
         problems,
-        old_data,
+        older,
         reprints: fold
             .reprints
             .iter()
@@ -267,15 +265,34 @@ fn left_out(saved: &BatchSaved) -> Vec<LeftOutView> {
         .collect()
 }
 
-/// Whether the data folder holds what a v0.1 data folder holds (workspaces.md).
-pub(super) fn holds_v01_data(data_dir: &Path) -> bool {
-    [
-        "labels",
-        "state.json",
-        "couriers.toml",
-        "categories.toml",
-        "categories",
-    ]
-    .iter()
-    .any(|name| data_dir.join(name).exists())
+/// One older version's data as the Day screen's note names it.
+#[derive(Serialize)]
+pub struct OlderView {
+    /// `v0.1` or `v0.4`.
+    version: &'static str,
+    /// The files and folders that show it; a folder's name ends in `\`.
+    names: Vec<String>,
+}
+
+pub(super) fn older_views(data_dir: &Path, older: &[OlderData]) -> Vec<OlderView> {
+    older
+        .iter()
+        .map(|found| OlderView {
+            version: match found.version {
+                OlderVersion::V0_1 => "v0.1",
+                OlderVersion::V0_4 => "v0.4",
+            },
+            names: found
+                .names
+                .iter()
+                .map(|name| {
+                    if data_dir.join(name).is_dir() {
+                        format!("{name}\\")
+                    } else {
+                        name.clone()
+                    }
+                })
+                .collect(),
+        })
+        .collect()
 }

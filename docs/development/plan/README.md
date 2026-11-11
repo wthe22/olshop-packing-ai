@@ -8,7 +8,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 - **Work under way: v0.5, accounts replace workspaces — designed, being built.** The design is in
   [software-design/](../../software-design/README.md) (start with [accounts](../../software-design/app/accounts.md));
-  the order of work is in [v0.5-accounts.md](v0.5-accounts.md): V5.2 to V5.5, R6.4, V5.6, V5.7, then R9. Every
+  the order of work is in [v0.5-accounts.md](v0.5-accounts.md): V5.3 to V5.5, R6.4, V5.6, V5.7, then R9. Every
   question of 2026-11-11 is answered; **Q-APP-18** (the saved orders of a renamed account,
   [questions/app.md](../../software-design/questions/app.md)) is open with its default A, which the work
   uses. v0.4 data is copied by a separate Python script (V5.7), never by the program.

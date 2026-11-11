@@ -1,4 +1,4 @@
-//! The search index of the open workspace (reprint.md): built on its own thread when the workspace
+//! The search index of the data folder (reprint.md): built on its own thread when the data folder
 //! opens, so the window never waits for it; each commit's date is taken in again from its fold. A
 //! fold that arrives while the build runs is applied when the build ends, so no commit is lost.
 //! A date another copy of the app committed to is found by its journal's length and taken in again.
@@ -20,7 +20,8 @@ enum Built {
 
 #[derive(Default)]
 struct Holder {
-    workspace: String,
+    /// The data folder it is built from.
+    data_dir: Option<PathBuf>,
     built: Built,
     /// The folds committed while the build ran.
     pending: Vec<Fold>,
@@ -32,20 +33,19 @@ struct Holder {
 pub(crate) struct Index(Arc<Mutex<Holder>>);
 
 impl Index {
-    /// Fold every journal of `workspace` on a thread of its own; the index of another workspace
+    /// Fold every journal of `data_dir` on a thread of its own; the index of the folder used before
     /// is dropped at once.
-    pub(crate) fn rebuild(&self, data_dir: PathBuf, workspace: String) {
+    pub(crate) fn rebuild(&self, data_dir: PathBuf) {
         *self.0.lock().unwrap() = Holder {
-            workspace: workspace.clone(),
+            data_dir: Some(data_dir.clone()),
             ..Holder::default()
         };
         let holder = self.0.clone();
         std::thread::spawn(move || {
-            let built = journal_lengths(&data_dir, &workspace).and_then(|lengths| {
-                SearchIndex::build(&data_dir, &workspace).map(|index| (index, lengths))
-            });
+            let built = journal_lengths(&data_dir)
+                .and_then(|lengths| SearchIndex::build(&data_dir).map(|index| (index, lengths)));
             let mut holder = holder.lock().unwrap();
-            if holder.workspace != workspace {
+            if holder.data_dir.as_ref() != Some(&data_dir) {
                 return;
             }
             holder.built = match built {
@@ -64,9 +64,6 @@ impl Index {
     /// Take a committed date in again.
     pub(crate) fn refresh(&self, fold: &Fold) {
         let mut holder = self.0.lock().unwrap();
-        if holder.workspace != fold.workspace {
-            return;
-        }
         match &mut holder.built {
             Built::Ready(index) => index.refresh(fold),
             Built::Loading => holder.pending.push(fold.clone()),
@@ -79,7 +76,6 @@ impl Index {
     pub(crate) fn take_in_changes(&self, data_dir: &Path) -> Result<bool, StoreError> {
         let mut holder = self.0.lock().unwrap();
         let Holder {
-            workspace,
             built: Built::Ready(index),
             lengths,
             ..
@@ -87,15 +83,13 @@ impl Index {
         else {
             return Ok(false);
         };
-        let now = journal_lengths(data_dir, workspace)?;
+        let now = journal_lengths(data_dir)?;
         if now == *lengths {
             return Ok(false);
         }
         for (date, length) in &now {
             if lengths.get(date) != Some(length) {
-                index.take_in(&Journal::open(&DateFolder::new(
-                    data_dir, workspace, *date,
-                ))?);
+                index.take_in(&Journal::open(&DateFolder::new(data_dir, *date))?);
             }
         }
         *lengths = now;

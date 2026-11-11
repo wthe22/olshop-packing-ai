@@ -1,5 +1,4 @@
-schema = "1.0"
-workspace = "Toko Contoh"
+schema = "2.0"
 date = "2026-10-07"
 journal_seq = 4
 reprints = []

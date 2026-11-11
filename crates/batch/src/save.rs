@@ -210,7 +210,7 @@ fn write_outputs(
     progress(SaveStage::Writing, total - 1, total);
     let out = partial.join(sorted.summary_file());
     let target = out.clone();
-    let (workspace, date, app) = (fold.workspace.clone(), fold.date, request.app.to_string());
+    let (date, app) = (fold.date, request.app.to_string());
     let printed = jiff::Zoned::now().strftime("%H:%M").to_string();
     let snapshot = record.clone();
     let couriers = draft.couriers.clone();
@@ -219,7 +219,6 @@ fn write_outputs(
             pdfium,
             &target,
             &SummaryFacts {
-                workspace: &workspace,
                 date,
                 record: &snapshot,
                 printed: &printed,

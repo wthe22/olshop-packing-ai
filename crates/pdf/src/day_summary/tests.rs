@@ -47,7 +47,6 @@ fn facts<'a>(
     couriers: &'a [Courier],
 ) -> DayFacts<'a> {
     DayFacts {
-        workspace: "Toko Contoh",
         date: date(2026, 10, 7),
         batches: vec![
             DayBatch {

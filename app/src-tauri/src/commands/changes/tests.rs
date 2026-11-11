@@ -1,7 +1,6 @@
 //! Two copies of the app on one data folder: what one writes, the other's look finds and reads
 //! again; a write waits for the other copy's and decides on the journal as it is on disk; a date
-//! viewed while the other copy writes is opened again after; a workspace the other copy renamed is
-//! followed and never made again.
+//! viewed while the other copy writes is opened again after; a date the other copy made is listed.
 
 use std::thread;
 use std::time::Duration;
@@ -14,8 +13,7 @@ use testkit::{TempDir, batch, sha};
 
 use super::*;
 use crate::commands::day::{mark_printed, overview};
-use crate::commands::start::{new_workspace, start_information, use_folder};
-use crate::commands::workspaces::rename;
+use crate::commands::start::{start_information, use_folder};
 
 const DAY: &str = "2026-10-07";
 
@@ -26,7 +24,6 @@ fn two_copies(tag: &str) -> (TempDir, AppState, AppState) {
     let first = AppState::new(program.path().to_path_buf());
     start_information(&first).unwrap();
     use_folder(&first, &program.path().join("data")).unwrap();
-    new_workspace(&first, "Toko Contoh").unwrap();
     let second = AppState::new(program.path().to_path_buf());
     start_information(&second).expect("the second copy opens the folder the first uses");
     for state in [&first, &second] {
@@ -80,7 +77,6 @@ fn what_one_copy_writes_the_other_finds_and_writes_after() {
     let found = DataChanges {
         day: true,
         panel: true,
-        gone: None,
     };
     assert_eq!(changes(&second).unwrap(), found);
     assert_eq!(batches(&second), 1);
@@ -116,31 +112,15 @@ fn a_write_waits_for_the_other_copy_and_a_date_viewed_meanwhile_opens_again() {
 }
 
 #[test]
-fn a_workspace_another_copy_renamed_is_followed_and_never_made_again() {
-    let (program, first, second) = two_copies("app-changes-renamed");
-    rename(&first, "Toko Contoh", "Toko Baru").unwrap();
-
-    let refused = printed(&second).unwrap_err();
-    assert!(
-        refused.contains("no longer in the data folder"),
-        "{refused}"
-    );
-    assert!(!program.path().join("data").join("Toko Contoh").exists());
-
-    let gone = WorkspaceGone {
-        workspace: "Toko Contoh".into(),
-        now_open: Some("Toko Baru".into()),
-    };
+fn a_date_another_copy_made_is_listed() {
+    let (program, _first, second) = two_copies("app-changes-dates");
+    std::fs::create_dir_all(program.path().join("data").join("2026-10-06")).unwrap();
     assert_eq!(
         changes(&second).unwrap(),
         DataChanges {
-            day: true,
+            day: false,
             panel: true,
-            gone: Some(gone),
         }
     );
-    assert_eq!(
-        second.with_data(|data| Ok(data.workspace.clone())).unwrap(),
-        Some("Toko Baru".to_string())
-    );
+    assert_eq!(changes(&second).unwrap(), DataChanges::default());
 }

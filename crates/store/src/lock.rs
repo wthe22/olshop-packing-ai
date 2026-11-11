@@ -1,6 +1,6 @@
 //! The data folder's write lock. Copies of the app, on this PC or another, share one data folder;
 //! `.lock` is held with `File::try_lock` only while one of them writes (a commit and the file moves
-//! around it, a workspace made, renamed or deleted), and `.lock-holder` beside it says which copy
+//! around it, a summary made on request, a write of the accounts), and `.lock-holder` beside it says which copy
 //! holds it (Windows refuses to read a locked file).
 
 use std::fs::{self, File, OpenOptions, TryLockError};

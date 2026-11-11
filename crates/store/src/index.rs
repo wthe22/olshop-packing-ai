@@ -1,5 +1,5 @@
-//! The search index (reprint.md): every order of a workspace's live batches, folded from every
-//! journal of the workspace, with the fields a filter reads and its trace back to the input page,
+//! The search index (reprint.md): every order of the live batches of every date, folded from every
+//! journal of the data folder, with the fields a filter reads and its trace back to the input page,
 //! and every date's reprints. It is only read: every decision is still taken from a date's own fold.
 
 use std::collections::BTreeMap;
@@ -14,9 +14,9 @@ use packing_engine::workflows::Courier;
 
 use crate::StoreError;
 use crate::date::DateFolder;
+use crate::dates::dates;
 use crate::fold::{Damage, Fold, LiveBatch};
 use crate::journal::Journal;
-use crate::workspaces::dates;
 
 /// One saved order as Search finds it.
 #[derive(Clone, Debug, PartialEq)]
@@ -80,7 +80,7 @@ pub struct ReprintMark {
     pub number: u8,
 }
 
-/// The orders of every date of one workspace, by date, each date in printing order.
+/// The orders of every date, by date, each date in printing order.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SearchIndex {
     dates: BTreeMap<Date, Vec<IndexedOrder>>,
@@ -91,12 +91,12 @@ pub struct SearchIndex {
 }
 
 impl SearchIndex {
-    /// Fold every journal of `workspace`. Nothing is written: a torn tail or `.partial/` waits for
-    /// the date's own open.
-    pub fn build(data_dir: &Path, workspace: &str) -> Result<Self, StoreError> {
+    /// Fold every journal of the data folder. Nothing is written: a torn tail or `.partial/` waits
+    /// for the date's own open.
+    pub fn build(data_dir: &Path) -> Result<Self, StoreError> {
         let mut index = SearchIndex::default();
-        for date in dates(data_dir, workspace)? {
-            index.take_in(&Journal::open(&DateFolder::new(data_dir, workspace, date))?);
+        for date in dates(data_dir)? {
+            index.take_in(&Journal::open(&DateFolder::new(data_dir, date))?);
         }
         Ok(index)
     }

@@ -22,7 +22,7 @@ mod plan_view;
 mod read;
 mod repeats;
 mod save;
-mod shops;
+
 mod views;
 
 use self::read::{Reading, read_into_draft, read_result};
@@ -70,13 +70,13 @@ pub(crate) fn checked(
 }
 
 /// The sort rules New batch offers — those that are on, in file order — and the one to preselect:
-/// the open draft's rule (the Plan screen's *Back*), else the rule of the workspace's newest batch
-/// on whichever date, else the first. A rule that is off is never preselected.
+/// the open draft's rule (the Plan screen's *Back*), else the rule of the newest batch on
+/// whichever date, else the first. A rule that is off is never preselected.
 #[derive(Serialize)]
 pub struct SortRulesView {
     rules: Vec<String>,
     preselected: String,
-    /// The rule of the workspace's newest batch, on or off; none before its first batch.
+    /// The rule of the newest batch, on or off; none before the first batch.
     last_used: Option<String>,
 }
 
@@ -97,12 +97,7 @@ pub(crate) fn sort_rules_of(state: &AppState) -> Result<SortRulesView, String> {
         .with_draft(|open| Ok(open.draft.rule_name.clone()))
         .ok();
     let last_used = state
-        .with_data(|data| {
-            let Some(workspace) = &data.workspace else {
-                return Ok(None);
-            };
-            newest_batch_rule(&data.dir, workspace).map_err(|error| error.to_string())
-        })
+        .with_data(|data| newest_batch_rule(&data.dir).map_err(|error| error.to_string()))
         .ok()
         .flatten();
     let preselected = draft

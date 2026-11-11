@@ -1,4 +1,4 @@
-//! The Day screen (05-after-save.md): the open workspace's date from its fold, and what changes it —
+//! The Day screen (05-after-save.md): the open date from its fold, and what changes it —
 //! the Sent mark, the Printed tick, revert and restore — each one append through `packing-batch`; the day
 //! summary, a view written from the fold; and *Open* on an output, which writes a missing one again.
 
@@ -10,7 +10,7 @@ use jiff::civil::Date;
 use packing_batch::{RestoreOutcome, RestoreRequest, restore};
 use packing_engine::ids::BatchId;
 use packing_engine::record::{PrintSent, PrintedMarked};
-use packing_store::Fold;
+use packing_store::{Fold, older_data};
 use serde::Serialize;
 use tauri::ipc::Response;
 use tauri::{AppHandle, Manager, State};
@@ -25,13 +25,14 @@ pub(crate) fn date_of(day: &str) -> Result<Date, String> {
         .map_err(|_| format!("{day} is not a date (YYYY-MM-DD)."))
 }
 
-/// Open `day` of the workspace (folded and checked unless it is open) and describe it.
+/// Open `day` (folded and checked unless it is open) and describe it.
 pub(crate) fn overview(state: &AppState, day: &str) -> Result<DayOverview, String> {
     let date = date_of(day)?;
     state.with_data(|data| {
-        let old_data = view::holds_v01_data(&data.dir);
+        let older = older_data(&data.dir).map_err(|error| error.to_string())?;
+        let older = view::older_views(&data.dir, &older);
         let open = data.open_day(date)?;
-        Ok(view::overview(open, old_data))
+        Ok(view::overview(open, older))
     })
 }
 

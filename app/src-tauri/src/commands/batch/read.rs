@@ -13,7 +13,7 @@ use jiff::civil::Date;
 use packing_batch::{Draft, ReadRequest, amend, check_files, read_draft};
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::repeats::LeftOutBecause;
-use packing_engine::shops::other_shop_files;
+
 use packing_engine::workflows::Workflows;
 use packing_pdf::worker::Progress;
 use packing_store::Fold;
@@ -24,7 +24,7 @@ use crate::{AppState, OpenDraft};
 use super::logo::{logo_views, read_pictures};
 use super::plan_view::{entries_of, plan_view};
 use super::repeats::repeats_view;
-use super::shops::{other_shops_view, shop_lists};
+
 use super::views::ReadResult;
 
 /// What to read: the files in reading order, the sort rule's name, the batch an amend redoes,
@@ -47,7 +47,7 @@ pub(super) fn read_into_draft(
         return Err("Choose at least one label file first.".to_string());
     }
     let (_, workflows) = settings::workflows(state.program())?;
-    let (shops, other_lists) = shop_lists(state)?;
+
     let cancel = Arc::new(AtomicBool::new(false));
     state.set_cancel(cancel.clone());
     let (progress, received) = mpsc::channel::<Progress>();
@@ -99,15 +99,13 @@ pub(super) fn read_into_draft(
     state.clear_cancel();
     let _ = forwarder.join();
     let (draft, logo_pictures) = read?;
-    let other_shops = other_shop_files(&draft.copies, &shops, &other_lists);
+
     let mut open = OpenDraft {
         date: reading.date,
         entries: entries_of(&draft.plan),
         draft,
         logo_pictures,
         skipped_logos: Vec::new(),
-        shops,
-        other_shops,
     };
     open.apply_plan();
     let result = state.with_data(|data| {
@@ -140,8 +138,6 @@ pub(super) fn read_result(open: &OpenDraft, fold: &Fold, workflows: &Workflows) 
         amend: draft.redo,
         couriers: workflows.couriers.iter().map(|c| c.name.clone()).collect(),
         logos: logo_views(open),
-        shops: open.shops.clone(),
-        other_shops: other_shops_view(open),
         repeats: repeats_view(draft),
         plan: plan_view(open, fold),
     }

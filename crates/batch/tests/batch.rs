@@ -41,7 +41,7 @@ fn day(tag: &str) -> Option<Day> {
     let vendor = vendor_dir()?;
     let guard = testkit::pdfium_lock();
     let data = TempDir::new(tag);
-    let folder = DateFolder::new(data.path(), "Toko Contoh", date(2026, 10, 8));
+    let folder = DateFolder::new(data.path(), date(2026, 10, 8));
     let journal = open_date(&folder).unwrap().journal;
     Some(Day {
         journal,
@@ -365,7 +365,7 @@ fn a_reprint_writes_the_chosen_orders_pages_into_today_in_printing_order() {
         .map(|order| (saved_on, order.order_id.clone()))
         .collect();
 
-    let today = DateFolder::new(day._data.path(), "Toko Contoh", date(2026, 10, 9));
+    let today = DateFolder::new(day._data.path(), date(2026, 10, 9));
     let mut journal = open_date(&today).unwrap().journal;
     let request = ReprintRequest {
         worker: &day.worker,

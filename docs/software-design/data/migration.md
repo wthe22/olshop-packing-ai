@@ -20,7 +20,8 @@ It needs Python 3.11 or later and the `xxhash` package (`py -m pip install xxhas
    `output/.partial/` (open that date in v0.4 once), a journal that is damaged (as the
    [fold](journal.md#a-torn-write-and-damage) finds it; a torn last line is left out, as the fold does), a
    date that already has a folder at the top of the data folder, an account name that `packing-settings.toml`
-   already has, or a shop listed by two workspaces.
+   already has, a shop listed by two workspaces, or an order in live batches of two workspaces on one date
+   (the [already-saved guard](../workflow/03-plan.md#7-orders-already-saved) lets a date hold it once).
 3. **Accounts**: one per workspace, named as its folder, with the shops of its `settings.toml`, appended to
    `packing-settings.toml` as `[[accounts]]` tables; the rest of the file is left as it is.
 4. **Each date** found in any workspace becomes one `{data_dir}/{date}/`:

@@ -2,9 +2,9 @@
 //! the journal, the views, the lock and the inputs.
 
 mod common;
+mod dates;
 mod index;
 mod journal;
 mod lock_and_files;
 mod partial;
 mod views;
-mod workspaces;

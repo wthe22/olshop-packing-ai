@@ -1,10 +1,8 @@
-//! The side panel (panel.md): the workspaces of the data folder, the open one's dates with their
-//! orders from the search index, and opening another workspace.
-
-use std::path::Path;
+//! The side panel (panel.md): the dates of the data folder with their orders of every account, from
+//! the search index, and whether today has a group PDF not marked Printed yet.
 
 use jiff::civil::Date;
-use packing_store::{dates, has_unprinted_groups, workspaces};
+use packing_store::{dates, has_unprinted_groups};
 use serde::Serialize;
 use tauri::State;
 
@@ -12,12 +10,10 @@ use crate::{AppState, today};
 
 #[derive(Serialize)]
 pub struct PanelView {
-    workspaces: Vec<String>,
-    /// The workspaces with a group PDF of today not marked Printed yet.
-    unprinted: Vec<String>,
-    open: Option<String>,
     /// Newest first; today is always listed.
     dates: Vec<DateRow>,
+    /// Today has a group PDF of a live batch not marked Printed yet.
+    today_unprinted: bool,
     /// The search index is still being built: no counts yet.
     loading: bool,
 }
@@ -35,23 +31,13 @@ pub struct DateRow {
 }
 
 pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
-    let (list, open, mut folders, workspace_dir, data_dir) = state.with_data(|data| {
-        let list = workspaces(&data.dir).map_err(|error| error.to_string())?;
-        let folders = match &data.workspace {
-            Some(workspace) => dates(&data.dir, workspace).map_err(|error| error.to_string())?,
-            None => Vec::new(),
-        };
-        let workspace_dir = data.workspace.as_ref().map(|name| data.dir.join(name));
-        Ok((
-            list,
-            data.workspace.clone(),
-            folders,
-            workspace_dir,
-            data.dir.clone(),
-        ))
-    })?;
     let today = today();
-    let unprinted = unprinted_workspaces(&data_dir, &list, today)?;
+    let (mut folders, data_dir, today_unprinted) = state.with_data(|data| {
+        let folders = dates(&data.dir).map_err(|error| error.to_string())?;
+        let unprinted =
+            has_unprinted_groups(&data.dir, today).map_err(|error| error.to_string())?;
+        Ok((folders, data.dir.clone(), unprinted))
+    })?;
     let today_has_folder = folders.contains(&today);
     if !today_has_folder {
         folders.push(today);
@@ -75,58 +61,18 @@ pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
             damaged: counts
                 .as_ref()
                 .is_some_and(|(_, damaged)| damaged.contains(&date)),
-            folder: workspace_dir
-                .as_ref()
-                .filter(|_| date != today || today_has_folder)
-                .map(|dir| dir.join(date.to_string()).display().to_string()),
+            folder: (date != today || today_has_folder)
+                .then(|| data_dir.join(date.to_string()).display().to_string()),
         })
         .collect();
     Ok(PanelView {
-        workspaces: list,
-        unprinted,
-        open,
         dates,
+        today_unprinted,
         loading,
     })
 }
 
-/// The workspaces whose today has a group PDF not marked Printed, read from each journal as it is.
-fn unprinted_workspaces(
-    data_dir: &Path,
-    list: &[String],
-    today: Date,
-) -> Result<Vec<String>, String> {
-    let mut names = Vec::new();
-    for name in list {
-        if has_unprinted_groups(data_dir, name, today).map_err(|error| error.to_string())? {
-            names.push(name.clone());
-        }
-    }
-    Ok(names)
-}
-
-/// Open another workspace of the data folder on today's date; an open draft is dropped.
-pub(crate) fn open_workspace(state: &AppState, name: &str) -> Result<(), String> {
-    state.with_data(|data| {
-        let list = workspaces(&data.dir).map_err(|error| error.to_string())?;
-        if !list.iter().any(|known| known == name) {
-            return Err(format!("{name} is not a workspace of this data folder."));
-        }
-        data.workspace = Some(name.to_string());
-        data.day = None;
-        state.index().rebuild(data.dir.clone(), name.to_string());
-        Ok(())
-    })?;
-    state.clear_draft();
-    Ok(())
-}
-
 #[tauri::command]
-pub fn workspaces_list(state: State<'_, AppState>) -> Result<PanelView, String> {
+pub fn panel_dates(state: State<'_, AppState>) -> Result<PanelView, String> {
     panel(&state)
-}
-
-#[tauri::command]
-pub fn workspace_open(state: State<'_, AppState>, name: String) -> Result<(), String> {
-    open_workspace(&state, &name)
 }

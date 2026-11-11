@@ -84,7 +84,7 @@ fn record(input_sha: &str, group: (String, u64), summary: (String, u64)) -> Valu
 
 fn started() -> Value {
     json!({"seq": 1, "time": "2026-10-08T09:00:00+07:00", "app": "0.3.3", "type": "started",
-           "schema": "1.0", "namespace": "Toko Contoh", "date": "2026-10-08"})
+           "schema": "2.0", "date": "2026-10-08"})
 }
 
 /// The input's pages in `order` (1-based), as a group PDF: the same page objects, another tree.
@@ -308,7 +308,10 @@ fn a_summary_that_prints_other_counts_is_found() {
 fn a_journal_that_changed_is_found() {
     let folder = Folder::new("journal");
     let first = line(&started());
-    let mut changed = first.clone().replace("Toko Contoh", "Toko Lain");
+    let mut changed = first
+        .clone()
+        .replace("\"schema\":\"2.0\"", "\"schema\":\"2.1\"");
+    assert_ne!(changed, first);
     changed.push_str(&line(&json!({"seq": 2, "time": "2026-10-08T09:00:00+07:00", "app": "0.3.3", "type": "recovered", "dropped_bytes": 0, "dropped_text": ""})));
     let next = json!({"seq": 9, "type": "batch_saved"});
     let findings = verify_batch(&BatchCheck {
@@ -419,7 +422,7 @@ fn verify_a_reprint(tag: &str, order: &[u32], tamper: impl Fn(&Folder)) -> Findi
     verify_reprint(&ReprintCheck {
         journal: b"",
         append: append.as_bytes(),
-        workspace_dir: &folder.0,
+        data_dir: &folder.0,
         output_dir: &folder.partial(),
     })
 }

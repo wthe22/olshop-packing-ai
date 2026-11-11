@@ -5,7 +5,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use packing_engine::record::{Datetime, Record, RecordBody, Recovered, SCHEMA, Started};
+use packing_engine::record::{Datetime, JOURNAL_SCHEMA, Record, RecordBody, Recovered, Started};
 
 use crate::StoreError;
 use crate::date::DateFolder;
@@ -42,7 +42,7 @@ impl Journal {
     pub fn open(folder: &DateFolder) -> Result<Self, StoreError> {
         let path = folder.dir().join(JOURNAL);
         let mut journal = Journal {
-            fold: Fold::new(folder.workspace(), folder.date()),
+            fold: Fold::new(folder.date()),
             path,
             good_len: 0,
             torn: None,
@@ -129,8 +129,7 @@ impl Journal {
         let mut all = Vec::with_capacity(bodies.len() + 2);
         if self.fold.last_seq == 0 {
             all.push(RecordBody::Started(Started {
-                schema: SCHEMA.to_string(),
-                workspace: self.fold.workspace.clone(),
+                schema: JOURNAL_SCHEMA.to_string(),
                 date: self.fold.date,
             }));
         }

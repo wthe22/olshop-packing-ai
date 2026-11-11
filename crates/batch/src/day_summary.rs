@@ -36,7 +36,6 @@ pub fn day_summary(
                 time.zoned().strftime("%H:%M").to_string()
             };
             let facts = DayFacts {
-                workspace: &fold.workspace,
                 date: fold.date,
                 batches: fold
                     .live

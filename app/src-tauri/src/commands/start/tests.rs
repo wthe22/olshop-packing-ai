@@ -25,19 +25,19 @@ fn the_build_time_is_a_local_date_and_minute() {
 
 #[test]
 fn explorer_gets_the_path_as_its_only_argument() {
-    let path = r"C:\Packing\packing-data\Toko Contoh\2026-10-07\output";
+    let path = r"C:\Packing\packing-data\2026-10-07\output";
     let command = explorer_command(path);
     let args: Vec<_> = command.get_args().collect();
     assert_eq!(args, [path]);
 }
 
 #[test]
-fn a_first_start_writes_the_two_files_and_names_the_first_workspace() {
+fn a_first_start_writes_the_two_files_and_opens_the_data_folder() {
     let _guard = testkit::pdfium_lock();
     let program = TempDir::new("app-start");
     let state = AppState::new(program.path().to_path_buf());
     let info = start_information(&state).unwrap();
-    assert!(info.data_folder.is_none() && info.workspace.is_none());
+    assert!(info.data_folder.is_none());
     assert!(
         program.path().join(WORKFLOWS_FILE).is_file(),
         "the bundled rules"
@@ -46,16 +46,14 @@ fn a_first_start_writes_the_two_files_and_names_the_first_workspace() {
     let dir = use_folder(&state, &program.path().join(DEFAULT_DATA_DIR)).unwrap();
     let written = fs::read_to_string(program.path().join(SETTINGS_FILE)).unwrap();
     assert!(written.contains("data_dir = \"packing-data\""), "{written}");
-    assert_eq!(new_workspace(&state, "Toko Contoh").unwrap(), "Toko Contoh");
-    assert!(Path::new(&dir).join("Toko Contoh").is_dir());
     assert!(
-        new_workspace(&state, "toko contoh").is_err(),
-        "a name differs by more than case"
+        Path::new(&dir).join(".lock").is_file(),
+        "its lock is taken once"
     );
 
     let second = AppState::new(program.path().to_path_buf());
     let info = start_information(&second).expect("a second copy shares the folder");
-    assert_eq!(info.workspace.as_deref(), Some("Toko Contoh"));
+
     assert_eq!(info.data_folder.as_deref(), Some(dir.as_str()));
 }
 

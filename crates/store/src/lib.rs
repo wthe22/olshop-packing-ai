@@ -3,6 +3,7 @@
 //! The journal is the only truth; every decision is taken from its fold as it is on disk.
 
 mod date;
+mod dates;
 mod error;
 mod files;
 mod fold;
@@ -11,12 +12,12 @@ mod inputs;
 mod journal;
 mod line;
 mod lock;
+mod older;
 mod outputs;
-mod shops;
 mod views;
-mod workspaces;
 
 pub use date::{DateFolder, OpenedDate, open_date, view_date};
+pub use dates::{dates, has_unprinted_groups, journal_lengths, newest_batch_rule};
 pub use error::StoreError;
 pub use files::sha256_of;
 pub use fold::{Damage, DamageReason, Fold, LastWrites, LiveBatch, Reprint};
@@ -25,14 +26,9 @@ pub use inputs::{InputProblem, InputState, StoredInput, check_inputs, input_path
 pub use journal::{Journal, Pending};
 pub use line::{encode_line, seal};
 pub use lock::DataLock;
+pub use older::{OlderData, OlderVersion, older_data};
 pub use outputs::{
     OutputProblem, OutputState, Settled, check_outputs, discard_partial, move_aside, move_forward,
     partial_dir, replaced_dir, settle_partial,
 };
-pub use shops::{WORKSPACE_SETTINGS, other_workspace_shops, set_workspace_shops, workspace_shops};
 pub use views::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, views_current, write_views};
-pub use workspaces::{
-    WORKSPACE_LIMIT, WorkspaceNameError, check_workspace_name, create_workspace, dates,
-    delete_workspace, has_unprinted_groups, journal_lengths, last_written, newest_batch_rule,
-    rename_workspace, workspaces,
-};

@@ -77,8 +77,7 @@ pub fn restore(
             copy_pages(request.worker, sources, pages, out.clone()).map(|()| count)
         }
         None => {
-            let (workspace, date, app) =
-                (fold.workspace.clone(), fold.date, request.app.to_string());
+            let (date, app) = (fold.date, request.app.to_string());
             let printed = jiff::Zoned::now().strftime("%H:%M").to_string();
             let (record, target) = (saved.clone(), out.clone());
             let couriers = request.couriers.to_vec();
@@ -89,7 +88,6 @@ pub fn restore(
                         pdfium,
                         &target,
                         &SummaryFacts {
-                            workspace: &workspace,
                             date,
                             record: &record,
                             printed: &printed,

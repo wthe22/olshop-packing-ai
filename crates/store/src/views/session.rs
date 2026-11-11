@@ -7,7 +7,8 @@ use jiff::civil::Date;
 use packing_engine::ids::{BatchId, CourierCode, OrderId, PdfId};
 use packing_engine::orders::display_name;
 use packing_engine::record::{
-    Datetime, Finding, InputPdf, ItemPick, LabelSortRule, LeftOutCopy, SCHEMA, SavedOrder, Sha256,
+    Datetime, Finding, InputPdf, ItemPick, JOURNAL_SCHEMA, LabelSortRule, LeftOutCopy, SavedOrder,
+    Sha256,
 };
 use serde::Serialize;
 
@@ -17,7 +18,6 @@ use crate::fold::{Fold, LiveBatch};
 #[derive(Serialize)]
 struct Root<'a> {
     schema: &'static str,
-    workspace: &'a str,
     date: Date,
     journal_seq: u32,
     input_pdfs: Numbered<LabelPdf<'a>>,
@@ -98,8 +98,7 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
         batches.push(label_batch(*batch, live, rule_id as u16, ids));
     }
     let root = Root {
-        schema: SCHEMA,
-        workspace: &fold.workspace,
+        schema: JOURNAL_SCHEMA,
         date: fold.date,
         journal_seq: fold.last_seq,
         input_pdfs: input_pdfs(fold),

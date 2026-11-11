@@ -1,4 +1,4 @@
-//! The search index: every live order of every date of a workspace, found by a filter on a range
+//! The search index: every live order of every date of the data folder, found by a filter on a range
 //! of dates or all, a reverted batch gone, a damaged date left out and named, an order's reprints.
 
 use std::fs;
@@ -10,10 +10,10 @@ use packing_engine::rules::parse_filter;
 use packing_store::{DateFolder, Journal, ReprintMark, SearchIndex};
 use testkit::{TempDir, sha};
 
-use crate::common::{APP, WORKSPACE, batch};
+use crate::common::{APP, batch};
 
 fn commit(data: &TempDir, day: i8, bodies: Vec<RecordBody>) -> Journal {
-    let folder = DateFolder::new(data.path(), WORKSPACE, date(2026, 10, day));
+    let folder = DateFolder::new(data.path(), date(2026, 10, day));
     let mut journal = Journal::open(&folder).unwrap();
     journal.commit(bodies, APP).unwrap();
     journal
@@ -33,7 +33,7 @@ fn ids(index: &SearchIndex, filter: &str, days: Option<(i8, i8)>) -> Vec<String>
 }
 
 #[test]
-fn every_live_order_of_the_workspace_is_found_by_its_fields() {
+fn every_live_order_of_the_data_folder_is_found_by_its_fields() {
     let data = TempDir::new("index");
     commit(
         &data,
@@ -50,7 +50,7 @@ fn every_live_order_of_the_workspace_is_found_by_its_fields() {
         8,
         vec![RecordBody::BatchSaved(batch(2, false, Vec::new()))],
     );
-    let mut index = SearchIndex::build(data.path(), WORKSPACE).unwrap();
+    let mut index = SearchIndex::build(data.path()).unwrap();
 
     let cases = [
         (
@@ -128,8 +128,7 @@ fn every_live_order_of_the_workspace_is_found_by_its_fields() {
         "each order's pages in its group PDF follow the orders of its group before it"
     );
 
-    let mut eighth =
-        Journal::open(&DateFolder::new(data.path(), WORKSPACE, date(2026, 10, 8))).unwrap();
+    let mut eighth = Journal::open(&DateFolder::new(data.path(), date(2026, 10, 8))).unwrap();
     eighth
         .commit(
             vec![RecordBody::BatchReverted(BatchReverted {
@@ -154,14 +153,10 @@ fn a_damaged_date_is_left_out_and_named() {
         7,
         vec![RecordBody::BatchSaved(batch(1, false, Vec::new()))],
     );
-    let journal = data
-        .path()
-        .join(WORKSPACE)
-        .join("2026-10-07")
-        .join("journal.jsonl");
+    let journal = data.path().join("2026-10-07").join("journal.jsonl");
     let text = fs::read_to_string(&journal).unwrap();
     fs::write(&journal, format!("0000000000000000 {{}}\n{text}")).unwrap();
-    let index = SearchIndex::build(data.path(), WORKSPACE).unwrap();
+    let index = SearchIndex::build(data.path()).unwrap();
     assert!(index.counts().is_empty());
     assert_eq!(
         index.damaged.keys().copied().collect::<Vec<_>>(),
@@ -198,7 +193,7 @@ fn an_order_printed_again_carries_each_reprint_and_is_found_by_its_date() {
         })
     };
     commit(&data, 7, vec![printed(1, &["580000000000000001"])]);
-    let mut index = SearchIndex::build(data.path(), WORKSPACE).unwrap();
+    let mut index = SearchIndex::build(data.path()).unwrap();
     let marks = |index: &SearchIndex, id: &str| {
         let order = index
             .find(date(2026, 10, 7), &OrderId::new(id))

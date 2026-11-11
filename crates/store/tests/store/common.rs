@@ -4,19 +4,18 @@ use std::fs;
 use std::path::Path;
 
 use jiff::civil::date;
-use packing_engine::record::{OutputFile, Record, RecordBody, SCHEMA, Started};
+use packing_engine::record::{JOURNAL_SCHEMA, OutputFile, Record, RecordBody, Started};
 use packing_store::{DateFolder, encode_line, sha256_of};
 use testkit::TempDir;
 
 pub use testkit::{batch, sha, time};
 
-pub const WORKSPACE: &str = "Toko Contoh";
 pub const APP: &str = "0.3.3";
 
-/// A fresh data folder and the date 2026-10-07 of the workspace `Toko Contoh` in it.
+/// A fresh data folder and the date 2026-10-07 in it.
 pub fn date_folder(tag: &str) -> (TempDir, DateFolder) {
     let data = TempDir::new(tag);
-    let folder = DateFolder::new(data.path(), WORKSPACE, date(2026, 10, 7));
+    let folder = DateFolder::new(data.path(), date(2026, 10, 7));
     (data, folder)
 }
 
@@ -70,8 +69,7 @@ pub fn record(seq: u32, body: RecordBody) -> Record {
 
 pub fn started() -> RecordBody {
     RecordBody::Started(Started {
-        schema: SCHEMA.to_string(),
-        workspace: WORKSPACE.to_string(),
+        schema: JOURNAL_SCHEMA.to_string(),
         date: date(2026, 10, 7),
     })
 }

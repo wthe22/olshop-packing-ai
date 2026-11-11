@@ -13,7 +13,11 @@ use crate::ids::{BatchId, CourierCode, OrderId, PdfId, TrackingId};
 
 pub use self::time::Datetime;
 
-/// The schema version every journal's `started` record carries.
+/// The schema version of a date's journal (its `started` record) and of its `session.toml`: one
+/// date for every account.
+pub const JOURNAL_SCHEMA: &str = "2.0";
+
+/// The schema version of the TOML files beside the program and of `order-contents.toml`.
 pub const SCHEMA: &str = "1.0";
 
 /// One line of the journal: the numbering every record carries, then its own fields.
@@ -59,9 +63,7 @@ impl RecordBody {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Started {
     pub schema: String,
-    /// The journal keeps the field name `namespace`, so no journal is migrated.
-    #[serde(rename = "namespace")]
-    pub workspace: String,
+    /// Equals the date folder's name.
     pub date: Date,
 }
 
@@ -290,7 +292,7 @@ pub struct ReprintedOrder {
     /// The date the order was saved.
     pub date: Date,
     pub batch: BatchId,
-    /// Its input: `{workspace}/{date}/input/{sha256}.pdf`.
+    /// Its input: `{date}/input/{sha256}.pdf`.
     pub sha256: Sha256,
     pub page_start: u16,
     pub page_end: u16,

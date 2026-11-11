@@ -1,4 +1,4 @@
-//! The day summary (day-summary.md): the open date of a workspace on A4, from its live batches —
+//! The day summary (day-summary.md): the open date of every account on A4, from its live batches —
 //! each batch as its Day card shows it, its groups with their orders and order contents; the
 //! couriers' counts; each batch's inputs with its ledger; then from a new page the pick pages of
 //! the whole day, and from another the day's order contents with their orders, most orders first.
@@ -30,7 +30,6 @@ pub struct DayBatch<'a> {
 }
 
 pub struct DayFacts<'a> {
-    pub workspace: &'a str,
     pub date: Date,
     /// Newest first, as on the Day screen.
     pub batches: Vec<DayBatch<'a>>,
@@ -46,7 +45,7 @@ pub fn write_day_summary(
     path: &Path,
     facts: &DayFacts<'_>,
 ) -> Result<usize, PdfError> {
-    let title = format!("Day summary · {} · {}", facts.workspace, facts.date);
+    let title = format!("Day summary · All accounts · {}", facts.date);
     let subtitle = format!(
         "{} · printed {}",
         content::header_counts(facts),
