@@ -17,6 +17,7 @@ use packing_store::{
 };
 use packing_verify::{BatchCheck, Findings, verify_batch};
 
+use crate::summaries::delete_account_summaries;
 use crate::written::{copy_pages, described, partial};
 use crate::{BatchError, Draft};
 
@@ -143,6 +144,11 @@ pub fn save(request: &SaveRequest<'_>, journal: &mut Journal) -> Result<SaveOutc
     if let Err(error) = write_views(dir, journal.fold()) {
         after_commit.push(error);
     }
+    if record.amends
+        && let Err(error) = delete_account_summaries(dir, batch)
+    {
+        after_commit.push(error);
+    }
     Ok(SaveOutcome::Saved(Saved {
         record,
         after_commit,
@@ -232,6 +238,7 @@ fn write_outputs(
             &SummaryFacts {
                 date,
                 record: &snapshot,
+                account: None,
                 printed: &printed,
                 app: &app,
                 couriers: &couriers,

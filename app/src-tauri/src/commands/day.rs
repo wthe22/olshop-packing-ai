@@ -7,7 +7,10 @@ mod view;
 use std::path::PathBuf;
 
 use jiff::civil::Date;
-use packing_batch::{RestoreOutcome, RestoreRequest, restore};
+use packing_batch::{
+    AccountSummaryOutcome, AccountSummaryRequest, RestoreOutcome, RestoreRequest, account_summary,
+    restore,
+};
 use packing_engine::ids::BatchId;
 use packing_engine::record::{PrintSent, PrintedMarked};
 use packing_store::{Fold, older_data};
@@ -63,8 +66,13 @@ pub(crate) fn mark_sent(state: &AppState, day: &str, mark: PrintSent) -> Result<
     })
 }
 
-/// Write the date's day summary from its journal and return its path.
-pub(crate) fn write_day_summary(state: &AppState, day: &str) -> Result<String, String> {
+/// Write the date's day summary of all accounts or of `account` from its journal and return its
+/// path.
+pub(crate) fn write_day_summary(
+    state: &AppState,
+    day: &str,
+    account: Option<&str>,
+) -> Result<String, String> {
     let date = date_of(day)?;
     let (_, workflows) = settings::workflows(state.program())?;
     state.write_day(date, |open| {
@@ -75,10 +83,57 @@ pub(crate) fn write_day_summary(state: &AppState, day: &str) -> Result<String, S
                     &open.folder,
                     open.journal.fold(),
                     &workflows.couriers,
+                    account,
                 )
             })?
             .map_err(|error| error.to_string())?;
         Ok(path.display().to_string())
+    })
+}
+
+/// An account's summary of a batch: its path when kept, else the verifier's findings.
+#[derive(Debug, Serialize)]
+pub struct AccountSummaryView {
+    pub(crate) path: Option<String>,
+    pub(crate) errors: Vec<String>,
+}
+
+pub(crate) fn write_account_summary(
+    state: &AppState,
+    day: &str,
+    batch: BatchId,
+    account: &str,
+) -> Result<AccountSummaryView, String> {
+    let date = date_of(day)?;
+    let (_, workflows) = settings::workflows(state.program())?;
+    state.write_day(date, |open| {
+        let outcome = state
+            .with_worker(|worker| {
+                account_summary(&AccountSummaryRequest {
+                    worker,
+                    folder: &open.folder,
+                    journal: &open.journal,
+                    batch,
+                    account,
+                    couriers: &workflows.couriers,
+                    app: APP_VERSION,
+                })
+            })?
+            .map_err(|error| error.to_string())?;
+        Ok(match outcome {
+            AccountSummaryOutcome::Written(path) => AccountSummaryView {
+                path: Some(path.display().to_string()),
+                errors: Vec::new(),
+            },
+            AccountSummaryOutcome::Findings(findings) => AccountSummaryView {
+                path: None,
+                errors: findings
+                    .errors
+                    .into_iter()
+                    .chain(findings.warnings)
+                    .collect(),
+            },
+        })
     })
 }
 
@@ -225,13 +280,33 @@ pub async fn revert_last(app: AppHandle, day: String, batch: BatchId) -> Result<
 
 /// **Day summary**: the date's summary PDF, written on its own thread; its path comes back.
 #[tauri::command]
-pub async fn day_summary(app: AppHandle, day: String) -> Result<String, String> {
+pub async fn day_summary(
+    app: AppHandle,
+    day: String,
+    account: Option<String>,
+) -> Result<String, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<AppState>();
-        write_day_summary(&state, &day)
+        write_day_summary(&state, &day, account.as_deref())
     })
     .await
     .map_err(|error| format!("the day summary task stopped: {error}"))?
+}
+
+/// An account's **summary** of a batch, written and checked on its own thread.
+#[tauri::command]
+pub async fn account_summary_pdf(
+    app: AppHandle,
+    day: String,
+    batch: BatchId,
+    account: String,
+) -> Result<AccountSummaryView, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<AppState>();
+        write_account_summary(&state, &day, batch, &account)
+    })
+    .await
+    .map_err(|error| format!("the account summary task stopped: {error}"))?
 }
 
 /// *Open* a group PDF or summary PDF in the PC's default PDF viewer, on its own thread: one that is

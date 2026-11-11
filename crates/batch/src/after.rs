@@ -8,6 +8,7 @@ use packing_store::{
 };
 
 use crate::BatchError;
+use crate::summaries::delete_account_summaries;
 
 /// Mark a label group of a live batch as sent to the printer, or take the mark back. A note only.
 pub fn set_sent(
@@ -59,5 +60,6 @@ pub fn revert(
     }
     discard_partial(dir)?;
     write_views(dir, journal.fold())?;
+    delete_account_summaries(dir, batch)?;
     Ok(batch)
 }

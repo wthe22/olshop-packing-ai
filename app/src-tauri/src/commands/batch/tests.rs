@@ -26,7 +26,7 @@ use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
 use super::{amend_start, checked, plan_view, resolve, sort_rules_of};
 use crate::commands::day::{
     OpenView, mark_printed, mark_sent, output_bytes, overview, ready_to_open, restore_file, revert,
-    write_day_summary,
+    write_account_summary, write_day_summary,
 };
 use crate::commands::panel::panel;
 use crate::commands::rules::{
@@ -139,14 +139,23 @@ fn a_saved_batch_shows_the_same_day_after_a_restart() {
             .starts_with("labels-repeat-"),
         "the copy kept names its input: {left_out:?}"
     );
-    let summary = write_day_summary(&state, DAY).unwrap();
+    let summary = write_day_summary(&state, DAY, None).unwrap();
     assert!(
         summary.ends_with("day summary.pdf") && Path::new(&summary).is_file(),
         "{summary}"
     );
     assert!(
-        write_day_summary(&state, "2026-10-09").is_err(),
+        write_day_summary(&state, "2026-10-09", None).is_err(),
         "a date with nothing saved has no day summary"
+    );
+    let mine = write_day_summary(&state, DAY, Some("Toko Contoh")).unwrap();
+    assert!(mine.ends_with("day summary Toko Contoh.pdf"), "{mine}");
+    let view = write_account_summary(&state, DAY, BatchId::new(1), "Toko Contoh").unwrap();
+    assert!(view.errors.is_empty(), "{view:?}");
+    let path = view.path.expect("kept");
+    assert!(
+        path.ends_with("1 summary Toko Contoh.pdf") && Path::new(&path).is_file(),
+        "{path}"
     );
 
     drop(state);

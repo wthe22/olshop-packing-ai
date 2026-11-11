@@ -1,4 +1,5 @@
-//! The day summary (day-summary.md): the open date of every account on A4, from its live batches —
+//! The day summary (day-summary.md): the open date of every account or of one on A4, from its live
+//! batches (an account's day summary: its orders, and the batches that hold one) —
 //! each batch as its Day card shows it, its groups with their orders and order contents; the
 //! couriers' counts; each batch's inputs with its ledger; then from a new page the pick pages of
 //! the whole day, and from another the day's order contents with their orders, most orders first.
@@ -10,7 +11,7 @@ mod content;
 use std::path::Path;
 
 use jiff::civil::Date;
-use packing_engine::record::BatchSaved;
+use packing_engine::record::{BatchSaved, of_account};
 use packing_engine::workflows::Courier;
 use pdfium_render::prelude::Pdfium;
 
@@ -37,6 +38,8 @@ pub struct DayFacts<'a> {
     pub printed: &'a str,
     /// The couriers of `packing-workflows.toml`, which name the records' courier codes.
     pub couriers: &'a [Courier],
+    /// The account whose day summary this is; none: all accounts.
+    pub account: Option<&'a str>,
 }
 
 /// Write the day summary and return its page count.
@@ -45,21 +48,54 @@ pub fn write_day_summary(
     path: &Path,
     facts: &DayFacts<'_>,
 ) -> Result<usize, PdfError> {
-    let title = format!("Day summary · All accounts · {}", facts.date);
+    let mine: Vec<BatchSaved> = match facts.account {
+        Some(account) => facts
+            .batches
+            .iter()
+            .map(|batch| of_account(batch.record, account))
+            .collect(),
+        None => Vec::new(),
+    };
+    let account_facts;
+    let shown = match facts.account {
+        None => facts,
+        Some(account) => {
+            account_facts = DayFacts {
+                batches: facts
+                    .batches
+                    .iter()
+                    .zip(&mine)
+                    .filter(|(_, mine)| !mine.orders.is_empty())
+                    .map(|(batch, mine)| DayBatch {
+                        record: mine,
+                        time: batch.time.clone(),
+                    })
+                    .collect(),
+                account: Some(account),
+                ..*facts
+            };
+            &account_facts
+        }
+    };
+    let title = format!(
+        "Day summary · {} · {}",
+        facts.account.unwrap_or("All accounts"),
+        facts.date
+    );
     let subtitle = format!(
         "{} · printed {}",
-        content::header_counts(facts),
+        content::header_counts(shown),
         facts.printed
     );
 
     let font_dir = Path::new(FONT_DIR);
     let measure = Measure::new(pdfium, font_dir)?;
     let mut builder = Builder::new(Layout::Pick, &measure);
-    for section in content::sections(facts) {
+    for section in content::sections(shown, facts) {
         draw_section(&mut builder, &section, &measure);
     }
-    draw_picks(&mut builder, &content::picks(facts));
-    let contents = content::order_contents(facts);
+    draw_picks(&mut builder, &content::picks(shown));
+    let contents = content::order_contents(shown);
     if !contents.is_empty() {
         new_page(&mut builder);
         let heading = "Order contents (orders per content)";

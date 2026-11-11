@@ -60,6 +60,7 @@ fn facts<'a>(
         ],
         printed: "17:05",
         couriers,
+        account: None,
     }
 }
 
@@ -79,7 +80,7 @@ fn the_day_reads_its_batches_as_their_cards_and_its_couriers() {
             .count(0, orders, "order", "orders")
             .count(1, 1, "content", "contents")
     };
-    let shown = sections(&day);
+    let shown = sections(&day, &day);
     let bars: Vec<(&str, Option<&str>)> = shown
         .iter()
         .map(|s| (s.heading.as_str(), s.right.as_deref()))
@@ -92,6 +93,7 @@ fn the_day_reads_its_batches_as_their_cards_and_its_couriers() {
                 Some("3 orders · 4 units")
             ),
             ("Batch 1 · saved 07:40 · 1 file", Some("3 orders · 4 units")),
+            ("Accounts", None),
             ("Couriers", None),
             ("Inputs", None),
         ]
@@ -102,6 +104,12 @@ fn the_day_reads_its_batches_as_their_cards_and_its_couriers() {
     );
     assert_eq!(
         shown[2].rows,
+        [Row::new("Toko Alfa")
+            .count(0, 6, "order", "orders")
+            .count(1, 8, "unit", "units")]
+    );
+    assert_eq!(
+        shown[3].rows,
         [
             Row::new("J&T Express").count(0, 5, "order", "orders"),
             Row::new("Unknown").count(0, 1, "order", "orders"),
@@ -119,7 +127,7 @@ fn the_day_reads_its_batches_as_their_cards_and_its_couriers() {
         ]
     };
     assert_eq!(
-        shown[3].rows,
+        shown[4].rows,
         [inputs("2"), inputs("1")].concat(),
         "each batch's inputs and ledger, newest batch first"
     );
@@ -201,4 +209,37 @@ fn the_batches_then_the_picks_then_the_order_contents_from_new_pages() {
     );
     assert!(texts[1].contains("Pick summary"), "{}", texts[1]);
     assert!(texts[2].contains("Order contents"), "{}", texts[2]);
+}
+
+#[test]
+fn an_accounts_day_summary_counts_its_orders_in_the_batches_that_hold_one() {
+    let Some(vendor) = vendor_dir() else {
+        eprintln!("skipped: run tools/get-pdfium.sh");
+        return;
+    };
+    let _guard = testkit::pdfium_lock();
+    let pdfium = crate::bind(&vendor).expect("bind pdfium");
+    let dir = TempDir::new("day-summary-account");
+    let path = dir.path().join("day summary Toko Beta.pdf");
+    let (first, mut second) = records();
+    second.orders[2].account = "Toko Beta".into();
+    let couriers = couriers();
+    let day = DayFacts {
+        account: Some("Toko Beta"),
+        ..facts(&first, &second, &couriers)
+    };
+    write_day_summary(&pdfium, &path, &day).expect("write the day summary");
+    let doc = pdfium.load_pdf_from_file(&path, None).expect("open it");
+    let first_page = doc.pages().get(0).expect("page 1").text().unwrap().all();
+    for shown in [
+        "Day summary · Toko Beta · 2026-10-07",
+        "1 order · 2 units · 1 batch · 1 group",
+        "Batch 2",
+        "4 pages read = 3 written + 1 left out",
+    ] {
+        assert!(first_page.contains(shown), "{shown}: {first_page}");
+    }
+    for hidden in ["Batch 1", "Accounts", "Toko Alfa"] {
+        assert!(!first_page.contains(hidden), "{hidden}: {first_page}");
+    }
 }

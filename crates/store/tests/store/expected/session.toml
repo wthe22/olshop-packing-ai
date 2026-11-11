@@ -73,6 +73,14 @@ name = "Spion Beat"
 variant = ""
 quantity = 2
 
+[[label_batches.accounts]]
+account = "Toko Alfa"
+order_count = 2
+
+[[label_batches.accounts]]
+account = "Toko Beta"
+order_count = 1
+
 [[label_batches.left_out]]
 order_id = "580000000000000001"
 pdf = 1

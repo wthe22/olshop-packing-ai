@@ -6,7 +6,7 @@ use packing_engine::record::CourierClueKind;
 use super::ContentIds;
 use crate::fold::Fold;
 
-const HEADER: [&str; 14] = [
+const HEADER: [&str; 16] = [
     "pdf_num",
     "page_start",
     "page_end",
@@ -14,6 +14,8 @@ const HEADER: [&str; 14] = [
     "tracking_id",
     "courier_code",
     "courier_clue",
+    "account",
+    "shop",
     "content_id",
     "skus",
     "total_quantity",
@@ -53,6 +55,8 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
                     .map(ToString::to_string)
                     .unwrap_or_default(),
                 clue.to_string(),
+                order.account.clone(),
+                order.shop.clone().unwrap_or_default(),
                 ids.id(*batch, order.content).to_string(),
                 skus.join("; "),
                 order

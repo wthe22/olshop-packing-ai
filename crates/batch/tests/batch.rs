@@ -13,9 +13,10 @@ use std::sync::mpsc;
 
 use jiff::civil::date;
 use packing_batch::{
-    BatchError, Draft, ReadRequest, ReprintOutcome, ReprintRequest, RestoreOutcome, RestoreRequest,
-    SaveOutcome, SaveRequest, Saved, amend, check_files, read_draft, reprint, restore, revert,
-    save, set_printed, set_sent,
+    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, ReadRequest, ReprintOutcome,
+    ReprintRequest, RestoreOutcome, RestoreRequest, SaveOutcome, SaveRequest, Saved,
+    account_summary, account_summary_file, amend, check_files, day_summary, day_summary_file,
+    read_draft, reprint, restore, revert, save, set_printed, set_sent,
 };
 use packing_engine::account_questions::{NoSenderQuestion, ShopQuestion};
 use packing_engine::accounts::{Account, ShopAccount, add_shop};
@@ -510,4 +511,69 @@ fn a_shop_no_account_lists_and_a_file_with_no_sender_wait_for_the_shop_prompt() 
     draft.keep_as_recorded(&first).unwrap();
     assert!(draft.account_questions().is_empty());
     assert_eq!(saved(day.save(&draft, false)).record.orders, first.orders);
+}
+
+#[test]
+fn an_accounts_summary_is_checked_kept_and_dropped_by_an_amend_or_a_revert() {
+    let Some(mut day) = day("batch-account-summary") else {
+        return skipped();
+    };
+    let draft = day.read_inputs().unwrap();
+    let first = saved(day.save(&draft, false)).record;
+    let account = first.orders[0].account.clone();
+    let write = |day: &Day, account: &str| {
+        account_summary(&AccountSummaryRequest {
+            worker: &day.worker,
+            folder: &day.folder,
+            journal: &day.journal,
+            batch: first.batch,
+            account,
+            couriers: &day.workflows.couriers,
+            app: APP,
+        })
+    };
+    let path = match write(&day, &account).unwrap() {
+        AccountSummaryOutcome::Written(path) => path,
+        AccountSummaryOutcome::Findings(findings) => panic!("the verifier found {findings:?}"),
+    };
+    assert_eq!(
+        path,
+        day.folder
+            .dir()
+            .join(account_summary_file(first.batch, &account))
+    );
+    assert!(path.is_file());
+    assert!(matches!(
+        write(&day, "Toko Tanpa Pesanan"),
+        Err(BatchError::NoBatch)
+    ));
+    let whole = day_summary(
+        &day.worker,
+        &day.folder,
+        day.journal.fold(),
+        &day.workflows.couriers,
+        Some(&account),
+    )
+    .unwrap();
+    assert_eq!(
+        whole,
+        day.folder.dir().join(day_summary_file(Some(&account)))
+    );
+
+    let redo = amend(&day.folder, day.journal.fold(), &day.workflows).unwrap();
+    let paths: Vec<PathBuf> = redo.files.iter().map(|f| f.path.clone()).collect();
+    let mut draft = day.read(&paths, &redo.rule, Some(redo.batch)).unwrap();
+    draft.keep_as_recorded(&first).unwrap();
+    saved(day.save(&draft, false));
+    assert!(
+        !path.exists(),
+        "an amend drops the batch's account summaries"
+    );
+
+    assert!(matches!(
+        write(&day, &account).unwrap(),
+        AccountSummaryOutcome::Written(_)
+    ));
+    revert(&day.folder, &mut day.journal, APP).unwrap();
+    assert!(!path.exists(), "and so does a revert");
 }

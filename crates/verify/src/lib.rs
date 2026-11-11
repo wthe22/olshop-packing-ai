@@ -43,6 +43,15 @@ pub struct RestoreCheck<'a> {
     pub output_dir: &'a Path,
 }
 
+/// What an account's summary of a batch is checked against: the date's journal as on disk, the
+/// live batch, the account and the file written.
+pub struct AccountSummaryCheck<'a> {
+    pub journal: &'a [u8],
+    pub batch: u8,
+    pub account: &'a str,
+    pub path: &'a Path,
+}
+
 /// The findings, errors and warnings apart, each in plain words.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Findings {
@@ -75,9 +84,25 @@ pub fn verify_batch(check: &BatchCheck<'_>) -> Findings {
     let batch = &journal.batch;
     let inputs = files::check_inputs(batch, check.input_dir, &mut findings);
     ledger::check_ledger(batch, &mut findings);
+    ledger::check_number(batch, journal.newest, &mut findings);
     ledger::check_orders(batch, &journal.live, &mut findings);
+    ledger::check_accounts(batch, &mut findings);
     files::check_group_pdfs(batch, &inputs, check.output_dir, &mut findings);
     summary::check_summary(batch, check.output_dir, &mut findings);
+    findings
+}
+
+/// V1, then V6 on an account's summary of a live batch: the account's orders only.
+pub fn verify_account_summary(check: &AccountSummaryCheck<'_>) -> Findings {
+    let mut findings = Findings::default();
+    if let Some(lines) = journal::read_lines(check.journal, b"", &mut findings) {
+        match lines.live.get(&check.batch) {
+            Some(batch) => {
+                summary::check_account_summary(batch, check.account, check.path, &mut findings);
+            }
+            None => findings.error(format!("batch {} is not live", check.batch)),
+        }
+    }
     findings
 }
 

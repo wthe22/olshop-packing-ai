@@ -2,6 +2,7 @@
 //! builds a batch's record from its plan; `packing-store` seals, appends and folds them. A field
 //! may be added without a new schema version; a field that changes meaning may not.
 
+mod accounts;
 mod time;
 
 use std::fmt;
@@ -11,6 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ids::{BatchId, CourierCode, OrderId, PdfId, TrackingId};
 
+pub use self::accounts::{AccountCount, account_counts, of_account, order_units};
 pub use self::time::Datetime;
 
 /// The schema version of a date's journal (its `started` record) and of its `session.toml`: one

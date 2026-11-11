@@ -1,6 +1,6 @@
 //! V3, the ledger — every page of every input in exactly one written or left-out copy — and V4,
 //! the orders: unique in the record and in the date's other live batches, each left-out copy
-//! naming what it was left out for.
+//! naming what it was left out for, each order an account and no shop two; and the batch's number.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -63,6 +63,52 @@ pub(crate) fn check_ledger(batch: &Batch, findings: &mut Findings) {
             findings.error(format!(
                 "{} pages past the end of {} are in a copy",
                 beyond, input.filename
+            ));
+        }
+    }
+}
+
+/// A new batch is the one after the date's newest live batch (1 on a new date); an amend redoes the
+/// newest.
+pub(crate) fn check_number(batch: &Batch, newest: Option<u8>, findings: &mut Findings) {
+    let want = match (batch.amends, newest) {
+        (true, newest) => newest,
+        (false, Some(newest)) => newest.checked_add(1),
+        (false, None) => Some(1),
+    };
+    if want != Some(batch.batch) {
+        let newest = newest.map_or("none".to_string(), |n| format!("batch {n}"));
+        findings.error(format!(
+            "batch {} does not follow the date's batches: the newest live one is {newest}",
+            batch.batch
+        ));
+    }
+}
+
+/// Every order names an account, and no shop (spaces and case ignored) stands under two.
+pub(crate) fn check_accounts(batch: &Batch, findings: &mut Findings) {
+    let mut shops: BTreeMap<String, (&str, BTreeSet<&str>)> = BTreeMap::new();
+    for order in &batch.orders {
+        if order.account.trim().is_empty() {
+            findings.error(format!("order {} names no account", order.order_id));
+        }
+        if let Some(shop) = &order.shop {
+            let key: String = shop
+                .chars()
+                .filter(|c| !c.is_whitespace())
+                .flat_map(char::to_lowercase)
+                .collect();
+            let entry = shops.entry(key).or_insert((shop, BTreeSet::new()));
+            entry.1.insert(&order.account);
+        }
+    }
+    for (shop, accounts) in shops.values() {
+        if accounts.len() > 1 {
+            let names: Vec<&str> = accounts.iter().copied().collect();
+            findings.error(format!(
+                "the shop {shop} stands under {} accounts: {}",
+                names.len(),
+                names.join(", ")
             ));
         }
     }

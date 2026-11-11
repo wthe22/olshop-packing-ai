@@ -9,7 +9,7 @@ pub(crate) mod content;
 use std::path::Path;
 
 use jiff::civil::Date;
-use packing_engine::record::BatchSaved;
+use packing_engine::record::{BatchSaved, of_account};
 use packing_engine::workflows::Courier;
 use pdfium_render::prelude::Pdfium;
 
@@ -32,6 +32,8 @@ pub struct SummaryFacts<'a> {
     pub date: Date,
     /// The batch's record, its group PDFs already in `outputs`.
     pub record: &'a BatchSaved,
+    /// The account whose summary this is (summary-pdf.md, *One account*); none: all accounts.
+    pub account: Option<&'a str>,
     /// `hh:mm`.
     pub printed: &'a str,
     /// The app version the journal's records carry.
@@ -46,11 +48,15 @@ pub fn write_summary(
     path: &Path,
     facts: &SummaryFacts<'_>,
 ) -> Result<usize, PdfError> {
-    let record = facts.record;
+    let whole = facts.record;
+    let mine = facts.account.map(|account| of_account(whole, account));
+    let record = mine.as_ref().unwrap_or(whole);
     let counts = content::counts(record);
     let title = format!(
-        "Summary · All accounts · {} · batch {}",
-        facts.date, record.batch
+        "Summary · {} · {} · batch {}",
+        facts.account.unwrap_or("All accounts"),
+        facts.date,
+        record.batch
     );
     let subtitle = format!(
         "{} orders · {} units · {} groups · printed {}",
@@ -60,7 +66,7 @@ pub fn write_summary(
     let font_dir = Path::new(FONT_DIR);
     let measure = Measure::new(pdfium, font_dir)?;
     let mut builder = Builder::new(Layout::Pick, &measure);
-    for section in content::facts(record, facts.app, facts.couriers) {
+    for section in content::facts(record, whole, facts.app, facts.couriers) {
         draw_section(&mut builder, &section, &measure);
     }
     let groups = content::group_sections(record);

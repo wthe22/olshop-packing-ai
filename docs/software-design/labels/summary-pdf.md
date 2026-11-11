@@ -98,11 +98,11 @@ nothing is kept.
 V6 of [verification](../app/verification.md) reads three things back as text and compares them with the
 record: the first page header's `<orders> orders · <units> units · <groups> groups`, the ledger's
 `<read> pages read = <written> written + <left> left out`, and each group bar's `<orders> orders · <units>
-units`, in group order. Their words and order are fixed for that reason — a group bar reads *1 orders* —
+units`, in group order, looked for after the ledger. Their words and order are fixed for that reason — a group bar reads *1 orders* —
 and the numbers have no thousands separator. A group bar is told from the header by the header's
 `<groups> groups` after its units. The group's name before its counts is not read: `lopdf` reads no text of
-a character drawn with the CID font (an `é` in a name). An account's row has its orders and units as two
-counts, never as one `<orders> orders · <units> units` text, so it is never read as a group bar.
+a character drawn with the CID font (an `é` in a name). An account's row on the facts pages reads like a
+group bar, which is why the bars are looked for only after the ledger.
 
 ## Fonts
 

@@ -90,6 +90,7 @@ pub fn restore(
                         &SummaryFacts {
                             date,
                             record: &record,
+                            account: None,
                             printed: &printed,
                             app: &app,
                             couriers: &couriers,

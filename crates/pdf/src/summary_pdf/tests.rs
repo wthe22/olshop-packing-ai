@@ -1,6 +1,6 @@
 use jiff::civil::date;
 use packing_engine::ids::CourierCode;
-use packing_engine::record::{BatchSaved, OutputFile};
+use packing_engine::record::{BatchSaved, OutputFile, of_account};
 use packing_engine::workflows::Courier;
 use pdfium_render::prelude::*;
 use testkit::{TempDir, batch, sha, vendor_dir};
@@ -98,9 +98,21 @@ fn the_facts_page_says_what_the_batch_is() {
     };
     let mut record = record();
     record.orders[2].courier = None;
+    record.orders[2].account = "Toko Beta".into();
     assert_eq!(
-        facts(&record, "0.3.3", &couriers()),
+        facts(&record, &record, "0.3.3", &couriers()),
         vec![
+            section(
+                "Accounts",
+                vec![
+                    Row::new("Toko Alfa")
+                        .count(0, 2, "order", "orders")
+                        .count(1, 2, "unit", "units"),
+                    Row::new("Toko Beta")
+                        .count(0, 1, "order", "orders")
+                        .count(1, 2, "unit", "units"),
+                ]
+            ),
             section(
                 "Couriers",
                 vec![
@@ -142,8 +154,36 @@ fn the_facts_page_says_what_the_batch_is() {
 }
 
 #[test]
+fn an_accounts_summary_has_its_own_couriers_and_the_batchs_inputs_but_no_accounts() {
+    let mut record = record();
+    record.orders[2].account = "Toko Beta".into();
+    let mine = of_account(&record, "Toko Beta");
+    let sections = facts(&mine, &record, "0.3.3", &couriers());
+    let headings: Vec<&str> = sections.iter().map(|s| s.heading.as_str()).collect();
+    assert_eq!(
+        headings,
+        [
+            "Couriers",
+            "Warnings",
+            "Inputs",
+            "Sort rule · default",
+            "Versions"
+        ]
+    );
+    assert_eq!(
+        sections[0].rows,
+        [Row::new("J&T Express").count(0, 1, "order", "orders")]
+    );
+    assert_eq!(
+        sections[2].rows,
+        facts(&record, &record, "0.3.3", &[])[3].rows
+    );
+}
+
+#[test]
 fn a_courier_the_rules_no_longer_name_shows_its_code() {
-    let rows = &facts(&record(), "0.3.3", &[])[0].rows;
+    let record = record();
+    let rows = &facts(&record, &record, "0.3.3", &[])[1].rows;
     assert_eq!(rows, &[Row::new("jnt").count(0, 3, "order", "orders")]);
 }
 
@@ -164,6 +204,7 @@ fn written(tag: &str, record: &BatchSaved, check: impl FnOnce(&Pdfium, &std::pat
         &SummaryFacts {
             date: date(2026, 10, 7),
             record,
+            account: None,
             printed: "09:12",
             app: "0.3.3",
             couriers: &couriers,

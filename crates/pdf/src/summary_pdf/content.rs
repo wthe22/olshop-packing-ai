@@ -6,7 +6,9 @@ use std::collections::BTreeMap;
 
 use packing_engine::ids::CourierCode;
 use packing_engine::orders::display_name;
-use packing_engine::record::{BatchSaved, LeftOutReason, SCHEMA, SavedOrder};
+use packing_engine::record::{
+    AccountCount, BatchSaved, LeftOutReason, SCHEMA, SavedOrder, account_counts, order_units,
+};
 use packing_engine::sorting::{REST_CODE, REST_NAME};
 use packing_engine::workflows::{Courier, courier_name};
 
@@ -25,8 +27,7 @@ pub(crate) fn counts(record: &BatchSaved) -> Counts {
     let units = record
         .orders
         .iter()
-        .flat_map(|order| &record.contents[order.content as usize].items)
-        .map(|item| u32::from(item.quantity))
+        .map(|order| order_units(record, order))
         .sum();
     Counts {
         orders: record.orders.len(),
@@ -144,48 +145,71 @@ fn group_name<'r>(record: &'r BatchSaved, code: &str) -> &'r str {
         .map_or("", |group| group.name.as_str())
 }
 
-/// The facts pages: the couriers, the warnings, the inputs with the ledger, the sort rule and the
-/// versions. `couriers` names the courier codes.
-pub(crate) fn facts(record: &BatchSaved, app: &str, couriers: &[Courier]) -> Vec<Section> {
+/// The facts pages of `record`, which is `whole` itself or one account's part of it: the accounts (on the
+/// summary of all accounts only), the couriers, the warnings, the whole batch's inputs with its
+/// ledger, the sort rule and the versions. `couriers` names the courier codes.
+pub(crate) fn facts(
+    record: &BatchSaved,
+    whole: &BatchSaved,
+    app: &str,
+    couriers: &[Courier],
+) -> Vec<Section> {
     let section = |heading: &str, rows: Vec<Row>| Section {
         heading: heading.to_string(),
         right: None,
         rows,
     };
-    vec![
-        section("Couriers", courier_rows(&record.orders, couriers)),
-        section(
-            "Warnings",
-            if record.warnings.is_empty() {
-                vec![Row::new("none")]
-            } else {
+    let all = std::ptr::eq(record, whole);
+    let accounts = all.then(|| section("Accounts", account_rows(&account_counts([whole]))));
+    accounts
+        .into_iter()
+        .chain([
+            section("Couriers", courier_rows(&record.orders, couriers)),
+            section(
+                "Warnings",
+                if record.warnings.is_empty() {
+                    vec![Row::new("none")]
+                } else {
+                    record
+                        .warnings
+                        .iter()
+                        .map(|w| Row::new(w.text.clone()))
+                        .collect()
+                },
+            ),
+            section("Inputs", input_rows(whole)),
+            section(
+                &format!("Sort rule · {}", record.sort_rule.name),
                 record
-                    .warnings
+                    .sort_rule
+                    .label_groups
                     .iter()
-                    .map(|w| Row::new(w.text.clone()))
-                    .collect()
-            },
-        ),
-        section("Inputs", input_rows(record)),
-        section(
-            &format!("Sort rule · {}", record.sort_rule.name),
-            record
-                .sort_rule
-                .label_groups
-                .iter()
-                .map(|group| {
-                    let filter = group.filter.as_deref().unwrap_or("every order left");
-                    Row::new(format!("{} · {filter}", group.name)).key(group.code.clone())
-                })
-                .collect(),
-        ),
-        section(
-            "Versions",
-            vec![Row::new(format!(
-                "schema {SCHEMA} · Packing v{app} · PDFium {PDFIUM_VERSION}"
-            ))],
-        ),
-    ]
+                    .map(|group| {
+                        let filter = group.filter.as_deref().unwrap_or("every order left");
+                        Row::new(format!("{} · {filter}", group.name)).key(group.code.clone())
+                    })
+                    .collect(),
+            ),
+            section(
+                "Versions",
+                vec![Row::new(format!(
+                    "schema {SCHEMA} · Packing v{app} · PDFium {PDFIUM_VERSION}"
+                ))],
+            ),
+        ])
+        .collect()
+}
+
+/// Each account's orders and units as two counts, so the verifier never reads a row as a group bar.
+pub(crate) fn account_rows(counts: &[AccountCount]) -> Vec<Row> {
+    counts
+        .iter()
+        .map(|count| {
+            Row::new(count.account.clone())
+                .count(0, count.orders, "order", "orders")
+                .count(1, count.units as usize, "unit", "units")
+        })
+        .collect()
 }
 
 /// Each input: the name it had, its pages and the first 12 characters of its SHA-256; then the

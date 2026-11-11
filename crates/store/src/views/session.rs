@@ -8,7 +8,7 @@ use packing_engine::ids::{BatchId, CourierCode, OrderId, PdfId};
 use packing_engine::orders::display_name;
 use packing_engine::record::{
     Datetime, Finding, InputPdf, ItemPick, JOURNAL_SCHEMA, LabelSortRule, LeftOutCopy, SavedOrder,
-    Sha256,
+    Sha256, account_counts,
 };
 use serde::Serialize;
 
@@ -54,6 +54,8 @@ struct LabelBatch<'a> {
     earliest_ship_by_date: Option<Date>,
     latest_ship_by_date: Option<Date>,
     couriers: BTreeSet<&'a CourierCode>,
+    /// Most orders first.
+    accounts: Vec<AccountOrders>,
     warnings: Vec<&'a str>,
     errors: Vec<&'a str>,
     left_out: &'a [LeftOutCopy],
@@ -68,6 +70,12 @@ struct LabelGroup<'a> {
     is_marked_as_sent: bool,
     is_marked_as_printed: bool,
     order_contents: Vec<OrderContentSummary>,
+}
+
+#[derive(Serialize)]
+struct AccountOrders {
+    account: String,
+    order_count: u16,
 }
 
 #[derive(Serialize)]
@@ -212,6 +220,13 @@ fn label_batch<'a>(
         earliest_ship_by_date: earliest,
         latest_ship_by_date: latest,
         couriers: orders.iter().filter_map(|o| o.courier.as_ref()).collect(),
+        accounts: account_counts([saved])
+            .into_iter()
+            .map(|count| AccountOrders {
+                account: count.account,
+                order_count: count.orders as u16,
+            })
+            .collect(),
         warnings: saved.warnings.iter().map(|f| f.text.as_str()).collect(),
         errors: saved.errors.iter().map(|f| f.text.as_str()).collect(),
         left_out: &saved.left_out,

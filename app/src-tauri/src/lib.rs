@@ -357,6 +357,7 @@ pub fn run() {
             commands::day::print_output,
             commands::day::output_pdf,
             commands::day::day_summary,
+            commands::day::account_summary_pdf,
             commands::panel::panel_dates,
             commands::changes::data_changes,
             commands::search::search_orders,

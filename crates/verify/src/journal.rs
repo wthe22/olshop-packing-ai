@@ -18,6 +18,8 @@ pub(crate) struct Journal {
     pub batch: Batch,
     /// The live batches before this one, by number, with their records.
     pub live: BTreeMap<u8, Batch>,
+    /// The number of the date's newest live batch before the new lines.
+    pub newest: Option<u8>,
 }
 
 /// Read and check the journal and the lines to append. `None` when the appended lines hold no
@@ -29,10 +31,15 @@ pub(crate) fn read(journal: &[u8], append: &[u8], findings: &mut Findings) -> Op
         .rev()
         .find(|(kind, _)| kind == "batch_saved")
         .and_then(|(_, json)| serde_json::from_slice::<Batch>(json).ok())?;
+    let newest = live.keys().next_back().copied();
     if batch.amends {
         live.remove(&batch.batch);
     }
-    Some(Journal { batch, live })
+    Some(Journal {
+        batch,
+        live,
+        newest,
+    })
 }
 
 /// V1: every line sealed and `seq` with no gap, the new lines after the last one. `None` when a

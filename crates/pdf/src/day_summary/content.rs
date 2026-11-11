@@ -8,9 +8,11 @@ use packing_engine::orders::display_name;
 use packing_engine::record::OrderContent;
 
 use super::{DayBatch, DayFacts};
+use packing_engine::record::account_counts;
+
 use crate::facts::{Row, Section, count};
 use crate::summary_pdf::content::{
-    ContentRow, counts as batch_counts, courier_rows, group_sections, input_rows,
+    ContentRow, account_rows, counts as batch_counts, courier_rows, group_sections, input_rows,
     picks as batch_picks,
 };
 
@@ -33,17 +35,31 @@ pub(crate) fn header_counts(facts: &DayFacts<'_>) -> String {
 
 /// Each batch, newest first, then the couriers of the whole day, then each batch's inputs with
 /// its ledger, keyed by the batch's number.
-pub(crate) fn sections(facts: &DayFacts<'_>) -> Vec<Section> {
+/// `facts` is `whole` or one account's part of it; the inputs and ledgers are `whole`'s.
+pub(crate) fn sections(facts: &DayFacts<'_>, whole: &DayFacts<'_>) -> Vec<Section> {
     let records = || facts.batches.iter().map(|batch| batch.record);
+    let shown = |batch| facts.batches.iter().any(|b| b.record.batch == batch);
+    let wholes = || {
+        whole
+            .batches
+            .iter()
+            .map(|batch| batch.record)
+            .filter(move |record| shown(record.batch))
+    };
     let section = |heading: &str, rows: Vec<Row>| Section {
         heading: heading.to_string(),
         right: None,
         rows,
     };
+    let accounts = facts
+        .account
+        .is_none()
+        .then(|| section("Accounts", account_rows(&account_counts(records()))));
     facts
         .batches
         .iter()
         .map(batch_section)
+        .chain(accounts)
         .chain([
             section(
                 "Couriers",
@@ -51,7 +67,7 @@ pub(crate) fn sections(facts: &DayFacts<'_>) -> Vec<Section> {
             ),
             section(
                 "Inputs",
-                records()
+                wholes()
                     .flat_map(|record| {
                         let key = record.batch.to_string();
                         input_rows(record)

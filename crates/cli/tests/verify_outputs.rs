@@ -160,6 +160,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
         &SummaryFacts {
             date: folder.date(),
             record: &record,
+            account: None,
             printed: "07:00",
             app: "0.3.3",
             couriers: &[],

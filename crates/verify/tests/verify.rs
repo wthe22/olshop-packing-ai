@@ -1,6 +1,6 @@
 //! The verifier on the repeat fixture's first input, with outputs made from it by `lopdf`: a right
-//! set passes; a journal, an input, a ledger, an order, a group PDF or a summary that is not what
-//! the record says is found.
+//! set passes; a journal, an input, a ledger, an order, an account, a batch number, a group PDF or a
+//! summary that is not what the record says is found, and an account's summary is checked too.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -8,8 +8,8 @@ use std::path::{Path, PathBuf};
 use lopdf::content::{Content, Operation};
 use lopdf::{Document, Object, Stream, dictionary};
 use packing_verify::{
-    BatchCheck, Findings, ReprintCheck, RestoreCheck, page_digests, verify_batch, verify_reprint,
-    verify_restore,
+    AccountSummaryCheck, BatchCheck, Findings, ReprintCheck, RestoreCheck, page_digests,
+    verify_account_summary, verify_batch, verify_reprint, verify_restore,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -59,10 +59,18 @@ fn line(value: &Value) -> String {
     format!("{:016x} {json}\n", xxh3_64(json.as_bytes()))
 }
 
-/// The input's pages 1, 2–3 and 6 are orders 101, 102 and 103; pages 4–5, order 102's second
-/// copy, are left out.
+/// The input's pages 1, 2–3 and 6 are orders 101 and 102 of Toko Alfa and 103 of Toko Beta;
+/// pages 4–5, order 102's second copy, are left out.
 fn record(input_sha: &str, group: (String, u64), summary: (String, u64)) -> Value {
-    let order = |id: &str, content: u16, start: u16, end: u16| json!({"order_id": id, "content": content, "pdf": 1, "page_start": start, "page_end": end, "group": "Z"});
+    let order = |id: &str, content: u16, start: u16, end: u16| {
+        let account = if content < 2 {
+            "Toko Alfa"
+        } else {
+            "Toko Beta"
+        };
+        json!({"order_id": id, "content": content, "pdf": 1, "page_start": start, "page_end": end,
+               "group": "Z", "account": account, "shop": account})
+    };
     json!({
         "seq": 2, "time": "2026-10-08T09:00:00+07:00", "app": "0.3.3", "type": "batch_saved",
         "batch": 1, "amends": false,
@@ -150,8 +158,10 @@ fn summary_pdf(path: &Path, lines: &[String]) {
 fn right_summary() -> Vec<String> {
     vec![
         "3 orders - 3 units - 1 groups - printed 09:12".into(),
-        "Z  Lainnya - 3 orders - 3 units".into(),
+        "Toko Alfa 2 orders 2 units".into(),
+        "Toko Beta 1 order 1 unit".into(),
         "6 pages read = 4 written + 2 left out (2 repeats, 0 saved earlier)".into(),
+        "Z  Lainnya - 3 orders - 3 units".into(),
     ]
 }
 
@@ -230,7 +240,7 @@ fn a_wrong_page_of_a_group_pdf_is_found() {
 #[test]
 fn a_record_that_does_not_add_up_is_found() {
     type Tamper = fn(&mut Value);
-    let cases: [(&str, Tamper, &str); 6] = [
+    let cases: [(&str, Tamper, &str); 10] = [
         (
             "a page in no copy",
             |b| b["left_out"] = json!([]),
@@ -261,6 +271,26 @@ fn a_record_that_does_not_add_up_is_found() {
             |b| b["outputs"][0]["size"] = json!(1),
             "not the file the record names",
         ),
+        (
+            "an order with no account",
+            |b| b["orders"][0]["account"] = json!(""),
+            "order 580000000000000101 names no account",
+        ),
+        (
+            "a shop under two accounts",
+            |b| b["orders"][2]["shop"] = json!("toko  ALFA"),
+            "stands under 2 accounts: Toko Alfa, Toko Beta",
+        ),
+        (
+            "a batch number that skips",
+            |b| b["batch"] = json!(2),
+            "batch 2 does not follow the date's batches: the newest live one is none",
+        ),
+        (
+            "an amend of no live batch",
+            |b| b["amends"] = json!(true),
+            "batch 1 does not follow",
+        ),
     ];
     for (what, tamper, finding) in cases {
         let findings = verify(
@@ -289,14 +319,14 @@ fn a_summary_that_prints_other_counts_is_found() {
         "{findings:?}"
     );
     let mut no_group = right_summary();
-    no_group.remove(1);
+    no_group.remove(4);
     let findings = verify("summary-group", &[1, 2, 3, 6], &no_group, |_| {});
     assert!(
         findings.errors.iter().any(|f| f.contains(GROUP_FILE)),
         "{findings:?}"
     );
     let mut other_units = right_summary();
-    other_units[1] = "Z  Lainnya - 3 orders - 4 units".into();
+    other_units[4] = "Z  Lainnya - 3 orders - 4 units".into();
     let findings = verify("summary-units", &[1, 2, 3, 6], &other_units, |_| {});
     assert!(
         findings.errors.iter().any(|f| f.contains(GROUP_FILE)),
@@ -512,7 +542,7 @@ fn a_restored_output_is_checked_as_at_the_save() {
         "{missing:?}"
     );
     let counts = verify_a_restore("restore-counts", SUMMARY_FILE, 1, |path| {
-        summary_pdf(path, &right_summary()[..2])
+        summary_pdf(path, &right_summary()[..3])
     });
     assert!(
         counts.errors.iter().any(|f| f.contains("prints no ledger")),
@@ -521,6 +551,71 @@ fn a_restored_output_is_checked_as_at_the_save() {
     let not_live = verify_a_restore("restore-not-live", GROUP_FILE, 2, |path| {
         group_pdf(path, &[1, 2, 3, 6])
     });
+    assert!(
+        not_live
+            .errors
+            .iter()
+            .any(|f| f.contains("batch 2 is not live")),
+        "{not_live:?}"
+    );
+}
+
+#[test]
+fn an_accounts_summary_counts_its_orders_and_the_whole_ledger() {
+    let folder = Folder::new("account-summary");
+    let (input_sha, _) = sha_and_size(&testdata(INPUT));
+    let journal = format!(
+        "{}{}",
+        line(&started()),
+        line(&record(
+            &input_sha,
+            ("0".repeat(64), 1),
+            ("0".repeat(64), 1)
+        ))
+    );
+    let check = |file: &str, lines: Option<&[String]>, batch: u8| {
+        let path = folder.partial().join(file);
+        if let Some(lines) = lines {
+            summary_pdf(&path, lines);
+        }
+        verify_account_summary(&AccountSummaryCheck {
+            journal: journal.as_bytes(),
+            batch,
+            account: "Toko Alfa",
+            path: &path,
+        })
+    };
+    let mut alfa = vec![
+        "2 orders - 2 units - 1 groups - printed 10:05".to_string(),
+        "6 pages read = 4 written + 2 left out (2 repeats, 0 saved earlier)".into(),
+        "Z  Lainnya - 2 orders - 2 units".into(),
+    ];
+    let right = check("1 summary Toko Alfa.pdf", Some(&alfa), 1);
+    assert!(right.is_clean(), "{right:?}");
+
+    let whole = check("whole.pdf", Some(&right_summary()), 1);
+    assert!(
+        whole
+            .errors
+            .iter()
+            .any(|f| f.contains("[3, 3, 1], the record says [2, 2, 1]")),
+        "the summary of all accounts is not Toko Alfa's: {whole:?}"
+    );
+    alfa[1] = "6 pages read = 3 written + 3 left out".into();
+    let ledger = check("ledger.pdf", Some(&alfa), 1);
+    assert!(
+        ledger.errors.iter().any(|f| f.contains("ledger")),
+        "{ledger:?}"
+    );
+    let missing = check("missing.pdf", None, 1);
+    assert!(
+        missing
+            .errors
+            .iter()
+            .any(|f| f.contains("missing.pdf was not written")),
+        "{missing:?}"
+    );
+    let not_live = check("1 summary Toko Alfa.pdf", None, 2);
     assert!(
         not_live
             .errors

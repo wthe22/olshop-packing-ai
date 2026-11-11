@@ -12,6 +12,9 @@ use crate::common::*;
 fn opened_batch(tag: &str) -> (testkit::TempDir, packing_store::DateFolder) {
     let (data, folder) = date_folder(tag);
     let files = outputs(&folder.dir().join("output"), 1, "one");
+    let mut saved = batch(1, false, files);
+    saved.orders[2].account = "Toko Beta".into();
+    saved.orders[2].shop = None;
     let printed = RecordBody::PrintedMarked(PrintedMarked {
         batch: BatchId::new(1),
         group: "A".into(),
@@ -26,7 +29,7 @@ fn opened_batch(tag: &str) -> (testkit::TempDir, packing_store::DateFolder) {
         &folder,
         &[
             record(1, started()),
-            record(2, RecordBody::BatchSaved(batch(1, false, files))),
+            record(2, RecordBody::BatchSaved(saved)),
             record(3, printed),
             record(4, sent),
         ],
