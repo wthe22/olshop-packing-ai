@@ -1,10 +1,11 @@
 <script lang="ts">
   // The account row of the Accounts screen: one tab per account, in the order they were made, and
-  // **+ New account** with its name field. The screen does the making and the asking; a refused
-  // name is shown under the field.
+  // **+ New account**, which asks the name in a dialog. The screen does the making and the asking; a
+  // refused name is shown under the field.
   import { tick } from "svelte";
   import type { Account } from "./api/accounts";
   import { texts } from "../texts";
+  import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
 
   let {
@@ -67,30 +68,33 @@
 {/if}
 
 {#if creating}
-  <form
-    class="form"
-    onsubmit={(event) => {
-      event.preventDefault();
-      submit();
-    }}
-  >
-    <input
-      bind:this={nameInput}
-      bind:value={name}
-      aria-label={words.nameLabel}
-      placeholder={words.namePlaceholder}
-      maxlength="40"
-      onkeydown={(event) => {
-        if (event.key === "Escape") {
-          event.stopPropagation();
-          creating = false;
-        }
+  <Dialog title={words.newAccount}>
+    <form
+      onsubmit={(event) => {
+        event.preventDefault();
+        submit();
       }}
-    />
-    <button type="button" onclick={() => (creating = false)}>{words.cancel}</button>
-    <button class="primary" type="submit" disabled={name.trim() === ""}>{words.create}</button>
-  </form>
-  {#if refused}<p class="refused">{refused}</p>{/if}
+    >
+      <input
+        bind:this={nameInput}
+        bind:value={name}
+        aria-label={words.nameLabel}
+        placeholder={words.namePlaceholder}
+        maxlength="40"
+        onkeydown={(event) => {
+          if (event.key === "Escape") {
+            event.stopPropagation();
+            creating = false;
+          }
+        }}
+      />
+      {#if refused}<p class="refused">{refused}</p>{/if}
+      <div class="buttons">
+        <button class="primary" type="submit" disabled={name.trim() === ""}>{words.create}</button>
+        <button type="button" onclick={() => (creating = false)}>{words.cancel}</button>
+      </div>
+    </form>
+  </Dialog>
 {/if}
 
 <style>
@@ -140,21 +144,20 @@
     color: var(--text-muted);
   }
 
-  .form {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .form input {
-    width: 16rem;
+  input {
+    box-sizing: border-box;
+    width: 100%;
   }
 
   .refused {
-    margin: -0.4rem 0 0.75rem;
+    margin: 0.4rem 0 0;
     color: var(--danger);
     font-size: 0.88rem;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
   }
 </style>

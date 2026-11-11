@@ -184,8 +184,8 @@ test("the accounts of a date are counted over its batches, most orders first", (
   assert.equal(accountsOf(several).length > 1, true, "several accounts: a menu");
   assert.deepEqual(accountsOf([]), []);
   assert.equal(
-    texts.day.batchAccounts(several[0].accounts) + " | " + texts.day.batchAccounts(one[0].accounts),
-    "Toko Alfa 5, Toko Beta 4 | Toko Alfa",
+    texts.day.batchAccounts(several[0].accounts.length) + " | " + texts.day.batchAccounts(one[0].accounts.length),
+    "2 accounts | 1 account",
   );
 });
 

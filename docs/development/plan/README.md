@@ -6,6 +6,34 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-12)
 
+- **Handoff of 2026-11-12 (second) — the owner's eight screen findings and the Grab Express label;
+  version 0.5.0 rebuilt.** The owner's words in chat, built and pushed:
+  - **Search** (R-UI-40..42): a row reads *shop* then the Order ID, both at the row's text size; the
+    *Label* column is *Wed, 11 Nov Batch 2* over *the group's name page 3*; the details are one line,
+    *From [input.pdf] p. 3, saved at 09:12 into group 2-A* ([search](../../software-design/ui/search.md)).
+  - **Dates panel** (R-UI-43): only the date and its orders; `· not printed yet` is gone, code included.
+  - **Accounts** (R-UI-44, R-UI-45): **+ New account** asks the name in a dialog; no text of the app
+    ends in `…` any more (**Rename**, *Loading*, *Saving*, *Reading labels: page 3 of 10*).
+  - **Day** (R-UI-46, R-UI-47): a batch with several accounts has **Summary PDF ▾** as a menu like **Day
+    summary** (*All accounts* opens the batch's file; an account writes its summary); the batch head says
+    *2 accounts* instead of the names and counts. The owner wrote "3 shops"; the app's word for what that
+    line counted is *account*, so it says *accounts*. If the owner wants the shops counted (a shop's
+    TikTok and Shopee spellings would count twice), that is the next `R-UI-48`.
+  - **Grab Express on Shopee** (R-LABEL-14, `samples/2026-11-11 grab-express.pdf`): read as Grab, its
+    `No. Pesanan:` and its pickup code (two digits + two letters) kept
+    ([business-process 02](../../business-process/02-data-sources.md)).
+  - **The owner's step first**: the program reads the owner's own `packing-workflows.toml` beside
+    `Packing.exe`, never the bundled copy (D-APP-3). In its `courier_code = "grab"` entry the owner changes
+    `instant_tags = ["Sameday"]` to `instant_tags = ["Sameday", "Same-day"]`, saves and starts the program
+    again. Without that line the order reads with no courier (a warning; it is still sorted and saved).
+  - **Open question**: **Q-LABEL-13** ([questions/label.md](../../software-design/questions/label.md)):
+    this label breaks a product name inside a word, so its lines are joined with nothing between (default
+    A: *Samping*, *SEPATU-HITAM*, but a break on a space glues two words, `Standar |Penyangga`).
+  - **The owner may test now** in `target/portable/Packing/`: Search a saved order and open its details;
+    New account; a batch of two accounts on the Day screen; read the 2026-11-11 file after the step above.
+  - **Where to answer**: a screen finding into [reviews/ui.md](../../reviews/ui.md) as `R-UI-48`, a label
+    finding into [reviews/label.md](../../reviews/label.md) as `R-LABEL-15`, Q-LABEL-13 in its question.
+    A new session turns each into a task and builds it.
 - **Handoff of 2026-11-12 — v0.5.0: accounts replace workspaces. The owner's review is next.** Built,
   checked and pushed; no task is open. The design is in [software-design/](../../software-design/README.md)
   (start with [accounts](../../software-design/app/accounts.md)); the finished plan is in the archive

@@ -23,7 +23,7 @@
     onCancel: () => void;
   } = $props();
 
-  // The save's stage and progress line: the event's stage in plain words, or *Saving …* before
+  // The save's stage and progress line: the event's stage in plain words, or *Saving* before
   // the first `save-progress` arrives.
   const savingText = $derived(
     progress ? saveStageText(progress.stage, progress.page, progress.pages) : texts.plan.saving,

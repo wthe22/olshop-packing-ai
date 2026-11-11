@@ -31,7 +31,10 @@ fn the_bundled_copy_holds_eight_couriers_and_one_rule() {
         tags,
         [
             ("gojek", ["GKS".to_string()].as_slice()),
-            ("grab", ["Sameday".to_string()].as_slice())
+            (
+                "grab",
+                ["Sameday".to_string(), "Same-day".to_string()].as_slice()
+            )
         ]
     );
     assert_eq!(workflows.not_courier_logos.len(), 5);

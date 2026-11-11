@@ -154,6 +154,32 @@ fn shopee_page(header: Vec<Run>, rows: &[Row]) -> PageText {
 }
 
 #[test]
+fn the_shopee_instant_slip_wraps_inside_words() {
+    let rows: [Row; 1] = [(
+        &["Sepatu Standar Sa", "mping Motor"],
+        &["Hitam"],
+        &["SEPATU-HITA", "M"],
+        4,
+    )];
+    let mut page = shopee_page(shopee_header(), &rows);
+    // The same cells on the word-wrapped layout join with a space.
+    assert_eq!(
+        read_slip(&page).unwrap().lines[0].name,
+        "Sepatu Standar Sa mping Motor"
+    );
+    page.text = "Kode Pengambilan: 12AB".to_string();
+    assert_eq!(
+        read_slip(&page).unwrap().lines,
+        vec![line(
+            "Sepatu Standar Samping Motor",
+            "Hitam",
+            "SEPATU-HITAM",
+            4
+        )]
+    );
+}
+
+#[test]
 fn the_shopee_style_slip_reads_its_cells_by_column_role() {
     let rows: [Row; 1] = [(
         &["Sepatu Standar Samping", "Motor | Pelindung Rantai"],

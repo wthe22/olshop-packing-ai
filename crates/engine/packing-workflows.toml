@@ -80,7 +80,7 @@ instant_tags = ["GKS"]
 
 [[courier_classifier]]
 courier_code = "grab"
-instant_tags = ["Sameday"]
+instant_tags = ["Sameday", "Same-day"]
 
 # The buying channels' strips: tokopedia | Shop 905x118, tokopedia | TikTok 527x73, the Shopee
 # wordmark 800x253, TikTok Shop 326x59, tokopedia PLUS 618x78.

@@ -6,6 +6,7 @@ use std::sync::OnceLock;
 
 use regex::Regex;
 
+use crate::label::is_instant;
 use crate::text::{PageText, Run};
 
 const COLUMN_TOLERANCE: f64 = 3.0; // a column starts this much left of its header word
@@ -43,6 +44,8 @@ enum ColumnRole {
 /// A slip's table header: its four words left to right, each with the role of its column.
 struct SlipHeader {
     words: [(&'static str, ColumnRole); 4],
+    /// How the style's instant-service label wraps a cell.
+    instant_wrap: Wrap,
 }
 
 /// The TikTok and Tokopedia slip; its `SKU` column holds the variation.
@@ -53,6 +56,7 @@ const ENGLISH_SLIP: SlipHeader = SlipHeader {
         ("Seller SKU", ColumnRole::SellerSku),
         ("Qty", ColumnRole::Qty),
     ],
+    instant_wrap: Wrap::Word,
 };
 
 /// The Shopee-style slip: the same three cells under Indonesian names, and its `SKU` column
@@ -64,9 +68,20 @@ const SHOPEE_SLIP: SlipHeader = SlipHeader {
         ("Variasi", ColumnRole::Variation),
         ("Qty", ColumnRole::Qty),
     ],
+    instant_wrap: Wrap::Character,
 };
 
 const SLIP_HEADERS: [SlipHeader; 2] = [ENGLISH_SLIP, SHOPEE_SLIP];
+
+/// Where a slip breaks a cell's text that does not fit on one line.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Wrap {
+    /// Between words: the lines join with a space, except after `-`.
+    Word,
+    /// At any character, inside a word too (the Shopee-style instant label): the lines join with
+    /// nothing between. A break that fell on a space loses that space.
+    Character,
+}
 
 fn int_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
@@ -85,11 +100,16 @@ fn cmp_asc(a: f64, b: f64) -> Ordering {
 /// Mirrors `slip.Slip` / `slip._slip`.
 pub fn read_slip(page: &PageText) -> Option<Slip> {
     let runs = &page.runs;
-    let (header_y, columns) = find_header(runs, page.width)?;
+    let (header_y, columns, header) = find_header(runs, page.width)?;
+    let wrap = if is_instant(&page.text) {
+        header.instant_wrap
+    } else {
+        Wrap::Word
+    };
     let table_end = table_end(runs);
     let rows = rows(runs, &columns, header_y, table_end);
     let lower_bound = table_end.unwrap_or(f64::NEG_INFINITY);
-    let lines = cells(runs, &columns, &rows, lower_bound)
+    let lines = cells(runs, &columns, &rows, (lower_bound, wrap))
         .into_iter()
         .map(|(cells, quantity)| slip_line(&columns, &cells, quantity))
         .collect();
@@ -104,13 +124,14 @@ pub fn read_slip(page: &PageText) -> Option<Slip> {
 /// right edge (the next column's word x, the page width after the last).
 type Column = (ColumnRole, f64, f64);
 
-/// The header line's y and its columns: the first line that holds one of the slip headers.
-fn find_header(runs: &[Run], page_width: f64) -> Option<(f64, Vec<Column>)> {
+/// The header line's y, its columns and the header found: the first line that holds one of the
+/// slip headers.
+fn find_header(runs: &[Run], page_width: f64) -> Option<(f64, Vec<Column>, &'static SlipHeader)> {
     for line in lines(runs) {
         let (text, starts) = joined(&line);
         for header in &SLIP_HEADERS {
             if let Some(columns) = columns_of(&text, &starts, header, page_width) {
-                return Some((line[0].y, columns));
+                return Some((line[0].y, columns, header));
             }
         }
     }
@@ -245,7 +266,7 @@ fn cells(
     runs: &[Run],
     columns: &[Column],
     rows: &[(f64, i64)],
-    lower_bound: f64,
+    (lower_bound, wrap): (f64, Wrap),
 ) -> Vec<(Vec<String>, i64)> {
     let excluded = |text: &str| EXCLUDED.iter().any(|prefix| text.starts_with(prefix));
     let mut out = Vec::new();
@@ -267,7 +288,7 @@ fn cells(
                         && !excluded(&r.text)
                 })
                 .collect();
-            result.push(join(&mut pieces));
+            result.push(join(&mut pieces, wrap));
         }
         out.push((result, *quantity));
     }
@@ -299,14 +320,21 @@ fn slip_line(columns: &[Column], cells: &[String], quantity: i64) -> SlipLine {
     line
 }
 
-/// Top-to-bottom, left-to-right; a wrap right after '-' joins without a space.
-fn join(pieces: &mut [&Run]) -> String {
+/// Top-to-bottom, left-to-right; between lines as `wrap` says.
+fn join(pieces: &mut [&Run], wrap: Wrap) -> String {
     pieces.sort_by(|a, b| cmp_asc(b.y, a.y).then_with(|| cmp_asc(a.x, b.x)));
     let mut out = String::new();
+    let mut last_y: Option<f64> = None;
     for run in pieces.iter() {
-        if !out.is_empty() && !out.ends_with('-') {
+        let same_line = last_y.is_some_and(|y| (y - run.y).abs() < LINE_TOLERANCE);
+        let glued = match wrap {
+            Wrap::Word => out.ends_with('-'),
+            Wrap::Character => !same_line,
+        };
+        if !out.is_empty() && !glued {
             out.push(' ');
         }
+        last_y = Some(run.y);
         out.push_str(&run.text);
     }
     out

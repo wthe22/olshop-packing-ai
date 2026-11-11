@@ -59,22 +59,6 @@ pub fn newest_batch_rule(data_dir: &Path) -> Result<Option<String>, StoreError> 
     Ok(None)
 }
 
-/// Whether a date has a group PDF of a live batch that is not marked Printed yet: the panel's mark
-/// under today. A damaged journal, or a date with no journal, has none.
-pub fn has_unprinted_groups(data_dir: &Path, date: Date) -> Result<bool, StoreError> {
-    let journal = Journal::open(&DateFolder::new(data_dir, date))?;
-    if journal.damage().is_some() {
-        return Ok(false);
-    }
-    Ok(journal.fold().live.values().any(|live| {
-        live.saved
-            .outputs
-            .iter()
-            .filter_map(|output| output.group.as_deref())
-            .any(|code| !live.printed.contains(code))
-    }))
-}
-
 /// The names of the folders in `dir`; none when it is not there.
 pub(crate) fn subfolders(dir: &Path) -> Result<Vec<String>, StoreError> {
     let entries = match fs::read_dir(dir) {

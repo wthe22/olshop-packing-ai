@@ -10,7 +10,7 @@
   import GroupPdfRow from "./GroupPdfRow.svelte";
   import OutputButtons from "./OutputButtons.svelte";
   import ReprintsCard from "./ReprintsCard.svelte";
-  import DaySummaryButton from "./DaySummaryButton.svelte";
+  import SummaryMenu from "./SummaryMenu.svelte";
   import { accountsOf } from "./dayAccounts";
 
   let {
@@ -100,7 +100,9 @@
         {/each}
       {/if}
     </span>
-    <DaySummaryButton
+    <SummaryMenu
+      label={texts.day.daySummary}
+      title={texts.day.daySummaryTitle}
       accounts={accountsOf(overview?.batches ?? [])}
       disabled={writing || !overview || overview.batches.length === 0}
       onWrite={onDaySummary}
@@ -145,7 +147,7 @@
             <span class="batch-name">{texts.day.batch(batch.batch)}</span>
             <span class="facts"
               >{texts.day.batchFacts(batch.time, batch.files, batch.orders)} · {texts.day.batchAccounts(
-                batch.accounts,
+                batch.accounts.length,
               )}{#if batch.amended}{texts.day.amended}{/if}</span
             >
           </span>
@@ -168,24 +170,26 @@
         {/each}
         <div class="batch-foot">
           <span class="packing">
-            {texts.day.summaryPdf}
-            <OutputButtons
-              file={batch.summary}
-              problem={batch.summary_problem}
-              mark={null}
-              printable={false}
-              {onRestore}
-              {onPrint}
-              {onOpenOutput}
-            />
-            {#if batch.accounts.length > 1}
-              {#each batch.accounts as { account } (account)}
-                <button
-                  title={texts.day.accountSummaryTitle(account)}
-                  disabled={writing}
-                  onclick={() => onAccountSummary(batch, account)}>{account}</button
-                >
-              {/each}
+            {#if batch.accounts.length > 1 && batch.summary_problem !== "changed"}
+              <SummaryMenu
+                label={texts.day.summaryPdf}
+                title={texts.day.summaryPdfTitle}
+                accounts={batch.accounts.map(({ account }) => account)}
+                disabled={writing}
+                onWrite={(account) =>
+                  account === null ? onOpenOutput(batch.summary) : onAccountSummary(batch, account)}
+              />
+            {:else}
+              {texts.day.summaryPdf}
+              <OutputButtons
+                file={batch.summary}
+                problem={batch.summary_problem}
+                mark={null}
+                printable={false}
+                {onRestore}
+                {onPrint}
+                {onOpenOutput}
+              />
             {/if}
           </span>
           {#if batch.left_out.length > 0}

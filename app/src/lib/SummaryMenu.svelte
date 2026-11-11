@@ -1,14 +1,18 @@
 <script lang="ts">
-  // *Day summary*: one button, or, when the date's live batches hold more than one account, a menu
-  // of *All accounts* and each account.
+  // A summary's button (*Day summary*, a batch's *Summary PDF*): one button, or, when its batches
+  // hold more than one account, a menu of *All accounts* and each account.
   import { texts } from "../texts";
 
   let {
+    label,
+    title,
     accounts,
     disabled,
     onWrite,
   }: {
-    // The accounts of the date's live batches; the button is a menu when there are several.
+    label: string;
+    title: string;
+    // The accounts of the summary's batches; the button is a menu when there are several.
     accounts: string[];
     disabled: boolean;
     // `null`: every account.
@@ -26,11 +30,11 @@
 {#if accounts.length > 1}
   <span class="menu">
     <button
-      title={texts.day.daySummaryTitle}
+      {title}
       {disabled}
       aria-haspopup="menu"
       aria-expanded={menuOpen}
-      onclick={() => (menuOpen = !menuOpen)}>{texts.day.daySummary} ▾</button
+      onclick={() => (menuOpen = !menuOpen)}>{label} ▾</button
     >
     {#if menuOpen}
       <span class="items" role="menu">
@@ -42,9 +46,7 @@
     {/if}
   </span>
 {:else}
-  <button title={texts.day.daySummaryTitle} {disabled} onclick={() => onWrite(null)}
-    >{texts.day.daySummary}</button
-  >
+  <button {title} {disabled} onclick={() => onWrite(null)}>{label}</button>
 {/if}
 
 <style>

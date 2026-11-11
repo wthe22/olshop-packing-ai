@@ -111,7 +111,7 @@ order; the summary PDF numbers them ([D-LABEL-19](summaries.md#d-label-19--the-s
 ## D-LABEL-21 — An instant label is named by its tag; its header images are never asked about
 
 **Decision.** A courier's `instant_tags` name the courier of an instant-service label, which has no logo and no
-tracking ID: `GKS` is Gojek, `Sameday` is Grab. Its header images are the buying channel's strips: none of them
+tracking ID: `GKS` is Gojek, `Sameday` and `Same-day` are Grab. Its header images are the buying channel's strips: none of them
 is asked about in the logo prompt. A tag in no list is asked about once in the logo prompt. It replaces
 D-LABEL-7.
 

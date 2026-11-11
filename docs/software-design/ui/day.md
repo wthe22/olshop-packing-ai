@@ -8,16 +8,16 @@ The start screen: what has been saved on the open date, for every account, and t
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  Wed, 7 Oct 2026 (today) (2 batches) (729 orders) (5 group PDFs)  [Day summary] [+ New batch]│
 │                                                                                        │
-│  ┌ Batch 2  saved 09:12 · 2 files · 129 orders · Toko Alfa 88, Toko Beta 41 [Amend] [Revert] │
+│  ┌ Batch 2  saved 09:12 · 2 files · 129 orders · 2 accounts ───────── [Amend] [Revert] │
 │  │  2-A  Sepatu            88 orders    3 contents               [✓] [Print] [Open]  │ │
 │  │  2-Z  Lainnya           41 orders   12 contents  Sent 09:14 ✕ [ ] [Print] [Open]  │ │
-│  │  Summary [Open] [Toko Alfa] [Toko Beta]   Saved with 2 errors ▸   Warnings: 1 ▸    │ │
+│  │  [Summary PDF ▾]                          Saved with 2 errors ▸   Warnings: 1 ▸    │ │
 │  └───────────────────────────────────────────────────────────────────────────────────┘ │
-│  ┌ Batch 1  saved 07:40 · 3 files · 600 orders · Toko Alfa ──────────────────────────┐ │
+│  ┌ Batch 1  saved 07:40 · 3 files · 600 orders · 1 account ──────────────────────────┐ │
 │  │  1-A  Sepatu           172 orders    4 contents               [ ] [Print] [Open]  │ │
 │  │  1-B  Spion & Knalpot   35 orders    4 contents    [ ]  ⚠ missing [Print] [Open]  │ │
 │  │  1-Z  Lainnya          393 orders   38 contents               [ ] [Print] [Open]  │ │
-│  │  Summary [Open]           Warnings: none   Left out: 3 ▸           [Open folder]  │ │
+│  │  Summary PDF [Open]       Warnings: none   Left out: 3 ▸           [Open folder]  │ │
 │  └───────────────────────────────────────────────────────────────────────────────────┘ │
 │  ┌ Reprints · 1 file · 3 orders ─────────────────────────────────────────────────────┐ │
 │  │  R1   made 09:40     3 orders     3 pages            Orders ▾   [Print] [Open]    │ │
@@ -31,7 +31,7 @@ The start screen: what has been saved on the open date, for every account, and t
 - **The open date** is the title, *Wed, 7 Oct 2026*, with a *today* pill when it is today; the title bar
   does not repeat it (R-UI-37). Its counts stand beside it as pills (no reprint, no pill for them).
 - Newest batch on top, each a card whose shaded head is *Batch 2* in bold and its save time, files and
-  orders, then its accounts: one account by its name, several each with its orders, most first. Each group PDF: `<batch>-<code>`, the group's name, its orders and their order
+  orders, then how many accounts its orders are of (*2 accounts*). Each group PDF: `<batch>-<code>`, the group's name, its orders and their order
   contents (*88 orders*, *3 contents*); the code is a chip in the logo's blue. Each count is a column of its own, its number right-aligned in a
   fixed width and its word after it in the muted colour, so the numbers of a card stand under each other.
 - **Print** opens the print preview of a group PDF or a reprint over the app's window,
@@ -50,12 +50,14 @@ The start screen: what has been saved on the open date, for every account, and t
   neither.
 - **Open** opens the group PDF, or the batch's summary PDF of all accounts, in the PC's default PDF viewer;
   a print from there marks nothing. A summary PDF has no **Print** ([D-APP-29](../decisions/accounts.md)). Before **Print** or **Open**, a file that is not there any more (deleted in Explorer)
-  is written again, checked like a **Restore**, with the dialog *Writing `<file>` again …*; a summary PDF
+  is written again, checked like a **Restore**, with the dialog *Writing `<file>` again*; a summary PDF
   written again has the program's current layout. **Open folder** opens the date's `output\` folder in
   Explorer.
-- **An account's button** in the summary row, when the batch holds more than one account, writes that
-  account's summary of the batch and opens it ([summary PDF](../labels/summary-pdf.md#one-account)), with the
-  dialog *Writing the summary of Toko Alfa …*; a finding of its check is shown and nothing is kept.
+- **Summary PDF** is a menu, like **Day summary**, when the batch holds more than one account: *All
+  accounts* opens the batch's summary PDF; an account writes that account's summary of the batch and opens it
+  ([summary PDF](../labels/summary-pdf.md#one-account)), with the dialog *Writing the summary of Toko Alfa*; a
+  finding of its check is shown and nothing is kept. A summary PDF found changed shows **Restore** in place
+  of the menu.
 - **Amend** and **Revert** appear only on the newest batch ([05 After the save](../workflow/05-after-save.md)):
   - Revert asks: "Undo batch 2?" — "Its 2 group PDFs and summary PDF are deleted. Throw away its printed
     labels." [Undo batch 2] [Cancel]
@@ -77,7 +79,7 @@ The start screen: what has been saved on the open date, for every account, and t
   Reprints are made on [Search](search.md).
 - **Day summary** writes the [day summary](../labels/day-summary.md) of the open date and opens it. When
   the date's live batches hold more than one account it is a menu: *All accounts*, then each account; while it
-  is written the dialog *Writing the day summary …* shows and the button is off, so it is written once. It is
+  is written the dialog *Writing the day summary* shows and the button is off, so it is written once. It is
   off while the date has no batch.
 - An input that is missing or changed is a line above the batches, naming the file and the batches that
   use it ([Messages](messages.md)).

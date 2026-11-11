@@ -17,7 +17,7 @@ mod outputs;
 mod views;
 
 pub use date::{DateFolder, OpenedDate, open_date, view_date};
-pub use dates::{dates, has_unprinted_groups, journal_lengths, newest_batch_rule};
+pub use dates::{dates, journal_lengths, newest_batch_rule};
 pub use error::StoreError;
 pub use files::sha256_of;
 pub use fold::{Damage, DamageReason, Fold, LastWrites, LiveBatch, Reprint};

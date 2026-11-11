@@ -7,7 +7,7 @@ of [Sort rules](sort-rules.md); **×**, a click beside it or `Esc` returns.
 ```
 ┌ Accounts ──────────────────────────────────────────────────────────────────────────── [×] ┐
 │ [ Toko Alfa ][ Toko Beta ]  + New account                                                 │
-│ ┌ Toko Alfa                                          [Rename…]  [Delete account] ──────┐ │
+│ ┌ Toko Alfa                                          [Rename]  [Delete account] ──────┐ │
 │ │ SHOPS  The labels of these senders are this account's orders.                          │ │
 │ │ [ Toko Alfa                       ] [×]                                                │ │
 │ │ [ Toko Alfa Official              ] [×]                                                │ │
@@ -27,16 +27,16 @@ of [Sort rules](sort-rules.md); **×**, a click beside it or `Esc` returns.
 - **The tabs** are the accounts of `packing-settings.toml`, in the order they were made, side by side as
   Settings' theme choice; the account shown is raised. It opens on the first account. With none yet it says
   *No accounts yet. The first read of labels asks which account each shop belongs to.* and **+ New account**.
-- **+ New account** asks for a name in a line under the tabs, with **Cancel** and **Create**; a name the rules
-  refuse ([accounts › Names](../app/accounts.md#names)) is told under the field. The new account has no shop
+- **+ New account** asks for a name in a dialog over the screen, with **Create** and **Cancel**; a name the
+  rules refuse ([accounts › Names](../app/accounts.md#names)) is told under the field. The new account has no shop
   and is shown.
 - **Another tab**, or **+ New account**, while the shops have unsaved changes asks first: *Discard the
   changes to Toko Alfa's shops?* [Discard] [Cancel].
 
 ## The account's card
 
-- **The head**: the account's name, **Rename…** and **Delete account**.
-  - **Rename…** puts the name in a field in place, with **Cancel** and **Rename**; Enter renames, `Esc`
+- **The head**: the account's name, **Rename** and **Delete account**.
+  - **Rename** puts the name in a field in place, with **Cancel** and **Rename**; Enter renames, `Esc`
     cancels. A refused name is told under the field. The line under it says: *Orders saved before keep the
     name they were saved with.*
   - **Delete account** asks "Delete account Toko Beta?" — "Its shops are asked about again at the next read.
@@ -48,7 +48,7 @@ of [Sort rules](sort-rules.md); **×**, a click beside it or `Esc` returns.
 - **Dates**: the dates with orders of this account, newest first, months folded as in the [panel](panel.md);
   each with the account's orders and the batches that hold them, as count columns. A folded month shows its
   orders. A click on a date opens it on the Day screen and closes this page; a draft being prepared asks
-  first. The counts come from the search index (*Loading…* until it is built) and are the orders saved
+  first. The counts come from the search index (*Loading* until it is built) and are the orders saved
   under this name.
 - **The foot** stays in view: *Unsaved changes*, **Cancel** and **Save** for the shops, as on Sort rules.
   Save writes `packing-settings.toml` under the data folder's lock.

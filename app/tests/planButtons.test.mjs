@@ -57,7 +57,7 @@ test("the Plan screen's words are the designed words", () => {
   // The amend's read shows its progress while the batch's labels are read again.
   assert.equal(
     texts.day.amendReading(143, 257),
-    "Reading the batch's labels …  page 143 of 257",
+    "Reading the batch's labels: page 143 of 257",
   );
   // The day switch still asks before discarding a draft.
   assert.equal(texts.day.askDiscardDraft.title, "Discard the batch being prepared?");

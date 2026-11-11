@@ -11,10 +11,9 @@ or hides it.
 │ DATES                    │  Wed, 21 Oct 2026 (today) (2 batches) (729 orders)          │
 │ ▾ October 2026           │                                         [ + New batch ]     │
 │ ▌ Wed, 21 Oct · today 729│  ┌ Batch 2  saved 09:12 · 129 orders ── [Amend] ┐           │
-│     · not printed yet    │  │  2-A  Sepatu         88 orders  [✓] [Open]   │           │
-│   Tue, 20 Oct        530 │  │  2-Z  Lainnya        41 orders  [ ] [Open]   │           │
-│   Mon, 19 Oct        412 │  └──────────────────────────────────────────────┘           │
-│ ▸ September 2026         │                                                             │
+│   Tue, 20 Oct        530 │  │  2-A  Sepatu         88 orders  [✓] [Open]   │           │
+│   Mon, 19 Oct        412 │  │  2-Z  Lainnya        41 orders  [ ] [Open]   │           │
+│ ▸ September 2026         │  └──────────────────────────────────────────────┘           │
 │ ⚠ Sat, 3 Oct  damaged    │                                                             │
 └──────────────────────────┴─────────────────────────────────────────────────────────────┘
 ```
@@ -24,9 +23,8 @@ or hides it.
 - **Dates** of the data folder, newest first (*Wed, 21 Oct*), each with its number of orders of every
   account, from the search index. Today is always listed, with *· today*, even before it has a folder. The
   open date is marked ▌ and shaded. One account's orders per date are on the [Accounts](accounts.md) screen.
-- **`· not printed yet`** under today's row when one of today's live batches has a group PDF not marked
-  **Printed** ([Day](day.md)). Today's journal is read when the panel is read; a summary PDF has no tick and
-  does not count.
+- A date's row shows only the date and its orders: whether its group PDFs are printed is on the
+  [Day](day.md) screen.
 - **Months fold**: the month of the open date and the current month start open, the others closed.
 - **Click a date** to open it ([01 Start and open](../workflow/01-start-and-open.md#2-open-a-date)). A draft
   being prepared asks first.

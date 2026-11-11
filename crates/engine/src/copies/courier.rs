@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 use regex::Regex;
 
 use crate::ids::{CourierCode, TrackingId};
-use crate::label::whitespace_re;
+use crate::label::{is_instant, whitespace_re};
 use crate::record::{CourierClue, CourierClueKind};
 use crate::text::{LogoImage, PageText};
 use crate::workflows::{Classifier, Workflows};
@@ -136,28 +136,30 @@ fn logo_courier<'a>(workflows: &'a Workflows, logos: &[LogoImage]) -> Option<Nam
 
 fn pickup_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
-    R.get_or_init(|| Regex::new(r"^[A-Z]{2}\d{4}$").expect("built-in pickup regex"))
+    // Two capital letters and four digits on the TikTok and Tokopedia labels, two digits and two
+    // capital letters on the Shopee-style one.
+    R.get_or_init(|| Regex::new(r"^([A-Z]{2}\d{4}|\d{2}[A-Z]{2})$").expect("built-in pickup regex"))
 }
 
 /// How far from the caption's line the pickup code may sit, in points: it is printed beside it
 /// in large type.
 const PICKUP_REACH: f64 = 30.0;
 
-/// An instant-service label prints `Kode Pengambilan` (business-process 02).
-pub(super) fn is_instant(text: &str) -> bool {
-    whitespace_re()
-        .replace_all(text, "")
-        .contains("KodePengambilan")
-}
-
-/// The pickup code of an instant-service label: the run of two capital letters and four digits
-/// beside its `Kode Pengambilan` caption. The page text does not keep the two together.
+/// The pickup code of an instant-service label: printed after its `Kode Pengambilan` caption in
+/// the caption's own run (the Shopee-style label), or as a run of its own beside it.
 pub(super) fn pickup_code(page: &PageText) -> Option<String> {
     let caption = page.runs.iter().find(|run| {
         whitespace_re()
             .replace_all(&run.text, "")
             .contains("KodePengambilan")
     })?;
+    let inline = caption
+        .text
+        .split_once("Pengambilan")
+        .map(|(_, rest)| rest.trim_start_matches(':').trim());
+    if let Some(code) = inline.filter(|code| pickup_re().is_match(code)) {
+        return Some(code.to_string());
+    }
     page.runs
         .iter()
         .find(|run| {

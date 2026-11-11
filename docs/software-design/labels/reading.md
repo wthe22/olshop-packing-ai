@@ -8,7 +8,7 @@
 | `tracking_id` | The label text, in one of the tracking-ID forms of `packing-workflows.toml` ([courier](courier.md)) |
 | `courier`, `courier_clue` | Deduced from the label: the courier and the clue that named it ([courier](courier.md)) |
 | `ship_by_date` | The date of the label's `In transit by: dd/mm/yyyy hh:mm`, or of the Shopee-style label's `Batas Kirim: dd-mm-yyyy` ([D-APP-21](../decisions/app-features.md)) |
-| `pickup_code` | The instant-service label's code: the run of two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together) (kept in the record; its label prints it) |
+| `pickup_code` | The instant-service label's code: two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together); on the Shopee-style instant label two digits and two capital letters after the caption in its own text run (kept in the record; its label prints it) |
 | `account`, `shop` | The listed shop name found in the sender, and the account that lists it ([accounts](../app/accounts.md#the-account-of-an-order)) |
 | item lines | The slip table: product name, variation, Seller SKU, quantity |
 | `total_quantity` | The slip's printed `Qty Total`; none on the Shopee-style slip (a filter counts the lines instead: [conditions](../rules-file/conditions.md)) |
@@ -71,7 +71,10 @@ The slip is read by text position, not by reading order: each text run of the pa
   column ends at the next header word's x (the last at the page's right edge).
 - **Rows**: sorted by y, a row starts at each `Qty` value. The runs inside a column's x-range at or after
   the row's y (and before the next row) are that cell. A wrapped cell joins its lines with a space, except
-  a wrap directly after `-`, which joins without one (`FI 2012-` + `2015` → `FI 2012-2015`).
+  a wrap directly after `-`, which joins without one (`FI 2012-` + `2015` → `FI 2012-2015`). The
+  Shopee-style instant label (a Shopee slip on a page with `Kode Pengambilan`) breaks a cell at any
+  character, so its lines join with nothing between (`Sa` + `mping` → `Samping`); a break that fell on a
+  space loses it ([Q-LABEL-13](../questions/label.md)).
 - **The table's end** is the caption under it — `Qty Total:` on the TikTok and Tokopedia slips, `Pesan:`
   on the Shopee-style slip — so the caption's value and the footer's tracking IDs are not read into the
   last row.

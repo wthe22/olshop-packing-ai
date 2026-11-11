@@ -54,9 +54,6 @@
                     {#if row.damaged}{texts.panel.damaged}{:else}{row.orders ?? ""}{/if}
                   </span>
                 </button>
-                {#if row.today && panel.today_unprinted}
-                  <span class="unprinted">· {texts.panel.notPrinted}</span>
-                {/if}
                 {#if row.folder}
                   <button
                     class="menu"
@@ -185,13 +182,6 @@
   }
 
   /* Under today's row. */
-  .unprinted {
-    flex-basis: 100%;
-    padding: 0 0.5rem 0.3rem 1.4rem;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-  }
-
   button.menu {
     visibility: hidden;
     border: none;

@@ -1,8 +1,8 @@
 //! The side panel (panel.md): the dates of the data folder with their orders of every account, from
-//! the search index, and whether today has a group PDF not marked Printed yet.
+//! the search index.
 
 use jiff::civil::Date;
-use packing_store::{dates, has_unprinted_groups};
+use packing_store::dates;
 use serde::Serialize;
 use tauri::State;
 
@@ -12,8 +12,6 @@ use crate::{AppState, today};
 pub struct PanelView {
     /// Newest first; today is always listed.
     dates: Vec<DateRow>,
-    /// Today has a group PDF of a live batch not marked Printed yet.
-    today_unprinted: bool,
     /// The search index is still being built: no counts yet.
     loading: bool,
 }
@@ -32,11 +30,9 @@ pub struct DateRow {
 
 pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
     let today = today();
-    let (mut folders, data_dir, today_unprinted) = state.with_data(|data| {
+    let (mut folders, data_dir) = state.with_data(|data| {
         let folders = dates(&data.dir).map_err(|error| error.to_string())?;
-        let unprinted =
-            has_unprinted_groups(&data.dir, today).map_err(|error| error.to_string())?;
-        Ok((folders, data.dir.clone(), unprinted))
+        Ok((folders, data.dir.clone()))
     })?;
     let today_has_folder = folders.contains(&today);
     if !today_has_folder {
@@ -65,11 +61,7 @@ pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
                 .then(|| data_dir.join(date.to_string()).display().to_string()),
         })
         .collect();
-    Ok(PanelView {
-        dates,
-        today_unprinted,
-        loading,
-    })
+    Ok(PanelView { dates, loading })
 }
 
 #[tauri::command]

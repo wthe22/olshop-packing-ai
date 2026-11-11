@@ -78,7 +78,7 @@ logos = []
 ```
 
 The bundled copy holds J&T Express (`jnt`), SiCepat (`sicepat`), J&T Cargo (`jnt-cargo`), IDX (`idx`), SPX
-(`spx`), Anteraja (`anteraja`), Gojek (`gojek`, tag `GKS`) and Grab (`grab`, tag `Sameday`) with the hashes,
+(`spx`), Anteraja (`anteraja`), Gojek (`gojek`, tag `GKS`) and Grab (`grab`, tags `Sameday` and `Same-day`) with the hashes,
 forms and tags of [courier deduction](../labels/courier.md), and the buying channels' strips in
 `not_courier`. A list field left out is empty.
 

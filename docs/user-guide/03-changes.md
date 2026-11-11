@@ -69,10 +69,10 @@ Four example filters (more in [the rules file](../software-design/rules-file/con
 **Accounts** in the title bar opens one account at a time: its shops, its dates and its name. **×**, a
 click beside it or `Esc` closes it.
 
-- **The tabs** are the accounts, in the order they were made; **+ New account** asks for a name. A name
+- **The tabs** are the accounts, in the order they were made; **+ New account** asks for a name in a dialog. A name
   that is taken is refused under the field. With no account yet, the first read of labels asks
   ([The shop prompt](02-a-day.md#the-shop-prompt)).
-- **Rename…** changes the name for the orders read from then on; orders saved before keep the name they
+- **Rename** changes the name for the orders read from then on; orders saved before keep the name they
   were saved with. **Delete account** asks first: its saved orders stay under its name and Search still
   finds them; its shops are asked about again at the next read.
 - **Shops** are the names its labels are sent by: one field each, **×** takes one off, **+ Add shop**

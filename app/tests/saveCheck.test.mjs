@@ -62,10 +62,10 @@ test("the dialog's words and the stage lines are the designed words", () => {
       saveStageText("Verifying", 0, 1),
       saveStageText("Saving", 0, 1),
     ],
-    ["Copying inputs …", "Writing …  file 2 of 3", "Verifying the outputs …", "Saving …"],
+    ["Copying inputs", "Writing file 2 of 3", "Verifying the outputs", "Saving"],
   );
   // Before the first event the Plan screen says it is saving.
-  assert.equal(texts.plan.saving, "Saving …");
+  assert.equal(texts.plan.saving, "Saving");
 
   // The Day card line counts errors, singular where it should be.
   assert.equal(texts.day.savedWithErrors(1), "Saved with 1 error ▸");

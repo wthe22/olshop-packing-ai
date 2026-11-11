@@ -553,10 +553,6 @@ fn the_panel_lists_the_dates_with_their_orders() {
     save(&state);
     state.index().wait();
     let shown = serde_json::to_value(panel(&state).unwrap()).unwrap();
-    assert_eq!(
-        shown["today_unprinted"], false,
-        "the batch was saved on another date"
-    );
     let dates = shown["dates"].as_array().unwrap();
     assert!(dates.iter().any(|row| row["today"] == true));
     let saved = dates.iter().find(|row| row["date"] == DAY).unwrap();

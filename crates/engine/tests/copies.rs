@@ -363,6 +363,26 @@ fn an_instant_label_is_named_by_its_tag_and_keeps_its_pickup_code() {
 }
 
 #[test]
+fn a_shopee_instant_label_prints_its_pickup_code_in_the_caption_run() {
+    let mut runs = label(
+        "1",
+        None,
+        &["Kode Pengambilan: 12AB"],
+        slip("Sepatu", 1, Some(1)),
+    );
+    runs.push(run(120.0, 398.0, "Same-day"));
+    let read = read_copies(
+        pages(vec![vec![page(runs, &[(TIKTOK_STRIP, None)])]]),
+        &["a.pdf"],
+        &workflows(),
+    )
+    .unwrap();
+    let copy = &read.copies[0];
+    assert_eq!(copy.courier.as_ref().map(|c| c.as_str()), Some("grab"));
+    assert_eq!(copy.pickup_code.as_deref(), Some("12AB"));
+}
+
+#[test]
 fn a_printed_total_that_differs_from_the_lines_is_found_per_copy() {
     let one = page(
         label("1", Some("JY0000000001"), &[], slip("Sepatu", 1, Some(3))),

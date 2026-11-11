@@ -157,7 +157,7 @@ where
                 courier::name_courier(workflows, &page, tracking_id.as_ref());
             // An instant label's header images are the buying channel's strips: its tag names
             // the courier, and a strip named as a courier would unname every such label.
-            if tracking_id.is_some() || !courier::is_instant(&page.text) {
+            if tracking_id.is_some() || !crate::label::is_instant(&page.text) {
                 note_unseen(&mut unseen, workflows, &page, &order_id);
             }
             copies.push(Copy {

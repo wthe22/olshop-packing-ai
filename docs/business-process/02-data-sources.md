@@ -111,6 +111,14 @@ creator handle, …) are not needed for packing.
   instant-service style again, with the `TikTok Shop` strip 326×59 — byte-identical to the Gojek page's —
   and the pickup code, but its header tag reads **`Sameday`** where the Gojek pages read `GKS`, and its
   `In transit by` is `23:59`. So the strip names the channel only; the tag names the courier.
+- **The Shopee-style instant label** (`2026-11-11 grab-express.pdf`, 1 page; the owner's word: Grab Express)
+  is the Shopee label's *Same-day* service: the header tag reads **`Same-day`**, and the page prints
+  `No. Pesanan:` (with a space after the dot) beside `Kode Pengambilan:` and its pickup code in **one
+  text object** — the code two digits + two capital letters. No courier logo, no tracking ID, `Berat:`,
+  `COD:`, `Batas Kirim: dd-mm-yyyy` and the Shopee slip (`Nama Produk` · `SKU` · `Variasi` · `Qty`,
+  then `Pesan:`). Its slip **breaks a cell's text at any character**, inside a word too (`…Standar Sa` /
+  `mping…`, a seller SKU `…-HITA` / `M`); the other Shopee layouts break between words. A break that falls
+  on a space prints no space on either line.
 - **The Anteraja label** (page 2 of `anteraja.pdf`, 3 pages: J&T Express, Anteraja, SiCepat) is a boxed
   layout like IDX: the `tokopedia | Shop` strip top left, the Anteraja logo (354×142, bytes
   `556e376839c5805d`) in the middle, the service tag `INS` top right, the tracking ID **`TSA-` + 11

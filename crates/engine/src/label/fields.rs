@@ -39,7 +39,7 @@ fn shopee_order_id_re() -> &'static Regex {
     // `regex` crate has no lookaround, so `find_order_id` checks by hand that a longer token is
     // not cut down to its first fourteen characters.
     R.get_or_init(|| {
-        Regex::new(r"No\.Pesanan:\s*(\d{6}[0-9A-Z]{8})").expect("built-in Shopee Order ID regex")
+        Regex::new(r"No\.\s*Pesanan:\s*(\d{6}[0-9A-Z]{8})").expect("built-in Shopee Order ID regex")
     })
 }
 
@@ -82,6 +82,13 @@ pub(super) fn has_digit_left(text: &str, start: usize) -> bool {
 /// The `(?!\d)` lookahead of the combined pattern: a right neighbour that is a digit rejects it.
 pub(super) fn has_digit_right(text: &str, end: usize) -> bool {
     text[end..].chars().next().is_some_and(|c| c.is_numeric())
+}
+
+/// An instant-service label prints `Kode Pengambilan` (business-process 02).
+pub fn is_instant(text: &str) -> bool {
+    whitespace_re()
+        .replace_all(text, "")
+        .contains("KodePengambilan")
 }
 
 /// `labels.find_order_id`: the Order ID on a page, or `None`.

@@ -14,14 +14,14 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 │ 3 orders in 2 batches   [–] Select all                                                              │
 │ ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐ │
 │ │     Order                       Items                            Label                          │ │
-│ │ [✓] 580000000000000042 Toko Alfa ×1  Sepatu Standar Samping Motor Wed, 7 Oct (2-A)  [Open] ›    │ │
+│ │ [✓] Toko Alfa 580000000000000042 ×1  Sepatu Standar Samping Motor Wed, 7 Oct Batch 2 [Open] ›    │ │
 │ │     (J&T Express) JY0000001234      — honda                      Sepatu x88 page 14  Reprinted  │ │
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ [ ] 580000000000000057 Toko Beta ×2  Spion Beat                   Wed, 7 Oct (2-B)  [Open] ⌄    │ │
+│ │ [ ] Toko Beta 580000000000000057 ×2  Spion Beat                   Wed, 7 Oct Batch 2 [Open] ⌄    │ │
 │ │     (J&T Express) JY0000001235                                   Spion x35 page 3               │ │
-│ │     Batch 2 · saved 09:12    from [▯ 10-07_09-05-49_Shipping label+Packing slip_2.pdf] p. 3     │ │
+│ │     From [▯ 10-07_09-05-49_Shipping label+Packing slip_2.pdf] p. 3, saved at 09:12 into group (2-B)│ │
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ [✓] 580000000000000061 Toko Alfa ×1  Kaca Spion                   Tue, 6 Oct (1-B)  [Open] ›    │ │
+│ │ [✓] Toko Alfa 580000000000000061 ×1  Kaca Spion                   Tue, 6 Oct Batch 1 [Open] ›    │ │
 │ │     (Unknown) no tracking ID    ×1  Spion Beat                   Spion x12 page 7               │ │
 │ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
 │ ─────────────────────────────────────────────────────────────────────────────────────────────────── │
@@ -51,22 +51,23 @@ On a narrower window the items take a line of their own under the order:
   *All days* ([D-UI-3](../decisions/ui.md)). Every account is searched unless the filter names one.
   The range's first and last date stand beside the list, so each choice shows what it covers; picking a date
   there makes the range the owner's own (*Custom range*). *All days* hides them. Results come from the search
-  index ([reprint](../app/reprint.md#the-search-index)); until it is built the screen says *Loading…*.
+  index ([reprint](../app/reprint.md#the-search-index)); until it is built the screen says *Loading*.
 - **Enter** in a box searches, so a scanned tracking ID finds its order at once; the first box has the
   focus when Search opens.
 - **Results**: the number of orders and batches and **Select all**, then one **row** per order under the
-  heads *Order*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; the Order ID in bold and its **shop** in the muted colour (its account's name in italics when
-  the label printed no sender), over the courier's name as a pill (*Unknown* when the label named none) and the tracking ID (*no tracking ID* when the
-  label printed none); its items, one line each (quantity, then name); the date it was saved on and the group
-  PDF's code (`2-A`) as a chip over the group's name and the **page** the label is on there (*page 14*,
+  heads *Order*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; its **shop** and the Order ID, both in bold at the size of
+  the row's other text (the account's name in italics when the label printed no sender), over the courier's name as a pill (*Unknown* when the label named none) and the tracking ID (*no tracking ID* when the
+  label printed none); its items, one line each (quantity, then name); the date it was saved on and its batch
+  (*Wed, 7 Oct Batch 2*) over the group's name and the **page** the label is on there (*page 14*,
   *pages 14–15* for a label with a second page), so the printed label is found in its stack; **Open** and the
   chevron. The order and label columns are as wide as their longest entry, so the items keep the rest of the
   row and a long product name wraps in one wide column. Results narrower than 54 rem (a window much less
   than full width) put the items on a line of their own under the order; narrower than 34 rem, the label
   too, and the heads are hidden. **Open** opens that group PDF, written again first when it is not there any
   more (as on the [Day](day.md) screen). The chevron opens the row's details under it, only what the row
-  does not show: *Batch 2 · saved 09:12* (its batch's last save) and the input PDF it was read from, its
-  file name in a box with a file icon in monospace, and its pages there.
+  does not show, as one line: *From* the input PDF it was read from (its file name in a box with a file icon
+  in monospace) and its pages there, *saved at 09:12* (its batch's last save) *into group* and the group PDF's
+  code (`2-B`) as a chip.
 - **Reprinted**: an order printed again before carries the mark *Reprinted* under **Open** (*Reprinted 2×* for more);
   its tooltip names each reprint and its date.
 - **Saved orders only**: an open draft's orders have no file yet and are not searched.

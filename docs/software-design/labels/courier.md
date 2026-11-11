@@ -47,7 +47,7 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    *Instant / Same Day* label ([business-process 02](../../business-process/02-data-sources.md)) is the only
    style with no courier logo and no tracking ID. It is recognised by the caption `Kode Pengambilan` with no
    tracking ID and no courier logo; its tag is looked up in `instant_tags`: `GKS` names Gojek, `Sameday`
-   Grab. Its header images are the buying channel's strips and are **never asked about**: a strip named as
+   and `Same-day` (the Shopee-style instant label) Grab. Its header images are the buying channel's strips and are **never asked about**: a strip named as
    a courier would leave every instant label of that channel unnamed. A tag in no list is asked about once
    in the logo prompt, like an unseen logo, and the answer is added to that courier's `instant_tags`. The
    style is known from three pages: each of these marks is re-checked on the next instant labels before it

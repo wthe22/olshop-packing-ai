@@ -11,10 +11,11 @@
 - **Dates**: **Viewed day** (the date the Day screen shows, the default; not listed when that is today),
   **Today**, **Yesterday**, **Last 7 days**, **Last 30 days**, **Custom range** (pick the first and last
   date) or **All days**, of every account, then **Search**: "3 orders in 2 batches" and one row per order.
-  **Order**: the Order ID and its shop (the account's name when the label printed none) over the courier and the tracking ID. **Items**, with the most room. **Label**:
-  the date and the group code over the group's name and the **page** the label is on (to find the printed
-  label in its stack). **Open** opens that group PDF; the arrow shows the batch's save time and the label
-  file it was read from, with its pages. In a narrow window the items move under the order.
+  **Order**: the shop (the account's name when the label printed none) and the Order ID over the courier
+  and the tracking ID. **Items**, with the most room. **Label**: the date and the batch over the group's
+  name and the **page** the label is on (to find the printed label in its stack). **Open** opens that group
+  PDF; the arrow shows one line: the label file it was read from and its pages, the batch's save time and
+  the group's code ("From … p. 3, saved at 09:12 into group 2-A"). In a narrow window the items move under the order.
 - **Account** and **Shop**: *Account equals* picks one account from the list and narrows the search to its
   orders; *Shop* does the same for a shop name. Without them every account is searched.
 - **Courier**: *equals* picks one courier from the list; *contains* or *starts with* takes typed text, so

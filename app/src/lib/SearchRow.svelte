@@ -1,9 +1,9 @@
 <script lang="ts">
-  // One order of Search's results as a row of the results' grid: its tick; its Order ID over its
-  // courier and tracking ID; its items, which take the room left; the date and group code over the
-  // group's name and the page the label is on; **Open**, the chevron of its details and its
-  // *Reprinted* mark. The details are what the row does not show: its batch's save time and the
-  // input PDF it was read from. The order and label columns take only their own width, so a long
+  // One order of Search's results as a row of the results' grid: its tick; its shop and Order ID
+  // over its courier and tracking ID; its items, which take the room left; the date and batch over
+  // the group's name and the page the label is on; **Open**, the chevron of its details and its
+  // *Reprinted* mark. The details are what the row does not show: the input PDF it was read from,
+  // its batch's save time and the group's code. The order and label columns take only their own width, so a long
   // product name keeps the rest; on a narrow window the items go under them. A click on the row's
   // text ticks it, for the mouse only: the tick is the keyboard's way.
   import type { SearchRow } from "./api/search";
@@ -49,12 +49,12 @@
   <input type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
   <div class="ids">
     <span class="line">
-      <span class="order">{row.order_id}</span>
       {#if row.shop}
         <span class="shop">{row.shop}</span>
       {:else}
         <span class="shop account">{row.account}</span>
       {/if}
+      <span class="order">{row.order_id}</span>
     </span>
     <span class="line">
       <span class="courier" class:unknown={!row.courier}>{row.courier ?? words.noCourier}</span>
@@ -69,7 +69,7 @@
   <div class="where">
     <span class="line">
       <span class="date">{formatShortDay(row.day)}</span>
-      <span class="group">{row.group}</span>
+      <span class="batch">{words.batch(row.batch)}</span>
     </span>
     <span class="line">
       <span class="file" title={row.file}>{fileLabel(row)}</span>
@@ -92,12 +92,10 @@
   </div>
   {#if traced}
     <p class="trace">
-      <span class="batch">{words.batch(row.batch, row.batch_time)}</span>
-      <span class="source"
-        >{words.from}
-        <span class="input"><Icon name="file" size={14} />{row.input}</span>
-        {words.inputPages(row.input_first_page, row.input_last_page)}</span
-      >
+      {words.from}
+      <span class="input"><Icon name="file" size={14} />{row.input}</span>
+      {words.inputPages(row.input_first_page, row.input_last_page)}{words.savedInto(row.batch_time)}
+      <span class="group">{row.group}</span>
     </p>
   {/if}
 </div>
@@ -162,19 +160,20 @@
   }
 
   .order {
+    font-size: 0.9rem;
     font-weight: 650;
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0.01em;
   }
 
   .shop {
-    color: var(--text-muted);
     font-size: 0.9rem;
+    font-weight: 650;
   }
 
   /* The label printed no sender: the account stands in the shop's place. */
   .shop.account {
     font-style: italic;
+    font-weight: 400;
   }
 
   .tracking {
@@ -242,7 +241,8 @@
     text-overflow: ellipsis;
   }
 
-  .page {
+  .page,
+  .batch {
     font-weight: 600;
   }
 
@@ -310,26 +310,13 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.3rem 1.25rem;
+    gap: 0.3rem 0.4rem;
     grid-column: 2 / -1;
     margin: 0;
     padding-top: 0.4rem;
     border-top: 1px solid var(--border-soft);
     color: var(--text-muted);
     font-size: 0.84rem;
-  }
-
-  .batch {
-    color: var(--text);
-    font-weight: 600;
-  }
-
-  .source {
-    display: inline-flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.4rem;
-    min-width: 0;
   }
 
   /* The input's file name, set apart as a file: its icon, a box, monospace. */

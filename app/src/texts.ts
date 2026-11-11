@@ -38,7 +38,6 @@ export const texts = {
     dates: "Dates",
     today: "today",
     damaged: "damaged",
-    notPrinted: "not printed yet",
     menu: "More",
     openFolder: "Open folder",
   },
@@ -72,11 +71,8 @@ export const texts = {
     batch: (n: number) => `Batch ${n}`,
     batchFacts: (time: string, files: number, orders: number) =>
       `saved ${time} · ${count(files, "file", "files")} · ${count(orders, "order", "orders")}`,
-    // The batch's accounts: one by its name, several each with its orders, most first.
-    batchAccounts: (accounts: { account: string; orders: number }[]) =>
-      accounts.length === 1
-        ? accounts[0].account
-        : accounts.map((a) => `${a.account} ${a.orders}`).join(", "),
+    // How many accounts the batch's orders are of: "3 accounts".
+    batchAccounts: (n: number) => count(n, "account", "accounts"),
     open: "Open",
     // **Print** opens the print preview over the app; a group PDF is then marked *Sent 09:14*,
     // whose ✕ takes the mark back when the print was cancelled or failed.
@@ -90,6 +86,9 @@ export const texts = {
     printedLabel: (file: string) => `Printed ${file}`,
     openFolder: "Open folder",
     summaryPdf: "Summary PDF",
+    // A batch's summary PDF with several accounts is a menu: *All accounts* opens the batch's file,
+    // an account writes that account's summary of the batch and opens it.
+    summaryPdfTitle: "Open the batch's summary PDF, or write one account's",
     // The words of a card's counts, each count in a column of its own after its number: a group
     // PDF's orders and their order contents ("88 orders  3 contents"), a reprint's orders and pages.
     orderWord: (n: number) => (n === 1 ? "order" : "orders"),
@@ -123,13 +122,11 @@ export const texts = {
     daySummary: "Day summary",
     daySummaryTitle: "Write the summary of the whole day as a PDF and open it",
     allAccounts: "All accounts",
-    // The summary button of one account of a batch.
-    accountSummaryTitle: (account: string) => `Write the summary of ${account} for this batch and open it`,
-    writingAccountSummary: (account: string) => `Writing the summary of ${account} …`,
+    writingAccountSummary: (account: string) => `Writing the summary of ${account}`,
     // The dialog while a file is written that the owner waits for: the day summary, or an output
     // that *Open* found missing.
-    writingDaySummary: "Writing the day summary …",
-    writingAgain: (file: string) => `Writing ${file} again …`,
+    writingDaySummary: "Writing the day summary",
+    writingAgain: (file: string) => `Writing ${file} again`,
     amended: " · amended",
     // The data folder also holds data of an older version, which is not read.
     older: (version: string, names: string[]) =>
@@ -142,7 +139,7 @@ export const texts = {
     // The green line after *Save batch*, shown for a few seconds.
     saved: (n: number, pdfs: number) =>
       `Batch ${n} saved: ${count(pdfs, "group PDF", "group PDFs")} and the summary PDF.`,
-    loading: "Loading…",
+    loading: "Loading",
     // *Amend* and *Revert*, on the newest batch only.
     amend: "Amend",
     revert: "Revert",
@@ -161,7 +158,7 @@ export const texts = {
     // While *Amend* reads the batch's own label files again (the
     // `read-progress` event), shown with a progress bar before the Plan screen opens.
     amendReading: (page: number, pages: number) =>
-      `Reading the batch's labels …  page ${page} of ${pages}`,
+      `Reading the batch's labels: page ${page} of ${pages}`,
     // Changing the day while a draft is open asks first; the batch being
     // prepared is thrown away. (The Plan screen's top *Back* never asks.)
     askDiscardDraft: { title: "Discard the batch being prepared?", body: null, ok: "Discard" },
@@ -190,9 +187,9 @@ export const texts = {
     selected: (files: number, pages: number) =>
       `Selected: ${count(files, "file", "files")} · ${count(pages, "page", "pages")}`,
     read: "Read labels",
-    // "Reading labels …  page 143 of 257 (file 1 of 2)".
+    // "Reading labels: page 143 of 257 (file 1 of 2)".
     reading: (page: number, pages: number, file: number, files: number) =>
-      `Reading labels …  page ${page} of ${pages} (file ${file} of ${files})`,
+      `Reading labels: page ${page} of ${pages} (file ${file} of ${files})`,
     back: "Back",
   },
 
@@ -269,11 +266,11 @@ export const texts = {
     // A new batch and an amend alike.
     save: "Save batch",
     // While *Save batch* runs — the stage and a progress bar. `saving` shows before the first `save-progress`.
-    saving: "Saving …",
-    saveCopying: "Copying inputs …",
-    saveWriting: (done: number, all: number) => `Writing …  file ${done + 1} of ${all}`,
-    saveVerifying: "Verifying the outputs …",
-    saveCommitting: "Saving …",
+    saving: "Saving",
+    saveCopying: "Copying inputs",
+    saveWriting: (done: number, all: number) => `Writing file ${done + 1} of ${all}`,
+    saveVerifying: "Verifying the outputs",
+    saveCommitting: "Saving",
     // The check before saving found something — the two lists, kept apart, with
     // *Save anyway* and *Cancel — nothing is saved*.
     checkTitle: "The verifier found the outputs differ from the record.",

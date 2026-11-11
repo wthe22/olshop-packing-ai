@@ -25,12 +25,12 @@ export const searchTexts = {
   rangeUntil: "Last date",
   search: "Search",
   // The search index is still being built.
-  loading: "Loading…",
+  loading: "Loading",
   // One line of an order's items, "name × quantity".
   item: (name: string, quantity: number) => `${name} ×${quantity}`,
   noMatch: "No saved order matches.",
-  // The heads of the results' columns: the Order ID over the courier and tracking ID, the items,
-  // the date and group code over the group's name and page.
+  // The heads of the results' columns: the shop and Order ID over the courier and tracking ID, the
+  // items, the date and batch over the group's name and page.
   columns: {
     order: "Order",
     items: "Items",
@@ -66,11 +66,12 @@ export const searchTexts = {
   // A row's **Open**, named for its group PDF.
   open: "Open",
   openFile: (file: string) => `Open ${file}`,
-  // The chevron that opens a row's details: its batch and the input PDF it was read from.
+  // The chevron that opens a row's details: "From [input.pdf] p. 3, saved at 09:12 into group 2-A".
   trace: "Where it came from",
-  batch: (n: number, time: string) => `Batch ${n} · saved ${time}`,
-  from: "from",
+  batch: (n: number) => `Batch ${n}`,
+  from: "From",
   inputPages: (first: number, last: number) => (first === last ? `p. ${first}` : `p. ${first}–${last}`),
+  savedInto: (time: string) => `, saved at ${time} into group`,
   reprint: (n: number) => `Reprint ${count(n, "order", "orders")}`,
   // "Reprint 1 written: 2 orders, 2 pages."
   made: (n: number, orders: number, pages: number) =>

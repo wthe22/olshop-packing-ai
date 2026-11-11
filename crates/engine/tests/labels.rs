@@ -92,6 +92,11 @@ fn the_shopee_style_label_is_keyed_by_its_own_order_number() {
     let cases = [
         // The caption's number: six digits then eight letters or digits.
         ("No.Pesanan: 261014ABCD1234", Some("261014ABCD1234")),
+        // The instant layout prints a space after the dot.
+        (
+            "No. Pesanan: 261111ABCD1234 Kode Pengambilan: 12AB",
+            Some("261111ABCD1234"),
+        ),
         // Whole only in the collapsed text on a spaced-out page.
         (
             "N o . P e s a n a n : 2 6 1 0 1 4 A B C D 1 2 3 4",

@@ -298,5 +298,5 @@ test("an account's summary of a batch is written and opened, or its findings sho
 
   await shell.daySummary("Toko Beta");
   assert.deepEqual(calls.find((call) => call.command === "day_summary").args, { day: "2026-10-07", account: "Toko Beta" });
-  assert.equal(texts.day.writingAccountSummary("Toko Alfa"), "Writing the summary of Toko Alfa …");
+  assert.equal(texts.day.writingAccountSummary("Toko Alfa"), "Writing the summary of Toko Alfa");
 });

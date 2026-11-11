@@ -8,7 +8,7 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
 
 - Built in memory at start, on its own thread, by folding every journal of the data folder
   ([journal](../data/journal.md#the-fold)); after each commit the new record is added. A year of dates
-  folds in about a second; Search shows *Loading…* until it is ready.
+  folds in about a second; Search shows *Loading* until it is ready.
 - One entry per order of a live batch: the fields a filter can use, its account and shop among them
   ([conditions](../rules-file/conditions.md#fields)), its date, batch and label group, the output file and
   the pages it fills there (the pages of the orders of its group before it, in printing order, plus one),
@@ -22,12 +22,12 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
 
 The [Search](../ui/search.md) screen takes a filter made with the boxes of the Sort rules screen and the
 dates to search: a range (the viewed date by default) or all dates, of every account
-([D-UI-3](../decisions/ui.md)); only the dates of the range are looked at. Each result row shows the order and its shop, its items, its date, batch and group
-file and its page there, a tick, and when opened its details: the batch's save time and the input PDF and
-pages it was read from:
+([D-UI-3](../decisions/ui.md)); only the dates of the range are looked at. Each result row shows its shop and the order, its items, its date, batch and group
+file and its page there, a tick, and when opened its details: the input PDF and pages it was read from,
+the batch's save time and the group's code:
 
 ```
-Batch 2 · saved 09:12    from [10-07_07-00-00_Shipping label+Packing slip_1.pdf] p. 12–13
+From [10-07_07-00-00_Shipping label+Packing slip_1.pdf] p. 12–13, saved at 09:12 into group 2-A
 ```
 
 Orders of an open draft are not searched: they are not saved.

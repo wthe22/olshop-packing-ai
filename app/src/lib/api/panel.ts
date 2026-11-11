@@ -19,8 +19,6 @@ export interface DateRow {
 export interface PanelView {
   // Newest first; today is always listed.
   dates: DateRow[];
-  // Today has a group PDF of a live batch not marked Printed yet.
-  today_unprinted: boolean;
   // The search index is still being built: no counts yet.
   loading: boolean;
 }

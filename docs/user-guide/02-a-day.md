@@ -32,12 +32,12 @@ The **Day** screen shows what has been saved on the open date and is the way to 
   first. It is written again each time you press it, so press it after the last batch of the day. When the
   date holds more than one account it is a menu: **All accounts**, then each account for that account's
   orders alone. A day summary still open in a PDF viewer may have to be closed first.
-- Each batch is a card: "Batch 2", "saved 09:12 · 2 files · 129 orders · Toko Alfa 88, Toko Beta 41" (the
-  accounts of the batch, the one with most orders first), one line per group PDF (`2-A`, its name,
+- Each batch is a card: "Batch 2", "saved 09:12 · 2 files · 129 orders · 2 accounts" (how many accounts
+  the batch's orders are of), one line per group PDF (`2-A`, its name,
   "88 orders", "3 contents") with **Print** and **Open**, and a line for the batch's summary PDF with
-  **Open** (a summary PDF is opened and printed from the PDF viewer, so it has no **Print**). A batch
-  with several accounts has one more button per account on that line: **Toko Alfa** writes the summary of
-  that account's orders in the batch and opens it.
+  **Open** (a summary PDF is opened and printed from the PDF viewer, so it has no **Print**). In a batch
+  with several accounts **Summary PDF** is a menu: **All accounts** opens the batch's summary PDF, **Toko
+  Alfa** writes the summary of that account's orders in the batch and opens it.
 - **Reprints**, under the batches, lists each reprint made on the date: `R1`, when it was made, its
   orders and pages, **Open**, and **Orders ▸** for the orders in it.
 - The tick beside **Open** notes that you have printed that group PDF. It is only a note — nothing is
@@ -74,7 +74,7 @@ courier, **Not a courier**, **I don't know** and **Skip all**.
   program.
 - **Not a courier** is for a buying channel's strip (`TikTok Shop`, `Shopee`, …); it is remembered too.
   The known strips are already in the file. An instant (same-day) label is named by its tag (`GKS`
-  Gojek, `Sameday` Grab), so its strip is never asked about.
+  Gojek, `Sameday` or `Same-day` Grab), so its strip is never asked about.
 - **I don't know** (or **Esc**) writes nothing: the orders save without a courier and the logo is asked
   about again next batch. **Skip all** does that for the rest of the batch.
 
