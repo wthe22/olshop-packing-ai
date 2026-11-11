@@ -1,6 +1,5 @@
-//! The condition types: the tree an entry's `when` parses into, the two operator sets, the
-//! field table that says which fields exist and how deep they can be used, and one entry of
-//! `categories.toml`.
+//! The condition types: the tree a condition text parses into, the two operator sets and the
+//! field table that says which fields exist and how deep they can be used.
 
 /// A text comparison operator (`contains` | `equals` | `starts_with`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -108,19 +107,6 @@ impl Condition {
             _ => 4,
         }
     }
-}
-
-/// One entry of `categories.toml` = one pick (04-rules-file).
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Category {
-    /// 1-3 letters or digits, unique.
-    pub code: String,
-    /// Heading text.
-    pub name: String,
-    /// The parsed `when`; `None` only when the entry has no `when` (last entry / the rest).
-    pub condition: Option<Condition>,
-    /// The original `when` text as written in the file; `None` when the entry has no `when`.
-    pub when: Option<String>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

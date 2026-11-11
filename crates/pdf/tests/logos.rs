@@ -323,15 +323,15 @@ fn reading_a_page_twice_gives_the_same_logos_and_keeps_the_document() {
 
     let file = read::open(&pdfium, &path).expect("open");
     let first = file
-        .page_text(0, packing_engine::label::courier_data())
+        .page_text(0, &testkit::bundled_workflows())
         .expect("first read")
         .logos;
     let second = file
-        .page_text(0, packing_engine::label::courier_data())
+        .page_text(0, &testkit::bundled_workflows())
         .expect("second read")
         .logos;
     let third = file
-        .page_text(0, packing_engine::label::courier_data())
+        .page_text(0, &testkit::bundled_workflows())
         .expect("third read")
         .logos;
     let _ = std::fs::remove_file(&path);

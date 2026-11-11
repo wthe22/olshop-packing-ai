@@ -12,7 +12,6 @@ use packing_engine::account_questions::{
 };
 
 use packing_engine::copies::{CopiesStop, read_copies};
-use packing_engine::label::courier_data;
 use packing_engine::record::CourierClueKind;
 
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, load_workflows};
@@ -32,7 +31,7 @@ fn the_fixture_reads_into_one_copy_per_order_as_its_answer() {
         &pdfium,
         std::slice::from_ref(&path),
         &AtomicBool::new(false),
-        courier_data(),
+        &workflows,
         &mut |_, _| {},
     )
     .expect("read labels-slip.pdf");
@@ -107,7 +106,7 @@ fn the_plain_fixture_stops_with_no_slip() {
         &pdfium,
         std::slice::from_ref(&path),
         &AtomicBool::new(false),
-        courier_data(),
+        &workflows,
         &mut |_, _| {},
     )
     .expect("read labels-plain.pdf");
@@ -130,7 +129,7 @@ fn the_repeat_inputs_ask_about_the_shop_no_account_lists() {
         &pdfium,
         &paths,
         &AtomicBool::new(false),
-        courier_data(),
+        &workflows,
         &mut |_, _| {},
     )
     .expect("read the repeat inputs");

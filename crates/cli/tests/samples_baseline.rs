@@ -1,5 +1,5 @@
 //! The local baseline of the owner's sample files: `packing-cli dump` of each `samples/*.pdf`
-//! must equal `work/baseline/<file>.json`, so a change to the reading shows on the real
+//! must equal `work/baseline-copies/<file>.json` (the copies of the v0.2 reading), so a change to the reading shows on the real
 //! downloads. Both folders are confidential and never committed.
 //!
 //! A missing baseline file is written from today's reading. A change meant to alter the reading
@@ -44,8 +44,8 @@ fn the_sample_files_read_as_their_baseline() {
         .filter(|path| path.extension().is_some_and(|ext| ext == "pdf"))
         .collect();
     files.sort();
-    let baseline = root.join("work").join("baseline");
-    fs::create_dir_all(&baseline).expect("work/baseline/");
+    let baseline = root.join("work").join("baseline-copies");
+    fs::create_dir_all(&baseline).expect("work/baseline-copies/");
 
     let mut written = Vec::new();
     let mut differ = Vec::new();
@@ -67,7 +67,7 @@ fn the_sample_files_read_as_their_baseline() {
     }
     assert!(
         differ.is_empty(),
-        "{differ:?} no longer read as their baseline in work/baseline/: compare the JSON; delete a \
+        "{differ:?} no longer read as their baseline in work/baseline-copies/: compare the JSON; delete a \
          baseline file only when the change is meant"
     );
 }

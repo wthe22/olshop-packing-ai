@@ -8,7 +8,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 - **Work under way: v0.5, accounts replace workspaces — designed, being built.** The design is in
   [software-design/](../../software-design/README.md) (start with [accounts](../../software-design/app/accounts.md));
-  the order of work is in [v0.5-accounts.md](v0.5-accounts.md): R6.4, V5.6, V5.7, then R9. Every
+  the order of work is in [v0.5-accounts.md](v0.5-accounts.md): V5.6, V5.7, then R9. Every
   question of 2026-11-11 is answered; **Q-APP-18** (the saved orders of a renamed account,
   [questions/app.md](../../software-design/questions/app.md)) is open with its default A, which the work
   uses. v0.4 data is copied by a separate Python script (V5.7), never by the program.
@@ -117,7 +117,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     [reviews/rules.md](../../reviews/rules.md) or [reviews/ui.md](../../reviews/ui.md) as the next
     `R-<SCOPE>-n` (R-RULES-7, R-UI-36).
 
-- **Handoff of 2026-10-29 — the owner tests round eight; then the work is R6.4 and R9.** Round eight of
+- **Handoff of 2026-10-29 — the owner tests round eight; then the work is R9.** Round eight of
   the owner's review, from the owner's words in chat, is built and pushed:
   - **Search** shows one compact **row** per order again: the Order ID over the tracking ID; the items,
     with the rest of the row; the group PDF's code, name and **page** over the courier and the date;
@@ -134,7 +134,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - Round seven's look ([D-UI-11](../../software-design/decisions/ui.md)) and *Tracking ID contains* stay.
   - **Found while checking, not fixed**: the PDF viewer of WebView2 (Edge's) draws the `·` of the summary
     PDFs and the day summary as `¥`; the text layer reads `·`. `·` is drawn with the non-CID font
-    (`packing_list/fonts.rs`), and the verifier reads the header's `·` line as text, so a fix touches both.
+    (`page/fonts.rs`), and the verifier reads the header's `·` line as text, so a fix touches both.
   - Checked on screenshots of the built program at 1536 × 800, 1093 × 580 (the owner's two screens at
     125 %) and at 960, 768 and 600 points wide, in both themes, with long made-up product names.
   - `target/portable/Packing/` is rebuilt. **The owner may test now**: Search on the small screen and in a
@@ -145,7 +145,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - A finding goes into [reviews/ui.md](../../reviews/ui.md), [reviews/label.md](../../reviews/label.md),
     [reviews/rules.md](../../reviews/rules.md) or [reviews/app.md](../../reviews/app.md) as the next
     `R-<SCOPE>-n` (R-UI-36, R-LABEL-12, R-RULES-7, R-APP-9); the next session turns each into a task.
-  - **Next without the owner:** **R6.4** ([R6-app-journal.md](R6-app-journal.md)), then **R9** (the full
+  - **Next without the owner:** **R9** (the full
     check, an independent review of the whole v0.2 diff, the coverage baseline, the handoff). An instant
     label's unknown tag is not asked about yet (W-9 of [workflow-audit.md](workflow-audit.md)).
   - The guide's pictures are the real program on the `testdata/` labels (`node tools/guide-pictures.mjs`
@@ -155,13 +155,13 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   and the order of work. **R1 to R5 are done**: [software-design/](../../software-design/README.md)
   describes v0.2; the project has no Python; the label fixtures are written by `crates/fixtures` one
   character per text object, as the downloads are; today's reading of the owner's eleven sample files is
-  pinned in `work/baseline/` on this PC ([testing.md](../testing.md), *Local baseline*); `crates/store`
+  pinned in `work/baseline-copies/` on this PC ([testing.md](../testing.md), *Local baseline*); `crates/store`
   holds the journal, the lock, the inputs, the views, the open-time checks and the workspaces; and
   `packing-engine` holds the v0.2 chain — `packing-workflows.toml`, copies with the courier clue,
   repeats and the copies left out, the plan with order contents, the `batch_saved` record — and the 2.32
   fix; `crates/verify` checks a batch's outputs by page digest with `lopdf` alone (every page of the
-  samples that PDFium copies keeps its digest). **R6 is under way** ([R6-app-journal.md](R6-app-journal.md)):
-  R6.1 to R6.3 are done, R6.4 follows the owner's test of v0.2. **The program the owner runs is v0.3.3**: it
+  samples that PDFium copies keeps its digest). **R6 is done**: the app and the command line save through
+  `crates/batch`, and the v0.1 code is removed. **The program the owner runs is v0.3.3**: it
   saves through `crates/batch` and the journal into `{data_dir}/{workspace}/{date}/` and writes the summary
   PDF. A task gets its own file in this folder when it starts; until then its row in the order of work is
   the task.
@@ -194,7 +194,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 A **local** session on the owner's PC (Windows, Git Bash): it builds, runs `tools/make-portable.sh` and
 commits. A cloud session cannot run commands on the PC; it can only read and write files there.
 
-Outside Windows the packing-list tests fail, because the packing list loads its fonts from
+Outside Windows the summary PDF tests fail, because the summary writer loads its fonts from
 `C:\Windows\Fonts` (ten tests of `packing-app`); that is not a regression.
 
 ## Reading for a new session

@@ -45,6 +45,16 @@ impl Workflows {
     pub fn sort_rule(&self, name: &str) -> Option<&SortRule> {
         self.sort_rules.iter().find(|rule| rule.name == name)
     }
+
+    /// Whether the rules already know a header image by its byte hash: a courier's logo or an
+    /// image answered *Not a courier*. Only an image they do not know needs its appearance read.
+    pub fn knows_logo(&self, hash: &str) -> bool {
+        self.not_courier_logos.iter().any(|known| known == hash)
+            || self
+                .classifiers
+                .iter()
+                .any(|classifier| classifier.logos.iter().any(|known| known == hash))
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

@@ -12,7 +12,6 @@ use packing_engine::account_questions::{AccountChoices, assign_accounts};
 use packing_engine::batch_record::{BatchFacts, batch_saved, saved_orders};
 use packing_engine::copies::read_copies;
 use packing_engine::ids::{BatchId, PdfId};
-use packing_engine::label::courier_data;
 use packing_engine::record::{Datetime, InputPdf, LeftOutReason, Record, RecordBody, Sha256};
 use packing_engine::repeats::{Choices, sort_out};
 use packing_engine::sorting::{plan_groups, sort_batch};
@@ -50,15 +49,15 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
         .map(|name| name.as_str().unwrap())
         .collect();
     let paths: Vec<_> = names.iter().map(|name| testdata(name)).collect();
+    let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
     let pages = read::read_all(
         &pdfium,
         &paths,
         &AtomicBool::new(false),
-        courier_data(),
+        &workflows,
         &mut |_, _| {},
     )
     .expect("read the repeat fixture");
-    let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
 
     let mut copies = read_copies(pages, &names, &workflows)
         .expect("copies")

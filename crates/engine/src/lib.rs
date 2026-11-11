@@ -5,24 +5,16 @@ pub mod account_questions;
 pub mod accounts;
 pub mod batch_record;
 pub mod copies;
-pub mod couriers_edit;
-pub mod day;
-pub mod groupings;
 pub mod ids;
 pub mod label;
-pub mod names;
 pub mod orders;
-pub mod plan;
 pub mod record;
 pub mod repeats;
 pub mod rules;
-pub mod rules_edit;
-pub mod search;
 
 pub mod slip;
 pub mod sorting;
 pub mod text;
-pub mod verify;
 pub mod workflows;
 
 #[cfg(test)]

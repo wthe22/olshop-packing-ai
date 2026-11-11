@@ -10,11 +10,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use packing_engine::accounts::{Account, OrderAccount};
 use packing_engine::copies::Copy;
-use packing_engine::ids::{OrderId, TrackingId};
-use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
+use packing_engine::ids::OrderId;
 use packing_engine::record::{CourierClue, CourierClueKind};
-use packing_engine::rules::{Category, parse_condition};
 use packing_engine::slip::SlipLine;
+use packing_engine::workflows::{BUNDLED_WORKFLOWS, Workflows, load_workflows};
 
 mod record;
 
@@ -24,6 +23,11 @@ pub use record::{batch, sha, time};
 pub fn vendor_dir() -> Option<PathBuf> {
     let vendor = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../vendor");
     vendor.join("pdfium.dll").exists().then_some(vendor)
+}
+
+/// The rules the program carries: the couriers, their clues and the sort rule `default`.
+pub fn bundled_workflows() -> Workflows {
+    load_workflows(BUNDLED_WORKFLOWS).expect("the bundled rules load")
 }
 
 /// A file in the shared `testdata/` folder.
@@ -69,69 +73,6 @@ impl Drop for TempDir {
     }
 }
 
-/// One product line with no variation, its display name equal to the name.
-pub fn line(name: &str, quantity: i64) -> Line {
-    Line {
-        name: name.to_string(),
-        variation: String::new(),
-        seller_sku: String::new(),
-        quantity,
-        display_name: name.to_string(),
-    }
-}
-
-/// One product line of a product with a variation, its display name `name — variation`.
-pub fn line_with_variation(name: &str, variation: &str, quantity: i64) -> Line {
-    Line {
-        name: name.to_string(),
-        variation: variation.to_string(),
-        seller_sku: String::new(),
-        quantity,
-        display_name: display_name(name, variation),
-    }
-}
-
-/// One order of a single line, on the same made-up order and tracking IDs every time.
-pub fn order(name: &str, quantity: i64, courier: Option<&str>) -> Order {
-    Order {
-        order_id: OrderId::new("580000000000000999"),
-        tracking_id: Some(TrackingId::new("JY0000009999")),
-        courier: courier.map(str::to_string),
-        ship_by: None,
-        lines: vec![line(name, quantity)],
-        customer_message: String::new(),
-    }
-}
-
-/// One read order of the given lines, carrying one page of the first file. An empty `tracking` is
-/// an order without a tracking ID.
-pub fn read_order(id: &str, tracking: &str, lines: Vec<Line>) -> ReadOrder {
-    ReadOrder {
-        order: Order {
-            order_id: OrderId::new(id),
-            tracking_id: (!tracking.is_empty()).then(|| TrackingId::new(tracking)),
-            courier: Some("J&T Express".to_string()),
-            ship_by: None,
-            lines,
-            customer_message: String::new(),
-        },
-        pages: vec![PageRef { file: 0, page: 0 }],
-        position: 1,
-        has_slip: true,
-        qty_total: None,
-    }
-}
-
-/// One category entry; a `when` of `None` is the last entry, which takes the rest.
-pub fn category(code: &str, name: &str, when: Option<&str>) -> Category {
-    Category {
-        code: code.to_string(),
-        name: name.to_string(),
-        condition: when.map(|text| parse_condition(text).expect("parse category")),
-        when: when.map(str::to_string),
-    }
-}
-
 /// A slip line of a v0.2 copy.
 pub fn slip_line(name: &str, variation: &str, seller_sku: &str, quantity: i64) -> SlipLine {
     SlipLine {
@@ -142,8 +83,6 @@ pub fn slip_line(name: &str, variation: &str, seller_sku: &str, quantity: i64) -
     }
 }
 
-/// A one-page v0.2 copy of `order_id` at `page` of `input`, with no tracking ID, courier or
-/// printed total; a test sets what it needs.
 /// One account per shop, named after it.
 pub fn shop_accounts(shops: &[&str]) -> Vec<Account> {
     shops
@@ -155,6 +94,8 @@ pub fn shop_accounts(shops: &[&str]) -> Vec<Account> {
         .collect()
 }
 
+/// A one-page v0.2 copy of `order_id` at `page` of `input`, with no tracking ID, courier or
+/// printed total; a test sets what it needs.
 pub fn copy(order_id: &str, input: usize, page: u16, lines: Vec<SlipLine>) -> Copy {
     Copy {
         order_id: OrderId::new(order_id),

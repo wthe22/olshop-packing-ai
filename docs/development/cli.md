@@ -6,31 +6,30 @@ uses ([app.md](app.md)).
 
 ## `packing-cli`
 
-From the repository root, Git Bash:
+From the repository root, Git Bash. It calls the same `packing-batch` steps as the app, on the same
+data folder (one folder per date, [data/](../software-design/data/README.md)).
 
 | Command | Does |
 |---|---|
-| `cargo run -p packing-cli -- prepare --labels <file>... [--rules <categories.toml>] [--couriers <couriers.toml>] [--data <dir>] [--day YYYY-MM-DD] [--packing-list whole\|per-pdf\|none] [--layout pick,full,summary] [--pdfium <dir>] [--quiet-ids]` | Read the label files, apply the picks and save one batch, like the app's Save |
-| `cargo run -p packing-cli -- revert [--day <day>] [--data <dir>] [--pdfium <dir>] [--quiet-ids]` | Undo the last batch of the day |
-| `cargo run -p packing-cli -- amend [--day <day>] [--data <dir>] [--rules <categories.toml>] [--couriers <couriers.toml>] [--pdfium <dir>] [--quiet-ids]` | Redo the last batch of the day in place |
-| `cargo run -p packing-cli -- dump --labels <file>... [--couriers <couriers.toml>] [--pdfium <dir>]` | Read the files as the first batch of an empty day and print what that gives as JSON (the files, the counts, every order, the read warnings); saves nothing. Without `--couriers`, the bundled courier list |
+| `cargo run -p packing-cli -- prepare --labels <file>... [options]` | Read the label files and save one batch into `<data>/<day>/` (`journal.jsonl`, `input/`, `output/`), like the app's Save |
+| `cargo run -p packing-cli -- revert [options]` | Undo the newest batch of the date |
+| `cargo run -p packing-cli -- amend [options]` | Redo the newest batch from its stored inputs, with the sort rule it was made with |
+| `cargo run -p packing-cli -- dump --labels <file>... [--pdfium <dir>]` | Read the files with the bundled rules and print what that gives as JSON (the files, the counts, every copy, the unknown header images, the read warnings); saves nothing |
 
-| Flag | Meaning |
+| Option | Meaning |
 |---|---|
-| `--labels <file>...` | One or more label PDFs of this batch (required for `prepare` and `dump`) |
-| `--rules <categories.toml>` | The picks, in order (default: `<data>/categories.toml`; without the file, the one catch-all pick) |
-| `--couriers <couriers.toml>` | The courier data (default: `<data>/couriers.toml`, else the bundled list) |
-| `--day YYYY-MM-DD` | The day folder (default: today) |
-| `--data <dir>` | The data folder holding `categories.toml`, `couriers.toml` and `labels/` (default: `.`) |
-| `--packing-list <scope>` | `whole` \| `per-pdf` \| `none` (default: `whole`) |
-| `--layout <list>` | Comma-separated `pick`, `full`, `summary` (default: `pick`) |
+| `--labels <file>...` | One or more label PDFs of this batch (`prepare`, `dump`); read in file-name order |
+| `--day YYYY-MM-DD` | The date (default: today) |
+| `--data <dir>` | The data folder (default: the `data_dir` of `packing-settings.toml`, else `packing-data`, inside `--program`) |
+| `--program <dir>` | The folder with `packing-settings.toml` (the accounts) and `packing-workflows.toml` (the sort rules); a missing file means no accounts and the bundled rules; the command writes neither (default: `.`) |
+| `--rule <name>` | The sort rule of a new batch (default: `default`) |
+| `--account <name>` | Put every order whose shop no account lists, and every file whose labels show no sender, under this account for this run only. Without it such an order stops the command and the message names the shops |
+| `--save-anyway` | Save a batch the verifier found something in, recording the findings; without it the findings stop the save |
 | `--pdfium <dir>` | The folder with `pdfium.dll` (default: next to the exe, else `vendor/`) |
-| `--quiet-ids` | Print counts only; no order IDs, tracking IDs or names |
+| `--quiet-ids` | Print counts only; no order IDs, tracking IDs, shops or names |
 
-`cargo run -p packing-cli -- --help` prints the same usage. `prepare` writes the batch to
-`<data>/labels/<day>/batch <b>/` — the saved PDFs, the packing lists, `summary.txt` and a copy of
-the label files read (the v0.1 day folder; the target layout is [data/](../software-design/data/README.md)); the run's counts go
-to the console. `dump` prints real order data when given a sample file: its output goes to `work/` only.
+`cargo run -p packing-cli -- --help` prints the same usage. `dump` prints real order data when given a
+sample file: its output goes to `work/` only.
 
 ## `packing-fixtures`
 

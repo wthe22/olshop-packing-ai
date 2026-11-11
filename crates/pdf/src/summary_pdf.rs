@@ -18,10 +18,10 @@ use crate::facts::{
     GAP_BELOW_SECTION, KEY_W, ROW_H, ROW_PT, RULE_GAP, TEXT_RIGHT, TEXT_X, draw_bar, draw_rule,
     draw_section, keep_together, new_page,
 };
-use crate::packing_list::emit::{emit, header_ops};
-use crate::packing_list::fonts::{FONT_DIR, Font};
-use crate::packing_list::measure::Measure;
-use crate::packing_list::{Builder, CELL_MARGIN, Cell, Layout, Op};
+use crate::page::emit::{emit, header_ops};
+use crate::page::fonts::{FONT_DIR, Font};
+use crate::page::measure::Measure;
+use crate::page::{Builder, CELL_MARGIN, Cell, Op};
 
 use self::content::{ContentRow, GroupSection};
 
@@ -65,7 +65,7 @@ pub fn write_summary(
 
     let font_dir = Path::new(FONT_DIR);
     let measure = Measure::new(pdfium, font_dir)?;
-    let mut builder = Builder::new(Layout::Pick, &measure);
+    let mut builder = Builder::new(&measure);
     for section in content::facts(record, whole, facts.app, facts.couriers) {
         draw_section(&mut builder, &section, &measure);
     }

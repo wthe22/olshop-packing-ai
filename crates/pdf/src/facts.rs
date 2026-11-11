@@ -4,9 +4,9 @@
 //! it, so the numbers of a page stand under each other. A section that breaks to a new page repeats
 //! its bar there.
 
-use crate::packing_list::fonts::Font;
-use crate::packing_list::measure::Measure;
-use crate::packing_list::{BAR_H, BODY_TOP, BOTTOM, Builder, CELL_MARGIN, Cell, MARGIN};
+use crate::page::fonts::Font;
+use crate::page::measure::Measure;
+use crate::page::{BAR_H, BODY_TOP, BOTTOM, Builder, CELL_MARGIN, Cell, MARGIN};
 
 /// The bars' width, millimetres: the page's text area.
 pub(crate) const WIDTH: f32 = 190.0;

@@ -15,7 +15,6 @@ use packing_engine::accounts::Account;
 use packing_engine::batch_record::{read_findings, saved_orders};
 use packing_engine::copies::{Copy, read_copies};
 use packing_engine::ids::{BatchId, OrderId};
-use packing_engine::label::courier_data;
 use packing_engine::orders::{PageItem, UnseenLogo};
 use packing_engine::record::{Finding, InputPdf};
 use packing_engine::repeats::{Choices, Orders, sort_out};
@@ -171,17 +170,12 @@ impl Draft {
 pub fn read_draft(request: ReadRequest<'_>) -> Result<Draft, BatchError> {
     let paths: Vec<PathBuf> = request.files.iter().map(|f| f.path.clone()).collect();
     let cancel = request.cancel;
+    let rules = request.workflows.clone();
     let progress = request.progress;
     let pages = request.worker.run(move |pdfium| {
-        read::read_all(
-            pdfium,
-            &paths,
-            &cancel,
-            courier_data(),
-            &mut |page, pages| {
-                let _ = progress.send(Progress { page, pages });
-            },
-        )
+        read::read_all(pdfium, &paths, &cancel, &rules, &mut |page, pages| {
+            let _ = progress.send(Progress { page, pages });
+        })
     })??;
     let names: Vec<&str> = request.files.iter().map(|f| f.filename.as_str()).collect();
     let read = read_copies(pages.clone(), &names, request.workflows)?;

@@ -1,6 +1,6 @@
 [package]
 name = "packing-pdf"
-description = "The only crate that touches PDFium: read text with positions, copy pages, write packing lists."
+description = "The only crate that touches PDFium: read text with positions, copy pages, write the summary PDFs."
 edition.workspace = true
 version.workspace = true
 publish.workspace = true
@@ -10,7 +10,6 @@ image.workspace = true
 jiff.workspace = true
 packing-engine.workspace = true
 pdfium-render.workspace = true
-serde.workspace = true
 xxhash-rust.workspace = true
 
 [dev-dependencies]

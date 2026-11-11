@@ -24,10 +24,10 @@ fn copies_pages_unchanged() {
     assert_eq!(copied.pages, pages.len());
     for (index, &(file, page)) in pages.iter().enumerate() {
         let original = files[file]
-            .page_text(page, packing_engine::label::courier_data())
+            .page_text(page, &testkit::bundled_workflows())
             .expect("original text");
         let copy = copied
-            .page_text(index, packing_engine::label::courier_data())
+            .page_text(index, &testkit::bundled_workflows())
             .expect("copy text");
         assert_eq!(original.text, copy.text, "page {index} text differs");
         assert_eq!(original.runs, copy.runs, "page {index} runs differ");
@@ -55,10 +55,10 @@ fn keeps_any_page_order_and_shares_resources() {
     assert_eq!(copied.pages, pages.len());
     for (index, &(file, page)) in pages.iter().enumerate() {
         let original = files[file]
-            .page_text(page, packing_engine::label::courier_data())
+            .page_text(page, &testkit::bundled_workflows())
             .expect("original text");
         let copy = copied
-            .page_text(index, packing_engine::label::courier_data())
+            .page_text(index, &testkit::bundled_workflows())
             .expect("copy text");
         assert_eq!(original.text, copy.text, "page {index} text differs");
     }

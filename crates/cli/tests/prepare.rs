@@ -1,109 +1,114 @@
-//! End-to-end test of `packing-cli prepare/revert/amend` on the made-up testdata: the batch
-//! folder, its saved PDFs, packing list, summary, download copy and `state.json`, the
-//! duplicate guard, revert, amend and the no-slip stop.
+//! End-to-end test of `packing-cli prepare/revert/amend` on the made-up testdata: the date folder
+//! with its journal, inputs and outputs, the duplicate guard, the account rules, revert, amend and
+//! the no-slip stop.
 //!
 //! Skipped with a message when `pdfium.dll` has not been downloaded (tools/get-pdfium.sh).
 
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{Command, Output};
 
-use packing_engine::day::DayState;
-use packing_engine::ids::{BatchNumber, PdfNumber};
-use packing_engine::names;
-use serde_json::Value;
+use jiff::civil::date;
+use packing_store::{DateFolder, Fold, view_date};
 use testkit::{TempDir, testdata, vendor_dir};
 
-const DAY: &str = "2026-10-07";
+const DAY: &str = "2026-10-08";
+const REPEAT_ACCOUNTS: &str = "\
+[[accounts]]
+name = \"Toko Contoh\"
+shops = [\"Toko Contoh\"]
 
-/// Run the built binary; `argv` is everything after the binary path.
-fn run(argv: &[&str], vendor: &Path) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_packing-cli"))
-        .args(argv)
-        .arg("--pdfium")
-        .arg(vendor)
-        .output()
-        .expect("run packing-cli")
+[[accounts]]
+name = \"Toko Lain\"
+shops = [\"Toko Lain\"]
+";
+
+/// A program folder and a data folder, and the way to run the built binary on them.
+struct Setup {
+    program: TempDir,
+    data: PathBuf,
+    vendor: PathBuf,
 }
 
-fn stderr(output: &Output) -> String {
-    String::from_utf8_lossy(&output.stderr).into_owned()
+impl Setup {
+    fn new(tag: &str, vendor: PathBuf, settings: Option<&str>) -> Setup {
+        let program = TempDir::new(tag);
+        if let Some(text) = settings {
+            fs::write(program.path().join("packing-settings.toml"), text).unwrap();
+        }
+        let data = program.path().join("data");
+        Setup {
+            program,
+            data,
+            vendor,
+        }
+    }
+
+    fn run(&self, command: &str, rest: &[&str]) -> Output {
+        Command::new(env!("CARGO_BIN_EXE_packing-cli"))
+            .arg(command)
+            .args(rest)
+            .args(["--day", DAY])
+            .arg("--program")
+            .arg(self.program.path())
+            .arg("--data")
+            .arg(&self.data)
+            .arg("--pdfium")
+            .arg(&self.vendor)
+            .output()
+            .expect("run packing-cli")
+    }
+
+    fn fold(&self) -> Fold {
+        let folder = DateFolder::new(&self.data, date(2026, 10, 8));
+        view_date(&folder)
+            .expect("open the date")
+            .journal
+            .fold()
+            .clone()
+    }
+
+    fn output(&self, file: &str) -> PathBuf {
+        self.data.join(DAY).join("output").join(file)
+    }
 }
 
-/// The expected saved-PDF file names from `expected-picks.json`.
-fn expected_file_names() -> Vec<String> {
-    let text = fs::read_to_string(testdata("expected-picks.json")).expect("expected-picks");
-    let categories: Vec<Value> = serde_json::from_str(&text).expect("parse expected-picks");
-    categories
-        .iter()
-        .map(|category| {
-            names::suggested_saved_pdf_name(
-                PdfNumber::new(category["number"].as_i64().unwrap()),
-                category["code"].as_str().unwrap(),
-                category["name"].as_str().unwrap(),
-                category["orders"].as_u64().unwrap() as usize,
-            )
-        })
-        .collect()
-}
-
-/// The saved PDFs of a batch folder (everything but the packing list).
-fn pdf_files(batch: &Path) -> Vec<PathBuf> {
-    let mut files: Vec<PathBuf> = fs::read_dir(batch)
-        .expect("read batch folder")
-        .filter_map(Result::ok)
-        .map(|entry| entry.path())
-        .filter(|path| {
-            path.extension().is_some_and(|e| e == "pdf")
-                && !path
-                    .file_name()
-                    .unwrap()
-                    .to_string_lossy()
-                    .starts_with("packing-list")
-        })
-        .collect();
-    files.sort();
-    files
-}
-
-/// The total pages of the given PDFs, using a page-counting closure (`pdfium_render` is not a
-/// direct dependency of this crate, so the type never has to be named here).
-fn total_pages(count: &dyn Fn(&Path) -> usize, files: &[PathBuf]) -> usize {
-    files.iter().map(|file| count(file)).sum()
-}
-
-fn assert_batch_one(data: &Path, count: &dyn Fn(&Path) -> usize) -> Vec<String> {
-    let batch = data.join("labels").join(DAY).join("batch 1");
-    assert!(batch.is_dir(), "batch 1 folder must exist");
-
-    let names: Vec<String> = pdf_files(&batch)
-        .iter()
-        .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
-        .collect();
-    let mut expected = expected_file_names();
-    expected.sort();
-    let mut got = names.clone();
-    got.sort();
-    assert_eq!(got, expected, "saved-PDF names match expected-picks.json");
-
-    let pages = total_pages(count, &pdf_files(&batch));
-    assert_eq!(pages, 24, "the saved PDFs hold every label page");
-
-    assert!(batch.join("packing-list.pdf").is_file(), "packing list");
-    assert!(batch.join("summary.txt").is_file(), "summary");
-    assert!(
-        batch.join("download").join("labels-slip.pdf").is_file(),
-        "download copy"
+fn labels(names: &[&str]) -> Vec<String> {
+    let mut args = vec!["--labels".to_string()];
+    args.extend(
+        names
+            .iter()
+            .map(|name| testdata(name).to_string_lossy().into_owned()),
     );
-
-    let state = DayState::load(&data.join("labels").join(DAY)).expect("state");
-    assert_eq!(state.batches.len(), 1);
-    assert_eq!(state.saved.len(), 23);
-    assert_eq!(state.batches[0].batch, BatchNumber::new(1));
-    assert_eq!(state.batches[0].pdfs.len(), expected.len());
-
-    names
+    args
 }
+
+fn run_labels(setup: &Setup, command: &str, names: &[&str], extra: &[&str]) -> Output {
+    let mut args = labels(names);
+    args.extend(extra.iter().map(|s| s.to_string()));
+    let args: Vec<&str> = args.iter().map(String::as_str).collect();
+    setup.run(command, &args)
+}
+
+fn text(bytes: &[u8]) -> String {
+    String::from_utf8_lossy(bytes).into_owned()
+}
+
+fn succeeded(output: &Output) -> String {
+    assert!(output.status.success(), "{}", text(&output.stderr));
+    text(&output.stdout)
+}
+
+fn failed(output: &Output) -> String {
+    assert!(
+        !output.status.success(),
+        "should have stopped: {}",
+        text(&output.stdout)
+    );
+    text(&output.stderr)
+}
+
+const REPEAT: [&str; 2] = ["labels-repeat-1.pdf", "labels-repeat-2.pdf"];
 
 #[test]
 fn prepare_revert_amend_round_trip() {
@@ -111,180 +116,126 @@ fn prepare_revert_amend_round_trip() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    if !Path::new(r"C:\Windows\Fonts\arial.ttf").exists() {
-        eprintln!("skipped: Arial font not installed");
-        return;
-    }
-    let Ok(pdfium) = packing_pdf::bind(&vendor) else {
-        eprintln!("skipped: pdfium.dll could not be bound");
-        return;
-    };
-    let cancel = std::sync::atomic::AtomicBool::new(false);
-    let count = |file: &Path| {
-        packing_pdf::read::read_all(
-            &pdfium,
-            &[file.to_path_buf()],
-            &cancel,
-            packing_engine::label::courier_data(),
-            &mut |_, _| {},
-        )
-        .expect("read saved PDF")
-        .len()
-    };
+    let _guard = testkit::pdfium_lock();
+    let setup = Setup::new("cli-roundtrip", vendor, Some(REPEAT_ACCOUNTS));
 
-    let data = TempDir::new("roundtrip");
-    fs::copy(
-        testdata("categories.toml"),
-        data.path().join("categories.toml"),
-    )
-    .expect("copy categories");
-    let labels = testdata("labels-slip.pdf");
-    let labels = labels.to_str().expect("label path");
+    let said = succeeded(&run_labels(&setup, "prepare", &REPEAT, &[]));
+    assert!(said.contains("saved batch 1"), "{said}");
+    assert!(setup.data.join(DAY).join("journal.jsonl").is_file());
+    assert!(setup.output("1-Z Lainnya x4.pdf").is_file());
+    assert!(setup.output("1 summary.pdf").is_file());
+    let fold = setup.fold();
+    assert_eq!(fold.live.len(), 1);
+    let first = fold.live.values().next().unwrap().saved.clone();
+    assert_eq!(first.orders.len(), 4);
+    assert_eq!(first.inputs.len(), 2);
 
-    // 1. First prepare writes batch 1.
-    let output = run(
-        &[
-            "prepare",
-            "--labels",
-            labels,
-            "--data",
-            data.path().to_str().unwrap(),
-            "--day",
-            DAY,
-        ],
-        &vendor,
-    );
-    assert!(
-        output.status.success(),
-        "prepare must succeed: {}",
-        stderr(&output)
-    );
-    let first = assert_batch_one(data.path(), &count);
-
-    // 2. A second prepare of the same file stops: every order is already saved.
-    let output = run(
-        &[
-            "prepare",
-            "--labels",
-            labels,
-            "--data",
-            data.path().to_str().unwrap(),
-            "--day",
-            DAY,
-        ],
-        &vendor,
-    );
-    assert!(!output.status.success(), "second prepare must stop");
-    assert!(
-        stderr(&output).contains("already saved today"),
-        "got: {}",
-        stderr(&output)
-    );
-    assert!(
-        !data
-            .path()
-            .join("labels")
-            .join(DAY)
-            .join("batch 2")
-            .exists(),
+    let said = failed(&run_labels(&setup, "prepare", &REPEAT, &[]));
+    assert!(said.contains("already saved"), "{said}");
+    assert_eq!(
+        setup.fold().last_seq,
+        fold.last_seq,
         "nothing new is written"
     );
+
+    let said = succeeded(&setup.run("revert", &[]));
+    assert!(said.contains("reverted batch 1"), "{said}");
+    assert!(setup.fold().live.is_empty());
+    assert!(!setup.output("1-Z Lainnya x4.pdf").exists());
+    let said = succeeded(&setup.run("revert", &[]));
+    assert!(said.contains("no batch to revert"), "{said}");
+
+    succeeded(&run_labels(&setup, "prepare", &REPEAT, &[]));
+    let again = setup.fold().live.values().next().unwrap().saved.clone();
+    let files = |record: &packing_engine::record::BatchSaved| -> Vec<String> {
+        record.outputs.iter().map(|o| o.file.clone()).collect()
+    };
+    assert_eq!(files(&again), files(&first), "the same files come back");
+
+    let before = setup.fold().last_seq;
+    let said = succeeded(&setup.run("amend", &[]));
+    assert!(said.contains("saved batch 1"), "{said}");
+    let amended = setup.fold();
+    assert!(amended.last_seq > before, "the amend is a record");
     assert_eq!(
-        DayState::load(&data.path().join("labels").join(DAY))
-            .expect("state")
-            .batches
-            .len(),
-        1
+        files(&amended.live.values().next().unwrap().saved),
+        files(&first)
     );
 
-    // 3. Revert removes batch 1 and its state entries.
-    let output = run(
-        &[
-            "revert",
-            "--data",
-            data.path().to_str().unwrap(),
-            "--day",
-            DAY,
-        ],
-        &vendor,
-    );
-    assert!(output.status.success(), "revert: {}", stderr(&output));
-    assert!(
-        !data
-            .path()
-            .join("labels")
-            .join(DAY)
-            .join("batch 1")
-            .exists()
-    );
-    let state = DayState::load(&data.path().join("labels").join(DAY)).expect("state");
-    assert!(state.batches.is_empty());
-    assert!(state.saved.is_empty());
-
-    // 4. Prepare again gives the same files and page counts.
-    let output = run(
-        &[
-            "prepare",
-            "--labels",
-            labels,
-            "--data",
-            data.path().to_str().unwrap(),
-            "--day",
-            DAY,
-        ],
-        &vendor,
-    );
-    assert!(
-        output.status.success(),
-        "prepare again: {}",
-        stderr(&output)
-    );
-    let again = assert_batch_one(data.path(), &count);
-    assert_eq!(again, first, "the same file names come back");
-
-    // 5. Amend re-saves batch 1 from its download copy.
-    let output = run(
-        &[
-            "amend",
-            "--data",
-            data.path().to_str().unwrap(),
-            "--day",
-            DAY,
-        ],
-        &vendor,
-    );
-    assert!(output.status.success(), "amend: {}", stderr(&output));
-    let amended = assert_batch_one(data.path(), &count);
-    assert_eq!(amended, first);
-
-    // 6. Plain labels stop with the no-slip message and write nothing.
-    let plain = testdata("labels-plain.pdf");
-    let plain = plain.to_str().expect("plain path");
-    let output = run(
-        &[
-            "prepare",
-            "--labels",
-            plain,
-            "--data",
-            data.path().to_str().unwrap(),
-            "--day",
-            DAY,
-        ],
-        &vendor,
-    );
-    assert!(!output.status.success(), "plain labels must stop");
-    assert!(
-        stderr(&output).contains("no packing slip"),
-        "got: {}",
-        stderr(&output)
-    );
-    assert!(
-        !data
-            .path()
-            .join("labels")
-            .join(DAY)
-            .join("batch 2")
-            .exists(),
+    let said = failed(&run_labels(&setup, "prepare", &["labels-plain.pdf"], &[]));
+    assert!(said.contains("no packing slip"), "{said}");
+    assert_eq!(
+        setup.fold().last_seq,
+        amended.last_seq,
         "plain labels write nothing"
     );
+}
+
+#[test]
+fn an_order_of_an_unlisted_shop_stops_unless_an_account_is_given() {
+    let Some(vendor) = vendor_dir() else {
+        eprintln!("skipped: run tools/get-pdfium.sh");
+        return;
+    };
+    let _guard = testkit::pdfium_lock();
+    let setup = Setup::new("cli-accounts", vendor, None);
+
+    let said = failed(&run_labels(&setup, "prepare", &REPEAT, &[]));
+    assert!(said.contains("have no account"), "{said}");
+    assert!(said.contains("Toko Contoh"), "the shops are named: {said}");
+    let said = failed(&run_labels(&setup, "prepare", &REPEAT, &["--quiet-ids"]));
+    assert!(said.contains("shops no account lists"), "{said}");
+    assert!(!said.contains("Toko Contoh"), "counts only: {said}");
+    assert!(!setup.data.join(DAY).join("journal.jsonl").exists());
+
+    let said = succeeded(&run_labels(
+        &setup,
+        "prepare",
+        &REPEAT,
+        &["--account", "Toko Alfa"],
+    ));
+    assert!(said.contains("saved batch 1"), "{said}");
+    let fold = setup.fold();
+    let record = &fold.live.values().next().unwrap().saved;
+    assert!(
+        record
+            .orders
+            .iter()
+            .all(|order| order.account == "Toko Alfa")
+    );
+    assert!(
+        !setup.program.path().join("packing-settings.toml").exists(),
+        "the run writes no settings"
+    );
+}
+
+#[test]
+fn what_cannot_run_is_said() {
+    let Some(vendor) = vendor_dir() else {
+        eprintln!("skipped: run tools/get-pdfium.sh");
+        return;
+    };
+    let _guard = testkit::pdfium_lock();
+    let setup = Setup::new("cli-refusals", vendor, Some(REPEAT_ACCOUNTS));
+    let said = failed(&run_labels(&setup, "prepare", &REPEAT, &["--rule", "nope"]));
+    assert!(said.contains("no sort rule \"nope\""), "{said}");
+    let said = failed(&setup.run("prepare", &[]));
+    assert!(said.contains("--labels"), "{said}");
+    let said = succeeded(&setup.run("amend", &[]));
+    assert!(said.contains("no batch to amend"), "{said}");
+    let said = failed(&setup.run("frobnicate", &[]));
+    assert!(said.contains("unknown command"), "{said}");
+    fs::write(setup.program.path().join("packing-workflows.toml"), "[[").unwrap();
+    let said = failed(&run_labels(&setup, "prepare", &REPEAT, &[]));
+    assert!(said.contains("packing-workflows.toml"), "{said}");
+    assert!(!setup.data.join(DAY).exists());
+}
+
+#[test]
+fn the_usage_is_printed_without_a_command() {
+    let output = Command::new(env!("CARGO_BIN_EXE_packing-cli"))
+        .output()
+        .expect("run packing-cli");
+    assert!(text(&output.stdout).contains("USAGE"));
+    assert!(output.status.success());
 }

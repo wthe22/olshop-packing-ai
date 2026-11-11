@@ -3,7 +3,7 @@
 //!
 //! PDFium is not thread-safe: every PDFium call in the app must run on the one thread that
 //! bound the library ([`worker::PdfWorker`]). The free functions in [`read`], [`write`] and
-//! [`packing_list`] take a `&Pdfium` and do no thread hand-off themselves.
+//! [`summary_pdf`] take a `&Pdfium` and do no thread hand-off themselves.
 
 use std::fmt;
 use std::path::{Path, PathBuf};
@@ -14,14 +14,12 @@ use pdfium_render::prelude::{Pdfium, PdfiumError};
 /// shown in Settings › *About* (version + PDFium version only).
 pub const PDFIUM_VERSION: &str = "chromium/7881";
 
-pub mod batch;
 pub mod day_summary;
 mod facts;
 pub mod logo;
-pub mod packing_list;
+mod page;
 pub mod read;
 pub mod summary_pdf;
-pub mod verify;
 pub mod worker;
 pub mod write;
 
@@ -49,7 +47,7 @@ pub enum PdfError {
     Font { path: PathBuf, message: String },
     /// The read was cancelled by the user.
     Cancelled,
-    /// A packing list could not be written (bad layout, nothing to list, item data missing).
+    /// A job could not run (the PDF worker thread stopped).
     Message(String),
     /// An error reported by PDFium itself.
     Pdfium(String),

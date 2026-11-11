@@ -29,7 +29,7 @@ pub(super) fn font_file(font: Font) -> &'static str {
 /// The characters PDFium's non-CID font path writes with the wrong glyph **and** the wrong code:
 /// with `cid = false` every one of `× ÷ é ® ™ ° ± ñ Ä ½ €` came out as `ÿ` (U+00FF), while
 /// `· Ø § — – … ’ “ ”` came out right (probe, review round 1). A wrong `×` is what the owner sees
-/// in the item lines of `full`/`summary`. Such characters are drawn with a CID copy of the same
+/// in the item lines of the summary. Such characters are drawn with a CID copy of the same
 /// font, which writes them — and reads them back — correctly.
 pub(super) fn cid_required(ch: char) -> bool {
     !(ch.is_ascii() || matches!(ch, '·' | 'Ø' | '§' | '—' | '–' | '…' | '’' | '“' | '”'))

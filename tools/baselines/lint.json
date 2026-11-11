@@ -1,9 +1,6 @@
 {
   "note": "Per file: the count of the ratcheted clippy warning (cognitive_complexity, threshold in clippy.toml) and of every lint suppression. Measured by tools/check-lint.mjs. Only shrinks: a new entry or suppression is never added.",
   "files": {
-    "crates/engine/tests/day_state.rs": {
-      "cognitive_complexity": 1
-    },
     "app/vite.config.js": {
       "ts_ignore": 1
     },

@@ -5,8 +5,7 @@
 //! they still apply.
 
 use packing_engine::ids::BatchId;
-use packing_engine::rules::parse_filter;
-use packing_engine::rules_edit::{self, Tree};
+use packing_engine::rules::{self, Tree, parse_filter};
 use packing_engine::sorting::{plan_groups, sort_batch};
 use packing_engine::workflows::{
     GroupEdit, NewRule, SortRule, Workflows, add_rule, delete_rule, load_workflows, rename_rule,
@@ -347,11 +346,11 @@ pub fn rules_save_text(state: State<'_, AppState>, text: String) -> Result<(), S
 /// The boxes of a filter, from the engine's parser, so the window has no second parser.
 #[tauri::command]
 pub fn filter_to_tree(text: String) -> Result<Tree, String> {
-    rules_edit::filter_to_tree(&text).map_err(|error| error.to_string())
+    rules::filter_to_tree(&text).map_err(|error| error.to_string())
 }
 
 /// Boxes as filter text, in the engine printer's one-line form.
 #[tauri::command]
 pub fn tree_to_filter(tree: Tree) -> Result<String, String> {
-    rules_edit::tree_to_filter(&tree).map_err(|error| error.to_string())
+    rules::tree_to_filter(&tree).map_err(|error| error.to_string())
 }

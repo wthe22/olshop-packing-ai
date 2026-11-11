@@ -15,7 +15,6 @@ use packing_engine::account_questions::{AccountChoices, assign_accounts};
 use packing_engine::batch_record::{BatchFacts, batch_saved};
 use packing_engine::copies::read_copies;
 use packing_engine::ids::{BatchId, PdfId};
-use packing_engine::label::courier_data;
 use packing_engine::record::{BatchSaved, Datetime, InputPdf, OutputFile, RecordBody};
 use packing_engine::repeats::{Choices, sort_out};
 use packing_engine::sorting::{plan_groups, sort_batch};
@@ -40,15 +39,15 @@ struct Draft {
 fn draft(pdfium: &Pdfium, data: &Path) -> Draft {
     let folder = DateFolder::new(data, date(2026, 10, 8));
     let paths: Vec<PathBuf> = INPUTS.iter().map(|name| testdata(name)).collect();
+    let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
     let pages = read::read_all(
         pdfium,
         &paths,
         &AtomicBool::new(false),
-        courier_data(),
+        &workflows,
         &mut |_, _| {},
     )
     .unwrap();
-    let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
     let mut copies = read_copies(pages, &INPUTS, &workflows).unwrap().copies;
     let accounts = shop_accounts(&["Toko Contoh", "Toko Lain"]);
     assign_accounts(&mut copies, &accounts, &AccountChoices::default());

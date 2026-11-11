@@ -3,12 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::rules::{
-    Condition, IS_EMPTY, NumberOp, RulesError, TextOp, format_condition, parse_condition,
-    parse_filter,
-};
-
-use super::error;
+use super::{Condition, IS_EMPTY, NumberOp, RulesError, TextOp, format_condition, parse_filter};
 
 /// A group's kind: **All of these** (`and`) or **Any of these** (`or`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -183,11 +178,6 @@ fn to_node(cond: &Condition) -> Node {
     }
 }
 
-/// Parse a condition and show it as boxes.
-pub fn condition_to_tree(text: &str) -> Result<Tree, RulesError> {
-    Ok(tree_of(&parse_condition(text)?))
-}
-
 /// Parse a filter of `packing-workflows.toml`, a one-off group or a search, and show it as boxes.
 pub fn filter_to_tree(text: &str) -> Result<Tree, RulesError> {
     Ok(tree_of(&parse_filter(text)?))
@@ -212,7 +202,7 @@ fn tree_of(condition: &Condition) -> Tree {
 /// `not (not a)`).
 fn group_condition(group: &Group) -> Result<Condition, RulesError> {
     if group.children.is_empty() {
-        return Err(error("this group is empty"));
+        return Err(RulesError::new("this group is empty"));
     }
     let mut operands = Vec::with_capacity(group.children.len());
     for child in &group.children {
@@ -252,7 +242,7 @@ fn row_condition(row: &Row) -> Result<Condition, RulesError> {
     match &row.value {
         RowValue::Text(value) => {
             let op = text_op_parse(&row.operator.trim().to_lowercase()).ok_or_else(|| {
-                error(format!(
+                RulesError::new(format!(
                     "unknown text operator \"{}\" for \"{field}\"",
                     row.operator
                 ))
@@ -266,7 +256,7 @@ fn row_condition(row: &Row) -> Result<Condition, RulesError> {
         RowValue::NoValue if row.operator.trim().eq_ignore_ascii_case(IS_EMPTY) => {
             Ok(Condition::Empty { field })
         }
-        RowValue::NoValue => Err(error(format!(
+        RowValue::NoValue => Err(RulesError::new(format!(
             "the operator \"{}\" of \"{field}\" needs a value",
             row.operator
         ))),
@@ -291,21 +281,11 @@ fn row_condition(row: &Row) -> Result<Condition, RulesError> {
 
 fn number_op(row: &Row, field: &str) -> Result<NumberOp, RulesError> {
     number_op_parse(row.operator.trim()).ok_or_else(|| {
-        error(format!(
+        RulesError::new(format!(
             "unknown number operator \"{}\" for \"{field}\"",
             row.operator
         ))
     })
-}
-
-/// Show boxes as condition text (the printer of `rules`, so boxes and text agree).
-/// The result is re-parsed so a hand-built tree with an unknown field or a bad date/time value
-/// gives the same error as the text view.
-pub fn tree_to_condition(tree: &Tree) -> Result<String, RulesError> {
-    let condition = group_condition(&tree.root)?;
-    let text = format_condition(&condition);
-    parse_condition(&text)?;
-    Ok(text)
 }
 
 /// Show boxes as filter text, checked by the filter grammar.

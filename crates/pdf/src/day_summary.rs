@@ -17,10 +17,10 @@ use pdfium_render::prelude::Pdfium;
 
 use crate::PdfError;
 use crate::facts::{ROW_H, draw_bar, draw_section, new_page};
-use crate::packing_list::emit::{emit, header_ops};
-use crate::packing_list::fonts::FONT_DIR;
-use crate::packing_list::measure::Measure;
-use crate::packing_list::{Builder, Layout, Op};
+use crate::page::emit::{emit, header_ops};
+use crate::page::fonts::FONT_DIR;
+use crate::page::measure::Measure;
+use crate::page::{Builder, Op};
 use crate::summary_pdf::{draw_content, draw_picks};
 
 /// One live batch of the date.
@@ -90,7 +90,7 @@ pub fn write_day_summary(
 
     let font_dir = Path::new(FONT_DIR);
     let measure = Measure::new(pdfium, font_dir)?;
-    let mut builder = Builder::new(Layout::Pick, &measure);
+    let mut builder = Builder::new(&measure);
     for section in content::sections(shown, facts) {
         draw_section(&mut builder, &section, &measure);
     }

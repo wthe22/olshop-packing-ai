@@ -1,7 +1,7 @@
 //! The boxes of a filter: text → boxes → text gives the printer's form, nested boxes of one kind
 //! merge, and the filter grammar decides what a box may hold.
 
-use packing_engine::rules_edit::{GroupKind, Node, RowValue, filter_to_tree, tree_to_filter};
+use packing_engine::rules::{GroupKind, Node, RowValue, filter_to_tree, tree_to_filter};
 
 #[test]
 fn a_filter_goes_to_boxes_and_back_in_the_printers_form() {
