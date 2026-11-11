@@ -1,6 +1,6 @@
-//! A batch read but not saved (steps 4–10): the chosen files read into copies, the copies into
-//! orders by the already-saved guard and the repeat choices, and the orders into the plan's label
-//! groups. A choice works out the orders again from the copies.
+//! A batch read but not saved (steps 4–10): the chosen files read into copies, each copy given its
+//! account, the copies into orders by the already-saved guard and the repeat choices, and the orders
+//! into the plan's label groups. A choice works out the orders again from the copies.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -8,6 +8,10 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::mpsc::Sender;
 
+use packing_engine::account_questions::{
+    AccountChoices, AccountQuestions, account_questions, assign_accounts,
+};
+use packing_engine::accounts::Account;
 use packing_engine::batch_record::{read_findings, saved_orders};
 use packing_engine::copies::{Copy, read_copies};
 use packing_engine::ids::{BatchId, OrderId};
@@ -30,6 +34,8 @@ pub struct ReadRequest<'a> {
     pub workflows: &'a Workflows,
     pub rule: &'a SortRule,
     pub fold: &'a Fold,
+    /// The accounts of `packing-settings.toml`, which name each label's account.
+    pub accounts: &'a [Account],
     /// The batch an amend redoes: its own orders are not saved earlier.
     pub redo: Option<BatchId>,
     pub cancel: Arc<AtomicBool>,
@@ -53,9 +59,28 @@ pub struct Draft {
     pub couriers: Vec<Courier>,
     /// The batch an amend redoes.
     pub redo: Option<BatchId>,
+    /// The accounts the copies are matched with, and what the shop prompt chose.
+    pub accounts: Vec<Account>,
+    pub account_choices: AccountChoices,
 }
 
 impl Draft {
+    /// The shop prompt's questions: the copies that have no account yet.
+    pub fn account_questions(&self) -> AccountQuestions {
+        account_questions(&self.copies)
+    }
+
+    /// Match the copies again with `accounts` (the prompt's shops written into them) and the
+    /// accounts chosen for each input's labels with no sender.
+    pub fn answer_accounts(&mut self, accounts: Vec<Account>, no_sender: BTreeMap<usize, String>) {
+        self.accounts = accounts;
+        self.account_choices.no_sender = no_sender;
+        self.assign_accounts();
+    }
+
+    pub(crate) fn assign_accounts(&mut self) {
+        assign_accounts(&mut self.copies, &self.accounts, &self.account_choices);
+    }
     /// Keep the copies `choices` names; nothing changes when one cannot apply.
     pub fn choose(&mut self, choices: Choices) -> Result<(), BatchError> {
         self.orders = sort_out(&self.copies, &self.saved, &choices)?;
@@ -127,6 +152,7 @@ impl Draft {
         let names: Vec<&str> = self.files.iter().map(|f| f.filename.as_str()).collect();
         let read = read_copies(self.pages.clone(), &names, workflows)?;
         self.copies = read.copies;
+        self.assign_accounts();
         self.unseen_logos = read.unseen_logos;
         self.couriers = workflows.couriers.clone();
         self.orders = match sort_out(&self.copies, &self.saved, &self.choices) {
@@ -166,7 +192,7 @@ pub fn read_draft(request: ReadRequest<'_>) -> Result<Draft, BatchError> {
         let ids: BTreeSet<&OrderId> = read.copies.iter().map(|c| &c.order_id).collect();
         return Err(BatchError::AllSavedEarlier { orders: ids.len() });
     }
-    Ok(Draft {
+    let mut draft = Draft {
         files: request.files,
         pages,
         copies: read.copies,
@@ -178,7 +204,11 @@ pub fn read_draft(request: ReadRequest<'_>) -> Result<Draft, BatchError> {
         plan: plan_groups(request.rule),
         couriers: request.workflows.couriers.clone(),
         redo: request.redo,
-    })
+        accounts: request.accounts.to_vec(),
+        account_choices: AccountChoices::default(),
+    };
+    draft.assign_accounts();
+    Ok(draft)
 }
 
 /// The orders of the date's live batches other than the one an amend redoes.

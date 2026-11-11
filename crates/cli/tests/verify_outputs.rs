@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 
 use jiff::civil::date;
+use packing_engine::account_questions::{AccountChoices, assign_accounts};
 use packing_engine::batch_record::{BatchFacts, batch_saved};
 use packing_engine::copies::read_copies;
 use packing_engine::ids::{BatchId, PdfId};
@@ -24,7 +25,7 @@ use packing_pdf::{read, write};
 use packing_store::{DateFolder, Journal, encode_line, input_path, sha256_of, store_input};
 use packing_verify::{BatchCheck, Findings, verify_batch};
 use pdfium_render::prelude::Pdfium;
-use testkit::{TempDir, testdata, vendor_dir};
+use testkit::{TempDir, shop_accounts, testdata, vendor_dir};
 
 const INPUTS: [&str; 2] = ["labels-repeat-1.pdf", "labels-repeat-2.pdf"];
 
@@ -48,7 +49,9 @@ fn draft(pdfium: &Pdfium, data: &Path) -> Draft {
     )
     .unwrap();
     let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
-    let copies = read_copies(pages, &INPUTS, &workflows).unwrap().copies;
+    let mut copies = read_copies(pages, &INPUTS, &workflows).unwrap().copies;
+    let accounts = shop_accounts(&["Toko Contoh", "Toko Lain"]);
+    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
     let orders = sort_out(&copies, &BTreeMap::new(), &Choices::default()).unwrap();
     let rule = workflows.sort_rule("default").unwrap();
     let plan = plan_groups(rule);

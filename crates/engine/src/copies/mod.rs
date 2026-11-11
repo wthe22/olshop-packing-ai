@@ -10,10 +10,9 @@ use std::fmt;
 
 use jiff::civil::Date;
 
+use crate::accounts::OrderAccount;
 use crate::ids::{CourierCode, OrderId, TrackingId};
-use crate::label::{
-    Form, SenderText, find_order_id, find_sender, find_ship_by, find_tracking_id_in,
-};
+use crate::label::{Form, Sender, find_order_id, find_sender, find_ship_by, find_tracking_id_in};
 use crate::orders::{NoSlip, NoSlipFile, PageItem, UnseenLogo};
 use crate::record::CourierClue;
 use crate::rules::{FilterFields, FilterLine};
@@ -42,8 +41,10 @@ pub struct Copy {
     pub total_quantity: Option<i64>,
     /// One page fingerprint per page, in page order.
     pub fingerprints: Vec<u64>,
-    /// The text around its first page's `Pengirim` caption, for the shop check.
-    pub sender: Option<SenderText>,
+    /// The sender its first page prints with the `Pengirim` caption; none without the caption.
+    pub sender: Option<Sender>,
+    /// Its account and shop, once its label or the shop prompt names them.
+    pub account: Option<OrderAccount>,
 }
 
 impl Copy {
@@ -173,6 +174,7 @@ where
                 total_quantity: slip.as_ref().and_then(|s| s.qty_total),
                 fingerprints: vec![page_fingerprint(&page)],
                 sender: find_sender(&page),
+                account: None,
             });
             current = Some(copies.len() - 1);
             continue;
@@ -297,5 +299,16 @@ impl FilterFields for Copy {
 
     fn ship_by(&self) -> Option<Date> {
         self.ship_by_date
+    }
+
+    fn account(&self) -> &str {
+        self.account.as_ref().map_or("", |found| &found.account)
+    }
+
+    fn shop(&self) -> &str {
+        self.account
+            .as_ref()
+            .and_then(|found| found.shop.as_deref())
+            .unwrap_or_default()
     }
 }

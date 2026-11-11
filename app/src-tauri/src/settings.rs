@@ -1,10 +1,11 @@
 //! The two files beside the program (data/README.md): `packing-settings.toml`, which names the data
-//! folder and the theme, and `packing-workflows.toml`, the owner's rules, written from the bundled
-//! copy when it is missing and from then on the owner's.
+//! folder, the theme and the accounts, and `packing-workflows.toml`, the owner's rules, written from
+//! the bundled copy when it is missing and from then on the owner's.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use packing_engine::accounts::Account;
 use packing_engine::record::SCHEMA;
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, WORKFLOWS_FILE, Workflows, load_workflows};
 use serde::{Deserialize, Serialize};
@@ -30,6 +31,8 @@ struct Root {
     data_dir: Option<PathBuf>,
     #[serde(default)]
     theme: Theme,
+    #[serde(default)]
+    accounts: Vec<Account>,
 }
 
 impl Default for Root {
@@ -38,6 +41,7 @@ impl Default for Root {
             schema: SCHEMA.to_string(),
             data_dir: None,
             theme: Theme::default(),
+            accounts: Vec::new(),
         }
     }
 }
@@ -88,6 +92,23 @@ pub(crate) fn set_theme(program: &Path, theme: Theme) -> Result<(), String> {
     let mut root = read_root(program)?;
     root.theme = theme;
     write_root(program, &root)
+}
+
+/// The accounts `packing-settings.toml` lists, in the order they were made.
+pub(crate) fn accounts(program: &Path) -> Result<Vec<Account>, String> {
+    Ok(read_root(program)?.accounts)
+}
+
+/// Change the accounts of the file as it is now, so another copy's change is kept; the caller holds
+/// the data folder's lock. Nothing is written when `change` refuses. Returns the accounts written.
+pub(crate) fn change_accounts(
+    program: &Path,
+    change: impl FnOnce(&mut Vec<Account>) -> Result<(), String>,
+) -> Result<Vec<Account>, String> {
+    let mut root = read_root(program)?;
+    change(&mut root.accounts)?;
+    write_root(program, &root)?;
+    Ok(root.accounts)
 }
 
 /// The rules beside the program, as text and as read; the bundled copy is written there first

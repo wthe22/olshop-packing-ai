@@ -1,6 +1,8 @@
 //! Packing engine: the reading and sorting rules. Takes text runs and returns decisions, so
 //! every rule is tested without PDF files.
 
+pub mod account_questions;
+pub mod accounts;
 pub mod batch_record;
 pub mod copies;
 pub mod couriers_edit;
@@ -16,7 +18,7 @@ pub mod repeats;
 pub mod rules;
 pub mod rules_edit;
 pub mod search;
-pub mod shops;
+
 pub mod slip;
 pub mod sorting;
 pub mod text;

@@ -152,6 +152,8 @@ pub(super) const FIELDS: &[(&str, FieldType, Level)] = &[
     ("channel", FieldType::Text, Level::Order),
     ("order_id", FieldType::Text, Level::Order),
     ("tracking_id", FieldType::Text, Level::Order),
+    ("account", FieldType::Text, Level::Order),
+    ("shop", FieldType::Text, Level::Order),
     ("ship_by", FieldType::Time, Level::Order),
     ("paid_time", FieldType::Time, Level::Order),
     ("rts_time", FieldType::Time, Level::Order),

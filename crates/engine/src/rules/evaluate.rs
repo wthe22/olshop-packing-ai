@@ -173,6 +173,10 @@ pub trait FilterFields {
     /// Empty when the label printed none.
     fn tracking_id(&self) -> &str;
     fn ship_by(&self) -> Option<Date>;
+    /// The account the order was read as; empty before it has one.
+    fn account(&self) -> &str;
+    /// The listed shop found on its label; empty when it printed no sender.
+    fn shop(&self) -> &str;
 }
 
 /// One item line as a filter reads it.
@@ -190,6 +194,8 @@ fn filter_text(order: &dyn FilterFields, field: &str, test: impl Fn(&str) -> boo
         "courier" => Some(order.courier()),
         "order_id" => Some(order.order_id()),
         "tracking_id" => Some(order.tracking_id()),
+        "account" => Some(order.account()),
+        "shop" => Some(order.shop()),
         _ => None,
     };
     if let Some(text) = single {

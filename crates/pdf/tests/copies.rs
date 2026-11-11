@@ -1,20 +1,24 @@
 //! The v0.2 reading of the committed fixture: `labels-slip.pdf` read into copies gives
 //! `expected-labels.json` — one copy per order, its pages, tracking ID, deadline date, lines and
-//! printed total — each courier with the clue the label offers, and its sender; the repeat inputs
-//! give the shop check of their answer; `labels-plain.pdf` stops.
+//! printed total — each courier with the clue the label offers, and its sender's name; the repeat
+//! inputs ask about the shop no account lists, as their answer has it; `labels-plain.pdf` stops.
 
 mod common;
 
 use std::sync::atomic::AtomicBool;
 
+use packing_engine::account_questions::{
+    AccountChoices, ShopQuestion, account_questions, assign_accounts,
+};
+
 use packing_engine::copies::{CopiesStop, read_copies};
 use packing_engine::label::courier_data;
 use packing_engine::record::CourierClueKind;
-use packing_engine::shops::{OtherSender, OtherShopFile, WorkspaceShops, other_shop_files};
+
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, load_workflows};
 use packing_pdf::read;
 use serde_json::Value;
-use testkit::testdata;
+use testkit::{shop_accounts, testdata};
 
 #[test]
 fn the_fixture_reads_into_one_copy_per_order_as_its_answer() {
@@ -69,11 +73,16 @@ fn the_fixture_reads_into_one_copy_per_order_as_its_answer() {
         assert_eq!(copy.courier.as_ref().map(|c| c.as_str()), code, "{id}");
         assert_eq!(copy.courier_clue.kind, kind, "{id}");
         match (&copy.sender, want["sender"].as_str()) {
-            (Some(sender), Some(name)) => assert!(sender.shows(name), "{id}: sender"),
+            (Some(sender), Some(name)) => {
+                assert_eq!(sender.name, name, "{id}: sender");
+                assert!(sender.text.shows(name), "{id}: sender");
+            }
             (sender, name) => assert_eq!(sender.is_some(), name.is_some(), "{id}: sender"),
         }
         assert!(
-            copy.sender.as_ref().is_none_or(|s| !s.shows("Toko Lain")),
+            copy.sender
+                .as_ref()
+                .is_none_or(|s| !s.text.shows("Toko Lain")),
             "{id}"
         );
     }
@@ -109,7 +118,7 @@ fn the_plain_fixture_stops_with_no_slip() {
 }
 
 #[test]
-fn the_repeat_inputs_name_the_orders_of_another_workspace_s_shop() {
+fn the_repeat_inputs_ask_about_the_shop_no_account_lists() {
     let Some(pdfium) = common::bind() else {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
@@ -125,46 +134,32 @@ fn the_repeat_inputs_name_the_orders_of_another_workspace_s_shop() {
         &mut |_, _| {},
     )
     .expect("read the repeat inputs");
-    let read = read_copies(pages, &names, &workflows).expect("copies");
+    let mut copies = read_copies(pages, &names, &workflows)
+        .expect("copies")
+        .copies;
     let answer: Value =
         serde_json::from_str(&std::fs::read_to_string(testdata("expected-repeat.json")).unwrap())
             .unwrap();
-    let own = vec!["Toko Contoh".to_string()];
-    let others = vec![WorkspaceShops {
-        workspace: "Lain".to_string(),
-        shops: vec!["Toko Lain".to_string()],
-    }];
+    let accounts = shop_accounts(&["Toko Contoh"]);
+    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
 
-    let want: Vec<OtherShopFile> = (0..names.len())
-        .filter_map(|input| {
-            let of_input: Vec<&Value> = answer["copies"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .filter(|copy| copy["input"] == input)
-                .collect();
-            let ids = |others: bool| {
-                let mut ids: Vec<&str> = of_input
-                    .iter()
-                    .filter(|copy| !others || copy["sender"] == "Toko Lain")
-                    .map(|copy| copy["order_id"].as_str().unwrap())
-                    .collect();
-                ids.sort();
-                ids.dedup();
-                ids.len()
-            };
-            (ids(true) > 0).then(|| OtherShopFile {
-                input,
-                orders: ids(true),
-                of_orders: ids(false),
-                sender: OtherSender::OfWorkspace("Lain".to_string()),
-            })
-        })
+    let other: Vec<&Value> = answer["copies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|copy| copy["sender"] == "Toko Lain")
         .collect();
-    assert_eq!(
-        want.len(),
-        1,
-        "the answer has one file with another shop's label"
-    );
-    assert_eq!(other_shop_files(&read.copies, &own, &others), want);
+    let mut inputs: Vec<usize> = other
+        .iter()
+        .map(|copy| copy["input"].as_u64().unwrap() as usize)
+        .collect();
+    inputs.dedup();
+    let want = ShopQuestion {
+        name: "Toko Lain".into(),
+        orders: other.len(),
+        inputs,
+    };
+    let questions = account_questions(&copies);
+    assert_eq!(questions.shops, [want]);
+    assert!(questions.no_sender.is_empty());
 }

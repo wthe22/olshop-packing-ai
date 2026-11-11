@@ -90,7 +90,12 @@ const FILTER_FIELDS: &[&str] = &[
     "order_id",
     "tracking_id",
     "ship_by",
+    "account",
+    "shop",
 ];
+
+/// The fields read from the label's sender, which `categories.toml`'s conditions never had.
+const LABEL_FIELDS: &[&str] = &["account", "shop"];
 
 /// Which language a text is parsed as: `categories.toml`'s conditions, or the filters of
 /// `packing-workflows.toml`, a one-off group and a search.
@@ -187,9 +192,10 @@ impl Parser {
 
     fn parse_comparison(&mut self) -> Result<Condition, RulesError> {
         let token = self.peek().clone();
-        let known = field_type(&token.text.to_lowercase()).filter(|_| {
-            self.grammar == Grammar::Categories
-                || FILTER_FIELDS.contains(&token.text.to_lowercase().as_str())
+        let lower = token.text.to_lowercase();
+        let known = field_type(&lower).filter(|_| match self.grammar {
+            Grammar::Categories => !LABEL_FIELDS.contains(&lower.as_str()),
+            Grammar::Filter => FILTER_FIELDS.contains(&lower.as_str()),
         });
         let Some((ftype, level)) = known else {
             return Err(RulesError::new(format!(

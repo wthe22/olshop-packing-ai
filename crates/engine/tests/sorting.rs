@@ -282,7 +282,11 @@ fn each_filter_field_reads_its_value_of_the_order() {
     order.tracking_id = Some(TrackingId::new("JY0000001234"));
     order.total_quantity = Some(3);
     order.ship_by_date = Some(date(2026, 10, 8));
-    let bare = copy("580000000000000043", 0, 2, vec![line("Jok", "", "", 1)]);
+    let mut bare = copy("580000000000000043", 0, 2, vec![line("Jok", "", "", 1)]);
+    bare.account = Some(packing_engine::accounts::OrderAccount {
+        account: "Toko Beta".into(),
+        shop: None,
+    });
     let cases = [
         ("name contains \"KACA\"", true, false),
         (
@@ -308,6 +312,10 @@ fn each_filter_field_reads_its_value_of_the_order() {
         ("ship_by != \"2026-10-09\"", true, false),
         ("not name contains \"sepatu\"", true, true),
         ("name contains \"jok\" or total_quantity > 0", true, true),
+        ("account equals \"toko alfa\"", true, false),
+        ("account starts_with \"Toko\"", true, true),
+        ("shop contains \"alfa\"", true, false),
+        ("shop is_empty", false, true),
     ];
     for (text, on_order, on_bare) in cases {
         let filter = parse_filter(text).expect(text);

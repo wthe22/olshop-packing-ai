@@ -1,7 +1,7 @@
 //! The app over `packing-batch` on the repeat fixture: a batch read and saved shows the same Day
 //! screen to a second copy of the app, and writes its day summary; Printed, amend and revert through the commands; the plan's
 //! edits for this batch; the sort rule preselected and *used in batch n*; the logo prompt's answers;
-//! the Repeated orders choices; the shop check; search, reprint, restore and the panel.
+//! the Repeated orders choices; the shop prompt; search, reprint, restore and the panel.
 //!
 //! Skipped with a message when `pdfium.dll` has not been downloaded (tools/get-pdfium.sh).
 
@@ -9,20 +9,21 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use jiff::civil::Date;
+use packing_engine::accounts::Account;
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::orders::{LogoAnswer, UnseenLogo};
 use packing_engine::record::{PrintSent, PrintedMarked};
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, WORKFLOWS_FILE};
-use serde_json::Value;
+use serde_json::{Value, json};
 use testkit::{PdfiumGuard, TempDir, testdata, vendor_dir};
 
 use super::logo::{answer_logo, read_pictures};
 use super::read::{Reading, read_into_draft};
 use super::repeats::RepeatChoices;
 use super::save::save_draft;
+use super::shops::answer_shop;
 use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
 use super::{amend_start, checked, plan_view, resolve, sort_rules_of};
-use crate::AppState;
 use crate::commands::day::{
     OpenView, mark_printed, mark_sent, output_bytes, overview, ready_to_open, restore_file, revert,
     write_day_summary,
@@ -33,12 +34,13 @@ use crate::commands::rules::{
 };
 use crate::commands::search::{DateRange, ReprintChoice, reprint_orders, reprinted_orders, search};
 use crate::commands::start::{start_information, use_folder};
+use crate::{AppState, settings};
 
 const DAY: &str = "2026-10-08";
 const GROUP_FILE: &str = "1-Z Lainnya x4.pdf";
 
-/// A program folder whose first start chose its `data` folder; the guard keeps this test the only
-/// one using PDFium.
+/// A program folder whose first start chose its `data` folder, with an account for each shop of the
+/// repeat fixture; the guard keeps this test the only one using PDFium.
 fn started(tag: &str) -> Option<(TempDir, AppState, PdfiumGuard)> {
     vendor_dir()?;
     let guard = testkit::pdfium_lock();
@@ -46,8 +48,23 @@ fn started(tag: &str) -> Option<(TempDir, AppState, PdfiumGuard)> {
     let state = AppState::new(program.path().to_path_buf());
     start_information(&state).unwrap();
     use_folder(&state, &program.path().join("data")).unwrap();
+    settings::change_accounts(program.path(), |accounts| {
+        accounts.extend([
+            account("Toko Contoh", &["Toko Contoh"]),
+            account("Toko Lain", &["Toko Lain"]),
+        ]);
+        Ok(())
+    })
+    .unwrap();
     overview(&state, DAY).unwrap();
     Some((program, state, guard))
+}
+
+fn account(name: &str, shops: &[&str]) -> Account {
+    Account {
+        name: name.into(),
+        shops: shops.iter().map(|shop| shop.to_string()).collect(),
+    }
 }
 
 fn date() -> Date {
@@ -664,4 +681,75 @@ fn a_saved_sort_rule_keeps_the_files_comments_and_the_open_plan_follows_it() {
     );
     assert_eq!(plan(&state).unwrap().sort_rule, "biasa");
     assert_eq!(rule_groups(&state, "harian").unwrap().len(), 2);
+}
+
+#[test]
+fn a_shop_answer_is_written_into_the_settings_and_gives_the_orders_their_account() {
+    let Some((program, state, _guard)) = started("app-shops") else {
+        return skipped();
+    };
+    let listed = |accounts: Vec<Account>| {
+        settings::change_accounts(program.path(), |now| {
+            *now = accounts;
+            Ok(())
+        })
+        .unwrap();
+    };
+    let contoh = || account("Toko Contoh", &["Toko Contoh"]);
+    listed(vec![contoh()]);
+    let shown = serde_json::to_value(read(&state)).unwrap();
+    let prompt = json!({
+        "accounts": ["Toko Contoh"],
+        "shops": [{"name": "Toko Lain", "orders": 1, "files": 1}],
+        "no_sender": [],
+    });
+    assert_eq!(shown["shops"], prompt);
+    let refused = save_draft(&state, false, &|_| {}).err().unwrap();
+    assert!(refused.contains("has no account yet"), "{refused}");
+
+    let answer = |name: &str, account: Value, no_sender: Value| {
+        let answer = json!({
+            "shops": [{"read": "Toko Lain", "name": name, "account": account}],
+            "no_sender": no_sender,
+        });
+        answer_shop(&state, &serde_json::from_value(answer).unwrap())
+    };
+    let new = json!({"new": "Toko Lain"});
+    let to_contoh = json!({"listed": "Toko Contoh"});
+    let refusals = [
+        answer("Toko Lian", new.clone(), json!({})),
+        answer("Toko Lain", new, json!({"1": "Toko Tiada"})),
+        answer("Toko Lain", json!({"listed": "Toko Tiada"}), json!({})),
+    ];
+    let refusals: Vec<String> = refusals.into_iter().map(|r| r.err().unwrap()).collect();
+    assert_eq!(
+        refusals,
+        [
+            "Toko Lian: not on these labels.",
+            "There is no account \"Toko Tiada\".",
+            "Toko Lain: there is no account by that name.",
+        ]
+    );
+    assert_eq!(settings::accounts(program.path()).unwrap(), [contoh()]);
+
+    // Another copy of the app lists the shop meanwhile: its account stands.
+    let lain = account("Toko Lain", &["Toko Lain"]);
+    listed(vec![contoh(), lain.clone()]);
+    let shown =
+        serde_json::to_value(answer("Toko Lain", to_contoh.clone(), json!({})).unwrap()).unwrap();
+    assert_eq!(shown["shops"]["shops"], json!([]));
+    assert_eq!(
+        settings::accounts(program.path()).unwrap(),
+        [contoh(), lain]
+    );
+
+    listed(vec![contoh()]);
+    read(&state);
+    let shown = serde_json::to_value(answer("Toko Lain", to_contoh, json!({})).unwrap()).unwrap();
+    assert_eq!(shown["shops"]["shops"], json!([]));
+    let written = account("Toko Contoh", &["Toko Contoh", "Toko Lain"]);
+    assert_eq!(settings::accounts(program.path()).unwrap(), [written]);
+    let text = fs::read_to_string(program.path().join(settings::SETTINGS_FILE)).unwrap();
+    assert!(text.contains("[[accounts]]"), "{text}");
+    save(&state);
 }

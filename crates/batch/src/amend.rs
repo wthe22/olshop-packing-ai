@@ -92,6 +92,12 @@ impl Draft {
                 choices.by_hand.insert(left.order_id.clone(), kept);
             }
         }
+        self.account_choices.recorded = record
+            .orders
+            .iter()
+            .map(|order| (order.order_id.clone(), order.account.clone()))
+            .collect();
+        self.assign_accounts();
         self.choose(choices)
     }
 }

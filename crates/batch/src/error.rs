@@ -49,6 +49,10 @@ pub enum BatchError {
         file: String,
     },
     TooManyReprints,
+    /// An order of the batch has no account yet: the shop prompt is not answered.
+    NoAccount {
+        order_id: OrderId,
+    },
 }
 
 impl fmt::Display for BatchError {
@@ -85,6 +89,9 @@ impl fmt::Display for BatchError {
                 write!(f, "{file} is not a file of a saved batch of this date.")
             }
             BatchError::TooManyReprints => f.write_str("This date has too many reprints."),
+            BatchError::NoAccount { order_id } => {
+                write!(f, "Order {order_id} has no account yet: answer which account its shop belongs to.")
+            }
         }
     }
 }

@@ -1,10 +1,13 @@
-//! The v0.2 chain on the repeat fixture, read through PDFium: pages → copies → orders (one copy
-//! each, the rest left out) → plan → the `batch_saved` record, against `expected-repeat.json`.
+//! The v0.2 chain on the repeat fixture, read through PDFium: pages → copies, each with the account
+//! of its sender → orders (one copy each, the rest left out) → plan → the `batch_saved` record,
+//! against `expected-repeat.json`.
 
 mod common;
 
 use std::collections::BTreeMap;
 use std::sync::atomic::AtomicBool;
+
+use packing_engine::account_questions::{AccountChoices, assign_accounts};
 
 use packing_engine::batch_record::{BatchFacts, batch_saved, saved_orders};
 use packing_engine::copies::read_copies;
@@ -16,7 +19,7 @@ use packing_engine::sorting::{plan_groups, sort_batch};
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, load_workflows};
 use packing_pdf::read;
 use serde_json::Value;
-use testkit::testdata;
+use testkit::{shop_accounts, testdata};
 
 fn input(pdf: u8, filename: &str, pages: u16) -> InputPdf {
     let time = Datetime::parse("2026-10-08T07:00:00+07:00").unwrap();
@@ -57,9 +60,11 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
     .expect("read the repeat fixture");
     let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
 
-    let copies = read_copies(pages, &names, &workflows)
+    let mut copies = read_copies(pages, &names, &workflows)
         .expect("copies")
         .copies;
+    let accounts = shop_accounts(&["Toko Contoh", "Toko Lain"]);
+    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
     let got: Vec<Value> = copies
         .iter()
         .map(|copy| {
@@ -68,10 +73,7 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
                 "input": copy.input,
                 "page_start": copy.page_start,
                 "page_end": copy.page_end,
-                // The fixtures' two shops: the one the copy's sender shows.
-                "sender": copy.sender.as_ref().and_then(|sender| {
-                    ["Toko Contoh", "Toko Lain"].into_iter().find(|name| sender.shows(name))
-                }),
+                "sender": copy.sender.as_ref().map(|sender| sender.name.as_str()),
                 "lines": copy.lines.iter().map(|l| serde_json::json!([l.name, l.variation, l.seller_sku, l.quantity])).collect::<Vec<_>>(),
             })
         })
@@ -122,6 +124,16 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
 
     let order_ids: Vec<&str> = saved.orders.iter().map(|o| o.order_id.as_str()).collect();
     assert_eq!(order_ids.len(), 4);
+    for order in &saved.orders {
+        let copy = answer["copies"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|copy| copy["order_id"] == order.order_id.as_str())
+            .unwrap();
+        assert_eq!(order.account, copy["sender"], "{}", order.order_id);
+        assert_eq!(order.shop.as_deref(), copy["sender"].as_str());
+    }
     assert!(saved.orders.iter().all(|order| order.group == "Z"));
     assert_eq!(saved.contents.len(), 4, "four distinct contents");
     assert_eq!(saved.sort_rule.name, "default");

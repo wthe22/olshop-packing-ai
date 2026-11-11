@@ -70,6 +70,14 @@ impl FilterFields for IndexedOrder {
     fn ship_by(&self) -> Option<Date> {
         self.order.ship_by_date
     }
+
+    fn account(&self) -> &str {
+        &self.order.account
+    }
+
+    fn shop(&self) -> &str {
+        self.order.shop.as_deref().unwrap_or_default()
+    }
 }
 
 /// A reprint that printed an order again.

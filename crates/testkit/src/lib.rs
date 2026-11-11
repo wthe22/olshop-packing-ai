@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use packing_engine::accounts::{Account, OrderAccount};
 use packing_engine::copies::Copy;
 use packing_engine::ids::{OrderId, TrackingId};
 use packing_engine::orders::{Line, Order, PageRef, ReadOrder, display_name};
@@ -143,6 +144,17 @@ pub fn slip_line(name: &str, variation: &str, seller_sku: &str, quantity: i64) -
 
 /// A one-page v0.2 copy of `order_id` at `page` of `input`, with no tracking ID, courier or
 /// printed total; a test sets what it needs.
+/// One account per shop, named after it.
+pub fn shop_accounts(shops: &[&str]) -> Vec<Account> {
+    shops
+        .iter()
+        .map(|shop| Account {
+            name: shop.to_string(),
+            shops: vec![shop.to_string()],
+        })
+        .collect()
+}
+
 pub fn copy(order_id: &str, input: usize, page: u16, lines: Vec<SlipLine>) -> Copy {
     Copy {
         order_id: OrderId::new(order_id),
@@ -162,6 +174,10 @@ pub fn copy(order_id: &str, input: usize, page: u16, lines: Vec<SlipLine>) -> Co
         total_quantity: None,
         fingerprints: vec![0],
         sender: None,
+        account: Some(OrderAccount {
+            account: "Toko Alfa".into(),
+            shop: Some("Toko Alfa".into()),
+        }),
     }
 }
 

@@ -67,6 +67,17 @@ pub fn save(request: &SaveRequest<'_>, journal: &mut Journal) -> Result<SaveOutc
     settle_partial(dir, &fold)?;
     let batch = number(request.draft, &fold)?;
     request.draft.check_current(&fold)?;
+    let draft = request.draft;
+    if let Some(&at) = draft
+        .orders
+        .kept
+        .iter()
+        .find(|&&at| draft.copies[at].account.is_none())
+    {
+        return Err(BatchError::NoAccount {
+            order_id: draft.copies[at].order_id.clone(),
+        });
+    }
     let progress = |stage, done, total| (request.progress)(SaveProgress { stage, done, total });
 
     progress(SaveStage::CopyingInputs, 0, request.draft.files.len());

@@ -108,7 +108,8 @@ have no sender ([D-APP-28](../decisions/accounts.md)):
   field so a name read with wrong spaces can be put right; the field must stay a name found on those
   labels, else it says *Not on these labels* under it. Its orders and files are counted. The owner picks an
   account from the list, or **New account**, which names a new account after the shop (its name editable in
-  place). **Continue** writes every answered shop into `packing-settings.toml`, so it is never asked again.
+  place). **Continue** writes every answered shop into `packing-settings.toml`, so it is never asked again; a shop
+  another copy of the app listed meanwhile keeps that account.
 - **A file with labels that have no sender**: one row per file, how many of its orders show no sender, and the
   account for them, for this read only; nothing is stored.
 - **Continue** is off until every row has an account. **Back** (and `Esc`) returns to the file list and

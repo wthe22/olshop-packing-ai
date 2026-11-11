@@ -100,8 +100,11 @@ Every style prints it with the caption `Pengirim` (`Pengirim :` or `Pengirim:`),
   vertical tracking ID can stick to the name's run (`TokoContoh7`), so a name is found inside the text, not
   compared with it.
 - **The name read**, shown by the shop prompt for a sender no account lists: the runs right of the caption on
-  its baseline, else those under it, else the caption's line of the page text after the caption; taken up
-  to a phone number (`(+62)`, `+62`, digits with `*`) or the next caption (a word and `:`), a digit stuck
-  to its end taken off, trimmed. Its spaces may be wrong (`Tok o Cont oh`): the owner corrects it in the
+  its baseline up to a run of one word with six digits or more (a phone number, or the tracking number the
+  Shopee-style label prints there), else those under it, else the caption's line of the page text after the
+  caption; taken up to a phone number (`(+62)`, `+62`, digits with `*`) or the next caption (a word and
+  `:`), a digit stuck to its end taken off, trimmed. Its spaces may be wrong (`Tok o Cont oh`): the owner corrects it in the
   prompt, and a name that is not found in those labels' sender text is refused there.
+- The Shopee-style label can print a long name cut short (`Toko Conto`): it is asked about once, and from
+  then on the longest listed name found wins.
 - **No caption** on the copy's first page: the copy has **no sender**.

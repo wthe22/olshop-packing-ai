@@ -22,11 +22,13 @@ mod plan_view;
 mod read;
 mod repeats;
 mod save;
+mod shops;
 
 mod views;
 
 use self::read::{Reading, read_into_draft, read_result};
 use self::repeats::RepeatChoices;
+use self::shops::ShopAnswer;
 use self::views::{
     AmendStart, FileCheckView, PlanEdit, PlanView, ReadProgress, ReadResult, SaveProgressEvent,
     SaveResultView, file_view,
@@ -165,6 +167,13 @@ pub fn answer_logo(
     answer: LogoAnswer,
 ) -> Result<ReadResult, String> {
     logo::answer_logo(&state, &hash, &answer)
+}
+
+/// The shop prompt's *Continue*: the shops written into `packing-settings.toml` and every order
+/// given its account; the read as it now is.
+#[tauri::command]
+pub fn answer_shop(state: State<'_, AppState>, answer: ShopAnswer) -> Result<ReadResult, String> {
+    shops::answer_shop(&state, &answer)
 }
 
 /// The live check of a one-off group's filter.

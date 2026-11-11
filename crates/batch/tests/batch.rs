@@ -1,9 +1,10 @@
 //! The batch steps on the repeat fixture (an order printed twice in a row, an order in both
 //! inputs): read → plan → save → verify → reopen, a second read of the same files, revert, the
-//! Printed tick, amend, and a finding that stops the save until *Save anyway*.
+//! Printed tick, amend, a finding that stops the save until *Save anyway*, and the shop prompt.
 //!
 //! Skipped with a message when `pdfium.dll` has not been downloaded (tools/get-pdfium.sh).
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -16,22 +17,26 @@ use packing_batch::{
     SaveOutcome, SaveRequest, Saved, amend, check_files, read_draft, reprint, restore, revert,
     save, set_printed, set_sent,
 };
+use packing_engine::account_questions::{NoSenderQuestion, ShopQuestion};
+use packing_engine::accounts::{Account, ShopAccount, add_shop};
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked};
 use packing_engine::workflows::{BUNDLED_WORKFLOWS, SortRule, Workflows, load_workflows};
 use packing_pdf::worker::PdfWorker;
 use packing_store::{DateFolder, Journal, Settled, input_path, open_date, partial_dir};
-use testkit::{PdfiumGuard, TempDir, testdata, vendor_dir};
+use testkit::{PdfiumGuard, TempDir, shop_accounts, testdata, vendor_dir};
 
 const INPUTS: [&str; 2] = ["labels-repeat-1.pdf", "labels-repeat-2.pdf"];
 const APP: &str = "0.3.3";
 const GROUP_FILE: &str = "1-Z Lainnya x4.pdf";
 
-/// A date of a fresh data folder, opened, with the worker and the bundled rules.
+/// A date of a fresh data folder, opened, with the worker, the bundled rules and an account for
+/// each shop of the repeat fixture.
 struct Day {
     folder: DateFolder,
     journal: Journal,
     workflows: Workflows,
+    accounts: Vec<Account>,
     worker: PdfWorker,
     _guard: PdfiumGuard,
     _data: TempDir,
@@ -47,6 +52,7 @@ fn day(tag: &str) -> Option<Day> {
         journal,
         folder,
         workflows: load_workflows(BUNDLED_WORKFLOWS).unwrap(),
+        accounts: shop_accounts(&["Toko Contoh", "Toko Lain"]),
         worker: PdfWorker::spawn(vendor).unwrap(),
         _guard: guard,
         _data: data,
@@ -68,6 +74,7 @@ impl Day {
             workflows: &self.workflows,
             rule,
             fold: self.journal.fold(),
+            accounts: &self.accounts,
             redo,
             cancel: Arc::new(AtomicBool::new(false)),
             progress,
@@ -80,7 +87,7 @@ impl Day {
         self.read(&paths, &rule, None)
     }
 
-    fn save(&mut self, draft: &Draft, save_anyway: bool) -> SaveOutcome {
+    fn try_save(&mut self, draft: &Draft, save_anyway: bool) -> Result<SaveOutcome, BatchError> {
         save(
             &SaveRequest {
                 worker: &self.worker,
@@ -92,7 +99,10 @@ impl Day {
             },
             &mut self.journal,
         )
-        .unwrap()
+    }
+
+    fn save(&mut self, draft: &Draft, save_anyway: bool) -> SaveOutcome {
+        self.try_save(draft, save_anyway).unwrap()
     }
 
     fn output(&self, file: &str) -> PathBuf {
@@ -177,17 +187,7 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
     let paths: Vec<PathBuf> = redo.files.iter().map(|f| f.path.clone()).collect();
     let stale = day.read(&paths, &redo.rule, Some(redo.batch)).unwrap();
     revert(&day.folder, &mut day.journal, APP).unwrap();
-    let refused = save(
-        &SaveRequest {
-            worker: &day.worker,
-            folder: &day.folder,
-            draft: &stale,
-            save_anyway: false,
-            app: APP,
-            progress: &|_| {},
-        },
-        &mut day.journal,
-    );
+    let refused = day.try_save(&stale, false);
     assert!(
         matches!(refused, Err(BatchError::NotNewest)),
         "an amend of a batch reverted meanwhile: {refused:?}"
@@ -209,9 +209,11 @@ fn a_draft_saves_after_another_copys_batch_unless_that_batch_took_its_orders() {
     let mine = day.read_inputs().unwrap();
     let late = day.read_inputs().unwrap();
     let rule = day.workflows.sort_rule("default").unwrap().clone();
-    let other = day
+    let mut other = day
         .read(&[testdata("labels-slip.pdf")], &rule, None)
         .unwrap();
+    let no_sender = BTreeMap::from([(0, "Toko Contoh".to_string())]);
+    other.answer_accounts(day.accounts.clone(), no_sender);
 
     assert_eq!(saved(day.save(&other, false)).record.batch, BatchId::new(1));
     let record = saved(day.save(&mine, false)).record;
@@ -220,17 +222,7 @@ fn a_draft_saves_after_another_copys_batch_unless_that_batch_took_its_orders() {
         BatchId::new(2),
         "numbered on the date as it is now"
     );
-    let refused = save(
-        &SaveRequest {
-            worker: &day.worker,
-            folder: &day.folder,
-            draft: &late,
-            save_anyway: false,
-            app: APP,
-            progress: &|_| {},
-        },
-        &mut day.journal,
-    );
+    let refused = day.try_save(&late, false);
     assert!(
         matches!(refused, Err(BatchError::DateChanged)),
         "its orders were saved after it was read: {refused:?}"
@@ -456,4 +448,66 @@ fn a_missing_output_is_restored_and_recorded() {
         &mut day.journal,
     );
     assert!(matches!(refused, Err(BatchError::NoOutput { .. })));
+}
+
+#[test]
+fn a_shop_no_account_lists_and_a_file_with_no_sender_wait_for_the_shop_prompt() {
+    let Some(mut day) = day("batch-accounts") else {
+        return skipped();
+    };
+    day.accounts.truncate(1);
+    let rule = day.workflows.sort_rule("default").unwrap().clone();
+    let paths = [testdata(INPUTS[1]), testdata("labels-slip.pdf")];
+    let mut draft = day.read(&paths, &rule, None).unwrap();
+    let questions = draft.account_questions();
+    let shop = ShopQuestion {
+        name: "Toko Lain".into(),
+        orders: 1,
+        inputs: vec![0],
+    };
+    assert_eq!(questions.shops, [shop]);
+    let file = NoSenderQuestion {
+        input: 1,
+        orders: 1,
+        of_orders: 23,
+    };
+    assert_eq!(questions.no_sender, [file]);
+    assert!(matches!(
+        day.try_save(&draft, false),
+        Err(BatchError::NoAccount { .. })
+    ));
+
+    let mut accounts = draft.accounts.clone();
+    add_shop(
+        &mut accounts,
+        "Toko Lain",
+        &ShopAccount::New("Toko Lain".into()),
+    )
+    .unwrap();
+    let no_sender = BTreeMap::from([(1, "Toko Contoh".to_string())]);
+    draft.answer_accounts(accounts.clone(), no_sender);
+    assert!(draft.account_questions().is_empty());
+    let first = saved(day.save(&draft, false)).record;
+    let account = |id: &str| {
+        let order = first.orders.iter().find(|o| o.order_id.as_str() == id);
+        order.map(|order| (order.account.as_str(), order.shop.as_deref()))
+    };
+    assert_eq!(
+        account("580000000000000104"),
+        Some(("Toko Lain", Some("Toko Lain")))
+    );
+    assert_eq!(account("580000000000000022"), Some(("Toko Contoh", None)));
+    assert_eq!(
+        account("580000000000000021"),
+        Some(("Toko Contoh", Some("Toko Contoh")))
+    );
+
+    // An amend reads the label with no sender again and keeps the account its record names.
+    day.accounts = accounts;
+    let redo = amend(&day.folder, day.journal.fold(), &day.workflows).unwrap();
+    let paths: Vec<PathBuf> = redo.files.iter().map(|f| f.path.clone()).collect();
+    let mut draft = day.read(&paths, &redo.rule, Some(redo.batch)).unwrap();
+    draft.keep_as_recorded(&first).unwrap();
+    assert!(draft.account_questions().is_empty());
+    assert_eq!(saved(day.save(&draft, false)).record.orders, first.orders);
 }

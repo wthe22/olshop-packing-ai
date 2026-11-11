@@ -27,6 +27,8 @@ fn saved_order(id: &str, content: u16, group: &str, page: u16) -> SavedOrder {
             value: Some("39b9b7b9f61d0e7f".into()),
             form: Some(r"J[XY]\d{10}".into()),
         },
+        account: "Toko Alfa".into(),
+        shop: Some("Toko Alfa".into()),
         content,
         skus: vec![Some("SELL-SEP-01".into())],
         total_quantity: Some(1),

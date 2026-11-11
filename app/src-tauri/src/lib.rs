@@ -367,6 +367,7 @@ pub fn run() {
             commands::batch::read_labels,
             commands::batch::cancel_read,
             commands::batch::answer_logo,
+            commands::batch::answer_shop,
             commands::batch::check_condition,
             commands::rules::rules_list,
             commands::rules::rules_load,

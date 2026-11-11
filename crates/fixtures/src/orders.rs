@@ -9,7 +9,7 @@ pub enum Style {
     Words,
 }
 
-/// The shop the fixtures' labels are sent by, and the one shop of another workspace.
+/// The shop the fixtures' labels are sent by, and another account's shop.
 pub const SHOP: &str = "Toko Contoh";
 pub const OTHER_SHOP: &str = "Toko Lain";
 

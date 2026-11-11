@@ -138,6 +138,10 @@ pub struct SavedOrder {
     pub tracking_id: Option<TrackingId>,
     pub courier: Option<CourierCode>,
     pub courier_clue: CourierClue,
+    /// The account the order was read as, by its name at the save.
+    pub account: String,
+    /// The listed shop found on its label, as the account listed it; none: no sender.
+    pub shop: Option<String>,
     /// Index into the batch's `contents`.
     pub content: u16,
     /// The Seller SKU of each of its content's items, in their order.

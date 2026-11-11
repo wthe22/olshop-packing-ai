@@ -24,6 +24,7 @@ use crate::{AppState, OpenDraft};
 use super::logo::{logo_views, read_pictures};
 use super::plan_view::{entries_of, plan_view};
 use super::repeats::repeats_view;
+use super::shops::shop_prompt;
 
 use super::views::ReadResult;
 
@@ -47,6 +48,7 @@ pub(super) fn read_into_draft(
         return Err("Choose at least one label file first.".to_string());
     }
     let (_, workflows) = settings::workflows(state.program())?;
+    let accounts = settings::accounts(state.program())?;
 
     let cancel = Arc::new(AtomicBool::new(false));
     state.set_cancel(cancel.clone());
@@ -84,6 +86,7 @@ pub(super) fn read_into_draft(
                     workflows: &workflows,
                     rule: &rule,
                     fold,
+                    accounts: &accounts,
                     redo: reading.redo,
                     cancel,
                     progress,
@@ -116,8 +119,8 @@ pub(super) fn read_into_draft(
     Ok(result)
 }
 
-/// The read as the screens show it: the counts, the warnings, the logos still to ask about and
-/// the plan.
+/// The read as the screens show it: the counts, the warnings, the logos and shops still to ask
+/// about and the plan.
 pub(super) fn read_result(open: &OpenDraft, fold: &Fold, workflows: &Workflows) -> ReadResult {
     let draft = &open.draft;
     let order_ids: BTreeSet<&OrderId> = draft.copies.iter().map(|c| &c.order_id).collect();
@@ -138,6 +141,7 @@ pub(super) fn read_result(open: &OpenDraft, fold: &Fold, workflows: &Workflows) 
         amend: draft.redo,
         couriers: workflows.couriers.iter().map(|c| c.name.clone()).collect(),
         logos: logo_views(open),
+        shops: shop_prompt(draft),
         repeats: repeats_view(draft),
         plan: plan_view(open, fold),
     }

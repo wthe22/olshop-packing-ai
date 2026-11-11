@@ -7,6 +7,7 @@ use packing_engine::record::Sha256;
 use serde::{Deserialize, Serialize};
 
 use super::repeats::RepeatsView;
+use super::shops::ShopPromptView;
 
 /// One chosen file as the file list shows it.
 #[derive(Serialize)]
@@ -73,7 +74,7 @@ impl SaveProgressEvent {
     }
 }
 
-/// What the New batch screen needs when reading ends, and again after every logo answer.
+/// What the New batch screen needs when reading ends, and again after every logo or shop answer.
 #[derive(Serialize)]
 pub struct ReadResult {
     pub(super) files: usize,
@@ -90,6 +91,8 @@ pub struct ReadResult {
     pub(super) couriers: Vec<String>,
     /// The header images the rules do not know and the owner has not passed over.
     pub(super) logos: Vec<LogoView>,
+    /// The shop prompt, asked after the logos.
+    pub(super) shops: ShopPromptView,
 
     /// The orders that appear more than once; none when every order has one copy.
     pub(super) repeats: Option<RepeatsView>,
