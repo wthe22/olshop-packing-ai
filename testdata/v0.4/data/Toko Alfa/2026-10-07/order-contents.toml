@@ -1,0 +1,22 @@
+schema = "1.0"
+auto_increment = 5
+
+[[order_content.1.items]]
+name = "Jok Kulit Vario | Custom"
+variant = ""
+quantity = 1
+
+[[order_content.2.items]]
+name = "Kaca Spion Motor Variasi"
+variant = ""
+quantity = 2
+
+[[order_content.3.items]]
+name = "Sepatu Standar Samping Motor | Pelindung Rantai"
+variant = ""
+quantity = 1
+
+[[order_content.4.items]]
+name = "Spion Beat | Kaca Spion Motor Honda Beat"
+variant = ""
+quantity = 1
