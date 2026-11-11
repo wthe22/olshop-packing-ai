@@ -32,7 +32,7 @@ filter language: each filter is made from boxes. A text view is there for typing
 ## The rules
 
 - **The tabs** at the top are the rules of the file, in file order, side by side as Settings' theme
-  choice; the rule shown is raised. The rule of the workspace's newest batch carries *last used*; a rule
+  choice; the rule shown is raised. The rule of the data folder's newest batch carries *last used*; a rule
   that is switched off carries *off* and its name is faint. **+ New rule** asks for a name in a line
   under the tabs and adds a rule with one group `Z Lainnya` and no filter, or *a copy of* the rule shown;
   a new rule and a copy start on.

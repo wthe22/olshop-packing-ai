@@ -7,16 +7,17 @@ column. Sketches show the English texts and made-up names, IDs and counts.
 
 | Screen | Content |
 |---|---|
-| [Panel](panel.md) | The side panel: the workspace, its dates, **+ New workspace** |
+| [Panel](panel.md) | The side panel: the dates of every account |
 | [Day](day.md) | The start screen: the batches of the open date, printed ticks, revert, amend, restore, the day's reprints, the day summary |
-| [New batch](new-batch.md) | Choosing the label files and the sort rule, reading them, the logo prompt |
+| [New batch](new-batch.md) | Choosing the label files and the sort rule, reading them, the logo and shop prompts |
 | [Repeated orders](duplicates.md) | The orders that appear more than once in a batch, grouped, and the copy that stays |
 | [Plan](plan.md) | The label groups, the per-batch changes and Save |
 | [Messages](messages.md) | Every stop message and warning, and what to do |
 | [Sort rules](sort-rules.md) | The boxes editor for the sort rules of `packing-workflows.toml` |
 | [Search](search.md) | Finding saved orders, their trace, and **Reprint** |
-| [Settings](settings.md) | The theme, the data folder, the workspaces (rename, delete) and *About* |
-| [Start](start.md) | The first start, the first workspace |
+| [Accounts](accounts.md) | One account at a time: its shops, its orders per date, rename and delete |
+| [Settings](settings.md) | The theme, the data folder and *About* |
+| [Start](start.md) | The first start: the data folder |
 
 ## Daily use in one picture
 
@@ -25,8 +26,9 @@ column. Sketches show the English texts and made-up names, IDs and counts.
   ▲                    choose files, sort rule                    adjust groups                 │
   └──────────────────────────────── back to the Day screen, new batch shown ◄───────────────────┘
  From the Day screen: [Open] a file to print it · the printed tick · [Amend] / [Revert] the newest batch ·
- [Search] (and Reprint) · [Sort rules] · [Settings] · the panel: another date or workspace
- Between (reading…) and Plan: the logo prompt, and Repeated orders when an order appears twice.
+ [Search] (and Reprint) · [Accounts] · [Sort rules] · [Settings] · the panel: another date
+ Between (reading…) and Plan: the logo prompt, the shop prompt for a shop no account lists, and Repeated
+ orders when an order appears twice.
 ```
 
 A normal batch: **New batch** → **Add files** → **Read labels** → (the plan is the sort rule, as every day)
@@ -36,7 +38,7 @@ A normal batch: **New batch** → **Add files** → **Read labels** → (the pla
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [▯] ◈ Packing (v0.2) │ Toko Contoh                          🔍 Search  ≡ Sort rules  ⚙ Settings │
+│ [▯] ◈ Packing v0.5                         🔍 Search  ◫ Accounts  ≡ Sort rules  ⚙ Settings │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                               (the current screen)                                     │
 └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -45,12 +47,11 @@ A normal batch: **New batch** → **Add files** → **Read labels** → (the pla
 - **[▯]** shows or hides the [panel](panel.md) (also `Ctrl+B`).
 - **Packing v0.2** is the window title and the title bar of every screen: the program's name and its version
   from the one place ([Settings › The version](settings.md#the-version)).
-- **The workspace** in the title bar; the open date is the [Day](day.md) screen's title. Together they say
-  where everything is saved. Changing the workspace or the date while a draft is open asks first ("Discard the batch being prepared?").
-- **Search**, **Sort rules** and **Settings** open over the current screen; the **×**, a click beside it or
+- **The open date** is the [Day](day.md) screen's title: it says where everything is saved. Changing the
+  date while a draft is open asks first ("Discard the batch being prepared?").
+- **Search**, **Accounts**, **Sort rules** and **Settings** open over the current screen; the **×**, a click beside it or
   `Esc` returns to it (an open draft is kept and recounted). In a window under 56 rem (a window well under
-  full width) the three show their icons only, their names as tooltips; a long workspace name is cut short
-  with *…* before the date is.
+  full width) the four show their icons only, their names as tooltips.
 - The theme (**Light**, **Dark** or **System**) is chosen in [Settings](settings.md) ([D-UI-8](../decisions/ui.md)).
 
 ## The look

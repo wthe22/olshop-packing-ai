@@ -13,8 +13,7 @@
   name its record gives it, so the record, the trace and the summary PDF name the download.
 - The list is **sorted by file name**: the download's name starts with its time and part number, so name
   order is download order. This is the **reading order** of the batch.
-- The **sort rule** is chosen here, among the rules that are on: the rule of the workspace's newest batch,
-  on whichever date, is preselected; the Plan screen's **Back** keeps the rule just read
+- The **sort rule** is chosen here, among the rules that are on: the rule of the data folder's newest batch, on whichever date, is preselected; the Plan screen's **Back** keeps the rule just read
   ([D-RULES-1](../decisions/rules.md), [D-RULES-5](../decisions/rules.md)).
 
 **Stops:** a file that cannot be opened as a PDF.
@@ -35,6 +34,7 @@ The worker thread opens the files in reading order and reads every page, with a 
 | **Courier and clue** | Logo bytes, else appearance, against the tracking form; text where no image can be read; the tag on an instant label ([courier](../labels/courier.md)) |
 | **Ship by** | The date of `In transit by: dd/mm/yyyy hh:mm` or `Batas Kirim: dd-mm-yyyy` |
 | **Pickup code** | `Kode Pengambilan` on an instant label |
+| **Sender** | The text around the `Pengirim` caption, and the name read there ([reading](../labels/reading.md#the-sender)) |
 | **Slip** | The table by text position: name, variation, Seller SKU, quantity per row; `Qty Total` |
 | **Fingerprint** | Text runs with positions and header-image hashes ([reading](../labels/reading.md#page-fingerprint)) |
 
@@ -48,7 +48,7 @@ Pages are walked once, in reading order, page order ([duplicates](../app/duplica
 1. A page with an Order ID and a label part **starts a copy** of that order.
 2. A page with no label part **continues** the copy of the page before it in the same input; an Order ID
    on it must be that copy's.
-3. A copy's values: the tracking ID, courier and ship-by of its first page; the item lines of every slip
+3. A copy's values: the tracking ID, courier, ship-by and sender of its first page; the item lines of every slip
    table of its pages, in page order; the `Qty Total` of its last slip that prints one.
 4. Copies are grouped into **orders** by Order ID. One copy is normal; two or more is a **repeat** (step 8).
 
@@ -69,9 +69,12 @@ Order ID; a page that starts a copy and has no slip table (plain labels). Each n
   before the plan. A courier or *Not a courier* is written into `packing-workflows.toml` at once, so it is
   asked once ever; *I don't know* writes nothing ([New batch](../ui/new-batch.md#the-logo-prompt)).
 
-- **A shop not of this workspace**: when the workspace lists its shops, the copies whose sender shows none
-  of them, or that have no sender, open *Not this workspace's shop* after the logo prompt
-  ([New batch](../ui/new-batch.md#the-shop-prompt)). **Read anyway** goes on to the plan; **Back** returns to
-  the file list. Nothing is written either way ([D-APP-25](../decisions/app-features.md)).
+- **The account of each copy**: the longest listed shop name found in its sender names its shop and account
+  ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo prompt, *Which account?* asks about
+  each sender no account lists, once per name, and each file with labels that have no sender
+  ([New batch](../ui/new-batch.md#the-shop-prompt)). A shop's answer is written into
+  `packing-settings.toml` at once; a file's answer holds for this read. **Back** returns to the file list
+  ([D-APP-28](../decisions/accounts.md)).
 
-**Check:** these are warnings, not stops; the owner may disagree for *no tracking ID*.
+**Check:** these are warnings, not stops; the owner may disagree for *no tracking ID*. Every order has an
+account before the plan.

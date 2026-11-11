@@ -17,7 +17,8 @@ written files embed whole fonts (about 1.4 MB); they print the same, and the siz
 
 **Decision.** Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at
 `1.0`. The schema version is not the app version: app `v0.2` writes `1.0`, and a schema change raises the app
-version. Data written by an older version is not read and not migrated (D-APP-17: nor deleted).
+version. Data written by an older version is not read and not migrated (D-APP-27: nor changed or deleted; a
+separate script copies v0.4 dates once).
 
 **Why.** The owner's choice: the data is a working set, and the labels can be read again.
 
@@ -32,16 +33,6 @@ the label and its packing slip; `orders.csv` is a view the app writes.
 
 **Applies to.** [reading](../labels/reading.md), [filter language](../rules-file/conditions.md).
 
-## D-APP-5 — A workspace replaces the session
-
-**Decision.** The session (a day plus an optional name) is replaced by the workspace: one folder per workspace,
-one folder per date inside it. Batch numbers run through a workspace and date. There is no session name and
-no *Main*.
-
-**Why.** The owner's choice: the session concept does not suit this workflow.
-
-**Applies to.** [workspaces](../app/workspaces.md), [data](../data/README.md).
-
 ## D-APP-6 — The courier list is part of packing-workflows.toml
 
 **Decision.** The courier list and the clues that name each courier are in `packing-workflows.toml`; there is
@@ -53,7 +44,7 @@ no `couriers.toml`. This replaces D-LABEL-1 (one courier file in the data folder
 
 ## D-APP-7 — The journal is the only truth
 
-**Decision.** Each workspace and date has one `journal.jsonl` of sealed records; a commit is one append and
+**Decision.** Each date has one `journal.jsonl` of sealed records, for every account; a commit is one append and
 `sync_all`; a torn last line is cut and recorded; damage stops the date. It replaces `state.json`.
 
 **Why.** The owner asked for no duplicated truth, ACID without a database, and every value traceable to its

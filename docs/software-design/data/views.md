@@ -10,16 +10,17 @@ Only live batches appear; a reverted batch is gone from the views and stays in t
 the journal does not hold (`RuleID`, `OrderContentID`) are numbered by the fold in order of first
 appearance, so the same journal always gives the same views.
 
-A fourth view, `day summary.pdf`, is written only on request, by **Day summary** on the Day screen, and
-is never checked for staleness: it says what the journal said when it was made
-([day summary](../labels/day-summary.md)).
+The summaries made on request — `day summary.pdf`, `day summary {account}.pdf` and `{batch} summary
+{account}.pdf` — are views too, written only by **Day summary** and a batch card's account buttons on the
+Day screen, and never checked for staleness: each says what the journal said when it was made
+([day summary](../labels/day-summary.md), [summary PDF](../labels/summary-pdf.md#one-account)). A revert or
+an amend deletes the batch's account summaries after its commit.
 
 ## `session.toml`
 
 ```
 Root {
-  schema: String                // "1.0"
-  workspace: String
+  schema: String                // "2.0"
   date: Date
   journal_seq: u32              // the journal's last seq when this file was written
   input_pdfs: Map<PdfID, LabelPdf>
@@ -54,6 +55,7 @@ LabelBatch {
   earliest_ship_by_date: Option<Date>
   latest_ship_by_date: Option<Date>
   couriers: List<CourierCode>
+  accounts: List<AccountOrders> // the batch's accounts, most orders first
   warnings: List<String>
   errors: List<String>
   left_out: List<LeftOutCopy>   // as in the journal
@@ -67,6 +69,11 @@ LabelGroup {
   is_marked_as_sent: bool
   is_marked_as_printed: bool
   order_contents: List<OrderContentSummary>   // in printing order
+}
+
+AccountOrders {
+  account: String
+  order_count: u16
 }
 
 OrderContentSummary {
@@ -95,6 +102,8 @@ Order {
   tracking_id: String
   courier_code: CourierCode
   courier_clue: String          // logo, shape, text, form, tag or empty
+  account: String
+  shop: String                  // empty: no sender on the label
   content_id: OrderContentID
   skus: String                  // its Seller SKUs in its content's item order, joined by "; "
   total_quantity: u16           // the printed Qty Total

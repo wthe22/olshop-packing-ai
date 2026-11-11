@@ -6,10 +6,10 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
 
 ## The search index
 
-- Built in memory when a workspace opens, on its own thread, by folding every journal of the workspace
+- Built in memory at start, on its own thread, by folding every journal of the data folder
   ([journal](../data/journal.md#the-fold)); after each commit the new record is added. A year of dates
   folds in about a second; Search shows *Loading…* until it is ready.
-- One entry per order of a live batch: the fields a filter can use
+- One entry per order of a live batch: the fields a filter can use, its account and shop among them
   ([conditions](../rules-file/conditions.md#fields)), its date, batch and label group, the output file and
   the pages it fills there (the pages of the orders of its group before it, in printing order, plus one),
   and its **trace**: the input's file name and pages, and the courier's clue.
@@ -21,8 +21,8 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
 ## Search
 
 The [Search](../ui/search.md) screen takes a filter made with the boxes of the Sort rules screen and the
-dates to search: a range (the viewed date by default) or all dates of the open workspace
-([D-UI-3](../decisions/ui.md)); only the dates of the range are looked at. Each result row shows the order, its items, its date, batch and group
+dates to search: a range (the viewed date by default) or all dates, of every account
+([D-UI-3](../decisions/ui.md)); only the dates of the range are looked at. Each result row shows the order and its shop, its items, its date, batch and group
 file and its page there, a tick, and when opened its details: the batch's save time and the input PDF and
 pages it was read from:
 
@@ -41,7 +41,7 @@ Orders of an open draft are not searched: they are not saved.
    reprint with its name.
 2. **Order.** The orders in their original printing order: by date, batch, then their place in the
    batch's record.
-3. **Write** the pages, unchanged, into `output/.partial/` of **today's** date of the workspace, named
+3. **Write** the pages, unchanged, into `output/.partial/` of **today's** date, named
    `reprint {n} x{count}.pdf`, `n` counting the reprints of today.
 4. **Verify**: the file's page *k* has the digest of the source page at *k*, and the page count adds up
    ([verification](verification.md)). A finding stops the reprint; nothing is kept.

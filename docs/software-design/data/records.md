@@ -8,8 +8,7 @@ folder is updated together.
 
 ```
 Started {                       // type "started", seq 1
-  schema: String                // "1.0"
-  namespace: String             // the workspace's name; the stored field keeps this word
+  schema: String                // "2.0"
   date: Date
 }
 
@@ -51,6 +50,8 @@ SavedOrder {
   tracking_id: Option<String>
   courier: Option<CourierCode>
   courier_clue: CourierClue
+  account: String               // the account the order was read as (accounts.md, The account of an order)
+  shop: Option<String>          // the shop name found, as the account listed it; none: no sender on the label
   content: u16                  // index into contents
   skus: List<Option<String>>    // the Seller SKU of each of its content's items, in their order
   total_quantity: Option<u16>   // Qty Total printed on the slip; none on the Shopee-style slip
@@ -111,7 +112,7 @@ ReprintedOrder {
   order_id: String
   date: Date                    // the date the order was saved
   batch: BatchID
-  sha256: String                // its input, {workspace}/{date}/input/{sha256}.pdf
+  sha256: String                // its input, {date}/input/{sha256}.pdf
   page_start: u16
   page_end: u16
 }
@@ -132,3 +133,5 @@ Recovered {                     // type "recovered"
 - The ledger (pages read, written, left out) is not stored: it follows from `inputs`, `orders` and
   `left_out`, and the verifier computes it.
 - `courier_clue` and the page range make every order traceable to the page and the clue it came from.
+- `account` and `shop` are the names at the save: a renamed or deleted account changes no record, and an
+  account's summary is made from these fields ([summary PDF](../labels/summary-pdf.md#one-account)).

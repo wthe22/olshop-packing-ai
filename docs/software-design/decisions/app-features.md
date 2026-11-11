@@ -1,6 +1,6 @@
 # Decisions: app — features
 
-D-APP-13 to D-APP-23. Sources, data and checks are in [app.md](app.md). Where a record names a former
+D-APP-13 to D-APP-26. Sources, data and checks are in [app.md](app.md); accounts in [accounts.md](accounts.md). Where a record names a former
 question (`Q-…`), the owner accepted its default.
 
 ## D-APP-13 — packing-workflows.toml beside the program
@@ -28,7 +28,7 @@ mistake must be avoidable and traceable.
 
 ## D-APP-15 — Search runs on an in-memory index of the journals
 
-**Decision.** The index is built from the workspace's journals when it opens and updated after each commit. It
+**Decision.** The index is built from every journal of the data folder at start and updated after each commit. It
 is only read; every write decision folds the journal.
 
 **Why.** Fast search over every date, and still one truth.
@@ -44,19 +44,6 @@ scopes and layouts, and their setting, are gone.
 **Why.** The owner asked for few options with sensible defaults; the pick layout was the one in use.
 
 **Applies to.** [summary PDF](../labels/summary-pdf.md), [Plan](../ui/plan.md), [Settings](../ui/settings.md).
-
-## D-APP-17 — One workspace per shop owner; v0.1 data is left alone
-
-**Decision.** A workspace holds one shop owner's labels (Q-APP-10); all of that shop owner's shops share its
-numbers and its guard. The screens, the code and the documents call it a **workspace**, never an owner (the
-owner's word, 2026-10-26).
-Two workspaces share nothing but the files beside the program (Q-APP-5: nothing shared). A v0.1 data folder is
-not read and never deleted; the app says what it found. Q-APP-4 (session folders) has no subject any more.
-
-**Why.** The owner's draft: a shop owner may have several shops. "Owner" on screen was confused with the
-owner of the app.
-
-**Applies to.** [workspaces](../app/workspaces.md).
 
 ## D-APP-18 — A finding of the verifier stops the save
 
@@ -112,38 +99,10 @@ optional time).
 
 **Applies to.** [duplicates](../app/duplicates.md#choosing).
 
-## D-APP-24 — A workspace can be renamed and deleted
-
-**Decision.** Settings › Workspaces renames or deletes a workspace (R-APP-8). **Rename** renames its folder;
-everything in it stays, and its journals keep the name in their `started` record, so the fold checks the date
-of `started` and no longer its workspace. **Delete** moves the folder, with all its dates, to the Recycle Bin.
-The open workspace follows: renamed, it stays open under the new name; deleted, the app opens the one it would
-open at start, or asks for a first workspace when none is left. An open draft of it is dropped, after asking.
-
-**Why.** The owner asked for it. The journal is never rewritten, so a rename cannot change what it recorded;
-the folder is the workspace's name. The Recycle Bin lets a delete by mistake be undone in Explorer.
-
-**Applies to.** [workspaces](../app/workspaces.md), [journal](../data/journal.md), [Settings](../ui/settings.md).
-
-## D-APP-25 — A workspace may list its shops; a label of another shop is asked about
-
-**Decision.** `{workspace}/settings.toml` lists shop names. Reading looks for them in each copy's sender
-(the `Pengirim` name), spaces and case ignored. Copies of another shop, or with no sender, are asked about
-once per read, a line per file, with **Read anyway** and **Back**. No list, no check. The sender is not kept
-in the record.
-
-**Why.** The owner's words (2026-11-05): a workspace takes its own shops' PDFs, with a warning and not a
-stop. The file in the workspace's folder moves with it and is shared by every copy on the data folder. Only
-the sender is looked at, since a product name can carry a shop's name. A shop may print another name on
-another platform, so each name is listed as printed.
-
-**Applies to.** [workspaces](../app/workspaces.md#its-shops), [reading](../labels/reading.md#the-sender),
-[02 Read](../workflow/02-read.md), [New batch](../ui/new-batch.md#the-shop-prompt), [Settings](../ui/settings.md).
-
 ## D-APP-26 — Print in the app; a group PDF is marked Sent, then Printed
 
-**Decision.** **Print** opens the web view's print preview of an output (the one Chrome shows) over the
-app's window. For a group PDF, opening the preview marks it **Sent** in the journal (`print_sent`);
+**Decision.** **Print** opens the web view's print preview of a group PDF or a reprint (the one Chrome shows)
+over the app's window. For a group PDF, opening the preview marks it **Sent** in the journal (`print_sent`);
 the mark's ✕ takes it back. The **Printed** tick stays the owner's mark that the labels came out, and can
 be ticked with or without *Sent*. **Open** stays, and marks nothing.
 

@@ -38,8 +38,8 @@
   covers them.
 - Naming: timestamps `*_time` (`create_time`, `modify_time`). Orders are identified by `Order ID`; items
   by product name and variation (the platform `SKU ID` is not on the label PDFs). The words of code are the
-  glossary of `code-rules.md` (workspace, sort rule, label group, group PDF, summary PDF, journal).
-- Data: the journal (`{workspace}/{date}/journal.jsonl`) is the only truth; every other data file is an
+  glossary of `code-rules.md` (account, shop, sort rule, label group, group PDF, summary PDF, journal).
+- Data: the journal (`{date}/journal.jsonl`, for every account) is the only truth; every other data file is an
   input, an output or a view of it, and nothing but the journal decides (`docs/software-design/data/`).
 - Writing: the owner is "the owner", never he/she/they/it/you. The dropship supplier's real name never
   appears: write "the supplier". About 150 lines per file at most; each fact has one home.
@@ -52,6 +52,7 @@
 - The owner is often away and may answer a review in a new session. Whenever the next step is the
   owner's, end with a committed handoff in the status block of `docs/development/plan/README.md`: what
   to review, where to write answers, and what to do with each answer. A new session starts there.
-- Shell is Git Bash on Windows. The project has no Python: every tool is Rust or Node.
+- Shell is Git Bash on Windows. Every tool is Rust or Node, with one exception the owner asked for:
+  `tools/migrate-v0.4.py`, a one-time v0.4 data migration run by hand, never part of the program.
 - The owner decides open choices: put them in `docs/software-design/questions/` with options and a
   default, do not pick silently.

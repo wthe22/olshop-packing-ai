@@ -119,7 +119,7 @@ name = "Lainnya"
   filter's double quotes need no escaping.
 - The bundled copy holds one rule, `default`, with one group `Z Lainnya` and no filter.
 - **Which rule a batch uses** is chosen on [New batch](../ui/new-batch.md#the-sort-rule) among the rules
-  that are on; the rule of the workspace's newest batch, on whichever date, is preselected
+  that are on; the rule of the data folder's newest batch, on whichever date, is preselected
   ([D-RULES-1](../decisions/rules.md)).
 - **A rule that is off** (`enabled = false`) is kept with its groups and is not offered on New batch; an
   amend of a batch saved with it still uses it. The Sort rules screen switches it; on is written as no key

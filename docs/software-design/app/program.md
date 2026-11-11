@@ -4,27 +4,28 @@
 
 | Command | Does | Returns |
 |---|---|---|
-| `workspaces_list()` | The workspaces of the data folder, and the open one's dates from the search index ([workspaces](workspaces.md)) | Names; per date its orders, whether it is damaged, its folder |
-| `workspace_new(name)` | **+ New workspace**: make the workspace's folder and open it on today's date | The name, or why it is refused |
-| `workspace_open(name)` | Open another workspace on today's date; its search index is built beside it | — |
-| `day_open(workspace, date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, sent and printed marks, reprints, findings; or the damage message |
+| `dates_list()` | The panel: the dates of the data folder from the search index ([accounts](accounts.md#listing-and-opening-dates)) | Per date its orders, whether it is damaged, its folder; whether today has a group PDF not printed |
+| `day_open(date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, sent and printed marks, reprints, findings; or the damage message |
 | `check_files(paths)` | SHA-256 and page count of each chosen file; *used in batch n*; one file chosen twice is listed once | The file list |
-| `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, the files with labels of other shops, repeats, the plan; or the stop |
+| `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, the senders and files to ask an account for, repeats, the plan; or the stop |
 | `sort_rules()` | New batch's **Sort rule**: the rules that are on, and the one to preselect ([New batch](../ui/new-batch.md#the-sort-rule)) | The names, the preselected one, the rule used last |
 | `cancel_read()` | Stop reading | — |
 | `name_logo(hash, answer)` | The logo prompt's answer: a courier, *Not a courier*, *I don't know* ([New batch](../ui/new-batch.md#the-logo-prompt)) | The recount |
+| `answer_shop(answer)` | The shop prompt's answer: a sender's account or a new account, written into `packing-settings.toml`; or the account of a file's labels with no sender, for this read ([New batch](../ui/new-batch.md#the-shop-prompt)) | What is still to ask, or the recount |
 | `resolve_repeats(choices)` | Apply the choice per group or per order ([duplicates](duplicates.md)) | One copy per order, the copies left out, the recount |
 | `plan(edits)` | Skip, move, add a one-off group, rename a file; recount | Groups with counts, order contents, file names |
 | `save_batch(save_anyway)` | Write, verify, commit, move ([04 Save](../workflow/04-save.md)). Emits `save-progress {stage, page, pages}` | The saved batch, or the verifier's findings (nothing saved until *Save anyway*) |
 | `revert_last(day, batch)` / `start_amend(day, batch)` | Revert the newest batch / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)); a `batch` that is no longer the newest is refused | The date / the amend's file list and read |
 | `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
-| `print_output(day, file)` | **Print**: the output made ready, one not there written again first, like `open_output`; the preview is the front end's | Opened, written again, or not kept with the verifier's findings |
+| `print_output(day, file)` | **Print** a group PDF or a reprint: the output made ready, one not there written again first, like `open_output`; the preview is the front end's | Opened, written again, or not kept with the verifier's findings |
 | `output_pdf(day, file)` | The bytes of an output that is there, for the preview | The PDF's bytes |
 | `set_sent(day, batch, group, sent)` | Appends `print_sent`: `true` once a group PDF's preview is open, `false` from the **Sent** mark's ✕ | — |
 | `restore_output(day, file)` | Write a changed output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
 | `open_output(day, file)` | **Open** a group PDF or summary PDF; one that is not there is written again first, like `restore_output` | Opened, written again, or not kept with the verifier's findings |
-| `day_summary(day)` | Write the date's [day summary](../labels/day-summary.md) on its own thread, then the window opens it | Its path |
-| `workspaces_overview()` / `workspace_set_shops(name, shops)` | Settings › Workspaces: each workspace with its dates and shops / **Shops** writes `{workspace}/settings.toml` under the lock | The rows / the names as written, or why they are refused |
+| `day_summary(day, account)` | Write the date's [day summary](../labels/day-summary.md), of all accounts (`account` none) or of one, on its own thread, then the window opens it | Its path |
+| `account_summary(day, batch, account)` | Write a batch's [summary of one account](../labels/summary-pdf.md#one-account), check it, then the window opens it | Its path, or the verifier's findings |
+| `accounts_list()` | The [Accounts](../ui/accounts.md) screen: each account with its shops, and per date its orders from the search index | The accounts |
+| `account_new(name)` / `account_rename(name, new_name)` / `account_delete(name)` / `account_set_shops(name, shops)` | **+ New account**, **Rename**, **Delete account**, **Save** of its shops: `packing-settings.toml` read again and written under the lock ([accounts](accounts.md#names)) | The accounts as written, or why it is refused |
 | `rules_list()` / `rules_load(rule)` / `rules_check(rule, groups)` / `rules_save(rule, groups)` | The Sort rules screen ([rules file](../rules-file/README.md)); a save rebuilds the open draft's plan | Rules on or off, the file and the couriers; groups; errors with line and column; live counts on the open draft |
 | `rules_check_text(text)` / `rules_save_text(text)` | *Edit file as text* | The first check that fails, with its line and column |
 | `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_enable(rule, enabled)` / `rule_delete(rule)` | **+ New rule**, **Rename**, the rule's switch (the draft's plan stays as it is), **Delete rule** | — |
@@ -34,7 +35,7 @@
 | `open_path(path)` / `show_in_folder(path)` | `explorer.exe "<path>"`, the path the only argument; a path that is not there is refused, since Explorer would open its home page | — |
 | `settings_get()` / `settings_set(data_dir)` | Settings ([settings](../ui/settings.md)) | — |
 | `about()` | The app version, the build time and the PDFium version | — |
-| `data_changes()` | The window's look for other copies' writes, each time it gets the focus ([Several copies](#several-copies)) | Whether the open date and the panel changed; the open workspace gone and the one opened instead |
+| `data_changes()` | The window's look for other copies' writes, each time it gets the focus ([Several copies](#several-copies)) | Whether the open date and the panel changed |
 
 `explorer.exe /select,<path>` is not used: Explorer parses `/select,` itself and does not understand the
 quotes Rust puts around an argument with a space, so it opens *Documents*. A bare path opens a folder as a
@@ -70,9 +71,9 @@ Packing\
    on that rule.
 3. **The data folder can be written**: its `.lock` file opens ([data](../data/README.md#one-writer)).
    Another copy of the app using the folder is no stop.
-4. **The workspace** whose journal was written last; none yet: ask for the first workspace's name
-   ([workspaces](workspaces.md)).
-5. **Today's date** of that workspace, opened as in `day_open`; the search index is built beside it.
+4. **The accounts** of `packing-settings.toml` ([accounts](accounts.md#the-accounts-file)); none yet is no
+   stop.
+5. **Today's date**, opened as in `day_open`; the search index of every date is built beside it.
 
 ## Several copies
 
@@ -81,14 +82,14 @@ Several copies of the app — on one PC, or on several PCs that share the data f
 
 - **A write** holds the data folder's lock ([data](../data/README.md#one-writer)) and waits while another
   copy holds it. It folds the date again first when its journal grew since it was read, so every decision
-  is taken from the journal as it is on disk. A workspace another copy renamed or deleted is not made again.
+  is taken from the journal as it is on disk.
 - **A save** whose orders another copy saved or reverted after the labels were read stops: *read the
   labels again*. Another copy's batch with other orders only moves this one to the next number.
 - **Revert** and **Amend** name the batch the Day screen showed; one that is no longer the newest is refused.
 - **The window looks** each time it gets the focus (`data_changes`): the Day screen reads its date again when the
   journal grew, or when it was opened while another copy wrote; the panel reads its list again when a
-  workspace or a date came or went or a journal grew, and the search index takes each such date in again.
-  When the open workspace is gone, the one the start would open opens, and a batch being prepared is
-  dropped.
-- `packing-workflows.toml` and `packing-settings.toml` are beside each program, not in the data folder:
-  copies started from one program folder share them, and the last save of a sort rule wins.
+  date came or went or a journal grew, and the search index takes each such date in again.
+- `packing-workflows.toml` and `packing-settings.toml` (with the accounts) are beside each program, not in
+  the data folder: copies started from one program folder share them, and the last save of a sort rule
+  wins. A write of the accounts reads the file again first, so another copy's change to another account is
+  kept; a copy on another PC keeps its own accounts.

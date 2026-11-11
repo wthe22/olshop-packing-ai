@@ -9,6 +9,7 @@
 | `courier`, `courier_clue` | Deduced from the label: the courier and the clue that named it ([courier](courier.md)) |
 | `ship_by_date` | The date of the label's `In transit by: dd/mm/yyyy hh:mm`, or of the Shopee-style label's `Batas Kirim: dd-mm-yyyy` ([D-APP-21](../decisions/app-features.md)) |
 | `pickup_code` | The instant-service label's code: the run of two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together) (kept in the record; its label prints it) |
+| `account`, `shop` | The listed shop name found in the sender, and the account that lists it ([accounts](../app/accounts.md#the-account-of-an-order)) |
 | item lines | The slip table: product name, variation, Seller SKU, quantity |
 | `total_quantity` | The slip's printed `Qty Total`; none on the Shopee-style slip (a filter counts the lines instead: [conditions](../rules-file/conditions.md)) |
 
@@ -81,7 +82,8 @@ The slip is read by text position, not by reading order: each text run of the pa
 
 ## The sender
 
-Read only for the shop check ([workspaces](../app/workspaces.md#its-shops)); it is not kept in the record.
+Read for an order's account ([accounts](../app/accounts.md#the-account-of-an-order)); the record keeps the
+shop name found, not the text.
 Every style prints it with the caption `Pengirim` (`Pengirim :` or `Pengirim:`), in one of four places:
 
 | Style | Where the name is |
@@ -97,4 +99,9 @@ Every style prints it with the caption `Pengirim` (`Pengirim :` or `Pengirim:`),
   its spaces taken out. The page text's spaces are not reliable (`Tok o Cont oh`), and a digit of the
   vertical tracking ID can stick to the name's run (`TokoContoh7`), so a name is found inside the text, not
   compared with it.
+- **The name read**, shown by the shop prompt for a sender no account lists: the runs right of the caption on
+  its baseline, else those under it, else the caption's line of the page text after the caption; taken up
+  to a phone number (`(+62)`, `+62`, digits with `*`) or the next caption (a word and `:`), a digit stuck
+  to its end taken off, trimmed. Its spaces may be wrong (`Tok o Cont oh`): the owner corrects it in the
+  prompt, and a name that is not found in those labels' sender text is refused there.
 - **No caption** on the copy's first page: the copy has **no sender**.

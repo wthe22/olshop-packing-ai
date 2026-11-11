@@ -1,6 +1,6 @@
 # Search
 
-Finds saved orders of the open workspace and prints their labels again. **Search** in the title bar opens it over
+Finds saved orders of every account and prints their labels again. **Search** in the title bar opens it over
 the current screen; **Close** returns to it. Searching changes nothing; **Reprint** writes one file
 ([reprint](../app/reprint.md)).
 
@@ -14,14 +14,14 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 │ 3 orders in 2 batches   [–] Select all                                                              │
 │ ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐ │
 │ │     Order                       Items                            Label                          │ │
-│ │ [✓] 580000000000000042          ×1  Sepatu Standar Samping Motor Wed, 7 Oct (2-A)  [Open] ›     │ │
+│ │ [✓] 580000000000000042 Toko Alfa ×1  Sepatu Standar Samping Motor Wed, 7 Oct (2-A)  [Open] ›    │ │
 │ │     (J&T Express) JY0000001234      — honda                      Sepatu x88 page 14  Reprinted  │ │
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ [ ] 580000000000000057          ×2  Spion Beat                   Wed, 7 Oct (2-B)  [Open] ⌄     │ │
+│ │ [ ] 580000000000000057 Toko Beta ×2  Spion Beat                   Wed, 7 Oct (2-B)  [Open] ⌄    │ │
 │ │     (J&T Express) JY0000001235                                   Spion x35 page 3               │ │
 │ │     Batch 2 · saved 09:12    from [▯ 10-07_09-05-49_Shipping label+Packing slip_2.pdf] p. 3     │ │
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ [✓] 580000000000000061          ×1  Kaca Spion                   Tue, 6 Oct (1-B)  [Open] ›     │ │
+│ │ [✓] 580000000000000061 Toko Alfa ×1  Kaca Spion                   Tue, 6 Oct (1-B)  [Open] ›    │ │
 │ │     (Unknown) no tracking ID    ×1  Spion Beat                   Spion x12 page 7               │ │
 │ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
 │ ─────────────────────────────────────────────────────────────────────────────────────────────────── │
@@ -32,7 +32,7 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 On a narrower window the items take a line of their own under the order:
 
 ```
-[✓] 580000000000000042                      Wed, 7 Oct (2-A)          [Open] ›
+[✓] 580000000000000042  Toko Alfa           Wed, 7 Oct (2-A)          [Open] ›
     (J&T Express) JY0000001234              Sepatu x88 page 14       Reprinted
     ×1  Sepatu Standar Samping Motor Pelindung Rantai Honda Beat — honda
 ```
@@ -41,21 +41,22 @@ On a narrower window the items take a line of their own under the order:
   boxes at the left, the dates and **Search** at the right; when Search is narrower than 60 rem, the dates
   and **Search** stand in one line under the boxes, so the box stays low. The fields are those of the
   filter language ([fields](../rules-file/conditions.md#fields)). The first box is *Tracking ID contains*,
-  so part of an ID finds its order ([D-UI-12](../decisions/ui.md)). Matching ignores case; an item field
+  so part of an ID finds its order ([D-UI-12](../decisions/ui.md)). *Account* and *Shop* narrow it to one
+  account or one shop: *Account equals* picks an account from the list ([D-RULES-6](../decisions/rules.md)). Matching ignores case; an item field
   matches when one line matches. The Courier row works as there: *equals* picks a courier from the list,
   *contains* and *starts with* take typed text matched against the couriers' names
   ([D-RULES-4](../decisions/rules.md)).
 - **Dates**: *Viewed day* (the date the Day screen shows, the default; left out while that date is today),
   *Today*, *Yesterday*, *Last 7 days* and *Last 30 days* (today and the dates before it), *Custom range* or
-  *All days* of the open workspace ([D-UI-3](../decisions/ui.md)).
+  *All days* ([D-UI-3](../decisions/ui.md)). Every account is searched unless the filter names one.
   The range's first and last date stand beside the list, so each choice shows what it covers; picking a date
   there makes the range the owner's own (*Custom range*). *All days* hides them. Results come from the search
   index ([reprint](../app/reprint.md#the-search-index)); until it is built the screen says *Loading…*.
 - **Enter** in a box searches, so a scanned tracking ID finds its order at once; the first box has the
   focus when Search opens.
 - **Results**: the number of orders and batches and **Select all**, then one **row** per order under the
-  heads *Order*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; the Order ID in bold over the
-  courier's name as a pill (*Unknown* when the label named none) and the tracking ID (*no tracking ID* when the
+  heads *Order*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; the Order ID in bold and its **shop** in the muted colour (its account's name in italics when
+  the label printed no sender), over the courier's name as a pill (*Unknown* when the label named none) and the tracking ID (*no tracking ID* when the
   label printed none); its items, one line each (quantity, then name); the date it was saved on and the group
   PDF's code (`2-A`) as a chip over the group's name and the **page** the label is on there (*page 14*,
   *pages 14–15* for a label with a second page), so the printed label is found in its stack; **Open** and the

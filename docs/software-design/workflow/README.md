@@ -6,7 +6,7 @@ each step against what the shop needs; a step that is wrong is a review item
 ([reviews/](../../reviews/README.md)). The words are in [Concepts](../requirements.md#concepts).
 
 ```
- 1 Start ─► 2 Open workspace and date ─► 3 Choose files ─► 4 Read pages ─► 5 Copies and orders ─► 6 Checks, logo prompt
+ 1 Start ─► 2 Open a date ─► 3 Choose files ─► 4 Read pages ─► 5 Copies and orders ─► 6 Checks, accounts
                                                                                                    │
  ┌─────────────────────────────────────────────────────────────────────────────────────────────────┘
  ▼
@@ -30,17 +30,17 @@ each step against what the shop needs; a step that is wrong is a review item
 | # | Always true |
 |---|---|
 | **I1** | Every page of an input belongs to exactly one copy, every copy to one order, and a copy's pages are consecutive in one input |
-| **I2** | An order is written by at most one live batch of a workspace and date; a repeat or an order saved earlier is left out, never doubled |
+| **I2** | An order is written by at most one live batch of a date; a repeat or an order saved earlier is left out, never doubled |
 | **I3** | Every order of a batch is in exactly one label group, so in one group PDF |
 | **I4** | The ledger adds up: every page of every input of a batch is written exactly once or left out on purpose — *pages read = written + left out* |
 | **I5** | An output page is its source page unchanged, and an order's pages are written together in their order |
-| **I6** | Batch numbers are consecutive within a workspace and date; a `PdfID` names one input, a `sha256` one `PdfID` |
+| **I6** | Batch numbers are consecutive within a date; a `PdfID` names one input, a `sha256` one `PdfID` |
 | **I7** | A batch is saved whole or not at all: the journal append is the only commit, and the outputs follow the journal |
 | **I8** | The journal holds every saved fact once; each line is sealed, `seq` has no gap; nothing else decides |
 | **I9** | An input is used only while its bytes have the SHA-256 the journal names |
 | **I10** | The views and the search index say what the journal says |
 | **I11** | A reprint holds exactly the chosen orders' pages, unchanged, in their original printing order |
-| **I12** | The summary PDF's printed counts are the record's |
+| **I12** | A summary PDF's printed counts are the record's, of all its accounts or of the one it names |
 
 ## Verification matrix
 
@@ -60,7 +60,7 @@ writer ([verification](../app/verification.md)); the store's checks re-read what
 | I9 | Store: inputs by content (step 11) | Store: SHA-256 at open; verifier V2 | Open, save, reprint |
 | I10 | Store: views after every commit (step 15) | Store: `journal_seq` at open; the index is rebuilt at every open | Open |
 | I11 | PDF writer (step 19) | Verifier V5 on the reprint | Every reprint |
-| I12 | Summary writer (step 12) | Verifier V6: the counts read back as text | Save, restore |
+| I12 | Summary writer (step 12, and on request) | Verifier V6: the counts read back as text | Save, restore, an account's summary |
 
 What no check can prove — a label missing from the download, a filter that says the wrong thing — is what
 the owner checks on the Plan screen, and what the known-answer tests pin

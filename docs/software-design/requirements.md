@@ -4,17 +4,17 @@
 
 | Tool | Runs on | Does |
 |---|---|---|
-| **PC app** | Windows PC, Rust + Tauri window | A workspace's label PDFs with packing slip → label groups shown and adjusted on screen, one PDF per group and a summary PDF per batch, each verified before it is saved; revert and amend of the newest batch; search and reprint ([PC app](app/README.md), [Screens](ui/README.md)) |
+| **PC app** | Windows PC, Rust + Tauri window | The label PDFs with packing slip of every shop → label groups shown and adjusted on screen, one PDF per group and a summary PDF per batch, each verified before it is saved; revert and amend of the newest batch; search and reprint ([PC app](app/README.md), [Screens](ui/README.md)) |
 
-The owner of the app prepares the labels of one or more shop owners, each in a **workspace** of its own
-([workspaces](app/workspaces.md)).
+The owner of the app prepares the labels of one or more shop owners, each an **account** with its shops
+([accounts](app/accounts.md)); one batch may hold the labels of several accounts.
 
 ## Concepts
 
 | Term | Meaning |
 |---|---|
-| **Workspace** | A folder of the data folder with its own batches and one folder per date; a **workspace** on screen too |
-| **Journal** | The one file of a workspace and date that holds every saved fact ([journal](data/journal.md)) |
+| **Account** | One shop owner's shops: a name and the shop names its labels are sent by, in `packing-settings.toml`; every order names its account and shop |
+| **Journal** | The one file of a date that holds every saved fact, for every account ([journal](data/journal.md)) |
 | **Input PDF** | A label download, stored once by its content: `input/{sha256}.pdf` |
 | **Sort rule** | A named list of label group rules in `packing-workflows.toml`; a batch is sorted by one ([rules file](rules-file/README.md)) |
 | **Label group** | One entry of a sort rule: code, name and **filter**. Its filter takes orders from what is left; its orders are written as one **group PDF** |
@@ -42,8 +42,9 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
   orders from what is left; the last may have no filter and takes the rest; leftovers are a final group.
 - **F-LABEL-4** Write one PDF per label group (pages unchanged), its orders re-ordered by order content, sorted
   by (orders descending, order content ascending), inside one order content in reading order. An order already
-  saved on the same date of the same workspace is left out and warned.
-- **F-LABEL-5** Write one A4 summary PDF per batch: the units to take from stock and the facts of the batch.
+  saved on the same date is left out and warned.
+- **F-LABEL-5** Write one A4 summary PDF per batch: the units to take from stock and the facts of the batch;
+  one account's summary of a batch or of a day on request.
 - **F-LABEL-6** Find the orders that appear more than once in a batch, count them, and let the owner choose
   which copy stays; every order is written once.
 
@@ -52,16 +53,16 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
 - **F-APP-1** Stop with a clear message on any problem; nothing is left half-written.
 - **F-APP-2** Input: one or more *Shipping label + Packing slip* PDFs per batch; plain labels stop the batch
   with instructions.
-- **F-APP-3** One **Save** saves the batch completely or not at all; batch numbers run through a workspace and
-  date.
+- **F-APP-3** One **Save** saves the batch completely or not at all; batch numbers run through a date, across
+  accounts.
 - **F-APP-4** The newest batch of a date can be reverted (undone) or amended (redone in place).
 - **F-APP-5** A label file already used on the date is recognised before reading, and one file chosen twice is
   read once.
 - **F-APP-7** Every output is checked before it is saved by code independent of the code that wrote it: every
   input page appears exactly once — written or left out on purpose — and every output page is its source page
   unchanged ([verification](app/verification.md)).
-- **F-APP-8** Workspaces, each with its own dates, batches, numbers and guard, and the shops whose labels it
-  takes: a label of another shop is asked about before the plan ([workspaces](app/workspaces.md)).
+- **F-APP-8** Accounts, each with the shops whose labels are its orders: an order's account is found from the
+  shop on its label, and a shop no account lists is asked about once before the plan ([accounts](app/accounts.md)).
 - **F-APP-9** Every saved fact is kept once, in the journal, and every order is traceable to its input, pages
   and courier clue; the files a person reads are written from it ([data](data/README.md)).
 - **F-APP-10** Saved orders can be found and their labels printed again in one verified PDF; a lost output is
@@ -73,13 +74,15 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
 - **F-UI-2** A batch is shown as a plan (the label groups of its sort rule, with counts and order contents) that
   can be changed for this batch only — skip, move, add a one-off group, rename a file — before anything is
   written.
-- **F-UI-3** The Day screen lists every batch of the open date with its group PDFs and summary PDF, each with
-  **Print** (the print preview inside the app) and **Open**; a group PDF has a *Sent* mark that **Print**
+- **F-UI-3** The Day screen lists every batch of the open date with its accounts, its group PDFs and summary
+  PDF; a group PDF has **Print** (the print preview inside the app) and **Open**, a summary **Open**; a group PDF has a *Sent* mark that **Print**
   sets and a printed tick ([Day](ui/day.md)).
 - **F-UI-4** The sort rules are edited in the app with live checks and counts.
 - **F-UI-6** The files that hold repeated orders are marked; a screen shows how many repeats there are, groups
   the files that repeat each other and lets the owner choose which copy stays ([Repeated orders](ui/duplicates.md)).
-- **F-UI-7** A side panel names the open workspace, lists its dates, and opens another date or workspace
-  ([Panel](ui/panel.md)).
-- **F-UI-8** Search finds saved orders by any filter field, shows each one's trace, and reprints the ticked
+- **F-UI-7** A side panel lists the dates of every account and opens another date ([Panel](ui/panel.md)).
+- **F-UI-8** Search finds saved orders of every account by any filter field, the account and shop among them,
+  shows each one's trace, and reprints the ticked
   ones ([Search](ui/search.md)).
+- **F-UI-9** An Accounts screen shows one account at a time: its shops, its orders per date, rename and
+  delete ([Accounts](ui/accounts.md)).

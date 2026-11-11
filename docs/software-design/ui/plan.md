@@ -6,6 +6,7 @@ on a normal day the owner checks the counts and presses **Save batch**.
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │  Batch 3 · rule default · 2 files · 257 pages · 256 orders · 0 already saved   [Back]  │
+│  Toko Alfa 200 · Toko Beta 56                                                          │
 │  Warnings: 2 ▸                                                                         │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  Use  Group                    Orders  Order contents  File name                       │
@@ -17,13 +18,13 @@ on a normal day the owner checks the counts and presses **Save batch**.
 │                                                                                        │
 │  [+ Add a group for this batch]                      [Edit sort rule]                  │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  Summary PDF: 3 summary.pdf                                        [ Save batch ]      │
+│  Summary PDF (all accounts): 3 summary.pdf                         [ Save batch ]      │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Rows** are the groups of the batch's sort rule ([New batch › The sort rule](new-batch.md#the-sort-rule)),
   in order; each takes its orders from what the rows above left ([03 Plan](../workflow/03-plan.md#9-the-plan)).
-  The header names the rule. When the batch held repeats it also says `· 14 copies left out ▸`, with
+  The header names the rule, and under it the batch's accounts, each with its orders, most first. When the batch held repeats it also says `· 14 copies left out ▸`, with
   **Change** back to [Repeated orders](duplicates.md).
 - **Use** unticked skips the group for this batch only: its orders fall to the rows below. Unticking the
   rest row sends its orders to a new last row `? Uncategorised`, so every order is still saved

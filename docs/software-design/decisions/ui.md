@@ -18,16 +18,16 @@ Where a record names a former question (`Q-…`), the owner accepted its default
 
 **Applies to.** [Settings](../ui/settings.md).
 
-## D-UI-3 — Search: the viewed day by default, a range of dates, or all days of the workspace
+## D-UI-3 — Search: the viewed day by default, a range of dates, or all days
 
 **Decision.** Search covers *Viewed day* (the date the Day screen shows, the default), *Today*, *Yesterday*,
-*Last 7 days*, *Last 30 days*, a *Custom range* or *All days* of the open workspace (Q-UI-3); the ranges other
+*Last 7 days*, *Last 30 days*, a *Custom range* or *All days* (Q-UI-3), of every account; the ranges other
 than *Viewed day* end today. *Viewed day* is left out while the viewed date is today. Never *This day*: the
 owner found it could mean many things (R-UI-37). Every saved order is found by every field, since the
 journals keep them all.
 
 **Why.** The open date covers daily use; a reprint of an older label needs the other dates, and a short range
-keeps a search of a workspace with months of data small.
+keeps a search of months of data small.
 
 **Applies to.** [Search](../ui/search.md), [reprint](../app/reprint.md#search).
 
@@ -60,18 +60,6 @@ which put the menu in the title bar.
 theme is chosen once, not every few minutes, so it belongs with the settings.
 
 **Applies to.** [Settings](../ui/settings.md), [data](../data/README.md).
-
-## D-UI-9 — A side panel of the workspace's dates
-
-**Decision.** A panel that can be hidden lists the open workspace's dates, newest first, months folded except the
-open and the current one (Q-UI-5); it replaces the title bar's day stepper (Q-UI-7). A row's menu offers **Open
-folder** only: a date has no name. A workspace is renamed or deleted in Settings
-([D-APP-24](app-features.md)). It replaces D-UI-5, under which the app renamed no workspace.
-
-**Why.** The sessions panel's defaults, carried over to workspaces and dates (Q-UI-6 asked about renaming
-sessions, which D-APP-5 removed).
-
-**Applies to.** [Panel](../ui/panel.md).
 
 ## D-UI-11 — The look: warm neutrals, a clay accent, cards with depth
 
@@ -106,3 +94,26 @@ full width; two IDs over each other and the group PDF over the courier leave the
 *Starts with* surprised the owner: a part of a tracking ID typed or pasted from the middle found nothing.
 
 **Applies to.** [Search](../ui/search.md).
+
+## D-UI-13 — The Accounts screen shows one account at a time
+
+**Decision.** **Accounts** in the title bar, beside Search, Sort rules and Settings, opens a page in the look of
+Sort rules: a tab per account and **+ New account**; the account's card with **Rename…** and **Delete
+account** in its head, its shops and its dates with its orders per date (Q-UI-9). Settings keeps the theme,
+the data folder and *About*.
+
+**Why.** The owner's words (2026-11-11): the daily order count and the facts of one account on a page of their
+own, with the account's shops, rename and delete moved from Settings.
+
+**Applies to.** [Accounts](../ui/accounts.md), [Settings](../ui/settings.md), [window frame](../ui/README.md#window-frame).
+
+## D-UI-14 — A side panel of the data folder's dates
+
+**Decision.** A panel that can be hidden lists the dates of the data folder, newest first, months folded except
+the open and the current one; each date counts the orders of every account (Q-UI-10). A row's menu offers
+**Open folder** only: a date has no name. It replaces D-UI-9, the panel of a workspace's dates.
+
+**Why.** A date holds every account's batches, and the Day screen shows them all; one account's counts are on
+the Accounts screen, so the panel needs no chooser.
+
+**Applies to.** [Panel](../ui/panel.md).

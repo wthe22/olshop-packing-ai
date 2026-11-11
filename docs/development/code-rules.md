@@ -59,8 +59,9 @@ uses a v0.1 word takes the new one when it is rewritten.
 
 | Concept | Word in code | Not |
 |---|---|---|
-| A folder of the data folder with its own dates | `Workspace` | namespace, session, shop, owner |
-| One date of a workspace, its journal folded | `Day` | session, date folder |
+| One shop owner's named list of shops | `Account` | workspace, namespace, owner |
+| A name an account lists, as a label's sender prints it | `Shop` | sender, store |
+| One date of the data folder, its journal folded | `Day` | session, date folder |
 | The one truth of a day | `Journal`, one `Record` per line | log, state |
 | A file the app writes from the journal | `View` | cache, export |
 | A named list of label groups | `SortRule` | grouping, set |

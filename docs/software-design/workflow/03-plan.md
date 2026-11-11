@@ -2,7 +2,7 @@
 
 ## 7. Orders already saved
 
-- Every order whose Order ID is in a live batch of this workspace and date (the fold of step 2) is taken
+- Every order whose Order ID is in a live batch of this date, of any account, (the fold of step 2) is taken
   out with all its copies, each recorded as left out with the reason `saved_earlier` and that batch. A
   repeat of such an order is not asked about. An amend leaves its own batch out of this set.
 - The orders taken out are one warning: tracking ID, batch, group and time.
@@ -11,7 +11,7 @@
 
 **Keeps:** I2 — no order is written by two live batches of a date.
 
-**Check:** the guard is by Order ID, within one workspace and date. A cancelled order that the platform
+**Check:** the guard is by Order ID, within one date. A cancelled order that the platform
 reissues with the same Order ID on the same date would be left out as already saved.
 
 ## 8. Repeats
@@ -39,7 +39,8 @@ The batch's **sort rule** gives the label group rules in file order ([groups](..
 2. For each group rule in order, unless skipped for this batch: the orders of `remaining` that its filter
    matches are the group's and leave `remaining`. A rule with **no filter matches every order left**. A
    filter is true for an order by the [filter language](../rules-file/conditions.md): an item field is true
-   when **one** of the order's lines matches; text ignores case.
+   when **one** of the order's lines matches; text ignores case. A group may take the orders of several
+   accounts; `account` and `shop` filter by them ([D-RULES-6](../decisions/rules.md)).
 3. What `remaining` holds at the end goes to the **rest**: the last rule when it has no filter (it has taken
    them already); else, or when that rule is skipped, a group `?` *Uncategorised*
    ([D-UI-1](../decisions/ui.md)).

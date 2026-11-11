@@ -46,7 +46,7 @@ For "a filter was wrong, do the last batch again":
 
 ## 19. Search and reprint
 
-- **Search** filters the in-memory index of the workspace over a range of dates or all of them, and shows
+- **Search** filters the in-memory index of every date over a range of dates or all of them, and shows
   each order with its trace ([reprint](../app/reprint.md#search)).
 - **Reprint** writes one PDF of the ticked orders' pages: the sources from a fold of each order's date
   journal, the pages unchanged from `input/` in the original printing order, written through

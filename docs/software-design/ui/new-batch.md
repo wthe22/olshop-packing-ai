@@ -35,7 +35,7 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 
 **Sort rule** lists the rules of `packing-workflows.toml` that are on ([rules file](../rules-file/README.md);
 a rule switched off on the Sort rules screen is not listed, [D-RULES-5](../decisions/rules.md)). The rule
-of the workspace's newest batch is preselected, on whichever date it was saved, so an owner who always
+of the data folder's newest batch is preselected, on whichever date it was saved, so an owner who always
 uses one rule never touches it, and a new day starts on the rule used last. **Back** from the Plan screen
 keeps the rule just read. A rule that is off, or gone, is never preselected: the first rule that is on
 is ([D-RULES-1](../decisions/rules.md)). The batch's record keeps a snapshot of the rule it was saved with.
@@ -89,23 +89,30 @@ QR never are. The picture is the image as printed, and the count says how many p
 
 ## The shop prompt
 
-When the workspace lists its shops ([workspaces](../app/workspaces.md#its-shops)) and some labels show
-another sender or none, one question comes before the Plan screen, after the logo prompt, with a line per
-input file that holds such labels:
+Every order needs an account ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo prompt,
+before the Plan screen, one question lists each sender no account lists and each file with labels that
+have no sender ([D-APP-28](../decisions/accounts.md)):
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Not this workspace's shop                                                             │
-│  Toko Contoh takes the labels of Toko Contoh, Toko Contoh Official.                    │
-│    [10-07_07-00-00_Shipping label_1.pdf]   40 of 40 orders   a shop of Toko Lain        │
-│    [10-07_09-12-00_Shipping label_1.pdf]    2 of 85 orders   no sender found            │
-│                                                             [Back]  [Read anyway]      │
+│  Which account?                                                                        │
+│  These shops are not listed yet. Each is asked about once.                             │
+│    Shop [ Toko Gamma                ]   12 orders in 2 files   [Toko Alfa ▾] [New account] │
+│  These labels show no sender. Choose for this read.                                    │
+│    [10-07_09-12-00_Shipping label_1.pdf]    2 of 85 orders     [Toko Alfa ▾]            │
+│                                                                   [Back]  [Continue]   │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- The count is the file's orders whose first copy is not a listed shop's. *a shop of Toko Lain* names the
-  workspace that lists the sender found; otherwise *another shop*, or *no sender found*.
-- **Read anyway** goes on to the plan; those orders are planned like any other. **Back** (the default, and
-  `Esc`) returns to the file list, where the file can be taken off.
-- Nothing is remembered: the question comes at every read of New batch that finds such labels, on an
-  amend's selection page too. *Amend*'s first read of the batch's own inputs, read before, does not ask.
+- **A shop**: one row per distinct name read ([reading](../labels/reading.md#the-sender)), in an editable
+  field so a name read with wrong spaces can be put right; the field must stay a name found on those
+  labels, else it says *Not on these labels* under it. Its orders and files are counted. The owner picks an
+  account from the list, or **New account**, which names a new account after the shop (its name editable in
+  place). **Continue** writes every answered shop into `packing-settings.toml`, so it is never asked again.
+- **A file with labels that have no sender**: one row per file, how many of its orders show no sender, and the
+  account for them, for this read only; nothing is stored.
+- **Continue** is off until every row has an account. **Back** (and `Esc`) returns to the file list and
+  writes nothing, where a file can be taken off. With one account and no shop to ask, a file's row starts on
+  that account.
+- The plan is then counted with every order's account; an amend's first read takes a no-sender order's
+  account from the batch's record and asks only about a shop no account lists any more.

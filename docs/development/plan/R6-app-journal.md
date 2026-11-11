@@ -9,7 +9,7 @@ Started 2026-10-26, after the owner's go-ahead (the v0.1 program checked: it wor
 Read first: [04 Save](../../software-design/workflow/04-save.md), [05 After the save](../../software-design/workflow/05-after-save.md),
 [journal](../../software-design/data/journal.md), [records](../../software-design/data/records.md),
 [summary PDF](../../software-design/labels/summary-pdf.md), [verification](../../software-design/app/verification.md),
-[program](../../software-design/app/program.md), [workspaces](../../software-design/app/workspaces.md).
+[program](../../software-design/app/program.md), [accounts](../../software-design/app/accounts.md).
 
 ## Steps
 

@@ -8,10 +8,9 @@ When `packing-settings.toml` is missing beside the program, or names no data fol
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ◈ Packing v0.2                                                                        │
+│  ◈ Packing v0.5                                                                        │
 │  Where should Packing keep its data?                                                   │
-│  Each workspace's labels, group PDFs and summary PDFs are kept there, one folder per   │
-│  workspace and date.                                                                   │
+│  The labels, group PDFs and summary PDFs are kept there, one folder per date.          │
 │  ┌ 🗀 Next to the program ─────────────────────────────────────────────────────────┐   │
 │  │   D:\Packing\packing-data                                                      │   │
 │  └─────────────────────────────────────────────────────────────────────────────────┘   │
@@ -27,16 +26,11 @@ When `packing-settings.toml` is missing beside the program, or names no data fol
 - `packing-workflows.toml` is written from the bundled copy when it is missing: the couriers, their clues
   and one sort rule `default` whose only group takes every order ([rules file](../rules-file/README.md)).
 
-## The first workspace
+## No first account
 
-When the data folder holds no workspace yet:
-
-```
-│  Name the first workspace.   [ Toko Contoh            ]                  [ Create ]    │
-```
-
-The name follows [workspaces › Names](../app/workspaces.md#names); **Create** makes the workspace's folder
-and opens today's date. More workspaces are added in the [panel](panel.md).
+The start asks no name: the Day screen of today opens. The first read of labels asks which account each shop
+belongs to ([New batch › The shop prompt](new-batch.md#the-shop-prompt)), and accounts can be made ahead on
+the [Accounts](accounts.md) screen.
 
 ## The rules file
 

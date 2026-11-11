@@ -16,6 +16,8 @@ Every message says what happened and what to do. A **stop** ends the step with n
 | Warning | Orders that appear more than once | **`<n>` orders appear more than once in this batch:** `<m>` copies are left out (`<file>` page `<p>`, kept: `<file>` page `<p>`), … |
 | Warning | Courier not recognised | **Courier unknown for `<n>` orders:** `<tracking IDs>`. They are sorted normally; only a filter on `courier` cannot see them. |
 | Warning | `Qty Total` differs from the lines | **Slip total differs** for `<tracking ID>`: printed `<a>`, lines add up to `<b>`. Check that order's slip when packing. |
+| Refused | A shop name in the shop prompt that is not on those labels | Under the field: **Not on these labels.** The name must be found after `Pengirim` on the labels it names. |
+| Refused | A shop name another account lists, or an account name taken | Under the field: **`<name>` is already a shop of `<account>`.** / **There is already an account `<name>`.** |
 | Warning | No tracking ID on a label | **No tracking ID read** for order `<order ID>`. Its label is saved as usual; only a filter on `tracking_id` cannot see it. |
 
 ## Saving, reverting, reprinting
@@ -30,7 +32,7 @@ Every message says what happened and what to do. A **stop** ends the step with n
 | Stop | Another copy of the app kept writing to the data folder for a minute | **Another copy of the app is still writing to the data folder** (`<computer>`, process `<pid>`, since `<time>`); try again in a moment. |
 | Stop | Another copy saved or reverted a batch with this batch's orders after the labels were read | **Another copy of the app saved or reverted a batch of this date after these labels were read.** Nothing was saved: read the labels again. |
 | Stop | **Revert** or **Amend** of a batch another copy has since followed with a newer one | **Batch `<b>` is no longer the newest batch of this date:** another copy of the app changed the date. It now shows as it is. |
-| Note | Another copy renamed or deleted the open workspace | **Workspace `<name>` was renamed or deleted in another copy of Packing.** The workspace the start would open opens. |
+
 
 ## Opening
 
@@ -38,7 +40,7 @@ Every message says what happened and what to do. A **stop** ends the step with n
 |---|---|---|
 | Stop | `packing-workflows.toml` does not parse | **The rules file has an error:** `<line, col: message>`. Fix `packing-workflows.toml` beside the program. [Open folder] |
 | Stop | A sort rule's filter has an error | **Sort rule `<name>` has an error:** `<line, col: message>`. The Sort rules screen opens on it. |
-| Damage | The journal of a date is damaged, or names another workspace or date | **`<date>` of `<workspace>` cannot be changed:** line `<n>` of its journal `<is damaged / names another workspace>`. It can be viewed; nothing is written to it. |
+| Damage | The journal of a date is damaged, or names another date or schema | **`<date>` cannot be changed:** line `<n>` of its journal `<is damaged / names another date / is of schema x.y>`. It can be viewed; nothing is written to it. |
 | Warning | An input of a live batch is missing or changed | **`<file>`, an input of batch `<b>`, is missing or has changed.** Amend, reprint and restore cannot use it. |
 | Warning | An output is missing or changed | On its batch card: **⚠ missing** and **Open** (writes it again) / **⚠ changed** and **Restore**. |
-| Note | A version 0.1 data folder | **This folder also holds data of Packing v0.1 (`labels\`). It is not read.** [Open folder] |
+| Note | Data of v0.1 or v0.4 in the data folder | **This folder also holds data of Packing `<v0.1 / v0.4>` (`<labels\ / Toko Contoh\, …>`). It is not read.** [Open folder] |

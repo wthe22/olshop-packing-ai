@@ -5,7 +5,7 @@ Where a record names a former question (`Q-…`), the owner accepted its default
 ## D-RULES-1 — A batch chooses its sort rule; the rule used last is preselected
 
 **Decision.** The sort rule is chosen per batch on New batch, before **Read labels**; the rule of the
-workspace's newest batch is preselected, on whichever date it was saved, so a new day starts on the rule
+data folder's newest batch is preselected, on whichever date it was saved, so a new day starts on the rule
 used last (Q-RULES-1 (a), R-RULES-5). While a batch is being prepared, its own rule is preselected, so
 the Plan screen's **Back** keeps the rule just read. A rule that is off is never preselected (D-RULES-5).
 The rules live in `packing-workflows.toml` (D-APP-13), which answers Q-RULES-1 (b).
@@ -63,3 +63,14 @@ can be switched on again as it was, and an old batch saved with it can still be 
 
 **Applies to.** [rules file](../rules-file/README.md#sort-rules), [Sort rules](../ui/sort-rules.md),
 [New batch › The sort rule](../ui/new-batch.md#the-sort-rule).
+
+## D-RULES-6 — Account and shop are fields of the filter language
+
+**Decision.** `account` and `shop` are text fields of the filter language (Q-RULES-3), so Search narrows to one
+account or shop and a sort rule may take one account's orders. *Account equals* picks an account on the
+screens; `shop is_empty` takes the orders whose label printed no sender.
+
+**Why.** One language for Search and the sort rules, as for every other field; a second way to filter Search
+would be more code for less.
+
+**Applies to.** [filter language](../rules-file/conditions.md#fields), [Search](../ui/search.md).

@@ -20,9 +20,9 @@ Into `output/.partial/` (the open-time check has settled any earlier one):
 
 1. **Group PDFs**, in plan order: each order's written copy, its pages copied unchanged from `input/` and
    together, in printing order (step 10).
-2. **The summary PDF** from the plan: the pick pages and the facts page ([summary PDF](../labels/summary-pdf.md)).
+2. **The summary PDF** of all the batch's accounts from the plan ([summary PDF](../labels/summary-pdf.md)).
 3. **The record**: a `batch_saved` built in memory with the next `seq` — the inputs, the sort rule as used,
-   the contents, the orders in printing order with their copies and groups, the copies left out, every
+   the contents, the orders in printing order with their copies, groups, accounts and shops, the copies left out, every
    output with its pages, size and SHA-256, and the read warnings ([records](../data/records.md)).
 
 **Stops:** a full disk or a folder that cannot be written; `.partial/` is deleted and the date is as before.

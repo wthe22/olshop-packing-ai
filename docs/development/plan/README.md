@@ -6,14 +6,14 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-11)
 
-- **Next work: v0.5, accounts replace workspaces — written, not designed or built.** The owner's words of
-  2026-11-11 are in [v0.5-accounts.md](v0.5-accounts.md), the first unfinished task. The next agent designs
-  it first (V5.1), then builds it in the order that file gives. The owner's open choices are Q-APP-12 to
-  Q-APP-17, Q-UI-9, Q-UI-10 and Q-RULES-3 ([software-design/questions/](../../software-design/questions/README.md)),
-  each with the default the work uses until the owner answers. Answered 2026-11-11: Q-APP-12, Q-APP-14 and
-  Q-APP-16 and Q-APP-15 (A), and the owner's other answers are in the plan's *owner's answers* section. R6.4 and R9 stay open and are placed in that
-  file's order. `target/portable/Packing/` is still the 0.4.2 build. Files left uncommitted by another
-  session (`docs/development/README.md`, `docs/development/app.md`, `tools/dev.bat`) are not part of this.
+- **Work under way: v0.5, accounts replace workspaces — designed, being built.** The design is in
+  [software-design/](../../software-design/README.md) (start with [accounts](../../software-design/app/accounts.md));
+  the order of work is in [v0.5-accounts.md](v0.5-accounts.md): V5.2 to V5.5, R6.4, V5.6, V5.7, then R9. Every
+  question of 2026-11-11 is answered; **Q-APP-18** (the saved orders of a renamed account,
+  [questions/app.md](../../software-design/questions/app.md)) is open with its default A, which the work
+  uses. v0.4 data is copied by a separate Python script (V5.7), never by the program.
+  `target/portable/Packing/` is still the 0.4.2 build. Files left uncommitted by another session
+  (`docs/development/README.md`, `docs/development/app.md`, `tools/dev.bat`) are not part of this.
 - **Handoff of 2026-11-09 — the panel marks a workspace with unprinted groups today; version 0.4.2.** The
   owner's words in chat, built and pushed:
   - The workspace list of the panel shows **`· not printed yet`** after a workspace whose live batches of
@@ -30,7 +30,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     `{workspace}/settings.toml`). A read whose labels show another sender, or none, asks first:
     **Back**, or **Read anyway**. Names are compared whole, spaces and case ignored, so the Shopee
     spelling is listed beside the TikTok one
-    ([workspaces › Its shops](../../software-design/app/workspaces.md#its-shops)). A workspace with no shop
+    (v0.4; replaced by [accounts](../../software-design/app/accounts.md) in v0.5). A workspace with no shop
     listed asks nothing.
   - **D-APP-26**: **Print** on a group PDF, a summary PDF or a reprint opens the print preview Chrome shows
     over the app's window. A group PDF is then marked *Sent hh:mm*; its ✕ takes the mark back when the

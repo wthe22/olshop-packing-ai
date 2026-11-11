@@ -1,14 +1,20 @@
 # Summary PDF (A4)
 
-One per batch, `output/{batch} summary.pdf`, written with the group PDFs and checked by the verifier
-([D-APP-16](../decisions/app-features.md)). There is no other packing list and no layout or scope to choose.
+One per batch, `output/{batch} summary.pdf`, of all the batch's accounts, written with the group PDFs and
+checked by the verifier ([D-APP-16](../decisions/app-features.md)). One account's summary is made on request
+([below](#one-account)). There is no other packing list and no layout or scope to choose.
 Three parts, each starting on a new page, in this order ([D-LABEL-16](../decisions/summaries.md)): the **facts
 pages**, the **group pages**, the **pick pages**. Every page has the same header and every part the same
 rows ([D-LABEL-19](../decisions/summaries.md)). The [day summary](day-summary.md) is drawn in the same layout.
 
 ```
-Summary · Toko Contoh · 2026-10-07 · batch 2                                           page 1/3
+Summary · All accounts · 2026-10-07 · batch 2                                           page 1/3
 129 orders · 141 units · 2 groups · printed 09:12
+▓ Accounts                                                                                    ▓
+  Toko Alfa                                                   88 orders    96 units
+  ─────────────────────────────────────────────────────────────────────────────────────────────
+  Toko Beta                                                   41 orders    45 units
+  ─────────────────────────────────────────────────────────────────────────────────────────────
 ▓ Couriers                                                                                    ▓
   J&T Express                                                 86 orders
   ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -24,7 +30,7 @@ Summary · Toko Contoh · 2026-10-07 · batch 2                                 
 
 ## The layout
 
-- The header takes the top 23 mm: `Summary · <workspace> · <date> · batch <b>` (13 pt bold) and
+- The header takes the top 23 mm: `Summary · <All accounts | account> · <date> · batch <b>` (13 pt bold) and
   `page x/y` in the first 7 mm, `<orders> orders · <units> units · <groups> groups · printed hh:mm`
   (9.5 pt) in the next 5 mm, then a 1 mm gap. The body starts at 23 mm on every page.
 - A section is a grey bar with its heading (11 pt bold) and, at its right, the section's own counts
@@ -45,6 +51,7 @@ The first pages say what the batch is, so the paper alone can be traced:
 
 | Section | Rows |
 |---|---|
+| Accounts | The batch's orders and units per account, most orders first. Only on the summary of all accounts |
 | Couriers | The batch's orders per courier, by the courier's **name** in `packing-workflows.toml` (its code when the file no longer names it), most first, *Unknown* last: *86 orders*. The count the owner hands over at the pickup |
 | Warnings | The read warnings. The verifier's findings come after this file is written, so they are on the Day card and in the journal, not here |
 | Inputs | Each input: the name it had, its pages, the first 12 characters of its SHA-256. Then the ledger in bold: *1000 pages read = 986 written + 14 left out (14 repeats, 0 saved earlier)* |
@@ -70,6 +77,22 @@ What to take from stock for the whole batch: one line per item (product name and
 **display name** and its units, in two columns, sorted by display name, under the bar
 *Pick summary (units to take from stock)*.
 
+## One account
+
+A batch card's account button on the [Day screen](../ui/day.md) writes `{date}/{batch} summary
+{account}.pdf` from the batch's record and opens it ([D-APP-29](../decisions/accounts.md)). It is a view
+of the journal: written again on every request, not recorded, never read for a decision; a revert or an
+amend deletes it. It is checked before it is kept (V6 on the account's orders); a finding stops it and
+nothing is kept.
+
+- The same layout and parts, of the orders whose `account` is that account: the header names the account
+  and counts its orders, units and groups; the Couriers, the Warnings that name one of its orders, the group
+  pages (a group with none of its orders is left out) and the pick pages are its own.
+- **Inputs** lists the batch's inputs and the batch's ledger, as the summary of all accounts does: the
+  inputs are the batch's, shared by its accounts. There is no Accounts section.
+- It is written to `.partial` beside it and renamed over the old one; one open in a viewer that locks it
+  stops the write with the file named.
+
 ## What the verifier reads
 
 V6 of [verification](../app/verification.md) reads three things back as text and compares them with the
@@ -78,7 +101,8 @@ record: the first page header's `<orders> orders · <units> units · <groups> gr
 units`, in group order. Their words and order are fixed for that reason — a group bar reads *1 orders* —
 and the numbers have no thousands separator. A group bar is told from the header by the header's
 `<groups> groups` after its units. The group's name before its counts is not read: `lopdf` reads no text of
-a character drawn with the CID font (an `é` in a name).
+a character drawn with the CID font (an `é` in a name). An account's row has its orders and units as two
+counts, never as one `<orders> orders · <units> units` text, so it is never read as a group bar.
 
 ## Fonts
 
