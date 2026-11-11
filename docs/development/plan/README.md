@@ -4,8 +4,15 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-09)
+## Status (2026-11-11)
 
+- **Next work: v0.5, accounts replace workspaces — written, not designed or built.** The owner's words of
+  2026-11-11 are in [v0.5-accounts.md](v0.5-accounts.md), the first unfinished task. The next agent designs
+  it first (V5.1), then builds it in the order that file gives. The owner's open choices are Q-APP-12 to
+  Q-APP-17, Q-UI-9, Q-UI-10 and Q-RULES-3 ([software-design/questions/](../../software-design/questions/README.md)),
+  each with the default the work uses until the owner answers. R6.4 and R9 stay open and are placed in that
+  file's order. `target/portable/Packing/` is still the 0.4.2 build. Files left uncommitted by another
+  session (`docs/development/README.md`, `docs/development/app.md`, `tools/dev.bat`) are not part of this.
 - **Handoff of 2026-11-09 — the panel marks a workspace with unprinted groups today; version 0.4.2.** The
   owner's words in chat, built and pushed:
   - The workspace list of the panel shows **`· not printed yet`** after a workspace whose live batches of
