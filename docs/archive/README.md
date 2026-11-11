@@ -12,4 +12,5 @@ finished task.
 | `phase-1-plan.md` | The tasks of phase 1, the Python script (finished; now `tools/analysis/`) |
 | `phase-2-finished-tasks.md` | Tasks 2.1–2.15 and 2.17 of the PC app phase (finished) |
 | `review-round-1.md` | The owner's review round 1 of the PC app (all items fixed) |
+| `v0.5-accounts.md` | The plan of v0.5, accounts replace workspaces (2026-11-11 to 2026-11-12, finished) |
 | `setup-log.md` | The dated log of one-time setup steps on the owner's PC |

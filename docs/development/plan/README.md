@@ -4,16 +4,33 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-11)
+## Status (2026-11-12)
 
-- **Work under way: v0.5, accounts replace workspaces — designed, being built.** The design is in
-  [software-design/](../../software-design/README.md) (start with [accounts](../../software-design/app/accounts.md));
-  the order of work is in [v0.5-accounts.md](v0.5-accounts.md): R9. Every
-  question of 2026-11-11 is answered; **Q-APP-18** (the saved orders of a renamed account,
-  [questions/app.md](../../software-design/questions/app.md)) is open with its default A, which the work
-  uses. v0.4 data is copied by a separate Python script (V5.7), never by the program.
-  `target/portable/Packing/` is still the 0.4.2 build. Files left uncommitted by another session
-  (`docs/development/README.md`, `docs/development/app.md`, `tools/dev.bat`) are not part of this.
+- **Handoff of 2026-11-12 — v0.5.0: accounts replace workspaces. The owner's review is next.** Built,
+  checked and pushed; no task is open. The design is in [software-design/](../../software-design/README.md)
+  (start with [accounts](../../software-design/app/accounts.md)); the finished plan is in the archive
+  (`v0.5-accounts.md`).
+  - **What to try** in `target/portable/Packing/` (version 0.5.0), with a copy of real downloads of two
+    shops: New batch reads both; the first read asks *Which account?* for each shop; the Day screen names
+    each batch's accounts, with a summary button per account and **Day summary** as a menu; **Accounts** in
+    the title bar shows each account's shops and dates; Search finds an order by its shop (the *Shop* and
+    *Account* fields) and shows the shop under each Order ID. The [user guide](../../user-guide/README.md) is
+    current, with pictures of v0.5.0.
+  - **v0.4 data**: `tools/migrate-v0.4.py` copies a v0.4 data folder once
+    ([migration](../../software-design/data/migration.md); `py -m pip install xxhash` first, see
+    [setup](../setup.md)). Tried on the made-up `testdata/v0.4/`: both dates open without damage with the
+    same orders, the v0.4 folders are unchanged and a second run refuses. Not tried on the owner's data,
+    and the verifier was not run on the migrated dates. **Run it on a copy of the real data folder first.**
+  - **Open question**: **Q-APP-18** (the saved orders of a renamed account,
+    [questions/app.md](../../software-design/questions/app.md)), built with its default A: orders saved
+    before keep the old name.
+  - **Checks**: the full check is green (size gate passed, no new lint suppression, coverage not lower);
+    an independent review found no journal or data bug; its migration-script findings are fixed.
+  - **Where to answer**: findings into [reviews/](../../reviews/README.md) as the next `R-UI-<n>` or
+    `R-APP-<n>`, one file per scope; an answer to Q-APP-18 in its question. A new session starts here,
+    turns each finding into a task file in this folder and builds it.
+  - Not part of this: files another session left uncommitted (`docs/development/README.md`,
+    `docs/development/app.md`, `tools/dev.bat`).
 - **Handoff of 2026-11-09 — the panel marks a workspace with unprinted groups today; version 0.4.2.** The
   owner's words in chat, built and pushed:
   - The workspace list of the panel shows **`· not printed yet`** after a workspace whose live batches of

@@ -133,8 +133,9 @@ def read_all(data_dir, existing_accounts):
         settings = folder / "settings.toml"
         shops[name] = tomllib.loads(settings.read_text("utf-8")).get("shops", []) if settings.is_file() else []
         for shop in shops[name]:
-            if shop_owner.setdefault(shop.lower(), name) != name:
-                raise Refused(f"the shop \"{shop}\" is listed by \"{shop_owner[shop.lower()]}\" and \"{name}\"")
+            key = "".join(shop.split()).lower()  # as the program compares shops
+            if shop_owner.setdefault(key, name) != name:
+                raise Refused(f"the shop \"{shop}\" is listed by \"{shop_owner[key]}\" and \"{name}\"")
         for date_dir in dates:
             if (date_dir / "output" / ".partial").exists():
                 raise Refused(f"{date_dir}: output/.partial exists; open that date in v0.4 once")
@@ -142,7 +143,9 @@ def read_all(data_dir, existing_accounts):
                 continue
             if (data_dir / date_dir.name).exists():
                 raise Refused(f"the date {date_dir.name} already has a folder in {data_dir}")
-            by_date.setdefault(date_dir.name, []).append(fold(name, date_dir.name, date_dir))
+            part = fold(name, date_dir.name, date_dir)
+            if part.batches or part.reprints:  # a date whose batches were all reverted holds nothing
+                by_date.setdefault(date_dir.name, []).append(part)
     for date, parts in by_date.items():
         seen = {}
         for part in parts:
@@ -277,8 +280,13 @@ def main(argv):
         sys.exit(__doc__)
     program = Path(argv[1])
     settings_path = program / SETTINGS
-    settings = tomllib.loads(settings_path.read_text("utf-8"))
-    data_dir = program / settings["data_dir"]  # an absolute data_dir replaces the program folder
+    text = settings_path.read_text("utf-8") if settings_path.is_file() else ""
+    settings = tomllib.loads(text)
+    data_dir = program / settings.get("data_dir", "packing-data")  # an absolute one replaces the program folder
+    # The program writes an empty account list as `accounts = []`, which the tables appended below replace.
+    text = re.sub(r"(?m)^accounts\s*=\s*\[\s*\]\s*\n?", "", text)
+    if re.search(r"(?m)^accounts\s*=", text):
+        sys.exit(f"Nothing was written. {SETTINGS} lists its accounts in a form this script does not extend.")
     existing = {a["name"].lower() for a in settings.get("accounts", [])}
     try:
         shops, by_date = read_all(data_dir, existing)
@@ -298,9 +306,8 @@ def main(argv):
         for text in left_out:
             print(f"  left out: {text}")
 
-    with settings_path.open("a", encoding="utf-8", newline="") as out:
-        for name, listed in shops.items():
-            out.write(account_table(name, listed))
+    tables = "".join(account_table(name, listed) for name, listed in shops.items())
+    settings_path.write_text(text + tables, encoding="utf-8", newline="")
     print(f"{len(shops)} accounts added to {SETTINGS}: {', '.join(shops)}")
 
 
