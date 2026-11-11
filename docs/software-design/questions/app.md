@@ -6,6 +6,8 @@ their answer goes into [decisions/](../decisions/README.md).
 
 ## Q-APP-12 — The word for a shop owner's group of shops
 
+**Answered 2026-11-11: account (A).**
+
 The owner wrote *account/owners*. *Owner* is the word the documents use for the person who runs the app, and
 D-APP-17 records that *owner* on screen was confused with that.
 
@@ -27,21 +29,32 @@ batch numbers) cannot be read as one journal.
 
 ## Q-APP-14 — Batch numbers across dates
 
+**Answered 2026-11-11: A, restart each date.**
+
 - **A. 1, 2, 3, … per date**, across all accounts; a new date starts at 1. *(Default; as today, per workspace.)*
 - **B. One running number** across all dates.
 
 ## Q-APP-15 — The summary PDFs of one account
 
-Today a batch's summary is written, verified and recorded in the journal. An account's summary is another
-document of the same batch, and the day summary is a view written on request.
+**Clarified 2026-11-11 at the owner's question; still open.**
 
-- **A. All accounts: stored and verified as today.** An account's summary (batch or day) is written on request
-  from the record, verified against it, and kept as a file but not recorded: it is a view.
-  Example file: `output/3 summary Toko Alfa.pdf`. *(Default)*
-- **B. Every account's summary stored and recorded** like the all-accounts one: more outputs per batch and
-  more journal records.
+Today each batch writes one summary PDF at save. It is verified and recorded in the journal, and the Day screen
+shows it with **Open** and **Print**. The day summary is a file made on request from the journal and is not
+recorded. With accounts, a batch holds several accounts' orders, so an account's summary is a second kind of
+document of the same batch. The two options differ in how an account's summary is kept:
+
+- **A. Made on request.** The all-accounts batch summary is saved exactly as today. An account's summary is
+  made when the owner asks, from the saved record, checked against it, and kept as a file. The journal records
+  nothing about it, as with the day summary today. Example file: `output/3 summary Toko Alfa.pdf`. *(Default)*
+- **B. Saved like today's.** Every account's summary is saved at save time and recorded in the journal, like the
+  all-accounts summary. Each batch then has one summary per account plus the all-accounts one: the current
+  behaviour, with more files and records.
+
+Until the owner answers, the work uses A.
 
 ## Q-APP-16 — A shop name no account lists
+
+**Answered 2026-11-11: yes, a shop name belongs to one account only (A).**
 
 Asked once per distinct shop name in a read (a line per file that has it), before the plan, the way the logo
 prompt is asked.
