@@ -11,7 +11,7 @@ From the repository root, Git Bash:
 |---|---|
 | Front-end checks (svelte-check) | `cd app && npm run check` |
 | Front-end build (to `app/build/`) | `cd app && npm run build` |
-| Open the window | `cd app && npm run tauri dev` |
+| Open the window | `cd app && npm run tauri dev`, or `tools\dev.bat` from Explorer or `cmd` |
 
 ## Gates and tests
 
