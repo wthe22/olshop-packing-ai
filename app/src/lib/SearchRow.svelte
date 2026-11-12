@@ -1,6 +1,6 @@
 <script lang="ts">
-  // One order of Search's results as a row of the results' grid: its tick; its shop and Order ID
-  // over its courier and tracking ID; its items, which take the room left; the date and batch over
+  // One order of Search's results as a row of the results' grid: its tick; its shop over its Order
+  // ID; its courier over its tracking ID; its items, which take the room left; the date and batch over
   // the group's name and the page the label is on; **Open**, the chevron of its details and its
   // *Reprinted* mark. The details are what the row does not show: the input PDF it was read from,
   // its batch's save time and the group's code. The order and label columns take only their own width, so a long
@@ -48,18 +48,16 @@
 <div class="row" class:ticked {@attach textClicks}>
   <input type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
   <div class="ids">
-    <span class="line">
-      {#if row.shop}
-        <span class="shop">{row.shop}</span>
-      {:else}
-        <span class="shop account">{row.account}</span>
-      {/if}
-      <span class="order">{row.order_id}</span>
-    </span>
-    <span class="line">
-      <span class="courier" class:unknown={!row.courier}>{row.courier ?? words.noCourier}</span>
-      <span class="tracking" class:faint={!row.tracking_id}>{row.tracking_id ?? words.noTracking}</span>
-    </span>
+    {#if row.shop}
+      <span class="shop">{row.shop}</span>
+    {:else}
+      <span class="shop account">{row.account}</span>
+    {/if}
+    <span class="order">{row.order_id}</span>
+  </div>
+  <div class="track">
+    <span class="courier" class:unknown={!row.courier}>{row.courier ?? words.noCourier}</span>
+    <span class="tracking" class:faint={!row.tracking_id}>{row.tracking_id ?? words.noTracking}</span>
   </div>
   <ul class="items">
     {#each row.items as item, i (i)}
@@ -133,25 +131,31 @@
     grid-column: 2;
   }
 
-  .items {
+  .track {
     grid-column: 3;
   }
 
-  .where {
+  .items {
     grid-column: 4;
   }
 
-  .tools {
+  .where {
     grid-column: 5;
   }
 
+  .tools {
+    grid-column: 6;
+  }
+
   .ids,
+  .track,
   .where,
   .tools {
     grid-row: 1;
   }
 
   .ids,
+  .track,
   .where {
     display: flex;
     flex-direction: column;
@@ -344,7 +348,7 @@
      the items go under both, full width. */
   @container results (max-width: 54rem) {
     .where {
-      grid-column: 3;
+      grid-column: 4;
     }
 
     .items {

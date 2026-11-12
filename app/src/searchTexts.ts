@@ -29,10 +29,11 @@ export const searchTexts = {
   // One line of an order's items, "name × quantity".
   item: (name: string, quantity: number) => `${name} ×${quantity}`,
   noMatch: "No saved order matches.",
-  // The heads of the results' columns: the shop and Order ID over the courier and tracking ID, the
-  // items, the date and batch over the group's name and page.
+  // The heads of the results' columns: the shop over the Order ID, the courier over the tracking ID,
+  // the items, the date and batch over the group's name and page.
   columns: {
     order: "Order",
+    tracking: "Tracking",
     items: "Items",
     label: "Label",
   },

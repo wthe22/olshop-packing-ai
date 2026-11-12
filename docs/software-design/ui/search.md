@@ -13,12 +13,12 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 │ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
 │ 3 orders in 2 batches   [–] Select all                                                              │
 │ ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│ │     Order                       Items                            Label                          │ │
-│ │ [✓] Toko Alfa 580000000000000042 ×1  Sepatu Standar Samping Motor Wed, 7 Oct Batch 2 [Open] ›    │ │
-│ │     (J&T Express) JY0000001234      — honda                      Sepatu x88 page 14  Reprinted  │ │
+│ │     Order                  Tracking          Items                          Label                       │ │
+│ │ [✓] Toko Alfa              (J&T Express)     ×1  Sepatu Standar Samping     Wed, 7 Oct Batch 2 [Open] ›│ │
+│ │     580000000000000042     JY0000001234      — honda                        Sepatu x88 page 14  Reprinted│ │
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ [ ] Toko Beta 580000000000000057 ×2  Spion Beat                   Wed, 7 Oct Batch 2 [Open] ⌄    │ │
-│ │     (J&T Express) JY0000001235                                   Spion x35 page 3               │ │
+│ │ [ ] Toko Beta              (J&T Express)     ×2  Spion Beat                 Wed, 7 Oct Batch 2 [Open] ⌄│ │
+│ │     580000000000000057     JY0000001235                                     Spion x35 page 3            │ │
 │ │     From [▯ 10-07_09-05-49_Shipping label+Packing slip_2.pdf] p. 3, saved at 09:12 into group (2-B)│ │
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
 │ │ [✓] Toko Alfa 580000000000000061 ×1  Kaca Spion                   Tue, 6 Oct Batch 1 [Open] ›    │ │
@@ -32,8 +32,8 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 On a narrower window the items take a line of their own under the order:
 
 ```
-[✓] 580000000000000042  Toko Alfa           Wed, 7 Oct (2-A)          [Open] ›
-    (J&T Express) JY0000001234              Sepatu x88 page 14       Reprinted
+[✓] Toko Alfa              (J&T Express)     Wed, 7 Oct (2-A)          [Open] ›
+    580000000000000042     JY0000001234      Sepatu x88 page 14       Reprinted
     ×1  Sepatu Standar Samping Motor Pelindung Rantai Honda Beat — honda
 ```
 
@@ -55,9 +55,10 @@ On a narrower window the items take a line of their own under the order:
 - **Enter** in a box searches, so a scanned tracking ID finds its order at once; the first box has the
   focus when Search opens.
 - **Results**: the number of orders and batches and **Select all**, then one **row** per order under the
-  heads *Order*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; its **shop**, in grey (the account's name in grey italics when the label printed no sender), and the
-  Order ID in bold, both at 0.9rem, over the courier's name as a pill (*Unknown* when the label named none) and the tracking ID (*no tracking ID* when the
-  label printed none); its items, one line each (quantity, then name); the date it was saved on and its batch
+  heads *Order*, *Tracking*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; in the **Order**
+  column, its **shop** in grey (the account's name in grey italics when the label printed no sender) over its
+  Order ID in bold, both at 0.9rem; in the **Tracking** column, its courier's name as a pill (*Unknown* when
+  the label named none) over the tracking ID (*no tracking ID* when the label printed none); its items, one line each (quantity, then name); the date it was saved on and its batch
   (*Wed, 7 Oct Batch 2*) over the group's name and the **page** the label is on there (*page 14*,
   *pages 14–15* for a label with a second page), so the printed label is found in its stack; **Open** and the
   chevron. The order and label columns are as wide as their longest entry, so the items keep the rest of the

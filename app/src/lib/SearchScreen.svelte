@@ -133,6 +133,7 @@
           <div class="head" aria-hidden="true">
             <span></span>
             <span>{words.columns.order}</span>
+            <span>{words.columns.tracking}</span>
             <span class="head-items">{words.columns.items}</span>
             <span>{words.columns.label}</span>
             <span></span>
@@ -328,7 +329,7 @@
 
   .rows {
     display: grid;
-    grid-template-columns: auto max-content minmax(0, 1fr) max-content auto;
+    grid-template-columns: auto max-content max-content minmax(0, 1fr) max-content auto;
     column-gap: 0.9rem;
   }
 
