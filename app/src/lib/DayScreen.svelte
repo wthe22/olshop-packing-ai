@@ -364,9 +364,9 @@
     border-radius: var(--radius-lg);
     background: var(--surface);
     box-shadow: var(--shadow);
-    overflow: hidden;
   }
 
+  /* Not `overflow: hidden` on the card: the Summary PDF menu opens below the card's foot. */
   .batch-head {
     display: flex;
     flex-wrap: wrap;
@@ -374,6 +374,7 @@
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
     border-bottom: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     background: var(--surface-2);
   }
 

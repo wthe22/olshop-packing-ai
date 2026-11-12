@@ -55,8 +55,8 @@ On a narrower window the items take a line of their own under the order:
 - **Enter** in a box searches, so a scanned tracking ID finds its order at once; the first box has the
   focus when Search opens.
 - **Results**: the number of orders and batches and **Select all**, then one **row** per order under the
-  heads *Order*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; its **shop** and the Order ID, both in bold at the size of
-  the row's other text (the account's name in italics when the label printed no sender), over the courier's name as a pill (*Unknown* when the label named none) and the tracking ID (*no tracking ID* when the
+  heads *Order*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; its **shop**, in grey (the account's name in grey italics when the label printed no sender), and the
+  Order ID in bold, both at 0.9rem, over the courier's name as a pill (*Unknown* when the label named none) and the tracking ID (*no tracking ID* when the
   label printed none); its items, one line each (quantity, then name); the date it was saved on and its batch
   (*Wed, 7 Oct Batch 2*) over the group's name and the **page** the label is on there (*page 14*,
   *pages 14–15* for a label with a second page), so the printed label is found in its stack; **Open** and the

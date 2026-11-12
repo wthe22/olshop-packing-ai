@@ -166,8 +166,8 @@
   }
 
   .shop {
+    color: var(--text-muted);
     font-size: 0.9rem;
-    font-weight: 650;
   }
 
   /* The label printed no sender: the account stands in the shop's place. */
