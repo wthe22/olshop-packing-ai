@@ -10,7 +10,7 @@
 schema = "1.0"
 
 [[couriers]]
-code = "jnt"
+code = "jnt-express"
 name = "J&T Express"
 
 [[couriers]]
@@ -42,7 +42,7 @@ code = "anteraja"
 name = "Anteraja"
 
 [[courier_classifier]]
-courier_code = "jnt"
+courier_code = "jnt-express"
 logos = ["39b9b7b9f61d0e7f"]     # 975x377 px, the same asset in every sample file
 tracking_id = 'J[XY]\d{10}'
 text = ["jet.co.id"]

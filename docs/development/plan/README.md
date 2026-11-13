@@ -23,7 +23,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     `label-data\config.toml` and `parser.toml`; add an account on the Accounts
     screen and see it in `config.toml`; answer a logo and see it in `parser.toml`.
   - **Where to answer**: findings into [reviews/ui.md](../../reviews/ui.md) as the next `R-UI-<n>`.
-  - The version number is unchanged (0.5.0); the owner may want 0.6.0 for the new layout.
+  - Version 0.6.0. The sample data in `target/portable/Packing/` was cleared; the bundled courier code of J&T Express is `jnt-express`.
 
 - **Handoff of 2026-11-12 (second) — the owner's eight screen findings and the Grab Express label;
   version 0.5.0 rebuilt.** The owner's words in chat, built and pushed:

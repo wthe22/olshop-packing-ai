@@ -4,7 +4,7 @@ The start screen: what has been saved on the open date, for every account, and t
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [☰] Packing v0.5                             [Search] [Accounts] [Sort rules] [Settings]│
+│ [☰] Packing v0.6                             [Search] [Accounts] [Sort rules] [Settings]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  Wed, 7 Oct 2026 (today) (2 batches) (729 orders) (5 group PDFs)  [Day summary] [+ New batch]│
 │                                                                                        │

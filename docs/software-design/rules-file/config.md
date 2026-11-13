@@ -10,7 +10,7 @@ written, edited and checked. Its courier filters name the couriers of [`parser.t
 Root {
   schema: String // X.Y version, starts at 1.0
   accounts: List<Account> // in the order they were made; missing: none
-  label_sort_rules: List<LabelSortRule>
+  label_sort_rules: List<LabelSortRule> // missing: the built-in rule `default`
 }
 
 Account {
@@ -77,7 +77,8 @@ name = "Lainnya"
 - A sort rule's groups apply in file order; an order goes to the **first** group whose filter matches
   ([groups](../labels/groups.md)). `'…'` is a TOML literal string and `'''…'''` spans lines, so the
   filter's double quotes need no escaping.
-- The bundled copy holds one rule, `default`, with one group `Z Lainnya` and no filter.
+- The bundled copy holds no rule. A config with none stands in with the built-in rule `default`: one group
+  `Z Lainnya`, no filter, for every order. It is written into the file when the owner first edits the rules.
 - **Which rule a batch uses** is chosen on [New batch](../ui/new-batch.md#the-sort-rule) among the rules
   that are on; the rule of the data folder's newest batch, on whichever date, is preselected
   ([D-RULES-1](../decisions/rules.md)).

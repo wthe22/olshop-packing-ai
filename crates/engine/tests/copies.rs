@@ -140,7 +140,7 @@ fn a_label_page_starts_a_copy_and_a_page_without_a_label_part_continues_it() {
     assert_eq!(copies[0].total_differs(), None);
     assert_eq!(copies[0].fingerprints.len(), 2);
     assert_eq!(copies[0].ship_by_date.unwrap().to_string(), "2026-10-07");
-    assert_eq!(copies[0].courier.as_ref().unwrap().as_str(), "jnt");
+    assert_eq!(copies[0].courier.as_ref().unwrap().as_str(), "jnt-express");
     assert_eq!(copies[1].courier.as_ref().unwrap().as_str(), "sicepat");
     assert_eq!((copies[1].page_start, copies[1].page_end), (3, 3));
     assert!(read.unseen_logos.is_empty());
@@ -234,7 +234,7 @@ fn the_courier_and_the_clue_that_named_it() {
             Some("JY0000000001"),
             vec![(JNT_LOGO, None)],
             &[],
-            Some("jnt"),
+            Some("jnt-express"),
             CourierClueKind::Logo,
             Some(JNT_LOGO),
         ),

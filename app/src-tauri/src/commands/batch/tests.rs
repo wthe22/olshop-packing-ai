@@ -300,6 +300,13 @@ fn the_newest_batchs_rule_is_preselected_and_its_files_are_used_in_it() {
     };
     let second = "
 [[label_sort_rules]]
+name = \"default\"
+
+[[label_sort_rules.label_groups]]
+code = \"Z\"
+name = \"Lainnya\"
+
+[[label_sort_rules]]
 name = \"harian\"
 
 [[label_sort_rules.label_groups]]

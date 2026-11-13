@@ -7,10 +7,4 @@ schema = "1.0"
 # Sort rules: a batch is sorted by the rule chosen for it. Its label groups apply in order; an
 # order goes to the FIRST group whose filter matches. A group without a filter takes every order
 # left and must be last. A rule with `enabled = false` is kept but not offered on New batch.
-
-[[label_sort_rules]]
-name = "default"
-
-[[label_sort_rules.label_groups]]
-code = "Z"
-name = "Lainnya"
+# With no rule here, a batch uses the built-in rule `default`: one group, Z Lainnya, for every order.

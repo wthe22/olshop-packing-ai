@@ -8,7 +8,7 @@ When `packing-app.toml` is missing beside the program, or names no data folder:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ◈ Packing v0.5                                                                        │
+│  ◈ Packing v0.6                                                                        │
 │  Where should Packing keep its data?                                                   │
 │  The labels, group PDFs and summary PDFs are kept there, one folder per date.          │
 │  ┌ 🗀 Next to the program ─────────────────────────────────────────────────────────┐   │
@@ -24,8 +24,8 @@ When `packing-app.toml` is missing beside the program, or names no data folder:
 - **Choose another folder** writes the chosen path, relative when it is inside the program's folder.
 - A folder that cannot be written (e.g. under `Program Files`) is refused with the reason.
 - `parser.toml` and `config.toml` are written into the folder from the bundled copies when they are
-  missing: the couriers and their clues, and one sort rule `default` whose only group takes every order,
-  with no account ([rules files](../rules-file/README.md)). A data folder that has them keeps them.
+  missing: the couriers and their clues in `parser.toml`, and a `config.toml` with no account and no sort rule (a
+  batch then uses the built-in `default`, one group that takes every order) ([rules files](../rules-file/README.md)). A data folder that has them keeps them.
 
 ## No first account
 

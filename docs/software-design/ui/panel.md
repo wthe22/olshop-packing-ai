@@ -6,7 +6,7 @@ or hides it.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [▯] ◈ Packing v0.5                            Search  Accounts  Sort rules  Settings    │
+│ [▯] ◈ Packing v0.6                            Search  Accounts  Sort rules  Settings    │
 ├──────────────────────────┬─────────────────────────────────────────────────────────────┤
 │ DATES                    │  Wed, 21 Oct 2026 (today) (2 batches) (729 orders)          │
 │ ▾ October 2026           │                                         [ + New batch ]     │

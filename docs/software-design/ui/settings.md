@@ -13,8 +13,8 @@ name and a line under it) and its control at the right.
 │ DATA                                                                                      │
 │ │ Data folder  C:Packingpacking-data                             [Open] [Change]     │ │
 │ ABOUT                                                                                     │
-│ │ ◈ Packing v0.5 — Sorts the day's label PDFs into group PDFs to print, …               │ │
-│ │ Version v0.5.0 · PDFium chromium/7881 · Journal schema 2.0, one row each                │ │
+│ │ ◈ Packing v0.6 — Sorts the day's label PDFs into group PDFs to print, …               │ │
+│ │ Version v0.6.0 · PDFium chromium/7881 · Journal schema 2.0, one row each                │ │
 └───────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -45,4 +45,4 @@ the title bar of every screen and *About*, all fed from that one place.
   version from `app/src-tauri/Cargo.toml`, which inherits the root's. `app/package.json`'s own
   `version` is npm's field: nothing shows it, and it is kept equal to the root's.
 - The `v` + version text is made in one place in the app crate. The journal's `app` field is the full
-  version (`0.5.0`).
+  version (`0.6.0`).

@@ -411,7 +411,7 @@ export const texts = {
       "name contains \"sepatu\"",
       "total_quantity = 1",
       "tracking_id starts_with \"JY\"",
-      "courier equals \"jnt\"",
+      "courier equals \"jnt-express\"",
       "courier is_empty",
       "ship_by < \"2026-10-07\"",
       "not name contains \"sepatu\" and (name contains \"spion\" or name contains \"knalpot\")",

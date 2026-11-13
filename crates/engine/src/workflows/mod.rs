@@ -32,8 +32,11 @@ pub const CONFIG_FILE: &str = "config.toml";
 
 /// The parser the program carries: the eight couriers and the channel strips that are not couriers.
 pub const BUNDLED_PARSER: &str = include_str!("../../parser.toml");
-/// The config the program carries: no account and one sort rule `default` with one group.
+/// The config the program carries: no account and no sort rule.
 pub const BUNDLED_CONFIG: &str = include_str!("../../config.toml");
+
+/// The name of the rule a config without any sort rule stands in with.
+pub const BUILT_IN_RULE: &str = "default";
 
 /// The bundled files, loaded.
 pub fn load_bundled() -> Workflows {
@@ -133,6 +136,20 @@ pub struct SortRule {
 }
 
 impl SortRule {
+    /// The rule a file without any stands in with: `default`, one group `Z Lainnya` that takes
+    /// every order.
+    pub fn built_in() -> SortRule {
+        SortRule {
+            name: BUILT_IN_RULE.to_string(),
+            enabled: true,
+            groups: vec![GroupRule {
+                code: "Z".to_string(),
+                name: "Lainnya".to_string(),
+                filter: None,
+            }],
+        }
+    }
+
     /// The rule as a saved batch keeps it.
     pub fn snapshot(&self) -> LabelSortRule {
         LabelSortRule {

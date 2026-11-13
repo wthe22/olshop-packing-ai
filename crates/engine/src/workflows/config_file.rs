@@ -100,7 +100,7 @@ impl File<'_> {
         codes: &[&CourierCode],
     ) -> Result<Vec<SortRule>, WorkflowsError> {
         if raw.is_empty() {
-            return Err(self.error_at(0, "no sort rule".to_string()));
+            return Ok(vec![SortRule::built_in()]);
         }
         let mut rules: Vec<SortRule> = Vec::new();
         for entry in raw {

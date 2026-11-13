@@ -7,7 +7,7 @@ fn the_bundled_copy_holds_eight_couriers_and_one_rule() {
     assert_eq!(
         codes,
         [
-            "jnt",
+            "jnt-express",
             "sicepat",
             "jnt-cargo",
             "idx",
@@ -44,7 +44,10 @@ fn the_bundled_copy_holds_eight_couriers_and_one_rule() {
     assert!(rule.groups[0].filter.is_none());
     assert_eq!(rule.snapshot().label_groups[0].code, "Z");
     assert_eq!(
-        workflows.courier(&CourierCode::new("jnt")).unwrap().name,
+        workflows
+            .courier(&CourierCode::new("jnt-express"))
+            .unwrap()
+            .name,
         "J&T Express"
     );
 }
@@ -169,13 +172,6 @@ fn every_check_names_its_line_and_column() {
             ),
             (7, 15),
             "not a regex",
-        ),
-        (
-            "no sort rule",
-            In::Config,
-            CONFIG_HEAD.to_string(),
-            (1, 1),
-            "no sort rule",
         ),
         (
             "every sort rule off",
@@ -353,4 +349,13 @@ fn the_design_examples_are_filters() {
     ] {
         assert!(crate::rules::parse_filter(refused).is_err(), "{refused}");
     }
+}
+
+#[test]
+fn a_config_without_a_sort_rule_stands_in_with_the_built_in_one() {
+    let workflows = loaded(PARSER_HEAD, CONFIG_HEAD);
+    let rule = workflows.sort_rule("default").expect("the built-in rule");
+    assert!(rule.enabled && rule.groups.len() == 1);
+    assert_eq!(rule.groups[0].code, "Z");
+    assert!(rule.groups[0].filter.is_none());
 }

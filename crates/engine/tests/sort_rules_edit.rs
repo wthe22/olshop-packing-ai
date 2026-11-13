@@ -8,6 +8,13 @@ use packing_engine::workflows::{
 };
 
 const HARIAN: &str = r#"
+[[label_sort_rules]]
+name = "default"
+
+[[label_sort_rules.label_groups]]
+code = "Z"
+name = "Lainnya"
+
 # The rule for the usual days.
 [[label_sort_rules]]
 name = "harian"

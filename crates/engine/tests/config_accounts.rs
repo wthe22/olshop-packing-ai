@@ -12,7 +12,9 @@ fn account(name: &str, shops: &[&str]) -> Account {
 
 #[test]
 fn accounts_are_written_before_the_sort_rules_and_the_rest_of_the_file_stays() {
-    let config = format!("{BUNDLED_CONFIG}\n# last word\n");
+    let rule = "[[label_sort_rules]]\nname = \"harian\"\n\n\
+                [[label_sort_rules.label_groups]]\ncode = \"Z\"\nname = \"Lainnya\"\n";
+    let config = format!("{BUNDLED_CONFIG}\n{rule}\n# last word\n");
     let accounts = [
         account("Toko Alfa", &["Toko Alfa", "Toko Alfa Official"]),
         account("Toko Beta", &[]),

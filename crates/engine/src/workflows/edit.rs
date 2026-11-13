@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 use toml_edit::{ArrayOfTables, DocumentMut, Item, Table};
 
-use super::{Workflows, WorkflowsError, load_workflows};
+use super::{BUILT_IN_RULE, Workflows, WorkflowsError, load_workflows};
 
 /// One label group as the screen sends it back. `origin` is its place in the rule as loaded, so
 /// its comments and an unchanged filter's text are kept; none for a group added on the screen.
@@ -83,16 +83,7 @@ pub fn add_rule(
                 copy.remove("enabled");
                 copy
             }
-            NewRule::Empty => {
-                let mut group = Table::new();
-                group.insert("code", toml_edit::value("Z"));
-                group.insert("name", toml_edit::value("Lainnya"));
-                let mut groups = ArrayOfTables::new();
-                groups.push(group);
-                let mut table = Table::new();
-                table.insert("label_groups", Item::ArrayOfTables(groups));
-                table
-            }
+            NewRule::Empty => built_in_tables().get(0).expect("the built-in rule").clone(),
         };
         table.insert("name", toml_edit::value(name));
         rules.push(table);
@@ -172,6 +163,9 @@ fn edit(
 ) -> Result<(String, Workflows), EditError> {
     load_workflows(parser, text)?;
     let mut doc = DocumentMut::from_str(text).expect("a file the rules loaded from is TOML");
+    if doc.get("label_sort_rules").is_none() {
+        doc.insert("label_sort_rules", Item::ArrayOfTables(built_in_tables()));
+    }
     let rules = doc
         .get_mut("label_sort_rules")
         .and_then(Item::as_array_of_tables_mut)
@@ -181,6 +175,21 @@ fn edit(
     let written = doc.to_string();
     let workflows = load_workflows(parser, &written)?;
     Ok((written, workflows))
+}
+
+/// The built-in rule as tables, written into a file that had no rule when an edit touches the rules.
+fn built_in_tables() -> ArrayOfTables {
+    let mut group = Table::new();
+    group.insert("code", toml_edit::value("Z"));
+    group.insert("name", toml_edit::value("Lainnya"));
+    let mut groups = ArrayOfTables::new();
+    groups.push(group);
+    let mut rule = Table::new();
+    rule.insert("name", toml_edit::value(BUILT_IN_RULE));
+    rule.insert("label_groups", Item::ArrayOfTables(groups));
+    let mut rules = ArrayOfTables::new();
+    rules.push(rule);
+    rules
 }
 
 /// The sort rules lose their place in the file, so they are written in the order of the list,

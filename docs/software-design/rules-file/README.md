@@ -32,7 +32,7 @@ classifier, account, rule name, or group code or name within a rule; a courier c
 lower-case letters, digits and `-`; a group code that is not 1–3 letters or digits; a classifier, a
 `courier equals` value or a logo answer naming no courier; a hash that is not 16 lower-case hex
 characters; a tracking-ID regex that does not compile; an account or shop name that
-[the Accounts screen would refuse](../app/accounts.md#names); no sort rule, or a rule with no group;
+[the Accounts screen would refuse](../app/accounts.md#names); a rule with no group;
 every rule off; a group with no `filter` that is not last; a filter error. A check that fails in
 `config.toml` names the rule and opens the Sort rules screen on it.
 

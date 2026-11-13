@@ -65,7 +65,7 @@ fn the_fixture_reads_into_one_copy_per_order_as_its_answer() {
         // The fixture prints no image: J&T is named by its printed site, IDX by its lettered
         // form, and SiCepat's bare-number form names nothing.
         let (code, kind) = match want["courier"].as_str().unwrap() {
-            "J&T Express" => (Some("jnt"), CourierClueKind::Text),
+            "J&T Express" => (Some("jnt-express"), CourierClueKind::Text),
             "IDX" => (Some("idx"), CourierClueKind::Form),
             _ => (None, CourierClueKind::None),
         };
