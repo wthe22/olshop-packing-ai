@@ -1,10 +1,10 @@
 use std::fs;
 
-use packing_engine::workflows::WORKFLOWS_FILE;
+use packing_engine::workflows::{CONFIG_FILE, PARSER_FILE};
 use testkit::TempDir;
 
 use super::*;
-use crate::settings::SETTINGS_FILE;
+use crate::settings::APP_FILE;
 
 #[test]
 fn the_shown_version_comes_from_one_place() {
@@ -32,20 +32,23 @@ fn explorer_gets_the_path_as_its_only_argument() {
 }
 
 #[test]
-fn a_first_start_writes_the_two_files_and_opens_the_data_folder() {
+fn a_first_start_opens_the_data_folder_and_writes_its_two_files() {
     let _guard = testkit::pdfium_lock();
     let program = TempDir::new("app-start");
     let state = AppState::new(program.path().to_path_buf());
     let info = start_information(&state).unwrap();
     assert!(info.data_folder.is_none());
     assert!(
-        program.path().join(WORKFLOWS_FILE).is_file(),
-        "the bundled rules"
+        !program.path().join(APP_FILE).exists(),
+        "nothing is written before a data folder is chosen"
     );
 
     let dir = use_folder(&state, &program.path().join(DEFAULT_DATA_DIR)).unwrap();
-    let written = fs::read_to_string(program.path().join(SETTINGS_FILE)).unwrap();
+    let written = fs::read_to_string(program.path().join(APP_FILE)).unwrap();
     assert!(written.contains("data_dir = \"packing-data\""), "{written}");
+    for file in [PARSER_FILE, CONFIG_FILE] {
+        assert!(Path::new(&dir).join(file).is_file(), "the bundled {file}");
+    }
     assert!(
         Path::new(&dir).join(".lock").is_file(),
         "its lock is taken once"
@@ -67,6 +70,6 @@ fn the_theme_and_the_data_folder_are_kept_apart_in_the_settings() {
     assert_eq!(settings::theme(program.path()).unwrap(), Theme::Dark);
     settings::set_theme(program.path(), Theme::Light).unwrap();
     assert_eq!(settings::data_dir(program.path()).unwrap(), Some(dir));
-    let written = fs::read_to_string(program.path().join(SETTINGS_FILE)).unwrap();
+    let written = fs::read_to_string(program.path().join(APP_FILE)).unwrap();
     assert!(written.contains("theme = \"light\""), "{written}");
 }

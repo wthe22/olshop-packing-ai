@@ -1,5 +1,5 @@
 //! The logo prompt (new-batch.md): the header images the rules do not know, each with the logo as
-//! printed, and the owner's answer written into `packing-workflows.toml`, after which the draft's
+//! printed, and the owner's answer written into `parser.toml`, after which the draft's
 //! copies are read again with the rules it now holds.
 
 use std::collections::HashMap;
@@ -62,7 +62,7 @@ pub(super) fn answer_logo(
     answer: &LogoAnswer,
 ) -> Result<ReadResult, String> {
     let program = state.program();
-    let (text, mut workflows) = settings::workflows(program)?;
+    let (_, mut workflows) = settings::workflows(program)?;
     let logo = match answer {
         LogoAnswer::Courier { name } => Some(LogoIs::Courier(
             workflows
@@ -76,10 +76,11 @@ pub(super) fn answer_logo(
         LogoAnswer::Skip => None,
     };
     if let Some(logo) = &logo {
-        let (written, rules) =
-            remember_logo(&text, hash, logo).map_err(|error| error.to_string())?;
-        settings::write_workflows(program, &written)?;
-        workflows = rules;
+        workflows = state.write_data(|_, _| {
+            settings::change_parser(program, |parser, config| {
+                remember_logo(parser, config, hash, logo).map_err(|error| error.to_string())
+            })
+        })?;
     }
     state.with_draft(|open| {
         match logo {

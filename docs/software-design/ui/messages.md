@@ -38,7 +38,7 @@ Every message says what happened and what to do. A **stop** ends the step with n
 
 | Kind | When | Message |
 |---|---|---|
-| Stop | `packing-workflows.toml` does not parse | **The rules file has an error:** `<line, col: message>`. Fix `packing-workflows.toml` beside the program. [Open folder] |
+| Stop | `parser.toml` or `config.toml` does not parse | **A rules file has an error:** `<file, line, col: message>`. Fix that file in the data folder. [Open folder] |
 | Stop | A sort rule's filter has an error | **Sort rule `<name>` has an error:** `<line, col: message>`. The Sort rules screen opens on it. |
 | Damage | The journal of a date is damaged, or names another date or schema | **`<date>` cannot be changed:** line `<n>` of its journal `<is damaged / names another date / is of schema x.y>`. It can be viewed; nothing is written to it. |
 | Warning | An input of a live batch is missing or changed | **`<file>`, an input of batch `<b>`, is missing or has changed.** Amend, reprint and restore cannot use it. |

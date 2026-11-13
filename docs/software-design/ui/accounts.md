@@ -24,7 +24,7 @@ of [Sort rules](sort-rules.md); **×**, a click beside it or `Esc` returns.
 
 ## The accounts
 
-- **The tabs** are the accounts of `packing-settings.toml`, in the order they were made, side by side as
+- **The tabs** are the accounts of `config.toml`, in the order they were made, side by side as
   Settings' theme choice; the account shown is raised. It opens on the first account. With none yet it says
   *No accounts yet. The first read of labels asks which account each shop belongs to.* and **+ New account**.
 - **+ New account** asks for a name in a dialog over the screen, with **Create** and **Cancel**; a name the
@@ -51,4 +51,4 @@ of [Sort rules](sort-rules.md); **×**, a click beside it or `Esc` returns.
   first. The counts come from the search index (*Loading* until it is built) and are the orders saved
   under this name.
 - **The foot** stays in view: *Unsaved changes*, **Cancel** and **Save** for the shops, as on Sort rules.
-  Save writes `packing-settings.toml` under the data folder's lock.
+  Save writes `config.toml` under the data folder's lock.

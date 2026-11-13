@@ -1,4 +1,4 @@
-// The window's theme: the owner's choice (`packing-settings.toml`) made into the light or dark
+// The window's theme: the owner's choice (`packing-app.toml`) made into the light or dark
 // colour set of `app.css` through `data-theme` on <html>. *System* follows Windows, also when
 // Windows changes while the program is open.
 

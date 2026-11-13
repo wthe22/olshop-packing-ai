@@ -16,9 +16,11 @@ The app is one folder, not an installed program.
 3. Make a shortcut to `Packing.exe` on the Desktop or the taskbar: right-click `Packing.exe` →
    *Show more options* → *Send to* → *Desktop (create shortcut)*. Start the program from the shortcut.
 
-Beside the program the app keeps two files of yours: `packing-settings.toml` (where the data is kept, and the accounts with their shops)
-and `packing-workflows.toml` (the couriers and the sort rules). Copying the whole folder to another PC
-moves the program and all its data along.
+Beside the program the app keeps one file of yours, `packing-app.toml` (where the data is kept, and the
+theme). Two more are in the data folder: `parser.toml` (the couriers and how the app tells them apart) and
+`config.toml` (the accounts with their shops, and the sort rules). Copying the whole folder to another PC
+moves the program and all its data along; pointing a second PC at the same data folder shares the accounts
+and the sort rules too.
 
 ## The first start
 

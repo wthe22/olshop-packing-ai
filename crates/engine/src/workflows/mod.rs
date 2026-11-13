@@ -1,20 +1,25 @@
-//! `packing-workflows.toml` (rules-file/README.md): the couriers, the clues that name them, the
-//! images that are not couriers, and the sort rules. One file beside the program, the owner's;
-//! the bundled copy is written when it is missing.
+//! The two files of the data folder (rules-file/README.md): `parser.toml`, the couriers, the clues
+//! that name them and the images that are not couriers, and `config.toml`, the accounts and the
+//! sort rules. Both are the owner's; a bundled copy is written when one is missing.
 
+mod accounts;
+mod config_file;
 mod edit;
 mod load;
+mod parser_file;
 mod remember;
 
 use std::fmt;
 
 use regex::Regex;
 
+use crate::accounts::Account;
 use crate::ids::CourierCode;
 use crate::label::Form;
 use crate::record::{LabelGroupRule, LabelSortRule};
 use crate::rules::Condition;
 
+pub use self::accounts::write_accounts;
 pub use self::edit::{
     EditError, GroupEdit, NewRule, add_rule, delete_rule, rename_rule, set_rule_enabled,
     write_groups,
@@ -22,11 +27,18 @@ pub use self::edit::{
 pub use self::load::load_workflows;
 pub use self::remember::{LogoIs, remember_logo};
 
-pub const WORKFLOWS_FILE: &str = "packing-workflows.toml";
+pub const PARSER_FILE: &str = "parser.toml";
+pub const CONFIG_FILE: &str = "config.toml";
 
-/// The copy the program carries: the eight couriers, the channel strips that are not couriers and
-/// one rule `default` with one group.
-pub const BUNDLED_WORKFLOWS: &str = include_str!("../../packing-workflows.toml");
+/// The parser the program carries: the eight couriers and the channel strips that are not couriers.
+pub const BUNDLED_PARSER: &str = include_str!("../../parser.toml");
+/// The config the program carries: no account and one sort rule `default` with one group.
+pub const BUNDLED_CONFIG: &str = include_str!("../../config.toml");
+
+/// The bundled files, loaded.
+pub fn load_bundled() -> Workflows {
+    load_workflows(BUNDLED_PARSER, BUNDLED_CONFIG).expect("the bundled files load")
+}
 
 #[derive(Clone, Debug)]
 pub struct Workflows {
@@ -34,6 +46,8 @@ pub struct Workflows {
     pub classifiers: Vec<Classifier>,
     /// Header images answered *Not a courier*, by their byte hash.
     pub not_courier_logos: Vec<String>,
+    /// In the order they were made.
+    pub accounts: Vec<Account>,
     pub sort_rules: Vec<SortRule>,
 }
 
@@ -151,9 +165,10 @@ pub struct Filter {
     pub condition: Condition,
 }
 
-/// A check of `packing-workflows.toml` that failed, at its line and column in the file.
+/// A check of `parser.toml` or `config.toml` that failed, at its line and column in the file.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WorkflowsError {
+    pub file: &'static str,
     pub line: usize,
     pub col: usize,
     pub message: String,
@@ -163,8 +178,8 @@ impl fmt::Display for WorkflowsError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{WORKFLOWS_FILE}, line {}, col {}: {}",
-            self.line, self.col, self.message
+            "{}, line {}, col {}: {}",
+            self.file, self.line, self.col, self.message
         )
     }
 }

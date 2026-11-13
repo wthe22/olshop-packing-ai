@@ -70,8 +70,8 @@ its **tracking ID**. A logo the app has not seen is asked about once, before the
 **Which courier is this logo?**, the logo as printed and "4 pages · 4 orders", then a button per
 courier, **Not a courier**, **I don't know** and **Skip all**.
 
-- **A courier name** names those orders and is remembered in `packing-workflows.toml`, beside the
-  program.
+- **A courier name** names those orders and is remembered in `parser.toml`, in the
+  data folder.
 - **Not a courier** is for a buying channel's strip (`TikTok Shop`, `Shopee`, …); it is remembered too.
   The known strips are already in the file. An instant (same-day) label is named by its tag (`GKS`
   Gojek, `Sameday` or `Same-day` Grab), so its strip is never asked about.
@@ -93,7 +93,7 @@ listed yet.", and one row per shop name read.
   on those labels.
 - Labels that show no shop name are listed by file ("2 of 85 orders") with an account for this read only.
 - **Continue** is off until every row has an account, then remembers every answered shop in
-  `packing-settings.toml`: it is never asked again. **Back** (or `Esc`) returns to the file list and
+  `config.toml`: it is never asked again. **Back** (or `Esc`) returns to the file list and
   remembers nothing.
 
 ### Repeated orders

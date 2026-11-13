@@ -34,7 +34,7 @@ The batch's orders count as unsaved again, and the next batch takes its number. 
 For "a filter was wrong, do the last batch again":
 
 1. Its inputs are read again from `input/`, in the recorded order, with the sort rule of the same name as
-   it is now in `packing-workflows.toml`, or the batch's snapshot when no rule has that name
+   it is now in `config.toml`, or the batch's snapshot when no rule has that name
    ([D-RULES-2](../decisions/rules.md)). The guard (step 7) leaves the batch's own orders out of the
    saved set; each repeat's kept copy is preselected from the record.
 2. **Back** shows the amend's file list: the owner may add files from anywhere and take files off; a file

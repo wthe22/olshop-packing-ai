@@ -8,7 +8,7 @@ use packing_store::StoreError;
 #[derive(Debug)]
 pub enum CliError {
     Usage(String),
-    /// `packing-settings.toml` or `packing-workflows.toml` cannot be used.
+    /// `packing-app.toml`, `parser.toml` or `config.toml` cannot be used.
     Program(String),
     /// Orders whose shop no account lists, and no `--account` to put them under.
     Accounts(String),

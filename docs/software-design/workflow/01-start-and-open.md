@@ -2,20 +2,20 @@
 
 ## 1. Start
 
-1. **Data folder.** Read `packing-settings.toml` beside the program; `data_dir` is absolute or relative to
+1. **Data folder.** Read `packing-app.toml` beside the program; `data_dir` is absolute or relative to
    the program's folder. Missing: the [Start](../ui/start.md) screen asks once (**Use `Packing\packing-data`** or
    **Choose a folder**) and writes the file.
-2. **Rules.** Read `packing-workflows.toml` beside the program; missing: write the bundled copy. Run its
-   checks ([rules file](../rules-file/README.md#checks)).
-3. **Writable.** Open `{data_dir}/.lock`: a folder that cannot be written stops here. Another copy of the
+2. **Writable.** Open `{data_dir}/.lock`: a folder that cannot be written stops here. Another copy of the
    app using the folder is no stop; the lock is taken only for a write ([data](../data/README.md#one-writer)).
+3. **Rules.** Read `parser.toml` and `config.toml` of the data folder; a missing one is written from the
+   bundled copy. Run their checks ([rules files](../rules-file/README.md#loading)).
 4. **Older data.** If the data folder holds data of v0.1 or v0.4, the Day screen will say so; nothing of it
    is read, changed or deleted ([accounts](../app/accounts.md#data-of-older-versions)).
-5. **Accounts.** Read `accounts` of `packing-settings.toml` ([accounts](../app/accounts.md#the-accounts-file));
+5. **Accounts.** Read `accounts` of `config.toml` ([accounts](../app/accounts.md#the-accounts-file));
    none is no stop: the first read asks.
 6. **Search index.** Fold every journal of the data folder on its own thread ([reprint](../app/reprint.md#the-search-index)).
 
-**Stops:** `packing-workflows.toml` that does not parse (its line and column); a data folder that cannot be
+**Stops:** `parser.toml` or `config.toml` that does not parse (its name, line and column); a data folder that cannot be
 written.
 
 **Check:** is today the right date to open on?

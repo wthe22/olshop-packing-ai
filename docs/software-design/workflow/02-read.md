@@ -30,7 +30,7 @@ The worker thread opens the files in reading order and reads every page, with a 
 |---|---|
 | **Order ID** | Three searches in order: an 18-digit number starting with 5; `OrderId:` + 18 digits with whitespace removed; `No.Pesanan:` + 14 characters |
 | **Label part** | A tracking ID, or an image in the header band (top 40 pt) |
-| **Tracking ID** | A token matching a form of `packing-workflows.toml`, fully |
+| **Tracking ID** | A token matching a form of `parser.toml`, fully |
 | **Courier and clue** | Logo bytes, else appearance, against the tracking form; text where no image can be read; the tag on an instant label ([courier](../labels/courier.md)) |
 | **Ship by** | The date of `In transit by: dd/mm/yyyy hh:mm` or `Batas Kirim: dd-mm-yyyy` |
 | **Pickup code** | `Kode Pengambilan` on an instant label |
@@ -66,14 +66,14 @@ Order ID; a page that starts a copy and has no slip table (plain labels). Each n
 - **Unknown courier** and **no tracking ID** are warnings: the order is sorted normally; only a filter on
   `courier` or `tracking_id` cannot see it.
 - **An unseen header image** — a candidate whose hash is in no list — opens *Which courier is this logo?*
-  before the plan. A courier or *Not a courier* is written into `packing-workflows.toml` at once, so it is
+  before the plan. A courier or *Not a courier* is written into `parser.toml` at once, so it is
   asked once ever; *I don't know* writes nothing ([New batch](../ui/new-batch.md#the-logo-prompt)).
 
 - **The account of each copy**: the longest listed shop name found in its sender names its shop and account
   ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo prompt, *Which account?* asks about
   each sender no account lists, once per name, and each file with labels that have no sender
   ([New batch](../ui/new-batch.md#the-shop-prompt)). A shop's answer is written into
-  `packing-settings.toml` at once; a file's answer holds for this read. **Back** returns to the file list
+  `config.toml` at once; a file's answer holds for this read. **Back** returns to the file list
   ([D-APP-28](../decisions/accounts.md)).
 
 **Check:** these are warnings, not stops; the owner may disagree for *no tracking ID*. Every order has an

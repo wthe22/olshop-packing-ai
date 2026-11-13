@@ -13,7 +13,7 @@ column. Sketches show the English texts and made-up names, IDs and counts.
 | [Repeated orders](duplicates.md) | The orders that appear more than once in a batch, grouped, and the copy that stays |
 | [Plan](plan.md) | The label groups, the per-batch changes and Save |
 | [Messages](messages.md) | Every stop message and warning, and what to do |
-| [Sort rules](sort-rules.md) | The boxes editor for the sort rules of `packing-workflows.toml` |
+| [Sort rules](sort-rules.md) | The boxes editor for the sort rules of `config.toml` |
 | [Search](search.md) | Finding saved orders, their trace, and **Reprint** |
 | [Accounts](accounts.md) | One account at a time: its shops, its orders per date, rename and delete |
 | [Settings](settings.md) | The theme, the data folder and *About* |

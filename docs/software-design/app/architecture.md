@@ -45,7 +45,7 @@ is read as written, not as meant.
 | Screens | Svelte 5 + SvelteKit (static adapter) + TypeScript + Vite | Plain CSS, no component library |
 | Read, copy, write PDFs | `pdfium-render` 0.9.4 + `pdfium.dll` (bblanchon/pdfium-binaries, `chromium/7881`) | Text with positions, image bytes, page copy, the summary PDF ([D-APP-1](../decisions/app.md)) |
 | Verify PDFs | `lopdf` | The verifier's only PDF library: page objects, content streams, the summary's text |
-| TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `packing-workflows.toml`, `packing-settings.toml`, the views |
+| TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `packing-app.toml`, `parser.toml`, `config.toml`, the views |
 | JSON | `serde`, `serde_json` | The journal |
 | Dates | `jiff` | Dates of the labels, `*_time` |
 | Hashes | `xxhash-rust` (XXH3-64), `sha2` (SHA-256) | XXH3-64: logo and shape hashes, page fingerprints and digests, the journal's seals. SHA-256: input and output files, so a file's name is its content |

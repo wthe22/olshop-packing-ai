@@ -23,11 +23,11 @@ USAGE:
 OPTIONS:
   --labels <file>...      One or more label PDFs of this batch (prepare, dump)
   --day YYYY-MM-DD        The date to work on (default: today)
-  --data <dir>            The data folder, holding one folder per date (default: the `data_dir`
-                          of packing-settings.toml, else packing-data, both inside --program)
-  --program <dir>         The folder with packing-settings.toml (accounts) and
-                          packing-workflows.toml (sort rules); a missing file means no accounts
-                          and the bundled rules (default: .)
+  --data <dir>            The data folder, holding one folder per date, parser.toml (couriers)
+                          and config.toml (accounts, sort rules); a missing file means the
+                          bundled copy (default: the `data_dir` of packing-app.toml, else
+                          packing-data, both inside --program)
+  --program <dir>         The folder with packing-app.toml (default: .)
   --rule <name>           The sort rule of a new batch (default: default); an amend keeps the
                           rule its batch was made with
   --account <name>        Put every order whose shop no account lists, and every file with

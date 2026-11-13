@@ -1,5 +1,5 @@
-# The owner's rules: couriers, the clues that name them, and the sort rules.
-# Written beside the program when missing; from then on it is the owner's.
+# How labels are read: the couriers, the clues that name them, and the header images that are not
+# couriers. Written into the data folder when missing; from then on it is the owner's.
 #
 # A hash is XXH3-64 (seed 0) of an image, 16 lower-case hex characters:
 #   logos   of the image's encoded bytes (one stable value per courier asset)
@@ -86,14 +86,3 @@ instant_tags = ["Sameday", "Same-day"]
 # wordmark 800x253, TikTok Shop 326x59, tokopedia PLUS 618x78.
 [not_courier]
 logos = ["6c1340227db55be4", "c2230c3c5d8c560d", "07fea99cbec66ae7", "f2cf7019646c955b", "330b79a3b29d4646"]
-
-# Sort rules: a batch is sorted by the rule chosen for it. Its label groups apply in order; an
-# order goes to the FIRST group whose filter matches. A group without a filter takes every order
-# left and must be last. A rule with `enabled = false` is kept but not offered on New batch.
-
-[[label_sort_rules]]
-name = "default"
-
-[[label_sort_rules.label_groups]]
-code = "Z"
-name = "Lainnya"

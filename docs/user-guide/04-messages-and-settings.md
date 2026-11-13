@@ -16,7 +16,7 @@ can still be saved. The full list is in [the screens' messages](../software-desi
 | **Courier unknown** for some orders | A warning: they are sorted normally; only a filter on the courier cannot see them. |
 | **Slip total differs** | A warning: check that order's packing slip when you pack it. |
 | **`<file>` is open in another program.** | Close the PDF viewer, then press the button again. |
-| **The rules file has an error:** `<line, col: message>` | Fix `packing-workflows.toml` beside the program, or the rule in **Sort rules**. |
+| **A rules file has an error:** `<file, line, col: message>` | Fix that file (`parser.toml` or `config.toml`) in the data folder, or the rule in **Sort rules**. |
 | **Another copy of the app is still writing to the data folder** | Another PC is saving a big batch: try again in a moment. |
 | **Another copy of the app saved or reverted a batch of this date after these labels were read** | Someone else saved some of the same orders: read the labels again. |
 | **This folder also holds data of Packing v0.1** | The data of the old version stays where it is and is not read. |
@@ -40,6 +40,6 @@ Open **Settings** in the title bar. Each row is a setting at the left and its co
   and the journal's schema version.
 
 There are no other settings: the sort rule you used last is preselected, the summary PDF is
-always written, and the couriers and sort rules live in `packing-workflows.toml` beside the program.
+always written, and the couriers live in `parser.toml` and the sort rules in `config.toml`, both in the data folder.
 
 The app is in English. Every screen text is in one file, so another language can be added.

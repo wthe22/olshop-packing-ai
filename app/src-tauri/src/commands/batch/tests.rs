@@ -13,7 +13,7 @@ use packing_engine::accounts::Account;
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::orders::{LogoAnswer, UnseenLogo};
 use packing_engine::record::{PrintSent, PrintedMarked};
-use packing_engine::workflows::{BUNDLED_WORKFLOWS, WORKFLOWS_FILE};
+use packing_engine::workflows::{CONFIG_FILE, PARSER_FILE};
 use serde_json::{Value, json};
 use testkit::{PdfiumGuard, TempDir, testdata, vendor_dir};
 
@@ -306,11 +306,9 @@ name = \"harian\"
 code = \"H\"
 name = \"Harian\"
 ";
-    fs::write(
-        program.path().join(WORKFLOWS_FILE),
-        format!("{BUNDLED_WORKFLOWS}{second}"),
-    )
-    .unwrap();
+    let config = program.path().join("data").join(CONFIG_FILE);
+    let text = fs::read_to_string(&config).unwrap();
+    fs::write(&config, format!("{text}{second}")).unwrap();
     let before = sort_rules_of(&state).unwrap();
     assert_eq!(before.rules, ["default", "harian"]);
     assert_eq!(
@@ -416,7 +414,7 @@ fn a_logo_answer_is_remembered_in_the_rules_and_the_prompt_moves_on() {
         "the copies were read again with the new rules"
     );
     answer_logo(&state, "fedcba9876543210", &LogoAnswer::NotCourier).unwrap();
-    let rules = fs::read_to_string(program.path().join(WORKFLOWS_FILE)).unwrap();
+    let rules = fs::read_to_string(program.path().join("data").join(PARSER_FILE)).unwrap();
     assert!(
         rules.contains("\"39b9b7b9f61d0e7f\", \"0123456789abcdef\""),
         "{rules}"
@@ -650,7 +648,7 @@ fn a_saved_sort_rule_keeps_the_files_comments_and_the_open_plan_follows_it() {
     );
 
     save_groups(&state, "default", &spion).unwrap();
-    let file = fs::read_to_string(program.path().join(WORKFLOWS_FILE)).unwrap();
+    let file = fs::read_to_string(program.path().join("data").join(CONFIG_FILE)).unwrap();
     assert!(file.contains("# Sort rules: a batch is sorted by the rule chosen for it."));
     assert!(
         file.contains("filter = 'name contains \"spion\"'"),
@@ -754,7 +752,7 @@ fn a_shop_answer_is_written_into_the_settings_and_gives_the_orders_their_account
     assert_eq!(shown["shops"]["shops"], json!([]));
     let written = account("Toko Contoh", &["Toko Contoh", "Toko Lain"]);
     assert_eq!(settings::accounts(program.path()).unwrap(), [written]);
-    let text = fs::read_to_string(program.path().join(settings::SETTINGS_FILE)).unwrap();
+    let text = fs::read_to_string(program.path().join("data").join(CONFIG_FILE)).unwrap();
     assert!(text.contains("[[accounts]]"), "{text}");
     save(&state);
 }

@@ -30,7 +30,7 @@ A scope groups the documents of one part of the system. IDs carry it.
 | Scope | Part | Design folder |
 |---|---|---|
 | LABEL | Reading labels and packing slips, courier deduction, label groups and order contents, the summary PDF | `software-design/labels/` |
-| RULES | `packing-workflows.toml` (couriers, sort rules) and the filter language | `software-design/rules-file/` |
+| RULES | `parser.toml` (couriers) and `config.toml` (accounts, sort rules) and the filter language | `software-design/rules-file/` |
 | APP | Architecture, accounts, the data folder and the journal, save, revert and amend, the verifier, reprint, the program folder | `software-design/app/`, `software-design/data/`, `software-design/workflow/` |
 | UI | The window and every screen | `software-design/ui/` |
 
@@ -66,7 +66,7 @@ still cite old IDs (`D2`, `D24`, …); `archive/id-map.md` maps them to the new 
 | **Item line** | One product with a variation, a Seller SKU and a quantity inside an order, read from the packing slip. An item is its name and variation |
 | **Order content** | The item lines of one order as (name, variation, quantity). Orders with the same order content are packed the same way and are printed next to each other in their group PDF |
 | **Account** | One shop owner's shops: a name and the shop names its labels are sent by. Every order names its account, found from the shop on its label (an **account** on screen too) |
-| **Sort rule** | A named list of label groups in `packing-workflows.toml`; a batch is sorted by the rule chosen for it ([rules file](software-design/rules-file/README.md)) |
+| **Sort rule** | A named list of label groups in `config.toml`; a batch is sorted by the rule chosen for it ([rules file](software-design/rules-file/README.md)) |
 | **Label group** | One entry of a sort rule: a code, a name and a filter (`name contains "sepatu"`); the orders it takes are written as one **group PDF**, `2-A Sepatu x88.pdf` |
 | **Summary PDF** | The one A4 sheet set of a batch: the units to take from stock and the batch's facts |
 | **Batch** | One round of arrange shipment → download → prepare, numbered 1, 2, 3, … within a date, across accounts: one label download prepared and saved together |

@@ -7,7 +7,7 @@ together ([data](../data/README.md#the-data-folder)): a batch may hold the order
 
 | Word | Meaning |
 |---|---|
-| **Account** | A name and the shop names its labels are sent by, in `packing-settings.toml` |
+| **Account** | A name and the shop names its labels are sent by, in `config.toml` |
 | **Shop** | A name an account lists, as the label prints it after `Pengirim` ([reading](../labels/reading.md#the-sender)) |
 | **Date** | A calendar date of the data folder: one folder with its journal, inputs and outputs |
 
@@ -21,8 +21,8 @@ together ([data](../data/README.md#the-data-folder)): a batch may hold the order
 
 ## The accounts file
 
-The accounts are the key `accounts` of `packing-settings.toml` beside the program
-([data](../data/README.md#beside-the-program)), in the order they were made:
+The accounts are the key `accounts` of `config.toml` in the data folder
+([data](../data/README.md#the-files)), in the order they were made:
 
 ```toml
 [[accounts]]
@@ -37,8 +37,8 @@ shops = ["Toko Beta"]
 - Written by the Accounts screen ([Accounts](../ui/accounts.md)) and by the shop prompt, under the data
   folder's lock, each write reading the file again first so another copy's change is kept. Read when labels
   are read and by the Accounts screen; never by the fold.
-- It travels with the program folder, not with the data folder: copies started from one program folder share
-  it, and a copy on another PC keeps its own list.
+- It travels with the data folder: every copy that uses the folder shares the list ([D-APP-30](../decisions/app-features.md)),
+  and a data folder given to another PC brings its accounts.
 
 ## Names
 
@@ -85,10 +85,10 @@ shops = ["Toko Beta"]
 
 ## Data of older versions
 
-The app reads only the date folders and never changes or deletes anything else in the data folder. It says
+The app reads only the date folders and its own `parser.toml` and `config.toml`, and never changes or
+deletes anything else in the data folder. It says
 what it found, a line on the Day screen with **Open folder** ([Messages](../ui/messages.md)):
 
 - **v0.1**: `labels/`, `state.json`, `couriers.toml`, `categories.toml` or `categories/`.
 - **v0.4**: a folder not named as a date that holds a `settings.toml` or a date folder with a
-  `journal.jsonl` (a v0.4 workspace). The owner may copy its dates into this layout once with the separate
-  script of [migration](../data/migration.md).
+  `journal.jsonl` (a v0.4 workspace).

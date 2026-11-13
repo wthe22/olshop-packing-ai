@@ -169,7 +169,7 @@ pub fn answer_logo(
     logo::answer_logo(&state, &hash, &answer)
 }
 
-/// The shop prompt's *Continue*: the shops written into `packing-settings.toml` and every order
+/// The shop prompt's *Continue*: the shops written into `config.toml` and every order
 /// given its account; the read as it now is.
 #[tauri::command]
 pub fn answer_shop(state: State<'_, AppState>, answer: ShopAnswer) -> Result<ReadResult, String> {

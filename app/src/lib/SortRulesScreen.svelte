@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Sort rules: edit the sort rules of `packing-workflows.toml` without typing the filter
+  // Sort rules: edit the sort rules of `config.toml` without typing the filter
   // language. A tab per rule; the rule shown is one card, its head the rule's switch (offered on
   // New batch or not), **Rename** and **Delete rule**, its rows the label groups — a code, a
   // name and a filter built from boxes (or typed as text), with the count it takes in the open

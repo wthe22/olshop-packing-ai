@@ -15,7 +15,7 @@ use packing_engine::ids::{BatchId, PdfId};
 use packing_engine::record::{Datetime, InputPdf, LeftOutReason, Record, RecordBody, Sha256};
 use packing_engine::repeats::{Choices, sort_out};
 use packing_engine::sorting::{plan_groups, sort_batch};
-use packing_engine::workflows::{BUNDLED_WORKFLOWS, load_workflows};
+use packing_engine::workflows::load_bundled;
 use packing_pdf::read;
 use serde_json::Value;
 use testkit::{shop_accounts, testdata};
@@ -49,7 +49,7 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
         .map(|name| name.as_str().unwrap())
         .collect();
     let paths: Vec<_> = names.iter().map(|name| testdata(name)).collect();
-    let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
+    let workflows = load_bundled();
     let pages = read::read_all(
         &pdfium,
         &paths,

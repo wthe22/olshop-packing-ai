@@ -19,7 +19,7 @@ use packing_store::{DataLock, DateFolder, Journal, open_date};
 use crate::accounts::answer_unlisted;
 use crate::error::CliError;
 use crate::options::{Options, pdfium_dir};
-use crate::program::{self, Settings};
+use crate::program;
 
 const APP: &str = env!("CARGO_PKG_VERSION");
 
@@ -28,15 +28,13 @@ struct Session {
     folder: DateFolder,
     journal: Journal,
     workflows: Workflows,
-    settings: Settings,
     _lock: DataLock,
 }
 
 impl Session {
     fn open(options: &Options) -> Result<Session, CliError> {
-        let settings = Settings::load(&options.program)?;
-        let workflows = program::workflows(&options.program)?;
-        let data = settings.data_dir(&options.program, options.data.as_deref());
+        let data = program::data_dir(&options.program, options.data.as_deref())?;
+        let workflows = program::workflows(&data)?;
         let lock = DataLock::acquire(&data)?;
         let folder = DateFolder::new(&data, options.day());
         let journal = open_date(&folder)?.journal;
@@ -44,7 +42,6 @@ impl Session {
             folder,
             journal,
             workflows,
-            settings,
             _lock: lock,
         })
     }
@@ -69,7 +66,7 @@ impl Session {
             workflows: &self.workflows,
             rule,
             fold,
-            accounts: &self.settings.accounts,
+            accounts: &self.workflows.accounts,
             redo,
             cancel: Arc::new(AtomicBool::new(false)),
             progress,

@@ -1,7 +1,7 @@
 //! The packing app window back end: the app state and setup. The window commands live in
 //! [`commands`]; the batch steps they call are `packing-batch`'s.
 //!
-//! The data folder is the one `packing-settings.toml` beside the program names. Other copies of the
+//! The data folder is the one `packing-app.toml` beside the program names. Other copies of the
 //! app, on this PC or another, may use the same folder: every write holds its lock, and every read
 //! checks the journal on disk first. The open date (its journal folded) and the open draft are app
 //! state, never stored: the journal is the only truth.
@@ -164,7 +164,7 @@ impl AppState {
         }
     }
 
-    /// The folder the program runs from: `packing-settings.toml` and `packing-workflows.toml`.
+    /// The folder the program runs from: `packing-app.toml` is here.
     pub(crate) fn program(&self) -> &Path {
         &self.program
     }

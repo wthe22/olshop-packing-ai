@@ -1,4 +1,4 @@
-//! The Sort rules screen's edits written into `packing-workflows.toml` (rules-file/README.md): a
+//! The Sort rules screen's edits written into `config.toml` (rules-file/config.md): a
 //! rule's groups replaced, a rule added, renamed, switched on or off, or deleted. The file is
 //! edited through `toml_edit`, so the owner's comments stay with their tables and a filter that
 //! was not changed keeps its text exactly; every edit is loaded again before it is returned, so a
@@ -29,13 +29,15 @@ pub enum NewRule<'a> {
     CopyOf(&'a str),
 }
 
-/// The file with rule `rule`'s groups replaced by `groups`, in their order.
+/// The file with rule `rule`'s groups replaced by `groups`, in their order. Every function here
+/// takes `parser.toml`'s text too, since the file's courier filters are checked against it.
 pub fn write_groups(
+    parser: &str,
     text: &str,
     rule: &str,
     groups: &[GroupEdit],
 ) -> Result<(String, Workflows), EditError> {
-    edit(text, |rules| {
+    edit(parser, text, |rules| {
         let table = rule_table(rules, rule)?;
         let old: Vec<Table> = table
             .get("label_groups")
@@ -68,11 +70,12 @@ pub fn write_groups(
 
 /// The file with a rule `name` added after the others.
 pub fn add_rule(
+    parser: &str,
     text: &str,
     name: &str,
     from: NewRule<'_>,
 ) -> Result<(String, Workflows), EditError> {
-    edit(text, |rules| {
+    edit(parser, text, |rules| {
         let mut table = match from {
             NewRule::CopyOf(rule) => {
                 let mut copy = rule_table(rules, rule)?.clone();
@@ -98,8 +101,13 @@ pub fn add_rule(
 }
 
 /// The file with rule `rule` named `name`. Saved batches keep the name they recorded.
-pub fn rename_rule(text: &str, rule: &str, name: &str) -> Result<(String, Workflows), EditError> {
-    edit(text, |rules| {
+pub fn rename_rule(
+    parser: &str,
+    text: &str,
+    rule: &str,
+    name: &str,
+) -> Result<(String, Workflows), EditError> {
+    edit(parser, text, |rules| {
         set_text(rule_table(rules, rule)?, "name", name);
         Ok(())
     })
@@ -108,11 +116,12 @@ pub fn rename_rule(text: &str, rule: &str, name: &str) -> Result<(String, Workfl
 /// The file with rule `rule` offered on New batch or not. On is the default, so it is written as
 /// no key; off as `enabled = false`. The only rule that is on stays on.
 pub fn set_rule_enabled(
+    parser: &str,
     text: &str,
     rule: &str,
     enabled: bool,
 ) -> Result<(String, Workflows), EditError> {
-    edit(text, |rules| {
+    edit(parser, text, |rules| {
         if !enabled && only_one_on(rules, rule) {
             return Err(EditError::LastOn);
         }
@@ -127,8 +136,8 @@ pub fn set_rule_enabled(
 }
 
 /// The file without rule `rule`; the last rule, and the only one that is on, cannot go.
-pub fn delete_rule(text: &str, rule: &str) -> Result<(String, Workflows), EditError> {
-    edit(text, |rules| {
+pub fn delete_rule(parser: &str, text: &str, rule: &str) -> Result<(String, Workflows), EditError> {
+    edit(parser, text, |rules| {
         let at = rules
             .iter()
             .position(|table| table.get("name").and_then(Item::as_str) == Some(rule))
@@ -155,19 +164,34 @@ fn only_one_on(rules: &ArrayOfTables, rule: &str) -> bool {
 }
 
 /// Load, change the sort rules, write, and load again: the edit is kept only when the whole file
-/// still passes every check. The tables of the sort rules lose their place in the file, so they
-/// are written in the order of the list, after the table before them.
+/// still passes every check.
 fn edit(
+    parser: &str,
     text: &str,
     change: impl FnOnce(&mut ArrayOfTables) -> Result<(), EditError>,
 ) -> Result<(String, Workflows), EditError> {
-    load_workflows(text)?;
+    load_workflows(parser, text)?;
     let mut doc = DocumentMut::from_str(text).expect("a file the rules loaded from is TOML");
     let rules = doc
         .get_mut("label_sort_rules")
         .and_then(Item::as_array_of_tables_mut)
         .expect("the rules loaded it as an array of tables");
     change(rules)?;
+    free_positions(&mut doc);
+    let written = doc.to_string();
+    let workflows = load_workflows(parser, &written)?;
+    Ok((written, workflows))
+}
+
+/// The sort rules lose their place in the file, so they are written in the order of the list,
+/// after the table before them.
+pub(super) fn free_positions(doc: &mut DocumentMut) {
+    let Some(rules) = doc
+        .get_mut("label_sort_rules")
+        .and_then(Item::as_array_of_tables_mut)
+    else {
+        return;
+    };
     for rule in rules.iter_mut() {
         rule.set_position(None);
         if let Some(groups) = rule
@@ -179,9 +203,6 @@ fn edit(
             }
         }
     }
-    let written = doc.to_string();
-    let workflows = load_workflows(&written)?;
-    Ok((written, workflows))
 }
 
 fn rule_table<'a>(rules: &'a mut ArrayOfTables, rule: &str) -> Result<&'a mut Table, EditError> {

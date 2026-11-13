@@ -37,7 +37,7 @@ export class Shell {
   day = $state("");
   exeDir = $state("");
   dataFolder = $state<string | null>(null);
-  // The theme `packing-settings.toml` names; `+page.svelte` shows it.
+  // The theme `packing-app.toml` names; `+page.svelte` shows it.
   theme = $state<Theme>("system");
   // The program's shown version, for the title bar's brand text; the OS
   // window title is set from the same one-place text on the Rust side at start.

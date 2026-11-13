@@ -11,7 +11,7 @@ use packing_engine::sorting::{
     FileNameError, PlanGroup, REST_CODE, check_file_names, content_of, default_file_name,
     plan_groups, sort_batch, suggested_file,
 };
-use packing_engine::workflows::{Courier, Filter, load_workflows};
+use packing_engine::workflows::{Courier, Filter, Workflows, load_workflows};
 use serde_json::Value;
 use testkit::{copy, slip_line as line, testdata};
 
@@ -53,6 +53,17 @@ fn fixture_copies() -> Vec<Copy> {
         .collect()
 }
 
+/// A test's couriers and sort rules written in one text: the parser is what comes before the first
+/// sort rule, the config what follows.
+fn from_one_text(text: &str) -> Workflows {
+    let (parser, rules) = text.split_once("[[label_sort_rules]]").unwrap();
+    let config = format!(
+        "schema = \"1.0\"
+[[label_sort_rules]]{rules}"
+    );
+    load_workflows(parser, &config).unwrap()
+}
+
 /// The groups of `testdata/categories.toml` written as a v0.2 sort rule.
 const FIXTURE_RULE: &str = r#"
 schema = "1.0"
@@ -89,7 +100,7 @@ filter = 'courier equals "jnt"'
 fn the_fixture_sorts_into_the_groups_and_order_contents_of_its_answer() {
     let copies = fixture_copies();
     assert_eq!(copies.len(), 23);
-    let workflows = load_workflows(FIXTURE_RULE).unwrap();
+    let workflows = from_one_text(FIXTURE_RULE);
     let plan = plan_groups(&workflows.sort_rules[0]);
     let kept: Vec<usize> = (0..copies.len()).collect();
     let sorted = sort_batch(&copies, &kept, &plan, BatchId::new(1), &workflows.couriers);
@@ -362,7 +373,7 @@ filter = 'distinct_items = 1 and name contains "sepatu"'
     );
     printed_other.total_quantity = Some(3);
     let copies = [shopee, printed_other];
-    let workflows = load_workflows(rule).unwrap();
+    let workflows = from_one_text(rule);
     let plan = plan_groups(&workflows.sort_rules[0]);
     let sorted = sort_batch(&copies, &[0, 1], &plan, BatchId::new(1), &[]);
     let orders = |code: &str| -> Vec<&str> {

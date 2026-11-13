@@ -1,19 +1,29 @@
 # Decisions: app — features
 
-D-APP-13 to D-APP-26. Sources, data and checks are in [app.md](app.md); accounts in [accounts.md](accounts.md). Where a record names a former
+D-APP-14 to D-APP-26 and D-APP-30. Sources, data and checks are in [app.md](app.md); accounts in [accounts.md](accounts.md). Where a record names a former
 question (`Q-…`), the owner accepted its default.
 
-## D-APP-13 — packing-workflows.toml beside the program
+## D-APP-30 — Preferences beside the program; the parser and the config in the data folder
 
-**Decision.** The couriers, their clues, `not_courier` and the sort rules are one file beside the program
-(Q-APP-11). It replaces `couriers.toml`, `categories.toml` and `categories/`. A saved batch keeps a snapshot of
-the sort rule it used. The label formats (Order ID captions, slip headers) stay in code.
+**Decision.** Three files (Q-APP-11). `packing-app.toml` beside the program holds the app's preferences, the
+data folder and the theme. `parser.toml` in the data folder holds how labels are read: the couriers, their
+clues and `not_courier`. `config.toml` in the data folder holds the accounts and the sort rules. They replace
+`couriers.toml`, `categories.toml`, `categories/`, and the earlier `packing-workflows.toml` and
+`packing-settings.toml`. A saved batch keeps a snapshot of the sort rule it used. The label formats (Order ID
+captions, slip headers) stay in code.
 
-**Why.** The owner's draft; one portable file of rules. The snapshot keeps every batch traceable. The formats
-are the platforms' facts, and a new platform needs new code and tests anyway: a format language would have no
-user.
+**Why.** The owner's layout. What describes the data (the accounts, the sort rules, what the app has learned
+of the labels) travels with it, to another PC or shared by several; what describes one program (where its
+data is, its theme) stays with the program. The parser and the config change for different reasons, so a
+mistake in one never breaks the other. The snapshot keeps every batch traceable. The formats are the
+platforms' facts, and a new platform needs new code and tests anyway: a format language would have no user.
 
-**Applies to.** [rules file](../rules-file/README.md).
+**Cost accepted.** Choosing another data folder in Settings switches the accounts and the rules with it; a
+folder without the files is given the bundled copies. A broken file stops every copy that uses the folder.
+Two copies saving the same rule at once: the last save wins. The data folder holds two files that are not
+dates, which the app reads and writes.
+
+**Applies to.** [rules files](../rules-file/README.md), [data](../data/README.md#the-files).
 
 ## D-APP-14 — Reprint the labels of chosen orders
 

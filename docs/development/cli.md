@@ -20,8 +20,8 @@ data folder (one folder per date, [data/](../software-design/data/README.md)).
 |---|---|
 | `--labels <file>...` | One or more label PDFs of this batch (`prepare`, `dump`); read in file-name order |
 | `--day YYYY-MM-DD` | The date (default: today) |
-| `--data <dir>` | The data folder (default: the `data_dir` of `packing-settings.toml`, else `packing-data`, inside `--program`) |
-| `--program <dir>` | The folder with `packing-settings.toml` (the accounts) and `packing-workflows.toml` (the sort rules); a missing file means no accounts and the bundled rules; the command writes neither (default: `.`) |
+| `--data <dir>` | The data folder, which holds `parser.toml` (the couriers) and `config.toml` (the accounts and the sort rules); a missing file means the bundled copy (default: the `data_dir` of `packing-app.toml`, else `packing-data`, inside `--program`) |
+| `--program <dir>` | The folder with `packing-app.toml`; the command writes no config file (default: `.`) |
 | `--rule <name>` | The sort rule of a new batch (default: `default`) |
 | `--account <name>` | Put every order whose shop no account lists, and every file whose labels show no sender, under this account for this run only. Without it such an order stops the command and the message names the shops |
 | `--save-anyway` | Save a batch the verifier found something in, recording the findings; without it the findings stop the save |

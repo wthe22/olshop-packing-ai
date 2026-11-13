@@ -33,14 +33,15 @@ the label and its packing slip; `orders.csv` is a view the app writes.
 
 **Applies to.** [reading](../labels/reading.md), [filter language](../rules-file/conditions.md).
 
-## D-APP-6 — The courier list is part of packing-workflows.toml
+## D-APP-6 — The courier list is part of the parser file
 
-**Decision.** The courier list and the clues that name each courier are in `packing-workflows.toml`; there is
-no `couriers.toml`. This replaces D-LABEL-1 (one courier file in the data folder).
+**Decision.** The courier list and the clues that name each courier are in `parser.toml` ([D-APP-30](app-features.md)).
+This replaces D-LABEL-1 (a `couriers.toml` of its own).
 
-**Why.** The owner's choice: a separate courier file has no purpose once the workflows file exists.
+**Why.** The owner's choice: the couriers are part of how labels are read, with the logos and shapes the
+app learns.
 
-**Applies to.** [rules file](../rules-file/README.md#couriers), [courier deduction](../labels/courier.md).
+**Applies to.** [parser file](../rules-file/parser.md), [courier deduction](../labels/courier.md).
 
 ## D-APP-7 — The journal is the only truth
 

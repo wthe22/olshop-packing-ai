@@ -53,7 +53,7 @@ date       = '"' digit digit digit digit "-" digit digit "-" digit digit '"'
 - A date is written year-month-day ([D-APP-21](../decisions/app-features.md)).
 - Errors give line and column and say what is expected, e.g.
   `line 2, col 18: expected a text operator (contains, equals, starts_with, is_empty) after "name"`. Inside
-  `packing-workflows.toml` the line and column are those of the file, not of the filter text.
+  `config.toml` the line and column are those of the file, not of the filter text.
 
 ## Fields
 
@@ -66,7 +66,7 @@ date       = '"' digit digit digit digit "-" digit digit "-" digit digit '"'
 | `line_quantity` | number | item | slip | Quantity of one line |
 | `total_quantity` | number | order | slip | The units of the order: the sum of its lines' quantities, on every slip (the Shopee-style slip prints no `Qty Total`; the printed total is only checked against this sum) |
 | `distinct_items` | number | order | — | Number of lines of the order |
-| `courier` | text | order | label | The courier's **code** in `packing-workflows.toml` (`jnt`) for `equals`, its **name** (`J&T Express`) for `contains` and `starts_with`; empty when no courier is named ([courier](../labels/courier.md)) |
+| `courier` | text | order | label | The courier's **code** in `parser.toml` (`jnt`) for `equals`, its **name** (`J&T Express`) for `contains` and `starts_with`; empty when no courier is named ([courier](../labels/courier.md)) |
 | `order_id` | text | order | label | The Order ID |
 | `account` | text | order | label | The order's account: the one that lists the shop on its label, or the one the owner chose for a label with no sender |
 | `shop` | text | order | label | The listed shop name found on the label; empty when it printed no sender |
@@ -89,6 +89,6 @@ An order has several lines. A comparison on an **item** field is true when **at 
 The app shows a filter as rows of `field · operator · value` inside AND / OR boxes, picked from lists, so
 the owner rarely types ([Sort rules](../ui/sort-rules.md)); for *equals* a courier is picked by name and
 stored by code, for *contains* and *starts with* part of a name is typed; for `account` *equals* an account
-is picked from the accounts of `packing-settings.toml`, and any name can be typed.
+is picked from the accounts of `config.toml`, and any name can be typed.
 The text above is what is stored. Printing a filter always uses lowercase keywords, one space around
 operators and parentheses only where needed, so the same filter always gives the same text.

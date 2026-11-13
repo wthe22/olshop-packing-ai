@@ -52,7 +52,7 @@ The first pages say what the batch is, so the paper alone can be traced:
 | Section | Rows |
 |---|---|
 | Accounts | The batch's orders and units per account, most orders first. Only on the summary of all accounts |
-| Couriers | The batch's orders per courier, by the courier's **name** in `packing-workflows.toml` (its code when the file no longer names it), most first, *Unknown* last: *86 orders*. The count the owner hands over at the pickup |
+| Couriers | The batch's orders per courier, by the courier's **name** in `parser.toml` (its code when the file no longer names it), most first, *Unknown* last: *86 orders*. The count the owner hands over at the pickup |
 | Warnings | The read warnings. The verifier's findings come after this file is written, so they are on the Day card and in the journal, not here |
 | Inputs | Each input: the name it had, its pages, the first 12 characters of its SHA-256. Then the ledger in bold: *1000 pages read = 986 written + 14 left out (14 repeats, 0 saved earlier)* |
 | Sort rule · `<name>` | Each group: its code as the key, then *Sepatu · name contains "sepatu"* |

@@ -6,14 +6,14 @@ import type { Theme } from "../theme";
 
 export interface StartInfo {
   exe_dir: string;
-  // The data folder `packing-settings.toml` names; null until one is chosen.
+  // The data folder `packing-app.toml` names; null until one is chosen.
   data_folder: string | null;
   pdfium_ready: boolean;
   today: string;
   // The program's shown version (`v` + the version); the title bar's brand text is the program's
   // name and this.
   version: string;
-  // The theme `packing-settings.toml` names.
+  // The theme `packing-app.toml` names.
   theme: Theme;
 }
 
@@ -39,7 +39,7 @@ export const openPath = (path: string): Promise<void> =>
 export const showInFolder = (path: string): Promise<void> =>
   invoke("show_in_folder", { path });
 
-// The theme menu: stored in `packing-settings.toml`; the OS title bar follows it.
+// The theme menu: stored in `packing-app.toml`; the OS title bar follows it.
 export const setTheme = (theme: Theme): Promise<void> => invoke("set_theme", { theme });
 
 export const about = (): Promise<About> => invoke("about");

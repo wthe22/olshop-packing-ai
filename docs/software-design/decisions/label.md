@@ -51,7 +51,7 @@ frame, barcodes and QR fall outside, so a per-order code is never asked about.
 
 **Applies to.** [courier deduction](../labels/courier.md), item 1.
 
-## D-LABEL-10 — The remembered images live in packing-workflows.toml
+## D-LABEL-10 — The remembered images live in parser.toml
 
 **Decision.** A named logo is appended to its courier's `logos`; a *Not a courier* hash to `not_courier.logos`
 (Q-LABEL-7).

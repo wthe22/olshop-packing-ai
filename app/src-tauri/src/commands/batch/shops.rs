@@ -1,5 +1,5 @@
 //! The shop prompt (new-batch.md): the senders no account lists and the files with labels that show
-//! no sender; the owner's answer, its shops written into `packing-settings.toml` under the data
+//! no sender; the owner's answer, its shops written into `config.toml` under the data
 //! folder's lock and the copies given their accounts again.
 
 use std::collections::BTreeMap;

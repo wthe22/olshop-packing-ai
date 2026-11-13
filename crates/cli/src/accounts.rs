@@ -1,6 +1,6 @@
 //! The shop prompt without a prompt: orders whose shop no account lists stop the command, naming
 //! the shops, unless `--account` puts them under one account for this run. Nothing is written to
-//! `packing-settings.toml`.
+//! `config.toml`.
 
 use packing_batch::Draft;
 use packing_engine::account_questions::AccountQuestions;
@@ -41,8 +41,7 @@ pub fn answer_unlisted(
 }
 
 fn describe(questions: &AccountQuestions, draft: &Draft, quiet_ids: bool) -> String {
-    let mut text =
-        String::from("some orders have no account: list their shops in packing-settings.toml");
+    let mut text = String::from("some orders have no account: list their shops in config.toml");
     text.push_str(" or pass --account <name> to put them all under one account for this run.");
     if quiet_ids {
         text.push_str(&format!(

@@ -17,7 +17,6 @@ fresh clone of the repository, run from its root in Git Bash.
 | `pdfium.dll` | PDFium: read the page text, copy pages, write the summary PDFs ([program.md](../software-design/app/program.md)) | `chromium/7881` from bblanchon/pdfium-binaries, matching `pdfium-render` 0.9.4; fetched by `bash tools/get-pdfium.sh` into `vendor/pdfium.dll` (git-ignored), SHA256 checked, with a PowerShell fallback for the download because `curl` fails on GitHub release files on this PC |
 | `cargo-llvm-cov` | The Rust coverage measurement of `bash tools/check.sh --coverage` | 0.9.1 (`cargo install cargo-llvm-cov --locked`) |
 | `llvm-tools-preview` (rustup component) | The `llvm-cov` and `llvm-profdata` binaries `cargo-llvm-cov` calls | `rustup component add llvm-tools-preview` |
-| `xxhash` (Python package) | Only to migrate v0.4 data once: the journal seals of `tools/migrate-v0.4.py` | `py -m pip install xxhash` with Python 3.11 or later ([migration](../software-design/data/migration.md)) |
 
 ## Steps
 

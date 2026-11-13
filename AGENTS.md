@@ -52,7 +52,6 @@
 - The owner is often away and may answer a review in a new session. Whenever the next step is the
   owner's, end with a committed handoff in the status block of `docs/development/plan/README.md`: what
   to review, where to write answers, and what to do with each answer. A new session starts there.
-- Shell is Git Bash on Windows. Every tool is Rust or Node, with one exception the owner asked for:
-  `tools/migrate-v0.4.py`, a one-time v0.4 data migration run by hand, never part of the program.
+- Shell is Git Bash on Windows. Every tool is Rust or Node.
 - The owner decides open choices: put them in `docs/software-design/questions/` with options and a
   default, do not pick silently.

@@ -33,7 +33,7 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 
 ## The sort rule
 
-**Sort rule** lists the rules of `packing-workflows.toml` that are on ([rules file](../rules-file/README.md);
+**Sort rule** lists the rules of `config.toml` that are on ([rules file](../rules-file/README.md);
 a rule switched off on the Sort rules screen is not listed, [D-RULES-5](../decisions/rules.md)). The rule
 of the data folder's newest batch is preselected, on whichever date it was saved, so an owner who always
 uses one rule never touches it, and a new day starts on the rule used last. **Back** from the Plan screen
@@ -76,7 +76,7 @@ QR never are. The picture is the image as printed, and the count says how many p
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **A courier name** (the couriers of `packing-workflows.toml`) names those orders at once, and the hash is
+- **A courier name** (the couriers of `parser.toml`) names those orders at once, and the hash is
   added to that courier's `logos` ([D-LABEL-10](../decisions/label.md)): it is never asked about again.
 - **Not a courier** answers for a buying channel's strip (`tokopedia | TikTok`, `TikTok Shop`, `Shopee`, …):
   the hash goes to `not_courier.logos` and the image is never asked about again.
@@ -108,7 +108,7 @@ have no sender ([D-APP-28](../decisions/accounts.md)):
   field so a name read with wrong spaces can be put right; the field must stay a name found on those
   labels, else it says *Not on these labels* under it. Its orders and files are counted. The owner picks an
   account from the list, or **New account**, which names a new account after the shop (its name editable in
-  place). **Continue** writes every answered shop into `packing-settings.toml`, so it is never asked again; a shop
+  place). **Continue** writes every answered shop into `config.toml`, so it is never asked again; a shop
   another copy of the app listed meanwhile keeps that account.
 - **A file with labels that have no sender**: one row per file, how many of its orders show no sender, and the
   account for them, for this read only; nothing is stored.

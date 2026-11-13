@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use std::process::{Command, Output};
 
 use jiff::civil::date;
+use packing_engine::workflows::BUNDLED_CONFIG;
 use packing_store::{DateFolder, Fold, view_date};
 use testkit::{TempDir, testdata, vendor_dir};
 
@@ -33,10 +34,15 @@ struct Setup {
 impl Setup {
     fn new(tag: &str, vendor: PathBuf, settings: Option<&str>) -> Setup {
         let program = TempDir::new(tag);
-        if let Some(text) = settings {
-            fs::write(program.path().join("packing-settings.toml"), text).unwrap();
-        }
         let data = program.path().join("data");
+        if let Some(accounts) = settings {
+            fs::create_dir_all(&data).unwrap();
+            fs::write(
+                data.join("config.toml"),
+                format!("{BUNDLED_CONFIG}{accounts}"),
+            )
+            .unwrap();
+        }
         Setup {
             program,
             data,
@@ -204,7 +210,7 @@ fn an_order_of_an_unlisted_shop_stops_unless_an_account_is_given() {
             .all(|order| order.account == "Toko Alfa")
     );
     assert!(
-        !setup.program.path().join("packing-settings.toml").exists(),
+        !setup.data.join("parser.toml").exists(),
         "the run writes no settings"
     );
 }
@@ -225,9 +231,9 @@ fn what_cannot_run_is_said() {
     assert!(said.contains("no batch to amend"), "{said}");
     let said = failed(&setup.run("frobnicate", &[]));
     assert!(said.contains("unknown command"), "{said}");
-    fs::write(setup.program.path().join("packing-workflows.toml"), "[[").unwrap();
+    fs::write(setup.data.join("parser.toml"), "[[").unwrap();
     let said = failed(&run_labels(&setup, "prepare", &REPEAT, &[]));
-    assert!(said.contains("packing-workflows.toml"), "{said}");
+    assert!(said.contains("parser.toml"), "{said}");
     assert!(!setup.data.join(DAY).exists());
 }
 

@@ -33,7 +33,7 @@ on a normal day the owner checks the counts and presses **Save batch**.
   no filter (here *Z Lainnya*), else `? Uncategorised`.
 - **+ Add a group for this batch** opens a small form: code (default `X`), name, filter (the boxes editor of
   [Sort rules](sort-rules.md), with the count it would take at that position). It is added above the rest
-  row and can be moved. **Also add to the sort rule** writes it into `packing-workflows.toml` too.
+  row and can be moved. **Also add to the sort rule** writes it into `config.toml` too.
 - **Edit sort rule** opens [Sort rules](sort-rules.md) on this batch's rule; a saved change rebuilds the plan.
 - A group that takes 0 orders is grey with "0 orders — no file".
 - **File name**: suggested `{batch}-{code} {name} x{count}` ([groups](../labels/groups.md#file-names)); the

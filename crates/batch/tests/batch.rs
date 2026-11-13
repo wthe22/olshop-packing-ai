@@ -22,7 +22,7 @@ use packing_engine::account_questions::{NoSenderQuestion, ShopQuestion};
 use packing_engine::accounts::{Account, ShopAccount, add_shop};
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked};
-use packing_engine::workflows::{BUNDLED_WORKFLOWS, SortRule, Workflows, load_workflows};
+use packing_engine::workflows::{SortRule, Workflows, load_bundled};
 use packing_pdf::worker::PdfWorker;
 use packing_store::{DateFolder, Journal, Settled, input_path, open_date, partial_dir};
 use testkit::{PdfiumGuard, TempDir, shop_accounts, testdata, vendor_dir};
@@ -52,7 +52,7 @@ fn day(tag: &str) -> Option<Day> {
     Some(Day {
         journal,
         folder,
-        workflows: load_workflows(BUNDLED_WORKFLOWS).unwrap(),
+        workflows: load_bundled(),
         accounts: shop_accounts(&["Toko Contoh", "Toko Lain"]),
         worker: PdfWorker::spawn(vendor).unwrap(),
         _guard: guard,

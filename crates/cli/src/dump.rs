@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 
 use packing_engine::copies::{Copy, read_copies};
-use packing_engine::workflows::{BUNDLED_WORKFLOWS, Workflows, courier_name, load_workflows};
+use packing_engine::workflows::{Workflows, courier_name, load_bundled};
 use packing_pdf::read;
 use packing_pdf::worker::PdfWorker;
 use serde_json::{Value, json};
@@ -24,7 +24,7 @@ pub fn run(options: &Options) -> Result<(), CliError> {
 /// The files, the counts, every copy, the header images the bundled rules do not know and the
 /// read warnings, as pretty JSON.
 pub fn dump_json(worker: &PdfWorker, paths: &[PathBuf]) -> Result<String, CliError> {
-    let workflows = load_workflows(BUNDLED_WORKFLOWS).expect("the bundled rules load");
+    let workflows = load_bundled();
     let rules = workflows.clone();
     let owned = paths.to_vec();
     let pages = worker.run(move |pdfium| {

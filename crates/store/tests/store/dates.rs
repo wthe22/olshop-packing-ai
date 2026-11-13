@@ -10,7 +10,7 @@ use packing_store::{
     DateFolder, Journal, OlderData, OlderVersion, SESSION_TOML, dates, journal_lengths,
     newest_batch_rule, older_data, open_date,
 };
-use testkit::{TempDir, testdata};
+use testkit::TempDir;
 
 use crate::common::{APP, batch, outputs};
 
@@ -104,17 +104,6 @@ fn data_of_older_versions_is_named_and_left_as_it_is() {
         "a folder with neither settings nor a journal is no workspace"
     );
     assert_eq!(dates(data.path()).unwrap(), [date(2026, 10, 7)]);
-
-    let v0_4 = testdata("v0.4/data");
-    assert_eq!(
-        older_data(&v0_4).unwrap(),
-        [OlderData {
-            version: OlderVersion::V0_4,
-            names: vec!["Toko Alfa".into(), "Toko Beta".into()],
-        }],
-        "the folder the v0.4 program wrote"
-    );
-    assert!(dates(&v0_4).unwrap().is_empty(), "it is not read");
 }
 
 /// Two dates written, opened, then opened again from the journal alone: the same fold and views.

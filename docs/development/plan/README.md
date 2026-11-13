@@ -4,7 +4,26 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-12)
+## Status (2026-11-13)
+
+- **Handoff of 2026-11-13 — the config files are three: `packing-app.toml`, `parser.toml`, `config.toml`.** The
+  owner's layout ([D-APP-30](../../software-design/decisions/app-features.md)), built and pushed:
+  - `packing-app.toml` beside `Packing.exe` holds the data folder and the theme. In the data folder,
+    `parser.toml` holds the couriers and their clues, `config.toml` the accounts and the sort rules
+    ([rules files](../../software-design/rules-file/README.md)).
+  - **No conversion is built.** The program reads only the three new files; a data folder without
+    `parser.toml` and `config.toml` is given the bundled copies. The owner moves the former content by
+    hand: the data folder and theme into `packing-app.toml`; the couriers, classifiers and `not_courier`
+    of `packing-workflows.toml` into `parser.toml`; its sort rules and the `[[accounts]]` of
+    `packing-settings.toml` into `config.toml`.
+  - **What changes for the owner**: the accounts, the sort rules and the learned logos are in the data
+    folder now, so they follow it to another PC and are shared by copies on one data folder; choosing another
+    data folder in Settings switches them too (a folder without the files is given the bundled copies).
+  - **To try** in `target/portable/Packing/`: start it; the accounts and sort rules are as before; open
+    `label-data\config.toml` and `parser.toml`; add an account on the Accounts
+    screen and see it in `config.toml`; answer a logo and see it in `parser.toml`.
+  - **Where to answer**: findings into [reviews/ui.md](../../reviews/ui.md) as the next `R-UI-<n>`.
+  - The version number is unchanged (0.5.0); the owner may want 0.6.0 for the new layout.
 
 - **Handoff of 2026-11-12 (second) — the owner's eight screen findings and the Grab Express label;
   version 0.5.0 rebuilt.** The owner's words in chat, built and pushed:
@@ -22,8 +41,9 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **Grab Express on Shopee** (R-LABEL-14, `samples/2026-11-11 grab-express.pdf`): read as Grab, its
     `No. Pesanan:` and its pickup code (two digits + two letters) kept
     ([business-process 02](../../business-process/02-data-sources.md)).
-  - **The owner's step first**: the program reads the owner's own `packing-workflows.toml` beside
-    `Packing.exe`, never the bundled copy (D-APP-3). In its `courier_code = "grab"` entry the owner changes
+  - **The owner's step first**: the program reads the owner's own `parser.toml` in the data folder (a copy of
+    the former `packing-workflows.toml`, see the handoff above), never the bundled copy (D-APP-3). In its
+    `courier_code = "grab"` entry the owner changes
     `instant_tags = ["Sameday"]` to `instant_tags = ["Sameday", "Same-day"]`, saves and starts the program
     again. Without that line the order reads with no courier (a warning; it is still sorted and saved).
   - **Open question**: **Q-LABEL-13** ([questions/label.md](../../software-design/questions/label.md)):
@@ -44,11 +64,6 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     the title bar shows each account's shops and dates; Search finds an order by its shop (the *Shop* and
     *Account* fields) and shows the shop under each Order ID. The [user guide](../../user-guide/README.md) is
     current, with pictures of v0.5.0.
-  - **v0.4 data**: `tools/migrate-v0.4.py` copies a v0.4 data folder once
-    ([migration](../../software-design/data/migration.md); `py -m pip install xxhash` first, see
-    [setup](../setup.md)). Tried on the made-up `testdata/v0.4/`: both dates open without damage with the
-    same orders, the v0.4 folders are unchanged and a second run refuses. Not tried on the owner's data,
-    and the verifier was not run on the migrated dates. **Run it on a copy of the real data folder first.**
   - **Open question**: **Q-APP-18** (the saved orders of a renamed account,
     [questions/app.md](../../software-design/questions/app.md)), built with its default A: orders saved
     before keep the old name.

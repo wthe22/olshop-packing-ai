@@ -1,71 +1,63 @@
-//! The two files beside the program that the batch steps read: `packing-settings.toml` for the
-//! data folder and the accounts, `packing-workflows.toml` for the sort rules. The command line
-//! writes neither.
+//! What the batch steps read besides the labels: `packing-app.toml` beside the program for the
+//! data folder, and `parser.toml` and `config.toml` in the data folder for the couriers, the
+//! accounts and the sort rules. The command line writes none of them.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use packing_engine::accounts::Account;
-use packing_engine::workflows::{BUNDLED_WORKFLOWS, WORKFLOWS_FILE, Workflows, load_workflows};
+use packing_engine::workflows::{
+    BUNDLED_CONFIG, BUNDLED_PARSER, CONFIG_FILE, PARSER_FILE, Workflows, load_workflows,
+};
 use serde::Deserialize;
 
 use crate::error::CliError;
 
-const SETTINGS_FILE: &str = "packing-settings.toml";
+const APP_FILE: &str = "packing-app.toml";
 
-/// The data folder a program folder without a settings file uses, as the app offers it.
+/// The data folder a program folder without an app file uses, as the app offers it.
 const DEFAULT_DATA_DIR: &str = "packing-data";
 
 #[derive(Default, Deserialize)]
-pub struct Settings {
+struct AppFile {
     data_dir: Option<PathBuf>,
-    #[serde(default)]
-    pub accounts: Vec<Account>,
 }
 
-impl Settings {
-    /// The file in `program`; no accounts and the default data folder when it is missing.
-    pub fn load(program: &Path) -> Result<Settings, CliError> {
-        let path = program.join(SETTINGS_FILE);
-        match fs::read_to_string(&path) {
-            Ok(text) => toml::from_str(&text)
-                .map_err(|error| CliError::Program(format!("{SETTINGS_FILE}: {error}"))),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Settings::default()),
-            Err(error) => Err(CliError::Program(format!(
-                "cannot read {}: {error}",
-                path.display()
-            ))),
-        }
+/// The data folder: `--data`, else the one `packing-app.toml` names, else `packing-data`, a
+/// relative path taken from the program folder.
+pub fn data_dir(program: &Path, chosen: Option<&Path>) -> Result<PathBuf, CliError> {
+    if let Some(dir) = chosen {
+        return Ok(dir.to_path_buf());
     }
-
-    /// The data folder: `--data`, else the one the settings name, else `packing-data`, a relative
-    /// path taken from the program folder.
-    pub fn data_dir(&self, program: &Path, chosen: Option<&Path>) -> PathBuf {
-        match chosen {
-            Some(dir) => dir.to_path_buf(),
-            None => program.join(
-                self.data_dir
-                    .as_deref()
-                    .unwrap_or(Path::new(DEFAULT_DATA_DIR)),
-            ),
-        }
-    }
-}
-
-/// The rules in `program`; the bundled copy when the file is missing.
-pub fn workflows(program: &Path) -> Result<Workflows, CliError> {
-    let path = program.join(WORKFLOWS_FILE);
-    let text = match fs::read_to_string(&path) {
-        Ok(text) => text,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => BUNDLED_WORKFLOWS.to_string(),
-        Err(error) => {
-            return Err(CliError::Program(format!(
-                "cannot read {}: {error}",
-                path.display()
-            )));
-        }
+    let app: AppFile = match read(&program.join(APP_FILE))? {
+        Some(text) => toml::from_str(&text)
+            .map_err(|error| CliError::Program(format!("{APP_FILE}: {error}")))?,
+        None => AppFile::default(),
     };
-    load_workflows(&text).map_err(|error| CliError::Program(error.to_string()))
+    Ok(program.join(
+        app.data_dir
+            .as_deref()
+            .unwrap_or(Path::new(DEFAULT_DATA_DIR)),
+    ))
+}
+
+/// The couriers, accounts and sort rules of the data folder; a bundled copy stands in for a file
+/// that is missing.
+pub fn workflows(data: &Path) -> Result<Workflows, CliError> {
+    let parser = read(&data.join(PARSER_FILE))?.unwrap_or_else(|| BUNDLED_PARSER.to_string());
+    let config = read(&data.join(CONFIG_FILE))?.unwrap_or_else(|| BUNDLED_CONFIG.to_string());
+    load_workflows(&parser, &config).map_err(|error| CliError::Program(error.to_string()))
+}
+
+/// The file's text; none when it is not there.
+fn read(path: &Path) -> Result<Option<String>, CliError> {
+    match fs::read_to_string(path) {
+        Ok(text) => Ok(Some(text)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(CliError::Program(format!(
+            "cannot read {}: {error}",
+            path.display()
+        ))),
+    }
 }
 
 #[cfg(test)]
@@ -75,42 +67,40 @@ mod tests {
     use super::*;
 
     #[test]
-    fn a_missing_program_folder_gives_the_defaults() {
+    fn without_files_the_defaults_and_the_bundled_copies_stand_in() {
         let program = TempDir::new("cli-program-none");
-        let settings = Settings::load(program.path()).expect("settings");
-        assert!(settings.accounts.is_empty());
         assert_eq!(
-            settings.data_dir(program.path(), None),
+            data_dir(program.path(), None).unwrap(),
             program.path().join("packing-data")
         );
         let chosen = Path::new("elsewhere");
-        assert_eq!(settings.data_dir(program.path(), Some(chosen)), chosen);
-        let rules = workflows(program.path()).expect("bundled rules");
-        assert!(rules.sort_rule("default").is_some());
+        assert_eq!(data_dir(program.path(), Some(chosen)).unwrap(), chosen);
+        let rules = workflows(program.path()).expect("bundled files");
+        assert!(rules.sort_rule("default").is_some() && rules.accounts.is_empty());
     }
 
     #[test]
-    fn the_settings_name_the_data_folder_and_the_accounts() {
-        let program = TempDir::new("cli-program-settings");
-        fs::write(
-            program.path().join(SETTINGS_FILE),
-            "data_dir = \"data\"\n[[accounts]]\nname = \"Toko Alfa\"\nshops = [\"Toko Alfa Official\"]\n",
-        )
-        .unwrap();
-        let settings = Settings::load(program.path()).expect("settings");
-        assert_eq!(settings.accounts[0].shops, ["Toko Alfa Official"]);
+    fn the_app_file_names_the_data_folder_and_the_data_folder_the_accounts() {
+        let program = TempDir::new("cli-program-files");
+        fs::write(program.path().join(APP_FILE), "data_dir = \"data\"\n").unwrap();
         assert_eq!(
-            settings.data_dir(program.path(), None),
+            data_dir(program.path(), None).unwrap(),
             program.path().join("data")
         );
+        let config = format!(
+            "{BUNDLED_CONFIG}[[accounts]]\nname = \"Toko Alfa\"\nshops = [\"Toko Alfa Official\"]\n"
+        );
+        fs::write(program.path().join(CONFIG_FILE), config).unwrap();
+        let rules = workflows(program.path()).expect("files");
+        assert_eq!(rules.accounts[0].shops, ["Toko Alfa Official"]);
     }
 
     #[test]
     fn a_broken_file_is_an_error() {
         let program = TempDir::new("cli-program-broken");
-        fs::write(program.path().join(SETTINGS_FILE), "accounts = 3\n").unwrap();
-        fs::write(program.path().join(WORKFLOWS_FILE), "not a rules file").unwrap();
-        assert!(Settings::load(program.path()).is_err());
+        fs::write(program.path().join(APP_FILE), "data_dir = 3\n").unwrap();
+        fs::write(program.path().join(PARSER_FILE), "not a parser file").unwrap();
+        assert!(data_dir(program.path(), None).is_err());
         assert!(workflows(program.path()).is_err());
     }
 }

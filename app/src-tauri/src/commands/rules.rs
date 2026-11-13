@@ -1,4 +1,4 @@
-//! The Sort rules screen (sort-rules.md): the sort rules of `packing-workflows.toml`, one rule's
+//! The Sort rules screen (sort-rules.md): the sort rules of `config.toml`, one rule's
 //! groups, the live check with the counts each group takes in the open draft, and the writes — a
 //! rule's groups, a new rule, a rename, a rule switched on or off, a delete, the whole file as
 //! text. After a write the open draft's plan follows the file, keeping its per-batch changes where
@@ -133,8 +133,10 @@ pub(crate) fn check(state: &AppState, rule: &str, groups: &[GroupInput]) -> Chec
             parse_filter(filter).err().map(|error| error.to_string())
         })
         .collect();
-    let written = settings::workflows(state.program())
-        .and_then(|(text, _)| write_groups(&text, rule, &edits(groups)).map_err(|e| e.to_string()));
+    let written = settings::parser_text(state.program()).and_then(|parser| {
+        let (text, _) = settings::workflows(state.program())?;
+        write_groups(&parser, &text, rule, &edits(groups)).map_err(|e| e.to_string())
+    });
     let (general, counts) = match written {
         Ok((_, workflows)) => (
             None,
@@ -177,15 +179,25 @@ fn counts(state: &AppState, rule: &SortRule) -> Option<Vec<usize>> {
         .ok()
 }
 
-/// Write the file and let the open draft's plan follow it. `renamed` is a rule's old and new name.
+/// What an edit makes of the two files' texts: the new `config.toml` and the rules it holds.
+type Edited = Result<(String, Workflows), String>;
+
+/// Make `edit` of `config.toml` as it is now, under the data folder's lock so another copy's change
+/// to the accounts or the rules is kept. Returns the rules as they were and as they are.
+fn edit_config(
+    state: &AppState,
+    edit: impl FnOnce(&str, &str) -> Edited,
+) -> Result<(Workflows, Workflows), String> {
+    state.write_data(|_, _| settings::change_config(state.program(), edit))
+}
+
+/// Edit the file and let the open draft's plan follow it. `renamed` is a rule's old and new name.
 fn write(
     state: &AppState,
-    written: &str,
-    workflows: &Workflows,
     renamed: Option<(&str, &str)>,
+    edit: impl FnOnce(&str, &str) -> Edited,
 ) -> Result<(), String> {
-    let (_, before) = settings::workflows(state.program())?;
-    settings::write_workflows(state.program(), written)?;
+    let (before, after) = edit_config(state, edit)?;
     let _ = state.with_draft(|open| {
         let was = before.sort_rule(&open.draft.rule_name).cloned();
         if let Some((old, new)) = renamed
@@ -193,7 +205,7 @@ fn write(
         {
             open.draft.rule_name = new.to_string();
         }
-        follow(open, was.as_ref(), workflows);
+        follow(open, was.as_ref(), &after);
         Ok(())
     });
     Ok(())
@@ -269,10 +281,9 @@ pub(crate) fn save_groups(
     rule: &str,
     groups: &[GroupInput],
 ) -> Result<(), String> {
-    let (text, _) = settings::workflows(state.program())?;
-    let (written, workflows) =
-        write_groups(&text, rule, &edits(groups)).map_err(|e| e.to_string())?;
-    write(state, &written, &workflows, None)
+    write(state, None, |parser, text| {
+        write_groups(parser, text, rule, &edits(groups)).map_err(|e| e.to_string())
+    })
 }
 
 /// **+ New rule**: one group `Z Lainnya`, or a copy of `copy_from`.
@@ -290,10 +301,10 @@ pub(crate) fn new_rule(
     name: &str,
     copy_from: Option<&str>,
 ) -> Result<(), String> {
-    let (text, _) = settings::workflows(state.program())?;
     let from = copy_from.map_or(NewRule::Empty, NewRule::CopyOf);
-    let (written, workflows) = add_rule(&text, name, from).map_err(|e| e.to_string())?;
-    write(state, &written, &workflows, None)
+    write(state, None, |parser, text| {
+        add_rule(parser, text, name, from).map_err(|e| e.to_string())
+    })
 }
 
 /// **Rename**: saved batches keep the name they recorded.
@@ -303,9 +314,9 @@ pub fn rule_rename(state: State<'_, AppState>, rule: String, name: String) -> Re
 }
 
 pub(crate) fn renamed(state: &AppState, rule: &str, name: &str) -> Result<(), String> {
-    let (text, _) = settings::workflows(state.program())?;
-    let (written, workflows) = rename_rule(&text, rule, name).map_err(|e| e.to_string())?;
-    write(state, &written, &workflows, Some((rule, name)))
+    write(state, Some((rule, name)), |parser, text| {
+        rename_rule(parser, text, rule, name).map_err(|e| e.to_string())
+    })
 }
 
 /// The rule's switch: offered on New batch or not; the only rule that is on stays on. Nothing a
@@ -316,31 +327,35 @@ pub fn rule_enable(state: State<'_, AppState>, rule: String, enabled: bool) -> R
 }
 
 pub(crate) fn switched(state: &AppState, rule: &str, enabled: bool) -> Result<(), String> {
-    let (text, _) = settings::workflows(state.program())?;
-    let (written, _) = set_rule_enabled(&text, rule, enabled).map_err(|e| e.to_string())?;
-    settings::write_workflows(state.program(), &written)
+    edit_config(state, |parser, text| {
+        set_rule_enabled(parser, text, rule, enabled).map_err(|e| e.to_string())
+    })
+    .map(|_| ())
 }
 
 /// **Delete rule**; the last rule, and the only one that is on, cannot be deleted.
 #[tauri::command]
 pub fn rule_delete(state: State<'_, AppState>, rule: String) -> Result<(), String> {
-    let (text, _) = settings::workflows(state.program())?;
-    let (written, workflows) = delete_rule(&text, &rule).map_err(|e| e.to_string())?;
-    write(&state, &written, &workflows, None)
+    write(&state, None, |parser, text| {
+        delete_rule(parser, text, &rule).map_err(|e| e.to_string())
+    })
 }
 
 /// *Edit file as text*: the whole file, checked as at start.
 #[tauri::command]
-pub fn rules_check_text(text: String) -> Result<(), String> {
-    load_workflows(&text)
+pub fn rules_check_text(state: State<'_, AppState>, text: String) -> Result<(), String> {
+    let parser = settings::parser_text(state.program())?;
+    load_workflows(&parser, &text)
         .map(|_| ())
         .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
 pub fn rules_save_text(state: State<'_, AppState>, text: String) -> Result<(), String> {
-    let workflows = load_workflows(&text).map_err(|error| error.to_string())?;
-    write(&state, &text, &workflows, None)
+    write(&state, None, |parser, _| {
+        let workflows = load_workflows(parser, &text).map_err(|error| error.to_string())?;
+        Ok((text.clone(), workflows))
+    })
 }
 
 /// The boxes of a filter, from the engine's parser, so the window has no second parser.

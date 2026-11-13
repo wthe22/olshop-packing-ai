@@ -3,7 +3,7 @@
 The label is read for two clues and the courier is named **only when the two agree** (the owner's rule,
 [D-LABEL-2](../decisions/label.md)): one clue alone can be wrong, so a wrong name would need two marks of
 the label to be wrong in the same way. The clues are the owner's data: `courier_classifier` and
-`not_courier` of `packing-workflows.toml` ([rules file](../rules-file/README.md#couriers)).
+`not_courier` of `parser.toml` ([rules file](../rules-file/README.md#couriers)).
 
 1. **The logo** — the main clue. Every label prints the courier's logo as an embedded image. The
    **candidates** are the images whose whole box lies in the page's **top 40 pt**
@@ -32,7 +32,7 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    order; one layout prints it on the line under `Resi:`, so only the ID printed whole along the edges
    names it); `TSA-` + 11 digits → Anteraja (one sample page). The form must match a token, or a match in the
    whitespace-collapsed text, **fully**; it need not be repeated (the boxed layouts print it once). A form
-   the platform adds is a line of `packing-workflows.toml`, not a program change.
+   the platform adds is a line of `parser.toml`, not a program change.
 4. **Named only when the two agree.** The form gives the *candidate* couriers; the courier is named when the
    logo's courier (by its bytes, else by its appearance) is among them. A logo whose courier and form
    disagree, a logo with no form, a form with no logo, or neither → no name: `courier` stays empty and a

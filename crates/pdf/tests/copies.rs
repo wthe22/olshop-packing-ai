@@ -14,7 +14,7 @@ use packing_engine::account_questions::{
 use packing_engine::copies::{CopiesStop, read_copies};
 use packing_engine::record::CourierClueKind;
 
-use packing_engine::workflows::{BUNDLED_WORKFLOWS, load_workflows};
+use packing_engine::workflows::load_bundled;
 use packing_pdf::read;
 use serde_json::Value;
 use testkit::{shop_accounts, testdata};
@@ -25,7 +25,7 @@ fn the_fixture_reads_into_one_copy_per_order_as_its_answer() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
+    let workflows = load_bundled();
     let path = testdata("labels-slip.pdf");
     let pages = read::read_all(
         &pdfium,
@@ -100,7 +100,7 @@ fn the_plain_fixture_stops_with_no_slip() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
+    let workflows = load_bundled();
     let path = testdata("labels-plain.pdf");
     let pages = read::read_all(
         &pdfium,
@@ -122,7 +122,7 @@ fn the_repeat_inputs_ask_about_the_shop_no_account_lists() {
         eprintln!("skipped: run tools/get-pdfium.sh");
         return;
     };
-    let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
+    let workflows = load_bundled();
     let names = ["labels-repeat-1.pdf", "labels-repeat-2.pdf"];
     let paths: Vec<_> = names.iter().map(|name| testdata(name)).collect();
     let pages = read::read_all(

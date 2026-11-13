@@ -1,10 +1,10 @@
-//! The Sort rules screen's edits of `packing-workflows.toml`: the owner's comments stay, an
+//! The Sort rules screen's edits of `config.toml`: the owner's comments stay, an
 //! unchanged filter keeps its text, the groups are written in the screen's order, and an edit that
 //! fails a check changes nothing.
 
 use packing_engine::workflows::{
-    BUNDLED_WORKFLOWS, EditError, GroupEdit, NewRule, Workflows, add_rule, delete_rule,
-    load_workflows, rename_rule, set_rule_enabled, write_groups,
+    BUNDLED_CONFIG, BUNDLED_PARSER, EditError, GroupEdit, NewRule, Workflows, add_rule,
+    delete_rule, load_workflows, rename_rule, set_rule_enabled, write_groups,
 };
 
 const HARIAN: &str = r#"
@@ -32,7 +32,7 @@ name = "Lainnya"
 "#;
 
 fn file() -> String {
-    format!("{BUNDLED_WORKFLOWS}{HARIAN}")
+    format!("{BUNDLED_CONFIG}{HARIAN}")
 }
 
 fn group(code: &str, name: &str, filter: Option<&str>, origin: Option<usize>) -> GroupEdit {
@@ -52,7 +52,7 @@ fn codes(workflows: &Workflows, rule: &str) -> Vec<String> {
 #[test]
 fn a_rules_groups_are_written_in_order_with_comments_and_unchanged_filters_kept() {
     let text = file();
-    let b_filter = load_workflows(&text)
+    let b_filter = load_workflows(BUNDLED_PARSER, &text)
         .unwrap()
         .sort_rule("harian")
         .unwrap()
@@ -72,7 +72,7 @@ fn a_rules_groups_are_written_in_order_with_comments_and_unchanged_filters_kept(
         group("C", "Jok", Some("name contains \"jok\""), None),
         group("Z", "Lainnya", None, Some(2)),
     ];
-    let (written, workflows) = write_groups(&text, "harian", &groups).unwrap();
+    let (written, workflows) = write_groups(BUNDLED_PARSER, &text, "harian", &groups).unwrap();
     assert_eq!(codes(&workflows, "harian"), ["B", "A", "C", "Z"]);
     assert_eq!(
         codes(&workflows, "default"),
@@ -102,7 +102,7 @@ fn a_rules_groups_are_written_in_order_with_comments_and_unchanged_filters_kept(
             ..group.clone()
         })
         .collect();
-    let (again, _) = write_groups(&written, "harian", &as_written).unwrap();
+    let (again, _) = write_groups(BUNDLED_PARSER, &written, "harian", &as_written).unwrap();
     assert_eq!(
         again, written,
         "writing the same groups again changes nothing"
@@ -112,30 +112,32 @@ fn a_rules_groups_are_written_in_order_with_comments_and_unchanged_filters_kept(
 #[test]
 fn a_rule_is_added_renamed_and_deleted_and_the_last_one_stays() {
     let text = file();
-    let (added, workflows) = add_rule(&text, "ramadhan", NewRule::Empty).unwrap();
+    let (added, workflows) = add_rule(BUNDLED_PARSER, &text, "ramadhan", NewRule::Empty).unwrap();
     assert_eq!(codes(&workflows, "ramadhan"), ["Z"]);
-    let (copied, workflows) = add_rule(&added, "lebaran", NewRule::CopyOf("harian")).unwrap();
+    let (copied, workflows) =
+        add_rule(BUNDLED_PARSER, &added, "lebaran", NewRule::CopyOf("harian")).unwrap();
     assert_eq!(codes(&workflows, "lebaran"), ["A", "B", "Z"]);
     assert!(
         copied.contains("# The rule for the usual days."),
         "the copy leaves the original's comment where it is"
     );
-    let (renamed, workflows) = rename_rule(&copied, "lebaran", "idul fitri").unwrap();
+    let (renamed, workflows) =
+        rename_rule(BUNDLED_PARSER, &copied, "lebaran", "idul fitri").unwrap();
     assert!(workflows.sort_rule("lebaran").is_none());
     assert_eq!(codes(&workflows, "idul fitri"), ["A", "B", "Z"]);
-    let (deleted, workflows) = delete_rule(&renamed, "ramadhan").unwrap();
+    let (deleted, workflows) = delete_rule(BUNDLED_PARSER, &renamed, "ramadhan").unwrap();
     assert!(workflows.sort_rule("ramadhan").is_none());
     assert!(deleted.contains("# The rule for the usual days."));
 
     assert_eq!(
-        delete_rule(BUNDLED_WORKFLOWS, "default").unwrap_err(),
+        delete_rule(BUNDLED_PARSER, BUNDLED_CONFIG, "default").unwrap_err(),
         EditError::LastRule
     );
     assert_eq!(
-        rename_rule(&text, "minggu", "x").unwrap_err(),
+        rename_rule(BUNDLED_PARSER, &text, "minggu", "x").unwrap_err(),
         EditError::NoRule("minggu".into())
     );
-    match add_rule(&text, "harian", NewRule::Empty).unwrap_err() {
+    match add_rule(BUNDLED_PARSER, &text, "harian", NewRule::Empty).unwrap_err() {
         EditError::Check(error) => assert!(error.message.contains("a name of its own"), "{error}"),
         other => panic!("{other:?}"),
     }
@@ -146,7 +148,7 @@ fn a_rule_is_switched_off_and_on_and_one_always_stays_on() {
     let text = file();
     let on = |workflows: &Workflows, rule: &str| workflows.sort_rule(rule).unwrap().enabled;
 
-    let (off, workflows) = set_rule_enabled(&text, "default", false).unwrap();
+    let (off, workflows) = set_rule_enabled(BUNDLED_PARSER, &text, "default", false).unwrap();
     assert!(!on(&workflows, "default"));
     assert!(on(&workflows, "harian"));
     assert!(
@@ -157,26 +159,30 @@ fn a_rule_is_switched_off_and_on_and_one_always_stays_on() {
     assert_eq!(codes(&workflows, "default"), ["Z"], "its groups stay");
 
     assert_eq!(
-        set_rule_enabled(&off, "harian", false).unwrap_err(),
+        set_rule_enabled(BUNDLED_PARSER, &off, "harian", false).unwrap_err(),
         EditError::LastOn
     );
-    assert_eq!(delete_rule(&off, "harian").unwrap_err(), EditError::LastOn);
-    let (copied, workflows) = add_rule(&off, "promo", NewRule::CopyOf("default")).unwrap();
+    assert_eq!(
+        delete_rule(BUNDLED_PARSER, &off, "harian").unwrap_err(),
+        EditError::LastOn
+    );
+    let (copied, workflows) =
+        add_rule(BUNDLED_PARSER, &off, "promo", NewRule::CopyOf("default")).unwrap();
     assert!(on(&workflows, "promo"), "a copy starts on");
-    let (_, workflows) = delete_rule(&copied, "default").unwrap();
+    let (_, workflows) = delete_rule(BUNDLED_PARSER, &copied, "default").unwrap();
     assert!(
         workflows.sort_rule("default").is_none(),
         "a rule that is off can go"
     );
 
-    let (again, workflows) = set_rule_enabled(&off, "default", true).unwrap();
+    let (again, workflows) = set_rule_enabled(BUNDLED_PARSER, &off, "default", true).unwrap();
     assert!(on(&workflows, "default"));
     assert!(
         !again.contains("name = \"default\"\nenabled"),
         "on is written as no key at all"
     );
     assert_eq!(
-        set_rule_enabled(&text, "minggu", true).unwrap_err(),
+        set_rule_enabled(BUNDLED_PARSER, &text, "minggu", true).unwrap_err(),
         EditError::NoRule("minggu".into())
     );
 }
@@ -188,7 +194,7 @@ fn an_edit_that_fails_a_check_names_its_place_and_returns_nothing() {
         group("Z", "Lainnya", None, Some(2)),
         group("A", "Sepatu", Some("name contains \"sepatu\""), Some(0)),
     ];
-    match write_groups(&text, "harian", &rest_not_last).unwrap_err() {
+    match write_groups(BUNDLED_PARSER, &text, "harian", &rest_not_last).unwrap_err() {
         EditError::Check(error) => {
             assert!(
                 error.message.contains("no filter but is not the last"),
@@ -203,7 +209,7 @@ fn an_edit_that_fails_a_check_names_its_place_and_returns_nothing() {
         group("Z", "Lainnya", None, Some(2)),
     ];
     assert!(matches!(
-        write_groups(&text, "harian", &bad_filter),
+        write_groups(BUNDLED_PARSER, &text, "harian", &bad_filter),
         Err(EditError::Check(_))
     ));
 }

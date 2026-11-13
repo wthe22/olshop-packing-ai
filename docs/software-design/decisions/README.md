@@ -9,7 +9,7 @@ reused. A decision that changes gets a new record that names the one it replaces
 | File | Records |
 |---|---|
 | [app.md](app.md) | D-APP-1, D-APP-3, D-APP-4, D-APP-6 to D-APP-12: PDFium, the schema version, order data from the labels, the courier list, the journal, views, one writer, inputs by content, outputs, the verifier |
-| [app-features.md](app-features.md) | D-APP-13 to D-APP-16, D-APP-18 to D-APP-23, D-APP-26: the rules file's place, reprint, the search index, the summary PDF, findings stop the save, amend, item identity, ship-by date, repeats, Print and the Sent mark |
+| [app-features.md](app-features.md) | D-APP-14 to D-APP-16, D-APP-18 to D-APP-23, D-APP-26, D-APP-30: the three config files' places, reprint, the search index, the summary PDF, findings stop the save, amend, item identity, ship-by date, repeats, Print and the Sent mark |
 | [accounts.md](accounts.md) | D-APP-27 to D-APP-29: accounts replace workspaces, an order's account from its shop, an account's summary on request |
 | [label.md](label.md) | D-LABEL-2, D-LABEL-4 to D-LABEL-6, D-LABEL-9 to D-LABEL-15, D-LABEL-21: two clues, remembered images, the Shopee-style label, appearance hash, the header band, copies, page identities, the courier clue, order contents, instant labels by their tag |
 | [summaries.md](summaries.md) | D-LABEL-16, D-LABEL-19, D-LABEL-20, D-LABEL-23: the summary PDF's parts, one row everywhere and couriers by name, the day summary as the Day cards, its inputs and its order contents by most orders |

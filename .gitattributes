@@ -7,6 +7,3 @@ testdata/*.pdf binary
 
 # Expected views are compared byte for byte
 crates/store/tests/store/expected/* -text
-
-# The v0.4 data folder of the migration test: journals are sealed and inputs named by SHA-256
-testdata/v0.4/** -text

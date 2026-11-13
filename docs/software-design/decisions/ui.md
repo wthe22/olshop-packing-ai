@@ -52,7 +52,7 @@ there is no check of saved files for repeats (Q-UI-8).
 ## D-UI-8 — The theme is the owner's choice, in Settings
 
 **Decision.** Settings › **Theme** offers **Light**, **Dark** and **System** (Windows' own, the default); the
-title bar has no theme menu (R-UI-31). The choice is `theme` in `packing-settings.toml`; every screen and every
+title bar has no theme menu (R-UI-31). The choice is `theme` in `packing-app.toml`; every screen and every
 control (text boxes, lists, ticks, radio buttons) follows it, and so does the OS title bar. It replaces D-UI-7,
 which put the menu in the title bar.
 

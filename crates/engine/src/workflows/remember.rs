@@ -1,4 +1,4 @@
-//! The logo prompt's answers written into `packing-workflows.toml` (courier.md): a logo the owner
+//! The logo prompt's answers written into `parser.toml` (courier.md): a logo the owner
 //! names goes into that courier's classifier, an image answered *Not a courier* into
 //! `not_courier`. The file is edited through `toml_edit`, so the owner's comments and every entry
 //! the answer does not touch stay as they were.
@@ -17,14 +17,15 @@ pub enum LogoIs {
     NotCourier,
 }
 
-/// The file's text with the image's byte hash remembered, and the rules it now holds. A hash
-/// already remembered changes nothing; a courier without a classifier gets one.
+/// The parser's text with the image's byte hash remembered, and the rules it now holds with
+/// `config`. A hash already remembered changes nothing; a courier without a classifier gets one.
 pub fn remember_logo(
     text: &str,
+    config: &str,
     hash: &str,
     logo: &LogoIs,
 ) -> Result<(String, Workflows), WorkflowsError> {
-    load_workflows(text)?;
+    load_workflows(text, config)?;
     let mut doc = DocumentMut::from_str(text).expect("a file the rules loaded from is TOML");
     match logo {
         LogoIs::Courier(code) => {
@@ -55,7 +56,7 @@ pub fn remember_logo(
         }
     }
     let written = doc.to_string();
-    let workflows = load_workflows(&written)?;
+    let workflows = load_workflows(&written, config)?;
     Ok((written, workflows))
 }
 

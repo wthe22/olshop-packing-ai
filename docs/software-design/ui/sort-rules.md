@@ -1,6 +1,6 @@
 # Sort rules
 
-Edit the sort rules of `packing-workflows.toml` ([rules file](../rules-file/README.md)) without typing the
+Edit the sort rules of `config.toml` ([rules file](../rules-file/README.md)) without typing the
 filter language: each filter is made from boxes. A text view is there for typing a filter instead.
 
 ```
@@ -94,9 +94,9 @@ The rule shown is one card: its head is the rule, its rows the groups.
 
 The foot stays at the bottom of the screen, in view while the groups scroll.
 
-- **Edit file as text** shows the whole of `packing-workflows.toml` (comments included) for larger edits;
+- **Edit file as text** shows the whole of `config.toml` (comments included) for larger edits;
   the same checks apply, and the foot's **Cancel** returns to the card.
 - *Unsaved changes* shows once a group differs from the file. **Save** is possible only then, and only
-  when every group is valid. It writes `packing-workflows.toml`, comments kept, and the open draft's plan
+  when every group is valid. It writes `config.toml`, comments kept, and the open draft's plan
   is rebuilt; per-batch changes on the Plan screen are kept where they still apply. **Cancel** (and the
   **×**, a click beside the screen, `Esc`) closes without saving.

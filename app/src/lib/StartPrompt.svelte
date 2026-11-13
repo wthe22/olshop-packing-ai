@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The Start prompt: shown at every start until `packing-settings.toml` beside the program names
+  // The Start prompt: shown at every start until `packing-app.toml` beside the program names
   // the data folder.
   import { texts } from "../texts";
   import Icon from "./Icon.svelte";

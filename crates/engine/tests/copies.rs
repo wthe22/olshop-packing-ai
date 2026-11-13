@@ -6,7 +6,7 @@ use packing_engine::ids::OrderId;
 use packing_engine::orders::PageItem;
 use packing_engine::record::CourierClueKind;
 use packing_engine::text::{LogoImage, PageText, Run};
-use packing_engine::workflows::{BUNDLED_WORKFLOWS, Workflows, load_workflows};
+use packing_engine::workflows::{Workflows, load_bundled};
 
 const JNT_LOGO: &str = "39b9b7b9f61d0e7f";
 const SICEPAT_LOGO: &str = "cf33ed60daa291b1";
@@ -18,7 +18,7 @@ const TOKOPEDIA_STRIP: &str = "6c1340227db55be4";
 const TIKTOK_STRIP: &str = "f2cf7019646c955b";
 
 fn workflows() -> Workflows {
-    load_workflows(BUNDLED_WORKFLOWS).unwrap()
+    load_bundled()
 }
 
 fn run(x: f64, y: f64, text: &str) -> Run {

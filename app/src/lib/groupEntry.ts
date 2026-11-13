@@ -1,4 +1,4 @@
-// One label group as the Sort rules screen edits it: the values `packing-workflows.toml` holds
+// One label group as the Sort rules screen edits it: the values `config.toml` holds
 // plus the state of the row that shows it, and the conversion of its filter between the boxes and
 // the printer's text.
 

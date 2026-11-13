@@ -1,4 +1,4 @@
-//! The Accounts screen (ui/accounts.md): the accounts of `packing-settings.toml`, made, renamed,
+//! The Accounts screen (ui/accounts.md): the accounts of `config.toml`, made, renamed,
 //! given their shops and deleted under the data folder's lock, and one account's dates from the
 //! search index.
 

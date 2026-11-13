@@ -18,7 +18,7 @@ use packing_engine::ids::{BatchId, PdfId};
 use packing_engine::record::{BatchSaved, Datetime, InputPdf, OutputFile, RecordBody};
 use packing_engine::repeats::{Choices, sort_out};
 use packing_engine::sorting::{plan_groups, sort_batch};
-use packing_engine::workflows::{BUNDLED_WORKFLOWS, load_workflows};
+use packing_engine::workflows::load_bundled;
 use packing_pdf::summary_pdf::{SummaryFacts, write_summary};
 use packing_pdf::{read, write};
 use packing_store::{DateFolder, Journal, encode_line, input_path, sha256_of, store_input};
@@ -39,7 +39,7 @@ struct Draft {
 fn draft(pdfium: &Pdfium, data: &Path) -> Draft {
     let folder = DateFolder::new(data, date(2026, 10, 8));
     let paths: Vec<PathBuf> = INPUTS.iter().map(|name| testdata(name)).collect();
-    let workflows = load_workflows(BUNDLED_WORKFLOWS).unwrap();
+    let workflows = load_bundled();
     let pages = read::read_all(
         pdfium,
         &paths,

@@ -1,5 +1,0 @@
-pdf_num,page_start,page_end,order_id,tracking_id,courier_code,courier_clue,content_id,skus,total_quantity,ship_by_date,pickup_code,batch_id,group_code
-1,6,6,580000000000000103,000000000203,,,1,SELL-JOK-01,1,2026-10-08,,1,Z
-2,2,2,580000000000000104,TKP0000000204,idx,form,2,,2,2026-10-08,,1,Z
-1,1,1,580000000000000101,JY0000000201,jnt,text,3,SELL-SEP-01,1,2026-10-08,,1,Z
-1,2,3,580000000000000102,JY0000000202,jnt,text,4,SELL-SPI-01,1,2026-10-08,,1,Z

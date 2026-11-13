@@ -24,7 +24,7 @@ Only the newest batch of a date can be changed — a later batch depends on the 
 ![The Sort rules screen](images/07-sort-rules.png)
 
 **Sort rules** in the title bar, or **Edit sort rule** on the Plan screen, opens the sort rules of
-`packing-workflows.toml`, the file beside the program. A sort rule is a list of label groups in order: an
+`config.toml`, a file in the data folder. A sort rule is a list of label groups in order: an
 order goes to the first group whose filter matches; the last group has no filter and takes the rest.
 
 - **The tabs** at the top are your rules; click one to show it (from the Plan screen it opens on the
@@ -77,7 +77,7 @@ click beside it or `Esc` closes it.
   finds them; its shops are asked about again at the next read.
 - **Shops** are the names its labels are sent by: one field each, **×** takes one off, **+ Add shop**
   adds one. A name another account lists, or listed twice, is told under its field and **Save** stays off.
-  **Save** (with **Cancel** and *Unsaved changes* at the foot) writes the shops to `packing-settings.toml`;
+  **Save** (with **Cancel** and *Unsaved changes* at the foot) writes the shops to `config.toml`;
   another tab asks first before it drops unsaved changes.
 - **Dates** lists the dates with orders of this account, newest first, by month, with its orders and
   batches on each; a click opens that date on the Day screen.

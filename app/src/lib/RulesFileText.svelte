@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The whole `packing-workflows.toml` as text, comments and all, checked as it is typed. The
+  // The whole `config.toml` as text, comments and all, checked as it is typed. The
   // screen's foot holds *Cancel* and *Save*.
   import { texts } from "../texts";
 

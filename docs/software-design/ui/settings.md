@@ -21,17 +21,17 @@ name and a line under it) and its control at the right.
 | Group | Row | Control |
 |---|---|---|
 | Appearance | Theme | **Light**, **Dark** or **System** (Windows' own, the default), side by side; the chosen one raised ([D-UI-8](../decisions/ui.md)) |
-| Data | Data folder | The folder of `packing-settings.toml` + **Open** + **Change** |
+| Data | Data folder | The folder of `packing-app.toml` + **Open** + **Change** |
 | About | The program's name, version and what it does; then Version (`v0.4.0`), Built (the time the program was compiled, `2026-10-30 09:15`), PDFium and Journal schema (`2.0`) | — |
 
 There are no other settings: every other choice has one fixed default, shown where it acts
 ([D-APP-16](../decisions/app-features.md)). There is no log file: the journal of each date is the record of what was
 done ([D-UI-2](../decisions/ui.md)). The accounts and their shops are on the [Accounts](accounts.md) screen.
 
-**Theme** is shown at once and written into `packing-settings.toml`; the OS title bar follows it.
+**Theme** is shown at once and written into `packing-app.toml`; the OS title bar follows it.
 
 **Change** chooses another folder and asks "Use `<folder>` for the data from now on? The data in
-`<old folder>` stays where it is." It writes `packing-settings.toml` (a path inside the program's folder is
+`<old folder>` stays where it is." It writes `packing-app.toml` (a path inside the program's folder is
 written relative to it) and opens the folder as at start
 ([program › Start](../app/program.md#start)). A draft being prepared asks first. Nothing is moved.
 

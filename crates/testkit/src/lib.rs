@@ -13,7 +13,7 @@ use packing_engine::copies::Copy;
 use packing_engine::ids::OrderId;
 use packing_engine::record::{CourierClue, CourierClueKind};
 use packing_engine::slip::SlipLine;
-use packing_engine::workflows::{BUNDLED_WORKFLOWS, Workflows, load_workflows};
+use packing_engine::workflows::{Workflows, load_bundled};
 
 mod record;
 
@@ -27,7 +27,7 @@ pub fn vendor_dir() -> Option<PathBuf> {
 
 /// The rules the program carries: the couriers, their clues and the sort rule `default`.
 pub fn bundled_workflows() -> Workflows {
-    load_workflows(BUNDLED_WORKFLOWS).expect("the bundled rules load")
+    load_bundled()
 }
 
 /// A file in the shared `testdata/` folder.

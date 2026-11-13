@@ -1,5 +1,4 @@
-//! Start (program.md): the data folder `packing-settings.toml` names, its lock and the rules beside
-//! the program; *About*, the version, and opening a file or folder in Explorer.
+//! Start (program.md): the data folder `packing-app.toml` names, its lock and the rules in it; *About*, the version, and opening a file or folder in Explorer.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -35,7 +34,7 @@ pub(crate) fn window_title() -> String {
 pub struct StartInfo {
     /// Where the program is: a first start offers its `data` folder.
     exe_dir: String,
-    /// The data folder in use; none until `packing-settings.toml` names one.
+    /// The data folder in use; none until `packing-app.toml` names one.
     data_folder: Option<String>,
 
     /// Whether the PDFium worker started (its dll was found).
@@ -46,11 +45,10 @@ pub struct StartInfo {
     theme: Theme,
 }
 
-/// Open the data folder `packing-settings.toml` names, as at start: the rules checked, the lock
-/// taken, the search index built.
+/// Open the data folder `packing-app.toml` names, as at start: the lock taken, the rules of its
+/// two files checked, the search index built.
 pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     let program = state.program();
-    settings::workflows(program)?;
     if !state.has_data()
         && let Some(dir) = settings::data_dir(program)?
     {
@@ -69,15 +67,17 @@ pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     })
 }
 
-/// Open `dir`; a folder that cannot be written stops here.
+/// Open `dir`; a folder that cannot be written stops here, and so does a file in it that does not
+/// load (`parser.toml` and `config.toml` are written from the bundled copies when missing).
 fn open_data(state: &AppState, dir: PathBuf) -> Result<(), String> {
     let data = Data::new(dir).map_err(|error| error.to_string())?;
+    settings::workflows(state.program())?;
     state.index().rebuild(data.dir.clone());
     state.set_data(data);
     Ok(())
 }
 
-/// Write `packing-settings.toml` naming `dir` and open it; the folder in use is kept as it is.
+/// Write `packing-app.toml` naming `dir` and open it; the folder in use is kept as it is.
 pub(crate) fn use_folder(state: &AppState, dir: &Path) -> Result<String, String> {
     let dir = settings::set_data_dir(state.program(), dir)?;
     let in_use = state.with_data(|data| Ok(data.dir == dir)).unwrap_or(false);
@@ -114,7 +114,7 @@ pub(crate) fn window_theme(theme: Theme) -> Option<tauri::Theme> {
     }
 }
 
-/// The theme menu: the choice is written into `packing-settings.toml` and the OS title bar
+/// The theme menu: the choice is written into `packing-app.toml` and the OS title bar
 /// follows it.
 #[tauri::command]
 pub fn set_theme(

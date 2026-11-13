@@ -13,10 +13,10 @@ The owner of the app prepares the labels of one or more shop owners, each an **a
 
 | Term | Meaning |
 |---|---|
-| **Account** | One shop owner's shops: a name and the shop names its labels are sent by, in `packing-settings.toml`; every order names its account and shop |
+| **Account** | One shop owner's shops: a name and the shop names its labels are sent by, in `config.toml`; every order names its account and shop |
 | **Journal** | The one file of a date that holds every saved fact, for every account ([journal](data/journal.md)) |
 | **Input PDF** | A label download, stored once by its content: `input/{sha256}.pdf` |
-| **Sort rule** | A named list of label group rules in `packing-workflows.toml`; a batch is sorted by one ([rules file](rules-file/README.md)) |
+| **Sort rule** | A named list of label group rules in `config.toml`; a batch is sorted by one ([rules file](rules-file/README.md)) |
 | **Label group** | One entry of a sort rule: code, name and **filter**. Its filter takes orders from what is left; its orders are written as one **group PDF** |
 | **Group PDF** | The output of one label group: `{batch}-{code} {name} x{count}.pdf`, its orders' label pages re-ordered by **order content** ([groups](labels/groups.md)) |
 | **Summary PDF** | One per batch: the units to take from stock and a page of facts ([summary PDF](labels/summary-pdf.md)) |

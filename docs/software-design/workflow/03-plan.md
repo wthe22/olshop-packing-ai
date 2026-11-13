@@ -46,7 +46,7 @@ The batch's **sort rule** gives the label group rules in file order ([groups](..
    ([D-UI-1](../decisions/ui.md)).
 4. A group that took **no** order is dropped: no file.
 5. The owner changes the plan for this batch only: skip, move, add a one-off group, rename a file. Every
-   change repeats 1–4 on the whole plan; `packing-workflows.toml` is not touched.
+   change repeats 1–4 on the whole plan; `parser.toml` and `config.toml` is not touched.
 
 **Keeps:** I3 — an order is taken once, by the first group that matches it, and `remaining` is what the
 rest takes: no order is in two groups and none is in none.
