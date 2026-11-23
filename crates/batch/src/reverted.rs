@@ -1,29 +1,31 @@
-//! The copies of a reverted batch's PDFs the owner chose to save (05-after-save.md, step 17):
-//! its group PDFs, summary PDF and account summaries, copied before the revert's commit into
-//! `reverted/batch {n} reverted {hh.mm}/` of the date folder. Nothing reads them again.
+//! The copies of a reverted batch's PDFs the owner chose to save (05-after-save.md, step 17): its
+//! group PDFs, summary PDF and account summaries, copied before the revert's commit into a new folder
+//! `{date} batch {n} reverted {hh.mm}` of the folder the owner picked. Nothing reads them again.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use jiff::civil::Date;
 use packing_engine::ids::BatchId;
 use packing_store::{OUTPUT_DIR, StoreError};
 
 use crate::summaries::account_summaries;
 
-pub const REVERTED_DIR: &str = "reverted";
-
 /// What a revert does with the batch's PDFs.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum RevertedPdfs {
-    /// Copied into `reverted/` before they leave `output/`.
-    Save,
+    /// Copied, before they leave `output/`, into a new folder of this one.
+    Save(PathBuf),
     Discard,
 }
 
-/// Copy the batch's `outputs` that are in `output/`, and its account summaries, into a new folder of
-/// `reverted/` and return it. A copy that fails takes the folder away again.
+/// Copy the batch's `outputs` that are in the date folder `dir`'s `output/`, and its account
+/// summaries, into a new folder of `into` and return it. A copy that fails takes the folder away
+/// again.
 pub(crate) fn save_copies(
     dir: &Path,
+    into: &Path,
+    date: Date,
     batch: BatchId,
     outputs: &[String],
 ) -> Result<PathBuf, StoreError> {
@@ -33,7 +35,7 @@ pub(crate) fn save_copies(
         .filter(|path| path.is_file())
         .collect();
     sources.extend(account_summaries(dir, batch)?);
-    let target = free_folder(&dir.join(REVERTED_DIR), batch);
+    let target = free_folder(into, date, batch);
     fs::create_dir_all(&target).map_err(|error| StoreError::Io {
         path: target.clone(),
         error,
@@ -56,16 +58,16 @@ pub(crate) fn drop_copies(folder: &Path) {
     let _ = fs::remove_dir_all(folder);
 }
 
-/// `batch 2 reverted 14.05`, or with ` (2)`, ` (3)` after it when that folder is there.
-fn free_folder(reverted: &Path, batch: BatchId) -> PathBuf {
+/// `2026-11-20 batch 2 reverted 14.05`, or with ` (2)`, ` (3)` after it when that folder is there.
+fn free_folder(into: &Path, date: Date, batch: BatchId) -> PathBuf {
     let name = format!(
-        "batch {batch} reverted {}",
+        "{date} batch {batch} reverted {}",
         jiff::Zoned::now().strftime("%H.%M")
     );
-    let mut folder = reverted.join(&name);
+    let mut folder = into.join(&name);
     let mut n = 2;
     while folder.exists() {
-        folder = reverted.join(format!("{name} ({n})"));
+        folder = into.join(format!("{name} ({n})"));
         n += 1;
     }
     folder

@@ -157,6 +157,7 @@ export const accountSummaryPdf = (
 
 // *Revert* `batch`, the newest; one that is no longer the newest (another copy of the app saved
 // since) is refused. A file open in a PDF viewer stops it with the file named.
-// The folder the PDFs were saved in, inside the date folder; `null` when they were discarded.
-export const revertLast = (day: string, batch: number, pdfs: "save" | "discard"): Promise<string | null> =>
-  invoke("revert_last", { day, batch, pdfs });
+// The batch's PDFs are copied into a new folder of `saveTo`, or discarded when it is `null`; the new
+// folder, when there is one.
+export const revertLast = (day: string, batch: number, saveTo: string | null): Promise<string | null> =>
+  invoke("revert_last", { day, batch, saveTo });

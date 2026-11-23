@@ -22,7 +22,7 @@ pub use error::BatchError;
 pub use files::{ChosenFile, check_files};
 pub use reprint::{ReprintOutcome, ReprintRequest, reprint};
 pub use restore::{RestoreOutcome, RestoreRequest, restore};
-pub use reverted::{REVERTED_DIR, RevertedPdfs};
+pub use reverted::RevertedPdfs;
 pub use save::{SaveOutcome, SaveProgress, SaveRequest, SaveStage, Saved, save};
 pub use summaries::{
     AccountSummaryOutcome, AccountSummaryRequest, DAY_SUMMARY_PDF, account_summary,

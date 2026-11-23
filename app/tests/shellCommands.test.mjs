@@ -85,8 +85,10 @@ test("the data folder: the start prompt, the program folder and a change", async
 
 test("the file and printed commands reach the back end", async () => {
   let fail = "";
+  let picked = null;
   const calls = useBackend({
     ...backend(),
+    "plugin:dialog|open": () => picked,
     start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", version: "0.1" }),
     open_path: (args) => {
       if (fail === "open_path") throw "the file is gone";
@@ -100,7 +102,7 @@ test("the file and printed commands reach the back end", async () => {
     },
     revert_last: (args) => {
       if (fail === "revert_last") throw "nothing to revert";
-      return args.pdfs === "save" ? "reverted\\batch 2 reverted 14.05" : null;
+      return args.saveTo === null ? null : "D:/Kept/2026-10-07 batch 2 reverted 14.05";
     },
     restore_output: (args) => {
       if (fail === "restore_output") throw "the input is gone";
@@ -146,16 +148,22 @@ test("the file and printed commands reach the back end", async () => {
   assert.equal(shell.busy, false);
   shell.error = "";
 
-  // *Revert* asks first, then reverts the batch, its PDFs saved or discarded, and recounts the day.
+  // *Revert* asks first, then reverts the batch, its PDFs saved into a picked folder or discarded,
+  // and recounts the day. Closing the folder picker reverts nothing.
   let pressed = "cancel";
   const asked = answerQuestions(() => pressed);
   const before = calls.filter((call) => call.command === "day_overview").length;
   await shell.revert(row);
   assert.deepEqual(asked, [texts.day.askRevert(2, 2)]);
-  assert.equal(calls.some((call) => call.command === "revert_last"), false, "cancel reverts nothing");
   pressed = "ok";
   await shell.revert(row);
-  assert.equal(shell.savedMessage, texts.day.revertSaved(2, "reverted\\batch 2 reverted 14.05"), "the line names the folder");
+  assert.equal(calls.some((call) => call.command === "revert_last"), false, "cancel or a closed picker reverts nothing");
+  assert.deepEqual(calls.find((call) => call.command === "plugin:dialog|open").args, {
+    options: { directory: true, multiple: false, title: texts.day.revertFolder(2) },
+  });
+  picked = "D:/Kept";
+  await shell.revert(row);
+  assert.equal(shell.savedMessage, texts.day.revertSaved(2, "D:/Kept/2026-10-07 batch 2 reverted 14.05"), "the line names the folder");
   pressed = "other";
   shell.savedMessage = null;
   await shell.revert(row);
@@ -163,8 +171,8 @@ test("the file and printed commands reach the back end", async () => {
   assert.deepEqual(
     calls.filter((call) => call.command === "revert_last").map((call) => call.args),
     [
-      { day: "2026-10-07", batch: 2, pdfs: "save" },
-      { day: "2026-10-07", batch: 2, pdfs: "discard" },
+      { day: "2026-10-07", batch: 2, saveTo: "D:/Kept" },
+      { day: "2026-10-07", batch: 2, saveTo: null },
     ],
   );
   assert.equal(calls.filter((call) => call.command === "day_overview").length, before + 2, "the day is recounted");

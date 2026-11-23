@@ -25,8 +25,8 @@ use super::shops::answer_shop;
 use super::views::{PlanEdit, PlanView, ReadResult, SaveResultView};
 use super::{amend_start, checked, plan_view, resolve, sort_rules_of};
 use crate::commands::day::{
-    OpenView, RevertPdfs, mark_printed, mark_sent, output_bytes, overview, ready_to_open,
-    restore_file, revert, write_account_summary, write_day_summary,
+    OpenView, mark_printed, mark_sent, output_bytes, overview, ready_to_open, restore_file, revert,
+    write_account_summary, write_day_summary,
 };
 use crate::commands::panel::panel;
 use crate::commands::rules::{
@@ -221,13 +221,19 @@ fn sent_printed_amend_and_revert_go_through_the_journal() {
     assert_eq!(amended["batches"][0]["pdfs"][0]["printed"], false);
     assert_eq!(amended["batches"][0]["pdfs"][0]["sent"], Value::Null);
 
-    assert!(revert(&state, DAY, BatchId::new(2), RevertPdfs::Discard).is_err());
-    let kept = revert(&state, DAY, BatchId::new(1), RevertPdfs::Save).unwrap();
+    assert!(revert(&state, DAY, BatchId::new(2), None).is_err());
+    let picked = state.program().join("kept");
+    let kept = revert(&state, DAY, BatchId::new(1), Some(picked.clone())).unwrap();
+    let folder = PathBuf::from(kept.unwrap());
+    assert_eq!(
+        folder.parent(),
+        Some(picked.as_path()),
+        "a new folder in the one picked"
+    );
     assert!(
-        kept.is_some_and(
-            |folder| folder.starts_with("reverted") && folder.contains("batch 1 reverted ")
-        ),
-        "the folder is named from the date folder"
+        folder.join("1 summary.pdf").is_file(),
+        "{}",
+        folder.display()
     );
     assert_eq!(day(&state)["batches"], Value::Array(Vec::new()));
 }

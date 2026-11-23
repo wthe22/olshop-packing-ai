@@ -336,13 +336,15 @@ export class Shell {
     }
   };
 
-  // *Revert* the newest batch: confirm, saving its PDFs or discarding them, then revert it. Saved,
-  // the green line names their folder.
+  // *Revert* the newest batch: confirm, then revert it, its PDFs saved into a folder the owner picks
+  // (closing the picker reverts nothing) or discarded. Saved, the green line names their folder.
   revert = async (row: dayData.BatchView) => {
     const answer = await confirmBox.choose(texts.day.askRevert(row.batch, row.pdfs.length));
     if (answer === "cancel") return;
+    const saveTo = answer === "ok" ? await this.pickFolder(texts.day.revertFolder(row.batch)) : null;
+    if (answer === "ok" && saveTo === null) return;
     try {
-      const folder = await dayData.revertLast(this.day, row.batch, answer === "ok" ? "save" : "discard");
+      const folder = await dayData.revertLast(this.day, row.batch, saveTo);
       await Promise.all([this.refreshOverview(), this.refreshPanel()]);
       if (folder) this.showSaved(texts.day.revertSaved(row.batch, folder));
     } catch (e) {

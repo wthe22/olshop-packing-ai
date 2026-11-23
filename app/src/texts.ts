@@ -150,16 +150,18 @@ export const texts = {
       `Batch ${n} saved: ${count(pdfs, "group PDF", "group PDFs")} and the summary PDF.`,
     // The same line after a revert that saved the batch's PDFs: the folder, in the date folder.
     revertSaved: (n: number, folder: string) => `Batch ${n} undone. Its PDFs are in ${folder}.`,
+    // The title of the folder picker after *Save*.
+    revertFolder: (n: number) => `Choose where to keep the PDFs of batch ${n}`,
     loading: "Loading",
     // *Amend* and *Revert*, on the newest batch only.
     amend: "Amend",
     revert: "Revert",
-    // The questions before *Revert* and *Amend*. A revert keeps a copy of the batch's PDFs in the
-    // date's `reverted` folder, or deletes them. An amend redoes the batch with its sort rule, so the
+    // The questions before *Revert* and *Amend*. A revert keeps a copy of the batch's PDFs in a
+    // folder the owner picks, or deletes them. An amend redoes the batch with its sort rule, so the
     // question names it.
     askRevert: (n: number, pdfs: number): Choice => ({
       title: `Undo batch ${n}?`,
-      body: `Its ${count(pdfs, "group PDF", "group PDFs")} and summary PDF are removed. Save keeps a copy in the date's reverted folder; Discard deletes them. Throw away its printed labels.`,
+      body: `Its ${count(pdfs, "group PDF", "group PDFs")} and summary PDF are removed. Save asks for a folder to keep a copy in; Discard deletes them. Throw away its printed labels.`,
       ok: "Save",
       other: "Discard",
     }),

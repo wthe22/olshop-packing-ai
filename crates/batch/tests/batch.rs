@@ -13,10 +13,10 @@ use std::sync::mpsc;
 
 use jiff::civil::date;
 use packing_batch::{
-    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, REVERTED_DIR, ReadRequest,
-    ReprintOutcome, ReprintRequest, RestoreOutcome, RestoreRequest, RevertedPdfs, SaveOutcome,
-    SaveRequest, Saved, account_summary, account_summary_file, amend, check_files, day_summary,
-    day_summary_file, read_draft, reprint, restore, revert, save, set_printed, set_sent,
+    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, ReadRequest, ReprintOutcome,
+    ReprintRequest, RestoreOutcome, RestoreRequest, RevertedPdfs, SaveOutcome, SaveRequest, Saved,
+    account_summary, account_summary_file, amend, check_files, day_summary, day_summary_file,
+    read_draft, reprint, restore, revert, save, set_printed, set_sent,
 };
 use packing_engine::account_questions::{NoSenderQuestion, ShopQuestion};
 use packing_engine::accounts::{Account, ShopAccount, add_shop};
@@ -173,7 +173,6 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
     assert!(day.journal.fold().live.is_empty());
     assert!(!day.output(GROUP_FILE).exists() && !day.output("1 summary.pdf").exists());
     assert!(!partial_dir(day.folder.dir()).exists());
-    assert!(!day.folder.dir().join(REVERTED_DIR).exists());
     assert!(matches!(
         revert(&day.folder, &mut day.journal, APP, RevertedPdfs::Discard),
         Err(BatchError::NoBatch)
@@ -186,11 +185,22 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
     let redo = amend(&day.folder, day.journal.fold(), &day.workflows).unwrap();
     let paths: Vec<PathBuf> = redo.files.iter().map(|f| f.path.clone()).collect();
     let stale = day.read(&paths, &redo.rule, Some(redo.batch)).unwrap();
-    let kept = revert(&day.folder, &mut day.journal, APP, RevertedPdfs::Save)
-        .unwrap()
-        .saved_to
-        .unwrap();
-    assert!(kept.starts_with(day.folder.dir().join(REVERTED_DIR)));
+    let picked = day.folder.dir().parent().unwrap().join("kept");
+    let kept = revert(
+        &day.folder,
+        &mut day.journal,
+        APP,
+        RevertedPdfs::Save(picked.clone()),
+    )
+    .unwrap()
+    .saved_to
+    .unwrap();
+    let name = kept.file_name().unwrap().to_string_lossy().to_string();
+    assert_eq!(kept.parent(), Some(picked.as_path()));
+    assert!(
+        name.starts_with(&format!("{} batch 1 reverted ", day.folder.date())),
+        "{name}"
+    );
     for file in [GROUP_FILE, "1 summary.pdf"] {
         assert!(
             kept.join(file).is_file() && !day.output(file).exists(),
@@ -583,10 +593,16 @@ fn an_accounts_summary_is_checked_kept_and_dropped_by_an_amend_or_a_revert() {
         write(&day, &account).unwrap(),
         AccountSummaryOutcome::Written(_)
     ));
-    let kept = revert(&day.folder, &mut day.journal, APP, RevertedPdfs::Save)
-        .unwrap()
-        .saved_to
-        .unwrap();
+    let picked = day.folder.dir().join("kept");
+    let kept = revert(
+        &day.folder,
+        &mut day.journal,
+        APP,
+        RevertedPdfs::Save(picked),
+    )
+    .unwrap()
+    .saved_to
+    .unwrap();
     assert!(!path.exists(), "and so does a revert");
     assert!(
         kept.join(path.file_name().unwrap()).is_file(),

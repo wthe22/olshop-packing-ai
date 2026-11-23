@@ -34,7 +34,7 @@ test("a revert asks whether to save its PDFs or discard them", async () => {
   const question = texts.day.askRevert(2, 3);
   assert.deepEqual(question, {
     title: "Undo batch 2?",
-    body: "Its 3 group PDFs and summary PDF are removed. Save keeps a copy in the date's reverted folder; Discard deletes them. Throw away its printed labels.",
+    body: "Its 3 group PDFs and summary PDF are removed. Save asks for a folder to keep a copy in; Discard deletes them. Throw away its printed labels.",
     ok: "Save",
     other: "Discard",
   });

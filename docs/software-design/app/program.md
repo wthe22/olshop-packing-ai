@@ -15,7 +15,7 @@
 | `resolve_repeats(choices)` | Apply the choice per group or per order ([duplicates](duplicates.md)) | One copy per order, the copies left out, the recount |
 | `plan(edits)` | Skip, move, add a one-off group, rename a file; recount | Groups with counts, order contents, file names |
 | `save_batch(save_anyway)` | Write, verify, commit, move ([04 Save](../workflow/04-save.md)). Emits `save-progress {stage, page, pages}` | The saved batch, or the verifier's findings (nothing saved until *Save anyway*) |
-| `revert_last(day, batch, pdfs)` / `start_amend(day, batch)` | Revert the newest batch, its PDFs saved or discarded (`pdfs`) / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)); a `batch` that is no longer the newest is refused | The folder the PDFs were saved in, inside the date folder / the amend's file list and read |
+| `revert_last(day, batch, save_to)` / `start_amend(day, batch)` | Revert the newest batch, its PDFs copied into a new folder of `save_to` or, without one, discarded / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)); a `batch` that is no longer the newest is refused | The new folder of the PDFs, when saved / the amend's file list and read |
 | `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
 | `print_output(day, file)` | **Print** a group PDF or a reprint: the output made ready, one not there written again first, like `open_output`; the preview is the front end's | Opened, written again, or not kept with the verifier's findings |
 | `output_pdf(day, file)` | The bytes of an output that is there, for the preview | The PDF's bytes |

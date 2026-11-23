@@ -44,9 +44,9 @@ pub struct Reverted {
     pub saved_to: Option<PathBuf>,
 }
 
-/// Revert the newest live batch: its PDFs copied into `reverted/` when `pdfs` says so, its outputs
-/// moved aside, `batch_reverted` appended, then the outputs deleted. A file Windows refuses to
-/// move stops it with the file named, and the date is as before.
+/// Revert the newest live batch: its PDFs copied into a folder of their own when `pdfs` says so,
+/// its outputs moved aside, `batch_reverted` appended, then the outputs deleted. A file Windows
+/// refuses to move stops it with the file named, and the date is as before.
 pub fn revert(
     folder: &DateFolder,
     journal: &mut Journal,
@@ -64,7 +64,7 @@ pub fn revert(
         .collect();
     settle_partial(dir, fold)?;
     let saved_to = match pdfs {
-        RevertedPdfs::Save => Some(save_copies(dir, batch, &files)?),
+        RevertedPdfs::Save(into) => Some(save_copies(dir, &into, folder.date(), batch, &files)?),
         RevertedPdfs::Discard => None,
     };
     let undo_copies = || saved_to.iter().for_each(|copies| drop_copies(copies));

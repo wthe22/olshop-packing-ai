@@ -5,11 +5,11 @@
 Only the newest batch of a date can be changed — a later batch depends on the ones before it.
 
 - **Revert** — undo the last batch. It asks: "Undo batch 2? Its 2 group PDFs and summary PDF are removed.
-  Save keeps a copy in the date's reverted folder; Discard deletes them. Throw away its printed labels."
-  [Save] [Discard] [Cancel]. Saved, the batch's PDFs (with its
-  account summaries) are kept in the date's `reverted` folder, in a folder such as
-  `batch 2 reverted 14.05`, which the green line names; the app never reads them again, so keep or delete
-  them as you like. Its orders count as not saved again and the next batch takes its number. If a file is
+  Save asks for a folder to keep a copy in; Discard deletes them. Throw away its printed labels."
+  [Save] [Discard] [Cancel]. **Save** asks where to keep them; close that window to leave the batch as it
+  is. The batch's PDFs (with its account summaries) go into a new folder there, such as
+  `2026-10-07 batch 2 reverted 14.05`, which the green line names; the app never reads them again, so keep
+  or delete them as you like. Its orders count as not saved again and the next batch takes its number. If a file is
   open in a PDF viewer, the app names the file to close and changes nothing.
 - **Amend** — "I fixed a sort rule, do the last batch again". It asks: "Redo batch 2? Its labels
   are read again with the sort rule default. After saving, print its PDFs again." [Redo] [Cancel]. The batch's own label files are

@@ -10,7 +10,7 @@ used: `Q-LABEL-13`, `Q-APP-19`, `Q-UI-10`, `Q-RULES-3`); numbers are never reuse
 
 | File | Open questions |
 |---|---|
-| [app.md](app.md) | Q-APP-19: where a revert saves the batch's PDFs; Q-APP-18: the saved orders of a renamed account |
+| [app.md](app.md) | Q-APP-18: the saved orders of a renamed account |
 | [label.md](label.md) | Q-LABEL-13: a product name the Shopee-style instant label breaks inside a word |
 
 A new question goes into a file per scope (`label.md`, `app.md`, `ui.md`, `rules.md`), listed here.

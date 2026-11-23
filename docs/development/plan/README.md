@@ -24,13 +24,10 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     show the open date over their bar like the Day screen's title, *today* or *not today* in amber.
   - **R-UI-50**: Search's first box is *Order ID contains*. A scanned tracking-ID barcode now needs the box
     switched to *Tracking ID*.
-  - **R-APP-11**: **Revert** asks *Undo batch 2?* with **Save** and **Discard**. Saved, the
-    batch's group PDFs, summary PDF and account summaries are copied into
-    `{date}\reverted\batch 2 reverted 14.05\` and the green line names that folder
-    ([D-APP-31](../../software-design/decisions/app-features.md)). Nothing reads the copies again.
-  - **Open question Q-APP-19** ([questions/app.md](../../software-design/questions/app.md)): where the
-    copies go: A the date folder (built), B a folder picked on every revert, C one folder in Settings. The
-    owner's letter goes under the question; A needs nothing more, B or C becomes a task.
+  - **R-APP-11**: **Revert** asks *Undo batch 2?* with **Save** and **Discard**. **Save** opens the
+    Windows folder picker (the owner's answer B to Q-APP-19; closing it reverts nothing); the batch's group
+    PDFs, summary PDF and account summaries are copied into a new folder `2026-10-07 batch 2 reverted 14.05`
+    there, and the green line names it ([D-APP-31](../../software-design/decisions/app-features.md)).
   - **R-UI-51**: a button is one short word for what it does and never names its target: *Add*, *Save*,
     *Discard*, *Redo*, *Delete*, *Reprint*; each question's line says plainly what will happen
     ([ui/README.md](../../software-design/ui/README.md)).

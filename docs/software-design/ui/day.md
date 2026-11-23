@@ -59,12 +59,13 @@ The start screen: what has been saved on the open date, for every account, and t
   finding of its check is shown and nothing is kept. A summary PDF found changed shows **Restore** in place
   of the menu.
 - **Amend** and **Revert** appear only on the newest batch ([05 After the save](../workflow/05-after-save.md)):
-  - Revert asks: "Undo batch 2?" — "Its 2 group PDFs and summary PDF are removed. Save keeps a copy in
-    the date's reverted folder; Discard deletes them. Throw away its printed labels." [Save] [Discard]
-    [Cancel]. Saved, the green line reads *Batch 2 undone. Its PDFs are in reverted\batch 2 reverted
-    14.05.* (R-APP-11)
-  - Amend asks: "Redo batch 2?" — "Its labels are read again with the sort rule default. After saving, print its PDFs again." [Redo]
-    [Cancel], then reads the batch's inputs again, with a progress bar, and opens the Plan screen titled
+  - Revert asks: "Undo batch 2?" — "Its 2 group PDFs and summary PDF are removed. Save asks for a folder
+    to keep a copy in; Discard deletes them. Throw away its printed labels." [Save] [Discard] [Cancel].
+    **Save** opens the Windows folder picker, titled *Choose where to keep the PDFs of batch 2*; closing it
+    reverts nothing. Saved, the green line reads *Batch 2 undone. Its PDFs are in D:\Kept\2026-10-07 batch
+    2 reverted 14.05.* (R-APP-11)
+  - Amend asks: "Redo batch 2?" — "Its labels are read again with the sort rule default. After saving,
+    print its PDFs again." [Redo] [Cancel], then reads the batch's inputs again, with a progress bar, and opens the Plan screen titled
     *Redo batch 2* ([Plan](plan.md)).
 - **⚠ missing** / **⚠ changed** stands before the button of an output the open-time check found missing or
   with another size. A missing one keeps **Open**, which writes it again; a changed one has **Restore**
