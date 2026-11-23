@@ -1,6 +1,6 @@
 # The owner's checklist for v0.2
 
-The owner tests the program folder `target/portable/Packing/` (copy it out first, or use it in place)
+The owner tests the program in `target/portable/` (copy `Packing.exe` and `pdfium.dll` out first, or run it in place)
 with real downloads, in this order. A finding goes into [reviews/ui.md](../../reviews/ui.md) or
 [reviews/app.md](../../reviews/app.md) as `R-<SCOPE>-n`: what was done, what happened, what was expected.
 

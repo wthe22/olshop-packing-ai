@@ -10,7 +10,9 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   built and pushed: **Save** on a revert copies the batch's input files of `{date}\input\` (its label PDFs)
   into the new folder `{date} batch {n} reverted {hh.mm}`; the group PDFs, summary PDF and account summaries
   are no longer copied ([D-APP-31](../../software-design/decisions/app-features.md)). The question and the
-  green line say *label PDFs*. `target/portable/Packing/` is rebuilt.
+  green line say *label PDFs*. `target/portable/` is rebuilt.
+  - **The program is no longer in a subfolder**: `target/portable/Packing.exe` and `pdfium.dll` sit directly
+    in `target/portable/` (was `target/portable/Packing/`); `tools/make-portable.sh` writes there.
   - **The owner may test now**: Revert on the newest batch, **Save**, pick a folder: the folder holds the
     batch's `…_NN_<hash>.pdf` files and nothing else; the input files stay in `input\`.
   - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as the next `R-APP-<n>`. A new
@@ -64,11 +66,11 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **What changes for the owner**: the accounts, the sort rules and the learned logos are in the data
     folder now, so they follow it to another PC and are shared by copies on one data folder; choosing another
     data folder in Settings switches them too (a folder without the files is given the bundled copies).
-  - **To try** in `target/portable/Packing/`: start it; the accounts and sort rules are as before; open
+  - **To try** in `target/portable/`: start it; the accounts and sort rules are as before; open
     `label-data\config.toml` and `parser.toml`; add an account on the Accounts
     screen and see it in `config.toml`; answer a logo and see it in `parser.toml`.
   - **Where to answer**: findings into [reviews/ui.md](../../reviews/ui.md) as the next `R-UI-<n>`.
-  - Version 0.6.0. The sample data in `target/portable/Packing/` was cleared; the bundled courier code of J&T Express is `jnt-express`.
+  - Version 0.6.0. The sample data in `target/portable/` was cleared; the bundled courier code of J&T Express is `jnt-express`.
 
 - **Handoff of 2026-11-12 (second) — the owner's eight screen findings and the Grab Express label;
   version 0.5.0 rebuilt.** The owner's words in chat, built and pushed:
@@ -94,7 +96,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **Open question**: **Q-LABEL-13** ([questions/label.md](../../software-design/questions/label.md)):
     this label breaks a product name inside a word, so its lines are joined with nothing between (default
     A: *Samping*, *SEPATU-HITAM*, but a break on a space glues two words, `Standar |Penyangga`).
-  - **The owner may test now** in `target/portable/Packing/`: Search a saved order and open its details;
+  - **The owner may test now** in `target/portable/`: Search a saved order and open its details;
     New account; a batch of two accounts on the Day screen; read the 2026-11-11 file after the step above.
   - **Where to answer**: a screen finding into [reviews/ui.md](../../reviews/ui.md) as `R-UI-48`, a label
     finding into [reviews/label.md](../../reviews/label.md) as `R-LABEL-15`, Q-LABEL-13 in its question.
@@ -103,7 +105,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   checked and pushed; no task is open. The design is in [software-design/](../../software-design/README.md)
   (start with [accounts](../../software-design/app/accounts.md)); the finished plan is in the archive
   (`v0.5-accounts.md`).
-  - **What to try** in `target/portable/Packing/` (version 0.5.0), with a copy of real downloads of two
+  - **What to try** in `target/portable/` (version 0.5.0), with a copy of real downloads of two
     shops: New batch reads both; the first read asks *Which account?* for each shop; the Day screen names
     each batch's accounts, with a summary button per account and **Day summary** as a menu; **Accounts** in
     the title bar shows each account's shops and dates; Search finds an order by its shop (the *Shop* and
@@ -125,7 +127,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     today have a group PDF not marked **Printed** ([panel](../../software-design/ui/panel.md)). The mark is
     read from each workspace's journal when the panel is read, so it clears on the next read after a tick.
   - Not in this change: the dates list of the open workspace has no mark, and a summary PDF does not count.
-  - `target/portable/Packing/` is rebuilt. **The owner may test now**: tick Printed on every group PDF of
+  - `target/portable/` is rebuilt. **The owner may test now**: tick Printed on every group PDF of
     today in one workspace, then open the workspace list; the mark goes when no group is left. A finding goes
     into [reviews/ui.md](../../reviews/ui.md) as the next `R-UI-<n>`.
 
@@ -144,7 +146,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     Print or Cancel was pressed.
   - **Update every copy together**: the journal now holds `print_sent` records, and an older copy of the
     program reads such a date as damaged ([records](../../software-design/data/records.md)).
-  - **The owner may test now** with `target/portable/Packing/Packing.exe`: list the shops of each
+  - **The owner may test now** with `target/portable.exe`: list the shops of each
     workspace, then read one day's real downloads, a file of another shop among them. Print a group PDF, cancel once (✕ the mark), print again, tick
     Printed. A finding goes into [reviews/app.md](../../reviews/app.md) as R-APP-10, a screen finding into
     [reviews/ui.md](../../reviews/ui.md) as R-UI-39, a sender read wrong into
@@ -162,7 +164,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     ([program › Several copies](../../software-design/app/program.md#several-copies)).
   - Version **0.3.3**. The commit also holds the earlier session's 0.3.2 work that was left uncommitted
     (the whole version shown, *About*'s build time, the buttons without `…`).
-  - **The owner may test now**: start `target/portable/Packing/Packing.exe` twice, or on two PCs with one
+  - **The owner may test now**: start `target/portable.exe` twice, or on two PCs with one
     shared data folder. Save a batch in one: the other shows it within a few seconds. Tick Printed in
     both, save in both at once, rename the workspace in one. A finding goes into
     [reviews/app.md](../../reviews/app.md) as R-APP-10.
@@ -188,7 +190,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     orders of 2 go to *Sepatu Hitam x2*, and each tracking ID ends in its letter. A batch already saved
     keeps what it read until it is amended. A finding goes into [reviews/label.md](../../reviews/label.md)
     or [reviews/rules.md](../../reviews/rules.md) as R-LABEL-13 or R-RULES-8.
-  - `target/portable/Packing/` is built from the working tree, which also holds another session's
+  - `target/portable/` is built from the working tree, which also holds another session's
     uncommitted work (as the build of 2026-11-01 did); that work stays uncommitted.
 
 - **Handoff of 2026-10-30 — Search's dates and rows, the date as the Day screen's title.** The owner's
@@ -242,7 +244,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     (`page/fonts.rs`), and the verifier reads the header's `·` line as text, so a fix touches both.
   - Checked on screenshots of the built program at 1536 × 800, 1093 × 580 (the owner's two screens at
     125 %) and at 960, 768 and 600 points wide, in both themes, with long made-up product names.
-  - `target/portable/Packing/` is rebuilt. **The owner may test now**: Search on the small screen and in a
+  - `target/portable/` is rebuilt. **The owner may test now**: Search on the small screen and in a
     window less than full width (a long product name, ticking rows, **Select all**, **Reprint**), and
     **Day summary**'s first and last pages; then [R8-checklist.md](R8-checklist.md) items 9 and 11 if not
     tried.
@@ -290,7 +292,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   screens (R8) whether the word fits; a finding goes into [reviews/ui.md](../../reviews/ui.md).
 - **Kept for the rework**: [workflow-audit.md](workflow-audit.md), where the built program differs from the
   design; the v0.2 crates close its rows, and the program follows when R5 and R6 put them to use.
-- The program folder `target/portable/Packing/` is rebuilt after each task; a rebuild replaces only
+- The program folder `target/portable/` is rebuilt after each task; a rebuild replaces only
   `Packing.exe` and `pdfium.dll`, so the owner's settings, rules and data there stay.
   The owner's checklist for v0.2 is [R8-checklist.md](R8-checklist.md).
 

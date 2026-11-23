@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-# Build the portable program folder: one folder with
-# Packing.exe and pdfium.dll, no installer. The owner copies the folder to e.g. D:\Packing\
-# and starts Packing.exe from a shortcut; at the first start the program writes
-# packing-app.toml beside itself, and the data folder (by default packing-data\) with parser.toml
-# and config.toml is there too. A rebuild replaces only the two program files, so those stay.
+# Build the portable program: Packing.exe and pdfium.dll in target/portable/, no installer. The owner
+# copies the two files to e.g. D:\Packing\ and starts Packing.exe from a shortcut; at the first start
+# the program writes packing-app.toml beside itself, and the data folder (by default packing-data\) with
+# parser.toml and config.toml is there too. A rebuild replaces only the two program files, so those stay.
 #
 # Steps:
 #   1. build the release binary without bundling (npm run tauri build -- --no-bundle)
-#   2. copy the binary (renamed Packing.exe) and pdfium.dll into
-#      target/portable/Packing/, replacing the two and nothing else
+#   2. copy the binary (renamed Packing.exe) and pdfium.dll into target/portable/, replacing the two
+#      and nothing else
 #
 # Run from anywhere:  bash tools/make-portable.sh
 # From Explorer or cmd, without a Git Bash window:  tools\make-portable.bat
@@ -20,8 +19,7 @@ app="$root/app"
 vendor="$root/vendor"
 target="$root/target"
 release="$target/release"
-portable="$target/portable"
-out="$portable/Packing"
+out="$target/portable"
 
 # pdfium.dll is git-ignored; fetch it once with get-pdfium.sh (docs/development/setup.md).
 if [ ! -f "$vendor/pdfium.dll" ]; then
@@ -48,11 +46,11 @@ if [ -z "$exe" ]; then
   exit 1
 fi
 
-echo "==> Assembling the program folder at $out"
+echo "==> Assembling the program at $out"
 mkdir -p "$out"
 cp "$exe" "$out/Packing.exe"
 cp "$vendor/pdfium.dll" "$out/pdfium.dll"
 
 echo "==> Done"
-ls -la "$out"
-echo "Program folder: $out"
+ls -la "$out"/Packing.exe "$out"/pdfium.dll
+echo "Program: $out"

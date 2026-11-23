@@ -56,13 +56,13 @@ what no test reaches are in [coverage.md](coverage.md).
 
 ### Build the program folder (portable)
 
-The program folder (one folder with `Packing.exe` + `pdfium.dll`, no installer; see
+The program (`Packing.exe` + `pdfium.dll` in `target/portable/`, no installer; see
 [program.md](../software-design/app/program.md)) is produced by `tools/make-portable.sh`. It needs
 `vendor/pdfium.dll` (`get-pdfium.sh`) and takes a few minutes (a release build; the first one is the
 slowest):
 
 ```bash
-bash tools/make-portable.sh          # → target/portable/Packing/
+bash tools/make-portable.sh          # → target/portable/
 ```
 
 `tools/make-portable.bat` is the same thing for Windows Explorer and `cmd`: double-click it (or
@@ -70,5 +70,5 @@ bash tools/make-portable.sh          # → target/portable/Packing/
 waits for a key so the output stays readable. `make-portable.bat --no-pause` builds and returns (for
 scripts, e.g. from another `.bat`).
 
-Copy `target/portable/Packing/` to the PC (e.g. `D:\Packing\`) and start `Packing.exe` from a
+Copy `Packing.exe` and `pdfium.dll` from `target/portable/` to the PC (e.g. `D:\Packing\`) and start `Packing.exe` from a
 shortcut. To update, close the app and replace `Packing.exe` and `pdfium.dll`; the data stays.

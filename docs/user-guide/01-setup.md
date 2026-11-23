@@ -6,11 +6,11 @@ plus one summary PDF to print. No terminal is needed.
 
 ## Set up the program folder
 
-The app is one folder, not an installed program.
+The app is two files, not an installed program.
 
-1. Copy the folder `Packing` (the output of `tools/make-portable.sh`, found in
-   `target/portable/Packing/`, or the folder you were given) to a place you can write to, for
-   example `D:\Packing\`. **Do not** put it under `C:\Program Files` — Windows does not let the app
+1. Make a folder `Packing` in a place you can write to, for example `D:\Packing\`, and copy into it
+   `Packing.exe` and `pdfium.dll` (the output of `tools/make-portable.sh`, found in `target/portable/`,
+   or the files you were given). **Do not** put them under `C:\Program Files` — Windows does not let the app
    write there.
 2. The folder must contain `Packing.exe` (the program) and `pdfium.dll` (the PDF reader it uses).
 3. Make a shortcut to `Packing.exe` on the Desktop or the taskbar: right-click `Packing.exe` →

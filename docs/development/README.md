@@ -61,7 +61,7 @@ crates/fixtures/           writes the made-up label PDFs of testdata/ and their 
 crates/testkit/            fixtures the tests share (never built into the app)
 app/                       Tauri app: Svelte screens (src/), Rust commands (src-tauri/)
 tools/get-pdfium.sh        downloads the pinned pdfium.dll into vendor/ (git-ignored)
-tools/make-portable.sh     builds the portable program folder target/portable/Packing/
+tools/make-portable.sh     builds Packing.exe and pdfium.dll into target/portable/
 tools/make-portable.bat    the same, for Explorer or cmd (runs the .sh through Git's bash)
 tools/dev.bat            run the app as a debug build with the Vite dev server (no release build)
 tools/guide-pictures.mjs   the user guide's pictures from the built program on testdata/ (WebView2 DevTools)

@@ -19,7 +19,7 @@ const LABELS = ["labels-repeat-1.pdf", "labels-repeat-2.pdf"].map((name) => path
 
 const program = fs.mkdtempSync(path.join(os.tmpdir(), "packing-pictures-"));
 for (const file of ["Packing.exe", "pdfium.dll"]) {
-  fs.copyFileSync(path.join(ROOT, "target", "portable", "Packing", file), path.join(program, file));
+  fs.copyFileSync(path.join(ROOT, "target", "portable", file), path.join(program, file));
 }
 // A WebView2 profile of its own: a copy of the program the owner has open would otherwise share its
 // browser process, which ignores the DevTools port.
