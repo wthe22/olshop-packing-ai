@@ -93,30 +93,39 @@ QR never are. The picture is the image as printed, and the count says how many p
 ## The shop prompt
 
 Every order needs an account ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo prompt,
-before the Plan screen, one question lists each sender no account lists and each file with labels that
-have no sender ([D-APP-28](../decisions/accounts.md)):
+before the Plan screen, one question has a row for each shop name no account has and for each file with
+labels that show no shop name, each with one list ([D-APP-28](../decisions/accounts.md)):
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Which account?                                                                        │
-│  These shops are not listed yet. Each is asked about once.                             │
-│    Shop [ Toko Gamma                ]   12 orders in 2 files   [Toko Alfa ▾] [New account] │
-│  These labels show no sender. Choose for this read.                                    │
-│    [10-07_09-12-00_Shipping label_1.pdf]    2 of 85 orders     [Toko Alfa ▾]            │
-│                                                                   [Back]  [Continue]   │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  Which account are these orders for?                                         │
+│  A shop is remembered with its account. Labels with no shop name are asked   │
+│  about each time.                                                            │
+│  ──────────────────────────────────────────────────────────────────────────  │
+│  Toko Gamma                                  12 orders   [New account     ▾] │
+│                                                          [Toko Gamma       ] │
+│  ──────────────────────────────────────────────────────────────────────────  │
+│  No shop name [Shipping label_3.pdf]          2 orders   [New: Toko Gamma ▾] │
+│  ──────────────────────────────────────────────────────────────────────────  │
+│  No shop name [Shipping label_5.pdf]          1 order   [Choose an account▾] │
+│                                                            [Back] [Continue] │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **A shop**: one row per distinct name read ([reading](../labels/reading.md#the-sender)), in an editable
-  field so a name read with wrong spaces can be put right; the field must stay a name found on those
-  labels, else it says *Not on these labels* under it. Its orders and files are counted. The owner picks an
-  account from the list, or **New account**, which names a new account after the shop (its name editable in
-  place). **Continue** writes every answered shop into `config.toml`, so it is never asked again; a shop
-  another copy of the app listed meanwhile keeps that account.
-- **A file with labels that have no sender**: one row per file, how many of its orders show no sender, and the
-  account for them, for this read only; nothing is stored.
-- **Continue** is off until every row has an account. **Back** (and `Esc`) returns to the file list and
-  writes nothing, where a file can be taken off. With one account and no shop to ask, a file's row starts on
-  that account.
+- **The list** of every row: the accounts, the new accounts other rows of the question name (*New: Toko
+  Gamma*), and **New account**, which shows a box for the new account's name under the list.
+- **A shop**: one row per distinct name read ([reading](../labels/reading.md#the-sender)), shown as read
+  (not editable), with its orders. **New account** starts on the shop's name. **Continue** writes every shop
+  into `config.toml` with its account, so it is never asked again; a shop another copy of the app listed
+  meanwhile keeps that account.
+- **Labels with no shop name**: one row per file, *No shop name*, the file and its orders that show none.
+  Their account holds for this read only; nothing is stored but a new account the row names, which is
+  made with no shop.
+- **Where a row starts**: with no account yet, a shop on **New account** with its name. A file on the
+  account its other orders go to, or following the shop row they share (so it takes that shop's answer);
+  else on the only account when no shop is asked; else *Choose an account*.
+- **Continue** is off until every row has an account and every new account a name; a name refused
+  ([accounts › Names](../app/accounts.md#names)) is said above the buttons. **Back** (and `Esc`) returns
+  to the file list and writes nothing, where a file can be taken off.
 - The plan is then counted with every order's account; an amend's first read takes a no-sender order's
   account from the batch's record and asks only about a shop no account lists any more.

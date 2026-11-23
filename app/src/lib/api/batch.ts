@@ -83,14 +83,14 @@ export interface ReadResult {
   // The header-band images the courier data does not know; empty when every logo is
   // known and no prompt is needed.
   logos: LogoView[];
-  // The shop prompt, asked after the logos; no rows when every order has an account.
+  // The account question, asked after the logos; no rows when every order has an account.
   shops: ShopPromptView;
   // The orders that appear more than once; `null` when every order has one copy.
   repeats: RepeatsView | null;
   plan: PlanView;
 }
 
-// The shop prompt: each sender no account lists and each file with labels that show no sender.
+// The account question: each shop name no account has and each file with labels that show none.
 export interface ShopPromptView {
   // The accounts the lists offer, in the order they were made.
   accounts: string[];
@@ -98,20 +98,19 @@ export interface ShopPromptView {
   no_sender: NoSenderRowView[];
 }
 
-// A sender no account lists: the name as first read, its orders and the files that hold them.
+// A shop name no account has: the name as first read and its orders.
 export interface ShopRowView {
   name: string;
   orders: number;
-  files: number;
 }
 
-// A file whose labels show no sender: its place in the reading order, its name, and how many of
-// its orders show none.
+// A file whose labels show no shop name: its place in the reading order, its name, how many of its
+// orders show none, and where its other orders go when they go to one place.
 export interface NoSenderRowView {
   input: number;
   file: string;
   orders: number;
-  of_orders: number;
+  others: { account: string } | { shop: string } | null;
 }
 
 // Where the owner puts a shop: an account already listed, or a new one by this name.
@@ -119,8 +118,8 @@ export type ShopAccount = { listed: string } | { new: string };
 
 // *Continue*: every row's answer. `no_sender` maps a file's place to its account, for this read only.
 export interface ShopAnswer {
-  shops: { read: string; name: string; account: ShopAccount }[];
-  no_sender: Record<number, string>;
+  shops: { read: string; account: ShopAccount }[];
+  no_sender: Record<number, ShopAccount>;
 }
 
 // Repeated orders: the groups of files that repeat each other, and the copy of each order that

@@ -217,20 +217,16 @@ export const texts = {
   // *Skip all*; Esc skips only the one logo shown.
   // The shop prompt: an account for each sender no account lists, and for the labels with no sender.
   shops: {
-    title: "Which account?",
-    shopsIntro: "These shops are not listed yet. Each is asked about once.",
-    noSenderIntro: "These labels show no sender. Choose for this read.",
-    shop: "Shop",
-    shopField: (read: string) => `Shop name as printed: ${read}`,
-    shopOrders: (orders: number, files: number) =>
-      `${count(orders, "order", "orders")} in ${count(files, "file", "files")}`,
-    noSenderOrders: (n: number, of: number) => `${n} of ${count(of, "order", "orders")}`,
+    title: "Which account are these orders for?",
+    intro: "A shop is remembered with its account. Labels with no shop name are asked about each time.",
+    noShopName: "No shop name",
+    orders: (n: number) => count(n, "order", "orders"),
     choose: "Choose an account",
     newAccount: "New account",
-    listedAccount: "A listed account",
-    accountOf: (shop: string) => `Account of ${shop}`,
-    accountOfFile: (file: string) => `Account of the labels of ${file} with no sender`,
-    newAccountName: (shop: string) => `Name of the new account for ${shop}`,
+    // A new account another row of the question names.
+    made: (name: string) => `New: ${name}`,
+    newName: "Name of the new account",
+    accountOf: (who: string) => `Account of ${who}`,
     back: "Back",
     continue: "Continue",
   },

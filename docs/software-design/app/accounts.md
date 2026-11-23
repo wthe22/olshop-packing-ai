@@ -56,10 +56,10 @@ shops = ["Toko Beta"]
 - An order's account and shop are those of the copy that is written; the record keeps both as they are at
   the save ([records](../data/records.md)). A copy left out keeps neither.
 - **A sender no account lists** is asked about before the plan, once per name: an account, or **New
-  account** named after the shop. The answer is written into the accounts file at once, so the name is
+  account**, named after the shop unless the owner types another name. The answer is written into the accounts file at once, so the name is
   asked about once ever ([New batch](../ui/new-batch.md#the-shop-prompt)).
 - **A label with no sender** (no `Pengirim` caption) is asked about per file: the account its orders go to
-  for this read. Such an order has no shop, and nothing is stored. An amend's first read gives each such
+  for this read, which may be a new one. Such an order has no shop, and nothing else is stored. An amend's first read gives each such
   order the account its record names.
 - Every order of a batch has an account: the plan waits for the answers.
 

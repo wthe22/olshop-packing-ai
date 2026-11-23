@@ -70,8 +70,8 @@ Order ID; a page that starts a copy and has no slip table (plain labels). Each n
   asked once ever; *I don't know* writes nothing ([New batch](../ui/new-batch.md#the-logo-prompt)).
 
 - **The account of each copy**: the longest listed shop name found in its sender names its shop and account
-  ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo prompt, *Which account?* asks about
-  each sender no account lists, once per name, and each file with labels that have no sender
+  ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo prompt, *Which account are these orders for?*
+  asks about each sender no account lists, once per name, and each file with labels that have no sender
   ([New batch](../ui/new-batch.md#the-shop-prompt)). A shop's answer is written into
   `config.toml` at once; a file's answer holds for this read. **Back** returns to the file list
   ([D-APP-28](../decisions/accounts.md)).

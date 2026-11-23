@@ -1,10 +1,12 @@
-//! The shop prompt (new-batch.md, *The shop prompt*): each copy given its account, and the questions
-//! about the copies left without one — a sender no account lists, a file whose labels print none.
+//! The account question (new-batch.md, *The shop prompt*): each copy given its account, and the
+//! questions about the copies left without one — a sender no account lists, a file whose labels print
+//! none, with the account its other orders share.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::fmt;
 
-use crate::accounts::{Account, NameError, OrderAccount, account_of, check_shop_name, same_shop};
+use serde::Serialize;
+
+use crate::accounts::{Account, OrderAccount, account_of, same_shop};
 use crate::copies::Copy;
 use crate::ids::OrderId;
 
@@ -35,6 +37,16 @@ pub struct NoSenderQuestion {
     /// Its orders with no sender, and all its orders.
     pub orders: usize,
     pub of_orders: usize,
+    /// Where its orders that print a sender all go, when they go to one place: the likely answer.
+    pub others: Option<Others>,
+}
+
+/// One account, or one sender the same questions ask about.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Others {
+    Account(String),
+    Shop(String),
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -46,23 +58,6 @@ pub struct AccountQuestions {
 impl AccountQuestions {
     pub fn is_empty(&self) -> bool {
         self.shops.is_empty() && self.no_sender.is_empty()
-    }
-}
-
-/// Why a shop name typed in the prompt is refused.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ShopAnswerError {
-    /// Not found in the sender of every label it was read from.
-    NotOnLabels,
-    Name(NameError),
-}
-
-impl fmt::Display for ShopAnswerError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ShopAnswerError::NotOnLabels => f.write_str("not on these labels"),
-            ShopAnswerError::Name(error) => error.fmt(f),
-        }
     }
 }
 
@@ -120,40 +115,46 @@ pub fn account_questions(copies: &[Copy]) -> AccountQuestions {
             question.inputs.sort_unstable();
         }
     }
-    AccountQuestions {
-        shops: shops.into_iter().map(|(question, _)| question).collect(),
-        no_sender: no_sender
-            .into_iter()
-            .map(|(input, orders)| NoSenderQuestion {
-                input,
-                orders: orders.len(),
-                of_orders: copies
-                    .iter()
-                    .filter(|copy| copy.input == input)
-                    .map(|copy| &copy.order_id)
-                    .collect::<BTreeSet<_>>()
-                    .len(),
-            })
-            .collect(),
-    }
+    let shops: Vec<ShopQuestion> = shops.into_iter().map(|(question, _)| question).collect();
+    let no_sender = no_sender
+        .into_iter()
+        .map(|(input, orders)| NoSenderQuestion {
+            input,
+            orders: orders.len(),
+            of_orders: copies
+                .iter()
+                .filter(|copy| copy.input == input)
+                .map(|copy| &copy.order_id)
+                .collect::<BTreeSet<_>>()
+                .len(),
+            others: others_of(copies, input, &shops),
+        })
+        .collect();
+    AccountQuestions { shops, no_sender }
 }
 
-/// Whether `answer` may stand for the sender read as `read`: found on every label of that sender
-/// with no account yet, and a shop no account lists.
-pub fn check_shop_answer(
-    copies: &[Copy],
-    read: &str,
-    answer: &str,
-    accounts: &[Account],
-) -> Result<(), ShopAnswerError> {
-    let on_every_label = copies
-        .iter()
-        .filter(|copy| copy.account.is_none())
-        .filter_map(|copy| copy.sender.as_ref())
-        .filter(|sender| same_shop(&sender.name, read))
-        .all(|sender| sender.text.shows(answer));
-    if !on_every_label {
-        return Err(ShopAnswerError::NotOnLabels);
+/// Where the orders of `input` that print a sender go: their account, or the sender asked about;
+/// `None` when they go to more than one place, or there are none.
+fn others_of(copies: &[Copy], input: usize, shops: &[ShopQuestion]) -> Option<Others> {
+    let mut found: Option<Others> = None;
+    for copy in copies.iter().filter(|copy| copy.input == input) {
+        let Some(sender) = &copy.sender else {
+            continue;
+        };
+        let here = match &copy.account {
+            Some(account) => Others::Account(account.account.clone()),
+            None => Others::Shop(
+                shops
+                    .iter()
+                    .find(|shop| same_shop(&shop.name, &sender.name))?
+                    .name
+                    .clone(),
+            ),
+        };
+        match &found {
+            Some(seen) if *seen != here => return None,
+            _ => found = Some(here),
+        }
     }
-    check_shop_name(answer, accounts).map_err(ShopAnswerError::Name)
+    found
 }

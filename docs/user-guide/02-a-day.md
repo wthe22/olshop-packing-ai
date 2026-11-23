@@ -85,18 +85,17 @@ courier, **Not a courier**, **I don't know** and **Skip all**.
 
 ![The shop prompt](images/10-shop-prompt.png)
 
-An order belongs to the account that lists the shop name on its label. A shop name no account lists is
-asked about once, after the logo prompt and before the plan: **Which account?**, "These shops are not
-listed yet.", and one row per shop name read.
+An order belongs to the account that lists the shop name on its label. After the logo prompt and before
+the plan, **Which account are these orders for?** has a row for each shop name no account lists, and a row
+for each file whose labels show no shop name.
 
-- A row shows the **Shop** name as read, how many orders in how many files carry it, and its account:
-  choose one from the list, or press **New account** to make an account named after the shop. The new
-  name is a field, put right in place (as in the picture); **A listed account** returns to the list. The
-  shop name is a field too, so a name read with a stray space can be put right; it must stay a name found
-  on those labels.
-- Labels that show no shop name are listed by file ("2 of 85 orders") with an account for this read only.
-- **Continue** is off until every row has an account, then remembers every answered shop in
-  `config.toml`: it is never asked again. **Back** (or `Esc`) returns to the file list and
+- A **shop** row shows the shop name as printed and its orders. Its list holds the accounts, a new account
+  another row names (*New: Toko Gamma*), and **New account**, which opens a box for the name, starting on
+  the shop name. The shop is remembered with its account in `config.toml` and never asked about again.
+- A **No shop name** row names the file and how many of its orders show no shop name. Its account holds for
+  this read only. It starts on the account of the file's other orders, or follows their shop's row.
+- With no account yet, every shop starts on **New account** named after the shop: **Continue** makes them.
+- **Continue** is off until every row has an account. **Back** (or `Esc`) returns to the file list and
   remembers nothing.
 
 ### Repeated orders

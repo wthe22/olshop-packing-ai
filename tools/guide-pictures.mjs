@@ -122,11 +122,9 @@ try {
   await until(shows("labels-repeat-2.pdf"));
   await picture("02-new-batch.png");
   await click("Read labels");
-  // The first read asks which account each shop belongs to: each becomes an account of its own.
-  await until(shows("Which account?"));
-  await run(`[...document.querySelectorAll("button")]
-    .filter((button) => button.textContent.trim() === "New account")
-    .forEach((button) => button.click())`);
+  // The first read asks which account each shop belongs to: with no account yet, each starts on a
+  // new account of its own.
+  await until(shows("Which account are these orders for?"));
   await wait(400);
   await picture("10-shop-prompt.png");
   await click("Continue");

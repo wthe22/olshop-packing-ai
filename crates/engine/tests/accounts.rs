@@ -4,10 +4,10 @@
 use std::collections::BTreeMap;
 
 use packing_engine::account_questions::{
-    AccountChoices, AccountQuestions, NoSenderQuestion, ShopAnswerError, ShopQuestion,
-    account_questions, assign_accounts, check_shop_answer,
+    AccountChoices, AccountQuestions, NoSenderQuestion, Others, ShopQuestion, account_questions,
+    assign_accounts,
 };
-use packing_engine::accounts::{Account, NameError, OrderAccount};
+use packing_engine::accounts::{Account, OrderAccount};
 use packing_engine::copies::Copy;
 use packing_engine::ids::OrderId;
 use packing_engine::label::find_sender;
@@ -95,11 +95,13 @@ fn a_listed_shop_names_the_account_and_the_rest_is_asked_about() {
                     input: 0,
                     orders: 1,
                     of_orders: 3,
+                    others: None,
                 },
                 NoSenderQuestion {
                     input: 1,
                     orders: 2,
                     of_orders: 4,
+                    others: None,
                 },
             ],
         },
@@ -109,41 +111,12 @@ fn a_listed_shop_names_the_account_and_the_rest_is_asked_about() {
 
 #[test]
 fn the_answers_give_every_copy_an_account() {
-    let mut accounts = vec![
+    let accounts = vec![
         account("Toko Alfa", &["Toko Alfa", "Toko Alfa Official"]),
         account("Toko Beta", &["Toko Beta"]),
+        account("Toko Gamma", &["Toko Gamma"]),
     ];
     let mut copies = read();
-    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
-
-    assert_eq!(
-        check_shop_answer(&copies, "Toko Gamma", "Toko Gama", &accounts),
-        Err(ShopAnswerError::NotOnLabels)
-    );
-    assert_eq!(
-        ShopAnswerError::NotOnLabels.to_string(),
-        "not on these labels"
-    );
-    assert_eq!(
-        check_shop_answer(&copies, "Toko Gamma", "Toko Alfa", &accounts),
-        Err(ShopAnswerError::NotOnLabels),
-        "not on the labels of that sender"
-    );
-    assert_eq!(
-        check_shop_answer(&copies, "Tok o Gamma", "Toko Gamma", &accounts),
-        Ok(())
-    );
-    accounts.push(account("Toko Gamma", &["Toko Gamma"]));
-    assert_eq!(
-        check_shop_answer(&copies, "Tok o Gamma", "toko gamma", &accounts),
-        Err(ShopAnswerError::Name(NameError::ShopListed {
-            account: "Toko Gamma".into()
-        }))
-    );
-    let listed = ShopAnswerError::Name(NameError::ShopListed {
-        account: "Toko Gamma".into(),
-    });
-    assert_eq!(listed.to_string(), "Toko Gamma already lists that shop");
 
     let choices = AccountChoices {
         no_sender: BTreeMap::from([(0, "Toko Alfa".to_string())]),
@@ -165,7 +138,40 @@ fn the_answers_give_every_copy_an_account() {
                 input: 1,
                 orders: 1,
                 of_orders: 4,
+                others: None,
             }],
         }
+    );
+}
+
+#[test]
+fn a_file_with_no_sender_names_where_its_other_orders_go() {
+    let accounts = vec![account("Toko Beta", &["Toko Beta"])];
+    let mut copies = vec![
+        labelled("580000000000000011", 0, Some("Toko Beta")),
+        labelled("580000000000000012", 0, None),
+        labelled("580000000000000013", 1, Some("Toko Gamma")),
+        labelled("580000000000000014", 1, Some("TokoGamma")),
+        labelled("580000000000000015", 1, None),
+        labelled("580000000000000016", 2, Some("Toko Beta")),
+        labelled("580000000000000017", 2, Some("Toko Gamma")),
+        labelled("580000000000000018", 2, None),
+        labelled("580000000000000019", 3, None),
+    ];
+    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
+    let others: Vec<_> = account_questions(&copies)
+        .no_sender
+        .into_iter()
+        .map(|question| (question.input, question.others))
+        .collect();
+    assert_eq!(
+        others,
+        [
+            (0, Some(Others::Account("Toko Beta".into()))),
+            (1, Some(Others::Shop("Toko Gamma".into()))),
+            (2, None),
+            (3, None),
+        ],
+        "one account, one sender asked about, both, none"
     );
 }

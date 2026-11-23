@@ -722,16 +722,16 @@ fn a_shop_answer_is_written_into_the_settings_and_gives_the_orders_their_account
     let shown = serde_json::to_value(read(&state)).unwrap();
     let prompt = json!({
         "accounts": ["Toko Contoh"],
-        "shops": [{"name": "Toko Lain", "orders": 1, "files": 1}],
+        "shops": [{"name": "Toko Lain", "orders": 1}],
         "no_sender": [],
     });
     assert_eq!(shown["shops"], prompt);
     let refused = save_draft(&state, false, &|_| {}).err().unwrap();
     assert!(refused.contains("has no account yet"), "{refused}");
 
-    let answer = |name: &str, account: Value, no_sender: Value| {
+    let answer = |account: Value, no_sender: Value| {
         let answer = json!({
-            "shops": [{"read": "Toko Lain", "name": name, "account": account}],
+            "shops": [{"read": "Toko Lain", "account": account}],
             "no_sender": no_sender,
         });
         answer_shop(&state, &serde_json::from_value(answer).unwrap())
@@ -739,15 +739,15 @@ fn a_shop_answer_is_written_into_the_settings_and_gives_the_orders_their_account
     let new = json!({"new": "Toko Lain"});
     let to_contoh = json!({"listed": "Toko Contoh"});
     let refusals = [
-        answer("Toko Lian", new.clone(), json!({})),
-        answer("Toko Lain", new, json!({"1": "Toko Tiada"})),
-        answer("Toko Lain", json!({"listed": "Toko Tiada"}), json!({})),
+        answer(new.clone(), json!({"1": {"new": "toko contoh"}})),
+        answer(new, json!({"1": {"listed": "Toko Tiada"}})),
+        answer(json!({"listed": "Toko Tiada"}), json!({})),
     ];
     let refusals: Vec<String> = refusals.into_iter().map(|r| r.err().unwrap()).collect();
     assert_eq!(
         refusals,
         [
-            "Toko Lian: not on these labels.",
+            "toko contoh: another account has that name.",
             "There is no account \"Toko Tiada\".",
             "Toko Lain: there is no account by that name.",
         ]
@@ -757,8 +757,7 @@ fn a_shop_answer_is_written_into_the_settings_and_gives_the_orders_their_account
     // Another copy of the app lists the shop meanwhile: its account stands.
     let lain = account("Toko Lain", &["Toko Lain"]);
     listed(vec![contoh(), lain.clone()]);
-    let shown =
-        serde_json::to_value(answer("Toko Lain", to_contoh.clone(), json!({})).unwrap()).unwrap();
+    let shown = serde_json::to_value(answer(to_contoh.clone(), json!({})).unwrap()).unwrap();
     assert_eq!(shown["shops"]["shops"], json!([]));
     assert_eq!(
         settings::accounts(program.path()).unwrap(),
@@ -767,10 +766,15 @@ fn a_shop_answer_is_written_into_the_settings_and_gives_the_orders_their_account
 
     listed(vec![contoh()]);
     read(&state);
-    let shown = serde_json::to_value(answer("Toko Lain", to_contoh, json!({})).unwrap()).unwrap();
+    // A file's labels with no shop name may go to a new account, made with no shop.
+    let answered = answer(to_contoh, json!({"0": {"new": "Toko Baru"}}));
+    let shown = serde_json::to_value(answered.unwrap()).unwrap();
     assert_eq!(shown["shops"]["shops"], json!([]));
     let written = account("Toko Contoh", &["Toko Contoh", "Toko Lain"]);
-    assert_eq!(settings::accounts(program.path()).unwrap(), [written]);
+    assert_eq!(
+        settings::accounts(program.path()).unwrap(),
+        [written, account("Toko Baru", &[])]
+    );
     let text = fs::read_to_string(program.path().join("data").join(CONFIG_FILE)).unwrap();
     assert!(text.contains("[[accounts]]"), "{text}");
     save(&state);

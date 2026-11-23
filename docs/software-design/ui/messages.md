@@ -16,7 +16,6 @@ Every message says what happened and what to do. A **stop** ends the step with n
 | Warning | Orders that appear more than once | **`<n>` orders appear more than once in this batch:** `<m>` copies are left out (`<file>` page `<p>`, kept: `<file>` page `<p>`), … |
 | Warning | Courier not recognised | **Courier unknown for `<n>` orders:** `<tracking IDs>`. They are sorted normally; only a filter on `courier` cannot see them. |
 | Warning | `Qty Total` differs from the lines | **Slip total differs** for `<tracking ID>`: printed `<a>`, lines add up to `<b>`. Check that order's slip when packing. |
-| Refused | A shop name in the shop prompt that is not on those labels | Under the field: **Not on these labels.** The name must be found after `Pengirim` on the labels it names. |
 | Refused | A shop name another account lists, or an account name taken | Under the field: **`<name>` is already a shop of `<account>`.** / **There is already an account `<name>`.** |
 | Warning | No tracking ID on a label | **No tracking ID read** for order `<order ID>`. Its label is saved as usual; only a filter on `tracking_id` cannot see it. |
 

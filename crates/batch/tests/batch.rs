@@ -18,7 +18,7 @@ use packing_batch::{
     account_summary, account_summary_file, amend, check_files, day_summary, day_summary_file,
     read_draft, reprint, restore, revert, save, set_printed, set_sent,
 };
-use packing_engine::account_questions::{NoSenderQuestion, ShopQuestion};
+use packing_engine::account_questions::{NoSenderQuestion, Others, ShopQuestion};
 use packing_engine::accounts::{Account, ShopAccount, add_shop};
 use packing_engine::ids::{BatchId, OrderId, PdfId};
 use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked};
@@ -490,6 +490,7 @@ fn a_shop_no_account_lists_and_a_file_with_no_sender_wait_for_the_shop_prompt() 
         input: 1,
         orders: 1,
         of_orders: 23,
+        others: Some(Others::Account("Toko Contoh".into())),
     };
     assert_eq!(questions.no_sender, [file]);
     assert!(matches!(

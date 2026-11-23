@@ -35,7 +35,7 @@ with real downloads, in this order. A finding goes into [reviews/ui.md](../../re
     **Text**; the counts *In batch n* with a batch open; *Unsaved changes* and another tab asking first;
     **Save**, then `packing-workflows.toml` keeps its comments; **Edit file as text**.
 11. **Settings.** **Theme** (Light, Dark, System); the data folder, **Change…**; **Accounts** (title bar): rename one,
-    add a shop, delete one (its saved orders stay under its name); the shop prompt *Which account?*; *About* reads
+    add a shop, delete one (its saved orders stay under its name); the shop prompt *Which account are these orders for?*; *About* reads
     *Version v0.2*.
 12. **The words.** Whether *account*, *label group*, *order content*, *group PDF* and *summary PDF*
     read well on the screens and the printed summary ([D-LABEL-15](../../software-design/decisions/label.md)).

@@ -1,18 +1,11 @@
 <script lang="ts">
-  // The shop prompt: after the logo prompt, before the Plan screen, each sender no account lists
-  // gets an account (a listed one, or a new one named after the shop), and each file whose labels
-  // show no sender gets the account for this read. **Back** (also Esc, the caller's) returns to the
-  // file list; **Continue** writes the answers and goes on to the plan.
+  // The account question: after the logo prompt, before the Plan screen, one row per shop name no
+  // account has and per file with labels that have no shop name, each with one list
+  // (`shopPrompt.ts`). *New account* shows a box for its name. **Back** (also Esc, the caller's)
+  // returns to the file list; **Continue** writes the answers and goes on to the plan.
   import { untrack } from "svelte";
   import type { ShopAnswer, ShopPromptView } from "./api/batch";
-  import {
-    canContinue,
-    noSenderDrafts,
-    shopAnswer,
-    shopDrafts,
-    type NoSenderDraft,
-    type ShopDraft,
-  } from "./shopPrompt";
+  import { accountRows, canContinue, choiceOf, listOf, shopAnswer, valueOf, type AccountRow } from "./shopPrompt";
   import { texts } from "../texts";
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
@@ -31,82 +24,54 @@
   const words = texts.shops;
 
   // The rows start from the prompt as it is when the dialog opens.
-  let shops = $state<ShopDraft[]>(untrack(() => shopDrafts(prompt)));
-  let files = $state<NoSenderDraft[]>(untrack(() => noSenderDrafts(prompt)));
+  let rows = $state<AccountRow[]>(untrack(() => accountRows(prompt)));
   let refused = $state("");
   let busy = $state(false);
 
-  const ready = $derived(canContinue(shops, files));
+  const ready = $derived(canContinue(rows));
 
-  function pick(shop: ShopDraft, value: string) {
-    shop.choice = value === "" ? { kind: "none" } : { kind: "listed", account: value };
-  }
+  const who = (row: AccountRow) =>
+    row.subject.kind === "shop" ? row.subject.name : `${row.subject.file}, ${words.noShopName}`;
 
   async function go() {
     busy = true;
-    refused = (await onContinue(shopAnswer(shops, files))) ?? "";
+    refused = (await onContinue(shopAnswer(rows))) ?? "";
     busy = false;
   }
 </script>
 
-<Dialog title={words.title} width="52rem">
-  {#if shops.length > 0}
-    <p class="intro">{words.shopsIntro}</p>
-    <ul>
-      {#each shops as shop, index (shop.read)}
-        <li>
-          <label class="shop">
-            <span class="label">{words.shop}</span>
-            <input bind:value={shop.name} aria-label={words.shopField(shop.read)} />
-          </label>
-          <span class="orders">{words.shopOrders(prompt.shops[index].orders, prompt.shops[index].files)}</span>
-          {#if shop.choice.kind === "new"}
-            <input
-              class="account"
-              bind:value={shop.choice.name}
-              aria-label={words.newAccountName(shop.name)}
-            />
-            <button onclick={() => pick(shop, "")}>{words.listedAccount}</button>
+<Dialog title={words.title} width="46rem">
+  <p class="intro">{words.intro}</p>
+  <ul>
+    {#each rows as row (row.key)}
+      <li>
+        <span class="who">
+          {#if row.subject.kind === "shop"}
+            <strong>{row.subject.name}</strong>
           {:else}
-            <select
-              value={shop.choice.kind === "listed" ? shop.choice.account : ""}
-              aria-label={words.accountOf(shop.name)}
-              onchange={(event) => pick(shop, event.currentTarget.value)}
-            >
-              <option value="">{words.choose}</option>
-              {#each prompt.accounts as account (account)}
-                <option value={account}>{account}</option>
-              {/each}
-            </select>
-            <button onclick={() => (shop.choice = { kind: "new", name: shop.name.trim() })}
-              >{words.newAccount}</button
-            >
+            <span class="muted">{words.noShopName}</span>
+            <span class="file" title={row.subject.file}><Icon name="file" size={14} />{row.subject.file}</span>
           {/if}
-        </li>
-      {/each}
-    </ul>
-  {/if}
-  {#if files.length > 0}
-    <p class="intro">{words.noSenderIntro}</p>
-    <ul>
-      {#each files as file (file.row.input)}
-        <li class="file-row">
-          <span class="file" title={file.row.file}><Icon name="file" size={14} />{file.row.file}</span>
-          <span class="orders">{words.noSenderOrders(file.row.orders, file.row.of_orders)}</span>
+        </span>
+        <span class="orders">{words.orders(row.orders)}</span>
+        <span class="account">
           <select
-            value={file.account ?? ""}
-            aria-label={words.accountOfFile(file.row.file)}
-            onchange={(event) => (file.account = event.currentTarget.value || null)}
+            value={valueOf(rows, row)}
+            aria-label={words.accountOf(who(row))}
+            onchange={(event) => (row.choice = choiceOf(row, event.currentTarget.value))}
           >
-            <option value="">{words.choose}</option>
-            {#each prompt.accounts as account (account)}
-              <option value={account}>{account}</option>
+            <option value="" disabled>{words.choose}</option>
+            {#each listOf(rows, row, prompt.accounts) as entry (entry.value)}
+              <option value={entry.value}>{entry.text}</option>
             {/each}
           </select>
-        </li>
-      {/each}
-    </ul>
-  {/if}
+          {#if row.choice.kind === "new"}
+            <input bind:value={row.choice.name} aria-label={words.newName} placeholder={words.newName} />
+          {/if}
+        </span>
+      </li>
+    {/each}
+  </ul>
   {#if refused}<p class="refused">{refused}</p>{/if}
   <div class="answers">
     <button onclick={onBack}>{words.back}</button>
@@ -116,52 +81,67 @@
 
 <style>
   .intro {
-    margin: 0 0 0.5rem;
+    margin: 0 0 0.75rem;
     color: var(--text-muted);
   }
 
   ul {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
     margin: 0 0 1rem;
     padding: 0;
     list-style: none;
   }
 
   li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 6rem 16rem;
+    align-items: start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  li:last-child {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .who {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem 0.75rem;
+    gap: 0.3rem 0.5rem;
+    min-width: 0;
+    min-height: 2rem;
+    overflow-wrap: anywhere;
   }
 
-  .shop {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
-  .shop input {
-    width: 14rem;
-  }
-
-  .label {
+  .muted {
     color: var(--text-muted);
   }
 
-  .account {
-    width: 12rem;
+  .orders {
+    display: flex;
+    align-items: center;
+    min-height: 2rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
-  .orders {
-    flex: 1;
-    min-width: 8rem;
-    font-variant-numeric: tabular-nums;
+  .account {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .account select,
+  .account input {
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .file {
-    max-width: 22rem;
+    max-width: 100%;
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;

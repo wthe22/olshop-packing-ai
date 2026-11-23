@@ -31,7 +31,13 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **R-UI-51**: a button is one short word for what it does and never names its target: *Add*, *Save*,
     *Discard*, *Redo*, *Delete*, *Reprint*; each question's line says plainly what will happen
     ([ui/README.md](../../software-design/ui/README.md)).
-  - **Where to answer**: findings into [reviews/ui.md](../../reviews/ui.md) as `R-UI-52`,
+  - **R-UI-52**: the account question (was *Which account?*, which could get stuck with no account to
+    choose) is one list per row: *Which account are these orders for?*, a row per new shop name (shown as
+    printed, no longer editable) and per file with labels that show no shop name. Every list offers the
+    accounts, a new account another row names (*New: Toko Gamma*) and **New account**; a file's row starts
+    on its other orders' account ([new-batch.md](../../software-design/ui/new-batch.md#the-shop-prompt)).
+    The portable build and the guide pictures are not redone yet: another session builds them.
+  - **Where to answer**: findings into [reviews/ui.md](../../reviews/ui.md) as `R-UI-53`,
     [reviews/app.md](../../reviews/app.md) as `R-APP-12`, [reviews/label.md](../../reviews/label.md) as
     `R-LABEL-16`. A new session turns each into a task and builds it.
 
