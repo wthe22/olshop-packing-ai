@@ -150,7 +150,7 @@ try {
   await run(`document.querySelector(".search .rows .row button.chevron").click()`);
   await wait(400);
   await picture("06-search.png");
-  await click("Reprint 1 order");
+  await click("Reprint");
   await until(shows("Reprint 1 written"));
   await click("Close");
   await until(shows("Reprints · 1 file"));

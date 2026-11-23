@@ -61,7 +61,7 @@ pub fn restore(
             let sources: Vec<PathBuf> = saved
                 .inputs
                 .iter()
-                .map(|input| input_path(dir, &input.sha256))
+                .map(|input| input_path(request.folder, input.pdf, &input.sha256))
                 .collect();
             let pages: Vec<(usize, usize)> = saved
                 .orders

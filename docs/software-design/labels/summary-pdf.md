@@ -40,8 +40,8 @@ Summary · All accounts · 2026-10-07 · batch 2                                
   0.6 mm below its last line, the next row 0.6 mm below the rule. A **key** (bold: `A-1`, `2-S1`, a sort
   rule's group code) sits at the left and the text 15 mm right of it; a row without a key starts its text
   at the left. At the right, up to two **counts**, each a number ending at 152 or 178 mm with its word
-  after it (*86 orders*, *1 order*), so the numbers of a page stand under each other; an input's SHA-256
-  ends at the right edge.
+  after it (*86 orders*, *1 order*), so the numbers of a page stand under each other; an input's short
+  hash ends at the right edge, in Consolas.
 - 1 mm above and below a bar, 3 mm after a section's last row. A section that breaks to a new page repeats
   its bar there as *<heading> (continued)*.
 
@@ -54,7 +54,7 @@ The first pages say what the batch is, so the paper alone can be traced:
 | Accounts | The batch's orders and units per account, most orders first. Only on the summary of all accounts |
 | Couriers | The batch's orders per courier, by the courier's **name** in `parser.toml` (its code when the file no longer names it), most first, *Unknown* last: *86 orders*. The count the owner hands over at the pickup |
 | Warnings | The read warnings. The verifier's findings come after this file is written, so they are on the Day card and in the journal, not here |
-| Inputs | Each input: the name it had, its pages, the first 12 characters of its SHA-256. Then the ledger in bold: *1000 pages read = 986 written + 14 left out (14 repeats, 0 saved earlier)* |
+| Inputs | Each input: the name it had, its pages, its short hash — the first 12 characters of its SHA-256, in Consolas, as its name in `input/` ends (R-LABEL-15). Then the ledger in bold: *1000 pages read = 986 written + 14 left out (14 repeats, 0 saved earlier)* |
 | Sort rule · `<name>` | Each group: its code as the key, then *Sepatu · name contains "sepatu"* |
 | Versions | `schema 1.0 · Packing v0.2 · PDFium <version>` |
 
@@ -106,7 +106,7 @@ group bar, which is why the bars are looked for only after the ledger.
 
 ## Fonts
 
-Arial 9.5–13 and Consolas 10 from `C:\Windows\Fonts`, embedded whole (about 1.4 MB a file, accepted:
+Arial 9.5–13 and Consolas 10.5 (the short hashes) from `C:\Windows\Fonts`, embedded whole (about 1.4 MB a file, accepted:
 [D-APP-1](../decisions/app.md)). PDFium's non-CID font path writes `× ÷ é ® ™ ° ± ñ Ä ½ €` as `ÿ`, so those
 characters are drawn with a **CID copy of the same font**; the CID font's text layer turns a space into
 U+00A0 and `-` into U+00AD, so it carries those characters only and the rest keeps a clean text layer — the

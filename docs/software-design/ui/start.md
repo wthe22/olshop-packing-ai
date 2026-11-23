@@ -8,7 +8,7 @@ When `packing-app.toml` is missing beside the program, or names no data folder:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ◈ Packing v0.6                                                                        │
+│  ◈ Packing v0.7                                                                        │
 │  Where should Packing keep its data?                                                   │
 │  The labels, group PDFs and summary PDFs are kept there, one folder per date.          │
 │  ┌ 🗀 Next to the program ─────────────────────────────────────────────────────────┐   │

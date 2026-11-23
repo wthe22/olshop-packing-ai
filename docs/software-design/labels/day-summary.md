@@ -52,7 +52,7 @@ Day summary · All accounts · 2026-10-07                                       
 - **Couriers**: the day's orders per courier, by name, most orders first; the orders no clue named are
   *Unknown*, last. The count the owner hands over to each courier's pickup.
 - **Inputs**: each live batch's inputs, newest batch first, the batch's number as the key: the name the
-  file had, its pages and the first 12 characters of its SHA-256, then the batch's ledger in bold, as the
+  file had, its pages and its short hash in Consolas, then the batch's ledger in bold, as the
   summary PDF's facts pages show them. The paper alone names the day's files.
 - Then, from a new page, the **pick pages** of the whole day: the units per item over every live batch, as
   the summary PDF's pick pages, under the bar *Pick summary (units to take from stock)*.

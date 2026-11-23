@@ -48,7 +48,7 @@ is read as written, not as meant.
 | TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `packing-app.toml`, `parser.toml`, `config.toml`, the views |
 | JSON | `serde`, `serde_json` | The journal |
 | Dates | `jiff` | Dates of the labels, `*_time` |
-| Hashes | `xxhash-rust` (XXH3-64), `sha2` (SHA-256) | XXH3-64: logo and shape hashes, page fingerprints and digests, the journal's seals. SHA-256: input and output files, so a file's name is its content |
+| Hashes | `xxhash-rust` (XXH3-64), `sha2` (SHA-256) | XXH3-64: logo and shape hashes, page fingerprints and digests, the journal's seals. SHA-256: input and output files; an input's name ends in its first 12 characters |
 | Tests | `cargo test`; `svelte-check` and `node --test` for the screens | Fixtures written by the Rust fixture writer ([testing](../../development/testing.md)) |
 | Build | `tools/make-portable.sh` | No installer; the program folder ([program](program.md#program-folder)) |
 

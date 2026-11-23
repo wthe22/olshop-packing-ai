@@ -106,6 +106,8 @@
           />
         {:else if shell.screen === "new-batch"}
           <NewBatchScreen
+            day={shell.day}
+            today={shell.today}
             batchNumber={shell.nextBatch}
             amend={shell.amendBatch}
             amendRule={shell.amendRule}
@@ -118,6 +120,8 @@
           />
         {:else if shell.screen === "repeats" && shell.readResult}
           <RepeatsScreen
+            day={shell.day}
+            today={shell.today}
             read={shell.readResult}
             onResult={shell.onRepeats}
             onContinue={shell.continueToPlan}
@@ -126,6 +130,8 @@
         {:else if shell.screen === "plan" && shell.readResult}
           {#key shell.planVersion}
             <PlanScreen
+              day={shell.day}
+              today={shell.today}
               batchNumber={shell.nextBatch}
               read={shell.readResult}
               onSaved={shell.onSaved}

@@ -35,8 +35,8 @@ test("the Amend question names the batch's sort rule, in the words the guide quo
   const amend = texts.day.askAmend(2, "default");
   assert.deepEqual(amend, {
     title: "Redo batch 2?",
-    body: "Its labels are read again with the sort rule default.",
-    ok: "Redo batch 2",
+    body: "Its labels are read again with the sort rule default. After saving, print its PDFs again.",
+    ok: "Redo",
   });
   // 03-changes.md quotes the Amend question, so the two must not drift. The quote may be wrapped
   // over two lines in the Markdown, so its whitespace is collapsed first.
@@ -54,7 +54,7 @@ test("the Sort rules screen asks in the words its design quotes", () => {
   const ask = texts.sortRules.askDiscard("harian");
   assert.deepEqual(ask, {
     title: "Discard the changes to harian?",
-    body: "They are not saved yet.",
+    body: "They are not saved yet and will be lost.",
     ok: "Discard",
   });
   const doc = readFileSync(

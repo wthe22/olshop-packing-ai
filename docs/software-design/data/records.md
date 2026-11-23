@@ -27,7 +27,7 @@ BatchSaved {                    // type "batch_saved"
 
 InputPdf {
   pdf: PdfID
-  sha256: String                // 64 hex characters; the file is input/{sha256}.pdf
+  sha256: String                // 64 hex characters; the file is input/{date}_{pdf}_{first 12}.pdf
   filename: String              // the name it had when it was chosen
   size: u64
   page_count: u16
@@ -112,7 +112,7 @@ ReprintedOrder {
   order_id: String
   date: Date                    // the date the order was saved
   batch: BatchID
-  sha256: String                // its input, {date}/input/{sha256}.pdf
+  sha256: String                // its input, in {date}/input/ (records.md, InputPdf)
   page_start: u16
   page_end: u16
 }

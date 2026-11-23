@@ -183,7 +183,7 @@
             >{words.clear}</button
           >
           <button class="primary" disabled={search.busy || tickedCount === 0} onclick={search.reprint}
-            >{words.reprint(tickedCount)}</button
+            >{words.reprint}</button
           >
         </div>
       {/if}

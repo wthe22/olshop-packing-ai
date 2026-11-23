@@ -5,7 +5,7 @@ app, then print.
 
 ## The window
 
-The title bar has the panel button at the left, the program and its version (**Packing v0.6**), and at
+The title bar has the panel button at the left, the program and its version (**Packing v0.7**), and at
 the right **Search** ([finding a saved order](05-search.md)), **Accounts** ([Accounts](03-changes.md#accounts)),
 **Sort rules** and **Settings**. `Esc` closes Search, Accounts, Sort rules and Settings.
 
@@ -25,7 +25,9 @@ The **Day** screen shows what has been saved on the open date and is the way to 
 
 - The title is the open date, "Wed, 7 Oct 2026" (with *today* when it is), and its counts beside it:
   "2 batches", "729 orders", "5 group PDFs".
-- **+ New batch** starts a new batch.
+- **+ New batch** starts a new batch, saved into the open date. On another date than today it is grey and
+  asks first: "Add a batch to Wed, 7 Oct 2026? It is not today: today is Mon, 23 Nov 2026." Click
+  **Add** only when the batch belongs to that date.
 - **Day summary** writes one PDF of the whole date and opens it: each batch as its card shows it; the
   orders per courier (the count to hand over at each pickup); each batch's label files with their pages;
   the pick list of the whole day; last, every order content of the day with its orders, the most orders
@@ -50,7 +52,8 @@ The **Day** screen shows what has been saved on the open date and is the way to 
 
 ![New batch with two files](images/02-new-batch.png)
 
-1. Click **+ New batch**.
+1. Click **+ New batch**. The date the batch is saved into stands at the top of every screen of the batch,
+   with *today*, or *not today* in amber.
 2. **Sort rule** is already set to the rule you used last, also on a new day; change it only for a batch
    that is sorted another way ([Sort rules](03-changes.md#sort-rules)). Only the rules that are on are
    listed.

@@ -13,14 +13,14 @@ use std::sync::mpsc;
 
 use jiff::civil::date;
 use packing_batch::{
-    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, ReadRequest, ReprintOutcome,
-    ReprintRequest, RestoreOutcome, RestoreRequest, SaveOutcome, SaveRequest, Saved,
-    account_summary, account_summary_file, amend, check_files, day_summary, day_summary_file,
-    read_draft, reprint, restore, revert, save, set_printed, set_sent,
+    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, REVERTED_DIR, ReadRequest,
+    ReprintOutcome, ReprintRequest, RestoreOutcome, RestoreRequest, RevertedPdfs, SaveOutcome,
+    SaveRequest, Saved, account_summary, account_summary_file, amend, check_files, day_summary,
+    day_summary_file, read_draft, reprint, restore, revert, save, set_printed, set_sent,
 };
 use packing_engine::account_questions::{NoSenderQuestion, ShopQuestion};
 use packing_engine::accounts::{Account, ShopAccount, add_shop};
-use packing_engine::ids::{BatchId, OrderId};
+use packing_engine::ids::{BatchId, OrderId, PdfId};
 use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked};
 use packing_engine::workflows::{SortRule, Workflows, load_bundled};
 use packing_pdf::worker::PdfWorker;
@@ -144,7 +144,7 @@ fn a_batch_is_saved_through_the_journal_and_opens_again() {
     }
     assert!(!partial_dir(day.folder.dir()).exists());
     for input in &record.inputs {
-        assert!(input_path(day.folder.dir(), &input.sha256).is_file());
+        assert!(input_path(&day.folder, input.pdf, &input.sha256).is_file());
     }
 
     let opened = open_date(&day.folder).unwrap();
@@ -168,15 +168,14 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
         other => panic!("a second read of the same files: {other:?}"),
     }
 
-    assert_eq!(
-        revert(&day.folder, &mut day.journal, APP).unwrap(),
-        BatchId::new(1)
-    );
+    let reverted = revert(&day.folder, &mut day.journal, APP, RevertedPdfs::Discard).unwrap();
+    assert_eq!((reverted.batch, reverted.saved_to), (BatchId::new(1), None));
     assert!(day.journal.fold().live.is_empty());
     assert!(!day.output(GROUP_FILE).exists() && !day.output("1 summary.pdf").exists());
     assert!(!partial_dir(day.folder.dir()).exists());
+    assert!(!day.folder.dir().join(REVERTED_DIR).exists());
     assert!(matches!(
-        revert(&day.folder, &mut day.journal, APP),
+        revert(&day.folder, &mut day.journal, APP, RevertedPdfs::Discard),
         Err(BatchError::NoBatch)
     ));
 
@@ -187,7 +186,17 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
     let redo = amend(&day.folder, day.journal.fold(), &day.workflows).unwrap();
     let paths: Vec<PathBuf> = redo.files.iter().map(|f| f.path.clone()).collect();
     let stale = day.read(&paths, &redo.rule, Some(redo.batch)).unwrap();
-    revert(&day.folder, &mut day.journal, APP).unwrap();
+    let kept = revert(&day.folder, &mut day.journal, APP, RevertedPdfs::Save)
+        .unwrap()
+        .saved_to
+        .unwrap();
+    assert!(kept.starts_with(day.folder.dir().join(REVERTED_DIR)));
+    for file in [GROUP_FILE, "1 summary.pdf"] {
+        assert!(
+            kept.join(file).is_file() && !day.output(file).exists(),
+            "{file}"
+        );
+    }
     let refused = day.try_save(&stale, false);
     assert!(
         matches!(refused, Err(BatchError::NotNewest)),
@@ -311,7 +320,7 @@ fn a_finding_stops_the_save_until_save_anyway() {
     };
     let draft = day.read_inputs().unwrap();
     // `input/` already holds bytes under the first input's name that are not its bytes.
-    let stored = input_path(day.folder.dir(), &draft.files[0].sha256);
+    let stored = input_path(&day.folder, PdfId::FIRST, &draft.files[0].sha256);
     fs::create_dir_all(stored.parent().unwrap()).unwrap();
     let mut bytes = fs::read(testdata(INPUTS[0])).unwrap();
     bytes.extend_from_slice(b"\n% changed\n");
@@ -574,6 +583,13 @@ fn an_accounts_summary_is_checked_kept_and_dropped_by_an_amend_or_a_revert() {
         write(&day, &account).unwrap(),
         AccountSummaryOutcome::Written(_)
     ));
-    revert(&day.folder, &mut day.journal, APP).unwrap();
+    let kept = revert(&day.folder, &mut day.journal, APP, RevertedPdfs::Save)
+        .unwrap()
+        .saved_to
+        .unwrap();
     assert!(!path.exists(), "and so does a revert");
+    assert!(
+        kept.join(path.file_name().unwrap()).is_file(),
+        "which saves a copy when asked"
+    );
 }

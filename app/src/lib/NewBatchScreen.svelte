@@ -22,9 +22,12 @@
   import BatchFiles from "./BatchFiles.svelte";
   import { fileChips } from "./repeats";
   import SortRuleControl from "./SortRuleControl.svelte";
+  import DayTitle from "./DayTitle.svelte";
   import { texts } from "../texts";
 
   let {
+    day,
+    today,
     batchNumber,
     amend,
     amendRule,
@@ -35,6 +38,9 @@
     onReviewRepeats,
     onCancel,
   }: {
+    // The open date, which the batch is saved into, shown over the bar; and today.
+    day: string;
+    today: string;
     batchNumber: number;
     // The batch being redone on an amend's selection page,
     // or `null` for a new batch's file list. Decides the title, the order the files are listed
@@ -286,6 +292,7 @@
 </script>
 
 <main>
+  <DayTitle {day} {today} inBatch />
   <div class="bar">
     <h2>{amend === null ? texts.newBatch.title(batchNumber) : texts.newBatch.amendTitle(amend)}</h2>
     <SortRuleControl

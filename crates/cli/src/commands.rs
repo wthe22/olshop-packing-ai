@@ -8,8 +8,8 @@ use std::sync::mpsc;
 
 use jiff::civil::Date;
 use packing_batch::{
-    BatchError, Draft, ReadRequest, SaveOutcome, SaveRequest, Saved, amend, check_files,
-    read_draft, revert, save,
+    BatchError, Draft, ReadRequest, RevertedPdfs, SaveOutcome, SaveRequest, Saved, amend,
+    check_files, read_draft, revert, save,
 };
 use packing_engine::ids::BatchId;
 use packing_engine::workflows::{SortRule, Workflows};
@@ -121,8 +121,13 @@ pub fn prepare(options: &Options) -> Result<(), CliError> {
 
 pub fn revert_last(options: &Options) -> Result<(), CliError> {
     let mut session = Session::open(options)?;
-    match revert(&session.folder, &mut session.journal, APP) {
-        Ok(batch) => println!("reverted batch {batch} on {}", session.date()),
+    match revert(
+        &session.folder,
+        &mut session.journal,
+        APP,
+        RevertedPdfs::Discard,
+    ) {
+        Ok(reverted) => println!("reverted batch {} on {}", reverted.batch, session.date()),
         Err(BatchError::NoBatch) => println!("no batch to revert on {}", session.date()),
         Err(error) => return Err(error.into()),
     }

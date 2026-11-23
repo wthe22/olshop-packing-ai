@@ -25,7 +25,7 @@ pub fn amend(folder: &DateFolder, fold: &Fold, workflows: &Workflows) -> Result<
         .inputs
         .iter()
         .map(|input| ChosenFile {
-            path: input_path(folder.dir(), &input.sha256),
+            path: input_path(folder, input.pdf, &input.sha256),
             filename: input.filename.clone(),
             sha256: input.sha256.clone(),
             size: input.size,

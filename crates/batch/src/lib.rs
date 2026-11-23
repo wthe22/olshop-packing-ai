@@ -10,17 +10,19 @@ mod error;
 mod files;
 mod reprint;
 mod restore;
+mod reverted;
 mod save;
 mod summaries;
 mod written;
 
-pub use after::{revert, set_printed, set_sent};
+pub use after::{Reverted, revert, set_printed, set_sent};
 pub use amend::{Amend, amend};
 pub use draft::{Draft, ReadRequest, read_draft};
 pub use error::BatchError;
 pub use files::{ChosenFile, check_files};
 pub use reprint::{ReprintOutcome, ReprintRequest, reprint};
 pub use restore::{RestoreOutcome, RestoreRequest, restore};
+pub use reverted::{REVERTED_DIR, RevertedPdfs};
 pub use save::{SaveOutcome, SaveProgress, SaveRequest, SaveStage, Saved, save};
 pub use summaries::{
     AccountSummaryOutcome, AccountSummaryRequest, DAY_SUMMARY_PDF, account_summary,

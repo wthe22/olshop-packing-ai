@@ -25,7 +25,7 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 │ │     (Unknown) no tracking ID    ×1  Spion Beat                   Spion x12 page 7               │ │
 │ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
 │ ─────────────────────────────────────────────────────────────────────────────────────────────────── │
-│ 2 of 3 selected                                                      [Clear]  [ Reprint 2 orders ]  │
+│ 2 of 3 selected                                                      [Clear]  [ Reprint ]           │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -40,7 +40,7 @@ On a narrower window the items take a line of their own under the order:
 - **The filter** is made with the boxes of [Sort rules](sort-rules.md), in one box with the dates: the
   boxes at the left, the dates and **Search** at the right; when Search is narrower than 60 rem, the dates
   and **Search** stand in one line under the boxes, so the box stays low. The fields are those of the
-  filter language ([fields](../rules-file/conditions.md#fields)). The first box is *Tracking ID contains*,
+  filter language ([fields](../rules-file/conditions.md#fields)). The first box is *Order ID contains*,
   so part of an ID finds its order ([D-UI-12](../decisions/ui.md)). *Account* and *Shop* narrow it to one
   account or one shop: *Account equals* picks an account from the list ([D-RULES-6](../decisions/rules.md)). Matching ignores case; an item field
   matches when one line matches. The Courier row works as there: *equals* picks a courier from the list,
@@ -52,7 +52,7 @@ On a narrower window the items take a line of their own under the order:
   The range's first and last date stand beside the list, so each choice shows what it covers; picking a date
   there makes the range the owner's own (*Custom range*). *All days* hides them. Results come from the search
   index ([reprint](../app/reprint.md#the-search-index)); until it is built the screen says *Loading*.
-- **Enter** in a box searches, so a scanned tracking ID finds its order at once; the first box has the
+- **Enter** in a box searches, so a scanned Order ID finds its order at once; the first box has the
   focus when Search opens.
 - **Results**: the number of orders and batches and **Select all**, then one **row** per order under the
   heads *Order*, *Tracking*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; in the **Order**
@@ -82,7 +82,7 @@ On a narrower window the items take a line of their own under the order:
   its tick shows a dash when only some are ticked. A search that finds one order ticks it.
 - **The reprint bar** stays at the foot of the screen while the rows scroll: `<n> of <m> selected`,
   **Clear**, and **Reprint `<n>` orders**. When a ticked order was reprinted before, the bar says how many,
-  and **Reprint** asks first: "Reprint 3 orders?" — "2 of them were reprinted before." [Reprint 3 orders]
+  and **Reprint** asks first: "Reprint 3 orders?" — "2 of them were reprinted before." [Reprint]
   [Cancel].
 - **Reprint `<n>` orders** writes one PDF of their label pages, unchanged, in their original printing order,
   into today's date: `reprint 1 x2.pdf` ([reprint](../app/reprint.md#reprint)). It is verified before it is

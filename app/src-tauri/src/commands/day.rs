@@ -8,13 +8,13 @@ use std::path::PathBuf;
 
 use jiff::civil::Date;
 use packing_batch::{
-    AccountSummaryOutcome, AccountSummaryRequest, RestoreOutcome, RestoreRequest, account_summary,
-    restore,
+    AccountSummaryOutcome, AccountSummaryRequest, RestoreOutcome, RestoreRequest, RevertedPdfs,
+    account_summary, restore,
 };
 use packing_engine::ids::BatchId;
 use packing_engine::record::{PrintSent, PrintedMarked};
 use packing_store::{Fold, older_data};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::ipc::Response;
 use tauri::{AppHandle, Manager, State};
 
@@ -137,15 +137,40 @@ pub(crate) fn write_account_summary(
     })
 }
 
-pub(crate) fn revert(state: &AppState, day: &str, batch: BatchId) -> Result<(), String> {
+/// The owner's answer to *Undo batch*: its PDFs saved into `reverted\`, or discarded.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RevertPdfs {
+    Save,
+    Discard,
+}
+
+/// Revert `batch`; the folder its PDFs were saved in, from the date folder
+/// (`reverted\batch 2 reverted 14.05`), when they were.
+pub(crate) fn revert(
+    state: &AppState,
+    day: &str,
+    batch: BatchId,
+    pdfs: RevertPdfs,
+) -> Result<Option<String>, String> {
     let date = date_of(day)?;
+    let pdfs = match pdfs {
+        RevertPdfs::Save => RevertedPdfs::Save,
+        RevertPdfs::Discard => RevertedPdfs::Discard,
+    };
     state.write_day(date, |open| {
         check_newest(open.journal.fold(), batch)?;
-        packing_batch::revert(&open.folder, &mut open.journal, APP_VERSION)
+        let reverted = packing_batch::revert(&open.folder, &mut open.journal, APP_VERSION, pdfs)
             .map_err(|error| error.to_string())?;
         open.outputs.retain(|problem| problem.batch != batch);
         state.index().refresh(open.journal.fold());
-        Ok(())
+        Ok(reverted.saved_to.map(|folder| {
+            folder
+                .strip_prefix(open.folder.dir())
+                .unwrap_or(&folder)
+                .display()
+                .to_string()
+        }))
     })
 }
 
@@ -269,13 +294,20 @@ pub async fn set_printed(
         .map_err(|error| format!("the Printed task stopped: {error}"))?
 }
 
-/// *Revert* `batch`, which must still be the newest. A file open in a PDF viewer stops it with the
-/// file named, and the date is as before.
+/// *Revert* `batch`, which must still be the newest, its PDFs saved or discarded. A file open in a
+/// PDF viewer stops it with the file named, and the date is as before.
 #[tauri::command]
-pub async fn revert_last(app: AppHandle, day: String, batch: BatchId) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || revert(&app.state::<AppState>(), &day, batch))
-        .await
-        .map_err(|error| format!("the revert task stopped: {error}"))?
+pub async fn revert_last(
+    app: AppHandle,
+    day: String,
+    batch: BatchId,
+    pdfs: RevertPdfs,
+) -> Result<Option<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        revert(&app.state::<AppState>(), &day, batch, pdfs)
+    })
+    .await
+    .map_err(|error| format!("the revert task stopped: {error}"))?
 }
 
 /// **Day summary**: the date's summary PDF, written on its own thread; its path comes back.

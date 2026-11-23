@@ -65,6 +65,7 @@ tools/make-portable.sh     builds the portable program folder target/portable/Pa
 tools/make-portable.bat    the same, for Explorer or cmd (runs the .sh through Git's bash)
 tools/dev.bat            run the app as a debug build with the Vite dev server (no release build)
 tools/guide-pictures.mjs   the user guide's pictures from the built program on testdata/ (WebView2 DevTools)
+tools/rename-inputs.py     the owner's one-time rename of v0.6 inputs to the v0.7 names (Python, as asked)
 tools/check.sh, *.mjs      the gates of code-rules.md
 testdata/                  made-up fixtures for the tests
 categories.toml            an example picks file: the grouping `default` (a data folder without one uses the one catch-all pick)

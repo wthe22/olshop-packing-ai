@@ -41,8 +41,8 @@ test("the result line, a row's items and the fixed texts", () => {
   assert.equal(searchSummary(3, 2), "3 orders in 2 batches");
   assert.equal(itemsText(row("580000000000000042")), "Sepatu ×2, Spion Beat ×1");
   assert.deepEqual(
-    [texts.search.reprint(1), texts.search.reprint(2), texts.search.made(1, 2, 2)],
-    ["Reprint 1 order", "Reprint 2 orders", "Reprint 1 written: 2 orders, 2 pages."],
+    [texts.search.reprint, texts.search.made(1, 2, 2)],
+    ["Reprint", "Reprint 1 written: 2 orders, 2 pages."],
   );
   assert.equal(texts.search.noMatch, "No saved order matches.");
   assert.equal(texts.nav.search, "Search");
@@ -53,8 +53,8 @@ test("the result line, a row's items and the fixed texts", () => {
   assert.deepEqual(
     [texts.search.askAgain(1, 3), texts.search.askAgain(2, 3)],
     [
-      { title: "Reprint 3 orders?", body: "1 of them was reprinted before.", ok: "Reprint 3 orders" },
-      { title: "Reprint 3 orders?", body: "2 of them were reprinted before.", ok: "Reprint 3 orders" },
+      { title: "Reprint 3 orders?", body: "1 of them was reprinted before.", ok: "Reprint" },
+      { title: "Reprint 3 orders?", body: "2 of them were reprinted before.", ok: "Reprint" },
     ],
   );
   assert.equal(reprintedMark(row("580000000000000042")), null);
@@ -78,7 +78,7 @@ test("a search finds rows, ticks choose them and Reprint writes them into today"
   });
   const search = new Search(() => "2026-10-07", () => "2026-10-27", () => (reprinted += 1));
   const [first] = search.tree.root.children;
-  assert.deepEqual([first.field, first.operator], ["tracking_id", "contains"], "the first box: tracking ID contains");
+  assert.deepEqual([first.field, first.operator], ["order_id", "contains"], "the first box: Order ID contains");
 
   await search.run();
   assert.deepEqual(calls[1], {
@@ -182,7 +182,7 @@ test("one order found is ticked; an order reprinted before is printed again only
 
   await search.reprint();
   assert.deepEqual(asked, [
-    { title: "Reprint 1 order?", body: "It was reprinted before.", ok: "Reprint 1 order" },
+    { title: "Reprint 1 order?", body: "It was reprinted before.", ok: "Reprint" },
   ]);
   assert.equal(calls.some((call) => call.command === "reprint"), false, "Cancel prints nothing");
   assert.equal(search.isTicked(before), true, "the tick stays for another try");

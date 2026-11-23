@@ -212,17 +212,15 @@ pub(crate) fn account_rows(counts: &[AccountCount]) -> Vec<Row> {
         .collect()
 }
 
-/// Each input: the name it had, its pages and the first 12 characters of its SHA-256; then the
-/// ledger in bold.
+/// Each input: the name it had, its pages and its short hash; then the ledger in bold.
 pub(crate) fn input_rows(record: &BatchSaved) -> Vec<Row> {
     record
         .inputs
         .iter()
         .map(|input| {
-            let sha = input.sha256.as_str();
             Row::new(input.filename.clone())
                 .count(0, usize::from(input.page_count), "page", "pages")
-                .tail(&sha[..12.min(sha.len())])
+                .tail(input.sha256.short())
         })
         .chain([Row::new(ledger(record)).bold()])
         .collect()

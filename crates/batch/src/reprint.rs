@@ -153,7 +153,7 @@ fn source(fold: &Fold, folder: &DateFolder, order_id: &OrderId) -> Result<Source
         .iter()
         .find(|input| input.pdf == order.pdf)
         .ok_or_else(not_saved)?;
-    let path = input_path(folder.dir(), &input.sha256);
+    let path = input_path(folder, input.pdf, &input.sha256);
     if !path.is_file() || sha256_of(&path)? != input.sha256 {
         return Err(BatchError::InputUnusable {
             file: input.filename.clone(),

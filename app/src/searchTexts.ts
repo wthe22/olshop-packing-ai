@@ -62,7 +62,7 @@ export const searchTexts = {
       all === 1
         ? "It was reprinted before."
         : `${before} of them ${before === 1 ? "was" : "were"} reprinted before.`,
-    ok: `Reprint ${count(all, "order", "orders")}`,
+    ok: "Reprint",
   }),
   // A row's **Open**, named for its group PDF.
   open: "Open",
@@ -73,7 +73,7 @@ export const searchTexts = {
   from: "From",
   inputPages: (first: number, last: number) => (first === last ? `p. ${first}` : `p. ${first}–${last}`),
   savedInto: (time: string) => `, saved at ${time} into group`,
-  reprint: (n: number) => `Reprint ${count(n, "order", "orders")}`,
+  reprint: "Reprint",
   // "Reprint 1 written: 2 orders, 2 pages."
   made: (n: number, orders: number, pages: number) =>
     `Reprint ${n} written: ${count(orders, "order", "orders")}, ${count(pages, "page", "pages")}.`,

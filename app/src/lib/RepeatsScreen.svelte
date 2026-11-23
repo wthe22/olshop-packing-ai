@@ -5,13 +5,19 @@
   import * as batch from "./api/batch";
   import { sameChoice, withCopy, withGroupChoice } from "./repeats";
   import { texts } from "../texts";
+  import DayTitle from "./DayTitle.svelte";
 
   let {
+    day,
+    today,
     read,
     onResult,
     onContinue,
     onBack,
   }: {
+    // The open date, which the batch is saved into, shown over the bar; and today.
+    day: string;
+    today: string;
     read: batch.ReadResult;
     // The read as it is after a choice.
     onResult: (result: batch.ReadResult) => void;
@@ -44,6 +50,7 @@
 </script>
 
 <main>
+  <DayTitle {day} {today} inBatch />
   <div class="bar">
     <h2>{texts.repeats.title}</h2>
     <span class="grow"></span>

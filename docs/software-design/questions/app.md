@@ -3,6 +3,19 @@
 Each question gives the problem, the options, and the **Default**: what the work does until the owner decides.
 Answered questions are removed, and their answer goes into [decisions/](../decisions/README.md).
 
+## Q-APP-19 — Where a revert saves the batch's PDFs
+
+**Revert** › **Save** copies the batch's group PDFs, summary PDF and account summaries before they leave
+`output/` ([D-APP-31](../decisions/app-features.md)). Where to?
+
+- **A. Into the date folder**: `2026-11-23\reverted\batch 2 reverted 14.05\`, the time of the revert in
+  its name; the green line after the revert names it. Nothing to choose, and the copies travel with the data
+  folder. *(Default, built)*
+- **B. A folder the owner picks** in the Windows folder dialog on every revert; closing the dialog cancels
+  the revert.
+- **C. One folder set in Settings** (e.g. `D:\Reverted`), with a folder per revert named by its date, batch
+  and time.
+
 ## Q-APP-18 — The saved orders of a renamed account
 
 An order keeps the account's name it was saved with: the journal is never rewritten

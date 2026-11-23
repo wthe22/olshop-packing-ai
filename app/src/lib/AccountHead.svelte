@@ -1,6 +1,6 @@
 <script lang="ts">
   // The head of the shown account's card: its name, **Rename** (the name edited in place, a refused
-  // name told under the field) and **Delete account**.
+  // name told under the field) and **Delete**.
   import { tick } from "svelte";
   import { texts } from "../texts";
 

@@ -1,7 +1,7 @@
 // Every screen text of the PC app, in English. Components import from here; no screen text is
 // written in a component. The Search and Settings screens' texts are their own files, joined here.
 
-import type { Question } from "./lib/confirm.svelte";
+import type { Choice, Question } from "./lib/confirm.svelte";
 import { count } from "./count";
 import { searchTexts } from "./searchTexts";
 import { settingsTexts } from "./settingsTexts";
@@ -58,6 +58,8 @@ export const texts = {
     // The title is the date, "Wed, 7 Oct 2026", marked *today* when it is; its counts stand beside
     // it, "2 batches  729 orders  5 group PDFs  1 reprint"; a day with no reprint shows no count of them.
     today: "today",
+    // The batch flow's title on a date that is not today, which the batch is saved into.
+    notToday: "not today",
     stats: (batches: number, orders: number, pdfs: number, reprints: number) =>
       [
         { n: batches, word: batches === 1 ? "batch" : "batches" },
@@ -67,6 +69,13 @@ export const texts = {
       ].filter((stat, i) => i < 3 || stat.n > 0),
     nothing: "Nothing saved on this date yet.",
     newBatch: "+ New batch",
+    // *New batch* on a date that is not today is muted, and asks before the batch starts.
+    newBatchNotToday: (day: string) => `${day} is not today: a new batch is saved into ${day}`,
+    askNotToday: (day: string, today: string, past: boolean): Question => ({
+      title: `Add a new batch to ${day}?`,
+      body: `Today is ${today}. This adds the new batch to a ${past ? "past" : "future"} day, not to today.`,
+      ok: "Add",
+    }),
     // A batch card's title, "Batch 2", and what follows it, "saved 09:12 · 2 files · 129 orders".
     batch: (n: number) => `Batch ${n}`,
     batchFacts: (time: string, files: number, orders: number) =>
@@ -139,21 +148,25 @@ export const texts = {
     // The green line after *Save batch*, shown for a few seconds.
     saved: (n: number, pdfs: number) =>
       `Batch ${n} saved: ${count(pdfs, "group PDF", "group PDFs")} and the summary PDF.`,
+    // The same line after a revert that saved the batch's PDFs: the folder, in the date folder.
+    revertSaved: (n: number, folder: string) => `Batch ${n} undone. Its PDFs are in ${folder}.`,
     loading: "Loading",
     // *Amend* and *Revert*, on the newest batch only.
     amend: "Amend",
     revert: "Revert",
-    // The questions before *Revert* and *Amend*. An amend redoes the batch with its sort rule, so
-    // the question names it.
-    askRevert: (n: number, pdfs: number): Question => ({
+    // The questions before *Revert* and *Amend*. A revert keeps a copy of the batch's PDFs in the
+    // date's `reverted` folder, or deletes them. An amend redoes the batch with its sort rule, so the
+    // question names it.
+    askRevert: (n: number, pdfs: number): Choice => ({
       title: `Undo batch ${n}?`,
-      body: `Its ${count(pdfs, "group PDF", "group PDFs")} and summary PDF are deleted. Throw away its printed labels.`,
-      ok: `Undo batch ${n}`,
+      body: `Its ${count(pdfs, "group PDF", "group PDFs")} and summary PDF are removed. Save keeps a copy in the date's reverted folder; Discard deletes them. Throw away its printed labels.`,
+      ok: "Save",
+      other: "Discard",
     }),
     askAmend: (n: number, rule: string): Question => ({
       title: `Redo batch ${n}?`,
-      body: `Its labels are read again with the sort rule ${rule}.`,
-      ok: `Redo batch ${n}`,
+      body: `Its labels are read again with the sort rule ${rule}. After saving, print its PDFs again.`,
+      ok: "Redo",
     }),
     // While *Amend* reads the batch's own label files again (the
     // `read-progress` event), shown with a progress bar before the Plan screen opens.
@@ -161,7 +174,11 @@ export const texts = {
       `Reading the batch's labels: page ${page} of ${pages}`,
     // Changing the day while a draft is open asks first; the batch being
     // prepared is thrown away. (The Plan screen's top *Back* never asks.)
-    askDiscardDraft: { title: "Discard the batch being prepared?", body: null, ok: "Discard" },
+    askDiscardDraft: {
+      title: "Discard the batch being prepared?",
+      body: "It is not saved yet and will be lost.",
+      ok: "Discard",
+    },
   },
 
   newBatch: {
@@ -345,7 +362,7 @@ export const texts = {
     // Drawn after a plus icon.
     newRule: "New rule",
     rename: "Rename",
-    deleteRule: "Delete rule",
+    deleteRule: "Delete",
     // A rule's tab: the one the newest batch was sorted by, and one that is switched off.
     lastUsed: "last used",
     off: "off",
@@ -355,12 +372,12 @@ export const texts = {
     offWord: "Off",
     offered: "New batch offers this rule.",
     notOffered: "Kept, but New batch does not offer it.",
-    // Why the switch or **Delete rule** cannot be used.
+    // Why the switch or **Delete** cannot be used.
     keptOnlyOn: "The only rule that is on: a new batch needs one.",
     keptLast: "The last rule cannot be deleted.",
     askDiscard: (rule: string): Question => ({
       title: `Discard the changes to ${rule}?`,
-      body: "They are not saved yet.",
+      body: "They are not saved yet and will be lost.",
       ok: "Discard",
     }),
     // The groups card's head: the groups, and the count column while a batch is open.

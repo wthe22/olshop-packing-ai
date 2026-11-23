@@ -155,19 +155,27 @@ pub fn account_summary(
     Ok(AccountSummaryOutcome::Written(target))
 }
 
-/// Delete the account summaries of `batch` in `dir`: a revert or an amend makes them stale.
-pub(crate) fn delete_account_summaries(dir: &Path, batch: BatchId) -> Result<(), StoreError> {
+/// The account summaries of `batch` in the date folder `dir`.
+pub(crate) fn account_summaries(dir: &Path, batch: BatchId) -> Result<Vec<PathBuf>, StoreError> {
     let prefix = format!("{batch} summary ");
     let entries = fs::read_dir(dir).map_err(|error| StoreError::Io {
         path: dir.to_path_buf(),
         error,
     })?;
-    for entry in entries.flatten() {
-        let name = entry.file_name().to_string_lossy().to_string();
-        if name.starts_with(&prefix) && name.ends_with(".pdf") {
-            let path = entry.path();
-            fs::remove_file(&path).map_err(|error| StoreError::Io { path, error })?;
-        }
+    Ok(entries
+        .flatten()
+        .filter(|entry| {
+            let name = entry.file_name().to_string_lossy().to_string();
+            name.starts_with(&prefix) && name.ends_with(".pdf")
+        })
+        .map(|entry| entry.path())
+        .collect())
+}
+
+/// Delete the account summaries of `batch` in `dir`: a revert or an amend makes them stale.
+pub(crate) fn delete_account_summaries(dir: &Path, batch: BatchId) -> Result<(), StoreError> {
+    for path in account_summaries(dir, batch)? {
+        fs::remove_file(&path).map_err(|error| StoreError::Io { path, error })?;
     }
     Ok(())
 }

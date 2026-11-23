@@ -17,6 +17,7 @@ import { DayOutputs } from "./dayOutputs.svelte";
 import { texts } from "../texts";
 import { amendOpens } from "./planFlow";
 import { confirmBox } from "./confirm.svelte";
+import { formatDay } from "../dates";
 import type { Theme } from "./theme";
 
 // The screens the shell routes between; the batch flow's screens are not in the nav.
@@ -201,7 +202,15 @@ export class Shell {
     return true;
   };
 
-  startBatch = () => {
+  // *New batch*; on a date that is not today, only when the owner says so.
+  startBatch = async () => {
+    if (
+      this.day !== this.today &&
+      !(await confirmBox.ask(
+        texts.day.askNotToday(formatDay(this.day), formatDay(this.today), this.day < this.today),
+      ))
+    )
+      return;
     this.savedMessage = null;
     this.overlay = null;
     this.files = [];
@@ -245,13 +254,18 @@ export class Shell {
     this.files = [];
     this.amendBatch = null;
     this.overlay = null;
-    this.savedMessage = texts.day.saved(result.batch, result.pdfs);
     if (result.after_save.length > 0) this.error = result.after_save.join(" ");
     this.screen = "day";
     await Promise.all([this.refreshOverview(), this.refreshPanel()]);
+    this.showSaved(texts.day.saved(result.batch, result.pdfs));
+  };
+
+  // The green line on the Day screen, shown for a few seconds.
+  private showSaved(message: string) {
+    this.savedMessage = message;
     if (this.savedTimer) clearTimeout(this.savedTimer);
     this.savedTimer = setTimeout(() => (this.savedMessage = null), 6000);
-  };
+  }
 
   // Leave the batch for the Day screen: *Cancel* on the PDF selection page (a new batch's file
   // list and the amend's selection page) and *Cancel amend*. Only here is the open draft
@@ -322,12 +336,15 @@ export class Shell {
     }
   };
 
-  // *Revert* the newest batch: confirm, then revert it.
+  // *Revert* the newest batch: confirm, saving its PDFs or discarding them, then revert it. Saved,
+  // the green line names their folder.
   revert = async (row: dayData.BatchView) => {
-    if (!(await confirmBox.ask(texts.day.askRevert(row.batch, row.pdfs.length)))) return;
+    const answer = await confirmBox.choose(texts.day.askRevert(row.batch, row.pdfs.length));
+    if (answer === "cancel") return;
     try {
-      await dayData.revertLast(this.day, row.batch);
+      const folder = await dayData.revertLast(this.day, row.batch, answer === "ok" ? "save" : "discard");
       await Promise.all([this.refreshOverview(), this.refreshPanel()]);
+      if (folder) this.showSaved(texts.day.revertSaved(row.batch, folder));
     } catch (e) {
       this.error = String(e);
     }

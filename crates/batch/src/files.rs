@@ -1,7 +1,7 @@
 //! The files chosen for a batch (step 3): each one's SHA-256, size, times and page count, and the
 //! live batch of the date that read the same bytes — never the batch an amend redoes, whose own
 //! files they may be. One file chosen twice is listed once. A file read from the date's `input/`,
-//! where it is named by its hash, keeps the name its record gives it.
+//! where it is named by its number and hash, keeps the name its record gives it.
 
 use std::fs;
 use std::path::PathBuf;
@@ -50,9 +50,10 @@ pub fn check_files(
             path: path.clone(),
             error,
         })?;
-        let recorded = (*path == input_path(folder.dir(), &sha256))
-            .then(|| recorded_name(fold, &sha256))
-            .flatten();
+        let recorded = fold
+            .pdf_of(&sha256)
+            .filter(|&pdf| *path == input_path(folder, pdf, &sha256))
+            .and_then(|_| recorded_name(fold, &sha256));
         files.push(ChosenFile {
             path: path.clone(),
             filename: recorded.unwrap_or_else(|| {

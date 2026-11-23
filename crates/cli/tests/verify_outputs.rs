@@ -66,9 +66,10 @@ fn draft(pdfium: &Pdfium, data: &Path) -> Draft {
         .iter()
         .enumerate()
         .map(|(at, path)| {
-            let stored = store_input(folder.dir(), path).unwrap();
+            let pdf = PdfId::new(at as u8 + 1);
+            let stored = store_input(&folder, pdf, path).unwrap();
             InputPdf {
-                pdf: PdfId::new(at as u8 + 1),
+                pdf,
                 sha256: stored.sha256,
                 filename: INPUTS[at].to_string(),
                 size: stored.size,
@@ -136,7 +137,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
     let mut sources: Vec<PathBuf> = record
         .inputs
         .iter()
-        .map(|input| input_path(folder.dir(), &input.sha256))
+        .map(|input| input_path(&folder, input.pdf, &input.sha256))
         .collect();
     sources.push(testdata("labels-slip.pdf"));
     let opened = read::open_all(pdfium, &sources).unwrap();

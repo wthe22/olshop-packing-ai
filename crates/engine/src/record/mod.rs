@@ -90,7 +90,7 @@ pub struct BatchSaved {
     pub errors: Vec<Finding>,
 }
 
-/// A label download, stored once as `input/{sha256}.pdf`.
+/// A label download, stored once in the date's `input/` as `{date}_{pdf}_{short hash}.pdf`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct InputPdf {
     pub pdf: PdfId,
@@ -298,7 +298,7 @@ pub struct ReprintedOrder {
     /// The date the order was saved.
     pub date: Date,
     pub batch: BatchId,
-    /// Its input: `{date}/input/{sha256}.pdf`.
+    /// Its input, in `{date}/input/`: the bytes of this hash.
     pub sha256: Sha256,
     pub page_start: u16,
     pub page_end: u16,
@@ -320,6 +320,11 @@ pub struct Sha256(String);
 impl Sha256 {
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+
+    /// The first 12 characters: the short hash an input's file name and the summaries show.
+    pub fn short(&self) -> &str {
+        &self.0[..12]
     }
 }
 

@@ -117,6 +117,37 @@ test("a new batch goes New batch → Plan → Save → the day screen", async ()
 });
 
 
+test("New batch on a date that is not today asks first; a no stays on the Day screen", async () => {
+  useBackend(backend());
+  const answers = [false, true];
+  const asked = answerQuestions(() => answers.shift());
+  const shell = new Shell();
+  shell.today = "2026-10-08";
+  shell.day = "2026-10-07";
+
+  await shell.startBatch();
+  assert.equal(shell.screen, "day", "no: nothing starts");
+  await shell.startBatch();
+  assert.equal(shell.screen, "new-batch", "yes: the batch starts on the open date");
+  assert.equal(shell.day, "2026-10-07");
+  assert.deepEqual(asked, [
+    texts.day.askNotToday("Wed, 7 Oct 2026", "Thu, 8 Oct 2026", true),
+    texts.day.askNotToday("Wed, 7 Oct 2026", "Thu, 8 Oct 2026", true),
+  ]);
+  assert.deepEqual(asked[0], {
+    title: "Add a new batch to Wed, 7 Oct 2026?",
+    body: "Today is Thu, 8 Oct 2026. This adds the new batch to a past day, not to today.",
+    ok: "Add",
+  });
+
+  await shell.cancelBatch();
+  shell.day = shell.today;
+  await shell.startBatch();
+  assert.equal(shell.screen, "new-batch");
+  assert.equal(asked.length, 2, "today asks nothing");
+});
+
+
 test("leaving an open batch asks before dropping it, and a refused answer stays", async () => {
   let discard = 0;
   useBackend(

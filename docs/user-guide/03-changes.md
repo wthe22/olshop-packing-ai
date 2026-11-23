@@ -4,12 +4,15 @@
 
 Only the newest batch of a date can be changed — a later batch depends on the ones before it.
 
-- **Revert** — undo the last batch. It asks: "Undo batch 2? Its 2 group PDFs and summary PDF are
-  deleted. Throw away its printed labels." [Undo batch 2] [Cancel]. Its orders count as not saved
-  again and the next batch takes its number. If a file is open in a PDF
-  viewer, the app names the file to close and changes nothing.
+- **Revert** — undo the last batch. It asks: "Undo batch 2? Its 2 group PDFs and summary PDF are removed.
+  Save keeps a copy in the date's reverted folder; Discard deletes them. Throw away its printed labels."
+  [Save] [Discard] [Cancel]. Saved, the batch's PDFs (with its
+  account summaries) are kept in the date's `reverted` folder, in a folder such as
+  `batch 2 reverted 14.05`, which the green line names; the app never reads them again, so keep or delete
+  them as you like. Its orders count as not saved again and the next batch takes its number. If a file is
+  open in a PDF viewer, the app names the file to close and changes nothing.
 - **Amend** — "I fixed a sort rule, do the last batch again". It asks: "Redo batch 2? Its labels
-  are read again with the sort rule default." [Redo batch 2] [Cancel]. The batch's own label files are
+  are read again with the sort rule default. After saving, print its PDFs again." [Redo] [Cancel]. The batch's own label files are
   read again from the date's `input` folder, with the sort rule of that name as it is now (or as it was
   saved, when no rule has that name any more), the same copies of repeated orders kept, and the **Plan**
   screen opens titled *Redo batch 2*; **Save batch** writes it again. Print it again after saving.
@@ -73,7 +76,7 @@ click beside it or `Esc` closes it.
   that is taken is refused under the field. With no account yet, the first read of labels asks
   ([The shop prompt](02-a-day.md#the-shop-prompt)).
 - **Rename** changes the name for the orders read from then on; orders saved before keep the name they
-  were saved with. **Delete account** asks first: its saved orders stay under its name and Search still
+  were saved with. **Delete** asks first: its saved orders stay under its name and Search still
   finds them; its shops are asked about again at the next read.
 - **Shops** are the names its labels are sent by: one field each, **×** takes one off, **+ Add shop**
   adds one. A name another account lists, or listed twice, is told under its field and **Save** stays off.

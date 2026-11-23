@@ -10,7 +10,7 @@ use serde::Deserialize;
 
 use crate::Findings;
 use crate::digest::Digester;
-use crate::files::{output_pages, sha256_and_size};
+use crate::files::{input_file, output_pages, sha256_and_size};
 use crate::record::Output;
 
 #[derive(Deserialize)]
@@ -88,11 +88,11 @@ pub(crate) fn check_reprint(
 
 /// The page digests of an order's input, after V2.
 fn input_pages(data_dir: &Path, order: &Reprinted, findings: &mut Findings) -> Option<Vec<u64>> {
-    let path = data_dir
-        .join(&order.date)
-        .join("input")
-        .join(format!("{}.pdf", order.sha256));
     let input = format!("the input of order {} ({})", order.order_id, order.date);
+    let Some(path) = input_file(&data_dir.join(&order.date).join("input"), &order.sha256) else {
+        findings.error(format!("{input} is not in its date's inputs"));
+        return None;
+    };
     match sha256_and_size(&path) {
         None => {
             findings.error(format!("{input} is not in its date's inputs"));

@@ -4,7 +4,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::io::Read;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use lopdf::Document;
 use sha2::{Digest, Sha256};
@@ -30,6 +30,23 @@ pub(crate) fn sha256_and_size(path: &Path) -> Option<(String, u64)> {
     Some((format!("{:x}", hasher.finalize()), size))
 }
 
+/// The file of `input_dir` whose name ends in `_` and the first 12 characters of `sha256`: how the
+/// store names an input past its date and number. The bytes are what V2 checks, not the name.
+pub(crate) fn input_file(input_dir: &Path, sha256: &str) -> Option<PathBuf> {
+    let end = format!("_{}.pdf", sha256.get(..12)?);
+    let mut found: Vec<PathBuf> = fs::read_dir(input_dir)
+        .ok()?
+        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.ends_with(&end))
+        })
+        .collect();
+    found.sort();
+    found.into_iter().next()
+}
+
 /// The page digests of each input the record names, by `PdfID`, after V2.
 pub(crate) fn check_inputs(
     batch: &Batch,
@@ -38,9 +55,12 @@ pub(crate) fn check_inputs(
 ) -> BTreeMap<u8, Vec<u64>> {
     let mut digests = BTreeMap::new();
     for input in &batch.inputs {
-        let path = input_dir.join(format!("{}.pdf", input.sha256));
         let changed = |findings: &mut Findings, why: &str| {
             findings.error(format!("{}, an input of the batch, {why}", input.filename))
+        };
+        let Some(path) = input_file(input_dir, &input.sha256) else {
+            changed(findings, "is not in the date's inputs");
+            continue;
         };
         match sha256_and_size(&path) {
             None => {

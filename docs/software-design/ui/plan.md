@@ -5,6 +5,7 @@ on a normal day the owner checks the counts and presses **Save batch**.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  Wed, 7 Oct 2026 (today)                                                               │
 │  Batch 3 · rule default · 2 files · 257 pages · 256 orders · 0 already saved   [Back]  │
 │  Toko Alfa 200 · Toko Beta 56                                                          │
 │  Warnings: 2 ▸                                                                         │

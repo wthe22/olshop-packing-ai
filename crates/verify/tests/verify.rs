@@ -25,6 +25,11 @@ fn testdata(name: &str) -> PathBuf {
         .join(name)
 }
 
+/// An input's name as the store gives it: its date, its number and its short hash.
+fn stored_name(sha256: &str) -> String {
+    format!("2026-10-08_01_{}.pdf", &sha256[..12])
+}
+
 struct Folder(PathBuf);
 
 impl Folder {
@@ -177,7 +182,7 @@ fn verify(
     let (input_sha, _) = sha_and_size(&testdata(INPUT));
     fs::copy(
         testdata(INPUT),
-        folder.input().join(format!("{input_sha}.pdf")),
+        folder.input().join(stored_name(&input_sha)),
     )
     .unwrap();
     let group = folder.partial().join(GROUP_FILE);
@@ -437,7 +442,7 @@ fn verify_a_reprint(tag: &str, order: &[u32], tamper: impl Fn(&Folder)) -> Findi
     let (input_sha, _) = sha_and_size(&testdata(INPUT));
     let input_dir = folder.0.join("2026-10-08").join("input");
     fs::create_dir_all(&input_dir).unwrap();
-    fs::copy(testdata(INPUT), input_dir.join(format!("{input_sha}.pdf"))).unwrap();
+    fs::copy(testdata(INPUT), input_dir.join(stored_name(&input_sha))).unwrap();
     let file = folder.partial().join(REPRINT_FILE);
     group_pdf(&file, order);
     let (sha, size) = sha_and_size(&file);
@@ -488,6 +493,18 @@ fn a_reprint_holds_exactly_its_orders_pages_in_their_order() {
         changed.errors.iter().any(|f| f.contains("has changed")),
         "{changed:?}"
     );
+    let old_name = verify_a_reprint("reprint-old-name", &[6, 1], |folder| {
+        let dir = folder.0.join("2026-10-08").join("input");
+        let (sha, _) = sha_and_size(&testdata(INPUT));
+        fs::rename(dir.join(stored_name(&sha)), dir.join(format!("{sha}.pdf"))).unwrap();
+    });
+    assert!(
+        old_name
+            .errors
+            .iter()
+            .any(|f| f.contains("is not in its date's inputs")),
+        "an input under another name is not found: {old_name:?}"
+    );
 }
 
 /// The date's journal holds batch 1; `file` is written again into `partial` and named by an
@@ -497,7 +514,7 @@ fn verify_a_restore(tag: &str, file: &str, batch: u8, write: impl Fn(&Path)) -> 
     let (input_sha, _) = sha_and_size(&testdata(INPUT));
     fs::copy(
         testdata(INPUT),
-        folder.input().join(format!("{input_sha}.pdf")),
+        folder.input().join(stored_name(&input_sha)),
     )
     .unwrap();
     let journal = format!(

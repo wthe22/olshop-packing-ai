@@ -1,6 +1,8 @@
 //! Steps 16 and 17 (05-after-save.md): the Sent mark, the Printed tick and the revert of the
 //! newest live batch, each one append; the views follow.
 
+use std::path::PathBuf;
+
 use packing_engine::ids::BatchId;
 use packing_engine::record::{BatchReverted, PrintSent, PrintedMarked, RecordBody};
 use packing_store::{
@@ -8,6 +10,7 @@ use packing_store::{
 };
 
 use crate::BatchError;
+use crate::reverted::{RevertedPdfs, drop_copies, save_copies};
 use crate::summaries::delete_account_summaries;
 
 /// Mark a label group of a live batch as sent to the printer, or take the mark back. A note only.
@@ -34,14 +37,22 @@ pub fn set_printed(
     Ok(())
 }
 
-/// Revert the newest live batch: its outputs moved aside, `batch_reverted` appended, then the
-/// outputs deleted. A file Windows refuses to move stops it with the file named, and the date is
-/// as before.
+/// The batch a revert undid, and the folder its PDFs were saved in.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Reverted {
+    pub batch: BatchId,
+    pub saved_to: Option<PathBuf>,
+}
+
+/// Revert the newest live batch: its PDFs copied into `reverted/` when `pdfs` says so, its outputs
+/// moved aside, `batch_reverted` appended, then the outputs deleted. A file Windows refuses to
+/// move stops it with the file named, and the date is as before.
 pub fn revert(
     folder: &DateFolder,
     journal: &mut Journal,
     app: &str,
-) -> Result<BatchId, BatchError> {
+    pdfs: RevertedPdfs,
+) -> Result<Reverted, BatchError> {
     let dir = folder.dir();
     let fold = journal.fold();
     let batch = fold.newest_live().ok_or(BatchError::NoBatch)?;
@@ -52,14 +63,23 @@ pub fn revert(
         .map(|output| output.file.clone())
         .collect();
     settle_partial(dir, fold)?;
-    move_aside(dir, &files)?;
+    let saved_to = match pdfs {
+        RevertedPdfs::Save => Some(save_copies(dir, batch, &files)?),
+        RevertedPdfs::Discard => None,
+    };
+    let undo_copies = || saved_to.iter().for_each(|copies| drop_copies(copies));
+    if let Err(error) = move_aside(dir, &files) {
+        undo_copies();
+        return Err(error.into());
+    }
     let reverted = RecordBody::BatchReverted(BatchReverted { batch });
     if let Err(error) = journal.commit(vec![reverted], app) {
+        undo_copies();
         settle_partial(dir, journal.fold())?;
         return Err(error.into());
     }
     discard_partial(dir)?;
     write_views(dir, journal.fold())?;
     delete_account_summaries(dir, batch)?;
-    Ok(batch)
+    Ok(Reverted { batch, saved_to })
 }

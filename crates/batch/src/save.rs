@@ -82,7 +82,7 @@ pub fn save(request: &SaveRequest<'_>, journal: &mut Journal) -> Result<SaveOutc
     let progress = |stage, done, total| (request.progress)(SaveProgress { stage, done, total });
 
     progress(SaveStage::CopyingInputs, 0, request.draft.files.len());
-    let inputs = store_inputs(request.draft, dir, &fold)?;
+    let inputs = store_inputs(request.draft, request.folder, &fold)?;
     let sorted = request.draft.sorted(batch);
     let mut files: Vec<String> = sorted.groups.iter().map(|g| g.file.clone()).collect();
     files.push(sorted.summary_file());
@@ -166,12 +166,12 @@ fn number(draft: &Draft, fold: &Fold) -> Result<BatchId, BatchError> {
 /// Step 11: each input in `input/` by its content, as it was read.
 fn store_inputs(
     draft: &Draft,
-    dir: &std::path::Path,
+    folder: &DateFolder,
     fold: &Fold,
 ) -> Result<Vec<InputPdf>, BatchError> {
     let inputs = draft.inputs(fold);
     for (file, input) in draft.files.iter().zip(&inputs) {
-        let stored = store_input(dir, &file.path)?;
+        let stored = store_input(folder, input.pdf, &file.path)?;
         if stored.sha256 != input.sha256 || stored.size != input.size {
             return Err(BatchError::FileChanged {
                 file: file.filename.clone(),
@@ -193,7 +193,10 @@ fn write_outputs(
     let dir = request.folder.dir();
     let partial = partial(dir)?;
     let draft = request.draft;
-    let sources: Vec<PathBuf> = inputs.iter().map(|i| input_path(dir, &i.sha256)).collect();
+    let sources: Vec<PathBuf> = inputs
+        .iter()
+        .map(|i| input_path(request.folder, i.pdf, &i.sha256))
+        .collect();
     let mut outputs = Vec::new();
     let total = sorted.groups.len() + 1;
     for (done, group) in sorted.groups.iter().enumerate() {

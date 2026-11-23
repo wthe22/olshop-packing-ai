@@ -72,7 +72,7 @@ fn open(folder: &DateFolder, may_write: bool) -> Result<OpenedDate, StoreError> 
             views_written: false,
         });
     }
-    let inputs = check_inputs(dir, fold)?;
+    let inputs = check_inputs(folder, fold)?;
     let settled = if writable {
         settle_partial(dir, fold)?
     } else {

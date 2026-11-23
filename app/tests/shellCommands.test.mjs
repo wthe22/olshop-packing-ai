@@ -98,8 +98,9 @@ test("the file and printed commands reach the back end", async () => {
     set_printed: () => {
       if (fail === "set_printed") throw "the batch is gone";
     },
-    revert_last: () => {
+    revert_last: (args) => {
       if (fail === "revert_last") throw "nothing to revert";
+      return args.pdfs === "save" ? "reverted\\batch 2 reverted 14.05" : null;
     },
     restore_output: (args) => {
       if (fail === "restore_output") throw "the input is gone";
@@ -145,12 +146,28 @@ test("the file and printed commands reach the back end", async () => {
   assert.equal(shell.busy, false);
   shell.error = "";
 
-  // *Revert* asks first, then reverts the batch and recounts the day.
+  // *Revert* asks first, then reverts the batch, its PDFs saved or discarded, and recounts the day.
+  let pressed = "cancel";
+  const asked = answerQuestions(() => pressed);
   const before = calls.filter((call) => call.command === "day_overview").length;
   await shell.revert(row);
-  assert.equal(calls.filter((call) => call.command === "revert_last").length, 1);
-  assert.deepEqual(calls.find((call) => call.command === "revert_last").args, { day: "2026-10-07", batch: 2 });
-  assert.equal(calls.filter((call) => call.command === "day_overview").length, before + 1, "the day is recounted");
+  assert.deepEqual(asked, [texts.day.askRevert(2, 2)]);
+  assert.equal(calls.some((call) => call.command === "revert_last"), false, "cancel reverts nothing");
+  pressed = "ok";
+  await shell.revert(row);
+  assert.equal(shell.savedMessage, texts.day.revertSaved(2, "reverted\\batch 2 reverted 14.05"), "the line names the folder");
+  pressed = "other";
+  shell.savedMessage = null;
+  await shell.revert(row);
+  assert.equal(shell.savedMessage, null, "discarded, there is no folder to name");
+  assert.deepEqual(
+    calls.filter((call) => call.command === "revert_last").map((call) => call.args),
+    [
+      { day: "2026-10-07", batch: 2, pdfs: "save" },
+      { day: "2026-10-07", batch: 2, pdfs: "discard" },
+    ],
+  );
+  assert.equal(calls.filter((call) => call.command === "day_overview").length, before + 2, "the day is recounted");
 
   // A failure of any of them shows the error line and keeps the day screen.
   for (const command of ["open_path", "show_in_folder", "set_printed", "restore_output", "revert_last"]) {

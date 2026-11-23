@@ -1,7 +1,7 @@
 <script lang="ts">
-  // The window's yes-or-no question (`confirm.svelte.ts`): its title, one short line, the button
-  // that does it and *Cancel*. The button has the focus, so Enter answers yes; Escape answers no
-  // and closes nothing behind the dialog.
+  // The window's question (`confirm.svelte.ts`): its title, one short line, the button that does
+  // it, the second way to do it when there is one, and *Cancel*. The first button has the focus, so
+  // Enter answers it; Escape cancels and closes nothing behind the dialog.
   import { confirmBox } from "./confirm.svelte";
   import { texts } from "../texts";
   import Dialog from "./Dialog.svelte";
@@ -16,7 +16,7 @@
     if (!confirmBox.question || event.key !== "Escape") return;
     event.preventDefault();
     event.stopPropagation();
-    confirmBox.answer(false);
+    confirmBox.answer("cancel");
   }
 </script>
 
@@ -28,10 +28,13 @@
       <p>{confirmBox.question.body}</p>
     {/if}
     <div class="buttons">
-      <button class="primary" bind:this={okButton} onclick={() => confirmBox.answer(true)}
+      <button class="primary" bind:this={okButton} onclick={() => confirmBox.answer("ok")}
         >{confirmBox.question.ok}</button
       >
-      <button onclick={() => confirmBox.answer(false)}>{texts.confirmCancel}</button>
+      {#if "other" in confirmBox.question}
+        <button onclick={() => confirmBox.answer("other")}>{confirmBox.question.other}</button>
+      {/if}
+      <button onclick={() => confirmBox.answer("cancel")}>{texts.confirmCancel}</button>
     </div>
   </Dialog>
 {/if}

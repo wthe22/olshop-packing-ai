@@ -77,11 +77,16 @@ cannot.
 
 ## D-APP-10 — Inputs are stored once, by content
 
-**Decision.** An input is kept as `input/{sha256}.pdf`; the journal keeps its original name, size and page
-count. One file chosen twice is one input. An input whose hash no longer matches is reported, never used.
+**Decision.** An input is kept as `input/{date}_{pdf}_{short hash}.pdf` — `2026-11-23_03_61459e8a8203.pdf`:
+the date, its `PdfID` on the date in two digits, and the first 12 characters of its SHA-256 (R-APP-10). The
+journal keeps its original name, size and page count. One file chosen twice is one input. An input whose
+hash no longer matches is reported, never used. The inputs of v0.6 and older, named `{sha256}.pdf`, are
+renamed once by `tools/rename-inputs.py`.
 
 **Why.** Two downloads with one name cannot overwrite each other, the same bytes are never read twice, and an
-amend, a reprint or a restore reads exactly the bytes that were verified.
+amend, a reprint or a restore reads exactly the bytes that were verified. Sorted by name, as Explorer lists
+them, a date's inputs stand in the order they were first read, and the short hash is the one the summary
+PDF prints beside each input.
 
 **Applies to.** [02 Read](../workflow/02-read.md#3-choose-the-files), [04 Save](../workflow/04-save.md#11-store-the-inputs).
 

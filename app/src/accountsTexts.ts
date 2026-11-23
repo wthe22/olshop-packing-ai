@@ -17,15 +17,15 @@ export const accountsTexts = {
   renameDone: "Rename",
   renameLabel: (name: string) => `New name for ${name}`,
   renameHint: "Orders saved before keep the name they were saved with.",
-  delete: "Delete account",
+  delete: "Delete",
   askDelete: (name: string): Question => ({
     title: `Delete account ${name}?`,
     body: "Its shops are asked about again at the next read. Its saved orders stay, under its name.",
-    ok: "Delete account",
+    ok: "Delete",
   }),
   askDiscard: (name: string): Question => ({
     title: `Discard the changes to ${name}'s shops?`,
-    body: null,
+    body: "They are not saved yet and will be lost.",
     ok: "Discard",
   }),
 

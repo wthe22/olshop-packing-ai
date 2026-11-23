@@ -47,6 +47,7 @@ beside the journal.
 | `session.toml`, `orders.csv`, `order-contents.toml`, the summaries made on request | Views | After every commit; rebuilt when missing or stale ([views](views.md)) | The owner and other programs. Never read for a decision |
 | `input/` | Inputs | At save, before the commit | Reading, amend, reprint, restore, the verifier |
 | `output/` | Outputs | At save: written aside, verified, moved in after the commit | Printing |
+| `reverted/` | The owner's copies of a reverted batch's PDFs | A revert told to save them ([D-APP-31](../decisions/app-features.md)) | Nothing: the owner's |
 | `parser.toml` | The owner's parser rules | The owner, the logo prompt | Reading labels; a saved batch keeps what it used |
 | `config.toml` | The accounts and the sort rules | The owner, the Sort rules screen, the Accounts screen, the shop prompt | Planning, and an order's account when labels are read ([accounts](../app/accounts.md#the-account-of-an-order)); a saved batch keeps its own copy of the rule it used |
 | `packing-app.toml` (beside the program) | Preferences | First start, Settings | Finding the data folder; the theme |

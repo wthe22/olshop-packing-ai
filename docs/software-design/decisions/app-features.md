@@ -1,7 +1,20 @@
 # Decisions: app — features
 
-D-APP-14 to D-APP-26 and D-APP-30. Sources, data and checks are in [app.md](app.md); accounts in [accounts.md](accounts.md). Where a record names a former
+D-APP-14 to D-APP-26, D-APP-30 and D-APP-31. Sources, data and checks are in [app.md](app.md); accounts in [accounts.md](accounts.md). Where a record names a former
 question (`Q-…`), the owner accepted its default.
+
+## D-APP-31 — A revert can keep copies of the batch's PDFs
+
+**Decision.** The revert's question offers to save the batch's PDFs or discard them (R-APP-11). Saved, its
+group PDFs, summary PDF and account summaries are copied into `reverted/batch {n} reverted {hh.mm}/` of the
+date folder before the outputs are moved aside; a revert that stops after the copy takes the copies away. The
+copies are the owner's: nothing reads them. Where they go is open: Q-APP-19.
+
+**Why.** The owner's words: a revert should not lose the batch's PDFs for good. Copied before the commit, the
+journal is unchanged and a stop at any step leaves the batch live or reverted, at most with a spare copy.
+
+**Applies to.** [05 After the save](../workflow/05-after-save.md#17-revert-newest-live-batch-only),
+[data folder](../data/README.md), [Day](../ui/day.md).
 
 ## D-APP-30 — Preferences beside the program; the parser and the config in the data folder
 

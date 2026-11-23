@@ -7,7 +7,7 @@ of [Sort rules](sort-rules.md); **×**, a click beside it or `Esc` returns.
 ```
 ┌ Accounts ──────────────────────────────────────────────────────────────────────────── [×] ┐
 │ [ Toko Alfa ][ Toko Beta ]  + New account                                                 │
-│ ┌ Toko Alfa                                          [Rename]  [Delete account] ──────┐ │
+│ ┌ Toko Alfa                                          [Rename]  [Delete] ──────────────┐ │
 │ │ SHOPS  The labels of these senders are this account's orders.                          │ │
 │ │ [ Toko Alfa                       ] [×]                                                │ │
 │ │ [ Toko Alfa Official              ] [×]                                                │ │
@@ -35,12 +35,12 @@ of [Sort rules](sort-rules.md); **×**, a click beside it or `Esc` returns.
 
 ## The account's card
 
-- **The head**: the account's name, **Rename** and **Delete account**.
+- **The head**: the account's name, **Rename** and **Delete**.
   - **Rename** puts the name in a field in place, with **Cancel** and **Rename**; Enter renames, `Esc`
     cancels. A refused name is told under the field. The line under it says: *Orders saved before keep the
     name they were saved with.*
-  - **Delete account** asks "Delete account Toko Beta?" — "Its shops are asked about again at the next read.
-    Its saved orders stay, under its name." [Delete account] [Cancel].
+  - **Delete** asks "Delete account Toko Beta?" — "Its shops are asked about again at the next read.
+    Its saved orders stay, under its name." [Delete] [Cancel].
 - **Shops**: one field per shop name, its **×**, and **+ Add shop**. A name listed twice, or listed by
   another account (spaces and case ignored), is told under its field and keeps **Save** off, with the
   reason as its tooltip ([accounts › Names](../app/accounts.md#names)). An account with no shop says

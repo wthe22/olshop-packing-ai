@@ -38,7 +38,7 @@ A normal batch: **New batch** → **Add files** → **Read labels** → (the pla
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [▯] ◈ Packing v0.6                         🔍 Search  ◫ Accounts  ≡ Sort rules  ⚙ Settings │
+│ [▯] ◈ Packing v0.7                         🔍 Search  ◫ Accounts  ≡ Sort rules  ⚙ Settings │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                               (the current screen)                                     │
 └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -67,8 +67,12 @@ between its rows. The title bar and the panel are the darkest layer (in the ligh
 ## Questions, waits and how things are written
 
 - **A question** before an action that deletes or redoes something is the app's own dialog, never Windows'
-  message box: a title that asks ("Undo batch 2?"), at most one short line, the button named for what it
-  does and **Cancel**. Enter answers with the button, `Esc` with **Cancel**.
+  message box: a title that asks ("Undo batch 2?"), one short line that says plainly what will happen,
+  the button that does it, a second one when there are two ways to do it, and **Cancel**. Enter answers
+  with the first button, `Esc` with **Cancel**.
+- **A button** is one short word or two for what it does, in the owner's words: *Add*, *Save*, *Discard*,
+  *Delete*, *Rename*. It never names its target (not *Add to Wed, 7 Oct*, not *Delete account*): the title
+  and the place say what it acts on (R-UI-51).
 - **A wait**: a file the owner waits for (the day summary, an output written again) shows a dialog with its
   line and a moving bar once it takes longer than a moment, over a backdrop that takes the clicks; a second
   click while it is written starts nothing.

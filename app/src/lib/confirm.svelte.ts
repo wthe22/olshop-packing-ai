@@ -1,5 +1,6 @@
-// The window's one yes-or-no question, asked in the app's own dialog (`ConfirmDialog.svelte`)
-// instead of the system's message box: `ask` shows it and resolves with the answer.
+// The window's one question, asked in the app's own dialog (`ConfirmDialog.svelte`) instead of the
+// system's message box: `ask` shows a yes-or-no question and resolves with the answer; `choose` shows
+// a question with two ways to do it and resolves with the button pressed.
 
 export interface Question {
   title: string;
@@ -9,22 +10,31 @@ export interface Question {
   ok: string;
 }
 
-class ConfirmBox {
-  question = $state<Question | null>(null);
-  private resolve: ((yes: boolean) => void) | null = null;
+// A question with a second way to do it, a button beside `ok`.
+export interface Choice extends Question {
+  other: string;
+}
 
-  // A question asked while another is open answers the first one *no*.
-  ask = (question: Question): Promise<boolean> => {
-    this.resolve?.(false);
+export type Answer = "ok" | "other" | "cancel";
+
+class ConfirmBox {
+  question = $state<Question | Choice | null>(null);
+  private resolve: ((answer: Answer) => void) | null = null;
+
+  ask = async (question: Question): Promise<boolean> => (await this.choose(question)) === "ok";
+
+  // A question asked while another is open answers the first one *cancel*.
+  choose = (question: Question | Choice): Promise<Answer> => {
+    this.resolve?.("cancel");
     this.question = question;
     return new Promise((resolve) => (this.resolve = resolve));
   };
 
-  answer = (yes: boolean) => {
+  answer = (answer: Answer) => {
     const resolve = this.resolve;
     this.resolve = null;
     this.question = null;
-    resolve?.(yes);
+    resolve?.(answer);
   };
 }
 

@@ -15,7 +15,7 @@
 | `resolve_repeats(choices)` | Apply the choice per group or per order ([duplicates](duplicates.md)) | One copy per order, the copies left out, the recount |
 | `plan(edits)` | Skip, move, add a one-off group, rename a file; recount | Groups with counts, order contents, file names |
 | `save_batch(save_anyway)` | Write, verify, commit, move ([04 Save](../workflow/04-save.md)). Emits `save-progress {stage, page, pages}` | The saved batch, or the verifier's findings (nothing saved until *Save anyway*) |
-| `revert_last(day, batch)` / `start_amend(day, batch)` | Revert the newest batch / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)); a `batch` that is no longer the newest is refused | The date / the amend's file list and read |
+| `revert_last(day, batch, pdfs)` / `start_amend(day, batch)` | Revert the newest batch, its PDFs saved or discarded (`pdfs`) / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)); a `batch` that is no longer the newest is refused | The folder the PDFs were saved in, inside the date folder / the amend's file list and read |
 | `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
 | `print_output(day, file)` | **Print** a group PDF or a reprint: the output made ready, one not there written again first, like `open_output`; the preview is the front end's | Opened, written again, or not kept with the verifier's findings |
 | `output_pdf(day, file)` | The bytes of an output that is there, for the preview | The PDF's bytes |
@@ -25,10 +25,10 @@
 | `day_summary(day, account)` | Write the date's [day summary](../labels/day-summary.md), of all accounts (`account` none) or of one, on its own thread, then the window opens it | Its path |
 | `account_summary(day, batch, account)` | Write a batch's [summary of one account](../labels/summary-pdf.md#one-account), check it, then the window opens it | Its path, or the verifier's findings |
 | `accounts_list()` | The [Accounts](../ui/accounts.md) screen: each account with its shops, and per date its orders from the search index | The accounts |
-| `account_new(name)` / `account_rename(name, new_name)` / `account_delete(name)` / `account_set_shops(name, shops)` | **+ New account**, **Rename**, **Delete account**, **Save** of its shops: `config.toml` read again and written under the lock ([accounts](accounts.md#names)) | The accounts as written, or why it is refused |
+| `account_new(name)` / `account_rename(name, new_name)` / `account_delete(name)` / `account_set_shops(name, shops)` | **+ New account**, **Rename**, **Delete**, **Save** of its shops: `config.toml` read again and written under the lock ([accounts](accounts.md#names)) | The accounts as written, or why it is refused |
 | `rules_list()` / `rules_load(rule)` / `rules_check(rule, groups)` / `rules_save(rule, groups)` | The Sort rules screen ([rules file](../rules-file/README.md)); a save rebuilds the open draft's plan | Rules on or off, the file and the couriers; groups; errors with line and column; live counts on the open draft |
 | `rules_check_text(text)` / `rules_save_text(text)` | *Edit file as text* | The first check that fails, with its line and column |
-| `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_enable(rule, enabled)` / `rule_delete(rule)` | **+ New rule**, **Rename**, the rule's switch (the draft's plan stays as it is), **Delete rule** | — |
+| `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_enable(rule, enabled)` / `rule_delete(rule)` | **+ New rule**, **Rename**, the rule's switch (the draft's plan stays as it is), **Delete** | — |
 | `filter_to_tree(text)` / `tree_to_filter(tree)` | The boxes editor: the engine's parser and printer, so the window has no second parser | Tree, or an error with line and column / the text |
 | `search_orders(filter, range)` | Search the index ([reprint](reprint.md#search)) on the dates `from`–`to`, both included; no range searches every date | One row per order with its group file and its trace in pieces (a hash or form as code) |
 | `reprint(orders)` | One PDF of the chosen orders' pages, verified, recorded ([reprint](reprint.md#reprint)) | The file, or the verifier's findings |

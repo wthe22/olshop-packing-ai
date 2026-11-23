@@ -5,9 +5,9 @@ Nothing of the date changes until step 14.
 
 ## 11. Store the inputs
 
-For each input of the batch that `input/` does not hold yet: copy it to `input/{sha256}.pdf.partial`,
-`sync_all`, hash the copy again, and rename it to `input/{sha256}.pdf`. A copy whose hash differs stops the
-save. From here on every page is taken from `input/`, never from the file the owner chose.
+For each input of the batch that `input/` does not hold yet: copy it to `input/{name}.partial`, `sync_all`,
+hash the copy again, and rename it to `input/{name}`, where `{name}` is `{date}_{pdf}_{short hash}.pdf`
+([D-APP-10](../decisions/app.md)). A copy whose hash differs stops the save. From here on every page is taken from `input/`, never from the file the owner chose.
 
 An input is never deleted. One stored by a save that is then cancelled is named by no record; it is
 harmless, and the next save of the same file finds it in place.

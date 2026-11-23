@@ -16,8 +16,11 @@
   import SaveProgress from "./SaveProgress.svelte";
   import { findingsOf, type Findings } from "./saveCheck";
   import { leftOutLines } from "./repeats";
+  import DayTitle from "./DayTitle.svelte";
 
   let {
+    day,
+    today,
     batchNumber,
     read,
     onSaved,
@@ -26,6 +29,9 @@
     onEditRule,
     onCancel,
   }: {
+    // The open date, which the batch is saved into, shown over the bar; and today.
+    day: string;
+    today: string;
     batchNumber: number;
     read: batch.ReadResult;
     onSaved: (result: batch.SaveResult) => void;
@@ -152,6 +158,7 @@
 </script>
 
 <main>
+  <DayTitle {day} {today} inBatch />
   <div class="bar">
     <h2>
       {#if amending}

@@ -4,6 +4,7 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  Wed, 7 Oct 2026 (today)                                                               │
 │  New batch 3   Sort rule: [default ▾]                                   [Cancel]       │
 │  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐       │
 │     Drop label PDFs here, or  [Add files]                                              │
@@ -16,6 +17,8 @@ Choose the label files of this batch and the sort rule it uses, then read them.
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
+- **The open date** stands over the bar as on the Day screen, with *today*, or *not today* in amber: the batch
+  is saved into it ([D-UI-15](../decisions/ui.md)). Repeated orders and Plan show it the same way.
 - **Add files** opens the Windows file dialog (several files at once, in the folder used last). Dropping
   files onto the window does the same.
 - Each listed file shows its page count and *downloaded* with its modify time; its SHA-256 is taken at once

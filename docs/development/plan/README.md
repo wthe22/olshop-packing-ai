@@ -4,7 +4,39 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-13)
+## Status (2026-11-23)
+
+- **Handoff of 2026-11-23 — v0.7.0: input names by date and number, the date on the batch screens, a revert
+  that keeps its PDFs.** The
+  owner's words in chat, built and pushed:
+  - **R-APP-10**: an input in `{date}\input\` is `{date}_{pdf}_{short hash}.pdf`, e.g.
+    `2026-11-23_03_61459e8a8203.pdf`: the date, its number on the date in two digits (so every list sorts
+    it), the first 12 characters of its SHA-256 ([D-APP-10](../../software-design/decisions/app.md)). The
+    journal is unchanged; the name follows from it.
+  - **The owner's step first**: close every copy of Packing, update every copy to v0.7.0, then run once
+    `python tools\rename-inputs.py "<data folder>"` (`--dry-run` lists first, changing nothing). It renames
+    the `{sha256}.pdf` files of every date by the journal; a file in use is named at the end with exit code
+    1, and a second run continues (a stop or a kill loses nothing: each file is one rename). A file no
+    journal names is left as it is. Until it has run, v0.7 reports the old inputs as missing on open.
+  - **R-LABEL-15**: the short hash in the summary PDF and the day summary is set in Consolas.
+  - **R-UI-48**: on a date that is not today, **+ New batch** is muted and asks *Add a batch to `<date>`?*
+    ([D-UI-15](../../software-design/decisions/ui.md)). **R-UI-49**: New batch, Repeated orders and Plan
+    show the open date over their bar like the Day screen's title, *today* or *not today* in amber.
+  - **R-UI-50**: Search's first box is *Order ID contains*. A scanned tracking-ID barcode now needs the box
+    switched to *Tracking ID*.
+  - **R-APP-11**: **Revert** asks *Undo batch 2?* with **Save** and **Discard**. Saved, the
+    batch's group PDFs, summary PDF and account summaries are copied into
+    `{date}\reverted\batch 2 reverted 14.05\` and the green line names that folder
+    ([D-APP-31](../../software-design/decisions/app-features.md)). Nothing reads the copies again.
+  - **Open question Q-APP-19** ([questions/app.md](../../software-design/questions/app.md)): where the
+    copies go: A the date folder (built), B a folder picked on every revert, C one folder in Settings. The
+    owner's letter goes under the question; A needs nothing more, B or C becomes a task.
+  - **R-UI-51**: a button is one short word for what it does and never names its target: *Add*, *Save*,
+    *Discard*, *Redo*, *Delete*, *Reprint*; each question's line says plainly what will happen
+    ([ui/README.md](../../software-design/ui/README.md)).
+  - **Where to answer**: findings into [reviews/ui.md](../../reviews/ui.md) as `R-UI-52`,
+    [reviews/app.md](../../reviews/app.md) as `R-APP-12`, [reviews/label.md](../../reviews/label.md) as
+    `R-LABEL-16`. A new session turns each into a task and builds it.
 
 - **Handoff of 2026-11-13 — the config files are three: `packing-app.toml`, `parser.toml`, `config.toml`.** The
   owner's layout ([D-APP-30](../../software-design/decisions/app-features.md)), built and pushed:

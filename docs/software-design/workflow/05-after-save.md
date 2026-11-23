@@ -18,14 +18,19 @@ marks start empty.
 
 ## 17. Revert (newest live batch only)
 
-After a question that names the batch and its files:
+After a question that names the batch and its files and offers to save its PDFs or discard them
+([D-APP-31](../decisions/app-features.md)):
 
-1. Move the batch's outputs into `output/.partial/replaced/`. A file Windows refuses to move stops the revert:
-   the files moved go back, and the message names the file to close.
-2. Append `batch_reverted {batch}` and `sync_all`.
-3. Delete `.partial/`; write the views; update the search index.
+1. Saved: copy the batch's outputs in `output/` and its account summaries into a new folder
+   `reverted/batch {n} reverted {hh.mm}/` of the date (` (2)` after the name when it is taken). A copy that
+   fails takes the folder away and stops the revert.
+2. Move the batch's outputs into `output/.partial/replaced/`. A file Windows refuses to move stops the revert:
+   the files moved go back, the copies of step 1 are taken away, and the message names the file to close.
+3. Append `batch_reverted {batch}` and `sync_all`; a failure takes the copies away.
+4. Delete `.partial/`; write the views; delete the batch's account summaries; update the search index.
 
 The batch's orders count as unsaved again, and the next batch takes its number. Its inputs stay in `input/`.
+The copies in `reverted/` are the owner's: nothing reads them again.
 
 **Keeps:** I2, I6, I7 — only the newest batch, because later numbers and the guard depend on it.
 

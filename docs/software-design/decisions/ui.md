@@ -75,7 +75,7 @@ and turned down the same day; the owner named Zed and Claude Code as the look to
 
 **Applies to.** [Screens](../ui/README.md#the-look), every screen.
 
-## D-UI-12 — Search shows each order as a compact row; its first box is *Tracking ID contains*
+## D-UI-12 — Search shows each order as a compact row; its first box is *Order ID contains*
 
 **Decision.** Search's results are one row per order (R-UI-35, R-UI-38) under the heads *Order*, *Items* and
 *Label*: the tick; the shop and the Order ID over the courier and the tracking ID; the items, which take the width the
@@ -85,14 +85,15 @@ apart as a file, and its pages, the batch's save time and the group's code; not 
 courier. The order column and the label column are
 as wide as their longest entry and no wider. On a narrower window the items move to a line of their own under
 the order; narrower still, the label goes under the order too. The filter and the dates share one box
-side by side. The first box is *Tracking ID contains*, not *starts with* (R-UI-33). It replaces D-UI-10, which
-showed the results as cards.
+side by side. The first box is *Order ID contains* (R-UI-50), not *starts with* (R-UI-33). It replaces D-UI-10,
+which showed the results as cards.
 
 **Why.** The owner found the cards hard to search through (2026-10-29): rows read down one column, cards
 scatter the same field over a grid. The table before the cards (R-UI-30) gave each long ID a column of its own
 and squeezed the items between eight columns on the owner's 15-inch screen at 125 %, often a window less than
 full width; two IDs over each other and the group PDF over the courier leave the items most of a row.
-*Starts with* surprised the owner: a part of a tracking ID typed or pasted from the middle found nothing.
+*Starts with* surprised the owner: a part of an ID typed or pasted from the middle found nothing. The owner
+looks an order up by its Order ID first (2026-11-23).
 
 **Applies to.** [Search](../ui/search.md).
 
@@ -116,5 +117,19 @@ the open and the current one; each date counts the orders of every account (Q-UI
 
 **Why.** A date holds every account's batches, and the Day screen shows them all; one account's counts are on
 the Accounts screen, so the panel needs no chooser.
+
+## D-UI-15 — A batch on a date that is not today is asked for, and its screens show the date
+
+**Decision.** On a date that is not today, the Day screen's **+ New batch** is muted and asks *Add a batch to
+Wed, 7 Oct 2026?* — *Today is Mon, 23 Nov 2026. This adds the new batch to a past day, not to today.* [Add]
+[Cancel] (R-UI-48, R-UI-51).
+New batch, Repeated orders and Plan show the open date over their bar, as large as the Day screen's title,
+with *today*, or *not today* in amber (R-UI-49).
+
+**Why.** A batch is saved into the open date, and a date opened from the panel to look something up stays
+open: the owner wants a batch there to be a choice, never a slip, and the date in view while it is made.
+
+**Applies to.** [Day](../ui/day.md), [New batch](../ui/new-batch.md), [Plan](../ui/plan.md),
+[Repeated orders](../ui/duplicates.md).
 
 **Applies to.** [Panel](../ui/panel.md).

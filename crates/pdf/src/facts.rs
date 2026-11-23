@@ -53,7 +53,7 @@ pub(crate) struct Row {
     pub text: String,
     pub bold: bool,
     pub counts: [Option<Count>; 2],
-    /// Text at the right edge, past the count columns (an input's SHA-256).
+    /// Text at the right edge, past the count columns, set in Consolas: an input's short hash.
     pub tail: Option<String>,
 }
 
@@ -248,7 +248,7 @@ fn draw_row(builder: &mut Builder<'_, '_>, row: &Row, measure: &Measure<'_>, hea
         }
     }
     if let Some(tail) = &row.tail {
-        text_right_at(builder, TEXT_RIGHT, top, font, tail);
+        text_right_at(builder, TEXT_RIGHT, top, Font::Consola, tail);
     }
     draw_rule(builder, top + height);
 }
@@ -258,7 +258,7 @@ fn text_end(row: &Row, measure: &Measure<'_>) -> f32 {
     match row.counts.iter().position(Option::is_some) {
         Some(column) => NUMBER_RIGHT[column] - NUMBER_W,
         None => match &row.tail {
-            Some(tail) => TEXT_RIGHT - measure.width_mm(tail, Font::Arial, ROW_PT) - TAIL_GAP,
+            Some(tail) => TEXT_RIGHT - measure.width_mm(tail, Font::Consola, ROW_PT) - TAIL_GAP,
             None => TEXT_RIGHT,
         },
     }

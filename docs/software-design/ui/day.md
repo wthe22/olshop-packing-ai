@@ -4,7 +4,7 @@ The start screen: what has been saved on the open date, for every account, and t
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [☰] Packing v0.6                             [Search] [Accounts] [Sort rules] [Settings]│
+│ [☰] Packing v0.7                             [Search] [Accounts] [Sort rules] [Settings]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │  Wed, 7 Oct 2026 (today) (2 batches) (729 orders) (5 group PDFs)  [Day summary] [+ New batch]│
 │                                                                                        │
@@ -59,9 +59,11 @@ The start screen: what has been saved on the open date, for every account, and t
   finding of its check is shown and nothing is kept. A summary PDF found changed shows **Restore** in place
   of the menu.
 - **Amend** and **Revert** appear only on the newest batch ([05 After the save](../workflow/05-after-save.md)):
-  - Revert asks: "Undo batch 2?" — "Its 2 group PDFs and summary PDF are deleted. Throw away its printed
-    labels." [Undo batch 2] [Cancel]
-  - Amend asks: "Redo batch 2?" — "Its labels are read again with the sort rule default." [Redo batch 2]
+  - Revert asks: "Undo batch 2?" — "Its 2 group PDFs and summary PDF are removed. Save keeps a copy in
+    the date's reverted folder; Discard deletes them. Throw away its printed labels." [Save] [Discard]
+    [Cancel]. Saved, the green line reads *Batch 2 undone. Its PDFs are in reverted\batch 2 reverted
+    14.05.* (R-APP-11)
+  - Amend asks: "Redo batch 2?" — "Its labels are read again with the sort rule default. After saving, print its PDFs again." [Redo]
     [Cancel], then reads the batch's inputs again, with a progress bar, and opens the Plan screen titled
     *Redo batch 2* ([Plan](plan.md)).
 - **⚠ missing** / **⚠ changed** stands before the button of an output the open-time check found missing or
@@ -87,5 +89,8 @@ The start screen: what has been saved on the open date, for every account, and t
   Packing v0.4 (`Toko Contoh\`, …). It is not read.* [Open folder]
   ([accounts](../app/accounts.md#data-of-older-versions)).
 - A date with nothing saved shows "Nothing saved on this date yet." and **New batch**.
+- **+ New batch** saves into the open date. On a date that is not today it is muted (its tooltip says
+  why) and asks first: "Add a batch to Wed, 7 Oct 2026?" — "It is not today: today is Mon, 23 Nov 2026."
+  [Add] [Cancel] ([D-UI-15](../decisions/ui.md)).
 - After **Save batch**, the new batch is on top with a green line "Batch 3 saved: 3 group PDFs and the
   summary." for a few seconds.

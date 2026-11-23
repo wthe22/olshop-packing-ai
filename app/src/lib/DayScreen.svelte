@@ -4,13 +4,14 @@
   // date's reprints; *New batch* starts the batch flow and *Day summary* writes the date's summary
   // PDF.
   import { texts } from "../texts";
-  import { formatDay } from "../dates";
+  import { formatShortDay } from "../dates";
   import type { BatchView, DayOverview, GroupPdfView, LeftOutView } from "./api/day";
   import type { SentMark } from "./dayOutputs.svelte";
   import GroupPdfRow from "./GroupPdfRow.svelte";
   import OutputButtons from "./OutputButtons.svelte";
   import ReprintsCard from "./ReprintsCard.svelte";
   import SummaryMenu from "./SummaryMenu.svelte";
+  import DayTitle from "./DayTitle.svelte";
   import { accountsOf } from "./dayAccounts";
 
   let {
@@ -90,8 +91,7 @@
 
 <main>
   <div class="bar">
-    <h1>{formatDay(day)}</h1>
-    {#if day === today}<span class="today">{texts.day.today}</span>{/if}
+    <DayTitle {day} {today} />
     <span class="stats">
       {#if overview}
         {@const { batches, orders, pdfs } = overview.totals}
@@ -107,7 +107,12 @@
       disabled={writing || !overview || overview.batches.length === 0}
       onWrite={onDaySummary}
     />
-    <button class="primary" onclick={onNewBatch}>{texts.day.newBatch}</button>
+    <!-- On a date that is not today the button is muted, and the shell asks before the batch. -->
+    <button
+      class={day === today ? "primary" : "muted"}
+      title={day === today ? undefined : texts.day.newBatchNotToday(formatShortDay(day))}
+      onclick={onNewBatch}>{texts.day.newBatch}</button
+    >
   </div>
 
   {#if saved}
@@ -267,20 +272,10 @@
     margin-bottom: 0.9rem;
   }
 
-  h1 {
-    margin: 0 0.35rem 0 0;
-    font-size: 1.3rem;
-    font-weight: 700;
-  }
-
-  .today {
-    margin-right: 0.35rem;
-    padding: 0.05rem 0.55rem;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent-text);
-    font-size: 0.8rem;
-    font-weight: 600;
+  /* *New batch* on a date that is not today. */
+  button.muted {
+    border-color: var(--border);
+    color: var(--text-muted);
   }
 
   /* The day's counts as pills beside the title, each number in bold. */

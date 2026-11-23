@@ -28,7 +28,7 @@ pub use line::{encode_line, seal};
 pub use lock::DataLock;
 pub use older::{OlderData, OlderVersion, older_data};
 pub use outputs::{
-    OutputProblem, OutputState, Settled, check_outputs, discard_partial, move_aside, move_forward,
-    partial_dir, replaced_dir, settle_partial,
+    OUTPUT_DIR, OutputProblem, OutputState, Settled, check_outputs, discard_partial, move_aside,
+    move_forward, partial_dir, replaced_dir, settle_partial,
 };
 pub use views::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, views_current, write_views};
