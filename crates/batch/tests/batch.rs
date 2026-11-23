@@ -186,6 +186,14 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
     let paths: Vec<PathBuf> = redo.files.iter().map(|f| f.path.clone()).collect();
     let stale = day.read(&paths, &redo.rule, Some(redo.batch)).unwrap();
     let picked = day.folder.dir().parent().unwrap().join("kept");
+    let fold = day.journal.fold();
+    let newest = fold.newest_live().unwrap();
+    let inputs: Vec<PathBuf> = fold.live[&newest]
+        .saved
+        .inputs
+        .iter()
+        .map(|input| input_path(&day.folder, input.pdf, &input.sha256))
+        .collect();
     let kept = revert(
         &day.folder,
         &mut day.journal,
@@ -201,9 +209,22 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
         name.starts_with(&format!("{} batch 1 reverted ", day.folder.date())),
         "{name}"
     );
+    assert_eq!(
+        fs::read_dir(&kept).unwrap().count(),
+        inputs.len(),
+        "the copies are the label PDFs and nothing else"
+    );
+    for input in &inputs {
+        let file = input.file_name().unwrap();
+        assert!(
+            kept.join(file).is_file() && input.is_file(),
+            "{}",
+            file.to_string_lossy()
+        );
+    }
     for file in [GROUP_FILE, "1 summary.pdf"] {
         assert!(
-            kept.join(file).is_file() && !day.output(file).exists(),
+            !kept.join(file).exists() && !day.output(file).exists(),
             "{file}"
         );
     }
@@ -606,7 +627,7 @@ fn an_accounts_summary_is_checked_kept_and_dropped_by_an_amend_or_a_revert() {
     .unwrap();
     assert!(!path.exists(), "and so does a revert");
     assert!(
-        kept.join(path.file_name().unwrap()).is_file(),
-        "which saves a copy when asked"
+        !kept.join(path.file_name().unwrap()).exists(),
+        "which is not among the label PDFs a revert saves"
     );
 }

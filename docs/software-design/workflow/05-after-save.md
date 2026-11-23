@@ -18,11 +18,11 @@ marks start empty.
 
 ## 17. Revert (newest live batch only)
 
-After a question that names the batch and its files and offers to save its PDFs or discard them
+After a question that names the batch and its files and offers to save its label PDFs or discard them
 ([D-APP-31](../decisions/app-features.md)). *Save* opens the Windows folder picker; closing it reverts
 nothing.
 
-1. Saved: copy the batch's outputs in `output/` and its account summaries into a new folder
+1. Saved: copy the batch's input files in `input/` (its label PDFs) into a new folder
    `{date} batch {n} reverted {hh.mm}` of the folder picked (` (2)` after the name when it is taken). A
    copy that fails takes the folder away and stops the revert.
 2. Move the batch's outputs into `output/.partial/replaced/`. A file Windows refuses to move stops the revert:

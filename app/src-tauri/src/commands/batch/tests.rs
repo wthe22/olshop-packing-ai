@@ -230,10 +230,16 @@ fn sent_printed_amend_and_revert_go_through_the_journal() {
         Some(picked.as_path()),
         "a new folder in the one picked"
     );
+    let copies: Vec<String> = fs::read_dir(&folder)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
     assert!(
-        folder.join("1 summary.pdf").is_file(),
-        "{}",
-        folder.display()
+        !copies.is_empty()
+            && copies
+                .iter()
+                .all(|name| name.starts_with(&format!("{DAY}_"))),
+        "the label PDFs of the day, and nothing else: {copies:?}"
     );
     assert_eq!(day(&state)["batches"], Value::Array(Vec::new()));
 }

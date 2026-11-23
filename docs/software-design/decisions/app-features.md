@@ -3,17 +3,19 @@
 D-APP-14 to D-APP-26, D-APP-30 and D-APP-31. Sources, data and checks are in [app.md](app.md); accounts in [accounts.md](accounts.md). Where a record names a former
 question (`Q-…`), the owner accepted its default.
 
-## D-APP-31 — A revert can keep copies of the batch's PDFs
+## D-APP-31 — A revert can keep copies of the batch's label PDFs
 
-**Decision.** The revert's question offers to save the batch's PDFs or discard them (R-APP-11). *Save* opens
-the Windows folder picker on every revert, and closing it reverts nothing (Q-APP-19, the owner's choice B).
-The batch's group PDFs, summary PDF and account summaries are copied into a new folder
-`{date} batch {n} reverted {hh.mm}` of the folder picked before the outputs are moved aside; a revert that
-stops after the copy takes the copies away. The copies are the owner's: nothing reads them.
+**Decision.** The revert's question offers to save the batch's label PDFs or discard them (R-APP-11). *Save*
+opens the Windows folder picker on every revert, and closing it reverts nothing (Q-APP-19, the owner's choice
+B). The batch's input files of `{date}/input/` (its label PDFs) are copied into a new folder
+`{date} batch {n} reverted {hh.mm}` of the folder picked before the outputs are moved aside; the group PDFs,
+summary PDF and account summaries are not copied. A revert that stops after the copy takes the copies away.
+The copies are the owner's: nothing reads them.
 
-**Why.** The owner's words: a revert should not lose the batch's PDFs for good, and they go where the owner
-wants them. A folder of their own keeps two reverts apart. Copied before the commit, the journal is unchanged
-and a stop at any step leaves the batch live or reverted, at most with a spare copy.
+**Why.** The owner's choice: the label PDFs are what the batch was made from, so keeping them keeps the batch
+(the group PDFs and summaries can be made again from them). A folder of their own keeps two reverts apart.
+Copied before the commit, the journal is unchanged and a stop at any step leaves the batch live or reverted,
+at most with a spare copy.
 
 **Applies to.** [05 After the save](../workflow/05-after-save.md#17-revert-newest-live-batch-only),
 [Day](../ui/day.md).

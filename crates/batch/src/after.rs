@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use packing_engine::ids::BatchId;
 use packing_engine::record::{BatchReverted, PrintSent, PrintedMarked, RecordBody};
 use packing_store::{
-    DateFolder, Journal, discard_partial, move_aside, settle_partial, write_views,
+    DateFolder, Journal, discard_partial, input_path, move_aside, settle_partial, write_views,
 };
 
 use crate::BatchError;
@@ -44,8 +44,8 @@ pub struct Reverted {
     pub saved_to: Option<PathBuf>,
 }
 
-/// Revert the newest live batch: its PDFs copied into a folder of their own when `pdfs` says so,
-/// its outputs moved aside, `batch_reverted` appended, then the outputs deleted. A file Windows
+/// Revert the newest live batch: its input PDFs copied into a folder of their own when `pdfs` says
+/// so, its outputs moved aside, `batch_reverted` appended, then the outputs deleted. A file Windows
 /// refuses to move stops it with the file named, and the date is as before.
 pub fn revert(
     folder: &DateFolder,
@@ -62,9 +62,15 @@ pub fn revert(
         .iter()
         .map(|output| output.file.clone())
         .collect();
+    let inputs: Vec<PathBuf> = fold.live[&batch]
+        .saved
+        .inputs
+        .iter()
+        .map(|input| input_path(folder, input.pdf, &input.sha256))
+        .collect();
     settle_partial(dir, fold)?;
     let saved_to = match pdfs {
-        RevertedPdfs::Save(into) => Some(save_copies(dir, &into, folder.date(), batch, &files)?),
+        RevertedPdfs::Save(into) => Some(save_copies(&into, folder.date(), batch, &inputs)?),
         RevertedPdfs::Discard => None,
     };
     let undo_copies = || saved_to.iter().for_each(|copies| drop_copies(copies));

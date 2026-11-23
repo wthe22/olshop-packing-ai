@@ -6,6 +6,16 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-23)
 
+- **Handoff of 2026-11-23 (later) — a revert saves the label PDFs, not the outputs.** The owner's request,
+  built and pushed: **Save** on a revert copies the batch's input files of `{date}\input\` (its label PDFs)
+  into the new folder `{date} batch {n} reverted {hh.mm}`; the group PDFs, summary PDF and account summaries
+  are no longer copied ([D-APP-31](../../software-design/decisions/app-features.md)). The question and the
+  green line say *label PDFs*. `target/portable/Packing/` is rebuilt.
+  - **The owner may test now**: Revert on the newest batch, **Save**, pick a folder: the folder holds the
+    batch's `…_NN_<hash>.pdf` files and nothing else; the input files stay in `input\`.
+  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as the next `R-APP-<n>`. A new
+    session turns each into a task and builds it.
+
 - **Handoff of 2026-11-23 — v0.7.0: input names by date and number, the date on the batch screens, a revert
   that keeps its PDFs.** The
   owner's words in chat, built and pushed:
