@@ -8,8 +8,6 @@ use regex::Regex;
 
 use crate::ids::{OrderId, TrackingId};
 
-use super::CourierTable;
-
 /// The characters trimmed from both ends of a tracking token.
 const TOKEN_TRIM: &str = " \t.,;:";
 
@@ -154,35 +152,10 @@ pub struct Form<'a> {
     pub unanchored: &'a Regex,
 }
 
-/// The most frequent tracking token of the text, `None` when none matches a courier form of
-/// `table`, the data folder's courier data.
-pub fn find_tracking_id(
-    text: &str,
-    order_id: &OrderId,
-    table: &CourierTable,
-) -> Option<TrackingId> {
-    let forms: Vec<Form<'_>> = table
-        .couriers
-        .iter()
-        .filter_map(|courier| {
-            Some(Form {
-                source: courier.tracking.as_deref()?,
-                full: courier.tracking_full.as_ref()?,
-                unanchored: courier.tracking_re.as_ref()?,
-            })
-        })
-        .collect();
-    find_tracking_id_in(text, order_id, &forms)
-}
-
 /// The most frequent token of the text that one of `forms` matches fully, `None` when none does.
 /// The owner's file decides which forms name a courier, so a form added there is read without a
 /// program change.
-pub fn find_tracking_id_in(
-    text: &str,
-    order_id: &OrderId,
-    forms: &[Form<'_>],
-) -> Option<TrackingId> {
+pub fn find_tracking_id(text: &str, order_id: &OrderId, forms: &[Form<'_>]) -> Option<TrackingId> {
     let mut counts: Vec<(String, usize)> = Vec::new();
     for raw in text.split_whitespace() {
         let token = raw.trim_matches(|c| TOKEN_TRIM.contains(c));

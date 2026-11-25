@@ -31,13 +31,17 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     each group PDF. Save a new batch: its inputs, group PDFs and `N Summary.pdf` sit in the date folder.
     Read `2026-11-25 split.pdf`: one order. Read `2026-11-24 sameday.pdf`: its two Grab orders show
     their pickup codes as tracking IDs.
-  - **Decide**: [Q-LABEL-14](../../software-design/questions/label.md) (the regular SPX label's courier,
-    default B) and Q-LABEL-15 (default A), in their question.
+  - **The regular SPX label** is named SPX by its `REGULAR SERVICE` badge, the owner's answer to Q-LABEL-14
+    ([D-LABEL-25](../../software-design/decisions/label.md)). Read `2026-11-23 spx regular.pdf`: courier SPX,
+    no logo asked about.
+  - **Decide**: [Q-LABEL-15](../../software-design/questions/label.md) (the Shopee-style instant code as the
+    tracking ID, default A; its sample is `2026-11-11 grab-express.pdf`).
   - **Still the owner's step from 2026-11-25**: in the data folder's `parser.toml`, the `spx` classifier's
     `tracking_id = 'SPXID\d{11}[A-Z]'` becomes `'SPXID\d{11}[A-Z]|CM\d{11}'`, so the regular SPX label
-    keeps its tracking ID.
-  - **Not done**: `crates/engine/couriers.toml`, the old courier table, is still loaded by the engine's
-    `label` module; removing it is a refactor of its own.
+    keeps its tracking ID; and its `logos` gain `"c622a9c866f1abf4"`, the badge (or answer **SPX** when the
+    logo prompt shows the badge, once the form is changed). A new data folder has both already.
+  - **Dead code removed**: the old reading path (`couriers.toml`, its courier table and deduction, the
+    pages → orders step and its warnings), never used since copies; and one unused PDF reader function.
   - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-16`,
     [reviews/label.md](../../reviews/label.md) as `R-LABEL-17`, [reviews/ui.md](../../reviews/ui.md) as
     `R-UI-54`. A new session turns each into a task and builds it.

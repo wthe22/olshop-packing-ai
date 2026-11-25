@@ -1,18 +1,14 @@
-//! The order and line model and what a read produces: the contents key, display names and the
-//! types the pages → orders step fills. The step itself is in the modules beside this file.
+//! The order and line model: the contents key and display names. What a read reports besides
+//! the copies is in the module beside this file.
 
 use jiff::civil::DateTime;
 
 use crate::ids::{OrderId, TrackingId};
 use crate::text::PageText;
 
-mod read;
-mod warnings;
+mod report;
 
-pub use self::read::read_batch;
-pub use self::warnings::{
-    LogoAnswer, NoSlip, NoSlipFile, OrderLabel, ReadError, UnseenLogo, Warning,
-};
+pub use self::report::{LogoAnswer, NoSlip, NoSlipFile, UnseenLogo};
 
 /// The slip's placeholder for a product without variants.
 pub const DEFAULT_VARIATION: &str = "Default";
@@ -80,34 +76,3 @@ pub fn display_name(name: &str, variation: &str) -> String {
 /// One page of a batch: the file index (in download order), the 0-based page index inside that
 /// file, and the page text.
 pub type PageItem = (usize, usize, PageText);
-
-/// A page reference: the file index and the 0-based page index.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct PageRef {
-    pub file: usize,
-    pub page: usize,
-}
-
-/// One order read from the labels, ready to use.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ReadOrder {
-    pub order: Order,
-    /// The order's pages, in download order.
-    pub pages: Vec<PageRef>,
-    /// Download position, 1..n in first-seen order.
-    pub position: usize,
-    pub has_slip: bool,
-    pub qty_total: Option<i64>,
-}
-
-/// The result of reading a batch.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Reading {
-    /// The orders, in download order.
-    pub orders: Vec<ReadOrder>,
-    /// Pages without an Order ID that continue the previous page's order.
-    pub continuation_pages: Vec<PageRef>,
-    /// The header-band images the courier data does not know, in first-seen order.
-    pub unseen_logos: Vec<UnseenLogo>,
-    pub warnings: Vec<Warning>,
-}

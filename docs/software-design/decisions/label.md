@@ -136,3 +136,15 @@ from the label as printed (D-LABEL-21), so an instant label is still known by it
 must find it, and an instant order no longer shows *no tracking ID*.
 
 **Applies to.** [reading](../labels/reading.md#per-order-data), [courier](../labels/courier.md).
+
+## D-LABEL-25 — The regular SPX layout's badge is an SPX logo
+
+**Decision.** The `REGULAR SERVICE` badge image of the regular SPX layout (bytes `c622a9c866f1abf4`) is
+in the bundled `spx` logos. With the `CM` + 11-digit form it names SPX by the two-clue rule (D-LABEL-2), as
+the wordmark does on the other SPX layouts (Q-LABEL-14).
+
+**Why.** The layout prints no SPX wordmark; the badge is the one header image of the page that is not a
+buying channel's strip. The owner chose it for now; a second layout carrying the same badge for another
+courier would show as a logo and form that disagree.
+
+**Applies to.** [courier](../labels/courier.md), the bundled `parser.toml`.

@@ -78,7 +78,7 @@ export interface ReadResult {
   warnings: string[];
   // The batch being redone when this read is an amend; `null` for a new batch.
   amend: number | null;
-  // The courier names the prompt's buttons show, in `couriers.toml` order.
+  // The courier names the prompt's buttons show, in `parser.toml` order.
   couriers: string[];
   // The header-band images the courier data does not know; empty when every logo is
   // known and no prompt is needed.

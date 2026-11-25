@@ -12,6 +12,10 @@ const JNT_LOGO: &str = "39b9b7b9f61d0e7f";
 const SICEPAT_LOGO: &str = "cf33ed60daa291b1";
 const CARGO_SHAPE: &str = "753ccbd14749befa";
 const ANTERAJA_LOGO: &str = "556e376839c5805d";
+/// The `REGULAR SERVICE` badge of the regular SPX layout.
+const SPX_REGULAR_BADGE: &str = "c622a9c866f1abf4";
+/// The `Shopee` wordmark: not a courier.
+const SHOPEE_WORDMARK: &str = "07fea99cbec66ae7";
 /// The `tokopedia | Shop` strip: not a courier.
 const TOKOPEDIA_STRIP: &str = "6c1340227db55be4";
 /// The `TikTok Shop` strip an instant label carries: not a courier.
@@ -289,6 +293,15 @@ fn the_courier_and_the_clue_that_named_it() {
             Some("anteraja"),
             CourierClueKind::Logo,
             Some(ANTERAJA_LOGO),
+        ),
+        (
+            "the regular SPX layout's badge, beside the Shopee wordmark",
+            Some("CM00000000001"),
+            vec![(SPX_REGULAR_BADGE, None), (SHOPEE_WORDMARK, None)],
+            &[],
+            Some("spx"),
+            CourierClueKind::Logo,
+            Some(SPX_REGULAR_BADGE),
         ),
         (
             "a masked logo by its shape",

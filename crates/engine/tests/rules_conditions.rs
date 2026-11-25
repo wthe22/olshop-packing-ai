@@ -10,7 +10,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use packing_engine::ids::{OrderId, TrackingId};
-use packing_engine::orders::{Line, Order};
+use packing_engine::orders::{Line, Order, display_name};
 use packing_engine::rules::{evaluate, fields_used, format_condition, parse_condition};
 use serde_json::Value;
 
@@ -268,4 +268,20 @@ fn app_and_csv_fields_are_rejected() {
             .message,
         "line 1, col 3: field \"paid_time\" needs the orders CSV, which the PC app does not read"
     );
+}
+
+#[test]
+fn a_display_name_cuts_at_the_pipe_and_appends_a_variation() {
+    let cases = [
+        ("Spion Beat | Kaca Spion Motor", "", "Spion Beat"),
+        (
+            "Spion Beat | Kaca Spion Motor",
+            "honda",
+            "Spion Beat — honda",
+        ),
+        ("Sepatu", "Default", "Sepatu"),
+    ];
+    for (name, variation, expected) in cases {
+        assert_eq!(display_name(name, variation), expected);
+    }
 }

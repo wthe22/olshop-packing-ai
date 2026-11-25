@@ -58,23 +58,6 @@ impl<'a> OpenedFile<'a> {
         })
     }
 
-    /// The text and runs of one 0-based page with no header-band images: the check before saving
-    /// reads its own output back and needs the Order ID and the printed counts only, never a
-    /// logo.
-    pub fn page_text_plain(&self, index: usize) -> Result<PageText, PdfError> {
-        let page = page_at(&self.doc, &self.path, index)?;
-        let text = page.text()?;
-        let all = text.all();
-        let runs = build_runs(&page, &text)?;
-        Ok(PageText {
-            text: all,
-            runs,
-            width: page.width().value as f64,
-            height: page.height().value as f64,
-            logos: Vec::new(),
-        })
-    }
-
     /// The header-band image with byte hash `hash` on one 0-based page, as PNG bytes (the logo
     /// prompt shows the logo as printed). `None` when the page carries no such image.
     pub fn band_picture(&self, index: usize, hash: &str) -> Result<Option<Vec<u8>>, PdfError> {

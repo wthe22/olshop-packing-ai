@@ -150,7 +150,7 @@ creator handle, …) are not needed for packing.
   with the service word `Reguler` and a `REGULAR SERVICE` badge image. Its order is keyed by
   `No. Pesanan` (`260000ABCD1234`, 14 characters), its `Batas Kirim:` is a date with no time, and its
   slip shows the item and `Pesan: (<No. Pesanan>)`. The file holds no image of the SPX wordmark: its
-  images are the barcodes, the badge and the `Shopee` wordmark (800×253), so no SPX logo names the courier.
+  images are the barcodes, the badge and the `Shopee` wordmark (800×253).
 - The **`No. Resi` layout of the Shopee-style label** (`2026-11-02 spx std.pdf`, 1 page) prints the
   whole ID after `No. Resi:` and the service tag `STD`; its SPX logo is another asset
   (`7f0d33c143e2ab14`), and in its text an empty box's `-` comes between `Batas Kirim:` and the date.

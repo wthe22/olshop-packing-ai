@@ -14,7 +14,7 @@
     onSkipAll,
   }: {
     logo: LogoView;
-    // The courier names of `couriers.toml`, in file order: one button each.
+    // The courier names of `parser.toml`, in file order: one button each.
     couriers: string[];
     // An answer is on its way; the buttons wait.
     busy?: boolean;

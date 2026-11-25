@@ -13,7 +13,8 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    **encoded bytes** (PDFium's `FPDFImageObj_GetImageDataRaw`, not the decoded pixels) are hashed with
    XXH3-64 (seed 0) and looked up in `logos`; a hash in `not_courier.logos` is not a logo. Measured stable
    across every sample export: J&T Express `39b9b7b9f61d0e7f`, SiCepat `cf33ed60daa291b1`, iD Express (IDX)
-   `9131c1f94ad363d4`, SPX `4583097ef370a670` (and `7f0d33c143e2ab14` on its `No. Resi` layout), Anteraja `556e376839c5805d` (354×142, one sample page). The
+   `9131c1f94ad363d4`, SPX `4583097ef370a670` (and `7f0d33c143e2ab14` on its `No. Resi` layout, the `REGULAR SERVICE` badge
+   `c622a9c866f1abf4` on its regular layout, [D-LABEL-25](../decisions/label.md)), Anteraja `556e376839c5805d` (354×142, one sample page). The
    buying channels' strips are in the bundled `not_courier.logos`: `tokopedia | Shop` `6c1340227db55be4`,
    `tokopedia | TikTok` `c2230c3c5d8c560d`, the Shopee wordmark `07fea99cbec66ae7`, `TikTok Shop`
    `f2cf7019646c955b`, `tokopedia PLUS` `330b79a3b29d4646`. About 0.5 µs a page.
@@ -30,8 +31,8 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    `JX` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo; `TKP` + 10
    digits → IDX; `SPXID` + 11 digits + a capital letter → SPX (the letter is part of the ID and differs per
    order; one layout prints it on the line under `Resi:`, so only the ID printed whole along the edges
-   names it); `CM` + 11 digits → SPX too (the regular layout, [Q-LABEL-14](../questions/label.md) for its
-   courier); `TSA-` + 11 digits → Anteraja (one sample page). The form must match a token, or a match in the
+   names it); `CM` + 11 digits → SPX too (the regular layout, whose logo is its badge,
+   [D-LABEL-25](../decisions/label.md)); `TSA-` + 11 digits → Anteraja (one sample page). The form must match a token, or a match in the
    whitespace-collapsed text, **fully**; it need not be repeated (the boxed layouts print it once). A form
    the platform adds is a line of `parser.toml`, not a program change.
 4. **Named only when the two agree.** The form gives the *candidate* couriers; the courier is named when the

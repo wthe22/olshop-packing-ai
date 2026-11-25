@@ -12,7 +12,7 @@ use jiff::civil::Date;
 
 use crate::accounts::OrderAccount;
 use crate::ids::{CourierCode, OrderId, TrackingId};
-use crate::label::{Form, Sender, find_order_id, find_sender, find_ship_by, find_tracking_id_in};
+use crate::label::{Form, Sender, find_order_id, find_sender, find_ship_by, find_tracking_id};
 use crate::orders::{NoSlip, NoSlipFile, PageItem, UnseenLogo};
 use crate::record::CourierClue;
 use crate::rules::{FilterFields, FilterLine};
@@ -139,8 +139,7 @@ where
         let number = index as u16 + 1;
         let order_id = find_order_id(&page.text);
         let no_id = OrderId::new("");
-        let tracking_id =
-            find_tracking_id_in(&page.text, order_id.as_ref().unwrap_or(&no_id), &forms);
+        let tracking_id = find_tracking_id(&page.text, order_id.as_ref().unwrap_or(&no_id), &forms);
         let slip = read_slip(&page);
         let split_slip = current.map(|at| &copies[at]).is_some_and(|copy| {
             is_split_slip(copy, (input, &page), (&order_id, &tracking_id), &no_slip)

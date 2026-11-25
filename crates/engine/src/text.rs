@@ -11,14 +11,14 @@ pub struct Run {
 
 /// One candidate courier logo of a page: an image whose whole box lies in the page's top band.
 /// `packing-pdf` builds these; the courier rule looks the hashes up in
-/// `couriers.toml` (courier.md items 1 and 3).
+/// `parser.toml` (courier.md items 1 and 3).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LogoImage {
     /// XXH3-64 (16 lowercase hex) of the image's **encoded bytes**
     /// (`FPDFImageObj_GetImageDataRaw`).
     pub hash: String,
     /// XXH3-64 (16 lowercase hex) of the image's **appearance**, computed by `packing-pdf` only
-    /// when `hash` is not yet known to `couriers.toml` (`logo`/`not_courier`). `None` means the
+    /// when `hash` is not yet known to `parser.toml` (`logos`/`not_courier`). `None` means the
     /// table already knew the bytes, so nothing had to be decoded.
     pub appearance: Option<String>,
 }
