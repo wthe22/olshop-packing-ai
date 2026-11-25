@@ -13,7 +13,7 @@
 │        ├──► packing-engine  rules, filters, pages → copies → orders, repeats, plan,  │
 │        │                    order contents, the record of a batch. No PDF, no file   │
 │        ├──► packing-pdf     PDFium: page text and images, copy pages, summary PDF   │
-│        ├──► packing-store   lock, journal, fold, input/ and output/, views, index   │
+│        ├──► packing-store   lock, journal, fold, inputs and outputs, views, index   │
 │        └──► packing-verify  lopdf: page digests and the checks of a record          │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 packing-cli (developer tool): the same crates from the command line, for tests and sample runs

@@ -18,7 +18,15 @@ packing-app.toml          where the data folder is, the theme
 packing-data\             the data folder (its name is the owner's choice)
   parser.toml             how labels are read: couriers, courier clues
   config.toml             the accounts and the sort rules
-  2026-10-07\ …           one folder per date
+  2026-10-07\ …           one folder per date, every file of the date directly in it:
+    journal.jsonl         the truth
+    session.toml …        the views
+    2 Input 03 61459e8a8203.pdf   an input of batch 2
+    2-A Sepatu x12.pdf    a group PDF of batch 2
+    2 Summary.pdf         the summary PDF of batch 2
+    Reprint 1 x4.pdf      a reprint
+    Day Summary.pdf       a summary made on request
+    .partial\             what an operation writes before its commit
 ```
 
 - `packing-app.toml` (beside the program): the app's preferences. Written at the first start
@@ -36,8 +44,8 @@ Root {
 }
 ```
 A date folder holds the work of one date for every account ([accounts](../app/accounts.md)); batch numbers
-run through a date. `output/` holds only the files the journal records; a summary made on request sits
-beside the journal.
+run through a date. A date folder has no subfolder but `.partial/` ([D-APP-32](../decisions/app.md)); a file
+the journal does not record is a view or the owner's.
 
 ## What is truth, and what is derived
 
@@ -45,8 +53,8 @@ beside the journal.
 |---|---|---|---|
 | `journal.jsonl` | **Truth** | One append per commit ([journal](journal.md)) | Every decision |
 | `session.toml`, `orders.csv`, `order-contents.toml`, the summaries made on request | Views | After every commit; rebuilt when missing or stale ([views](views.md)) | The owner and other programs. Never read for a decision |
-| `input/` | Inputs | At save, before the commit | Reading, amend, reprint, restore, the verifier |
-| `output/` | Outputs | At save: written aside, verified, moved in after the commit | Printing |
+| `{batch} Input {pdf} {short hash}.pdf` | Inputs | At save, before the commit | Reading, amend, reprint, restore, the verifier |
+| The group PDFs, `{batch} Summary.pdf`, `Reprint {n} x{count}.pdf` | Outputs | At save: written into `.partial/`, verified, moved in after the commit | Printing |
 | `parser.toml` | The owner's parser rules | The owner, the logo prompt | Reading labels; a saved batch keeps what it used |
 | `config.toml` | The accounts and the sort rules | The owner, the Sort rules screen, the Accounts screen, the shop prompt | Planning, and an order's account when labels are read ([accounts](../app/accounts.md#the-account-of-an-order)); a saved batch keeps its own copy of the rule it used |
 | `packing-app.toml` (beside the program) | Preferences | First start, Settings | Finding the data folder; the theme |
@@ -55,7 +63,7 @@ beside the journal.
 decided by them after the save.
 
 Every saved fact has one home, the journal; a view and the search index are rebuilt from it and are only
-read. An output is reproducible from `input/` and the journal ([reprint](../app/reprint.md)).
+read. An output is reproducible from the inputs and the journal ([reprint](../app/reprint.md)).
 
 ## One writer
 

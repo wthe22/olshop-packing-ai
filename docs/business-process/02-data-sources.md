@@ -74,6 +74,10 @@ creator handle, …) are not needed for packing.
   with a QR code, `Weight`, `COD`, `Print Time`, and the order ID inside the box (`TT Order ID :` on
   J&T Cargo, `Order ID :` on IDX). The third style is the instant-service label (below) and the
   fourth the Shopee-style label (below) — the two styles only one or two sample pages each carry.
+- A **split** J&T Express label (`2026-11-25 split.pdf`, one order, the owner calls it a rare case) prints
+  the label on one page with no slip, and the slip on the next: `In transit by:` with its date and
+  time, `Tracking number:` with the label's own tracking ID, the slip table, `Qty Total:` and `Order ID:`.
+  The slip page has no header image. The label page prints `Estimated Date:` but no `In transit by`.
 - The **instant-service label** is the platform's *Instant / Same Day* style and the only label that
   names no courier. Two sample pages, one per buying channel: `2026-10-07 tt-instant 162.pdf` p162
   (download stamp 2026-10-07 07:16; its header carries the `TikTok Shop` strip 326×59) and

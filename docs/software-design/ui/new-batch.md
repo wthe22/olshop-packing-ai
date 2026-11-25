@@ -47,7 +47,7 @@ is ([D-RULES-1](../decisions/rules.md)). The batch's record keeps a snapshot of 
 
 **Back** on an amend's Plan screen opens this page, titled *Redo batch 2*, so the batch's files can change:
 
-- The batch's own inputs are listed first, from `input/`, in their recorded order, then what the owner added.
+- The batch's own inputs are listed first, from the date folder, in their recorded order, then what the owner added.
 - The sort rule is shown, not chosen: *Sort rule: default (as now)*, or *default (as saved)* when no rule
   has that name any more ([D-RULES-2](../decisions/rules.md)).
 - **Add files** and a drop add any PDF on the PC; **×** takes a file off, and its orders stay unsaved for a

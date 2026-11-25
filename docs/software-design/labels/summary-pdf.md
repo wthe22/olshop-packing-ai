@@ -1,6 +1,6 @@
 # Summary PDF (A4)
 
-One per batch, `output/{batch} summary.pdf`, of all the batch's accounts, written with the group PDFs and
+One per batch, `{batch} Summary.pdf` in the date folder, of all the batch's accounts, written with the group PDFs and
 checked by the verifier ([D-APP-16](../decisions/app-features.md)). One account's summary is made on request
 ([below](#one-account)). There is no other packing list and no layout or scope to choose.
 Three parts, each starting on a new page, in this order ([D-LABEL-16](../decisions/summaries.md)): the **facts
@@ -54,7 +54,7 @@ The first pages say what the batch is, so the paper alone can be traced:
 | Accounts | The batch's orders and units per account, most orders first. Only on the summary of all accounts |
 | Couriers | The batch's orders per courier, by the courier's **name** in `parser.toml` (its code when the file no longer names it), most first, *Unknown* last: *86 orders*. The count the owner hands over at the pickup |
 | Warnings | The read warnings. The verifier's findings come after this file is written, so they are on the Day card and in the journal, not here |
-| Inputs | Each input: the name it had, its pages, its short hash — the first 12 characters of its SHA-256, in Consolas, as its name in `input/` ends (R-LABEL-15). Then the ledger in bold: *1000 pages read = 986 written + 14 left out (14 repeats, 0 saved earlier)* |
+| Inputs | Each input: the name it had, its pages, its short hash — the first 12 characters of its SHA-256, in Consolas, as its stored name ends (R-LABEL-15). Then the ledger in bold: *1000 pages read = 986 written + 14 left out (14 repeats, 0 saved earlier)* |
 | Sort rule · `<name>` | Each group: its code as the key, then *Sepatu · name contains "sepatu"* |
 | Versions | `schema 1.0 · Packing v0.2 · PDFium <version>` |
 
@@ -79,7 +79,7 @@ What to take from stock for the whole batch: one line per item (product name and
 
 ## One account
 
-A batch card's account button on the [Day screen](../ui/day.md) writes `{date}/{batch} summary
+A batch card's account button on the [Day screen](../ui/day.md) writes `{date}/{batch} Summary -
 {account}.pdf` from the batch's record and opens it ([D-APP-29](../decisions/accounts.md)). It is a view
 of the journal: written again on every request, not recorded, never read for a decision; a revert or an
 amend deletes it. It is checked before it is kept (V6 on the account's orders); a finding stops it and

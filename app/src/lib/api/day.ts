@@ -54,7 +54,7 @@ export interface BatchView {
   warnings: string[];
   // The verifier's errors: only on a batch saved anyway.
   errors: string[];
-  // `output\`, for *Open* and *Open folder*.
+  // The date folder, for *Open* and *Open folder*.
   folder: string;
 }
 
@@ -77,7 +77,7 @@ export interface DayOverview {
 
 // One older version's data as the Day screen's note names it.
 export interface OlderData {
-  // `v0.1` or `v0.4`.
+  // `v0.1`, `v0.4` or `v0.7`.
   version: string;
   // The files and folders that show it; a folder's name ends in `\`.
   names: string[];

@@ -22,7 +22,7 @@ struct Restored {
 pub(crate) fn check_restore(
     json: &[u8],
     live: &BTreeMap<u8, Batch>,
-    input_dir: &Path,
+    date_dir: &Path,
     output_dir: &Path,
     findings: &mut Findings,
 ) {
@@ -51,7 +51,7 @@ pub(crate) fn check_restore(
     let mut checked = batch.clone();
     if output.group.is_some() {
         checked.outputs = vec![output];
-        let inputs = files::check_inputs(&checked, input_dir, findings);
+        let inputs = files::check_inputs(&checked, date_dir, findings);
         files::check_group_pdfs(&checked, &inputs, output_dir, findings);
     } else {
         checked.outputs.retain(|o| o.group.is_some());

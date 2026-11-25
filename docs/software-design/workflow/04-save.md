@@ -5,9 +5,10 @@ Nothing of the date changes until step 14.
 
 ## 11. Store the inputs
 
-For each input of the batch that `input/` does not hold yet: copy it to `input/{name}.partial`, `sync_all`,
-hash the copy again, and rename it to `input/{name}`, where `{name}` is `{date}_{pdf}_{short hash}.pdf`
-([D-APP-10](../decisions/app.md)). A copy whose hash differs stops the save. From here on every page is taken from `input/`, never from the file the owner chose.
+For each input of the batch that the date folder does not hold yet: copy it to `{name}.partial` there,
+`sync_all`, hash the copy again, and rename it to `{name}`, where `{name}` is
+`{batch} Input {pdf} {short hash}.pdf` ([D-APP-10](../decisions/app.md)). A copy whose hash differs stops the
+save. From here on every page is taken from the stored inputs, never from the file the owner chose.
 
 An input is never deleted. One stored by a save that is then cancelled is named by no record; it is
 harmless, and the next save of the same file finds it in place.
@@ -16,9 +17,9 @@ harmless, and the next save of the same file finds it in place.
 
 ## 12. Write the outputs
 
-Into `output/.partial/` (the open-time check has settled any earlier one):
+Into the date folder's `.partial/` (the open-time check has settled any earlier one):
 
-1. **Group PDFs**, in plan order: each order's written copy, its pages copied unchanged from `input/` and
+1. **Group PDFs**, in plan order: each order's written copy, its pages copied unchanged from the stored inputs and
    together, in printing order (step 10).
 2. **The summary PDF** of all the batch's accounts from the plan ([summary PDF](../labels/summary-pdf.md)).
 3. **The record**: a `batch_saved` built in memory with the next `seq` — the inputs, the sort rule as used,
@@ -31,7 +32,7 @@ Into `output/.partial/` (the open-time check has settled any earlier one):
 
 ## 13. Verify
 
-`packing-verify` checks the record's bytes against the journal, `input/` and `output/.partial/`: V1–V6 of
+`packing-verify` checks the record's bytes against the journal, the stored inputs and `.partial/`: V1–V6 of
 [verification](../app/verification.md).
 
 - **No finding**: go on.
@@ -55,7 +56,7 @@ Into `output/.partial/` (the open-time check has settled any earlier one):
 
 ## 15. Move the outputs, write the views
 
-1. Move every file of `.partial/` into `output/`, replacing a file of the same name; delete `.partial/`
+1. Move every file of `.partial/` into the date folder, replacing a file of the same name; delete `.partial/`
    with `replaced/`. A move Windows refuses leaves the batch saved: the message names the file, and the
    next open moves it forward.
 2. Write `orders.csv`, `order-contents.toml`, then `session.toml`, each to a temporary file renamed into

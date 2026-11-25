@@ -221,7 +221,7 @@ fn output_path(state: &AppState, day: &str, file: &str) -> Result<PathBuf, Strin
         return Err(format!("{file} is not a file name."));
     }
     let date = date_of(day)?;
-    state.with_data(|data| Ok(data.open_day(date)?.folder.dir().join("output").join(file)))
+    state.with_data(|data| Ok(data.open_day(date)?.folder.dir().join(file)))
 }
 
 pub(crate) fn output_bytes(state: &AppState, day: &str, file: &str) -> Result<Vec<u8>, String> {

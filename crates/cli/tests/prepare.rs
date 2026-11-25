@@ -75,7 +75,7 @@ impl Setup {
     }
 
     fn output(&self, file: &str) -> PathBuf {
-        self.data.join(DAY).join("output").join(file)
+        self.data.join(DAY).join(file)
     }
 }
 
@@ -129,7 +129,7 @@ fn prepare_revert_amend_round_trip() {
     assert!(said.contains("saved batch 1"), "{said}");
     assert!(setup.data.join(DAY).join("journal.jsonl").is_file());
     assert!(setup.output("1-Z Lainnya x4.pdf").is_file());
-    assert!(setup.output("1 summary.pdf").is_file());
+    assert!(setup.output("1 Summary.pdf").is_file());
     let fold = setup.fold();
     assert_eq!(fold.live.len(), 1);
     let first = fold.live.values().next().unwrap().saved.clone();

@@ -13,7 +13,7 @@ Only the newest batch of a date can be changed — a later batch depends on the 
   open in a PDF viewer, the app names the file to close and changes nothing.
 - **Amend** — "I fixed a sort rule, do the last batch again". It asks: "Redo batch 2? Its labels
   are read again with the sort rule default. After saving, print its PDFs again." [Redo] [Cancel]. The batch's own label files are
-  read again from the date's `input` folder, with the sort rule of that name as it is now (or as it was
+  read again from the date's folder, with the sort rule of that name as it is now (or as it was
   saved, when no rule has that name any more), the same copies of repeated orders kept, and the **Plan**
   screen opens titled *Redo batch 2*; **Save batch** writes it again. Print it again after saving.
   - **Back** (top) shows the batch's files, its rule fixed ("Sort rule: default (as now)"); add files
@@ -44,7 +44,8 @@ order goes to the first group whose filter matches; the last group has no filter
   boxes inside; **not** reverses a row or a box. **Courier · equals** lists the couriers by name;
   **Courier · contains** takes typed text and matches the names (`J&T` takes J&T Express and J&T Cargo).
 - **Courier · is unknown** takes the orders whose courier the app could not name, and **Tracking ID · is
-  unknown** those without a tracking ID (instant-service labels); with **not**, the others. *Is empty* does
+  unknown** those whose tracking ID could not be read (an instant-service label's is its pickup code); with **not**,
+  the others. *Is empty* does
   the same on the other text fields.
 - **In batch 3** is the count each group takes in the batch being prepared, so a change can be judged
   before saving.

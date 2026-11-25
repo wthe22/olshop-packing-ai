@@ -88,7 +88,7 @@ pub struct BatchView {
     warnings: Vec<String>,
     /// The verifier's errors: only on a batch saved anyway.
     errors: Vec<String>,
-    /// `output/`, for *Open* and *Open folder*.
+    /// The date folder, for *Open* and *Open folder*.
     folder: String,
 }
 
@@ -126,12 +126,12 @@ pub struct ReprintRow {
 
 pub(super) fn overview(day: &OpenDay, older: Vec<OlderView>) -> DayOverview {
     let fold = day.journal.fold();
-    let output = day.folder.dir().join("output");
+    let output = day.folder.dir();
     let batches: Vec<BatchView> = fold
         .live
         .iter()
         .rev()
-        .map(|(batch, live)| batch_view(day, *batch, live, &output))
+        .map(|(batch, live)| batch_view(day, *batch, live, output))
         .collect();
     let mut problems = Vec::new();
     if let Some(damage) = day.journal.damage() {
@@ -284,7 +284,7 @@ fn left_out(saved: &BatchSaved) -> Vec<LeftOutView> {
 /// One older version's data as the Day screen's note names it.
 #[derive(Serialize)]
 pub struct OlderView {
-    /// `v0.1` or `v0.4`.
+    /// `v0.1`, `v0.4` or `v0.7`.
     version: &'static str,
     /// The files and folders that show it; a folder's name ends in `\`.
     names: Vec<String>,
@@ -297,6 +297,7 @@ pub(super) fn older_views(data_dir: &Path, older: &[OlderData]) -> Vec<OlderView
             version: match found.version {
                 OlderVersion::V0_1 => "v0.1",
                 OlderVersion::V0_4 => "v0.4",
+                OlderVersion::V0_7 => "v0.7",
             },
             names: found
                 .names

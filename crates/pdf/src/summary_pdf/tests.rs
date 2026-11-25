@@ -196,7 +196,7 @@ fn written(tag: &str, record: &BatchSaved, check: impl FnOnce(&Pdfium, &std::pat
     let _guard = testkit::pdfium_lock();
     let pdfium = crate::bind(&vendor).expect("bind pdfium");
     let dir = TempDir::new(tag);
-    let path = dir.path().join("1 summary.pdf");
+    let path = dir.path().join("1 Summary.pdf");
     let couriers = couriers();
     write_summary(
         &pdfium,

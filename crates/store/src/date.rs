@@ -1,5 +1,5 @@
 //! A date folder of the data folder, and what happens when it opens (journal.md, *When a date opens*):
-//! fold, inputs, `output/.partial/`, outputs, views — in that order, before the date is shown.
+//! fold, inputs, `.partial/`, outputs, views — in that order, before the date is shown.
 
 use std::path::{Path, PathBuf};
 

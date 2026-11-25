@@ -16,5 +16,4 @@ owner sees, what the owner wants. A resolved item is deleted; its answer is writ
 [../development/plan/](../development/plan/README.md). Numbers are never reused. A scope file stays in
 place when it holds no item, so the next finding of that scope has a home.
 
-Open items: `app.md` (R-APP-2), the owner's reading of [the workflow](../software-design/workflow/README.md);
-`app.md` (R-APP-12 to R-APP-15) and `label.md` (R-LABEL-16), written down and not yet built.
+Open items: `app.md` (R-APP-2), the owner's reading of [the workflow](../software-design/workflow/README.md).

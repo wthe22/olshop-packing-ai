@@ -66,7 +66,7 @@ pub fn revert(
         .saved
         .inputs
         .iter()
-        .map(|input| input_path(folder, input.pdf, &input.sha256))
+        .map(|input| input_path(folder, batch, input.pdf, &input.sha256))
         .collect();
     settle_partial(dir, fold)?;
     let saved_to = match pdfs {

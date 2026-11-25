@@ -82,7 +82,7 @@ impl LiveBatch {
     }
 }
 
-/// What the journal's last record writes into `output/`, which settles `output/.partial/`.
+/// What the journal's last record writes into the date folder, which settles its `.partial/`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LastWrites {
     Nothing,

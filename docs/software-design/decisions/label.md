@@ -72,10 +72,14 @@ frame, barcodes and QR fall outside, so a per-order code is never asked about.
 ## D-LABEL-12 — A copy starts at a page with a label part, and its pages are together
 
 **Decision.** A page with an Order ID and a tracking ID or header image starts a copy; a page without continues
-the copy right before it in the same input (Q-LABEL-9). A continuation page anywhere else stops the batch.
+the copy right before it in the same input (Q-LABEL-9). A continuation page anywhere else stops the batch. One
+exception, the split label: a page right after a one-page copy that had no slip, with its Order ID, no header
+image, a slip and no tracking ID but the copy's own, continues that copy.
 
 **Why.** A second copy right after the first is then still a repeat. Measured: every multi-page order of the
-samples has its second page right after its first, and page ranges make every order traceable.
+samples has its second page right after its first, and page ranges make every order traceable. The split J&T
+label (`2026-11-25 split.pdf`, the owner's rare case) prints the tracking ID beside its slip; a repeat's
+second copy never follows a copy without a slip, as a download either has slips on every label or on none.
 
 **Applies to.** [duplicates](../app/duplicates.md#1-copies), [reading](../labels/reading.md#copies-and-multi-page-orders).
 
@@ -120,3 +124,15 @@ prompt once showed an instant label's `TikTok Shop` strip, the owner answered *G
 TikTok instant label of Gojek or Grab could be named (a courier logo on an instant label names nothing).
 
 **Applies to.** [courier deduction](../labels/courier.md), item 7; [rules file](../rules-file/README.md#couriers).
+
+## D-LABEL-24 — An instant label's pickup code is its tracking ID
+
+**Decision.** An order whose label prints no tracking ID and a pickup code under `Kode Pengambilan` takes the
+pickup code as its tracking ID (R-LABEL-16): `BC0000` on the TikTok Shop instant label, `12AB` on the
+Shopee-style one (Q-LABEL-15). The pickup code is still kept in its own field. The courier is named before,
+from the label as printed (D-LABEL-21), so an instant label is still known by its missing tracking ID.
+
+**Why.** The owner's request: the courier's rider asks for that code, so Search and a `tracking_id` filter
+must find it, and an instant order no longer shows *no tracking ID*.
+
+**Applies to.** [reading](../labels/reading.md#per-order-data), [courier](../labels/courier.md).

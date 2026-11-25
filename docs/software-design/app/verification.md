@@ -36,7 +36,7 @@ has a digest of its own.
 | # | Check | Finding when it fails |
 |---|---|---|
 | V1 | Every line of the journal has its seal and the next `seq`; the record follows the last one | Error: the journal changed |
-| V2 | Every input file in `input/` has the record's SHA-256 and page count; the verifier finds it by the end of its name, `_` and the first 12 characters of the SHA-256, and checks the bytes | Error: an input changed |
+| V2 | Every input file in the date folder has the record's SHA-256 and page count; the verifier finds it by its name, ` Input ` in it and a space and the first 12 characters of the SHA-256 at its end, and checks the bytes | Error: an input changed |
 | V3 | **The ledger**: every page of every input lies in exactly one written copy or one left-out copy; *pages read = written + left out* | Error: a page in no copy (1:0), a page in two (1:N) |
 | V4 | Order IDs are unique in the record and in no other live batch of the date; each `repeat` names a kept copy that is written; each `saved_earlier` names a live batch that holds the order | Error |
 | V5 | Each group PDF has the record's SHA-256, size and page count, and its page *k* has the digest of the source page the record puts at *k* | Error: missing (1:0), doubled (1:N), a page of no input, an order split over two files. Warning: every page there once, in another order |
@@ -56,7 +56,7 @@ once. Either stops the save ([D-APP-18](../decisions/app-features.md)):
 
 - The dialog names the findings in plain words, errors and warnings in two lists, and offers
   **Save anyway** and **Cancel — nothing is saved** ([Plan › Saving](../ui/plan.md#saving)).
-- **Cancel** deletes `output/.partial/` and keeps the draft.
+- **Cancel** deletes `.partial/` and keeps the draft.
 - **Save anyway** commits the record with the findings in its `errors` and `warnings`; the Day card shows
   them until the batch is reverted or amended.
 

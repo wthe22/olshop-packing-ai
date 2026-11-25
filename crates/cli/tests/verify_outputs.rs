@@ -67,7 +67,7 @@ fn draft(pdfium: &Pdfium, data: &Path) -> Draft {
         .enumerate()
         .map(|(at, path)| {
             let pdf = PdfId::new(at as u8 + 1);
-            let stored = store_input(&folder, pdf, path).unwrap();
+            let stored = store_input(&folder, BatchId::new(1), pdf, path).unwrap();
             InputPdf {
                 pdf,
                 sha256: stored.sha256,
@@ -132,12 +132,12 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
         mut record,
         pages,
     } = draft(pdfium, data.path());
-    let partial = folder.dir().join("output").join(".partial");
+    let partial = folder.dir().join(".partial");
     fs::create_dir_all(&partial).unwrap();
     let mut sources: Vec<PathBuf> = record
         .inputs
         .iter()
-        .map(|input| input_path(&folder, input.pdf, &input.sha256))
+        .map(|input| input_path(&folder, record.batch, input.pdf, &input.sha256))
         .collect();
     sources.push(testdata("labels-slip.pdf"));
     let opened = read::open_all(pdfium, &sources).unwrap();
@@ -153,7 +153,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
     // The group bar names the group with characters drawn in the CID font too; the verifier reads
     // the bar's counts, not its name.
     record.sort_rule.label_groups[0].name = "Kaca é ×".into();
-    let summary_path = partial.join("1 summary.pdf");
+    let summary_path = partial.join("1 Summary.pdf");
     let summary_pages = write_summary(
         pdfium,
         &summary_path,
@@ -192,7 +192,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
     verify_batch(&BatchCheck {
         journal: b"",
         append: &append,
-        input_dir: &folder.dir().join("input"),
+        date_dir: folder.dir(),
         output_dir: &partial,
     })
 }

@@ -52,7 +52,8 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    a courier would leave every instant label of that channel unnamed. A tag in no list is asked about once
    in the logo prompt, like an unseen logo, and the answer is added to that courier's `instant_tags`. The
    style is known from three pages: each of these marks is re-checked on the next instant labels before it
-   is relied on.
+   is relied on. The courier is named from the label as printed; the order's tracking ID is then its pickup
+   code ([D-LABEL-24](../decisions/label.md)).
 8. **The Shopee-style label carries both clues**: the small red `SPX` wordmark (68×27, masked, bytes
    `4583097ef370a670`, or `7f0d33c143e2ab14` on the `No. Resi` layout) and `SPXID` + 11 digits + a letter,
    which no other courier uses

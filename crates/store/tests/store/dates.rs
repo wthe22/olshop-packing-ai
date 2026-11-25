@@ -89,6 +89,7 @@ fn data_of_older_versions_is_named_and_left_as_it_is() {
     fs::create_dir_all(&beta).unwrap();
     fs::write(beta.join("journal.jsonl"), b"").unwrap();
     fs::create_dir_all(data.path().join("Toko Gamma").join("2026-10-07")).unwrap();
+    fs::create_dir_all(data.path().join("2026-10-07").join("output")).unwrap();
     assert_eq!(
         older_data(data.path()).unwrap(),
         [
@@ -100,8 +101,12 @@ fn data_of_older_versions_is_named_and_left_as_it_is() {
                 version: OlderVersion::V0_4,
                 names: vec!["Toko Alfa".into(), "Toko Beta".into()],
             },
+            OlderData {
+                version: OlderVersion::V0_7,
+                names: vec!["2026-10-07".into()],
+            },
         ],
-        "a folder with neither settings nor a journal is no workspace"
+        "a folder with neither settings nor a journal is no workspace; a date with output/ is of v0.7"
     );
     assert_eq!(dates(data.path()).unwrap(), [date(2026, 10, 7)]);
 }
@@ -112,12 +117,12 @@ fn each_date_opens_again_as_it_was_saved() {
     let data = TempDir::new("reopen");
     for (day, tag) in [(7, "seventh"), (8, "eighth")] {
         let folder = DateFolder::new(data.path(), date(2026, 10, day));
-        let files = outputs(&folder.dir().join("output"), 1, tag);
+        let files = outputs(folder.dir(), 1, tag);
         commit(&data, day, RecordBody::BatchSaved(batch(1, false, files)));
     }
     let eighth = DateFolder::new(data.path(), date(2026, 10, 8));
     let mut journal = Journal::open(&eighth).unwrap();
-    let files = outputs(&eighth.dir().join("output"), 2, "second");
+    let files = outputs(eighth.dir(), 2, "second");
     journal
         .commit(vec![RecordBody::BatchSaved(batch(2, false, files))], APP)
         .unwrap();

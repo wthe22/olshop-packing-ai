@@ -1,6 +1,7 @@
-//! `output/`: the outputs of an operation are written into `output/.partial/` and move in only
-//! after the commit; old outputs an amend or a revert replaces wait in `.partial/replaced/`. When
-//! a date opens, the journal's last record settles what an interrupted operation left there.
+//! The outputs, in the date folder: those of an operation are written into its `.partial/` and
+//! move in only after the commit; old outputs an amend or a revert replaces wait in
+//! `.partial/replaced/`. When a date opens, the journal's last record settles what an interrupted
+//! operation left there.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -11,31 +12,28 @@ use crate::StoreError;
 use crate::files::{files_in, move_file, sha256_of};
 use crate::fold::{Fold, LastWrites};
 
-pub const OUTPUT_DIR: &str = "output";
-
 pub fn partial_dir(date_dir: &Path) -> PathBuf {
-    date_dir.join(OUTPUT_DIR).join(".partial")
+    date_dir.join(".partial")
 }
 
 pub fn replaced_dir(date_dir: &Path) -> PathBuf {
     partial_dir(date_dir).join("replaced")
 }
 
-/// Move these outputs from `output/` into `.partial/replaced/`. When Windows refuses one, the
+/// Move these outputs from the date folder into `.partial/replaced/`. When Windows refuses one, the
 /// files moved so far go back and the refused file is named.
 pub fn move_aside(date_dir: &Path, files: &[String]) -> Result<(), StoreError> {
-    let output = date_dir.join(OUTPUT_DIR);
     let replaced = replaced_dir(date_dir);
     fs::create_dir_all(&replaced).map_err(|e| StoreError::io(&replaced, e))?;
     let mut moved: Vec<&String> = Vec::new();
     for file in files {
-        let from = output.join(file);
+        let from = date_dir.join(file);
         if !from.is_file() {
             continue;
         }
         if let Err(error) = move_file(&from, &replaced.join(file)) {
             for back in moved {
-                let _ = move_file(&replaced.join(back), &output.join(back));
+                let _ = move_file(&replaced.join(back), &date_dir.join(back));
             }
             return Err(error);
         }
@@ -44,26 +42,24 @@ pub fn move_aside(date_dir: &Path, files: &[String]) -> Result<(), StoreError> {
     Ok(())
 }
 
-/// After the commit: every file of `.partial/` into `output/`, replacing one of the same name;
+/// After the commit: every file of `.partial/` into the date folder, replacing one of the same name;
 /// then `.partial/` goes with `replaced/`.
 pub fn move_forward(date_dir: &Path) -> Result<usize, StoreError> {
     let partial = partial_dir(date_dir);
-    let output = date_dir.join(OUTPUT_DIR);
     let files = files_in(&partial)?;
     for file in &files {
-        move_file(&partial.join(file), &output.join(file))?;
+        move_file(&partial.join(file), &date_dir.join(file))?;
     }
     remove_partial(&partial)?;
     Ok(files.len())
 }
 
-/// The files of `.partial/replaced/` back into `output/`; the rest of `.partial/` is deleted.
+/// The files of `.partial/replaced/` back into the date folder; the rest of `.partial/` is deleted.
 fn move_back(date_dir: &Path) -> Result<usize, StoreError> {
     let replaced = replaced_dir(date_dir);
-    let output = date_dir.join(OUTPUT_DIR);
     let files = files_in(&replaced)?;
     for file in &files {
-        move_file(&replaced.join(file), &output.join(file))?;
+        move_file(&replaced.join(file), &date_dir.join(file))?;
     }
     remove_partial(&partial_dir(date_dir))?;
     Ok(files.len())
@@ -86,13 +82,13 @@ fn remove_partial(partial: &Path) -> Result<(), StoreError> {
 pub enum Settled {
     /// No `.partial/` was left.
     Nothing,
-    /// The last record wrote what `.partial/` holds: its files moved into `output/`.
+    /// The last record wrote what `.partial/` holds: its files moved into the date folder.
     Forward { moved: usize },
     /// `.partial/` held an operation that was not committed: the replaced files went back.
     Back { restored: usize },
 }
 
-/// Settle `output/.partial/` by the journal's last record (journal.md, *When a date opens*).
+/// Settle `.partial/` by the journal's last record (journal.md, *When a date opens*).
 pub fn settle_partial(date_dir: &Path, fold: &Fold) -> Result<Settled, StoreError> {
     let partial = partial_dir(date_dir);
     if !partial.is_dir() {
@@ -111,7 +107,6 @@ pub fn settle_partial(date_dir: &Path, fold: &Fold) -> Result<Settled, StoreErro
 /// did not commit leaves files the record does not name, or the record's files moved aside.
 fn wrote_what_partial_holds(date_dir: &Path, fold: &Fold) -> Result<bool, StoreError> {
     let partial = partial_dir(date_dir);
-    let output = date_dir.join(OUTPUT_DIR);
     let held = files_in(&partial)?;
     match &fold.last_writes {
         LastWrites::Nothing => Ok(false),
@@ -124,7 +119,7 @@ fn wrote_what_partial_holds(date_dir: &Path, fold: &Fold) -> Result<bool, StoreE
             }
             for (file, sha256) in files {
                 let in_partial = partial.join(file);
-                let in_output = output.join(file);
+                let in_output = date_dir.join(file);
                 let holds = |path: &Path| -> Result<bool, StoreError> {
                     Ok(path.is_file() && sha256_of(path)? == *sha256)
                 };
@@ -158,11 +153,10 @@ pub struct OutputProblem {
 
 /// Every output of a live batch, by existence and size.
 pub fn check_outputs(date_dir: &Path, fold: &Fold) -> Result<Vec<OutputProblem>, StoreError> {
-    let output = date_dir.join(OUTPUT_DIR);
     let mut problems = Vec::new();
     for (batch, live) in &fold.live {
         for file in &live.saved.outputs {
-            let path = output.join(&file.file);
+            let path = date_dir.join(&file.file);
             let state = match fs::metadata(&path) {
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                     Some(OutputState::Missing)

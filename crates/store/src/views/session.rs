@@ -123,7 +123,7 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
             .iter()
             .map(|reprint| Reprint {
                 number: reprint.made.number,
-                output_path: output_path(&reprint.made.file),
+                output_path: reprint.made.file.clone(),
                 order_ids: reprint
                     .made
                     .orders
@@ -134,10 +134,6 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
             .collect(),
     };
     toml::to_string(&root).expect("a view is plain TOML")
-}
-
-fn output_path(file: &str) -> String {
-    format!("output/{file}")
 }
 
 /// Each input of a live batch, once, with what its written orders and findings say.
@@ -202,7 +198,7 @@ fn label_batch<'a>(
             let code = output.group.as_deref()?;
             Some(LabelGroup {
                 code,
-                output_path: output_path(&output.file),
+                output_path: output.file.clone(),
                 is_marked_as_sent: live.sent.contains_key(code),
                 is_marked_as_printed: live.printed.contains(code),
                 order_contents: order_contents(batch, code, &orders, ids),
@@ -235,7 +231,7 @@ fn label_batch<'a>(
             .outputs
             .iter()
             .find(|output| output.group.is_none())
-            .map(|output| output_path(&output.file)),
+            .map(|output| output.file.clone()),
     }
 }
 

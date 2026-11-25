@@ -17,7 +17,7 @@ use xxhash_rust::xxh3::xxh3_64;
 
 const INPUT: &str = "labels-repeat-1.pdf";
 const GROUP_FILE: &str = "1-Z Lainnya x3.pdf";
-const SUMMARY_FILE: &str = "1 summary.pdf";
+const SUMMARY_FILE: &str = "1 Summary.pdf";
 
 fn testdata(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -25,9 +25,9 @@ fn testdata(name: &str) -> PathBuf {
         .join(name)
 }
 
-/// An input's name as the store gives it: its date, its number and its short hash.
+/// An input's name as the store gives it: its batch, its number and its short hash.
 fn stored_name(sha256: &str) -> String {
-    format!("2026-10-08_01_{}.pdf", &sha256[..12])
+    format!("1 Input 01 {}.pdf", &sha256[..12])
 }
 
 struct Folder(PathBuf);
@@ -36,12 +36,13 @@ impl Folder {
     fn new(tag: &str) -> Self {
         let dir = std::env::temp_dir().join(format!("packing-verify-{tag}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(dir.join("input")).unwrap();
+        fs::create_dir_all(dir.join("date")).unwrap();
         fs::create_dir_all(dir.join("partial")).unwrap();
         Folder(dir)
     }
-    fn input(&self) -> PathBuf {
-        self.0.join("input")
+    /// The date folder, which holds the inputs.
+    fn date(&self) -> PathBuf {
+        self.0.join("date")
     }
     fn partial(&self) -> PathBuf {
         self.0.join("partial")
@@ -180,11 +181,7 @@ fn verify(
 ) -> Findings {
     let folder = Folder::new(tag);
     let (input_sha, _) = sha_and_size(&testdata(INPUT));
-    fs::copy(
-        testdata(INPUT),
-        folder.input().join(stored_name(&input_sha)),
-    )
-    .unwrap();
+    fs::copy(testdata(INPUT), folder.date().join(stored_name(&input_sha))).unwrap();
     let group = folder.partial().join(GROUP_FILE);
     group_pdf(&group, group_order);
     let summary_path = folder.partial().join(SUMMARY_FILE);
@@ -199,7 +196,7 @@ fn verify(
     verify_batch(&BatchCheck {
         journal: b"",
         append: append.as_bytes(),
-        input_dir: &folder.input(),
+        date_dir: &folder.date(),
         output_dir: &folder.partial(),
     })
 }
@@ -352,7 +349,7 @@ fn a_journal_that_changed_is_found() {
     let findings = verify_batch(&BatchCheck {
         journal: changed.as_bytes(),
         append: line(&next).as_bytes(),
-        input_dir: &folder.input(),
+        date_dir: &folder.date(),
         output_dir: &folder.partial(),
     });
     assert!(
@@ -440,9 +437,9 @@ const REPRINT_FILE: &str = "Reprint 1 x2.pdf";
 fn verify_a_reprint(tag: &str, order: &[u32], tamper: impl Fn(&Folder)) -> Findings {
     let folder = Folder::new(tag);
     let (input_sha, _) = sha_and_size(&testdata(INPUT));
-    let input_dir = folder.0.join("2026-10-08").join("input");
-    fs::create_dir_all(&input_dir).unwrap();
-    fs::copy(testdata(INPUT), input_dir.join(stored_name(&input_sha))).unwrap();
+    let date_dir = folder.0.join("2026-10-08");
+    fs::create_dir_all(&date_dir).unwrap();
+    fs::copy(testdata(INPUT), date_dir.join(stored_name(&input_sha))).unwrap();
     let file = folder.partial().join(REPRINT_FILE);
     group_pdf(&file, order);
     let (sha, size) = sha_and_size(&file);
@@ -481,7 +478,7 @@ fn a_reprint_holds_exactly_its_orders_pages_in_their_order() {
         "{short:?}"
     );
     let changed = verify_a_reprint("reprint-input", &[6, 1], |folder| {
-        let input = fs::read_dir(folder.0.join("2026-10-08").join("input"))
+        let input = fs::read_dir(folder.0.join("2026-10-08"))
             .unwrap()
             .next()
             .unwrap()
@@ -494,16 +491,17 @@ fn a_reprint_holds_exactly_its_orders_pages_in_their_order() {
         "{changed:?}"
     );
     let old_name = verify_a_reprint("reprint-old-name", &[6, 1], |folder| {
-        let dir = folder.0.join("2026-10-08").join("input");
+        let dir = folder.0.join("2026-10-08");
         let (sha, _) = sha_and_size(&testdata(INPUT));
-        fs::rename(dir.join(stored_name(&sha)), dir.join(format!("{sha}.pdf"))).unwrap();
+        let v0_7 = format!("2026-10-08_01_{}.pdf", &sha[..12]);
+        fs::rename(dir.join(stored_name(&sha)), dir.join(v0_7)).unwrap();
     });
     assert!(
         old_name
             .errors
             .iter()
             .any(|f| f.contains("is not in its date's inputs")),
-        "an input under another name is not found: {old_name:?}"
+        "an input under its v0.7 name is not found: {old_name:?}"
     );
 }
 
@@ -512,11 +510,7 @@ fn a_reprint_holds_exactly_its_orders_pages_in_their_order() {
 fn verify_a_restore(tag: &str, file: &str, batch: u8, write: impl Fn(&Path)) -> Findings {
     let folder = Folder::new(tag);
     let (input_sha, _) = sha_and_size(&testdata(INPUT));
-    fs::copy(
-        testdata(INPUT),
-        folder.input().join(stored_name(&input_sha)),
-    )
-    .unwrap();
+    fs::copy(testdata(INPUT), folder.date().join(stored_name(&input_sha))).unwrap();
     let journal = format!(
         "{}{}",
         line(&started()),
@@ -535,7 +529,7 @@ fn verify_a_restore(tag: &str, file: &str, batch: u8, write: impl Fn(&Path)) -> 
     verify_restore(&RestoreCheck {
         journal: journal.as_bytes(),
         append: line(&restored).as_bytes(),
-        input_dir: &folder.input(),
+        date_dir: &folder.date(),
         output_dir: &folder.partial(),
     })
 }

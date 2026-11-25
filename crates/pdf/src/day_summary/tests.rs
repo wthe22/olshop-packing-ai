@@ -188,7 +188,7 @@ fn the_batches_then_the_picks_then_the_order_contents_from_new_pages() {
     let _guard = testkit::pdfium_lock();
     let pdfium = crate::bind(&vendor).expect("bind pdfium");
     let dir = TempDir::new("day-summary");
-    let path = dir.path().join("day summary.pdf");
+    let path = dir.path().join("Day Summary.pdf");
     let (first, second) = records();
     let couriers = couriers();
     let pages = write_day_summary(&pdfium, &path, &facts(&first, &second, &couriers))

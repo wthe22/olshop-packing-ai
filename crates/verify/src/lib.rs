@@ -15,17 +15,18 @@ mod summary;
 use std::path::Path;
 
 /// What a batch is checked against: the journal as on disk, the lines its commit appends (the
-/// batch's record last), the date's `input/` and the folder that holds the new outputs.
+/// batch's record last), the date folder, which holds the inputs, and the folder that holds the new
+/// outputs.
 pub struct BatchCheck<'a> {
     pub journal: &'a [u8],
     pub append: &'a [u8],
-    pub input_dir: &'a Path,
+    pub date_dir: &'a Path,
     pub output_dir: &'a Path,
 }
 
 /// What a reprint is checked against: today's journal as on disk, the `reprint_made` line its
-/// commit appends, the data folder (each order's input is `{date}/input/{sha256}.pdf` in it) and
-/// the folder that holds the new file.
+/// commit appends, the data folder (each order's input is in its date folder, named by its hash)
+/// and the folder that holds the new file.
 pub struct ReprintCheck<'a> {
     pub journal: &'a [u8],
     pub append: &'a [u8],
@@ -34,12 +35,12 @@ pub struct ReprintCheck<'a> {
 }
 
 /// What a restored output is checked against: the date's journal as on disk, the
-/// `output_restored` line its commit appends, the date's `input/` and the folder that holds the
-/// file written again.
+/// `output_restored` line its commit appends, the date folder, which holds the inputs, and the
+/// folder that holds the file written again.
 pub struct RestoreCheck<'a> {
     pub journal: &'a [u8],
     pub append: &'a [u8],
-    pub input_dir: &'a Path,
+    pub date_dir: &'a Path,
     pub output_dir: &'a Path,
 }
 
@@ -82,7 +83,7 @@ pub fn verify_batch(check: &BatchCheck<'_>) -> Findings {
         return findings;
     };
     let batch = &journal.batch;
-    let inputs = files::check_inputs(batch, check.input_dir, &mut findings);
+    let inputs = files::check_inputs(batch, check.date_dir, &mut findings);
     ledger::check_ledger(batch, &mut findings);
     ledger::check_number(batch, journal.newest, &mut findings);
     ledger::check_orders(batch, &journal.live, &mut findings);
@@ -127,13 +128,9 @@ pub fn verify_restore(check: &RestoreCheck<'_>) -> Findings {
         "output_restored",
         &mut findings,
     ) {
-        Some((json, live)) => restore::check_restore(
-            json,
-            &live,
-            check.input_dir,
-            check.output_dir,
-            &mut findings,
-        ),
+        Some((json, live)) => {
+            restore::check_restore(json, &live, check.date_dir, check.output_dir, &mut findings)
+        }
         None => findings.error("the new lines hold no restore record to check".to_string()),
     }
     findings

@@ -151,7 +151,7 @@ fn the_fixture_sorts_into_the_groups_and_order_contents_of_its_answer() {
     );
     assert_eq!(sorted.groups.last().unwrap().code, REST_CODE);
     assert_eq!(sorted.printing_order().len(), 23);
-    assert_eq!(sorted.summary_file(), "1 summary.pdf");
+    assert_eq!(sorted.summary_file(), "1 Summary.pdf");
 }
 
 #[test]
@@ -242,7 +242,7 @@ fn file_names_follow_the_default_rule_and_the_windows_rules() {
     );
 
     let names = |list: &[&str]| list.iter().map(|s| s.to_string()).collect::<Vec<_>>();
-    assert!(check_file_names(&names(&["1-A Sepatu x2.pdf", "1 summary.pdf"])).is_ok());
+    assert!(check_file_names(&names(&["1-A Sepatu x2.pdf", "1 Summary.pdf"])).is_ok());
     for (list, error) in [
         (
             vec!["a.pdf", "A.PDF"],

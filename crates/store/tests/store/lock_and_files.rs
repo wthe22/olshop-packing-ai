@@ -2,7 +2,7 @@
 
 use std::fs;
 
-use packing_engine::ids::PdfId;
+use packing_engine::ids::{BatchId, PdfId};
 use packing_engine::record::{RecordBody, Sha256};
 use packing_store::{
     DataLock, InputState, Journal, check_inputs, input_path, open_date, sha256_of, store_input,
@@ -38,13 +38,13 @@ fn an_input_is_stored_once_by_its_content() {
     let source = data.path().join("labels_1.pdf");
     fs::write(&source, b"%PDF-1.4 made up").unwrap();
 
-    let stored = store_input(&folder, PdfId::new(3), &source).unwrap();
+    let stored = store_input(&folder, BatchId::new(2), PdfId::new(3), &source).unwrap();
     assert_eq!(stored.sha256, sha256_of(&source).unwrap());
     assert_eq!(stored.size, 16);
-    let path = input_path(&folder, PdfId::new(3), &stored.sha256);
+    let path = input_path(&folder, BatchId::new(2), PdfId::new(3), &stored.sha256);
     assert_eq!(fs::read(&path).unwrap(), b"%PDF-1.4 made up");
     assert_eq!(
-        store_input(&folder, PdfId::new(3), &source).unwrap(),
+        store_input(&folder, BatchId::new(2), PdfId::new(3), &source).unwrap(),
         stored,
         "stored again: the same"
     );
@@ -53,17 +53,17 @@ fn an_input_is_stored_once_by_its_content() {
 }
 
 #[test]
-fn an_input_is_named_by_its_date_number_and_short_hash() {
+fn an_input_is_named_by_its_batch_number_and_short_hash() {
     let (_data, folder) = date_folder("inputs-name");
     let sha256 = Sha256::try_from(format!("0123456789ab{}", "f".repeat(52))).unwrap();
-    for (pdf, name) in [
-        (1, "2026-10-07_01_0123456789ab.pdf"),
-        (12, "2026-10-07_12_0123456789ab.pdf"),
-        (123, "2026-10-07_123_0123456789ab.pdf"),
+    for (batch, pdf, name) in [
+        (1, 1, "1 Input 01 0123456789ab.pdf"),
+        (2, 12, "2 Input 12 0123456789ab.pdf"),
+        (12, 123, "12 Input 123 0123456789ab.pdf"),
     ] {
         assert_eq!(
-            input_path(&folder, PdfId::new(pdf), &sha256),
-            folder.dir().join("input").join(name)
+            input_path(&folder, BatchId::new(batch), PdfId::new(pdf), &sha256),
+            folder.dir().join(name)
         );
     }
 }
@@ -73,7 +73,7 @@ fn an_input_missing_or_changed_is_named_at_open() {
     let (data, folder) = date_folder("inputs-check");
     let source = data.path().join("labels_1.pdf");
     fs::write(&source, b"%PDF-1.4 made up").unwrap();
-    let stored = store_input(&folder, PdfId::FIRST, &source).unwrap();
+    let stored = store_input(&folder, BatchId::FIRST, PdfId::FIRST, &source).unwrap();
     let mut saved = batch(1, false, Vec::new());
     saved.inputs[0].sha256 = stored.sha256.clone();
     let mut journal = Journal::open(&folder).unwrap();
@@ -82,7 +82,7 @@ fn an_input_missing_or_changed_is_named_at_open() {
         .unwrap();
     assert!(check_inputs(&folder, journal.fold()).unwrap().is_empty());
 
-    let path = input_path(&folder, PdfId::FIRST, &stored.sha256);
+    let path = input_path(&folder, BatchId::FIRST, PdfId::FIRST, &stored.sha256);
     fs::write(&path, b"%PDF-1.4 changed").unwrap();
     let opened = open_date(&folder).unwrap();
     assert_eq!(opened.inputs.len(), 1);

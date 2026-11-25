@@ -127,7 +127,7 @@ fn a_saved_batch_shows_the_same_day_after_a_restart() {
     let shown = day(&state);
     let batch = &shown["batches"][0];
     assert_eq!(batch["pdfs"][0]["file"], GROUP_FILE);
-    assert_eq!(batch["summary"], "1 summary.pdf");
+    assert_eq!(batch["summary"], "1 Summary.pdf");
     assert_eq!(batch["orders"], 4);
     let left_out = batch["left_out"].as_array().unwrap();
     assert_eq!(left_out.len(), 2);
@@ -141,7 +141,7 @@ fn a_saved_batch_shows_the_same_day_after_a_restart() {
     );
     let summary = write_day_summary(&state, DAY, None).unwrap();
     assert!(
-        summary.ends_with("day summary.pdf") && Path::new(&summary).is_file(),
+        summary.ends_with("Day Summary.pdf") && Path::new(&summary).is_file(),
         "{summary}"
     );
     assert!(
@@ -149,12 +149,12 @@ fn a_saved_batch_shows_the_same_day_after_a_restart() {
         "a date with nothing saved has no day summary"
     );
     let mine = write_day_summary(&state, DAY, Some("Toko Contoh")).unwrap();
-    assert!(mine.ends_with("day summary Toko Contoh.pdf"), "{mine}");
+    assert!(mine.ends_with("Day Summary - Toko Contoh.pdf"), "{mine}");
     let view = write_account_summary(&state, DAY, BatchId::new(1), "Toko Contoh").unwrap();
     assert!(view.errors.is_empty(), "{view:?}");
     let path = view.path.expect("kept");
     assert!(
-        path.ends_with("1 summary Toko Contoh.pdf") && Path::new(&path).is_file(),
+        path.ends_with("1 Summary - Toko Contoh.pdf") && Path::new(&path).is_file(),
         "{path}"
     );
 
@@ -235,10 +235,7 @@ fn sent_printed_amend_and_revert_go_through_the_journal() {
         .map(|entry| entry.unwrap().file_name().to_string_lossy().into_owned())
         .collect();
     assert!(
-        !copies.is_empty()
-            && copies
-                .iter()
-                .all(|name| name.starts_with(&format!("{DAY}_"))),
+        !copies.is_empty() && copies.iter().all(|name| name.starts_with("1 Input ")),
         "the label PDFs of the day, and nothing else: {copies:?}"
     );
     assert_eq!(day(&state)["batches"], Value::Array(Vec::new()));
@@ -522,7 +519,7 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     assert_eq!(listed["orders"][1]["found"]["group"], "1-Z");
     assert!(reprinted_orders(&state, &today, 2).is_err(), "no reprint 2");
 
-    let output = program.path().join("data").join(DAY).join("output");
+    let output = program.path().join("data").join(DAY);
     fs::remove_file(output.join(GROUP_FILE)).unwrap();
     let missing = day(&state);
     assert_eq!(
@@ -541,28 +538,28 @@ fn open_writes_a_deleted_summary_again_from_the_journal() {
     };
     read(&state);
     save(&state);
-    let output = program.path().join("data").join(DAY).join("output");
-    let summary = output.join("1 summary.pdf");
+    let output = program.path().join("data").join(DAY);
+    let summary = output.join("1 Summary.pdf");
     fs::remove_file(&summary).unwrap();
-    let (path, view) = ready_to_open(&state, DAY, "1 summary.pdf").unwrap();
+    let (path, view) = ready_to_open(&state, DAY, "1 Summary.pdf").unwrap();
     assert_eq!(
         (path.as_path(), view),
         (summary.as_path(), OpenView::WrittenAgain)
     );
     assert!(summary.is_file());
     assert_eq!(
-        ready_to_open(&state, DAY, "1 summary.pdf").unwrap().1,
+        ready_to_open(&state, DAY, "1 Summary.pdf").unwrap().1,
         OpenView::Opened
     );
-    let bytes = output_bytes(&state, DAY, "1 summary.pdf").unwrap();
+    let bytes = output_bytes(&state, DAY, "1 Summary.pdf").unwrap();
     assert_eq!(
         (bytes.len() as u64, &bytes[..5]),
         (fs::metadata(&summary).unwrap().len(), &b"%PDF-"[..])
     );
-    assert!(output_bytes(&state, DAY, "9 summary.pdf").is_err());
-    assert!(ready_to_open(&state, DAY, "..\\1 summary.pdf").is_err());
+    assert!(output_bytes(&state, DAY, "9 Summary.pdf").is_err());
+    assert!(ready_to_open(&state, DAY, "..\\1 Summary.pdf").is_err());
     assert!(
-        ready_to_open(&state, DAY, "9 summary.pdf").is_err(),
+        ready_to_open(&state, DAY, "9 Summary.pdf").is_err(),
         "a file no batch wrote is not written"
     );
 }

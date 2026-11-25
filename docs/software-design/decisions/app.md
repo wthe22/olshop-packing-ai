@@ -1,6 +1,6 @@
 # Decisions: app — sources, data and checks
 
-D-APP-1 to D-APP-12. The app's features are in [app-features.md](app-features.md).
+D-APP-1 to D-APP-12 and D-APP-32. The app's features are in [app-features.md](app-features.md).
 
 ## D-APP-1 — PDFium reads, copies and writes the PDFs
 
@@ -77,24 +77,24 @@ cannot.
 
 ## D-APP-10 — Inputs are stored once, by content
 
-**Decision.** An input is kept as `input/{date}_{pdf}_{short hash}.pdf` — `2026-11-23_03_61459e8a8203.pdf`:
-the date, its `PdfID` on the date in two digits, and the first 12 characters of its SHA-256 (R-APP-10). The
-journal keeps its original name, size and page count. One file chosen twice is one input. An input whose
-hash no longer matches is reported, never used. The inputs of v0.6 and older, named `{sha256}.pdf`, are
-renamed once by `tools/rename-inputs.py`.
+**Decision.** An input is kept in its date folder as `{batch} Input {pdf} {short hash}.pdf` —
+`2 Input 03 61459e8a8203.pdf`: the batch whose record names it, the word *Input*, its `PdfID` on the date in
+two digits, and the first 12 characters of its SHA-256 (R-APP-13). The same bytes named by a second batch are
+stored again under that batch's number. The journal keeps its original name, size and page count. One file
+chosen twice is one input. An input whose hash no longer matches is reported, never used.
 
 **Why.** Two downloads with one name cannot overwrite each other, the same bytes are never read twice, and an
 amend, a reprint or a restore reads exactly the bytes that were verified. Sorted by name, as Explorer lists
-them, a date's inputs stand in the order they were first read, and the short hash is the one the summary
+them, a batch's inputs stand beside its outputs in the order they were first read, and the short hash is the one the summary
 PDF prints beside each input.
 
 **Applies to.** [02 Read](../workflow/02-read.md#3-choose-the-files), [04 Save](../workflow/04-save.md#11-store-the-inputs).
 
 ## D-APP-11 — Outputs are written aside, verified, committed, then moved; a lost one is restored
 
-**Decision.** Outputs are written to `output/.partial/`, verified there, then the journal commit, then moved
-into `output/`. On open, the journal decides whether `.partial/` goes forward or back. A lost output is
-written again from `input/` and the journal.
+**Decision.** Outputs are written to `.partial/` of the date folder, verified there, then the journal commit,
+then moved into the date folder. On open, the journal decides whether `.partial/` goes forward or back. A lost
+output is written again from the inputs and the journal.
 
 **Why.** A batch is saved whole or not at all even when the app stops between two steps, and an output is
 reproducible, so losing one costs nothing.
@@ -111,3 +111,24 @@ read and write, checks every save, reprint and restore by page digest, ledger an
 it. On 1,309 pages, every page PDFium copied kept its `lopdf` digest and every page had a digest of its own.
 
 **Applies to.** [verification](../app/verification.md), [architecture](../app/architecture.md#who-may-use-whom).
+
+## D-APP-32 — One flat folder per date
+
+**Decision.** Every file of a date sits directly in its date folder: the journal, the views, the inputs, the
+group PDFs, the summary PDF, the reprints and the summaries made on request (R-APP-12); there is no `input/`
+and no `output/`. What an operation writes waits in `.partial/` of the date folder until its commit
+(D-APP-11); an input is copied to `{name}.partial` beside its name and renamed. The names: `{batch} Input
+{pdf} {short hash}.pdf` (D-APP-10), `{batch}-{code} {name} x{count}.pdf`, `{batch} Summary.pdf`,
+`{batch} Summary - {account}.pdf`, `Reprint {n} x{count}.pdf`, `Day Summary.pdf` and `Day Summary -
+{account}.pdf` (R-APP-14, R-APP-15). A name the journal records stays as recorded. A data folder of v0.7 is
+converted once by `tools/flatten-data.py`: the inputs take their new names, the outputs move up unchanged,
+`output/.partial/` becomes `.partial/`, the summaries made on request are renamed and the views deleted (the
+app writes them again). Until then the Day screen names each date that still has `input/` or `output/`.
+
+**Why.** The owner's choice: one Explorer window shows a date's whole work, a batch's files side by side by
+its number. `.partial/` keeps a save whole as before. The journal is the truth and is never rewritten, so a
+name it records keeps its case.
+
+**Applies to.** [data](../data/README.md), [journal](../data/journal.md#when-a-date-opens),
+[04 Save](../workflow/04-save.md), [05 After the save](../workflow/05-after-save.md),
+[accounts › Data of older versions](../app/accounts.md#data-of-older-versions).

@@ -54,7 +54,7 @@ Cargo.toml, Cargo.lock     Rust workspace
 crates/engine/             rules, labels and slips → orders, plan, runs, day state (no PDF code)
 crates/pdf/                PDFium: read text, copy pages, packing lists, the batch steps
 crates/cli/                developer command line (tests, sample runs, the samples baseline)
-crates/store/              the data folder: lock, journal and fold, input/ and output/, views
+crates/store/              the data folder: lock, journal and fold, inputs and outputs, views
 crates/batch/              the batch steps over the crates above: read, save, revert, amend, Printed
 crates/verify/             the independent verifier: lopdf only, page digests, the checks of a batch
 crates/fixtures/           writes the made-up label PDFs of testdata/ and their answer (lopdf only)
@@ -65,7 +65,7 @@ tools/make-portable.sh     builds Packing.exe and pdfium.dll into target/portabl
 tools/make-portable.bat    the same, for Explorer or cmd (runs the .sh through Git's bash)
 tools/dev.bat            run the app as a debug build with the Vite dev server (no release build)
 tools/guide-pictures.mjs   the user guide's pictures from the built program on testdata/ (WebView2 DevTools)
-tools/rename-inputs.py     the owner's one-time rename of v0.6 inputs to the v0.7 names (Python, as asked)
+tools/flatten-data.py      the owner's one-time move of a v0.7 data folder to the flat date folders of v0.8 (Python, as asked)
 tools/check.sh, *.mjs      the gates of code-rules.md
 testdata/                  made-up fixtures for the tests
 categories.toml            an example picks file: the grouping `default` (a data folder without one uses the one catch-all pick)

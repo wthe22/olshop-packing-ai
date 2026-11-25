@@ -10,7 +10,7 @@ Only live batches appear; a reverted batch is gone from the views and stays in t
 the journal does not hold (`RuleID`, `OrderContentID`) are numbered by the fold in order of first
 appearance, so the same journal always gives the same views.
 
-The summaries made on request — `day summary.pdf`, `day summary {account}.pdf` and `{batch} summary
+The summaries made on request — `Day Summary.pdf`, `Day Summary - {account}.pdf` and `{batch} Summary -
 {account}.pdf` — are views too, written only by **Day summary** and a batch card's account buttons on the
 Day screen, and never checked for staleness: each says what the journal said when it was made
 ([day summary](../labels/day-summary.md), [summary PDF](../labels/summary-pdf.md#one-account)). A revert or
@@ -60,12 +60,12 @@ LabelBatch {
   errors: List<String>
   left_out: List<LeftOutCopy>   // as in the journal
   order_count: u16
-  summary_pdf_path: Path        // output/{batch} summary.pdf
+  summary_pdf_path: Path        // {batch} Summary.pdf, in the date folder
 }
 
 LabelGroup {
   code: String                  // LabelGroupRule.code
-  output_path: Path             // output/{batch}-{code} {name} x{count}.pdf
+  output_path: Path             // {batch}-{code} {name} x{count}.pdf, in the date folder
   is_marked_as_sent: bool
   is_marked_as_printed: bool
   order_contents: List<OrderContentSummary>   // in printing order

@@ -1,4 +1,4 @@
-//! Step 18 (05-after-save.md): what an amend reads — the newest live batch's inputs from `input/`
+//! Step 18 (05-after-save.md): what an amend reads — the newest live batch's inputs from the date folder
 //! in the recorded order, with the sort rule of the batch's name as it is now, else the batch's own
 //! snapshot — and, once read, each repeat's copy kept as the record has it.
 
@@ -13,7 +13,7 @@ use crate::{BatchError, ChosenFile, Draft};
 
 pub struct Amend {
     pub batch: BatchId,
-    /// The batch's inputs in `input/`, in reading order.
+    /// The batch's inputs in the date folder, in reading order.
     pub files: Vec<ChosenFile>,
     pub rule: SortRule,
 }
@@ -25,7 +25,7 @@ pub fn amend(folder: &DateFolder, fold: &Fold, workflows: &Workflows) -> Result<
         .inputs
         .iter()
         .map(|input| ChosenFile {
-            path: input_path(folder, input.pdf, &input.sha256),
+            path: input_path(folder, batch, input.pdf, &input.sha256),
             filename: input.filename.clone(),
             sha256: input.sha256.clone(),
             size: input.size,

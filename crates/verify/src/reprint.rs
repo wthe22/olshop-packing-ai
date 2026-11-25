@@ -89,7 +89,7 @@ pub(crate) fn check_reprint(
 /// The page digests of an order's input, after V2.
 fn input_pages(data_dir: &Path, order: &Reprinted, findings: &mut Findings) -> Option<Vec<u64>> {
     let input = format!("the input of order {} ({})", order.order_id, order.date);
-    let Some(path) = input_file(&data_dir.join(&order.date).join("input"), &order.sha256) else {
+    let Some(path) = input_file(&data_dir.join(&order.date), &order.sha256) else {
         findings.error(format!("{input} is not in its date's inputs"));
         return None;
     };

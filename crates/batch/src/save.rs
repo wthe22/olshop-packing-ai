@@ -1,5 +1,5 @@
 //! Steps 11–15 (04-save.md): the inputs stored by content, the outputs written into
-//! `output/.partial/` from `input/`, verified, the record committed, the outputs moved in and the
+//! `.partial/` from the inputs, verified, the record committed, the outputs moved in and the
 //! views written. Nothing of the date changes before the commit; after it the batch is saved,
 //! whatever a later move or view write says.
 
@@ -82,7 +82,7 @@ pub fn save(request: &SaveRequest<'_>, journal: &mut Journal) -> Result<SaveOutc
     let progress = |stage, done, total| (request.progress)(SaveProgress { stage, done, total });
 
     progress(SaveStage::CopyingInputs, 0, request.draft.files.len());
-    let inputs = store_inputs(request.draft, request.folder, &fold)?;
+    let inputs = store_inputs(request.draft, request.folder, batch, &fold)?;
     let sorted = request.draft.sorted(batch);
     let mut files: Vec<String> = sorted.groups.iter().map(|g| g.file.clone()).collect();
     files.push(sorted.summary_file());
@@ -102,7 +102,7 @@ pub fn save(request: &SaveRequest<'_>, journal: &mut Journal) -> Result<SaveOutc
     let findings = verify_batch(&BatchCheck {
         journal: &journal.bytes()?,
         append: &pending.bytes,
-        input_dir: &dir.join("input"),
+        date_dir: dir,
         output_dir: &partial_dir(dir),
     });
     if !findings.is_clean() {
@@ -163,15 +163,16 @@ fn number(draft: &Draft, fold: &Fold) -> Result<BatchId, BatchError> {
     }
 }
 
-/// Step 11: each input in `input/` by its content, as it was read.
+/// Step 11: each input in the date folder under `batch`, by its content, as it was read.
 fn store_inputs(
     draft: &Draft,
     folder: &DateFolder,
+    batch: BatchId,
     fold: &Fold,
 ) -> Result<Vec<InputPdf>, BatchError> {
     let inputs = draft.inputs(fold);
     for (file, input) in draft.files.iter().zip(&inputs) {
-        let stored = store_input(folder, input.pdf, &file.path)?;
+        let stored = store_input(folder, batch, input.pdf, &file.path)?;
         if stored.sha256 != input.sha256 || stored.size != input.size {
             return Err(BatchError::FileChanged {
                 file: file.filename.clone(),
@@ -181,7 +182,7 @@ fn store_inputs(
     Ok(inputs)
 }
 
-/// Step 12: the group PDFs, in plan order, each order's pages copied from `input/`; the record;
+/// Step 12: the group PDFs, in plan order, each order's pages copied from the inputs; the record;
 /// then the summary PDF from it.
 fn write_outputs(
     request: &SaveRequest<'_>,
@@ -195,7 +196,7 @@ fn write_outputs(
     let draft = request.draft;
     let sources: Vec<PathBuf> = inputs
         .iter()
-        .map(|i| input_path(request.folder, i.pdf, &i.sha256))
+        .map(|i| input_path(request.folder, sorted.batch, i.pdf, &i.sha256))
         .collect();
     let mut outputs = Vec::new();
     let total = sorted.groups.len() + 1;

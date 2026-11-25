@@ -6,38 +6,46 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-25)
 
-- **Handoff of 2026-11-25 (latest) — the owner's simple finding built; the rest saved.** Built and pushed:
+- **Handoff of 2026-11-25 (evening) — v0.8.0-alpha: one flat folder per date; the split and Sameday labels
+  read.** Built, checked and pushed; `target/portable/` is rebuilt.
+  - **The owner's step first**: close every copy of Packing, put v0.8.0-alpha in place of every copy, then
+    run once `python tools\flatten-data.py "<data folder>"` (`--dry-run` lists first, changing nothing). In
+    each date folder it renames the label PDFs of `input\` to `{batch} Input {pdf} {short hash}.pdf` and
+    moves them up, moves the files of `output\` up unchanged, renames `day summary.pdf` and the account
+    summaries to the new names, and deletes the three views (the program writes them again). A file in use
+    is named at the end with exit code 1; a second run continues. A file no journal names stays in `input\`.
+    It also takes the `{sha256}.pdf` names of v0.6, so `rename-inputs.py` is gone. Until it has run, the
+    Day screen names the dates that still have `input\` or `output\`, and their files count as missing.
+  - **R-APP-12 to R-APP-15** ([D-APP-32](../../software-design/decisions/app.md)): every file of a date sits
+    in its date folder; what a save writes waits in `.partial\` of the date folder until its commit.
+    Inputs `2 Input 03 0a1b2c3d4e5f.pdf` (the batch whose record names them; bytes a second batch uses are
+    stored again under its number), `2 Summary.pdf`, `2 Summary - Toko Alfa.pdf`, `Day Summary.pdf`,
+    `Day Summary - Toko Alfa.pdf`. A summary the journal recorded as `1 summary.pdf` keeps that name.
+  - **The split label** (`samples/2026-11-25 split.pdf`): a J&T label with no slip, and its slip on the
+    next page, which prints the label's tracking ID again. The slip page now continues the label: one order,
+    two pages, its slip lines, Qty Total and deadline ([D-LABEL-12](../../software-design/decisions/label.md)).
+  - **R-LABEL-16**: an instant label's pickup code (`Kode Pengambilan`) is its tracking ID
+    ([D-LABEL-24](../../software-design/decisions/label.md)); the courier is named as before. The Shopee-style
+    instant code (`12AB`) is taken too: [Q-LABEL-15](../../software-design/questions/label.md), default A.
+  - **The owner may test now**: after the conversion, open an old date: no missing files, Open opens
+    each group PDF. Save a new batch: its inputs, group PDFs and `N Summary.pdf` sit in the date folder.
+    Read `2026-11-25 split.pdf`: one order. Read `2026-11-24 sameday.pdf`: its two Grab orders show
+    their pickup codes as tracking IDs.
+  - **Decide**: [Q-LABEL-14](../../software-design/questions/label.md) (the regular SPX label's courier,
+    default B) and Q-LABEL-15 (default A), in their question.
+  - **Still the owner's step from 2026-11-25**: in the data folder's `parser.toml`, the `spx` classifier's
+    `tracking_id = 'SPXID\d{11}[A-Z]'` becomes `'SPXID\d{11}[A-Z]|CM\d{11}'`, so the regular SPX label
+    keeps its tracking ID.
+  - **Not done**: `crates/engine/couriers.toml`, the old courier table, is still loaded by the engine's
+    `label` module; removing it is a refactor of its own.
+  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-16`,
+    [reviews/label.md](../../reviews/label.md) as `R-LABEL-17`, [reviews/ui.md](../../reviews/ui.md) as
+    `R-UI-54`. A new session turns each into a task and builds it.
+
+- **Handoff of 2026-11-25 — the source PDF's short hash in Search.** Built and pushed:
   [R-UI-53](../../reviews/ui.md): an expanded search row shows the source PDF's short hash after its file name
-  (the input record's hash, [search](../../software-design/ui/search.md)). `target/portable/` is rebuilt.
-  - **Saved for later**, written in the reviews: [R-LABEL-16](../../reviews/label.md) (the instant label's
-    pickup code as the tracking ID changes how the courier is named, a design choice), and
-    [R-APP-12 to R-APP-15](../../reviews/app.md) (the flat date folder and the new names change the stored
-    files and the design, so they wait for the next dev). The flat folder comes with a Python script that
-    converts an existing data folder once; the next dev's release is **v0.8 alpha**.
-  - **The owner may test now**: Search a saved order, open its chevron: the file name is followed by its short hash.
-  - **For the next dev, a rare case**: `samples/2026-11-25 split.pdf`, a J&T label the owner calls a rare
-    case (the owner's words: "split"); kept in `samples/` on the owner's PC, not committed.
-
-- **Handoff of 2026-11-25 (later) — the regular SPX label reads its tracking ID.** The owner's request, built:
-  the bundled SPX tracking form also takes `CM` + 11 digits (the regular layout, `samples/2026-11-23 spx regular.pdf`:
-  tracking `CM00000000001`, order `260000ABCD1234`). The courier stays unnamed: the layout has no SPX logo
-  image, and the two-clue rule needs one ([Q-LABEL-14](../../software-design/questions/label.md), default B).
-  - **The owner's step**: in the data folder's `parser.toml`, the `[[courier_classifier]]` of `spx` changes
-    `tracking_id = 'SPXID\d{11}[A-Z]'` to `tracking_id = 'SPXID\d{11}[A-Z]|CM\d{11}'`, saves and starts the program
-    again. Without it the regular label keeps no tracking ID.
-  - **Decide Q-LABEL-14** (A, B or C) in its question; it is the only open choice.
-  - **Not done**: `crates/engine/couriers.toml`, the old courier table that [D-APP-6](../../software-design/decisions/app.md)
-    replaced with `parser.toml`, still holds the old SPX form. The live reader takes its forms from `parser.toml`;
-    the old file is for the next dev to remove or confirm unused.
-
-- **Handoff of 2026-11-25 — feedback written down, nothing designed or built.** The owner gathers more feedback
-  first; the items are open in the reviews and the next dev takes them up when the owner says so:
-  [R-LABEL-16](../../reviews/label.md) (the tracking ID of a TikTok Shop Sameday order),
-  [R-UI-53](../../reviews/ui.md) (the source PDF's short hash in an expanded search result) and
-  [R-APP-12 to R-APP-15](../../reviews/app.md) (one folder per date; the input, batch summary and day summary
-  names). The two sample labels of R-LABEL-16 and the file names are in `samples/`:
-  `2026-11-24 sameday.pdf` and `2026-11-23 spx regular.pdf` (the SPX one is a regular courier label).
-  - **Where to answer**: more findings into the matching `docs/reviews/<scope>.md` as the next number.
+  (the input record's hash, [search](../../software-design/ui/search.md)). The owner may test: Search a saved
+  order, open its chevron.
 
 - **Handoff of 2026-11-23 (later) — a revert saves the label PDFs, not the outputs.** The owner's request,
   built and pushed: **Save** on a revert copies the batch's input files of `{date}\input\` (its label PDFs)
@@ -58,11 +66,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     `2026-11-23_03_61459e8a8203.pdf`: the date, its number on the date in two digits (so every list sorts
     it), the first 12 characters of its SHA-256 ([D-APP-10](../../software-design/decisions/app.md)). The
     journal is unchanged; the name follows from it.
-  - **The owner's step first**: close every copy of Packing, update every copy to v0.7.0, then run once
-    `python tools\rename-inputs.py "<data folder>"` (`--dry-run` lists first, changing nothing). It renames
-    the `{sha256}.pdf` files of every date by the journal; a file in use is named at the end with exit code
-    1, and a second run continues (a stop or a kill loses nothing: each file is one rename). A file no
-    journal names is left as it is. Until it has run, v0.7 reports the old inputs as missing on open.
+  - The one-time rename of the v0.6 input names is now part of `flatten-data.py` (the v0.8 handoff).
   - **R-LABEL-15**: the short hash in the summary PDF and the day summary is set in Consolas.
   - **R-UI-48**: on a date that is not today, **+ New batch** is muted and asks *Add a batch to `<date>`?*
     ([D-UI-15](../../software-design/decisions/ui.md)). **R-UI-49**: New batch, Repeated orders and Plan

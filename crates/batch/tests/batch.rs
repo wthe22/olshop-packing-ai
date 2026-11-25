@@ -107,7 +107,7 @@ impl Day {
     }
 
     fn output(&self, file: &str) -> PathBuf {
-        self.folder.dir().join("output").join(file)
+        self.folder.dir().join(file)
     }
 }
 
@@ -134,7 +134,7 @@ fn a_batch_is_saved_through_the_journal_and_opens_again() {
     assert_eq!((record.batch, record.amends), (BatchId::new(1), false));
     assert_eq!((record.orders.len(), record.left_out.len()), (4, 2));
     let files: Vec<&str> = record.outputs.iter().map(|o| o.file.as_str()).collect();
-    assert_eq!(files, [GROUP_FILE, "1 summary.pdf"]);
+    assert_eq!(files, [GROUP_FILE, "1 Summary.pdf"]);
     for output in &record.outputs {
         assert!(
             day.output(&output.file).is_file(),
@@ -144,7 +144,7 @@ fn a_batch_is_saved_through_the_journal_and_opens_again() {
     }
     assert!(!partial_dir(day.folder.dir()).exists());
     for input in &record.inputs {
-        assert!(input_path(&day.folder, input.pdf, &input.sha256).is_file());
+        assert!(input_path(&day.folder, record.batch, input.pdf, &input.sha256).is_file());
     }
 
     let opened = open_date(&day.folder).unwrap();
@@ -171,7 +171,7 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
     let reverted = revert(&day.folder, &mut day.journal, APP, RevertedPdfs::Discard).unwrap();
     assert_eq!((reverted.batch, reverted.saved_to), (BatchId::new(1), None));
     assert!(day.journal.fold().live.is_empty());
-    assert!(!day.output(GROUP_FILE).exists() && !day.output("1 summary.pdf").exists());
+    assert!(!day.output(GROUP_FILE).exists() && !day.output("1 Summary.pdf").exists());
     assert!(!partial_dir(day.folder.dir()).exists());
     assert!(matches!(
         revert(&day.folder, &mut day.journal, APP, RevertedPdfs::Discard),
@@ -192,7 +192,7 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
         .saved
         .inputs
         .iter()
-        .map(|input| input_path(&day.folder, input.pdf, &input.sha256))
+        .map(|input| input_path(&day.folder, newest, input.pdf, &input.sha256))
         .collect();
     let kept = revert(
         &day.folder,
@@ -222,7 +222,7 @@ fn saved_orders_are_left_out_until_the_batch_is_reverted() {
             file.to_string_lossy()
         );
     }
-    for file in [GROUP_FILE, "1 summary.pdf"] {
+    for file in [GROUP_FILE, "1 Summary.pdf"] {
         assert!(
             !kept.join(file).exists() && !day.output(file).exists(),
             "{file}"
@@ -335,7 +335,7 @@ fn an_amend_saves_the_newest_batch_again_under_its_number() {
     assert_eq!(
         names(&again),
         names(&first),
-        "the inputs read again from input/ keep their download names"
+        "the inputs read again from the date folder keep their download names"
     );
     let live = &day.journal.fold().live[&first.batch];
     assert!(live.printed.is_empty(), "an amend starts its ticks empty");
@@ -350,8 +350,13 @@ fn a_finding_stops_the_save_until_save_anyway() {
         return skipped();
     };
     let draft = day.read_inputs().unwrap();
-    // `input/` already holds bytes under the first input's name that are not its bytes.
-    let stored = input_path(&day.folder, PdfId::FIRST, &draft.files[0].sha256);
+    // The date folder already holds bytes under the first input's name that are not its bytes.
+    let stored = input_path(
+        &day.folder,
+        BatchId::FIRST,
+        PdfId::FIRST,
+        &draft.files[0].sha256,
+    );
     fs::create_dir_all(stored.parent().unwrap()).unwrap();
     let mut bytes = fs::read(testdata(INPUTS[0])).unwrap();
     bytes.extend_from_slice(b"\n% changed\n");
@@ -364,7 +369,7 @@ fn a_finding_stops_the_save_until_save_anyway() {
     assert!(!findings.errors.is_empty(), "{findings:?}");
     assert_eq!(day.journal.fold().last_seq, 0, "nothing was saved");
     assert!(!partial_dir(day.folder.dir()).exists());
-    assert!(!day.folder.dir().join("output").join(GROUP_FILE).exists());
+    assert!(!day.folder.dir().join(GROUP_FILE).exists());
 
     let record = saved(day.save(&draft, true)).record;
     let texts: Vec<&str> = record.errors.iter().map(|f| f.text.as_str()).collect();
@@ -423,7 +428,7 @@ fn a_reprint_writes_the_chosen_orders_pages_into_today_in_printing_order() {
         .collect();
     let reprinted: Vec<&OrderId> = made.orders.iter().map(|o| &o.order_id).collect();
     assert_eq!(reprinted, in_order, "their original printing order");
-    assert!(today.dir().join("output").join(&made.file).is_file());
+    assert!(today.dir().join(&made.file).is_file());
     let reprints = &journal.fold().reprints;
     assert_eq!((reprints.len(), &reprints[0].made), (1, &made));
     assert_eq!(
@@ -453,7 +458,7 @@ fn a_missing_output_is_restored_and_recorded() {
     };
     let draft = day.read_inputs().unwrap();
     let record = saved(day.save(&draft, false)).record;
-    for file in [GROUP_FILE, "1 summary.pdf"] {
+    for file in [GROUP_FILE, "1 Summary.pdf"] {
         fs::remove_file(day.output(file)).unwrap();
         let request = RestoreRequest {
             worker: &day.worker,

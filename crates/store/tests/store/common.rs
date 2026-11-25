@@ -19,7 +19,7 @@ pub fn date_folder(tag: &str) -> (TempDir, DateFolder) {
     (data, folder)
 }
 
-/// Write `bytes` as `output/<file>` (or into `dir` when given) and describe it as the record does.
+/// Write `bytes` as `<file>` of `dir` and describe it as the record does.
 pub fn output_file(dir: &Path, file: &str, group: Option<&str>, bytes: &[u8]) -> OutputFile {
     fs::create_dir_all(dir).unwrap();
     let path = dir.join(file);
@@ -50,7 +50,7 @@ pub fn outputs(dir: &Path, number: u8, tag: &str) -> Vec<OutputFile> {
         ),
         output_file(
             dir,
-            &format!("{number} summary.pdf"),
+            &format!("{number} Summary.pdf"),
             None,
             format!("S {tag}").as_bytes(),
         ),

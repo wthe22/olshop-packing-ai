@@ -7,7 +7,7 @@ question (`Q-…`), the owner accepted its default.
 
 **Decision.** The revert's question offers to save the batch's label PDFs or discard them (R-APP-11). *Save*
 opens the Windows folder picker on every revert, and closing it reverts nothing (Q-APP-19, the owner's choice
-B). The batch's input files of `{date}/input/` (its label PDFs) are copied into a new folder
+B). The batch's stored input files (its label PDFs) are copied into a new folder
 `{date} batch {n} reverted {hh.mm}` of the folder picked before the outputs are moved aside; the group PDFs,
 summary PDF and account summaries are not copied. A revert that stops after the copy takes the copies away.
 The copies are the owner's: nothing reads them.
@@ -45,7 +45,7 @@ dates, which the app reads and writes.
 ## D-APP-14 — Reprint the labels of chosen orders
 
 **Decision.** Search has a tick per row, *Select all results* and **Reprint**: one PDF of the chosen orders'
-pages from `input/`, in their original printing order, unchanged, verified, recorded as `reprint_made` in
+pages from the stored inputs, in their original printing order, unchanged, verified, recorded as `reprint_made` in
 today's journal. It never changes a batch or the already-saved guard.
 
 **Why.** The owner's draft: a label sometimes needs printing again (damage, a mistake), and printing twice by
@@ -64,7 +64,7 @@ is only read; every write decision folds the journal.
 
 ## D-APP-16 — One summary PDF per batch, and no output options
 
-**Decision.** Each batch writes `{batch} summary.pdf`: facts, groups with their order contents, picks
+**Decision.** Each batch writes `{batch} Summary.pdf`: facts, groups with their order contents, picks
 ([D-LABEL-16](summaries.md)). The packing-list
 scopes and layouts, and their setting, are gone.
 

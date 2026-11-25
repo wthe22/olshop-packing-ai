@@ -37,7 +37,7 @@ fn prepared_lines_are_what_the_commit_appends_and_go_stale_after_another_commit(
     let (_data, folder) = date_folder("prepared");
     let mut journal = Journal::open(&folder).unwrap();
     assert!(journal.bytes().unwrap().is_empty());
-    let first = outputs(&folder.dir().join("output"), 1, "one");
+    let first = outputs(folder.dir(), 1, "one");
     let pending = journal
         .prepare(vec![RecordBody::BatchSaved(batch(1, false, first))], APP)
         .unwrap();
@@ -85,7 +85,7 @@ fn another_copys_commit_is_seen_on_disk_and_a_stale_fold_appends_nothing() {
 fn sent_and_printed_marks_revert_amend_and_reprints_fold_by_their_rules() {
     let (_data, folder) = date_folder("fold-rules");
     let mut journal = Journal::open(&folder).unwrap();
-    let out = folder.dir().join("output");
+    let out = folder.dir().to_path_buf();
     let first = outputs(&out, 1, "one");
     journal
         .commit(vec![RecordBody::BatchSaved(batch(1, false, first))], APP)

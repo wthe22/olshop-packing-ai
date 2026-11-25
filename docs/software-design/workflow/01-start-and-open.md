@@ -31,7 +31,7 @@ in this order ([journal › When a date opens](../data/journal.md#when-a-date-op
 2. **Torn tail**: a last line without `\n` or with a bad seal is left out of the fold; the next commit cuts
    it and records it as `recovered`.
 3. **Inputs**: SHA-256 of every input of a live batch, compared with its record.
-4. **`output/.partial/`**: rolled forward when the journal's last record wrote what it holds, else back.
+4. **`.partial/`**: rolled forward when the journal's last record wrote what it holds, else back.
 5. **Outputs**: each output of a live batch exists with its recorded size; a missing or changed one gets
    **Restore**.
 6. **Views**: written again when missing or when `session.toml`'s `journal_seq` is not the last `seq`.

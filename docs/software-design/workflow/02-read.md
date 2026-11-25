@@ -9,7 +9,7 @@
 - A file whose SHA-256 is an input of a live batch of this date shows *used in batch n*: it can be read; its
   orders are then found as already saved (step 7). On an amend's selection page the batch being redone is
   never that batch: its own files, chosen again from anywhere, are the same files.
-- A file read from the date's `input/`, where it is named by its number and hash (an amend's own files), keeps the
+- A file read from the date's stored inputs, where it is named by its batch, number and hash (an amend's own files), keeps the
   name its record gives it, so the record, the trace and the summary PDF name the download.
 - The list is **sorted by file name**: the download's name starts with its time and part number, so name
   order is download order. This is the **reading order** of the batch.
@@ -29,8 +29,8 @@ The worker thread opens the files in reading order and reads every page, with a 
 | Value | How |
 |---|---|
 | **Order ID** | Three searches in order: an 18-digit number starting with 5; `OrderId:` + 18 digits with whitespace removed; `No.Pesanan:` + 14 characters |
-| **Label part** | A tracking ID, or an image in the header band (top 40 pt) |
-| **Tracking ID** | A token matching a form of `parser.toml`, fully |
+| **Label part** | A tracking ID, or an image in the header band (top 40 pt); not the slip page of a split label ([reading](../labels/reading.md#copies-and-multi-page-orders)) |
+| **Tracking ID** | A token matching a form of `parser.toml`, fully; on an instant label, which prints none, the pickup code |
 | **Courier and clue** | Logo bytes, else appearance, against the tracking form; text where no image can be read; the tag on an instant label ([courier](../labels/courier.md)) |
 | **Ship by** | The date of `In transit by: dd/mm/yyyy hh:mm` or `Batas Kirim: dd-mm-yyyy` |
 | **Pickup code** | `Kode Pengambilan` on an instant label |

@@ -37,7 +37,7 @@ OPTIONS:
   --pdfium <dir>          The folder with pdfium.dll (default: next to the exe, else vendor)
   --quiet-ids             Print counts only; no order IDs, tracking IDs, shops or names
 
-prepare reads the files and saves a batch into <data>/<day>/ (journal.jsonl, input/, output/).
+prepare reads the files and saves a batch into <data>/<day>/ (journal.jsonl, the inputs and the outputs).
 revert undoes the newest batch of the date. amend redoes it from its stored inputs. dump saves
 nothing: it prints what reading the files gives as JSON, read with the bundled rules.
 ";

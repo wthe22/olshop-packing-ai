@@ -11,7 +11,7 @@ data folder (one folder per date, [data/](../software-design/data/README.md)).
 
 | Command | Does |
 |---|---|
-| `cargo run -p packing-cli -- prepare --labels <file>... [options]` | Read the label files and save one batch into `<data>/<day>/` (`journal.jsonl`, `input/`, `output/`), like the app's Save |
+| `cargo run -p packing-cli -- prepare --labels <file>... [options]` | Read the label files and save one batch into `<data>/<day>/` (`journal.jsonl`, the inputs and the outputs), like the app's Save |
 | `cargo run -p packing-cli -- revert [options]` | Undo the newest batch of the date |
 | `cargo run -p packing-cli -- amend [options]` | Redo the newest batch from its stored inputs, with the sort rule it was made with |
 | `cargo run -p packing-cli -- dump --labels <file>... [--pdfium <dir>]` | Read the files with the bundled rules and print what that gives as JSON (the files, the counts, every copy, the unknown header images, the read warnings); saves nothing |

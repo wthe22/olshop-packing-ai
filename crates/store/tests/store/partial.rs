@@ -1,4 +1,4 @@
-//! `output/.partial/` settled by the journal's last record when a date opens: an operation that
+//! `.partial/` settled by the journal's last record when a date opens: an operation that
 //! committed moves forward, one that did not goes back; a date only viewed leaves it alone.
 
 use std::fs;
@@ -12,10 +12,11 @@ use packing_store::{
 
 use crate::common::*;
 
-const BATCH_ONE_FILES: [&str; 3] = ["1-A Sepatu x2.pdf", "1-Z Lainnya x1.pdf", "1 summary.pdf"];
+const BATCH_ONE_FILES: [&str; 3] = ["1-A Sepatu x2.pdf", "1-Z Lainnya x1.pdf", "1 Summary.pdf"];
 
+/// The PDFs of the date folder: the journal and the views sit beside them.
 fn output_names(folder: &packing_store::DateFolder) -> Vec<String> {
-    let mut names: Vec<String> = fs::read_dir(folder.dir().join("output"))
+    let mut names: Vec<String> = fs::read_dir(folder.dir())
         .unwrap()
         .filter_map(|entry| {
             let entry = entry.unwrap();
@@ -25,16 +26,17 @@ fn output_names(folder: &packing_store::DateFolder) -> Vec<String> {
                 .is_file()
                 .then(|| entry.file_name().to_string_lossy().into_owned())
         })
+        .filter(|name| name.ends_with(".pdf"))
         .collect();
     names.sort();
     names
 }
 
 fn read_output(folder: &packing_store::DateFolder, file: &str) -> String {
-    fs::read_to_string(folder.dir().join("output").join(file)).unwrap()
+    fs::read_to_string(folder.dir().join(file)).unwrap()
 }
 
-/// Batch 1 saved and moved into `output/`.
+/// Batch 1 saved and moved into the date folder.
 fn saved_batch_one(tag: &str) -> (testkit::TempDir, packing_store::DateFolder, Journal) {
     let (data, folder) = date_folder(tag);
     let mut journal = Journal::open(&folder).unwrap();
@@ -61,7 +63,7 @@ fn a_crash_between_the_commit_and_the_moves_is_settled_forward() {
     assert!(!partial_dir(folder.dir()).exists());
     assert_eq!(
         output_names(&folder),
-        ["1 summary.pdf", "1-A Sepatu x2.pdf", "1-Z Lainnya x1.pdf"]
+        ["1 Summary.pdf", "1-A Sepatu x2.pdf", "1-Z Lainnya x1.pdf"]
     );
     assert!(opened.outputs.is_empty(), "{:?}", opened.outputs);
     assert!(opened.views_written);
@@ -81,7 +83,7 @@ fn a_date_viewed_while_another_copy_writes_leaves_partial_and_the_views_alone() 
     assert_eq!(viewed.settled, Settled::Nothing);
     assert!(!viewed.views_written);
     assert!(partial_dir(folder.dir()).exists());
-    assert_eq!(viewed.outputs.len(), 3, "not in output/ yet");
+    assert_eq!(viewed.outputs.len(), 3, "not in the date folder yet");
 }
 
 #[test]
@@ -156,9 +158,9 @@ fn a_revert_settles_by_whether_it_was_committed() {
 #[test]
 fn a_missing_or_changed_output_is_found_at_open() {
     let (_data, folder, _journal) = saved_batch_one("outputs-check");
-    let output = folder.dir().join("output");
+    let output = folder.dir().to_path_buf();
     fs::remove_file(output.join("1-A Sepatu x2.pdf")).unwrap();
-    fs::write(output.join("1 summary.pdf"), "a longer summary").unwrap();
+    fs::write(output.join("1 Summary.pdf"), "a longer summary").unwrap();
 
     let opened = open_date(&folder).unwrap();
     let found: Vec<(&str, OutputState)> = opened
@@ -170,7 +172,7 @@ fn a_missing_or_changed_output_is_found_at_open() {
         found,
         [
             ("1-A Sepatu x2.pdf", OutputState::Missing),
-            ("1 summary.pdf", OutputState::Changed)
+            ("1 Summary.pdf", OutputState::Changed)
         ]
     );
 }
@@ -183,7 +185,7 @@ fn a_crash_during_the_moves_is_settled_forward() {
     journal
         .commit(vec![RecordBody::BatchSaved(batch(1, false, files))], APP)
         .unwrap();
-    let output = folder.dir().join("output");
+    let output = folder.dir().to_path_buf();
     fs::rename(
         partial_dir(folder.dir()).join("1-A Sepatu x2.pdf"),
         output.join("1-A Sepatu x2.pdf"),

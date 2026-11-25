@@ -19,7 +19,7 @@ on a normal day the owner checks the counts and presses **Save batch**.
 │                                                                                        │
 │  [+ Add a group for this batch]                      [Edit sort rule]                  │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  Summary PDF (all accounts): 3 summary.pdf                         [ Save batch ]      │
+│  Summary PDF (all accounts): 3 Summary.pdf                         [ Save batch ]      │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 

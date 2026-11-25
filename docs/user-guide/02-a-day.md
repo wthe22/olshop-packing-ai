@@ -5,7 +5,7 @@ app, then print.
 
 ## The window
 
-The title bar has the panel button at the left, the program and its version (**Packing v0.7**), and at
+The title bar has the panel button at the left, the program and its version (**Packing v0.8.0-alpha**), and at
 the right **Search** ([finding a saved order](05-search.md)), **Accounts** ([Accounts](03-changes.md#accounts)),
 **Sort rules** and **Settings**. `Esc` closes Search, Accounts, Sort rules and Settings.
 
@@ -44,7 +44,7 @@ The **Day** screen shows what has been saved on the open date and is the way to 
   orders and pages, **Open**, and **Orders ▸** for the orders in it.
 - The tick beside **Open** notes that you have printed that group PDF. It is only a note — nothing is
   blocked — and it is saved the moment you click it. A batch you amend starts with its ticks cleared.
-- **Open folder** opens the date's `output` folder in Explorer.
+- **Open folder** opens the date's folder in Explorer.
 - On the newest batch only: **Amend** and **Revert** ([Changes](03-changes.md)).
 - A date with nothing saved shows "Nothing saved on this date yet."
 

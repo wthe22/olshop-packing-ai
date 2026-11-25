@@ -1,5 +1,5 @@
 //! Step 20 (reprint.md, *Restore*): an output of a live batch that is missing or changed, written
-//! again from `input/` and the batch's record — a group PDF by the reprint path, the summary PDF as
+//! again from the inputs and the batch's record — a group PDF by the reprint path, the summary PDF as
 //! at the save — verified, then recorded as `output_restored` with its new size and SHA-256.
 
 use std::path::PathBuf;
@@ -20,7 +20,7 @@ use crate::written::{copy_pages, described, partial};
 pub struct RestoreRequest<'a> {
     pub worker: &'a PdfWorker,
     pub folder: &'a DateFolder,
-    /// The output's name in `output/`.
+    /// The output's name in the date folder.
     pub file: &'a str,
     pub app: &'a str,
     /// The couriers of `packing-workflows.toml`: a summary PDF names them.
@@ -61,7 +61,7 @@ pub fn restore(
             let sources: Vec<PathBuf> = saved
                 .inputs
                 .iter()
-                .map(|input| input_path(request.folder, input.pdf, &input.sha256))
+                .map(|input| input_path(request.folder, *batch, input.pdf, &input.sha256))
                 .collect();
             let pages: Vec<(usize, usize)> = saved
                 .orders
@@ -124,7 +124,7 @@ pub fn restore(
     let findings = verify_restore(&RestoreCheck {
         journal: &journal.bytes()?,
         append: &pending.bytes,
-        input_dir: &dir.join("input"),
+        date_dir: dir,
         output_dir: &partial_dir(dir),
     });
     if !findings.is_clean() {

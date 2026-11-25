@@ -141,8 +141,12 @@ where
         let no_id = OrderId::new("");
         let tracking_id =
             find_tracking_id_in(&page.text, order_id.as_ref().unwrap_or(&no_id), &forms);
-        let has_label_part = tracking_id.is_some() || !page.logos.is_empty();
         let slip = read_slip(&page);
+        let split_slip = current.map(|at| &copies[at]).is_some_and(|copy| {
+            is_split_slip(copy, (input, &page), (&order_id, &tracking_id), &no_slip)
+                && slip.is_some()
+        });
+        let has_label_part = (tracking_id.is_some() || !page.logos.is_empty()) && !split_slip;
         if has_label_part {
             let Some(order_id) = order_id else {
                 return Err(CopiesStop::NoOrderId {
@@ -160,6 +164,9 @@ where
             if tracking_id.is_some() || !crate::label::is_instant(&page.text) {
                 note_unseen(&mut unseen, workflows, &page, &order_id);
             }
+            let pickup_code = courier::pickup_code(&page);
+            // An instant label prints no tracking ID: its pickup code is the one the courier uses.
+            let tracking_id = tracking_id.or_else(|| pickup_code.as_deref().map(TrackingId::new));
             copies.push(Copy {
                 order_id,
                 input,
@@ -169,7 +176,7 @@ where
                 courier,
                 courier_clue,
                 ship_by_date: find_ship_by(&page.text).map(|time| time.date()),
-                pickup_code: courier::pickup_code(&page),
+                pickup_code,
                 lines: slip.as_ref().map(|s| s.lines.clone()).unwrap_or_default(),
                 total_quantity: slip.as_ref().and_then(|s| s.qty_total),
                 fingerprints: vec![page_fingerprint(&page)],
@@ -199,7 +206,12 @@ where
         }
         copy.page_end = number;
         copy.fingerprints.push(page_fingerprint(&page));
+        if copy.ship_by_date.is_none() {
+            copy.ship_by_date = find_ship_by(&page.text).map(|time| time.date());
+        }
         if let Some(slip) = slip {
+            let label_page = (copy.input, usize::from(copy.page_start) - 1);
+            no_slip.retain(|&page| page != label_page);
             copy.lines.extend(slip.lines);
             if slip.qty_total.is_some() {
                 copy.total_quantity = slip.qty_total;
@@ -216,6 +228,24 @@ where
         unseen_logos: unseen,
         pages: pages_read,
     })
+}
+
+/// The slip half of a split label: a page right after a label page that had no slip, in the same
+/// input, with the same Order ID, no header image and no tracking ID but the label's. It prints the
+/// tracking ID beside the slip, so it would otherwise start a second copy of the order.
+fn is_split_slip(
+    copy: &Copy,
+    (input, page): (usize, &crate::text::PageText),
+    (order_id, tracking_id): (&Option<OrderId>, &Option<TrackingId>),
+    no_slip: &[(usize, usize)],
+) -> bool {
+    let label_page = (copy.input, usize::from(copy.page_start) - 1);
+    copy.input == input
+        && copy.page_end == copy.page_start
+        && no_slip.last() == Some(&label_page)
+        && page.logos.is_empty()
+        && order_id.as_ref() == Some(&copy.order_id)
+        && (tracking_id.is_none() || *tracking_id == copy.tracking_id)
 }
 
 /// Count a header image no list knows, for the logo prompt.

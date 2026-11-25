@@ -41,12 +41,12 @@ Orders of an open draft are not searched: they are not saved.
    reprint with its name.
 2. **Order.** The orders in their original printing order: by date, batch, then their place in the
    batch's record.
-3. **Write** the pages, unchanged, into `output/.partial/` of **today's** date, named
+3. **Write** the pages, unchanged, into `.partial/` of **today's** date, named
    `Reprint {n} x{count}.pdf`, `n` counting the reprints of today.
 4. **Verify**: the file's page *k* has the digest of the source page at *k*, and the page count adds up
    ([verification](verification.md)). A finding stops the reprint; nothing is kept.
 5. **Commit** `reprint_made` in today's journal, with every order's date, batch, input and pages; then
-   move the file into `output/`.
+   move the file into today's date folder.
 
 A reprint changes no batch: the orders stay saved where they were, the already-saved guard is unchanged,
 and no printed mark moves. The Day screen lists the day's reprints with **Open**.
@@ -58,9 +58,9 @@ The open-time check lists an output of a live batch that is missing or changed
 **Restore** on its batch card writes a changed one again; **Open** on a group PDF or summary PDF that is not
 there (missing when the date opened, or deleted since) writes it again first, then opens it:
 
-- a group PDF from `input/` and the batch's record — the reprint path, its pages in the recorded order;
+- a group PDF from the stored inputs and the batch's record — the reprint path, its pages in the recorded order;
 - the summary PDF from the batch's record, in the program's current layout: deleting an old batch's
   summary PDF and pressing **Open** shows its data in today's layout.
 
-The file is verified like the original (V2, V5 or V6), written through `output/.partial/`, and committed as
+The file is verified like the original (V2, V5 or V6), written through `.partial/`, and committed as
 `output_restored` with its new size and SHA-256, which the open-time check uses from then on.

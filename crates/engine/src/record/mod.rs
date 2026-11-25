@@ -90,7 +90,7 @@ pub struct BatchSaved {
     pub errors: Vec<Finding>,
 }
 
-/// A label download, stored once in the date's `input/` as `{date}_{pdf}_{short hash}.pdf`.
+/// A label download, stored in the date folder as `{batch} Input {pdf} {short hash}.pdf`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct InputPdf {
     pub pdf: PdfId,
@@ -216,7 +216,7 @@ pub enum LeftOutReason {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OutputFile {
-    /// The name in `output/`.
+    /// The name in the date folder.
     pub file: String,
     /// The label group's code; none for the summary PDF.
     pub group: Option<String>,
@@ -298,7 +298,7 @@ pub struct ReprintedOrder {
     /// The date the order was saved.
     pub date: Date,
     pub batch: BatchId,
-    /// Its input, in `{date}/input/`: the bytes of this hash.
+    /// Its input, in the date folder: the bytes of this hash.
     pub sha256: Sha256,
     pub page_start: u16,
     pub page_end: u16,

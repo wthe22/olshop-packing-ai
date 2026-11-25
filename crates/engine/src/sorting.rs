@@ -72,7 +72,7 @@ pub struct ContentBlock {
 pub struct SortedGroup {
     pub code: String,
     pub name: String,
-    /// The group PDF's name in `output/`, with `.pdf`.
+    /// The group PDF's name in the date folder, with `.pdf`.
     pub file: String,
     /// Most orders first, then by content.
     pub contents: Vec<ContentBlock>,
@@ -107,9 +107,9 @@ impl SortedBatch {
             .collect()
     }
 
-    /// `{batch} summary.pdf`.
+    /// `{batch} Summary.pdf`.
     pub fn summary_file(&self) -> String {
-        format!("{} summary.pdf", self.batch)
+        format!("{} Summary.pdf", self.batch)
     }
 }
 

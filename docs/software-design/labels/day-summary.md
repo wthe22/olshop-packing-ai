@@ -1,7 +1,7 @@
 # Day summary (A4)
 
 One file for the whole open date, of all accounts or of one, made on request: **Day summary** on the
-[Day screen](../ui/day.md) writes `{date}/day summary.pdf` (all accounts) or `{date}/day summary
+[Day screen](../ui/day.md) writes `{date}/Day Summary.pdf` (all accounts) or `{date}/Day Summary -
 {account}.pdf` from the date's journal and opens it in the PC's default PDF viewer. It is a view of the journal ([views](../data/views.md)): written again
 on every request, never read for a decision, not recorded and not checked by the verifier. It holds the
 batches as their Day cards show them, the couriers, the inputs, the day's picks and the day's order
@@ -65,5 +65,5 @@ Day summary · All accounts · 2026-10-07                                       
   orders are one of an item, two of it, or a mix; it is the longest part, so it comes last.
 - A date with no live batch has no day summary: the button is off. An account's day summary is offered for
   the accounts the date's live batches hold.
-- The file is written to `day summary.pdf.partial` and renamed over the old one. A day summary open in a
+- The file is written to `Day Summary.pdf.partial` and renamed over the old one. A day summary open in a
   PDF viewer that locks it stops the write with the file named; the old file stays.

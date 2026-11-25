@@ -1,5 +1,5 @@
-//! `input/`: each label download stored once, by its content (04-save.md, step 11), and checked
-//! when a date opens.
+//! The inputs: each label download stored in the date folder under the batch that names it, by its
+//! content (04-save.md, step 11), and checked when a date opens.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -12,13 +12,16 @@ use crate::date::DateFolder;
 use crate::files::sha256_of;
 use crate::fold::Fold;
 
-pub const INPUT_DIR: &str = "input";
-
-/// `input/{date}_{pdf}_{short hash}.pdf`, the number in two digits, so a file list sorted by name
-/// shows a date's inputs in the order they were first read.
-pub fn input_path(folder: &DateFolder, pdf: PdfId, sha256: &Sha256) -> PathBuf {
-    let name = format!("{}_{:02}_{}.pdf", folder.date(), pdf.get(), sha256.short());
-    folder.dir().join(INPUT_DIR).join(name)
+/// `{batch} Input {pdf} {short hash}.pdf`, the number in two digits, so a file list sorted by name
+/// shows a batch's inputs beside its outputs, in the order they were first read.
+pub fn input_path(folder: &DateFolder, batch: BatchId, pdf: PdfId, sha256: &Sha256) -> PathBuf {
+    let name = format!(
+        "{} Input {:02} {}.pdf",
+        batch.get(),
+        pdf.get(),
+        sha256.short()
+    );
+    folder.dir().join(name)
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -27,11 +30,12 @@ pub struct StoredInput {
     pub size: u64,
 }
 
-/// Store `source` in the date's `input/` as input `pdf` unless it is there: copied to a `.partial`
-/// file, synced, hashed again and renamed. A copy whose hash differs from the source's is not
-/// stored.
+/// Store `source` in the date folder as input `pdf` of `batch` unless it is there: copied to a
+/// `.partial` file, synced, hashed again and renamed. A copy whose hash differs from the source's
+/// is not stored.
 pub fn store_input(
     folder: &DateFolder,
+    batch: BatchId,
     pdf: PdfId,
     source: &Path,
 ) -> Result<StoredInput, StoreError> {
@@ -39,12 +43,12 @@ pub fn store_input(
     let size = fs::metadata(source)
         .map_err(|e| StoreError::io(source, e))?
         .len();
-    let target = input_path(folder, pdf, &sha256);
+    let target = input_path(folder, batch, pdf, &sha256);
     if target.is_file() {
         return Ok(StoredInput { sha256, size });
     }
-    let dir = folder.dir().join(INPUT_DIR);
-    fs::create_dir_all(&dir).map_err(|e| StoreError::io(&dir, e))?;
+    let dir = folder.dir();
+    fs::create_dir_all(dir).map_err(|e| StoreError::io(dir, e))?;
     let partial = target.with_extension("pdf.partial");
     let mut from = fs::File::open(source).map_err(|e| StoreError::io(source, e))?;
     let mut copy = fs::File::create(&partial).map_err(|e| StoreError::io(&partial, e))?;
@@ -82,7 +86,7 @@ pub fn check_inputs(folder: &DateFolder, fold: &Fold) -> Result<Vec<InputProblem
     let mut problems = Vec::new();
     for (batch, live) in &fold.live {
         for input in &live.saved.inputs {
-            let path = input_path(folder, input.pdf, &input.sha256);
+            let path = input_path(folder, *batch, input.pdf, &input.sha256);
             let state = if !path.is_file() {
                 Some(InputState::Missing)
             } else if sha256_of(&path)? != input.sha256 {

@@ -11,7 +11,7 @@ use crate::common::*;
 /// Batch 1 written as a journal with fixed times and its outputs in place, then opened.
 fn opened_batch(tag: &str) -> (testkit::TempDir, packing_store::DateFolder) {
     let (data, folder) = date_folder(tag);
-    let files = outputs(&folder.dir().join("output"), 1, "one");
+    let files = outputs(folder.dir(), 1, "one");
     let mut saved = batch(1, false, files);
     saved.orders[2].account = "Toko Beta".into();
     saved.orders[2].shop = None;

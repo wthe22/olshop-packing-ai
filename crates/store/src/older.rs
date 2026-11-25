@@ -1,5 +1,5 @@
 //! Data of an older version in the data folder (accounts.md, *Data of older versions*): found and
-//! named for the Day screen's note, never read, changed or deleted.
+//! named for the Day screen's note, never changed or deleted.
 
 use std::path::Path;
 
@@ -19,10 +19,16 @@ const V0_1_NAMES: [&str; 5] = [
 /// What a v0.4 workspace folder holds besides its dates.
 const V0_4_SETTINGS: &str = "settings.toml";
 
+/// The subfolders a date folder of v0.7 and older keeps its inputs and outputs in.
+const V0_7_FOLDERS: [&str; 2] = ["input", "output"];
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OlderVersion {
     V0_1,
     V0_4,
+    /// Date folders not yet converted by `flatten-data.py`: their journal is read, their files
+    /// are not found.
+    V0_7,
 }
 
 /// One older version's data, by the files and folders of the data folder that show it.
@@ -61,6 +67,21 @@ pub fn older_data(data_dir: &Path) -> Result<Vec<OlderData>, StoreError> {
         found.push(OlderData {
             version: OlderVersion::V0_4,
             names: v0_4,
+        });
+    }
+    let v0_7: Vec<String> = subfolders(data_dir)?
+        .into_iter()
+        .filter(|name| {
+            date_named(name).is_some()
+                && V0_7_FOLDERS
+                    .iter()
+                    .any(|folder| data_dir.join(name).join(folder).is_dir())
+        })
+        .collect();
+    if !v0_7.is_empty() {
+        found.push(OlderData {
+            version: OlderVersion::V0_7,
+            names: v0_7,
         });
     }
     Ok(found)

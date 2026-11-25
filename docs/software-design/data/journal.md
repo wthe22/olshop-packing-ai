@@ -22,7 +22,7 @@ Crate `packing-store` owns it.
 
 A commit is **one append of the record's line, then `sync_all`**. Nothing is saved before it returns;
 everything is saved after it. The first commit of a date writes `started` and its own record in the same
-append. Outputs move into `output/` only after the commit ([04 Save](../workflow/04-save.md)).
+append. Outputs move into the date folder only after the commit ([04 Save](../workflow/04-save.md)).
 
 ## The fold
 
@@ -61,17 +61,17 @@ In this order, before the date is shown (steps 3 and 5 write, and run only while
 folder's lock: [data › One writer](README.md#one-writer)):
 
 1. **Fold** the journal (above).
-2. **Inputs**: every input of a live batch must exist in `input/` and have the `sha256` its record names.
+2. **Inputs**: every input of a live batch must exist in the date folder and have the `sha256` its record names.
    One that is missing or changed is reported ([Messages](../ui/messages.md)) and never used: an amend,
    reprint or restore that needs it stops with its name.
-3. **`output/.partial/`**, if present, is settled by the journal's last record:
+3. **`.partial/`**, if present, is settled by the journal's last record:
    - **forward** when that record is a `batch_saved`, `output_restored` or `reprint_made`, every file it
-     writes is in `.partial/` or in `output/` with the `sha256` it names, and `.partial/` holds no other
+     writes is in `.partial/` or in the date folder with the `sha256` it names, and `.partial/` holds no other
      file — or a `batch_reverted`, `.partial/replaced/` holds that batch's files and `.partial/` nothing
-     else: the new files are moved into `output/` and `replaced/` is deleted. (A file the record does not
+     else: the new files are moved into the date folder and `replaced/` is deleted. (A file the record does not
      name is a later operation's that did not commit);
-   - **back** otherwise: the files of `replaced/` are moved back into `output/`, the rest is deleted.
-4. **Outputs**: every output of a live batch must exist in `output/` with the size the newest record that
+   - **back** otherwise: the files of `replaced/` are moved back into the date folder, the rest is deleted.
+4. **Outputs**: every output of a live batch must exist in the date folder with the size the newest record that
    wrote it names (`batch_saved` or `output_restored`). A missing one is shown on its batch card with
    **Restore** ([reprint](../app/reprint.md#restore)).
 5. **Views**: rebuilt when one is missing or `session.toml`'s `journal_seq` differs from the journal's

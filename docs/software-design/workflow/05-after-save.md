@@ -22,15 +22,15 @@ After a question that names the batch and its files and offers to save its label
 ([D-APP-31](../decisions/app-features.md)). *Save* opens the Windows folder picker; closing it reverts
 nothing.
 
-1. Saved: copy the batch's input files in `input/` (its label PDFs) into a new folder
+1. Saved: copy the batch's stored input files (its label PDFs) into a new folder
    `{date} batch {n} reverted {hh.mm}` of the folder picked (` (2)` after the name when it is taken). A
    copy that fails takes the folder away and stops the revert.
-2. Move the batch's outputs into `output/.partial/replaced/`. A file Windows refuses to move stops the revert:
+2. Move the batch's outputs into `.partial/replaced/`. A file Windows refuses to move stops the revert:
    the files moved go back, the copies of step 1 are taken away, and the message names the file to close.
 3. Append `batch_reverted {batch}` and `sync_all`; a failure takes the copies away.
 4. Delete `.partial/`; write the views; delete the batch's account summaries; update the search index.
 
-The batch's orders count as unsaved again, and the next batch takes its number. Its inputs stay in `input/`.
+The batch's orders count as unsaved again, and the next batch takes its number. Its inputs stay in the date folder.
 The copies are the owner's: nothing reads them again.
 
 **Keeps:** I2, I6, I7 — only the newest batch, because later numbers and the guard depend on it.
@@ -39,7 +39,7 @@ The copies are the owner's: nothing reads them again.
 
 For "a filter was wrong, do the last batch again":
 
-1. Its inputs are read again from `input/`, in the recorded order, with the sort rule of the same name as
+1. Its inputs are read again from the date folder, in the recorded order, with the sort rule of the same name as
    it is now in `config.toml`, or the batch's snapshot when no rule has that name
    ([D-RULES-2](../decisions/rules.md)). The guard (step 7) leaves the batch's own orders out of the
    saved set; each repeat's kept copy is preselected from the record.
@@ -55,17 +55,17 @@ For "a filter was wrong, do the last batch again":
 - **Search** filters the in-memory index of every date over a range of dates or all of them, and shows
   each order with its trace ([reprint](../app/reprint.md#search)).
 - **Reprint** writes one PDF of the ticked orders' pages: the sources from a fold of each order's date
-  journal, the pages unchanged from `input/` in the original printing order, written through
-  `output/.partial/` of today's date, verified (V2, V5), recorded as `reprint_made` in today's journal,
-  then moved into `output/` ([reprint](../app/reprint.md#reprint)). A finding stops it; nothing is kept.
+  journal, the pages unchanged from the stored inputs in the original printing order, written through
+  `.partial/` of today's date, verified (V2, V5), recorded as `reprint_made` in today's journal,
+  then moved into today's folder ([reprint](../app/reprint.md#reprint)). A finding stops it; nothing is kept.
 
 **Keeps:** I11. A reprint changes no batch and not the already-saved guard.
 
 ## 20. Restore
 
 An output of a live batch found changed when the date opened is written again on **Restore**, and one that
-is not there is written again by **Open**: a group PDF from `input/` by its record, the summary PDF from its
-record in today's layout; verified (V2, V5 or V6), recorded as `output_restored`, moved into `output/`
+is not there is written again by **Open**: a group PDF from the stored inputs by its record, the summary PDF from its
+record in today's layout; verified (V2, V5 or V6), recorded as `output_restored`, moved into the date folder
 ([reprint](../app/reprint.md#restore)).
 
 **Keeps:** I5, I12 — a restored file is checked like the original.
@@ -73,4 +73,4 @@ record in today's layout; verified (V2, V5 or V6), recorded as `output_restored`
 ## Failure model
 
 Each of 16–20 is one append: before it returns the date is as before; after it the next open settles
-`output/.partial/` by the journal ([journal](../data/journal.md#when-a-date-opens)).
+`.partial/` by the journal ([journal](../data/journal.md#when-a-date-opens)).

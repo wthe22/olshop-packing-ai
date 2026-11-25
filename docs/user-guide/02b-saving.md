@@ -4,7 +4,7 @@ Continues [A day's batches](02-a-day.md#a-normal-batch-step-by-step).
 
 ## Saving and the check
 
-**Save batch** copies the label files into the date's `input` folder, writes the group PDFs and the
+**Save batch** copies the label files into the date's folder, writes the group PDFs and the
 summary PDF, and then a separate checker reads every written page back and compares it with the
 source pages and the plan: a doubled, missing, swapped or foreign page is caught before you print.
 The stage and a progress bar show while it runs (*Copying inputs*, *Writing*, *Verifying*, *Saving*).

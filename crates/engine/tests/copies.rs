@@ -147,6 +147,49 @@ fn a_label_page_starts_a_copy_and_a_page_without_a_label_part_continues_it() {
 }
 
 #[test]
+fn a_split_label_takes_its_slip_and_deadline_from_the_next_page() {
+    let label_half = || {
+        page(
+            vec![
+                run(5.8, 400.0, "580000000000000001"),
+                run(5.8, 380.0, "JY0000000001"),
+            ],
+            &[(JNT_LOGO, None)],
+        )
+    };
+    let slip_half = |tracking: &str| {
+        let mut runs = vec![
+            run(5.8, 410.0, "In transit by: 08/10/2026 23:59"),
+            run(150.0, 410.0, &format!("Tracking number: {tracking}")),
+        ];
+        runs.extend(continuation("1", "Sepatu", 2, Some(2)));
+        page(runs, &[])
+    };
+    let read = read_copies(
+        pages(vec![vec![label_half(), slip_half("JY0000000001")]]),
+        &["split.pdf"],
+        &workflows(),
+    )
+    .unwrap();
+    assert_eq!(read.copies.len(), 1, "the slip half is no second copy");
+    let copy = &read.copies[0];
+    assert_eq!((copy.page_start, copy.page_end), (1, 2));
+    assert_eq!(copy.tracking_id.as_ref().unwrap().as_str(), "JY0000000001");
+    assert_eq!((copy.lines.len(), copy.total_quantity), (1, Some(2)));
+    assert_eq!(copy.ship_by_date.unwrap().to_string(), "2026-10-08");
+
+    let other = read_copies(
+        pages(vec![vec![label_half(), slip_half("JY0000000009")]]),
+        &["split.pdf"],
+        &workflows(),
+    );
+    assert!(
+        matches!(other, Err(CopiesStop::NoSlip(_))),
+        "a page with another tracking ID starts its own copy: {other:?}"
+    );
+}
+
+#[test]
 fn the_same_order_twice_is_two_copies_never_one_longer_order() {
     let one = || {
         page(
@@ -202,7 +245,7 @@ fn a_page_that_cannot_be_placed_stops_the_batch() {
         (
             "plain labels",
             vec![vec![
-                page(label("1", Some("JY0000000001"), &[], Vec::new()), &[]),
+                page(label("2", Some("JY0000000002"), &[], Vec::new()), &[]),
                 good(),
             ]],
             "1 of 2 pages are plain shipping labels",
@@ -328,7 +371,7 @@ fn the_courier_and_the_clue_that_named_it() {
 }
 
 #[test]
-fn an_instant_label_is_named_by_its_tag_and_keeps_its_pickup_code() {
+fn an_instant_label_is_named_by_its_tag_and_its_pickup_code_is_its_tracking_id() {
     let cases = [
         ("GKS", TIKTOK_STRIP, Some("gojek")),
         ("Sameday", TIKTOK_STRIP, Some("grab")),
@@ -355,6 +398,11 @@ fn an_instant_label_is_named_by_its_tag_and_keeps_its_pickup_code() {
             assert_eq!(copy.courier_clue.value.as_deref(), Some(tag));
         }
         assert_eq!(copy.pickup_code.as_deref(), Some("WX1234"));
+        assert_eq!(
+            copy.tracking_id.as_ref().map(|t| t.as_str()),
+            Some("WX1234"),
+            "an instant label's pickup code is its tracking ID"
+        );
         assert!(
             read.unseen_logos.is_empty(),
             "{tag}: an instant label's header image is a channel strip, never asked about"
@@ -380,6 +428,7 @@ fn a_shopee_instant_label_prints_its_pickup_code_in_the_caption_run() {
     let copy = &read.copies[0];
     assert_eq!(copy.courier.as_ref().map(|c| c.as_str()), Some("grab"));
     assert_eq!(copy.pickup_code.as_deref(), Some("12AB"));
+    assert_eq!(copy.tracking_id.as_ref().map(|t| t.as_str()), Some("12AB"));
 }
 
 #[test]

@@ -5,7 +5,7 @@
 | Value | Comes from |
 |---|---|
 | `order_id` | The label text (three-step search below) |
-| `tracking_id` | The label text, in one of the tracking-ID forms of `parser.toml` ([courier](courier.md)) |
+| `tracking_id` | The label text, in one of the tracking-ID forms of `parser.toml` ([courier](courier.md)); on an instant-service label, which prints none, its `pickup_code` ([D-LABEL-24](../decisions/label.md)) |
 | `courier`, `courier_clue` | Deduced from the label: the courier and the clue that named it ([courier](courier.md)) |
 | `ship_by_date` | The date of the label's `In transit by: dd/mm/yyyy hh:mm`, or of the Shopee-style label's `Batas Kirim: dd-mm-yyyy` ([D-APP-21](../decisions/app-features.md)) |
 | `pickup_code` | The instant-service label's code: two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together); on the Shopee-style instant label two digits and two capital letters after the caption in its own text run (kept in the record; its label prints it) |
@@ -44,7 +44,10 @@ The **Shopee-style label** ([business-process 02](../../business-process/02-data
 A page that has an Order ID **and** a label part — a tracking ID, or an image in the header band — starts a
 **copy** of that order. A page without a label part continues the copy of the page before it, in the same
 input; a slip's continuation page repeats the Order ID, the table header and `Customer Message`, and
-carries no tracking ID and no courier logo. A copy's pages are together and are copied unchanged, in their
+carries no tracking ID and no courier logo. A **split label** prints its slip on the page after the label: a
+label page with no slip, then a page with the same Order ID, no header image, the slip, the `In transit by`
+deadline and the label's own tracking ID. That page continues the copy too, and the copy takes its slip and,
+when the label page printed none, its deadline ([D-LABEL-12](../decisions/label.md)). A copy's pages are together and are copied unchanged, in their
 order. Two copies of one Order ID are a **repeat**, never one longer order
 ([duplicates](../app/duplicates.md), [D-LABEL-12](../decisions/label.md)).
 

@@ -18,19 +18,19 @@ use packing_verify::{AccountSummaryCheck, Findings, verify_account_summary};
 
 use crate::BatchError;
 
-pub const DAY_SUMMARY_PDF: &str = "day summary.pdf";
+pub const DAY_SUMMARY_PDF: &str = "Day Summary.pdf";
 
-/// The day summary's file: of all accounts, or `day summary {account}.pdf`.
+/// The day summary's file: of all accounts, or `Day Summary - {account}.pdf`.
 pub fn day_summary_file(account: Option<&str>) -> String {
     account.map_or_else(
         || DAY_SUMMARY_PDF.to_string(),
-        |account| format!("day summary {account}.pdf"),
+        |account| format!("Day Summary - {account}.pdf"),
     )
 }
 
-/// An account's summary of a batch: `{batch} summary {account}.pdf`.
+/// An account's summary of a batch: `{batch} Summary - {account}.pdf`.
 pub fn account_summary_file(batch: BatchId, account: &str) -> String {
-    format!("{batch} summary {account}.pdf")
+    format!("{batch} Summary - {account}.pdf")
 }
 
 /// Write the date's day summary of all accounts or of `account`, its couriers named by
@@ -157,7 +157,7 @@ pub fn account_summary(
 
 /// The account summaries of `batch` in the date folder `dir`.
 pub(crate) fn account_summaries(dir: &Path, batch: BatchId) -> Result<Vec<PathBuf>, StoreError> {
-    let prefix = format!("{batch} summary ");
+    let prefix = format!("{batch} Summary - ");
     let entries = fs::read_dir(dir).map_err(|error| StoreError::Io {
         path: dir.to_path_buf(),
         error,

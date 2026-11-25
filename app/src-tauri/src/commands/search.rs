@@ -235,13 +235,7 @@ pub(crate) fn reprint_orders(
             ReprintOutcome::Made(made) => ReprintView {
                 made: Some(MadeView {
                     number: made.number,
-                    path: day
-                        .folder
-                        .dir()
-                        .join("output")
-                        .join(&made.file)
-                        .display()
-                        .to_string(),
+                    path: day.folder.dir().join(&made.file).display().to_string(),
                     file: made.file,
                     orders: made.orders.len(),
                     pages: made.pages,

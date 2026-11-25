@@ -1,10 +1,10 @@
 //! The files chosen for a batch (step 3): each one's SHA-256, size, times and page count, and the
 //! live batch of the date that read the same bytes — never the batch an amend redoes, whose own
-//! files they may be. One file chosen twice is listed once. A file read from the date's `input/`,
-//! where it is named by its number and hash, keeps the name its record gives it.
+//! files they may be. One file chosen twice is listed once. A file chosen from the date's own
+//! inputs, named by batch, number and hash, keeps the name the record of that batch gives it.
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 use jiff::Timestamp;
@@ -50,10 +50,7 @@ pub fn check_files(
             path: path.clone(),
             error,
         })?;
-        let recorded = fold
-            .pdf_of(&sha256)
-            .filter(|&pdf| *path == input_path(folder, pdf, &sha256))
-            .and_then(|_| recorded_name(fold, &sha256));
+        let recorded = recorded_name(fold, folder, path, &sha256);
         files.push(ChosenFile {
             path: path.clone(),
             filename: recorded.unwrap_or_else(|| {
@@ -79,13 +76,17 @@ pub fn check_files(
     Ok(files)
 }
 
-/// The name a live batch's record gives the bytes `sha256`.
-fn recorded_name(fold: &Fold, sha256: &Sha256) -> Option<String> {
-    fold.live
-        .values()
-        .flat_map(|live| &live.saved.inputs)
-        .find(|input| input.sha256 == *sha256)
-        .map(|input| input.filename.clone())
+/// The name a live batch's record gives the bytes `sha256` when `path` is that batch's stored input.
+fn recorded_name(fold: &Fold, folder: &DateFolder, path: &Path, sha256: &Sha256) -> Option<String> {
+    fold.live.iter().find_map(|(batch, live)| {
+        live.saved
+            .inputs
+            .iter()
+            .find(|input| {
+                input.sha256 == *sha256 && path == input_path(folder, *batch, input.pdf, sha256)
+            })
+            .map(|input| input.filename.clone())
+    })
 }
 
 /// The live batch other than `redo` whose inputs hold these bytes.

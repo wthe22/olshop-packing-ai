@@ -1,5 +1,5 @@
 //! What the save, a reprint and a restore share: pages copied unchanged from stored inputs into a
-//! file of `output/.partial/`, and a written file described as its record names it.
+//! file of `.partial/`, and a written file described as its record names it.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -25,7 +25,7 @@ pub(crate) fn copy_pages(
     Ok(())
 }
 
-/// `output/.partial/` of a date, made if missing.
+/// `.partial/` of a date, made if missing.
 pub(crate) fn partial(date_dir: &Path) -> Result<PathBuf, BatchError> {
     let partial = packing_store::partial_dir(date_dir);
     fs::create_dir_all(&partial).map_err(|error| StoreError::Io {
