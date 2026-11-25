@@ -18,12 +18,12 @@ test("the data folder: the start prompt, the program folder and a change", async
   let failChoose = false;
   const calls = useBackend({
     ...backend(),
-    start_info: () => ({ today: "2026-10-07", exe_dir: "C:/Packing", data_folder: null, version: "0.1" }),
+    start_info: () => ({ today: "2026-10-07", exe_dir: "C:/Packing", data_folder: null, version: "0.1", migration: [], read_only: false }),
     "plugin:dialog|open": () => picked,
-    use_program_folder: () => "C:/Packing",
+    use_program_folder: () => ({ data_folder: "C:/Packing", migration: [], read_only: false }),
     choose_data_folder: (args) => {
       if (failChoose) throw "the folder cannot be written to";
-      return args.path;
+      return { data_folder: args.path, migration: [], read_only: false };
     },
   });
   answerQuestions(() => answer === "Ok");
@@ -89,7 +89,7 @@ test("the file and printed commands reach the back end", async () => {
   const calls = useBackend({
     ...backend(),
     "plugin:dialog|open": () => picked,
-    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", version: "0.1" }),
+    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", version: "0.1", migration: [], read_only: false }),
     open_path: (args) => {
       if (fail === "open_path") throw "the file is gone";
       return { ...args };
@@ -210,7 +210,7 @@ test("a command that fails while loading shows the error and still opens the day
   const partial = new Shell();
   useBackend({
     ...backend(),
-    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", version: "0.1" }),
+    start_info: () => ({ today: "2026-10-07", exe_dir: "", data_folder: "C:/Data", version: "0.1", migration: [], read_only: false }),
     panel_dates: () => {
       throw "the day folder is unreadable";
     },
@@ -232,7 +232,7 @@ test("a command that fails while loading shows the error and still opens the day
   const stuck = new Shell();
   useBackend({
     ...backend(),
-    start_info: () => ({ today: "2026-10-07", exe_dir: "C:/Packing", data_folder: null, version: "0.1" }),
+    start_info: () => ({ today: "2026-10-07", exe_dir: "C:/Packing", data_folder: null, version: "0.1", migration: [], read_only: false }),
     use_program_folder: () => {
       throw "the program folder is read only";
     },

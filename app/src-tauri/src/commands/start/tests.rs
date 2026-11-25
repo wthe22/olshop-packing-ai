@@ -43,7 +43,9 @@ fn a_first_start_opens_the_data_folder_and_writes_its_two_files() {
         "nothing is written before a data folder is chosen"
     );
 
-    let dir = use_folder(&state, &program.path().join(DEFAULT_DATA_DIR)).unwrap();
+    let dir = use_folder(&state, &program.path().join(DEFAULT_DATA_DIR))
+        .unwrap()
+        .data_folder;
     let written = fs::read_to_string(program.path().join(APP_FILE)).unwrap();
     assert!(written.contains("data_dir = \"packing-data\""), "{written}");
     for file in [PARSER_FILE, CONFIG_FILE] {

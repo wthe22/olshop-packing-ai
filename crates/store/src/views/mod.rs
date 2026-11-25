@@ -61,6 +61,18 @@ pub fn views_current(date_dir: &Path, fold: &Fold) -> bool {
             .is_some_and(|seq| seq.journal_seq == fold.last_seq)
 }
 
+/// The `schema` of the date's `session.toml`; none when there is no such file or it does not read.
+pub(crate) fn views_schema(date_dir: &Path) -> Option<String> {
+    #[derive(Deserialize)]
+    struct Schema {
+        schema: String,
+    }
+    fs::read_to_string(date_dir.join(SESSION_TOML))
+        .ok()
+        .and_then(|text| toml::from_str::<Schema>(&text).ok())
+        .map(|found| found.schema)
+}
+
 /// The `OrderContentID`s of a fold: numbered from 1 in order of first appearance over the live
 /// batches, so the same journal always gives the same views.
 pub(crate) struct ContentIds {

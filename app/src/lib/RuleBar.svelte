@@ -8,6 +8,7 @@
   import { ruleNameProblem } from "./sortRules";
   import { texts } from "../texts";
   import Icon from "./Icon.svelte";
+  import { access } from "./readOnly.svelte";
 
   let {
     rules,
@@ -73,9 +74,11 @@
       </button>
     {/each}
   </div>
-  <button class="ghost" disabled={busy} onclick={open}
-    ><Icon name="plus" size={16} />{texts.sortRules.newRule}</button
-  >
+  {#if !access.readOnly}
+    <button class="ghost" disabled={busy} onclick={open}
+      ><Icon name="plus" size={16} />{texts.sortRules.newRule}</button
+    >
+  {/if}
 </div>
 
 {#if creating}

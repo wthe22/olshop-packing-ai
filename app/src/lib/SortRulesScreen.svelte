@@ -18,6 +18,7 @@
   import { boxesToFilter, type GroupEntry } from "./groupEntry";
   import { fromRustTree, newTree } from "./conditions";
   import { unconfigured } from "./unconfigured";
+  import { access } from "./readOnly.svelte";
 
   let {
     draftBatch,
@@ -305,25 +306,29 @@
         <p class="error">{generalError}</p>
       {/if}
 
-      {#each entries as entry, index (entry)}
-        <GroupRow
-          {entry}
-          {draftBatch}
-          {couriers}
-          canUp={canMoveUp(index)}
-          canDown={canMoveDown(index)}
-          last={index === entries.length - 1}
-          onChange={refresh}
-          onMove={(delta) => move(index, delta)}
-          onRemove={() => removeGroup(index)}
-        />
-      {/each}
-
-      <div class="card-foot">
-        <button class="ghost" onclick={addGroup}
-          ><Icon name="plus" size={16} />{texts.sortRules.addGroup}</button
-        >
+      <div class="groups" inert={access.readOnly}>
+        {#each entries as entry, index (entry)}
+          <GroupRow
+            {entry}
+            {draftBatch}
+            {couriers}
+            canUp={canMoveUp(index)}
+            canDown={canMoveDown(index)}
+            last={index === entries.length - 1}
+            onChange={refresh}
+            onMove={(delta) => move(index, delta)}
+            onRemove={() => removeGroup(index)}
+          />
+        {/each}
       </div>
+
+      {#if !access.readOnly}
+        <div class="card-foot">
+          <button class="ghost" onclick={addGroup}
+            ><Icon name="plus" size={16} />{texts.sortRules.addGroup}</button
+          >
+        </div>
+      {/if}
     </section>
   {/if}
 
@@ -336,22 +341,31 @@
         >{texts.sortRules.save}</button
       >
     {:else}
-      <button class="ghost" onclick={() => ((fileMode = true), (fileError = ""))}
-        >{texts.sortRules.editFile}</button
-      >
+      {#if !access.readOnly}
+        <button class="ghost" onclick={() => ((fileMode = true), (fileError = ""))}
+          >{texts.sortRules.editFile}</button
+        >
+      {/if}
       <span class="grow"></span>
       {#if dirty}
         <span class="unsaved">{texts.sortRules.unsaved}</span>
       {/if}
       <button onclick={onClose}>{texts.sortRules.cancel}</button>
-      <button class="primary" disabled={!canSave || !dirty || busy} onclick={save}
-        >{texts.sortRules.save}</button
-      >
+      {#if !access.readOnly}
+        <button class="primary" disabled={!canSave || !dirty || busy} onclick={save}
+          >{texts.sortRules.save}</button
+        >
+      {/if}
     {/if}
   </footer>
 </div>
 
 <style>
+  /* The group rows as the card's own children; read-only, they take no input. */
+  .groups {
+    display: contents;
+  }
+
   /* The foot stays at the bottom of the screen, and in view while the groups scroll. */
   .rules {
     display: flex;

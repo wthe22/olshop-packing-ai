@@ -52,3 +52,21 @@ the `packing-data` folder stay as they are.
 A data folder used by version 0.1 (with `labels\`, `state.json`, `categories.toml`) or by version 0.4
 (one folder per shop owner) is not read by this version and never deleted: the Day screen says so with
 **Open folder**.
+
+### When a new version asks to update the data folder
+
+A new version may keep more of each order than the one before: from version 0.8.2 the receiver's province,
+city and district. Then, before any date opens, it asks **Update the data folder?** and lists each date it
+would change:
+
+- **Update** reads the addresses of the batches saved before from their label PDFs in the date folders and
+  writes each date's lists again. A line shows how far it is (*Reading addresses: 2026-11-25, batch 1, page 3
+  of 120*). No batch, label or PDF is changed or deleted. **Continue** opens the Day screen.
+- **Open read-only** shows the data as it is and changes nothing in the data folder. The title bar says
+  *Read-only*, and what would change something is not shown: **+ New batch**, **Amend**, **Revert**,
+  **Print**, the **Printed** tick, **Reprint**, and the changes on the Accounts and Sort rules screens.
+  Starting the program again asks again.
+
+A batch named in red was not read: its label PDF in the date folder has changed. The other batches are
+updated, and the next start asks about it again. The same question comes when another data folder is chosen
+that needs it.

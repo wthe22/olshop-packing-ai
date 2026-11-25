@@ -3,6 +3,7 @@
   // name told under the field) and **Delete**.
   import { tick } from "svelte";
   import { texts } from "../texts";
+  import { access } from "./readOnly.svelte";
 
   let {
     name,
@@ -67,8 +68,10 @@
   {:else}
     <h3>{name}</h3>
     <span class="grow"></span>
-    <button onclick={start}>{words.rename}</button>
-    <button class="danger" onclick={onDelete}>{words.delete}</button>
+    {#if !access.readOnly}
+      <button onclick={start}>{words.rename}</button>
+      <button class="danger" onclick={onDelete}>{words.delete}</button>
+    {/if}
   {/if}
 </div>
 

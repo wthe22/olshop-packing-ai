@@ -7,6 +7,7 @@
   import type { RuleSummary } from "./api/rules";
   import { deleteProblem, ruleNameProblem, switchOffProblem, type RuleKept } from "./sortRules";
   import { texts } from "../texts";
+  import { access } from "./readOnly.svelte";
 
   let {
     rules,
@@ -91,7 +92,7 @@
       aria-checked={on}
       aria-label={texts.sortRules.offer}
       title={keptText(switchKept) || texts.sortRules.offer}
-      disabled={busy || switchKept !== null}
+      disabled={busy || switchKept !== null || access.readOnly}
       onclick={() => run(() => onSwitch(!on))}><span class="knob"></span></button
     >
     <span class="state">
@@ -99,12 +100,14 @@
       {on ? texts.sortRules.offered : texts.sortRules.notOffered}
     </span>
     <span class="grow"></span>
-    <button disabled={busy} onclick={startRename}>{texts.sortRules.rename}</button>
-    <button
-      disabled={busy || deleteKept !== null}
-      title={keptText(deleteKept)}
-      onclick={() => run(onDelete)}>{texts.sortRules.deleteRule}</button
-    >
+    {#if !access.readOnly}
+      <button disabled={busy} onclick={startRename}>{texts.sortRules.rename}</button>
+      <button
+        disabled={busy || deleteKept !== null}
+        title={keptText(deleteKept)}
+        onclick={() => run(onDelete)}>{texts.sortRules.deleteRule}</button
+      >
+    {/if}
   {/if}
 </div>
 {#if error}

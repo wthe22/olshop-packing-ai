@@ -8,6 +8,7 @@
   import AccountHead from "./AccountHead.svelte";
   import AccountShops from "./AccountShops.svelte";
   import AccountDates from "./AccountDates.svelte";
+  import { access } from "./readOnly.svelte";
 
   let {
     today,
@@ -51,19 +52,21 @@
   {/if}
 
   <span class="spacer"></span>
-  <footer class="foot">
-    <span class="grow"></span>
-    {#if screen.dirty}
-      <span class="unsaved">{words.unsaved}</span>
-    {/if}
-    <button disabled={!screen.dirty} onclick={screen.cancelShops}>{words.cancel}</button>
-    <button
-      class="primary"
-      title={screen.blocked}
-      disabled={!screen.dirty || screen.saving || screen.blocked !== ""}
-      onclick={screen.saveShops}>{words.save}</button
-    >
-  </footer>
+  {#if !access.readOnly}
+    <footer class="foot">
+      <span class="grow"></span>
+      {#if screen.dirty}
+        <span class="unsaved">{words.unsaved}</span>
+      {/if}
+      <button disabled={!screen.dirty} onclick={screen.cancelShops}>{words.cancel}</button>
+      <button
+        class="primary"
+        title={screen.blocked}
+        disabled={!screen.dirty || screen.saving || screen.blocked !== ""}
+        onclick={screen.saveShops}>{words.save}</button
+      >
+    </footer>
+  {/if}
 </div>
 
 <style>

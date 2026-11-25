@@ -5,6 +5,8 @@
   import type { OverlayId } from "./shell.svelte";
   import Icon, { type IconName } from "./Icon.svelte";
   import Logo from "./Logo.svelte";
+  import { access } from "./readOnly.svelte";
+  import { updateTexts } from "../updateTexts";
 
   let {
     overlay,
@@ -35,7 +37,10 @@
     aria-label={texts.nav.togglePanel}
     onclick={onTogglePanel}><Icon name="panel" /></button
   >
-  <span class="brand"><Logo size={22} />{texts.title}<span class="version">{version}</span></span>
+  <span class="brand"
+    ><Logo size={22} />{texts.title}<span class="version">{version}</span
+    >{#if access.readOnly}<span class="read-only">{updateTexts.pill}</span>{/if}</span
+  >
   <span class="grow"></span>
 
   <nav>
@@ -77,6 +82,16 @@
     border-radius: 999px;
     background: var(--accent-soft);
     color: var(--accent-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .read-only {
+    padding: 0 0.45rem;
+    border: 1px solid var(--danger-border);
+    border-radius: 999px;
+    background: var(--danger-bg);
+    color: var(--danger);
     font-size: 0.75rem;
     font-weight: 600;
   }

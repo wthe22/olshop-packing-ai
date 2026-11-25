@@ -6,5 +6,6 @@ mod dates;
 mod index;
 mod journal;
 mod lock_and_files;
+mod migrations;
 mod partial;
 mod views;

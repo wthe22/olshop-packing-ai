@@ -7,6 +7,7 @@
   import Icon from "./Icon.svelte";
   import Count from "./Count.svelte";
   import OutputButtons from "./OutputButtons.svelte";
+  import { access } from "./readOnly.svelte";
 
   let {
     batch,
@@ -37,6 +38,8 @@
   <span class="sent">
     {#if pdf.sent && !pdf.printed}
       {texts.day.sent(pdf.sent)}
+    {/if}
+    {#if pdf.sent && !pdf.printed && !access.readOnly}
       <button
         class="icon"
         title={texts.day.unsend(pdf.file)}
@@ -49,6 +52,7 @@
     <input
       type="checkbox"
       checked={pdf.printed}
+      disabled={access.readOnly}
       aria-label={texts.day.printedLabel(pdf.file)}
       title={texts.day.printedLabel(pdf.file)}
       onchange={(event) => onSetPrinted(batch, pdf, event.currentTarget.checked)}

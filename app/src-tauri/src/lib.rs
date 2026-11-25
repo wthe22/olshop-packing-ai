@@ -30,9 +30,14 @@ pub(crate) use index::Index;
 /// The app version the journal's records carry.
 pub(crate) const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+/// What a write in read-only mode says.
+pub(crate) const READ_ONLY: &str = "Read-only: this copy changes nothing in the data folder.";
+
 /// The data folder in use and its open date.
 pub(crate) struct Data {
     pub dir: PathBuf,
+    /// Opened read-only: nothing in the data folder is written, not even its lock.
+    pub read_only: bool,
     pub day: Option<OpenDay>,
     /// The data folder's dates as the last look for other copies' changes found them.
     pub dates: Vec<Date>,
@@ -45,17 +50,31 @@ impl Data {
         DataLock::try_acquire(&dir)?;
         Ok(Self {
             dir,
+            read_only: false,
             day: None,
             dates: Vec::new(),
         })
     }
 
+    /// The data folder for reading only: no lock is taken and no date is settled.
+    pub(crate) fn read_only(dir: PathBuf) -> Self {
+        Self {
+            dir,
+            read_only: true,
+            day: None,
+            dates: Vec::new(),
+        }
+    }
+
     /// The `date` to read: folded and checked again unless it is the one open and no
     /// other copy of the app has written to it since. While another copy writes, it opens for
-    /// viewing only and the next read opens it again.
+    /// viewing only and the next read opens it again; read-only, it always opens for viewing.
     pub(crate) fn open_day(&mut self, date: Date) -> Result<&mut OpenDay, String> {
         if !self.is_open(date) {
-            let lock = DataLock::try_acquire(&self.dir).map_err(|error| error.to_string())?;
+            let lock = match self.read_only {
+                true => None,
+                false => DataLock::try_acquire(&self.dir).map_err(|error| error.to_string())?,
+            };
             self.open(date, lock.as_ref())?;
         }
         Ok(self.day.as_mut().expect("opened above"))
@@ -76,7 +95,9 @@ impl Data {
 
     fn is_open(&self, date: Date) -> bool {
         self.day.as_ref().is_some_and(|day| {
-            day.folder.date() == date && day.settled && !day.journal.changed_on_disk()
+            day.folder.date() == date
+                && (day.settled || self.read_only)
+                && !day.journal.changed_on_disk()
         })
     }
 
@@ -178,6 +199,11 @@ impl AppState {
         *self.data.lock().unwrap() = Some(data);
     }
 
+    /// Use no data folder until the next is opened.
+    pub(crate) fn clear_data(&self) {
+        *self.data.lock().unwrap() = None;
+    }
+
     /// Run `f` with the data folder, or say that none is set.
     pub(crate) fn with_data<R>(
         &self,
@@ -204,12 +230,15 @@ impl AppState {
 
     /// Run `write` holding the data folder's lock. The lock is taken before the data folder's
     /// state, so while another copy of the app writes, this one waits without holding up the
-    /// window's other commands.
+    /// window's other commands. Read-only, nothing is run.
     pub(crate) fn write_data<R>(
         &self,
         write: impl FnOnce(&mut Data, &DataLock) -> Result<R, String>,
     ) -> Result<R, String> {
-        let dir = self.with_data(|data| Ok(data.dir.clone()))?;
+        let dir = self.with_data(|data| match data.read_only {
+            true => Err(READ_ONLY.to_string()),
+            false => Ok(data.dir.clone()),
+        })?;
         let lock = DataLock::acquire(&dir).map_err(|error| error.to_string())?;
         self.with_data(|data| write(data, &lock))
     }
@@ -348,6 +377,8 @@ pub fn run() {
             commands::start::set_theme,
             commands::start::open_path,
             commands::start::show_in_folder,
+            commands::migrate::update_data,
+            commands::migrate::read_only,
             commands::day::day_overview,
             commands::day::set_printed,
             commands::day::set_sent,

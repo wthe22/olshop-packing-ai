@@ -1,6 +1,7 @@
 //! The batch steps on the repeat fixture (an order printed twice in a row, an order in both
 //! inputs): read → plan → save → verify → reopen, a second read of the same files, revert, the
-//! Printed tick, amend, a finding that stops the save until *Save anyway*, and the shop prompt.
+//! Printed tick, amend, a finding that stops the save until *Save anyway*, the shop prompt, and
+//! the migration that reads the area of a batch saved before it was read.
 //!
 //! Skipped with a message when `pdfium.dll` has not been downloaded (tools/get-pdfium.sh).
 
@@ -13,18 +14,19 @@ use std::sync::mpsc;
 
 use jiff::civil::date;
 use packing_batch::{
-    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, ReadRequest, ReprintOutcome,
-    ReprintRequest, RestoreOutcome, RestoreRequest, RevertedPdfs, SaveOutcome, SaveRequest, Saved,
-    account_summary, account_summary_file, amend, check_files, day_summary, day_summary_file,
-    read_draft, reprint, restore, revert, save, set_printed, set_sent,
+    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, MigrateRequest, ReadRequest,
+    ReprintOutcome, ReprintRequest, RestoreOutcome, RestoreRequest, RevertedPdfs, SaveOutcome,
+    SaveRequest, Saved, account_summary, account_summary_file, amend, check_files, day_summary,
+    day_summary_file, migrate_date, read_draft, reprint, restore, revert, save, set_printed,
+    set_sent,
 };
 use packing_engine::account_questions::{NoSenderQuestion, Others, ShopQuestion};
 use packing_engine::accounts::{Account, ShopAccount, add_shop};
 use packing_engine::ids::{BatchId, OrderId, PdfId};
-use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked};
+use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked, RecordBody};
 use packing_engine::workflows::{SortRule, Workflows, load_bundled};
 use packing_pdf::worker::PdfWorker;
-use packing_store::{DateFolder, Journal, Settled, input_path, open_date, partial_dir};
+use packing_store::{DateFolder, Journal, Settled, input_path, migrations, open_date, partial_dir};
 use testkit::{PdfiumGuard, TempDir, shop_accounts, testdata, vendor_dir};
 
 const INPUTS: [&str; 2] = ["labels-repeat-1.pdf", "labels-repeat-2.pdf"];
@@ -635,4 +637,87 @@ fn an_accounts_summary_is_checked_kept_and_dropped_by_an_amend_or_a_revert() {
         !kept.join(path.file_name().unwrap()).exists(),
         "which is not among the label PDFs a revert saves"
     );
+}
+
+/// The batch as a version that did not read the area saved it, on `day` of the same data folder,
+/// with its label PDFs as `inputs` gives them.
+fn saved_before_the_area(
+    day: &Day,
+    on: i8,
+    record: &BatchSaved,
+    inputs: impl Fn(&PdfId) -> Vec<u8>,
+) -> (DateFolder, Journal) {
+    let folder = DateFolder::new(day.folder.dir().parent().unwrap(), date(2026, 10, on));
+    fs::create_dir_all(folder.dir()).unwrap();
+    for input in &record.inputs {
+        let path = input_path(&folder, record.batch, input.pdf, &input.sha256);
+        fs::write(path, inputs(&input.pdf)).unwrap();
+    }
+    let mut before = record.clone();
+    for order in &mut before.orders {
+        order.area = None;
+    }
+    let mut journal = Journal::open(&folder).unwrap();
+    journal
+        .commit(vec![RecordBody::BatchSaved(before)], APP)
+        .unwrap();
+    (folder, journal)
+}
+
+#[test]
+fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
+    let Some(mut day) = day("batch-migrate") else {
+        return skipped();
+    };
+    let draft = day.read_inputs().unwrap();
+    let record = saved(day.save(&draft, false)).record;
+    let stored = |pdf: &PdfId| {
+        let input = record
+            .inputs
+            .iter()
+            .find(|input| input.pdf == *pdf)
+            .unwrap();
+        fs::read(input_path(&day.folder, record.batch, *pdf, &input.sha256)).unwrap()
+    };
+    let (progress, seen) = mpsc::channel();
+    let request = MigrateRequest {
+        worker: &day.worker,
+        workflows: &day.workflows,
+        app: APP,
+        progress,
+    };
+
+    let (older, mut journal) = saved_before_the_area(&day, 9, &record, stored);
+    assert!(
+        migrate_date(&older, &mut journal, &request)
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        journal.fold().live[&record.batch].saved.orders,
+        record.orders,
+        "each order has the area the save read"
+    );
+    let pages: Vec<usize> = seen.try_iter().map(|progress| progress.page).collect();
+    assert_eq!(pages, (1..=record.orders.len()).collect::<Vec<_>>());
+    let data_dir = day.folder.dir().parent().unwrap();
+    assert!(
+        migrations(data_dir).unwrap().is_empty(),
+        "nothing is left to do"
+    );
+    let area = record.orders[0].area.clone().unwrap();
+    let csv = fs::read_to_string(older.dir().join("orders.csv")).unwrap();
+    assert!(csv.contains(&area.province.unwrap()), "the views show it");
+
+    let (changed, mut journal) = saved_before_the_area(&day, 10, &record, |_| b"changed".to_vec());
+    let last_seq = journal.fold().last_seq;
+    let skipped = migrate_date(&changed, &mut journal, &request).unwrap();
+    assert_eq!(skipped.len(), 1);
+    assert!(matches!(skipped[0].error, BatchError::InputChanged { .. }));
+    assert_eq!(
+        journal.fold().last_seq,
+        last_seq,
+        "a batch it cannot read is left as it was"
+    );
+    assert!(changed.dir().join("session.toml").is_file());
 }

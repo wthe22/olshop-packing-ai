@@ -44,6 +44,11 @@ pub enum BatchError {
         file: String,
         date: Date,
     },
+    /// An input the migration reads is missing or not the bytes the journal names.
+    InputChanged {
+        file: String,
+        date: Date,
+    },
     /// A restore names a file that is no output of a live batch.
     NoOutput {
         file: String,
@@ -84,6 +89,10 @@ impl fmt::Display for BatchError {
             BatchError::InputUnusable { file, date } => write!(
                 f,
                 "{file}, an input of {date}, is missing or has changed. It cannot be printed again."
+            ),
+            BatchError::InputChanged { file, date } => write!(
+                f,
+                "{file}, an input of {date}, is missing or has changed: its addresses cannot be read."
             ),
             BatchError::NoOutput { file } => {
                 write!(f, "{file} is not a file of a saved batch of this date.")

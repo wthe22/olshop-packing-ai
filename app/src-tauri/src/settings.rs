@@ -113,9 +113,9 @@ fn write_if_missing(path: &Path, text: &str) -> Result<(), String> {
     .map_err(|error| format!("Cannot write {}: {error}.", path.display()))
 }
 
-/// The texts of `parser.toml` and `config.toml`. A missing file is written first, from the
-/// bundled copy.
-fn texts(program: &Path) -> Result<(String, String), String> {
+/// Write `parser.toml` and `config.toml` from the bundled copies where missing; the data folder
+/// opened for writing has both.
+pub(crate) fn ensure_files(program: &Path) -> Result<(), String> {
     let dir = data_folder(program)?;
     let (parser, config) = (dir.join(PARSER_FILE), dir.join(CONFIG_FILE));
     if !parser.is_file() || !config.is_file() {
@@ -124,11 +124,24 @@ fn texts(program: &Path) -> Result<(String, String), String> {
         write_if_missing(&parser, BUNDLED_PARSER)?;
         write_if_missing(&config, BUNDLED_CONFIG)?;
     }
-    let read = |path: &Path| {
-        fs::read_to_string(path)
-            .map_err(|error| format!("Cannot read {}: {error}.", path.display()))
+    Ok(())
+}
+
+/// The texts of `parser.toml` and `config.toml`; a missing file reads as its bundled copy and is
+/// not written.
+fn texts(program: &Path) -> Result<(String, String), String> {
+    let dir = data_folder(program)?;
+    let read = |name: &str, bundled: &str| {
+        let path = dir.join(name);
+        match fs::read_to_string(&path) {
+            Err(error) if error.kind() == ErrorKind::NotFound => Ok(bundled.to_string()),
+            read => read.map_err(|error| format!("Cannot read {}: {error}.", path.display())),
+        }
     };
-    Ok((read(&parser)?, read(&config)?))
+    Ok((
+        read(PARSER_FILE, BUNDLED_PARSER)?,
+        read(CONFIG_FILE, BUNDLED_CONFIG)?,
+    ))
 }
 
 /// The rules of the data folder, with the text of `config.toml` (the sort rules and the accounts)

@@ -6,16 +6,35 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-26)
 
-- **The next dev task: [v0.8-migrations.md](v0.8-migrations.md).** Start there: it checks the last commit
-  first, then builds [R-LABEL-18](../../reviews/label.md), [R-LABEL-17](../../reviews/label.md) and
-  [R-APP-16](../../reviews/app.md) ([D-APP-33](../../software-design/decisions/app.md)). Nothing waits for the
-  owner.
-
-- **Handoff of 2026-11-26 — v0.8.1-alpha.** Committed without the full check or a build
-  (the next dev task runs both; no build until its features are done). The converter keeps a backup by default (`--no-backup` moves), rebuilds from it on every run and deletes it
-  only with `--remove-backup` once every file is in the date folder. The program no longer rewrites a view of
-  an older version by itself ([D-APP-33](../../software-design/decisions/app.md)). The converter can be tried now: restore
-  `2026-11-25` from the 7z, run it, look at the folder.
+- **Handoff of 2026-11-26 — v0.8.2-alpha: the receiver's area, migrations that ask, read-only.** Built,
+  checked and pushed; `target/portable/` is rebuilt. No dev task is left: the next one comes from the
+  owner's findings.
+  - **R-LABEL-17**: each order records the receiver's province, city and district as the label prints them
+    (the standard, boxed, instant and Shopee-style layouts; empty where a layout prints none), in the
+    journal and as three columns of `orders.csv` after `shop` ([D-LABEL-26](../../software-design/decisions/label.md)).
+    All 744 sample orders read all three.
+  - **R-LABEL-18**: an instant order saved before its pickup code became its tracking ID now shows the
+    pickup code as its tracking ID; no file is changed.
+  - **R-APP-16** ([D-APP-33](../../software-design/decisions/app.md)): at its start the program asks
+    **Update the data folder?** before any date opens, listing each date and what changes (the addresses of
+    its batches saved before, its lists). **Update** reads them from the label PDFs in the date folders,
+    one line per date and the page being read, then **Continue**. **Open read-only** changes nothing in the
+    data folder: the title bar says *Read-only*, and no button that writes is shown. Choosing another data
+    folder asks the same.
+  - **Tried on a copy** of `2026-11-25`: the start asked (one date, 1 batch, 75 orders); read-only changed
+    no file of the copy and showed no button that writes; **Update** showed the page being read and a line
+    for the date, filled the province, city and district of all 75 orders, wrote `session.toml` 2.2, and
+    the next start did not ask again.
+  - **What to try**: keep a copy of the data folder first. Start the new program: it asks. Choose **Open
+    read-only**, look around (no file of the data folder changes), close it, start again and choose
+    **Update**. Then a date's `orders.csv` shows the three columns.
+  - **The question Q-APP-20** ([questions/app.md](../../software-design/questions/app.md)): may the theme
+    and Settings › **Change** still work in read-only mode? They write `packing-app.toml` beside the program,
+    not the data folder. Default A: yes. The answer goes into that file.
+  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-17`,
+    [reviews/label.md](../../reviews/label.md) as `R-LABEL-19` (an area read wrong: the date, the order and
+    what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-54`. A new session turns each into a
+    task and builds it.
 
 - **Handoff of 2026-11-25 (evening) — v0.8.0-alpha: one flat folder per date; the split and Sameday labels
   read.** Built, checked and pushed; `target/portable/` is rebuilt.

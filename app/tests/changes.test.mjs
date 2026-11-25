@@ -17,6 +17,8 @@ const startInfo = () => ({
   exe_dir: "C:/Packing",
   data_folder: "C:/Data",
   version: "0.3.3",
+  migration: [],
+  read_only: false,
 });
 
 const nothing = { day: false, panel: false };

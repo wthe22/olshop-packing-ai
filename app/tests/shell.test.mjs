@@ -20,6 +20,8 @@ test("starting the shell loads the folder, today and the day's overview", async 
         exe_dir: "C:/Packing",
         data_folder: "C:/Data",
         version: "0.1",
+        migration: [],
+        read_only: false,
       }),
       panel_dates: () => ({ dates: [{ date: "2026-10-07" }, { date: "2026-10-06" }] }),
       about: () => ({ version: "0.1", pdfium: "140.0", schema: "1.0" }),
@@ -49,7 +51,7 @@ test("starting the shell loads the folder, today and the day's overview", async 
   assert.deepEqual(calls[2].args, { day: "2026-10-07" });
 
   // No folder yet: the start prompt stays and the day is not loaded.
-  const noFolder = useBackend(backend({ start_info: () => ({ today: "2026-10-08", exe_dir: "", data_folder: null, version: "0.1" }) }));
+  const noFolder = useBackend(backend({ start_info: () => ({ today: "2026-10-08", exe_dir: "", data_folder: null, version: "0.1", migration: [], read_only: false }) }));
   const prompt = new Shell();
   await prompt.load();
   assert.equal(prompt.needsFolder, true);

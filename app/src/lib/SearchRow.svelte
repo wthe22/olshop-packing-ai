@@ -11,6 +11,7 @@
   import { texts } from "../texts";
   import { formatShortDay } from "../dates";
   import Icon from "./Icon.svelte";
+  import { access } from "./readOnly.svelte";
 
   let {
     row,
@@ -46,7 +47,11 @@
 </script>
 
 <div class="row" class:ticked {@attach textClicks}>
-  <input type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
+  {#if access.readOnly}
+    <span></span>
+  {:else}
+    <input type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
+  {/if}
   <div class="ids">
     {#if row.shop}
       <span class="shop">{row.shop}</span>

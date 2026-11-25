@@ -13,6 +13,8 @@
   import SummaryMenu from "./SummaryMenu.svelte";
   import DayTitle from "./DayTitle.svelte";
   import { accountsOf } from "./dayAccounts";
+  import { access } from "./readOnly.svelte";
+  import { updateTexts } from "../updateTexts";
 
   let {
     day,
@@ -100,20 +102,26 @@
         {/each}
       {/if}
     </span>
-    <SummaryMenu
-      label={texts.day.daySummary}
-      title={texts.day.daySummaryTitle}
-      accounts={accountsOf(overview?.batches ?? [])}
-      disabled={writing || !overview || overview.batches.length === 0}
-      onWrite={onDaySummary}
-    />
-    <!-- On a date that is not today the button is muted, and the shell asks before the batch. -->
-    <button
-      class={day === today ? "primary" : "muted"}
-      title={day === today ? undefined : texts.day.newBatchNotToday(formatShortDay(day))}
-      onclick={onNewBatch}>{texts.day.newBatch}</button
-    >
+    {#if !access.readOnly}
+      <SummaryMenu
+        label={texts.day.daySummary}
+        title={texts.day.daySummaryTitle}
+        accounts={accountsOf(overview?.batches ?? [])}
+        disabled={writing || !overview || overview.batches.length === 0}
+        onWrite={onDaySummary}
+      />
+      <!-- On a date that is not today the button is muted, and the shell asks before the batch. -->
+      <button
+        class={day === today ? "primary" : "muted"}
+        title={day === today ? undefined : texts.day.newBatchNotToday(formatShortDay(day))}
+        onclick={onNewBatch}>{texts.day.newBatch}</button
+      >
+    {/if}
   </div>
+
+  {#if access.readOnly}
+    <p class="read-only">{updateTexts.dayLine}</p>
+  {/if}
 
   {#if saved}
     <p class="saved">{saved}</p>
@@ -156,7 +164,7 @@
               )}{#if batch.amended}{texts.day.amended}{/if}</span
             >
           </span>
-          {#if i === 0}
+          {#if i === 0 && !access.readOnly}
             <span class="grow"></span>
             <button onclick={() => onAmend(batch)}>{texts.day.amend}</button>
             <button onclick={() => onRevert(batch)}>{texts.day.revert}</button>
@@ -175,7 +183,7 @@
         {/each}
         <div class="batch-foot">
           <span class="packing">
-            {#if batch.accounts.length > 1 && batch.summary_problem !== "changed"}
+            {#if batch.accounts.length > 1 && batch.summary_problem !== "changed" && !access.readOnly}
               <SummaryMenu
                 label={texts.day.summaryPdf}
                 title={texts.day.summaryPdfTitle}
@@ -303,6 +311,15 @@
 
   .muted {
     color: var(--text-muted);
+  }
+
+  .read-only {
+    margin: 0 0 0.75rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius);
+    background: var(--danger-bg);
+    color: var(--danger);
   }
 
   .saved {

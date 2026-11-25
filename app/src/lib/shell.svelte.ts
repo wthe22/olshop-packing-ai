@@ -17,6 +17,7 @@ import { DayOutputs } from "./dayOutputs.svelte";
 import { texts } from "../texts";
 import { amendOpens } from "./planFlow";
 import { confirmBox } from "./confirm.svelte";
+import { access } from "./readOnly.svelte";
 import { formatDay } from "../dates";
 import type { Theme } from "./theme";
 
@@ -38,6 +39,9 @@ export class Shell {
   day = $state("");
   exeDir = $state("");
   dataFolder = $state<string | null>(null);
+  // What the migration would change in the data folder: while there is something, the Update
+  // question shows and no date opens.
+  migration = $state<start.MigrationView[]>([]);
   // The theme `packing-app.toml` names; `+page.svelte` shows it.
   theme = $state<Theme>("system");
   // The program's shown version, for the title bar's brand text; the OS
@@ -98,7 +102,9 @@ export class Shell {
       this.version = info.version;
       this.theme = info.theme;
       this.needsFolder = info.data_folder === null;
-      if (!this.needsFolder) await this.afterFolder();
+      this.migration = info.migration;
+      access.readOnly = info.read_only;
+      if (!this.needsFolder && this.migration.length === 0) await this.afterFolder();
     } catch (e) {
       this.error = String(e);
     }
@@ -146,12 +152,39 @@ export class Shell {
     if (this.panel.loading) this.panelTimer = setTimeout(this.refreshPanel, 500);
   };
 
+  // The Update question answered with **Update**, which has opened the folder.
+  updated = async () => {
+    this.migration = [];
+    await this.afterFolder();
+  };
+
+  // The Update question answered with **Open read-only**.
+  openReadOnly = async () => {
+    this.busy = true;
+    try {
+      await start.openReadOnly();
+      access.readOnly = true;
+      this.migration = [];
+      await this.afterFolder();
+    } catch (e) {
+      this.error = String(e);
+    }
+    this.busy = false;
+  };
+
+  // A folder chosen: it opens, unless the migration would change it and the question shows.
+  private chosen = async (choice: start.FolderChoice) => {
+    this.dataFolder = choice.data_folder;
+    this.needsFolder = false;
+    this.migration = choice.migration;
+    access.readOnly = choice.read_only;
+    if (this.migration.length === 0) await this.afterFolder();
+  };
+
   useProgramFolder = async () => {
     this.busy = true;
     try {
-      this.dataFolder = await start.useProgramFolder();
-      this.needsFolder = false;
-      await this.afterFolder();
+      await this.chosen(await start.useProgramFolder());
     } catch (e) {
       this.error = String(e);
     }
@@ -163,9 +196,7 @@ export class Shell {
     if (!picked) return;
     this.busy = true;
     try {
-      this.dataFolder = await start.chooseDataFolder(picked);
-      this.needsFolder = false;
-      await this.afterFolder();
+      await this.chosen(await start.chooseDataFolder(picked));
     } catch (e) {
       this.error = String(e);
     }
@@ -177,8 +208,7 @@ export class Shell {
     if (!picked) return;
     if (!(await confirmBox.ask(texts.settings.askChange(picked, this.dataFolder ?? "")))) return;
     try {
-      this.dataFolder = await start.chooseDataFolder(picked);
-      await this.afterFolder();
+      await this.chosen(await start.chooseDataFolder(picked));
     } catch (e) {
       this.error = String(e);
     }

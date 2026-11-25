@@ -4,6 +4,7 @@
   import { texts } from "../texts";
   import type { FileProblem } from "./api/day";
   import type { SentMark } from "./dayOutputs.svelte";
+  import { access } from "./readOnly.svelte";
 
   let {
     file,
@@ -29,9 +30,11 @@
   <span class="problem">{texts.day.problem(problem)}</span>
 {/if}
 {#if problem === "changed"}
-  <button onclick={() => onRestore(file)}>{texts.day.restore}</button>
+  {#if !access.readOnly}
+    <button onclick={() => onRestore(file)}>{texts.day.restore}</button>
+  {/if}
 {:else}
-  {#if printable}
+  {#if printable && !access.readOnly}
     <button title={texts.day.printTitle(file)} onclick={() => onPrint(file, mark)}
       >{texts.day.print}</button
     >

@@ -5,6 +5,7 @@
   import { texts } from "../texts";
   import type { ShopProblem } from "./shops";
   import Icon from "./Icon.svelte";
+  import { access } from "./readOnly.svelte";
 
   let {
     names = $bindable(),
@@ -34,26 +35,31 @@
     <div class="field">
       <input
         bind:value={names[index]}
+        readonly={access.readOnly}
         aria-label={words.shopLabel(index + 1)}
         {@attach (input) =>
           untrack(() => {
             if (index === names.length - 1 && names[index] === "") input.focus();
           })}
       />
-      <button
-        type="button"
-        class="icon"
-        title={words.removeShop(names[index])}
-        aria-label={words.removeShop(names[index])}
-        onclick={() => onRemove(index)}><Icon name="close" size={16} /></button
-      >
+      {#if !access.readOnly}
+        <button
+          type="button"
+          class="icon"
+          title={words.removeShop(names[index])}
+          aria-label={words.removeShop(names[index])}
+          onclick={() => onRemove(index)}><Icon name="close" size={16} /></button
+        >
+      {/if}
       {#if problem && problem.kind !== "empty"}
         <p class="refused">{words.problem(problem)}</p>
       {/if}
     </div>
   {/each}
   {#if refused}<p class="refused">{refused}</p>{/if}
-  <div><button type="button" class="ghost" onclick={onAdd}>{words.addShop}</button></div>
+  {#if !access.readOnly}
+    <div><button type="button" class="ghost" onclick={onAdd}>{words.addShop}</button></div>
+  {/if}
 </div>
 
 <style>

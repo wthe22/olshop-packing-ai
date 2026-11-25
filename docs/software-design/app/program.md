@@ -4,6 +4,9 @@
 
 | Command | Does | Returns |
 |---|---|---|
+| `start_info()` | The data folder, and what the migration would change in it ([Start](#start)) | The folder, the dates to update with their batches and orders, whether it is open read-only |
+| `update_data()` | **Update**: the migration, date by date, under the lock; then the folder opens. Emits `migration-step` (the label page being read, each date done) | Each date with its batches read and those skipped, with why |
+| `read_only()` | **Open read-only**: the folder opens without its lock; every command that writes is refused | — |
 | `dates_list()` | The panel: the dates of the data folder from the search index ([accounts](accounts.md#listing-and-opening-dates)) | Per date its orders, whether it is damaged, its folder; whether today has a group PDF not printed |
 | `day_open(date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, sent and printed marks, reprints, findings; or the damage message |
 | `check_files(paths)` | SHA-256 and page count of each chosen file; *used in batch n*; one file chosen twice is listed once | The file list |
@@ -67,13 +70,17 @@ Packing\
 
 1. **The data folder.** Read `packing-app.toml` beside the program. Missing, or its `data_dir`
    missing: the [Start](../ui/start.md) screen asks once and writes the file.
-2. **The data folder can be written**: its `.lock` file opens ([data](../data/README.md#one-writer)).
+2. **The migration.** What it would change is found first, reading only; while there is something, the
+   window asks **Update** or **Open read-only** before any date opens
+   ([01 Start](../workflow/01-start-and-open.md#1-start), [D-APP-33](../decisions/app.md)). Read-only, the
+   steps below write nothing: no `.lock`, no rules file.
+3. **The data folder can be written**: its `.lock` file opens ([data](../data/README.md#one-writer)).
    Another copy of the app using the folder is no stop.
-3. **The rules.** Read `parser.toml` and `config.toml` of the data folder; a missing one is written from the
+4. **The rules.** Read `parser.toml` and `config.toml` of the data folder; a missing one is written from the
    bundled copy. A file that does not parse stops the app with its name, line and column; a filter error
    opens the Sort rules screen on that rule.
-4. **The accounts** of `config.toml` ([accounts](accounts.md#the-accounts-file)); none yet is no stop.
-5. **Today's date**, opened as in `day_open`; the search index of every date is built beside it.
+5. **The accounts** of `config.toml` ([accounts](accounts.md#the-accounts-file)); none yet is no stop.
+6. **Today's date**, opened as in `day_open`; the search index of every date is built beside it.
 
 ## Several copies
 

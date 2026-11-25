@@ -141,14 +141,24 @@ name it records keeps its case.
 **Decision.** The app never migrates data on its own. A migration is a new version of a stored file (a
 view of an older `schema`) or data filled in from the stored PDFs (a field a newer reader records). When
 the data folder needs one, the app asks at its start: what would change (which dates, how many batches),
-with **Update** and **Open read-only**. Update shows its progress: the step, the date and file, and how far
-(*Reading addresses: 2026-11-25, batch 1, page 3 of 120*). **Read-only** writes nothing at all: no
-migration, no recovery of a stopped save, no view, no batch, revert, amend, reprint, mark or summary.
-Outside read-only mode, recovery and upkeep that change no file's version stay automatic: settling
-`.partial/` and writing a missing or stale view (journal › When a date opens).
+with **Update** and **Open read-only**; choosing another data folder asks the same. Update shows its
+progress: the step, the date and file, and how far (*Reading addresses: 2026-11-25, batch 1, page 3 of
+120*). **Read-only** writes nothing at all in the data folder: no migration, no lock file, no rules file
+from the bundled copy, no recovery of a stopped save, no view, no batch, revert, amend, reprint, mark or
+summary; the screens do not offer them, and the back end refuses every write. It lasts until the program
+starts again. Outside read-only mode, recovery and upkeep that change no file's version stay automatic:
+settling `.partial/` and writing a missing or stale view (journal › When a date opens).
+
+The migrations: the views of another `schema` are written again; the receiver's area of each order of a
+live batch saved before it was read is read from the batch's stored label PDFs, one `areas_filled` record
+per batch (D-LABEL-26). A batch whose label PDF is missing is not offered (it cannot be read); one whose
+label PDF has changed is skipped and named, and the next start asks again. A damaged journal is passed
+over. Whether the theme and the data folder choice, kept in `packing-app.toml` beside the program, may
+change in read-only mode is open (Q-APP-20).
 
 **Why.** The owner's rule: no surprises; a long migration must not look like a frozen program, and the
 owner must be able to look at data without changing it.
 
 **Applies to.** [data](../data/README.md), [journal](../data/journal.md#when-a-date-opens),
-[views](../data/views.md).
+[views](../data/views.md), [01 Start](../workflow/01-start-and-open.md#1-start),
+[Start screen](../ui/start.md#update-the-data-folder).

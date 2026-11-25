@@ -5,7 +5,7 @@ the label downloads, check the plan, save and print. Plain words, not for a deve
 
 | File | Covers | Read when |
 |---|---|---|
-| [01-setup.md](01-setup.md) | What the app is; putting the program folder on a PC; the first start; a new version of the program | once, before the first day of packing |
+| [01-setup.md](01-setup.md) | What the app is; putting the program folder on a PC; the first start; a new version of the program and its question to update the data folder | once, before the first day of packing |
 | [02-a-day.md](02-a-day.md) | The window and the panel; a normal batch, step by step, to the plan: the shop prompt, repeated orders | every day, while packing |
 | [02b-saving.md](02b-saving.md) | Saving and the check; what to print; the Day screen after saving; several batches a day | after the plan is right |
 | [03-changes.md](03-changes.md) | Reverting or amending the last batch; editing the sort rules; the accounts and their shops | a batch, a sort rule or an account needs changing |

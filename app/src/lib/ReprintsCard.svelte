@@ -8,6 +8,7 @@
   import type { ReprintRow } from "./api/day";
   import { texts } from "../texts";
   import { formatShortDay } from "../dates";
+  import { access } from "./readOnly.svelte";
 
   let {
     day,
@@ -43,9 +44,11 @@
         onclick={() => list.toggle(reprint.number)}
         >{texts.day.reprintOrders} {list.isOpen(reprint.number) ? "▾" : "▸"}</button
       >
-      <button title={texts.day.printTitle(reprint.file)} onclick={() => onPrint(reprint.file)}
-        >{texts.day.print}</button
-      >
+      {#if !access.readOnly}
+        <button title={texts.day.printTitle(reprint.file)} onclick={() => onPrint(reprint.file)}
+          >{texts.day.print}</button
+        >
+      {/if}
       <button onclick={() => onOpen(reprint.path)}>{texts.day.open}</button>
     </div>
     {#if list.isOpen(reprint.number)}

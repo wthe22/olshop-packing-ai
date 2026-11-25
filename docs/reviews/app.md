@@ -13,15 +13,3 @@ that they are correct.
 
 **Waits for the owner's reading.** A step the owner finds wrong is written here as an item, one each; the
 points R1 had to settle are listed in [the plan's status](../development/plan/README.md).
-
-## R-APP-16 — Strict read-only mode, and migrations that ask, with progress
-
-**Present.** Opening a date writes without asking: the views of an older version are written again, a
-stopped save is settled. A long step shows little of what it does.
-
-**Wanted.** At its start, when the data folder needs a migration, the app asks: what would change, with
-**Update** and **Open read-only** (the only way into read-only). Read-only writes nothing at all. Update
-shows its progress, step by step, so the program never looks frozen. The rule is
-[D-APP-33](../software-design/decisions/app.md); this item builds it, with the migrations of R-LABEL-17
-and the views' `schema` 2.1.
-

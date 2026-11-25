@@ -5,15 +5,26 @@
 1. **Data folder.** Read `packing-app.toml` beside the program; `data_dir` is absolute or relative to
    the program's folder. Missing: the [Start](../ui/start.md) screen asks once (**Use `Packing\packing-data`** or
    **Choose a folder**) and writes the file.
-2. **Writable.** Open `{data_dir}/.lock`: a folder that cannot be written stops here. Another copy of the
+2. **Migration.** Find, reading only, what the migration would change: dates whose `session.toml` is of
+   another `schema`, and live batches saved before the receiver's area was read whose label PDFs are in the
+   date folder; a damaged journal is passed over. If there is any, the
+   [Start](../ui/start.md#update-the-data-folder) screen asks before any date opens: **Update** or **Open
+   read-only** ([D-APP-33](../decisions/app.md)). Choosing another data folder asks the same.
+   - **Update**, holding the data folder's lock, date by date, oldest first: the orders of each batch are
+     read again from the first page of their copies in its stored label PDFs and recorded in one
+     `areas_filled` record ([records](../data/records.md)); then the date's views are written. A batch
+     whose label PDF has changed is skipped and named; the next start asks again.
+   - **Open read-only**: the steps below run without writing. No lock is taken, a missing rules file is read
+     from its bundled copy, and every date opens for viewing only.
+3. **Writable.** Open `{data_dir}/.lock`: a folder that cannot be written stops here. Another copy of the
    app using the folder is no stop; the lock is taken only for a write ([data](../data/README.md#one-writer)).
-3. **Rules.** Read `parser.toml` and `config.toml` of the data folder; a missing one is written from the
+4. **Rules.** Read `parser.toml` and `config.toml` of the data folder; a missing one is written from the
    bundled copy. Run their checks ([rules files](../rules-file/README.md#loading)).
-4. **Older data.** If the data folder holds data of v0.1 or v0.4, the Day screen will say so; nothing of it
+5. **Older data.** If the data folder holds data of v0.1 or v0.4, the Day screen will say so; nothing of it
    is read, changed or deleted ([accounts](../app/accounts.md#data-of-older-versions)).
-5. **Accounts.** Read `accounts` of `config.toml` ([accounts](../app/accounts.md#the-accounts-file));
+6. **Accounts.** Read `accounts` of `config.toml` ([accounts](../app/accounts.md#the-accounts-file));
    none is no stop: the first read asks.
-6. **Search index.** Fold every journal of the data folder on its own thread ([reprint](../app/reprint.md#the-search-index)).
+7. **Search index.** Fold every journal of the data folder on its own thread ([reprint](../app/reprint.md#the-search-index)).
 
 **Stops:** `parser.toml` or `config.toml` that does not parse (its name, line and column); a data folder that cannot be
 written.
@@ -41,7 +52,7 @@ A date with no journal is empty: nothing is read and no folder is made until its
 Steps 4 and 6 write: they run only while this copy holds the data folder's lock, taken if no other copy
 writes. While another copy writes, the date opens for viewing only and opens again once it is done. An open
 date is opened again whenever its journal grew: another copy committed to it
-([program › Several copies](../app/program.md#several-copies)).
+([program › Several copies](../app/program.md#several-copies)). In read-only mode steps 4 and 6 never run.
 
 **Stops:** damage — a bad line before the last, a `seq` gap, a record that breaks its rule, a `started`
 record naming another date or schema. The date opens for viewing only, with the line named; the app

@@ -7,6 +7,7 @@
   import { texts } from "../texts";
   import Dialog from "./Dialog.svelte";
   import Icon from "./Icon.svelte";
+  import { access } from "./readOnly.svelte";
 
   let {
     accounts,
@@ -60,7 +61,9 @@
       {/each}
     </div>
   {/if}
-  <button class="ghost" onclick={open}><Icon name="plus" size={16} />{words.newAccount}</button>
+  {#if !access.readOnly}
+    <button class="ghost" onclick={open}><Icon name="plus" size={16} />{words.newAccount}</button>
+  {/if}
 </div>
 
 {#if accounts.length === 0 && !creating}

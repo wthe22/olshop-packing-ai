@@ -8,6 +8,7 @@ use packing_pdf::PDFIUM_VERSION;
 use serde::Serialize;
 use tauri::State;
 
+use crate::commands::migrate::{MigrationView, pending};
 use crate::settings::{self, DEFAULT_DATA_DIR, Theme};
 use crate::{AppState, Data, today};
 
@@ -36,6 +37,11 @@ pub struct StartInfo {
     exe_dir: String,
     /// The data folder in use; none until `packing-app.toml` names one.
     data_folder: Option<String>,
+    /// What the migration would change in it: while there is something, no date opens until the
+    /// owner answers.
+    pub(crate) migration: Vec<MigrationView>,
+    /// The owner chose to look at the data folder without changing it.
+    pub(crate) read_only: bool,
 
     /// Whether the PDFium worker started (its dll was found).
     pdfium_ready: bool,
@@ -46,20 +52,28 @@ pub struct StartInfo {
 }
 
 /// Open the data folder `packing-app.toml` names, as at start: the lock taken, the rules of its
-/// two files checked, the search index built.
+/// two files checked, the search index built. A folder the migration would change is not opened:
+/// the owner answers first.
 pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
     let program = state.program();
+    let mut migration = Vec::new();
     if !state.has_data()
         && let Some(dir) = settings::data_dir(program)?
     {
-        open_data(state, dir)?;
+        migration = pending(&dir)?;
+        if migration.is_empty() {
+            open_data(state, dir)?;
+        }
     }
-    let data_folder = state
-        .with_data(|data| Ok(data.dir.display().to_string()))
-        .ok();
+    let data_folder = match state.with_data(|data| Ok(data.dir.clone())) {
+        Ok(dir) => Some(dir),
+        Err(_) => settings::data_dir(program)?,
+    };
     Ok(StartInfo {
         exe_dir: program.display().to_string(),
-        data_folder,
+        data_folder: data_folder.map(|dir| dir.display().to_string()),
+        migration,
+        read_only: state.with_data(|data| Ok(data.read_only)).unwrap_or(false),
         pdfium_ready: state.ensure_worker(),
         today: today().to_string(),
         version: version_text(),
@@ -69,22 +83,43 @@ pub(crate) fn start_information(state: &AppState) -> Result<StartInfo, String> {
 
 /// Open `dir`; a folder that cannot be written stops here, and so does a file in it that does not
 /// load (`parser.toml` and `config.toml` are written from the bundled copies when missing).
-fn open_data(state: &AppState, dir: PathBuf) -> Result<(), String> {
+pub(crate) fn open_data(state: &AppState, dir: PathBuf) -> Result<(), String> {
     let data = Data::new(dir).map_err(|error| error.to_string())?;
+    settings::ensure_files(state.program())?;
     settings::workflows(state.program())?;
     state.index().rebuild(data.dir.clone());
     state.set_data(data);
     Ok(())
 }
 
-/// Write `packing-app.toml` naming `dir` and open it; the folder in use is kept as it is.
-pub(crate) fn use_folder(state: &AppState, dir: &Path) -> Result<String, String> {
+/// The data folder chosen, and what the migration would change in it.
+#[derive(Debug, Serialize)]
+pub struct FolderChoice {
+    pub(crate) data_folder: String,
+    /// While there is something, the folder is not opened: the window asks first, as at start.
+    pub(crate) migration: Vec<MigrationView>,
+    /// The folder in use was chosen again and stays read-only.
+    pub(crate) read_only: bool,
+}
+
+/// Write `packing-app.toml` naming `dir` and open it, unless the migration would change it. The
+/// folder in use is kept as it is.
+pub(crate) fn use_folder(state: &AppState, dir: &Path) -> Result<FolderChoice, String> {
     let dir = settings::set_data_dir(state.program(), dir)?;
     let in_use = state.with_data(|data| Ok(data.dir == dir)).unwrap_or(false);
+    let mut migration = Vec::new();
     if !in_use {
-        open_data(state, dir.clone())?;
+        migration = pending(&dir)?;
+        match migration.is_empty() {
+            true => open_data(state, dir.clone())?,
+            false => state.clear_data(),
+        }
     }
-    Ok(dir.display().to_string())
+    Ok(FolderChoice {
+        data_folder: dir.display().to_string(),
+        migration,
+        read_only: state.with_data(|data| Ok(data.read_only)).unwrap_or(false),
+    })
 }
 
 #[tauri::command]
@@ -94,14 +129,17 @@ pub fn start_info(state: State<'_, AppState>) -> Result<StartInfo, String> {
 
 /// *Use this folder*: the `data` folder inside the program's folder.
 #[tauri::command]
-pub fn use_program_folder(state: State<'_, AppState>) -> Result<String, String> {
+pub fn use_program_folder(state: State<'_, AppState>) -> Result<FolderChoice, String> {
     let dir = state.program().join(DEFAULT_DATA_DIR);
     use_folder(&state, &dir)
 }
 
 /// *Choose a folder* / Settings *Change*.
 #[tauri::command]
-pub fn choose_data_folder(state: State<'_, AppState>, path: String) -> Result<String, String> {
+pub fn choose_data_folder(
+    state: State<'_, AppState>,
+    path: String,
+) -> Result<FolderChoice, String> {
     use_folder(&state, Path::new(&path))
 }
 

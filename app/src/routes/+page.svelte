@@ -11,6 +11,7 @@
   import Frame from "../lib/Frame.svelte";
   import Panel from "../lib/Panel.svelte";
   import StartPrompt from "../lib/StartPrompt.svelte";
+  import UpdatePrompt from "../lib/UpdatePrompt.svelte";
   import DayScreen from "../lib/DayScreen.svelte";
   import NewBatchScreen from "../lib/NewBatchScreen.svelte";
   import PlanScreen from "../lib/PlanScreen.svelte";
@@ -59,6 +60,14 @@
     busy={shell.busy}
     onUse={shell.useProgramFolder}
     onChoose={shell.chooseFolder}
+  />
+{:else if shell.migration.length > 0}
+  <UpdatePrompt
+    version={shell.version}
+    dates={shell.migration}
+    error={shell.error}
+    onDone={shell.updated}
+    onReadOnly={shell.openReadOnly}
   />
 {:else}
   <div class="window">

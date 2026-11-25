@@ -12,6 +12,7 @@
   import BoxesEditor from "./BoxesEditor.svelte";
   import Icon from "./Icon.svelte";
   import SearchRow from "./SearchRow.svelte";
+  import { access } from "./readOnly.svelte";
 
   let {
     day,
@@ -118,15 +119,17 @@
     {:else}
       <div class="found">
         <span class="summary">{searchSummary(search.result.orders, search.result.batches)}</span>
-        <label class="all">
-          <input
-            type="checkbox"
-            checked={search.allTicked()}
-            indeterminate={search.someTicked()}
-            onchange={(event) => search.selectAll(event.currentTarget.checked)}
-          />
-          {words.selectAll}
-        </label>
+        {#if !access.readOnly}
+          <label class="all">
+            <input
+              type="checkbox"
+              checked={search.allTicked()}
+              indeterminate={search.someTicked()}
+              onchange={(event) => search.selectAll(event.currentTarget.checked)}
+            />
+            {words.selectAll}
+          </label>
+        {/if}
       </div>
       <div class="results">
         <div class="rows">
@@ -164,7 +167,7 @@
     {/if}
   {/if}
 
-  {#if search.made || (search.result && search.result.orders > 0)}
+  {#if search.made || (search.result && search.result.orders > 0 && !access.readOnly)}
     <div class="bar">
       {#if search.made}
         <p class="made">
@@ -172,7 +175,7 @@
           <button onclick={() => search.made && onOpen(search.made.path)}>{texts.day.open}</button>
         </p>
       {/if}
-      {#if search.result && search.result.orders > 0}
+      {#if search.result && search.result.orders > 0 && !access.readOnly}
         <div class="actions">
           <span>{words.selected(tickedCount, search.result.orders)}</span>
           {#if search.reprintedBefore() > 0}

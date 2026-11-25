@@ -9,7 +9,7 @@
 │        ▼                                                                            │
 │  packing-app (Tauri 2): commands, the open draft, the worker thread                  │
 │        ▼                                                                            │
-│  packing-batch  the batch steps: read a draft, save, revert, amend, Printed         │
+│  packing-batch  the batch steps: read a draft, save, revert, amend, Printed, migrate│
 │        ├──► packing-engine  rules, filters, pages → copies → orders, repeats, plan,  │
 │        │                    order contents, the record of a batch. No PDF, no file   │
 │        ├──► packing-pdf     PDFium: page text and images, copy pages, summary PDF   │
