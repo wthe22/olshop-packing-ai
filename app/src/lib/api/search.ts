@@ -35,6 +35,8 @@ export interface SearchRow {
   batch_time: string;
   // The input PDF it was read from, by the name it had when it was chosen, and its pages there.
   input: string;
+  // The input's short hash, the one its file name carries (`{date}_{pdf}_{short hash}.pdf`).
+  input_hash: string;
   input_first_page: number;
   input_last_page: number;
   // The reprints that printed it again, oldest first.

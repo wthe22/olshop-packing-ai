@@ -34,6 +34,8 @@ pub struct IndexedOrder {
     pub file_pages: RangeInclusive<u16>,
     /// The name its input had when it was chosen.
     pub input: String,
+    /// The short hash of that input, the one its file name carries.
+    pub input_hash: String,
 }
 
 /// A date with orders of one account: how many, and in how many batches.
@@ -256,6 +258,11 @@ fn indexed(date: Date, batch: BatchId, live: &LiveBatch) -> Vec<IndexedOrder> {
                 .iter()
                 .find(|input| input.pdf == order.pdf)
                 .map_or_else(String::new, |input| input.filename.clone()),
+            input_hash: saved
+                .inputs
+                .iter()
+                .find(|input| input.pdf == order.pdf)
+                .map_or_else(String::new, |input| input.sha256.short().to_string()),
             order: order.clone(),
         })
         .collect()

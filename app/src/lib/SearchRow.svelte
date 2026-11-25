@@ -91,7 +91,7 @@
   {#if traced}
     <p class="trace">
       {words.from}
-      <span class="input"><Icon name="file" size={14} />{row.input}</span>
+      <span class="input"><Icon name="file" size={14} />{row.input}<span class="hash">{row.input_hash}</span></span>
       {words.inputPages(row.input_first_page, row.input_last_page)}{words.savedInto(row.batch_time)}
       <span class="group">{row.group}</span>
     </p>
@@ -337,6 +337,12 @@
     font-family: var(--font-mono);
     font-size: 0.8rem;
     overflow-wrap: anywhere;
+  }
+
+  .hash {
+    padding-left: 0.4rem;
+    border-left: 1px solid var(--border);
+    opacity: 0.7;
   }
 
   .input :global(svg) {

@@ -67,7 +67,7 @@ On a narrower window the items take a line of their own under the order:
   too, and the heads are hidden. **Open** opens that group PDF, written again first when it is not there any
   more (as on the [Day](day.md) screen). The chevron opens the row's details under it, only what the row
   does not show, as one line: *From* the input PDF it was read from (its file name in a box with a file icon
-  in monospace) and its pages there, *saved at 09:12* (its batch's last save) *into group* and the group PDF's
+  in monospace, then its short hash, the one its file name carries) and its pages there, *saved at 09:12* (its batch's last save) *into group* and the group PDF's
   code (`2-B`) as a chip.
 - **Reprinted**: an order printed again before carries the mark *Reprinted* under **Open** (*Reprinted 2×* for more);
   its tooltip names each reprint and its date.

@@ -69,8 +69,10 @@ pub struct OrderRow {
     last_page: u16,
     /// The batch's last save, `09:12`.
     batch_time: String,
-    /// The input PDF it was read from, by the name it had when it was chosen, and its pages there.
+    /// The input PDF it was read from, by the name it had when it was chosen, its short hash, and its
+    /// pages there.
     input: String,
+    input_hash: String,
     input_first_page: u16,
     input_last_page: u16,
     /// The reprints that printed it again, oldest first.
@@ -157,6 +159,7 @@ fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> Order
         last_page: *order.file_pages.end(),
         batch_time: order.batch_time.zoned().strftime("%H:%M").to_string(),
         input: order.input.clone(),
+        input_hash: order.input_hash.clone(),
         input_first_page: saved.page_start,
         input_last_page: saved.page_end,
         reprints: index

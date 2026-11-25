@@ -6,6 +6,15 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-25)
 
+- **Handoff of 2026-11-25 (latest) — the owner's simple finding built; the rest saved.** Built and pushed:
+  [R-UI-53](../../reviews/ui.md): an expanded search row shows the source PDF's short hash after its file name
+  (the input record's hash, [search](../../software-design/ui/search.md)). `target/portable/` is rebuilt.
+  - **Saved for later**, written in the reviews: [R-LABEL-16](../../reviews/label.md) (the instant label's
+    pickup code as the tracking ID changes how the courier is named, a design choice), and
+    [R-APP-12 to R-APP-15](../../reviews/app.md) (the flat date folder and the new names change the stored
+    files and the design, so they wait for the next dev).
+  - **The owner may test now**: Search a saved order, open its chevron: the file name is followed by its short hash.
+
 - **Handoff of 2026-11-25 (later) — the regular SPX label reads its tracking ID.** The owner's request, built:
   the bundled SPX tracking form also takes `CM` + 11 digits (the regular layout, `samples/2026-11-23 spx regular.pdf`:
   tracking `CM00000000001`, order `260000ABCD1234`). The courier stays unnamed: the layout has no SPX logo
