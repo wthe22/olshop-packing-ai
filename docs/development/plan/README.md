@@ -6,16 +6,13 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-26)
 
-- **The next dev** (still v0.8 alpha, its version raised again): [R-APP-16](../../reviews/app.md) — read-only mode that writes nothing, and every
-  migration asked for at the start with its progress shown ([D-APP-33](../../software-design/decisions/app.md),
-  also in `AGENTS.md`); [R-LABEL-17](../../reviews/label.md) — each order's province, city and district as
-  printed, for new batches and, by that migration, for batches saved before; [R-LABEL-18](../../reviews/label.md)
-  — an old instant order's pickup code as its tracking ID. The views' `schema` 2.1 is written now, but an older
-  `session.toml` is only written again by that migration.
+- **The next dev task: [v0.8-migrations.md](v0.8-migrations.md).** Start there: it checks the last commit
+  first, then builds [R-LABEL-18](../../reviews/label.md), [R-LABEL-17](../../reviews/label.md) and
+  [R-APP-16](../../reviews/app.md) ([D-APP-33](../../software-design/decisions/app.md)). Nothing waits for the
+  owner.
 
-- **Handoff of 2026-11-26 — v0.8.1-alpha.** Committed without the full check or a
-  build (the next dev runs both; no build until its features are done). The
-  converter keeps a backup by default (`--no-backup` moves), rebuilds from it on every run and deletes it
+- **Handoff of 2026-11-26 — v0.8.1-alpha.** Committed without the full check or a build
+  (the next dev task runs both; no build until its features are done). The converter keeps a backup by default (`--no-backup` moves), rebuilds from it on every run and deletes it
   only with `--remove-backup` once every file is in the date folder. The program no longer rewrites a view of
   an older version by itself ([D-APP-33](../../software-design/decisions/app.md)). The converter can be tried now: restore
   `2026-11-25` from the 7z, run it, look at the folder.
