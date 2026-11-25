@@ -15,6 +15,8 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     files and the design, so they wait for the next dev). The flat folder comes with a Python script that
     converts an existing data folder once; the next dev's release is **v0.8 alpha**.
   - **The owner may test now**: Search a saved order, open its chevron: the file name is followed by its short hash.
+  - **For the next dev, a rare case**: `samples/2026-11-25 split.pdf`, a J&T label the owner calls a rare
+    case (the owner's words: "split"); kept in `samples/` on the owner's PC, not committed.
 
 - **Handoff of 2026-11-25 (later) — the regular SPX label reads its tracking ID.** The owner's request, built:
   the bundled SPX tracking form also takes `CM` + 11 digits (the regular layout, `samples/2026-11-23 spx regular.pdf`:
