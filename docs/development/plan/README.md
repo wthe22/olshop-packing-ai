@@ -12,7 +12,8 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **Saved for later**, written in the reviews: [R-LABEL-16](../../reviews/label.md) (the instant label's
     pickup code as the tracking ID changes how the courier is named, a design choice), and
     [R-APP-12 to R-APP-15](../../reviews/app.md) (the flat date folder and the new names change the stored
-    files and the design, so they wait for the next dev).
+    files and the design, so they wait for the next dev). The flat folder comes with a Python script that
+    converts an existing data folder once; the next dev's release is **v0.8 alpha**.
   - **The owner may test now**: Search a saved order, open its chevron: the file name is followed by its short hash.
 
 - **Handoff of 2026-11-25 (later) — the regular SPX label reads its tracking ID.** The owner's request, built:

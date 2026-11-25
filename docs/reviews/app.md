@@ -23,6 +23,10 @@ PDFs and the summary PDF). The day summary sits directly in the date folder.
 journal included. Where the files being written first go, and how a file is kept safe while it is written, is
 for the next dev to settle.
 
+**For the next dev.** The next dev also builds a Python script that converts an existing data folder from the
+`input/` and `output/` layout to the flat one (the owner's existing dates must keep working after the change; the
+script is run once by the owner, like `tools/rename-inputs.py`). The flat layout ships as **v0.8 alpha**.
+
 ## R-APP-13 — Inputs named like the outputs
 
 **Present.** An input is named `{date}_{NN}_{hash}.pdf`, for example `2026-11-23_03_61459e8a8203.pdf`.
