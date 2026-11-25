@@ -412,7 +412,7 @@ fn a_reprint_writes_the_chosen_orders_pages_into_today_in_printing_order() {
         ReprintOutcome::Findings(findings) => panic!("the verifier found {findings:?}"),
     };
     assert_eq!(made.number, 1);
-    assert_eq!(made.file, "reprint 1 x2.pdf");
+    assert_eq!(made.file, "Reprint 1 x2.pdf");
     let in_order: Vec<&OrderId> = record
         .orders
         .iter()

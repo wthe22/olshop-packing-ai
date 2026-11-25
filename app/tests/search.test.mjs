@@ -74,7 +74,7 @@ test("a search finds rows, ticks choose them and Reprint writes them into today"
     reprint: (args) =>
       refused
         ? { made: null, errors: ["page 2 of the reprint is not the source page."] }
-        : { made: { number: 1, file: "reprint 1 x2.pdf", path: "C:/r.pdf", orders: args.orders.length, pages: 2 }, errors: [] },
+        : { made: { number: 1, file: "Reprint 1 x2.pdf", path: "C:/r.pdf", orders: args.orders.length, pages: 2 }, errors: [] },
   });
   const search = new Search(() => "2026-10-07", () => "2026-10-27", () => (reprinted += 1));
   const [first] = search.tree.root.children;
@@ -172,7 +172,7 @@ test("one order found is ticked; an order reprinted before is printed again only
   const calls = useBackend({
     tree_to_filter: () => 'tracking_id starts_with "JY0000001234"',
     search_orders: () => ({ loading: false, orders: 1, batches: 1, rows: [before] }),
-    reprint: () => ({ made: { number: 2, file: "reprint 2 x1.pdf", path: "C:/r.pdf", orders: 1, pages: 1 }, errors: [] }),
+    reprint: () => ({ made: { number: 2, file: "Reprint 2 x1.pdf", path: "C:/r.pdf", orders: 1, pages: 1 }, errors: [] }),
   });
   const search = new Search(() => "2026-10-07", () => "2026-10-27", () => {});
   await search.run();

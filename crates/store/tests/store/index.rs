@@ -182,7 +182,7 @@ fn an_order_printed_again_carries_each_reprint_and_is_found_by_its_date() {
     let printed = |number: u8, ids: &[&str]| {
         RecordBody::ReprintMade(ReprintMade {
             number,
-            file: format!("reprint {number} x{}.pdf", ids.len()),
+            file: format!("Reprint {number} x{}.pdf", ids.len()),
             pages: ids.len() as u16,
             size: 1,
             sha256: sha('c'),

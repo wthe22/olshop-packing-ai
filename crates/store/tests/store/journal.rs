@@ -130,7 +130,7 @@ fn sent_and_printed_marks_revert_amend_and_reprints_fold_by_their_rules() {
         .commit(
             vec![RecordBody::ReprintMade(ReprintMade {
                 number: 1,
-                file: "reprint 1 x0.pdf".into(),
+                file: "Reprint 1 x0.pdf".into(),
                 pages: 0,
                 size: 0,
                 sha256: sha('c'),

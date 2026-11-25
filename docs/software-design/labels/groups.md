@@ -28,7 +28,7 @@
 
 - **Group PDF**: `{batch}-{code} {name} x{count}.pdf`, e.g. `2-A Sepatu x88.pdf`; `count` is the group's
   orders. **Summary PDF**: `{batch} summary.pdf` ([summary PDF](summary-pdf.md)). **Reprint**:
-  `reprint {n} x{count}.pdf` ([reprint](../app/reprint.md#reprint)).
+  `Reprint {n} x{count}.pdf` ([reprint](../app/reprint.md#reprint)).
 - A suggested name follows the default file-name rule ([data](../data/README.md#types-versions-and-names)):
   `Spion & Knalpot` gives `2-B Spion Knalpot x35.pdf`. The batch number in front makes *sort by name*
   printing order. The rest group `?` has no code in its name, since Windows does not allow `?`:

@@ -42,7 +42,7 @@ Orders of an open draft are not searched: they are not saved.
 2. **Order.** The orders in their original printing order: by date, batch, then their place in the
    batch's record.
 3. **Write** the pages, unchanged, into `output/.partial/` of **today's** date, named
-   `reprint {n} x{count}.pdf`, `n` counting the reprints of today.
+   `Reprint {n} x{count}.pdf`, `n` counting the reprints of today.
 4. **Verify**: the file's page *k* has the digest of the source page at *k*, and the page count adds up
    ([verification](verification.md)). A finding stops the reprint; nothing is kept.
 5. **Commit** `reprint_made` in today's journal, with every order's date, batch, input and pages; then

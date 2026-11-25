@@ -502,7 +502,7 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
         .collect();
     let made = serde_json::to_value(reprint_orders(&state, &choices).unwrap()).unwrap();
     assert_eq!(made["errors"], Value::Array(Vec::new()));
-    assert_eq!(made["made"]["file"], "reprint 1 x2.pdf");
+    assert_eq!(made["made"]["file"], "Reprint 1 x2.pdf");
     assert!(Path::new(made["made"]["path"].as_str().unwrap()).is_file());
     let today = crate::today().to_string();
     let shown = serde_json::to_value(overview(&state, &today).unwrap()).unwrap();

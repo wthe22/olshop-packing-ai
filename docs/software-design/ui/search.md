@@ -85,7 +85,7 @@ On a narrower window the items take a line of their own under the order:
   and **Reprint** asks first: "Reprint 3 orders?" — "2 of them were reprinted before." [Reprint]
   [Cancel].
 - **Reprint `<n>` orders** writes one PDF of their label pages, unchanged, in their original printing order,
-  into today's date: `reprint 1 x2.pdf` ([reprint](../app/reprint.md#reprint)). It is verified before it is
+  into today's date: `Reprint 1 x2.pdf` ([reprint](../app/reprint.md#reprint)). It is verified before it is
   kept; a finding stops it and nothing is kept.
 - When it is written, a green note at the bar's left, in the bar's line while both fit, says "Reprint 1
   written: 2 orders, 2 pages." with **Open**; the rows are searched again, so the orders just printed

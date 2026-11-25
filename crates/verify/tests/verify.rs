@@ -433,7 +433,7 @@ fn a_page_has_one_digest_however_it_is_stored() {
     );
 }
 
-const REPRINT_FILE: &str = "reprint 1 x2.pdf";
+const REPRINT_FILE: &str = "Reprint 1 x2.pdf";
 
 /// A reprint of orders 103 and 101 into today's `partial`, its pages in `order`; the input stored
 /// under the date it was saved on.
@@ -472,12 +472,12 @@ fn a_reprint_holds_exactly_its_orders_pages_in_their_order() {
         swapped
             .errors
             .iter()
-            .any(|f| f.contains("page 1 of reprint 1 x2.pdf is not page 6")),
+            .any(|f| f.contains("page 1 of Reprint 1 x2.pdf is not page 6")),
         "{swapped:?}"
     );
     let short = verify_a_reprint("reprint-short", &[6], |_| {});
     assert!(
-        short.errors.iter().any(|f| f.contains("is not in reprint")),
+        short.errors.iter().any(|f| f.contains("is not in Reprint")),
         "{short:?}"
     );
     let changed = verify_a_reprint("reprint-input", &[6, 1], |folder| {

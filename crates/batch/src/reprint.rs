@@ -54,7 +54,7 @@ pub fn reprint(
     let dir = request.today.dir();
     settle_partial(dir, &fold)?;
     let number = u8::try_from(fold.reprints.len() + 1).map_err(|_| BatchError::TooManyReprints)?;
-    let out = partial(dir)?.join(format!("reprint {number} x{}.pdf", sources.len()));
+    let out = partial(dir)?.join(format!("Reprint {number} x{}.pdf", sources.len()));
     let mut paths: Vec<PathBuf> = Vec::new();
     let mut pages = Vec::new();
     for source in &sources {
