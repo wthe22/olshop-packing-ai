@@ -3,7 +3,8 @@
 Binding for all code in this repository, written by the owner, an agent or a subagent: Rust, Svelte and
 TypeScript. The project is in heavy development: build for what is decided now, add no compatibility layer
 or option for a change that might come. Stored user data is the exception: a change to its shape is a
-migration.
+migration, which the app runs only when the owner chooses it, with its progress shown; read-only mode
+writes nothing ([D-APP-33](../software-design/decisions/app.md)).
 
 Every rule states its reason. An exception to a rule is allowed only with a one-line reason in the commit
 message that makes it.

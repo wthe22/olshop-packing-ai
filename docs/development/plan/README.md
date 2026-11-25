@@ -4,7 +4,21 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-25)
+## Status (2026-11-26)
+
+- **The next dev** (still v0.8 alpha, its version raised again): [R-APP-16](../../reviews/app.md) — read-only mode that writes nothing, and every
+  migration asked for at the start with its progress shown ([D-APP-33](../../software-design/decisions/app.md),
+  also in `AGENTS.md`); [R-LABEL-17](../../reviews/label.md) — each order's province, city and district as
+  printed, for new batches and, by that migration, for batches saved before; [R-LABEL-18](../../reviews/label.md)
+  — an old instant order's pickup code as its tracking ID. The views' `schema` 2.1 is written now, but an older
+  `session.toml` is only written again by that migration.
+
+- **Handoff of 2026-11-26 — v0.8.1-alpha.** Committed without the full check or a
+  build (the next dev runs both; no build until its features are done). The
+  converter keeps a backup by default (`--no-backup` moves), rebuilds from it on every run and deletes it
+  only with `--remove-backup` once every file is in the date folder. The program no longer rewrites a view of
+  an older version by itself ([D-APP-33](../../software-design/decisions/app.md)). The converter can be tried now: restore
+  `2026-11-25` from the 7z, run it, look at the folder.
 
 - **Handoff of 2026-11-25 (evening) — v0.8.0-alpha: one flat folder per date; the split and Sameday labels
   read.** Built, checked and pushed; `target/portable/` is rebuilt.
@@ -13,8 +27,8 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     nothing). Each date's `input\`, `output\` and old summaries move unchanged into `v0.7 backup\` of the
     date, and the new files are copied up from there: the label PDFs as `{batch} Input {pdf} {short
     hash}.pdf`, the outputs unchanged, the summaries made on request under their new names. Nothing is
-    deleted; the journal and the views are not touched (the program writes the views again, as their
-    version is older). Run it again at any time: it copies again from the backup whatever is missing or
+    deleted; the journal and the views are not touched (their paths stay out of date until the
+    migration of the next dev, which asks first). Run it again at any time: it copies again from the backup whatever is missing or
     wrong, and leaves what the program wrote since. Once every date checks out, `--remove-backup` deletes
     each backup whose files are all in the date folder, and names the rest (a file no journal names stays
     in the backup until the owner moves it). With `--no-backup` the files are moved instead.

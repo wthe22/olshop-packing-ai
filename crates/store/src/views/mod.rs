@@ -23,8 +23,8 @@ pub const SESSION_TOML: &str = "session.toml";
 pub const ORDERS_CSV: &str = "orders.csv";
 pub const ORDER_CONTENTS_TOML: &str = "order-contents.toml";
 
-/// The schema version of `session.toml`. A file of another version is out of date, so a change
-/// to its fields is written again from the journal when the date opens.
+/// The schema version of `session.toml`. A file of another version is written again only by the
+/// migration the owner starts, never when a date opens.
 pub const SESSION_SCHEMA: &str = "2.1";
 
 /// Write the three views of the fold, `session.toml` last.
@@ -44,12 +44,11 @@ pub fn write_views(date_dir: &Path, fold: &Fold) -> Result<(), StoreError> {
     )
 }
 
-/// Whether the three views are there and `session.toml` is of this version and says the journal's
-/// last `seq`.
+/// Whether the three views are there and `session.toml` says the journal's last `seq`. Its
+/// `schema` is not looked at: a view of another version waits for the owner's migration.
 pub fn views_current(date_dir: &Path, fold: &Fold) -> bool {
     #[derive(Deserialize)]
     struct Seq {
-        schema: String,
         journal_seq: u32,
     }
     let all_there = [ORDERS_CSV, ORDER_CONTENTS_TOML, SESSION_TOML]
@@ -59,7 +58,7 @@ pub fn views_current(date_dir: &Path, fold: &Fold) -> bool {
         && fs::read_to_string(date_dir.join(SESSION_TOML))
             .ok()
             .and_then(|text| toml::from_str::<Seq>(&text).ok())
-            .is_some_and(|seq| seq.schema == SESSION_SCHEMA && seq.journal_seq == fold.last_seq)
+            .is_some_and(|seq| seq.journal_seq == fold.last_seq)
 }
 
 /// The `OrderContentID`s of a fold: numbered from 1 in order of first appearance over the live

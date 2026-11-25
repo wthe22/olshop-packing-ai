@@ -3,8 +3,9 @@
 Three files of the owner's draft, written from the journal after every commit so a person or another
 program can read a date without the app ([D-APP-8](../decisions/app.md)). Each is written to a temporary
 file and renamed into place; `session.toml` is written last, so its `journal_seq` vouches for all three.
-A view is never read for a decision. When one is missing, or `session.toml`'s `schema` is not this
-version's or its `journal_seq` not the journal's last `seq`, all three are written again from the journal ([journal › When a date opens](journal.md#when-a-date-opens)).
+A view is never read for a decision. When one is missing or `session.toml`'s `journal_seq` is not the
+journal's last `seq`, all three are written again; when its `schema` is not this version's, only by the
+migration the owner starts ([D-APP-33](../decisions/app.md)). Then all three are written again from the journal ([journal › When a date opens](journal.md#when-a-date-opens)).
 
 Only live batches appear; a reverted batch is gone from the views and stays in the journal. IDs that
 the journal does not hold (`RuleID`, `OrderContentID`) are numbered by the fold in order of first

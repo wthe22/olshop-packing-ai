@@ -22,6 +22,10 @@
   lower. Never weaken a check or add to a baseline.
 - The project is in heavy development: build for what is decided now; no compatibility layer or option for
   a change that might come. A change to the shape of stored user data is a migration.
+- Migrations and read-only (D-APP-33): the app never migrates data on its own. A migration (a new
+  version of a stored file, or data filled in from the stored PDFs) runs only when the owner chooses it
+  on the screen that asks, and shows its progress (what it does, on which date and file, how far). Read-only
+  mode writes nothing at all: no migration, no recovery, no view, no batch, no summary.
 - Another session may be editing: run `git status` and `git log --oneline -5` before editing a file, and
   never touch a file that session owns.
 - This repository is the PC app.

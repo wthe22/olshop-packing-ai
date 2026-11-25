@@ -17,8 +17,8 @@ written files embed whole fonts (about 1.4 MB); they print the same, and the siz
 
 **Decision.** Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at
 `1.0`. The schema version is not the app version: app `v0.2` writes `1.0`, and a schema change raises the app
-version. Data written by an older version is not read and not migrated (D-APP-27: nor changed or deleted; a
-separate script copies v0.4 dates once).
+version. Data written by an older version is not read and not changed (D-APP-27: nor deleted; a separate
+script copies v0.4 dates once), except by a migration the owner starts (D-APP-33).
 
 **Why.** The owner's choice: the data is a working set, and the labels can be read again.
 
@@ -125,8 +125,25 @@ converted by `tools/flatten-data.py`: the inputs take their new names, the outpu
 `output/.partial/` becomes `.partial/` and the summaries made on request are renamed. It deletes no data:
 the old folders are kept in `v0.7 backup/` (unless `--no-backup`) until `--remove-backup` finds every file of it
 in the date folder ([development](../../development/README.md)). The views are left: `session.toml` of
-schema 2.0 is out of date, so the app writes them again ([views](../data/views.md)). Until then the Day
-screen names each date that still has `input/` or `output/`.
+schema 2.0 is out of date, and the app writes them again once the owner starts that migration (D-APP-33).
+Until then the Day screen names each date that still has `input/` or `output/`.
+
+## D-APP-33 — Migrations ask first; read-only writes nothing
+
+**Decision.** The app never migrates data on its own. A migration is a new version of a stored file (a
+view of an older `schema`) or data filled in from the stored PDFs (a field a newer reader records). When
+the data folder needs one, the app asks at its start: what would change (which dates, how many batches),
+with **Update** and **Open read-only**. Update shows its progress: the step, the date and file, and how far
+(*Reading addresses: 2026-11-25, batch 1, page 3 of 120*). **Read-only** writes nothing at all: no
+migration, no recovery of a stopped save, no view, no batch, revert, amend, reprint, mark or summary.
+Outside read-only mode, recovery and upkeep that change no file's version stay automatic: settling
+`.partial/` and writing a missing or stale view (journal › When a date opens).
+
+**Why.** The owner's rule: no surprises; a long migration must not look like a frozen program, and the
+owner must be able to look at data without changing it.
+
+**Applies to.** [data](../data/README.md), [journal](../data/journal.md#when-a-date-opens),
+[views](../data/views.md).
 
 **Why.** The owner's choice: one Explorer window shows a date's whole work, a batch's files side by side by
 its number. `.partial/` keeps a save whole as before. The journal is the truth and is never rewritten, so a

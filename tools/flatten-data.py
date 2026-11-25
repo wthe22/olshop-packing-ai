@@ -20,8 +20,8 @@ In each date folder that still has input\\ or output\\:
 - the summaries made on request take the new names: `Day Summary.pdf`, `Day Summary - {account}.pdf`
   and `{batch} Summary - {account}.pdf`.
 
-The journal is only read. The views (session.toml and the others) are left: the program writes them again
-when the date opens, as their version is older.
+The journal is only read. The views (session.toml and the others) are left: their paths are out of date
+until the program's migration, which it asks about, writes them again.
 
 A date folder with `v0.7 backup\\` is converted again from the backup on every run: a file missing, or
 holding other bytes than the journal names for it, is copied again; a wrong file is moved into
