@@ -7,6 +7,9 @@ another file of the date folder holds the same bytes, or when it is an unfinishe
     python flatten-data.py "D:\\Packing\\packing-data" --remove-backup the backup, once checked
     add --dry-run to any of them to list what would happen, changing nothing
 
+Started with no data folder (a double-click), it asks for the folder and whether to keep a backup (yes
+unless answered no).
+
 In each date folder that still has input\\ or output\\:
 
 - with --backup, input\\, output\\ and the summaries made on request move unchanged into
@@ -348,6 +351,9 @@ def main(argv) -> int:
         return 2
     asked = not folders
     data_dir = Path(folders[0] if folders else input("Data folder: ").strip().strip('"'))
+    if asked and not args["remove"]:
+        answer = input("Keep the old files in a backup folder of each date? [Y/n]: ").strip().lower()
+        args["backup"] = answer not in ("n", "no")
     if not data_dir.is_dir():
         print(f"{data_dir} is not a folder.")
         return 2
