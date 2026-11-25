@@ -129,7 +129,7 @@ TikTok instant label of Gojek or Grab could be named (a courier logo on an insta
 
 **Decision.** An order whose label prints no tracking ID and a pickup code under `Kode Pengambilan` takes the
 pickup code as its tracking ID (R-LABEL-16): `BC0000` on the TikTok Shop instant label, `12AB` on the
-Shopee-style one (Q-LABEL-15). The pickup code is still kept in its own field. The courier is named before,
+Shopee-style one, as the owner chose (Q-LABEL-15). The pickup code is still kept in its own field. The courier is named before,
 from the label as printed (D-LABEL-21), so an instant label is still known by its missing tracking ID.
 
 **Why.** The owner's request: the courier's rider asks for that code, so Search and a `tracking_id` filter

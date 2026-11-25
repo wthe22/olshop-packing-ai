@@ -65,7 +65,7 @@ tools/make-portable.sh     builds Packing.exe and pdfium.dll into target/portabl
 tools/make-portable.bat    the same, for Explorer or cmd (runs the .sh through Git's bash)
 tools/dev.bat            run the app as a debug build with the Vite dev server (no release build)
 tools/guide-pictures.mjs   the user guide's pictures from the built program on testdata/ (WebView2 DevTools)
-tools/flatten-data.py      the owner's move of a v0.7 data folder to the flat date folders of v0.8, with --backup and --remove-backup (Python, as asked)
+tools/flatten-data.py      the owner's move of a v0.7 data folder to the flat date folders of v0.8, with a backup (--no-backup moves) and --remove-backup (Python, as asked)
 tools/check.sh, *.mjs      the gates of code-rules.md
 testdata/                  made-up fixtures for the tests
 categories.toml            an example picks file: the grouping `default` (a data folder without one uses the one catch-all pick)

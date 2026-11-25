@@ -3,18 +3,6 @@
 Each question gives the problem, the options, and the **Default**: what the work does until the owner decides.
 Answered questions are removed, and their answer goes into [decisions/](../decisions/README.md).
 
-## Q-LABEL-15 — The Shopee-style instant label's pickup code as its tracking ID
-
-The owner asked for the TikTok Shop instant label's code (two capital letters and four digits) as the tracking ID
-(R-LABEL-16). The Shopee-style instant label prints its own code under the same caption: two digits and two
-capital letters (`12AB`).
-
-- **A. Both codes are the tracking ID.** *(Default)*
-- **B. Only the TikTok Shop code.** The Shopee-style instant order keeps no tracking ID (its code stays in
-  `pickup_code`).
-
-Default A is what the work does now ([D-LABEL-24](../decisions/label.md)).
-
 ## Q-LABEL-13 — A product name the Shopee-style instant label breaks inside a word
 
 The Shopee *Same-day* label (Grab Express) breaks a long product name or seller SKU wherever the line is

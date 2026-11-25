@@ -9,7 +9,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 - **Handoff of 2026-11-25 (evening) — v0.8.0-alpha: one flat folder per date; the split and Sameday labels
   read.** Built, checked and pushed; `target/portable/` is rebuilt.
   - **The owner's step first**: close every copy of Packing, put the new program in place of every copy,
-    then run `python tools\flatten-data.py "<data folder>" --backup` (`--dry-run` lists first, changing
+    then run `python tools\flatten-data.py "<data folder>"` (`--dry-run` lists first, changing
     nothing). Each date's `input\`, `output\` and old summaries move unchanged into `v0.7 backup\` of the
     date, and the new files are copied up from there: the label PDFs as `{batch} Input {pdf} {short
     hash}.pdf`, the outputs unchanged, the summaries made on request under their new names. Nothing is
@@ -17,7 +17,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     version is older). Run it again at any time: it copies again from the backup whatever is missing or
     wrong, and leaves what the program wrote since. Once every date checks out, `--remove-backup` deletes
     each backup whose files are all in the date folder, and names the rest (a file no journal names stays
-    in the backup until the owner moves it). Without `--backup` the files are moved instead.
+    in the backup until the owner moves it). With `--no-backup` the files are moved instead.
   - **R-APP-12 to R-APP-15** ([D-APP-32](../../software-design/decisions/app.md)): every file of a date sits
     in its date folder; what a save writes waits in `.partial\` of the date folder until its commit.
     Inputs `2 Input 03 0a1b2c3d4e5f.pdf` (the batch whose record names them; bytes a second batch uses are
@@ -28,7 +28,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     two pages, its slip lines, Qty Total and deadline ([D-LABEL-12](../../software-design/decisions/label.md)).
   - **R-LABEL-16**: an instant label's pickup code (`Kode Pengambilan`) is its tracking ID
     ([D-LABEL-24](../../software-design/decisions/label.md)); the courier is named as before. The Shopee-style
-    instant code (`12AB`) is taken too: [Q-LABEL-15](../../software-design/questions/label.md), default A.
+    instant code (`12AB`) is taken too, the owner's answer.
   - **The owner may test now**: after the conversion, open an old date: no missing files, Open opens
     each group PDF. Save a new batch: its inputs, group PDFs and `N Summary.pdf` sit in the date folder.
     Read `2026-11-25 split.pdf`: one order. Read `2026-11-24 sameday.pdf`: its two Grab orders show
@@ -36,8 +36,6 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **The regular SPX label** is named SPX by its `REGULAR SERVICE` badge, the owner's answer to Q-LABEL-14
     ([D-LABEL-25](../../software-design/decisions/label.md)). Read `2026-11-23 spx regular.pdf`: courier SPX,
     no logo asked about.
-  - **Decide**: [Q-LABEL-15](../../software-design/questions/label.md) (the Shopee-style instant code as the
-    tracking ID, default A; its sample is `2026-11-11 grab-express.pdf`).
   - **Still the owner's step from 2026-11-25**: in the data folder's `parser.toml`, the `spx` classifier's
     `tracking_id = 'SPXID\d{11}[A-Z]'` becomes `'SPXID\d{11}[A-Z]|CM\d{11}'`, so the regular SPX label
     keeps its tracking ID; and its `logos` gain `"c622a9c866f1abf4"`, the badge (or answer **SPX** when the

@@ -123,7 +123,7 @@ and no `output/`. What an operation writes waits in `.partial/` of the date fold
 {account}.pdf` (R-APP-14, R-APP-15). A name the journal records stays as recorded. A data folder of v0.7 is
 converted by `tools/flatten-data.py`: the inputs take their new names, the outputs move up unchanged,
 `output/.partial/` becomes `.partial/` and the summaries made on request are renamed. It deletes no data:
-with `--backup` the old folders are kept in `v0.7 backup/` until `--remove-backup` finds every file of it
+the old folders are kept in `v0.7 backup/` (unless `--no-backup`) until `--remove-backup` finds every file of it
 in the date folder ([development](../../development/README.md)). The views are left: `session.toml` of
 schema 2.0 is out of date, so the app writes them again ([views](../data/views.md)). Until then the Day
 screen names each date that still has `input/` or `output/`.

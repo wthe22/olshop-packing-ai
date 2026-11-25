@@ -2,18 +2,17 @@
 in its date folder, no input and output folders. Apart from --remove-backup, a file is deleted only when
 another file of the date folder holds the same bytes, or when it is an unfinished copy of this script.
 
-    python flatten-data.py "D:\\Packing\\packing-data" --backup        convert, keeping the old files
-    python flatten-data.py "D:\\Packing\\packing-data"                 convert by moving the old files
+    python flatten-data.py "D:\\Packing\\packing-data"                 convert, keeping the old files
+    python flatten-data.py "D:\\Packing\\packing-data" --no-backup     convert by moving the old files
     python flatten-data.py "D:\\Packing\\packing-data" --remove-backup the backup, once checked
     add --dry-run to any of them to list what would happen, changing nothing
 
-Started with no data folder (a double-click), it asks for the folder and whether to keep a backup (yes
-unless answered no).
+Started with no data folder (a double-click), it asks for the folder and converts with a backup.
 
 In each date folder that still has input\\ or output\\:
 
-- with --backup, input\\, output\\ and the summaries made on request move unchanged into
-  `v0.7 backup\\`, and the new files are copied from there; without it, the files are moved;
+- input\\, output\\ and the summaries made on request move unchanged into `v0.7 backup\\`, and the new
+  files are copied from there; with --no-backup, the files are moved instead;
 - each label PDF of input\\ becomes `{batch} Input {pdf} {short hash}.pdf`, once for every batch whose
   record names its bytes (found by hashing the file);
 - each file of output\\ goes up unchanged: the journal names them;
@@ -314,7 +313,7 @@ def process(date_dir: Path, args, run: Run):
                 remove_backup(date_dir, journal, run)
             else:
                 print("  not converted with a backup; nothing to remove")
-        elif backup.is_dir() or args["backup"]:
+        elif backup.is_dir() or not args["no_backup"]:
             make_backup(date_dir, run)
             if run.dry_run and not (backup / COMPLETE).is_file():
                 print("  then each new file is copied from the backup")
@@ -343,17 +342,18 @@ def report(run: Run) -> int:
 
 
 def main(argv) -> int:
-    flags = {"--dry-run", "--backup", "--remove-backup"}
-    args = {"dry_run": "--dry-run" in argv, "backup": "--backup" in argv, "remove": "--remove-backup" in argv}
+    flags = {"--dry-run", "--no-backup", "--remove-backup"}
+    args = {"dry_run": "--dry-run" in argv, "no_backup": "--no-backup" in argv, "remove": "--remove-backup" in argv}
     folders = [arg for arg in argv if arg not in flags]
-    if args["backup"] and args["remove"]:
-        print("--backup and --remove-backup do not go together.")
+    unknown = [arg for arg in folders if arg.startswith("--")]
+    if unknown:
+        print(f"Unknown option {unknown[0]}; the options are {', '.join(sorted(flags))}.")
+        return 2
+    if args["no_backup"] and args["remove"]:
+        print("--no-backup and --remove-backup do not go together.")
         return 2
     asked = not folders
     data_dir = Path(folders[0] if folders else input("Data folder: ").strip().strip('"'))
-    if asked and not args["remove"]:
-        answer = input("Keep the old files in a backup folder of each date? [Y/n]: ").strip().lower()
-        args["backup"] = answer not in ("n", "no")
     if not data_dir.is_dir():
         print(f"{data_dir} is not a folder.")
         return 2
