@@ -42,11 +42,19 @@ fn entry(label: &Label) -> Vec<(&'static str, Value)> {
                 .map_or(Value::Null, |s| json!(iso(s))),
         ),
         ("sender", json!(label.sender.name())),
+        ("area", area(label.area)),
         ("has_slip", json!(label.slip.is_some())),
         ("lines", Value::Array(lines)),
         ("qty_total", qty_total),
         ("customer_message", json!(message)),
     ]
+}
+
+/// The area as read: `[province, city, district]`, an empty part as none.
+fn area(printed: Option<&str>) -> Value {
+    let mut parts = printed.unwrap_or_default().split(',');
+    let mut next = || parts.next().filter(|part| !part.is_empty());
+    json!([next(), next(), next()])
 }
 
 /// A line as the reader stores it: the slip's `Default` variation is no variation.

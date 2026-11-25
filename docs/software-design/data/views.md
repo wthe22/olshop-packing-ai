@@ -4,8 +4,9 @@ Three files of the owner's draft, written from the journal after every commit so
 program can read a date without the app ([D-APP-8](../decisions/app.md)). Each is written to a temporary
 file and renamed into place; `session.toml` is written last, so its `journal_seq` vouches for all three.
 A view is never read for a decision. When one is missing or `session.toml`'s `journal_seq` is not the
-journal's last `seq`, all three are written again; when its `schema` is not this version's, only by the
-migration the owner starts ([D-APP-33](../decisions/app.md)). Then all three are written again from the journal ([journal › When a date opens](journal.md#when-a-date-opens)).
+journal's last `seq`, all three are written again ([journal › When a date opens](journal.md#when-a-date-opens));
+when its `schema` is not this version's, only by the migration the owner starts
+([D-APP-33](../decisions/app.md)).
 
 Only live batches appear; a reverted batch is gone from the views and stays in the journal. IDs that
 the journal does not hold (`RuleID`, `OrderContentID`) are numbered by the fold in order of first
@@ -21,7 +22,7 @@ an amend deletes the batch's account summaries after its commit.
 
 ```
 Root {
-  schema: String                // "2.1"
+  schema: String                // "2.2": orders.csv has the receiver's area
   date: Date
   journal_seq: u32              // the journal's last seq when this file was written
   input_pdfs: Map<PdfID, LabelPdf>
@@ -105,6 +106,9 @@ Order {
   courier_clue: String          // logo, shape, text, form, tag or empty
   account: String
   shop: String                  // empty: no sender on the label
+  province: String              // the receiver's area as printed (records.md, Area); empty: not printed or not read
+  city: String
+  district: String
   content_id: OrderContentID
   skus: String                  // its Seller SKUs in its content's item order, joined by "; "
   total_quantity: u16           // the printed Qty Total

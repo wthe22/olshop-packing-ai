@@ -133,9 +133,11 @@ Shopee-style one, as the owner chose (Q-LABEL-15). The pickup code is still kept
 from the label as printed (D-LABEL-21), so an instant label is still known by its missing tracking ID.
 
 **Why.** The owner's request: the courier's rider asks for that code, so Search and a `tracking_id` filter
-must find it, and an instant order no longer shows *no tracking ID*.
+must find it, and an instant order no longer shows *no tracking ID*. An order saved before this rule reads
+the same: the fold gives its pickup code as its tracking ID, and no file is changed (R-LABEL-18).
 
-**Applies to.** [reading](../labels/reading.md#per-order-data), [courier](../labels/courier.md).
+**Applies to.** [reading](../labels/reading.md#per-order-data), [courier](../labels/courier.md),
+[journal](../data/journal.md#the-fold).
 
 ## D-LABEL-25 — The regular SPX layout's badge is an SPX logo
 
@@ -148,3 +150,17 @@ buying channel's strip. The owner chose it for now; a second layout carrying the
 courier would show as a logo and form that disagree.
 
 **Applies to.** [courier](../labels/courier.md), the bundled `parser.toml`.
+
+## D-LABEL-26 — The receiver's area is read as printed
+
+**Decision.** Each order records the receiver's province, city and district as its label prints them
+(R-LABEL-17): in the journal's order record (`area`) and as three columns of `orders.csv`. No spelling is put
+right and no `Kab.` or `Kota` is taken off; a part the layout does not print is none. Only the spaces of a
+province a line break cut are taken from the list of provinces. A batch saved before gets its area from its
+stored inputs by the migration the owner starts (D-APP-33): one `areas_filled` record per batch.
+
+**Why.** The owner's request: the area is on every label, and as printed it is the label's own truth;
+normalising would be a guess the owner did not ask for.
+
+**Applies to.** [reading](../labels/reading.md#the-receivers-area), [records](../data/records.md),
+[views](../data/views.md#orderscsv).

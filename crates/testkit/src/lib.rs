@@ -11,7 +11,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use packing_engine::accounts::{Account, OrderAccount};
 use packing_engine::copies::Copy;
 use packing_engine::ids::OrderId;
-use packing_engine::record::{CourierClue, CourierClueKind};
+use packing_engine::record::{Area, CourierClue, CourierClueKind};
 use packing_engine::slip::SlipLine;
 use packing_engine::workflows::{Workflows, load_bundled};
 
@@ -111,6 +111,7 @@ pub fn copy(order_id: &str, input: usize, page: u16, lines: Vec<SlipLine>) -> Co
         },
         ship_by_date: None,
         pickup_code: None,
+        area: Area::default(),
         lines,
         total_quantity: None,
         fingerprints: vec![0],

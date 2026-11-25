@@ -1,8 +1,9 @@
 //! The journal: a commit read back, the torn tail, damage by line, a record the fold refuses.
 
-use packing_engine::ids::BatchId;
+use packing_engine::ids::{BatchId, OrderId, TrackingId};
 use packing_engine::record::{
-    BatchReverted, PrintSent, PrintedMarked, RecordBody, Recovered, ReprintMade,
+    Area, AreasFilled, BatchReverted, OrderArea, PrintSent, PrintedMarked, RecordBody, Recovered,
+    ReprintMade,
 };
 use packing_store::{DamageReason, Journal, StoreError, open_date};
 
@@ -180,6 +181,9 @@ fn a_record_the_fold_refuses_writes_nothing() {
             group: "A".into(),
             sent: true,
         }),
+        areas_filled(1, "580000000000000001"),
+        areas_filled(1, "580000000000000009"),
+        areas_filled(2, "580000000000000001"),
         started(),
     ];
     for body in cases {
@@ -188,6 +192,54 @@ fn a_record_the_fold_refuses_writes_nothing() {
         assert!(matches!(error, StoreError::Rejected(_)), "{kind}: {error}");
     }
     assert_eq!(journal_text(&folder), before);
+}
+
+/// The area of one order of `batch`: a province only.
+fn areas_filled(batch: u8, order_id: &str) -> RecordBody {
+    RecordBody::AreasFilled(AreasFilled {
+        batch: BatchId::new(batch),
+        orders: vec![OrderArea {
+            order_id: OrderId::new(order_id),
+            area: Area {
+                province: Some("JAWA BARAT".into()),
+                ..Area::default()
+            },
+        }],
+    })
+}
+
+#[test]
+fn an_older_record_reads_its_pickup_code_as_tracking_id_and_gets_its_area_once() {
+    let (_data, folder) = date_folder("older-record");
+    let mut journal = Journal::open(&folder).unwrap();
+    let mut older = batch(1, false, Vec::new());
+    older.orders[0].tracking_id = None;
+    older.orders[0].pickup_code = Some("WX1234".into());
+    for order in &mut older.orders {
+        order.area = None;
+    }
+    journal
+        .commit(vec![RecordBody::BatchSaved(older)], APP)
+        .unwrap();
+    let order = &journal.fold().live[&BatchId::new(1)].saved.orders[0];
+    assert_eq!(order.tracking_id, Some(TrackingId::new("WX1234")));
+    assert_eq!(order.area, None);
+
+    journal
+        .commit(vec![areas_filled(1, "580000000000000001")], APP)
+        .unwrap();
+    let orders = &journal.fold().live[&BatchId::new(1)].saved.orders;
+    assert_eq!(
+        orders[0]
+            .area
+            .as_ref()
+            .and_then(|area| area.province.as_deref()),
+        Some("JAWA BARAT")
+    );
+    assert_eq!(orders[1].area, None, "an order not named keeps none");
+    let again = journal.commit(vec![areas_filled(1, "580000000000000001")], APP);
+    assert!(matches!(again, Err(StoreError::Rejected(_))), "once only");
+    assert_eq!(Journal::open(&folder).unwrap().fold(), journal.fold());
 }
 
 #[test]

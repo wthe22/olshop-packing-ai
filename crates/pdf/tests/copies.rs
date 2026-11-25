@@ -1,6 +1,6 @@
 //! The v0.2 reading of the committed fixture: `labels-slip.pdf` read into copies gives
-//! `expected-labels.json` — one copy per order, its pages, tracking ID, deadline date, lines and
-//! printed total — each courier with the clue the label offers, and its sender's name; the repeat
+//! `expected-labels.json` — one copy per order, its pages, tracking ID, deadline date, receiver's
+//! area, lines and printed total — each courier with the clue the label offers, and its sender's name; the repeat
 //! inputs ask about the shop no account lists, as their answer has it; `labels-plain.pdf` stops.
 
 mod common;
@@ -61,6 +61,9 @@ fn the_fixture_reads_into_one_copy_per_order_as_its_answer() {
             .collect();
         assert_eq!(Value::Array(lines), want["lines"], "{id}: lines");
         assert_eq!(copy.total_quantity, want["qty_total"].as_i64(), "{id}");
+        let area = &copy.area;
+        let area = serde_json::json!([area.province, area.city, area.district]);
+        assert_eq!(area, want["area"], "{id}: area");
 
         // The fixture prints no image: J&T is named by its printed site, IDX by its lettered
         // form, and SiCepat's bare-number form names nothing.

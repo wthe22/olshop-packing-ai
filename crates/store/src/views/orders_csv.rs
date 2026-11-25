@@ -6,7 +6,7 @@ use packing_engine::record::CourierClueKind;
 use super::ContentIds;
 use crate::fold::Fold;
 
-const HEADER: [&str; 16] = [
+const HEADER: [&str; 19] = [
     "pdf_num",
     "page_start",
     "page_end",
@@ -16,6 +16,9 @@ const HEADER: [&str; 16] = [
     "courier_clue",
     "account",
     "shop",
+    "province",
+    "city",
+    "district",
     "content_id",
     "skus",
     "total_quantity",
@@ -30,6 +33,7 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
     out.push('\n');
     for (batch, live) in &fold.live {
         for order in &live.saved.orders {
+            let area = order.area.clone().unwrap_or_default();
             let clue = match order.courier_clue.kind {
                 CourierClueKind::None => "",
                 kind => kind.as_str(),
@@ -57,6 +61,9 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
                 clue.to_string(),
                 order.account.clone(),
                 order.shop.clone().unwrap_or_default(),
+                area.province.unwrap_or_default(),
+                area.city.unwrap_or_default(),
+                area.district.unwrap_or_default(),
                 ids.id(*batch, order.content).to_string(),
                 skus.join("; "),
                 order

@@ -6,10 +6,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use jiff::civil::Date;
-use packing_engine::ids::{BatchId, PdfId};
+use packing_engine::ids::{BatchId, PdfId, TrackingId};
 use packing_engine::record::{
-    BatchSaved, Datetime, JOURNAL_SCHEMA, OutputFile, OutputRestored, Record, RecordBody,
-    ReprintMade, Sha256,
+    AreasFilled, BatchSaved, Datetime, JOURNAL_SCHEMA, OutputFile, OutputRestored, Record,
+    RecordBody, ReprintMade, Sha256,
 };
 
 /// Where a journal is damaged: the line, counted from 1, and why.
@@ -239,6 +239,7 @@ impl Fold {
                 self.last_writes =
                     LastWrites::Files(vec![(reprint.file.clone(), reprint.sha256.clone())]);
             }
+            RecordBody::AreasFilled(filled) => self.fill_areas(filled)?,
             RecordBody::Recovered(_) => {}
         }
         Ok(())
@@ -283,7 +284,7 @@ impl Fold {
         self.live.insert(
             saved.batch,
             LiveBatch {
-                saved: saved.clone(),
+                saved: with_pickup_tracking(saved),
                 create_time,
                 modify_time: time.clone(),
                 sent: BTreeMap::new(),
@@ -298,6 +299,30 @@ impl Fold {
                 .map(|output| (output.file.clone(), output.sha256.clone()))
                 .collect(),
         );
+        Ok(())
+    }
+
+    /// Each order named gets its area: an order of the batch that has none yet.
+    fn fill_areas(&mut self, filled: &AreasFilled) -> Result<(), DamageReason> {
+        let batch = filled.batch;
+        let live = self.live_batch(batch)?;
+        for named in &filled.orders {
+            let order = live
+                .saved
+                .orders
+                .iter_mut()
+                .find(|order| order.order_id == named.order_id)
+                .ok_or_else(|| {
+                    rule(format!(
+                        "{} is not an order of batch {batch}",
+                        named.order_id
+                    ))
+                })?;
+            if order.area.is_some() {
+                return Err(rule(format!("{} has its area already", named.order_id)));
+            }
+            order.area = Some(named.area.clone());
+        }
         Ok(())
     }
 
@@ -320,6 +345,18 @@ impl Fold {
         }
         Ok(live)
     }
+}
+
+/// The record as the fold reads it: an order whose label printed no tracking ID and a pickup code
+/// has the pickup code as its tracking ID, whichever version of the app saved it.
+fn with_pickup_tracking(saved: &BatchSaved) -> BatchSaved {
+    let mut saved = saved.clone();
+    for order in &mut saved.orders {
+        if order.tracking_id.is_none() {
+            order.tracking_id = order.pickup_code.as_deref().map(TrackingId::new);
+        }
+    }
+    saved
 }
 
 fn rule(text: impl Into<String>) -> DamageReason {

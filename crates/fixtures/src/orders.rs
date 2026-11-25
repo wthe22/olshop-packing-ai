@@ -13,6 +13,13 @@ pub enum Style {
 pub const SHOP: &str = "Toko Contoh";
 pub const OTHER_SHOP: &str = "Toko Lain";
 
+/// The receivers' areas the labels print, made up; the last prints no district.
+pub const AREAS: [&str; 3] = [
+    "JAWA BARAT,KAB. CONTOH,CONTOH TENGAH",
+    "DKI JAKARTA,KOTA CONTOH BARAT,KEBON CONTOH",
+    "JAWA TIMUR,KOTA CONTOH,",
+];
+
 /// Where a label prints its sender beside the `Pengirim` caption: three of the places the downloads
 /// use, or no caption at all.
 #[derive(Clone, Copy)]
@@ -69,6 +76,8 @@ pub struct Label {
     /// Every character followed by a space, as some labels print their text.
     pub spaced: bool,
     pub sender: Sender,
+    /// The line under the `Penerima :` caption, `province,city,district`; none: no caption.
+    pub area: Option<&'static str>,
     pub slip: Option<Slip>,
     pub style: Style,
 }
@@ -303,6 +312,7 @@ pub fn slip_labels() -> Vec<Label> {
                     _ if number % 5 == 1 => Sender::Joined(SHOP),
                     _ => Sender::Right(SHOP),
                 },
+                area: Some(AREAS[number as usize % AREAS.len()]),
                 slip: Some(Slip {
                     rows,
                     qty_total,
@@ -321,6 +331,7 @@ pub fn slip_labels() -> Vec<Label> {
         ship_by: Some("07/10/2026 12:45".into()),
         spaced: false,
         sender: Sender::Right(SHOP),
+        area: Some(AREAS[0]),
         slip: Some(Slip {
             rows: vec![
                 Row {
@@ -356,6 +367,7 @@ pub fn slip_labels() -> Vec<Label> {
         ship_by: None,
         spaced: false,
         sender: Sender::Joined(SHOP),
+        area: None,
         slip: Some(Slip {
             rows: vec![row(
                 &Product {
@@ -384,6 +396,7 @@ pub fn plain_labels() -> Vec<Label> {
         ship_by: ship_by.map(str::to_string),
         spaced: false,
         sender: Sender::Right(SHOP),
+        area: None,
         slip: None,
         style: Style::Glyphs,
     };
@@ -418,6 +431,7 @@ pub fn repeat_inputs() -> [Vec<Label>; 2] {
         ship_by: Some("08/10/2026 23:59".into()),
         spaced: false,
         sender: Sender::Right(SHOP),
+        area: Some(AREAS[1]),
         slip: Some(Slip {
             rows: vec![row(product, quantity, "Default")],
             qty_total: quantity,

@@ -107,6 +107,7 @@ fn copy_json(copy: &Copy, workflows: &Workflows) -> Value {
             .map(|code| courier_name(&workflows.couriers, code.as_str())),
         "ship_by_date": copy.ship_by_date.map(|date| date.to_string()),
         "sender": copy.sender.as_ref().map(|sender| sender.name.as_str()),
+        "area": [copy.area.province, copy.area.city, copy.area.district],
         "lines": lines,
         "qty_total": copy.total_quantity,
     })
@@ -144,7 +145,7 @@ mod tests {
         for copy in copies {
             let id = copy["order_id"].as_str().expect("order_id");
             let want = &answer[id];
-            for field in ["lines", "qty_total", "tracking_id"] {
+            for field in ["lines", "qty_total", "tracking_id", "area"] {
                 assert_eq!(copy[field], want[field], "{id}: {field}");
             }
             assert_eq!(

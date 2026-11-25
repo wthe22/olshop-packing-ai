@@ -42,6 +42,7 @@ pub enum RecordBody {
     PrintSent(PrintSent),
     OutputRestored(OutputRestored),
     ReprintMade(ReprintMade),
+    AreasFilled(AreasFilled),
     Recovered(Recovered),
 }
 
@@ -56,6 +57,7 @@ impl RecordBody {
             RecordBody::PrintSent(_) => "print_sent",
             RecordBody::OutputRestored(_) => "output_restored",
             RecordBody::ReprintMade(_) => "reprint_made",
+            RecordBody::AreasFilled(_) => "areas_filled",
             RecordBody::Recovered(_) => "recovered",
         }
     }
@@ -152,12 +154,22 @@ pub struct SavedOrder {
     pub ship_by_date: Option<Date>,
     /// The instant-service label's pickup code.
     pub pickup_code: Option<String>,
+    /// None: saved before the area was read, until an `areas_filled` record names the order.
+    pub area: Option<Area>,
     /// The input that holds the copy written.
     pub pdf: PdfId,
     pub page_start: u16,
     pub page_end: u16,
     /// The label group's code.
     pub group: String,
+}
+
+/// The receiver's area as the label prints it; a part the layout does not print is none.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Area {
+    pub province: Option<String>,
+    pub city: Option<String>,
+    pub district: Option<String>,
 }
 
 /// The clue that named an order's courier.
@@ -301,6 +313,21 @@ pub struct ReprintedOrder {
     pub sha256: Sha256,
     pub page_start: u16,
     pub page_end: u16,
+}
+
+/// The area of every order of a batch saved before the area was read, read from its stored inputs.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AreasFilled {
+    pub batch: BatchId,
+    /// In the batch's printing order.
+    pub orders: Vec<OrderArea>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OrderArea {
+    pub order_id: OrderId,
+    #[serde(flatten)]
+    pub area: Area,
 }
 
 /// The cut-off tail of an append that did not finish.

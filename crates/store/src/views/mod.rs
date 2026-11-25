@@ -25,7 +25,7 @@ pub const ORDER_CONTENTS_TOML: &str = "order-contents.toml";
 
 /// The schema version of `session.toml`. A file of another version is written again only by the
 /// migration the owner starts, never when a date opens.
-pub const SESSION_SCHEMA: &str = "2.1";
+pub const SESSION_SCHEMA: &str = "2.2";
 
 /// Write the three views of the fold, `session.toml` last.
 pub fn write_views(date_dir: &Path, fold: &Fold) -> Result<(), StoreError> {

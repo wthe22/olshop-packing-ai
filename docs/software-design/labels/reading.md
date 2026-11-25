@@ -10,6 +10,7 @@
 | `ship_by_date` | The date of the label's `In transit by: dd/mm/yyyy hh:mm`, or of the Shopee-style label's `Batas Kirim: dd-mm-yyyy` ([D-APP-21](../decisions/app-features.md)) |
 | `pickup_code` | The instant-service label's code: two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together); on the Shopee-style instant label two digits and two capital letters after the caption in its own text run (kept in the record; its label prints it) |
 | `account`, `shop` | The listed shop name found in the sender, and the account that lists it ([accounts](../app/accounts.md#the-account-of-an-order)) |
+| `area` | The receiver's province, city and district as printed ([below](#the-receivers-area)) |
 | item lines | The slip table: product name, variation, Seller SKU, quantity |
 | `total_quantity` | The slip's printed `Qty Total`; none on the Shopee-style slip (a filter counts the lines instead: [conditions](../rules-file/conditions.md)) |
 
@@ -114,3 +115,27 @@ Every style prints it with the caption `Pengirim` (`Pengirim :` or `Pengirim:`),
 - The Shopee-style label can print a long name cut short (`Toko Conto`): it is asked about once, and from
   then on the longest listed name found wins.
 - **No caption** on the copy's first page: the copy has **no sender**.
+
+## The receiver's area
+
+The province, city and district of the receiver, read from the copy's first page **as printed**: no
+spelling put right, no `Kab.` or `Kota` taken off. A part the layout does not print is none, never guessed.
+Each layout prints them in its own place, found by its captions:
+
+| Layout | Where | Read as |
+|---|---|---|
+| TikTok standard (J&T Express, SiCepat) and boxed (IDX, J&T Cargo, Anteraja) | The first line under the `Penerima` caption, in its column (within 2 pt of its x), up to 25 pt lower, that holds two commas | `province,city,district`; the boxed layout prints the name first and goes on with the street |
+| Instant (`Alamat :` caption: Gojek, Grab) | The address under `Alamat :`, its lines 11.5 pt apart | The last three parts: `…, district, city, province` |
+| Shopee-style (a `Berat:` caption: SPX, Grab Express) | The province ends the address under `Penerima:`, left of the `Pengirim:` column, its lines 7.5 to 8.2 pt apart; the city and the district are the first two texts, left to right, of the line right above `Berat:` (or above its `CASHLESS` note) | Province: the address's last part; city, district: as the line prints them |
+
+- **A wrapped address** breaks a line inside a word too, and the break drops the space between words. A
+  line that starts with a capital letter starts a new word; any other is joined without a space
+  (`Kalide` / `res` is `Kalideres`).
+- **A province** takes the spaces of its name in the list of provinces, its letters as printed, so a break
+  inside or between its words reads right (`JA` / `WA TENGAH`, `DKI` / `JAKARTA`). A name not in the list
+  stays as read.
+- Shopee-style: a word-by-word line (justified) is one line; a tag (`HOME`, `OFFICE`) right of the caption's
+  column and a street's hint above the city line are not read; the tracking ID printed upright at the page's
+  edge is left of the city line's start.
+- On the owner's samples (744 orders of the four layouts) every order reads a province, a city and a
+  district.

@@ -59,6 +59,22 @@ fn a_started_record_and_a_recovered_one_read_back() {
 }
 
 #[test]
+fn an_areas_filled_record_names_each_order_with_its_area_flat() {
+    let json = r#"{"seq":5,"time":"2026-10-07T09:00:00+07:00","app":"0.8.2","type":"areas_filled","batch":1,"orders":[{"order_id":"580000000000000001","province":"JAWA BARAT","city":"KAB. CONTOH","district":null}]}"#;
+    let RecordBody::AreasFilled(filled) = round_trip(json).body else {
+        panic!("an areas_filled record");
+    };
+    assert_eq!(
+        filled.orders[0].area,
+        Area {
+            province: Some("JAWA BARAT".into()),
+            city: Some("KAB. CONTOH".into()),
+            district: None,
+        }
+    );
+}
+
+#[test]
 fn a_sha256_is_64_lower_case_hex_characters() {
     let good = "a".repeat(64);
     assert!(Sha256::try_from(good).is_ok());

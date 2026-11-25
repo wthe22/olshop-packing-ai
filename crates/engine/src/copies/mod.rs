@@ -12,9 +12,11 @@ use jiff::civil::Date;
 
 use crate::accounts::OrderAccount;
 use crate::ids::{CourierCode, OrderId, TrackingId};
-use crate::label::{Form, Sender, find_order_id, find_sender, find_ship_by, find_tracking_id};
+use crate::label::{
+    Form, Sender, find_area, find_order_id, find_sender, find_ship_by, find_tracking_id,
+};
 use crate::orders::{NoSlip, NoSlipFile, PageItem, UnseenLogo};
-use crate::record::CourierClue;
+use crate::record::{Area, CourierClue};
 use crate::rules::{FilterFields, FilterLine};
 use crate::slip::{SlipLine, read_slip};
 use crate::workflows::Workflows;
@@ -35,6 +37,8 @@ pub struct Copy {
     pub courier_clue: CourierClue,
     pub ship_by_date: Option<Date>,
     pub pickup_code: Option<String>,
+    /// The receiver's area its first page prints.
+    pub area: Area,
     /// The item lines of every slip table of its pages, in page order.
     pub lines: Vec<SlipLine>,
     /// The `Qty Total` of its last slip that prints one.
@@ -176,6 +180,7 @@ where
                 courier_clue,
                 ship_by_date: find_ship_by(&page.text).map(|time| time.date()),
                 pickup_code,
+                area: find_area(&page),
                 lines: slip.as_ref().map(|s| s.lines.clone()).unwrap_or_default(),
                 total_quantity: slip.as_ref().and_then(|s| s.qty_total),
                 fingerprints: vec![page_fingerprint(&page)],

@@ -57,6 +57,7 @@ pub fn batch_saved(facts: BatchFacts<'_>) -> BatchSaved {
                 .map(|n| u16::try_from(n).unwrap_or(u16::MAX)),
             ship_by_date: copy.ship_by_date,
             pickup_code: copy.pickup_code.clone(),
+            area: Some(copy.area.clone()),
             pdf: facts.inputs[copy.input].pdf,
             page_start: copy.page_start,
             page_end: copy.page_end,

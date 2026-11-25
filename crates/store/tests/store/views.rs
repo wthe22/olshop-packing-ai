@@ -15,6 +15,7 @@ fn opened_batch(tag: &str) -> (testkit::TempDir, packing_store::DateFolder) {
     let mut saved = batch(1, false, files);
     saved.orders[2].account = "Toko Beta".into();
     saved.orders[2].shop = None;
+    saved.orders[2].area = None;
     let printed = RecordBody::PrintedMarked(PrintedMarked {
         batch: BatchId::new(1),
         group: "A".into(),
@@ -80,13 +81,13 @@ fn a_missing_or_stale_view_is_written_again_and_a_current_one_is_left() {
     );
     assert!(view(&folder, SESSION_TOML).contains("journal_seq = 4"));
 
-    let older = view(&folder, SESSION_TOML).replace("schema = \"2.1\"", "schema = \"2.0\"");
+    let older = view(&folder, SESSION_TOML).replace("schema = \"2.2\"", "schema = \"2.1\"");
     fs::write(folder.dir().join(SESSION_TOML), older).unwrap();
     assert!(
         !open_date(&folder).unwrap().views_written,
         "a session.toml of another version waits for the owner's migration"
     );
-    assert!(view(&folder, SESSION_TOML).starts_with("schema = \"2.0\""));
+    assert!(view(&folder, SESSION_TOML).starts_with("schema = \"2.1\""));
 
     fs::write(folder.dir().join(SESSION_TOML), "not toml [").unwrap();
     assert!(

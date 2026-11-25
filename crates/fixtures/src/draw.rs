@@ -14,6 +14,9 @@ pub const FONT_SIZE: f64 = 9.0;
 
 const LEFT: f64 = 5.8;
 const SENDER_TOP: f64 = 145.0;
+const RECEIVER_TOP: f64 = 175.0;
+/// The area line sits this much lower than the receiver's caption.
+const AREA_STEP: f64 = 9.0;
 const SLIP_HEADER_Y: f64 = 290.0;
 /// A wrapped line sits this much lower than the line above.
 const LINE_STEP: f64 = 8.2;
@@ -113,6 +116,10 @@ fn label_part(label: &Label) -> Vec<Text> {
         texts.push(put(130.0, "www.jet.co.id".into()));
     }
     texts.extend(sender(label.sender));
+    if let Some(area) = label.area {
+        texts.push(regular(LEFT, RECEIVER_TOP, "Penerima :"));
+        texts.push(regular(LEFT, RECEIVER_TOP + AREA_STEP, area));
+    }
     texts
 }
 

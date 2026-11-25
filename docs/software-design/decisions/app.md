@@ -128,6 +128,14 @@ in the date folder ([development](../../development/README.md)). The views are l
 schema 2.0 is out of date, and the app writes them again once the owner starts that migration (D-APP-33).
 Until then the Day screen names each date that still has `input/` or `output/`.
 
+**Why.** The owner's choice: one Explorer window shows a date's whole work, a batch's files side by side by
+its number. `.partial/` keeps a save whole as before. The journal is the truth and is never rewritten, so a
+name it records keeps its case.
+
+**Applies to.** [data](../data/README.md), [journal](../data/journal.md#when-a-date-opens),
+[04 Save](../workflow/04-save.md), [05 After the save](../workflow/05-after-save.md),
+[accounts › Data of older versions](../app/accounts.md#data-of-older-versions).
+
 ## D-APP-33 — Migrations ask first; read-only writes nothing
 
 **Decision.** The app never migrates data on its own. A migration is a new version of a stored file (a
@@ -144,11 +152,3 @@ owner must be able to look at data without changing it.
 
 **Applies to.** [data](../data/README.md), [journal](../data/journal.md#when-a-date-opens),
 [views](../data/views.md).
-
-**Why.** The owner's choice: one Explorer window shows a date's whole work, a batch's files side by side by
-its number. `.partial/` keeps a save whole as before. The journal is the truth and is never rewritten, so a
-name it records keeps its case.
-
-**Applies to.** [data](../data/README.md), [journal](../data/journal.md#when-a-date-opens),
-[04 Save](../workflow/04-save.md), [05 After the save](../workflow/05-after-save.md),
-[accounts › Data of older versions](../app/accounts.md#data-of-older-versions).
