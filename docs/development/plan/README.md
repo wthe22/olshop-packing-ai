@@ -4,7 +4,16 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-23)
+## Status (2026-11-25)
+
+- **Handoff of 2026-11-25 — feedback written down, nothing designed or built.** The owner gathers more feedback
+  first; the items are open in the reviews and the next dev takes them up when the owner says so:
+  [R-LABEL-16](../../reviews/label.md) (the tracking ID of a TikTok Shop Sameday order),
+  [R-UI-53](../../reviews/ui.md) (the source PDF's short hash in an expanded search result) and
+  [R-APP-12 to R-APP-15](../../reviews/app.md) (one folder per date; the input, batch summary and day summary
+  names). The two sample labels of R-LABEL-16 and the file names are in `samples/`:
+  `2026-11-24 sameday.pdf` and `2026-11-23 spx regular.pdf` (the SPX one is a regular courier label).
+  - **Where to answer**: more findings into the matching `docs/reviews/<scope>.md` as the next number.
 
 - **Handoff of 2026-11-23 (later) — a revert saves the label PDFs, not the outputs.** The owner's request,
   built and pushed: **Save** on a revert copies the batch's input files of `{date}\input\` (its label PDFs)
