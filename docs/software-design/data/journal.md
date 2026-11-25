@@ -74,8 +74,8 @@ folder's lock: [data › One writer](README.md#one-writer)):
 4. **Outputs**: every output of a live batch must exist in the date folder with the size the newest record that
    wrote it names (`batch_saved` or `output_restored`). A missing one is shown on its batch card with
    **Restore** ([reprint](../app/reprint.md#restore)).
-5. **Views**: rebuilt when one is missing or `session.toml`'s `journal_seq` differs from the journal's
-   last `seq` ([views](views.md)).
+5. **Views**: rebuilt when one is missing, or `session.toml`'s `schema` is not this version's or its
+   `journal_seq` differs from the journal's last `seq` ([views](views.md)).
 
 ## Size
 

@@ -136,7 +136,7 @@ fn each_date_opens_again_as_it_was_saved() {
         let first = open_date(&folder).unwrap();
         assert!(first.journal.damage().is_none() && first.outputs.is_empty());
         let session = fs::read_to_string(folder.dir().join(SESSION_TOML)).unwrap();
-        assert!(session.starts_with(&format!("schema = \"2.0\"\ndate = \"2026-10-0{day}\"\n")));
+        assert!(session.starts_with(&format!("schema = \"2.1\"\ndate = \"2026-10-0{day}\"\n")));
 
         let again = open_date(&folder).unwrap();
         assert_eq!(again.journal.fold(), first.journal.fold(), "day {day}");

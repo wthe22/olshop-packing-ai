@@ -80,6 +80,14 @@ fn a_missing_or_stale_view_is_written_again_and_a_current_one_is_left() {
     );
     assert!(view(&folder, SESSION_TOML).contains("journal_seq = 4"));
 
+    let older = view(&folder, SESSION_TOML).replace("schema = \"2.1\"", "schema = \"2.0\"");
+    fs::write(folder.dir().join(SESSION_TOML), older).unwrap();
+    assert!(
+        open_date(&folder).unwrap().views_written,
+        "a session.toml of another version"
+    );
+    assert!(view(&folder, SESSION_TOML).starts_with("schema = \"2.1\""));
+
     fs::write(folder.dir().join(SESSION_TOML), "not toml [").unwrap();
     assert!(
         open_date(&folder).unwrap().views_written,

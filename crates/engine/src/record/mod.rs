@@ -15,8 +15,7 @@ use crate::ids::{BatchId, CourierCode, OrderId, PdfId, TrackingId};
 pub use self::accounts::{AccountCount, account_counts, of_account, order_units};
 pub use self::time::Datetime;
 
-/// The schema version of a date's journal (its `started` record) and of its `session.toml`: one
-/// date for every account.
+/// The schema version of a date's journal (its `started` record): one date for every account.
 pub const JOURNAL_SCHEMA: &str = "2.0";
 
 /// The schema version of the TOML files beside the program and of `order-contents.toml`.

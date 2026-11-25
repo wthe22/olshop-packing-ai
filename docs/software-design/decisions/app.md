@@ -121,9 +121,12 @@ and no `output/`. What an operation writes waits in `.partial/` of the date fold
 {pdf} {short hash}.pdf` (D-APP-10), `{batch}-{code} {name} x{count}.pdf`, `{batch} Summary.pdf`,
 `{batch} Summary - {account}.pdf`, `Reprint {n} x{count}.pdf`, `Day Summary.pdf` and `Day Summary -
 {account}.pdf` (R-APP-14, R-APP-15). A name the journal records stays as recorded. A data folder of v0.7 is
-converted once by `tools/flatten-data.py`: the inputs take their new names, the outputs move up unchanged,
-`output/.partial/` becomes `.partial/`, the summaries made on request are renamed and the views deleted (the
-app writes them again). Until then the Day screen names each date that still has `input/` or `output/`.
+converted by `tools/flatten-data.py`: the inputs take their new names, the outputs move up unchanged,
+`output/.partial/` becomes `.partial/` and the summaries made on request are renamed. It deletes no data:
+with `--backup` the old folders are kept in `v0.7 backup/` until `--remove-backup` finds every file of it
+in the date folder ([development](../../development/README.md)). The views are left: `session.toml` of
+schema 2.0 is out of date, so the app writes them again ([views](../data/views.md)). Until then the Day
+screen names each date that still has `input/` or `output/`.
 
 **Why.** The owner's choice: one Explorer window shows a date's whole work, a batch's files side by side by
 its number. `.partial/` keeps a save whole as before. The journal is the truth and is never rewritten, so a

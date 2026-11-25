@@ -8,14 +8,16 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 - **Handoff of 2026-11-25 (evening) — v0.8.0-alpha: one flat folder per date; the split and Sameday labels
   read.** Built, checked and pushed; `target/portable/` is rebuilt.
-  - **The owner's step first**: close every copy of Packing, put v0.8.0-alpha in place of every copy, then
-    run once `python tools\flatten-data.py "<data folder>"` (`--dry-run` lists first, changing nothing). In
-    each date folder it renames the label PDFs of `input\` to `{batch} Input {pdf} {short hash}.pdf` and
-    moves them up, moves the files of `output\` up unchanged, renames `day summary.pdf` and the account
-    summaries to the new names, and deletes the three views (the program writes them again). A file in use
-    is named at the end with exit code 1; a second run continues. A file no journal names stays in `input\`.
-    It also takes the `{sha256}.pdf` names of v0.6, so `rename-inputs.py` is gone. Until it has run, the
-    Day screen names the dates that still have `input\` or `output\`, and their files count as missing.
+  - **The owner's step first**: close every copy of Packing, put the new program in place of every copy,
+    then run `python tools\flatten-data.py "<data folder>" --backup` (`--dry-run` lists first, changing
+    nothing). Each date's `input\`, `output\` and old summaries move unchanged into `v0.7 backup\` of the
+    date, and the new files are copied up from there: the label PDFs as `{batch} Input {pdf} {short
+    hash}.pdf`, the outputs unchanged, the summaries made on request under their new names. Nothing is
+    deleted; the journal and the views are not touched (the program writes the views again, as their
+    version is older). Run it again at any time: it copies again from the backup whatever is missing or
+    wrong, and leaves what the program wrote since. Once every date checks out, `--remove-backup` deletes
+    each backup whose files are all in the date folder, and names the rest (a file no journal names stays
+    in the backup until the owner moves it). Without `--backup` the files are moved instead.
   - **R-APP-12 to R-APP-15** ([D-APP-32](../../software-design/decisions/app.md)): every file of a date sits
     in its date folder; what a save writes waits in `.partial\` of the date folder until its commit.
     Inputs `2 Input 03 0a1b2c3d4e5f.pdf` (the batch whose record names them; bytes a second batch uses are
@@ -70,7 +72,6 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     `2026-11-23_03_61459e8a8203.pdf`: the date, its number on the date in two digits (so every list sorts
     it), the first 12 characters of its SHA-256 ([D-APP-10](../../software-design/decisions/app.md)). The
     journal is unchanged; the name follows from it.
-  - The one-time rename of the v0.6 input names is now part of `flatten-data.py` (the v0.8 handoff).
   - **R-LABEL-15**: the short hash in the summary PDF and the day summary is set in Consolas.
   - **R-UI-48**: on a date that is not today, **+ New batch** is muted and asks *Add a batch to `<date>`?*
     ([D-UI-15](../../software-design/decisions/ui.md)). **R-UI-49**: New batch, Repeated orders and Plan
