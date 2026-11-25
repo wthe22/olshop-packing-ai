@@ -30,7 +30,8 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    `JX` + 10 digits → J&T Express; `00` + 10 digits → SiCepat; `57` + 10 digits → J&T Cargo; `TKP` + 10
    digits → IDX; `SPXID` + 11 digits + a capital letter → SPX (the letter is part of the ID and differs per
    order; one layout prints it on the line under `Resi:`, so only the ID printed whole along the edges
-   names it); `TSA-` + 11 digits → Anteraja (one sample page). The form must match a token, or a match in the
+   names it); `CM` + 11 digits → SPX too (the regular layout, [Q-LABEL-14](../questions/label.md) for its
+   courier); `TSA-` + 11 digits → Anteraja (one sample page). The form must match a token, or a match in the
    whitespace-collapsed text, **fully**; it need not be repeated (the boxed layouts print it once). A form
    the platform adds is a line of `parser.toml`, not a program change.
 4. **Named only when the two agree.** The form gives the *candidate* couriers; the courier is named when the

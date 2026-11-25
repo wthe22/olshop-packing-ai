@@ -141,7 +141,13 @@ creator handle, …) are not needed for packing.
   holds the seller SKU and its `Variasi` column the variation — the same two values the Tokopedia
   slip prints as `SKU` and `Seller SKU`. Its barcodes and QR are **images** (693×231, 594×100,
   300×300), not drawn paths, and it has no page-wide frame image.
-- **The `No. Resi` layout of the Shopee-style label** (`2026-11-02 spx std.pdf`, 1 page) prints the
+- The **regular SPX layout** (`2026-11-23 spx regular.pdf`, 1 page, one order) prints the tracking ID
+  `CM` + 11 digits (for example `CM00000000001`) along the top and side edges and after `No. Resi:`,
+  with the service word `Reguler` and a `REGULAR SERVICE` badge image. Its order is keyed by
+  `No. Pesanan` (`260000ABCD1234`, 14 characters), its `Batas Kirim:` is a date with no time, and its
+  slip shows the item and `Pesan: (<No. Pesanan>)`. The file holds no image of the SPX wordmark: its
+  images are the barcodes, the badge and the `Shopee` wordmark (800×253), so no SPX logo names the courier.
+- The **`No. Resi` layout of the Shopee-style label** (`2026-11-02 spx std.pdf`, 1 page) prints the
   whole ID after `No. Resi:` and the service tag `STD`; its SPX logo is another asset
   (`7f0d33c143e2ab14`), and in its text an empty box's `-` comes between `Batas Kirim:` and the date.
   Its product name ends in a bare `|`, the shop's own name printed whole on the slip; the owner removes

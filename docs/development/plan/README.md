@@ -6,6 +6,18 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-25)
 
+- **Handoff of 2026-11-25 (later) — the regular SPX label reads its tracking ID.** The owner's request, built:
+  the bundled SPX tracking form also takes `CM` + 11 digits (the regular layout, `samples/2026-11-23 spx regular.pdf`:
+  tracking `CM00000000001`, order `260000ABCD1234`). The courier stays unnamed: the layout has no SPX logo
+  image, and the two-clue rule needs one ([Q-LABEL-14](../../software-design/questions/label.md), default B).
+  - **The owner's step**: in the data folder's `parser.toml`, the `[[courier_classifier]]` of `spx` changes
+    `tracking_id = 'SPXID\d{11}[A-Z]'` to `tracking_id = 'SPXID\d{11}[A-Z]|CM\d{11}'`, saves and starts the program
+    again. Without it the regular label keeps no tracking ID.
+  - **Decide Q-LABEL-14** (A, B or C) in its question; it is the only open choice.
+  - **Not done**: `crates/engine/couriers.toml`, the old courier table that [D-APP-6](../../software-design/decisions/app.md)
+    replaced with `parser.toml`, still holds the old SPX form. The live reader takes its forms from `parser.toml`;
+    the old file is for the next dev to remove or confirm unused.
+
 - **Handoff of 2026-11-25 — feedback written down, nothing designed or built.** The owner gathers more feedback
   first; the items are open in the reviews and the next dev takes them up when the owner says so:
   [R-LABEL-16](../../reviews/label.md) (the tracking ID of a TikTok Shop Sameday order),

@@ -324,6 +324,22 @@ fn accounts_are_read_and_checked_like_the_screens_check_them() {
 }
 
 #[test]
+fn the_spx_forms_read_both_layouts_and_nothing_else() {
+    let workflows = load_bundled();
+    let spx = workflows
+        .classifiers
+        .iter()
+        .find(|c| c.courier.as_str() == "spx")
+        .expect("an SPX classifier");
+    let form = spx.tracking_id.as_ref().unwrap();
+    assert!(form.matches("SPXID06520916149B"));
+    assert!(form.matches("CM00000000001"));
+    assert!(!form.matches("CM9122600274"));
+    assert!(!form.matches("CM00000000001X"));
+    assert!(!form.matches("SPXID06520916149"));
+}
+
+#[test]
 fn the_design_examples_are_filters() {
     let examples = [
         "name contains \"sepatu\"",
