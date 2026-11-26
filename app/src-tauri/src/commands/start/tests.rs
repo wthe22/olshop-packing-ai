@@ -75,3 +75,27 @@ fn the_theme_and_the_data_folder_are_kept_apart_in_the_settings() {
     let written = fs::read_to_string(program.path().join(APP_FILE)).unwrap();
     assert!(written.contains("theme = \"light\""), "{written}");
 }
+
+#[test]
+fn a_newer_minor_of_the_settings_reads_and_keeps_its_keys() {
+    let program = TempDir::new("app-newer");
+    let file = program.path().join(APP_FILE);
+    fs::write(&file, "schema = \"1.3\"\ntheme = \"dark\"\nzoom = 125\n").unwrap();
+    assert_eq!(settings::theme(program.path()).unwrap(), Theme::Dark);
+    settings::set_theme(program.path(), Theme::Light).unwrap();
+    let written = fs::read_to_string(&file).unwrap();
+    assert_eq!(written, "schema = \"1.3\"\ntheme = \"light\"\nzoom = 125\n");
+
+    fs::write(&file, "schema = \"2.0\"\n").unwrap();
+    let error = settings::theme(program.path()).unwrap_err();
+    assert!(
+        error.contains("schema 2.0 is of a newer format: this copy reads 1.x"),
+        "{error}"
+    );
+    assert!(settings::set_theme(program.path(), Theme::Dark).is_err());
+    assert_eq!(
+        fs::read_to_string(&file).unwrap(),
+        "schema = \"2.0\"\n",
+        "nothing written"
+    );
+}

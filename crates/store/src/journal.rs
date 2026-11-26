@@ -10,7 +10,7 @@ use packing_engine::record::{Datetime, JOURNAL_SCHEMA, Record, RecordBody, Recov
 use crate::StoreError;
 use crate::date::DateFolder;
 use crate::fold::{Damage, DamageReason, Fold};
-use crate::line::{encode_line, parse};
+use crate::line::{Entry, encode_line, parse};
 
 pub const JOURNAL: &str = "journal.jsonl";
 
@@ -62,8 +62,12 @@ impl Journal {
                 return Ok(journal);
             }
         };
-        for (line, record) in &parsed.records {
-            if let Err(reason) = journal.fold.apply(record) {
+        for (line, entry) in &parsed.records {
+            let applied = match entry {
+                Entry::Record(record) => journal.fold.apply(record),
+                Entry::PassedOver(record) => journal.fold.pass_over(record),
+            };
+            if let Err(reason) = applied {
                 journal.damage = Some(Damage {
                     line: *line,
                     reason,

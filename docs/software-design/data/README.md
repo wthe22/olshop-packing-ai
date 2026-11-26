@@ -7,7 +7,7 @@ Where the app keeps what it knows, and which file is the truth. The rules that f
 |---|---|
 | [journal.md](journal.md) | The journal: line format, commit, torn write, the fold and what is checked when a date opens |
 | [records.md](records.md) | The journal's records and their fields |
-| [views.md](views.md) | `session.toml`, `orders.csv`, `order-contents.toml`: what the journal says, written for reading |
+| [views.md](views.md) | `day.toml`, `orders.csv`, `order-contents.toml`: what the journal says, written for reading |
 
 ## The files
 
@@ -20,7 +20,7 @@ packing-data\             the data folder (its name is the owner's choice)
   config.toml             the accounts and the sort rules
   2026-10-07\ …           one folder per date, every file of the date directly in it:
     journal.jsonl         the truth
-    session.toml …        the views
+    day.toml …            the views
     2 Input 03 61459e8a8203.pdf   an input of batch 2
     2-A Sepatu x12.pdf    a group PDF of batch 2
     2 Summary.pdf         the summary PDF of batch 2
@@ -52,7 +52,7 @@ the journal does not record is a view or the owner's.
 | File | Kind | Written | Read for |
 |---|---|---|---|
 | `journal.jsonl` | **Truth** | One append per commit ([journal](journal.md)) | Every decision |
-| `session.toml`, `orders.csv`, `order-contents.toml`, the summaries made on request | Views | After every commit; rebuilt when missing or stale ([views](views.md)) | The owner and other programs. Never read for a decision |
+| `day.toml`, `orders.csv`, `order-contents.toml`, the summaries made on request | Views | After every commit; rebuilt when missing or stale ([views](views.md)) | The owner and other programs. Never read for a decision |
 | `{batch} Input {pdf} {short hash}.pdf` | Inputs | At save, before the commit | Reading, amend, reprint, restore, the verifier |
 | The group PDFs, `{batch} Summary.pdf`, `Reprint {n} x{count}.pdf` | Outputs | At save: written into `.partial/`, verified, moved in after the commit | Printing |
 | `parser.toml` | The owner's parser rules | The owner, the logo prompt | Reading labels; a saved batch keeps what it used |
@@ -86,11 +86,16 @@ journal that grew meanwhile. A date opened while another copy holds the lock is 
 - `PdfID: u8` (an input of the date), `BatchID: u8` (1, 2, 3, … within the date),
   `OrderContentID: u16` and `RuleID: u8` (numbered in the views). `CourierCode` is `Courier.code` of
   `parser.toml`.
-- Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at `1.0`.
-  The schema version is not the app version: the journal is `2.0` and `session.toml` `2.1` (a date for all
-  accounts), `packing-app.toml`, `parser.toml`, `config.toml` and `order-contents.toml` `1.0`. Every journal record also carries the
-  app version that wrote it. Data of an older schema is not read and not migrated
-  ([D-APP-3](../decisions/app.md)).
+- Every TOML file, the journal's first record and `orders.csv` (its last column's header, `schema:2.1`)
+  carry `schema` as an `X.Y` version, starting at `1.0`. The schema version is not the app version: the
+  journal is `2.0`, `day.toml` and `orders.csv` `2.1` (a date for all accounts), `packing-app.toml`,
+  `parser.toml`, `config.toml` and `order-contents.toml` `1.0`. Every journal record also carries the app
+  version that wrote it ([D-APP-3](../decisions/app.md)).
+- **A copy reads every version of its own X** and passes over what it does not know: a key, a field, a
+  record type, a column. A change an older copy of the same X can pass over keeps X; one that needs another
+  way of reading or changes what data means raises X. A file of a higher X is not read: the copy says it is
+  of a newer format. A file of a lower X is read only by the migration the owner starts. An older copy writes
+  nothing that would drop what it passed over ([D-APP-34](../decisions/versions.md)).
 - **Default file names** use only letters, digits, space, `-` and `_`. Any other character becomes a space,
   repeated spaces become one, the ends are trimmed, and a name is cut at 100 characters. The owner may
   still change an output's name before saving; such a name must be a valid Windows file name and unique in

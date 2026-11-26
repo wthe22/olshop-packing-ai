@@ -4,16 +4,23 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-26)
+## Status (2026-11-27)
 
-- **Handoff of 2026-11-26 (latest) — three data questions for the owner.** No code changed.
-  - [Q-APP-21](../../software-design/questions/app.md) (a new name for `session.toml`),
-    [Q-APP-22](../../software-design/questions/app.md) (why v0.7 calls a v0.8 journal damaged at line 3:
-    `areas_filled`, a record type it does not know; what newer copies say instead),
-    [Q-APP-23](../../software-design/questions/app.md) (a version for `orders.csv`).
-  - **Where to answer**: under each question in [questions/app.md](../../software-design/questions/app.md),
-    or in a session. A new session writes each answer into `decisions/app.md` and the design files, deletes
-    the question, and builds it as a v0.8 task.
+- **Handoff of 2026-11-27 (latest) — v0.8.7-alpha: a copy reads its own major version; `day.toml`.**
+  The owner's answers to Q-APP-21 to 23 ([decisions/versions.md](../../software-design/decisions/versions.md)).
+  - **D-APP-34**: a copy reads every `X.Y` of its own X and passes over what it does not know (a key, a
+    field, a record type, a column); a higher X says *newer format, update this copy*. The journal stays
+    `2.0`: a record type this copy does not know is passed over, with a note on the Day screen, and the date
+    still takes commits. An older copy writes no view it would write short, and keeps unknown keys of
+    `packing-app.toml`, `parser.toml` and `config.toml`. v0.7 still calls v0.8's `areas_filled` damage.
+  - **D-APP-35**: `session.toml` is `day.toml` (**Update** writes it and deletes `session.toml`);
+    `orders.csv` ends with the column `schema:2.1`, its cells empty.
+  - **Changed for the owner**: a mistyped key in `config.toml` or `parser.toml` (*enabeld = false*) is now
+    passed over silently, where it used to stop the start.
+  - **To check**: **Update** on a copy of the v0.7 data: each date gets `day.toml`, loses `session.toml`, and
+    `orders.csv` opens in Excel with the empty *schema:2.1* column at the right.
+  - **Where to answer**: [reviews/app.md](../../reviews/app.md) as `R-APP-19`. Whether a key a rules file
+    does not know should be named on the start screen, not only passed over, is the owner's call there.
 
 - **Handoff of 2026-11-26 — v0.8.6-alpha: Search's cards under heads, one row each.** Built,
   checked and pushed; `target/portable/` is rebuilt. No dev task is left.

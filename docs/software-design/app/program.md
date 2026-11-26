@@ -61,7 +61,8 @@ Packing\
 
 - Copying the folder moves the program and, with a relative `data_dir`, all its data along.
 - **New version**: replace `Packing.exe` and `pdfium.dll`; `packing-app.toml` and the data stay. A version
-  that writes another schema is a new major data version: older data is not read ([D-APP-3](../decisions/app.md)).
+  that writes another major schema cannot read the older data, which waits for the migration; a newer minor
+  reads as before ([D-APP-3](../decisions/app.md), [D-APP-34](../decisions/versions.md)).
 - WebView2 keeps its browser cache under `%LOCALAPPDATA%\com.wthe22.olshop-packing\`; it holds no data of
   the app.
 - The app is in English; every screen text is in one file (`app/src/texts.ts`).

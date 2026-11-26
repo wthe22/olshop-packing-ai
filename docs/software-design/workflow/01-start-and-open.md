@@ -6,8 +6,8 @@
    the program's folder. Missing: the [Start](../ui/start.md) screen asks once (**Use `Packing\packing-data`** or
    **Choose a folder**) and writes the file.
 2. **Migration.** Find, reading only, what the migration would change: date folders of v0.7 (with
-   `input/` or `output/`, or a backup whose conversion stopped), dates whose `session.toml` is of another
-   `schema`, and live batches saved before the receiver's area or the weight was read whose label PDFs are in the date
+   `input/` or `output/`, or a backup whose conversion stopped), dates whose views are of an older
+   `schema` or still `session.toml`, and live batches saved before the receiver's area or the weight was read whose label PDFs are in the date
    folder (on a date of v0.7, will be once it is flat); a damaged journal is passed over. If there is any, the
    [Start](../ui/start.md#update-the-data-folder) screen asks before any date opens: **Update** or **Open
    read-only** ([D-APP-33](../decisions/app.md)). Choosing another data folder asks the same.
@@ -49,7 +49,7 @@ in this order ([journal › When a date opens](../data/journal.md#when-a-date-op
 4. **`.partial/`**: rolled forward when the journal's last record wrote what it holds, else back.
 5. **Outputs**: each output of a live batch exists with its recorded size; a missing or changed one gets
    **Restore**.
-6. **Views**: written again when missing or when `session.toml`'s `journal_seq` is not the last `seq`.
+6. **Views**: written again when missing or when `day.toml`'s `journal_seq` is not the last `seq`.
 
 A date with no journal is empty: nothing is read and no folder is made until its first commit.
 

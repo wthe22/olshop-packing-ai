@@ -14,7 +14,7 @@ use crate::date::DateFolder;
 use crate::files::{move_file, sha256_of};
 use crate::inputs::input_path;
 use crate::journal::Journal;
-use crate::line::parse;
+use crate::line::{Entry, parse};
 
 pub const V0_7_BACKUP: &str = "v0.7 backup";
 /// Written last: the date was converted to the end.
@@ -104,7 +104,9 @@ fn named(folder: &DateFolder, journal: &Journal) -> Result<Named, StoreError> {
     let parsed = parse(&journal.bytes()?).map_err(StoreError::Damaged)?;
     let mut inputs: BTreeMap<Sha256, BTreeSet<String>> = BTreeMap::new();
     for (_, record) in &parsed.records {
-        if let RecordBody::BatchSaved(saved) = &record.body {
+        if let Entry::Record(record) = record
+            && let RecordBody::BatchSaved(saved) = &record.body
+        {
             for input in &saved.inputs {
                 let path = input_path(folder, saved.batch, input.pdf, &input.sha256);
                 let name = file_name(&path).unwrap_or_default().to_string();

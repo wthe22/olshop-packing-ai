@@ -13,7 +13,6 @@ use crate::ids::CourierCode;
 use crate::rules::{Condition, TextOp, parse_filter};
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
 struct RawConfig {
     schema: Spanned<String>,
     #[serde(default)]
@@ -23,7 +22,6 @@ struct RawConfig {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
 struct RawAccount {
     name: Spanned<String>,
     #[serde(default)]
@@ -31,7 +29,6 @@ struct RawAccount {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
 struct RawSortRule {
     name: Spanned<String>,
     #[serde(default = "on")]
@@ -44,7 +41,6 @@ fn on() -> bool {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
 struct RawGroup {
     code: Spanned<String>,
     name: Spanned<String>,

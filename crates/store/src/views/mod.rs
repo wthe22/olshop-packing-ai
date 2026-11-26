@@ -1,10 +1,10 @@
-//! The views (views.md): `orders.csv`, `order-contents.toml` and `session.toml`, written from the
+//! The views (views.md): `orders.csv`, `order-contents.toml` and `day.toml`, written from the
 //! fold after every commit so a person or another program can read a date without the app. Only
-//! live batches appear. `session.toml` is written last: its `journal_seq` vouches for all three.
+//! live batches appear. `day.toml` is written last: its `journal_seq` vouches for all three.
 //! A view is never read for a decision.
 
+mod day;
 mod orders_csv;
-mod session;
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -12,6 +12,7 @@ use std::path::Path;
 
 use packing_engine::ids::BatchId;
 use packing_engine::record::{OrderContent, SCHEMA};
+use packing_engine::schema::Schema;
 use serde::ser::{Serialize, SerializeMap, Serializer};
 use serde::{Deserialize, Serialize as SerializeDerive};
 
@@ -19,16 +20,22 @@ use crate::StoreError;
 use crate::files::write_atomic;
 use crate::fold::Fold;
 
-pub const SESSION_TOML: &str = "session.toml";
+pub const DAY_TOML: &str = "day.toml";
 pub const ORDERS_CSV: &str = "orders.csv";
 pub const ORDER_CONTENTS_TOML: &str = "order-contents.toml";
+/// `day.toml` under its older name, which the migration replaces.
+pub const SESSION_TOML: &str = "session.toml";
 
-/// The schema version of `session.toml`. A file of another version is written again only by the
-/// migration the owner starts, never when a date opens.
-pub const SESSION_SCHEMA: &str = "2.1";
+/// The schema version of `day.toml` and of `orders.csv` (its last column's header). A file of an
+/// older version is written again only by the migration the owner starts, never when a date opens.
+pub const VIEWS_SCHEMA: Schema = Schema::new(2, 1);
 
-/// Write the three views of the fold, `session.toml` last.
+/// Write the three views of the fold, `day.toml` last. A copy writes none it could not write
+/// whole: none of a date with a newer copy's record, none over a newer copy's `day.toml`.
 pub fn write_views(date_dir: &Path, fold: &Fold) -> Result<(), StoreError> {
+    if left_to_a_newer_copy(date_dir, fold) {
+        return Ok(());
+    }
     let ids = ContentIds::of(fold);
     write_atomic(
         &date_dir.join(ORDERS_CSV),
@@ -38,38 +45,69 @@ pub fn write_views(date_dir: &Path, fold: &Fold) -> Result<(), StoreError> {
         &date_dir.join(ORDER_CONTENTS_TOML),
         contents_toml(&ids).as_bytes(),
     )?;
-    write_atomic(
-        &date_dir.join(SESSION_TOML),
-        session::text(fold, &ids).as_bytes(),
-    )
+    write_atomic(&date_dir.join(DAY_TOML), day::text(fold, &ids).as_bytes())
 }
 
-/// Whether the three views are there and `session.toml` says the journal's last `seq`. Its
-/// `schema` is not looked at: a view of another version waits for the owner's migration.
+/// The views are a newer copy's to write: the journal holds a record this copy passed over, or
+/// `day.toml` is of a newer version than this copy writes.
+fn left_to_a_newer_copy(date_dir: &Path, fold: &Fold) -> bool {
+    !fold.passed_over.is_empty()
+        || views_schema(date_dir, DAY_TOML).is_some_and(|found| {
+            Schema::parse(&found).is_some_and(|version| version > VIEWS_SCHEMA)
+        })
+}
+
+/// Whether the three views are there and `day.toml` says the journal's last `seq`, or they are a
+/// newer copy's to write. Its `schema` is not looked at otherwise: a view of an older version waits
+/// for the owner's migration.
 pub fn views_current(date_dir: &Path, fold: &Fold) -> bool {
+    if left_to_a_newer_copy(date_dir, fold) {
+        return true;
+    }
     #[derive(Deserialize)]
     struct Seq {
         journal_seq: u32,
     }
-    let all_there = [ORDERS_CSV, ORDER_CONTENTS_TOML, SESSION_TOML]
+    let all_there = [ORDERS_CSV, ORDER_CONTENTS_TOML, DAY_TOML]
         .iter()
         .all(|name| date_dir.join(name).is_file());
     all_there
-        && fs::read_to_string(date_dir.join(SESSION_TOML))
+        && fs::read_to_string(date_dir.join(DAY_TOML))
             .ok()
             .and_then(|text| toml::from_str::<Seq>(&text).ok())
             .is_some_and(|seq| seq.journal_seq == fold.last_seq)
 }
 
-/// The `schema` of the date's `session.toml`; none when there is no such file or it does not read.
-pub(crate) fn views_schema(date_dir: &Path) -> Option<String> {
+/// The `schema` the migration finds in a date's views, when it writes them again: `session.toml`'s,
+/// whatever it is, or that of a `day.toml` older than this copy writes.
+pub(crate) fn older_views(date_dir: &Path) -> Option<String> {
+    if let Some(found) = views_schema(date_dir, SESSION_TOML) {
+        return Some(found);
+    }
+    views_schema(date_dir, DAY_TOML)
+        .filter(|found| Schema::parse(found).is_none_or(|version| version < VIEWS_SCHEMA))
+}
+
+/// The views written again by the migration: `session.toml` goes once `day.toml` is there.
+pub fn write_views_again(date_dir: &Path, fold: &Fold) -> Result<(), StoreError> {
+    write_views(date_dir, fold)?;
+    let old = date_dir.join(SESSION_TOML);
+    if date_dir.join(DAY_TOML).is_file() && old.is_file() {
+        fs::remove_file(&old).map_err(|error| StoreError::io(&old, error))?;
+    }
+    Ok(())
+}
+
+/// The `schema` of the date's `file` (`day.toml` or `session.toml`); none when there is no such
+/// file or it does not read.
+pub(crate) fn views_schema(date_dir: &Path, file: &str) -> Option<String> {
     #[derive(Deserialize)]
-    struct Schema {
+    struct Found {
         schema: String,
     }
-    fs::read_to_string(date_dir.join(SESSION_TOML))
+    fs::read_to_string(date_dir.join(file))
         .ok()
-        .and_then(|text| toml::from_str::<Schema>(&text).ok())
+        .and_then(|text| toml::from_str::<Found>(&text).ok())
         .map(|found| found.schema)
 }
 
@@ -110,7 +148,7 @@ impl ContentIds {
 fn contents_toml(ids: &ContentIds) -> String {
     #[derive(SerializeDerive)]
     struct Root<'a> {
-        schema: &'static str,
+        schema: Schema,
         auto_increment: u16,
         order_content: Numbered<&'a OrderContent>,
     }

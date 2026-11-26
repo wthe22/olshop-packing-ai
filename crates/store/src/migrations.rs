@@ -1,7 +1,7 @@
 //! What the owner's migration would change in the data folder (journal.md, *When a date opens*):
-//! date folders of v0.7 to make flat, views of another `schema`, and live batches saved before the
-//! receiver's area or the weight was read. Finding them reads only; a damaged journal is passed over, as nothing
-//! may be appended to it.
+//! date folders of v0.7 to make flat, views of an older `schema` or still named `session.toml`, and
+//! live batches saved before the receiver's area or the weight was read. Finding them reads only; a
+//! damaged journal is passed over, as nothing may be appended to it.
 
 use std::path::Path;
 
@@ -15,7 +15,7 @@ use crate::flatten::is_v0_7;
 use crate::fold::Fold;
 use crate::inputs::input_path;
 use crate::journal::Journal;
-use crate::views::{SESSION_SCHEMA, views_schema};
+use crate::views::older_views;
 
 /// A date the migration would change.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -23,7 +23,8 @@ pub struct DateMigration {
     pub date: Date,
     /// Its files are still in v0.7's `input/` and `output/` (or a conversion stopped).
     pub v0_7: bool,
-    /// The `schema` of its `session.toml`, when another than this version writes.
+    /// The `schema` of its views when they are written again: a `session.toml`, or an older
+    /// `day.toml`.
     pub older_views: Option<String>,
     /// Its batches whose labels would be read for the area or the weight, and how many orders that is.
     pub batches: Vec<BatchId>,
@@ -40,7 +41,7 @@ pub fn migrations(data_dir: &Path) -> Result<Vec<DateMigration>, StoreError> {
             continue;
         }
         let v0_7 = is_v0_7(folder.dir());
-        let older_views = views_schema(folder.dir()).filter(|schema| schema != SESSION_SCHEMA);
+        let older_views = older_views(folder.dir());
         // A date of v0.7 has its label PDFs in the date folder once it is flat.
         let batches = if v0_7 {
             unread(journal.fold()).collect()

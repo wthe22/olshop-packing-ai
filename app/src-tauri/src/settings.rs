@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 use packing_engine::accounts::Account;
 use packing_engine::record::SCHEMA;
+use packing_engine::schema::{Schema, SchemaFit};
 use packing_engine::workflows::{
     BUNDLED_CONFIG, BUNDLED_PARSER, CONFIG_FILE, PARSER_FILE, Workflows, load_workflows,
     write_accounts,
@@ -30,39 +31,79 @@ pub enum Theme {
     Dark,
 }
 
-#[derive(Serialize, Deserialize)]
+impl Theme {
+    fn as_str(self) -> &'static str {
+        match self {
+            Theme::System => "system",
+            Theme::Light => "light",
+            Theme::Dark => "dark",
+        }
+    }
+}
+
+/// What this copy reads of `packing-app.toml`; a key it does not know is passed over.
+#[derive(Default, Deserialize)]
 struct Root {
-    schema: String,
     data_dir: Option<PathBuf>,
     #[serde(default)]
     theme: Theme,
 }
 
-impl Default for Root {
-    fn default() -> Self {
-        Root {
-            schema: SCHEMA.to_string(),
-            data_dir: None,
-            theme: Theme::default(),
-        }
+/// `packing-app.toml`'s text; empty when the file is missing.
+fn read_text(program: &Path) -> Result<String, String> {
+    let path = program.join(APP_FILE);
+    match fs::read_to_string(&path) {
+        Ok(text) => Ok(text),
+        Err(error) if error.kind() == ErrorKind::NotFound => Ok(String::new()),
+        Err(error) => Err(format!("Cannot read {}: {error}.", path.display())),
     }
 }
 
-/// `packing-app.toml` as read; the defaults when the file is missing.
+/// `packing-app.toml` as read, of a version this copy reads; the defaults when it is missing.
 fn read_root(program: &Path) -> Result<Root, String> {
-    let path = program.join(APP_FILE);
-    let text = match fs::read_to_string(&path) {
-        Ok(text) => text,
-        Err(error) if error.kind() == ErrorKind::NotFound => return Ok(Root::default()),
-        Err(error) => return Err(format!("Cannot read {}: {error}.", path.display())),
-    };
-    toml::from_str(&text).map_err(|error| format!("{APP_FILE}: {error}"))
+    #[derive(Deserialize)]
+    struct Version {
+        schema: String,
+    }
+    let text = read_text(program)?;
+    if text.is_empty() {
+        return Ok(Root::default());
+    }
+    let error = |message: String| format!("{APP_FILE}: {message}");
+    let found = toml::from_str::<Version>(&text)
+        .map_err(|e| error(e.message().to_string()))?
+        .schema;
+    match Schema::parse(&found).map(|version| SCHEMA.fit(version)) {
+        Some(SchemaFit::Reads) => {}
+        Some(SchemaFit::Newer) => {
+            return Err(error(format!(
+                "schema {found} is of a newer format: this copy reads {}. Update this copy.",
+                SCHEMA.family()
+            )));
+        }
+        Some(SchemaFit::Older) | None => {
+            return Err(error(format!(
+                "schema {found} is not one this copy reads ({}).",
+                SCHEMA.family()
+            )));
+        }
+    }
+    toml::from_str(&text).map_err(|e| error(e.message().to_string()))
 }
 
-fn write_root(program: &Path, root: &Root) -> Result<(), String> {
-    let text = toml::to_string(root).expect("the preferences are plain TOML");
+/// Set `key` in `packing-app.toml`, every other key kept as it is, a newer copy's too; a new file
+/// starts with this copy's `schema`.
+fn write_key(program: &Path, key: &str, value: &str) -> Result<(), String> {
+    let mut doc: toml_edit::DocumentMut = read_text(program)?
+        .parse()
+        .map_err(|error| format!("{APP_FILE}: {error}"))?;
+    if !doc.contains_key("schema") {
+        doc["schema"] = toml_edit::value(SCHEMA.to_string());
+    }
+    doc[key] = toml_edit::value(value);
     let path = program.join(APP_FILE);
-    fs::write(&path, text).map_err(|error| format!("Cannot write {}: {error}.", path.display()))
+    fs::write(&path, doc.to_string())
+        .map_err(|error| format!("Cannot write {}: {error}.", path.display()))
 }
 
 /// The data folder `packing-app.toml` names, a relative path taken from the program's folder;
@@ -77,10 +118,8 @@ pub(crate) fn set_data_dir(program: &Path, dir: &Path) -> Result<PathBuf, String
     let stored = dir
         .strip_prefix(program)
         .map_or_else(|_| dir.to_path_buf(), Path::to_path_buf);
-    let mut root = read_root(program)?;
-    root.schema = SCHEMA.to_string();
-    root.data_dir = Some(stored.clone());
-    write_root(program, &root)?;
+    read_root(program)?;
+    write_key(program, "data_dir", &stored.to_string_lossy())?;
     Ok(program.join(stored))
 }
 
@@ -91,9 +130,8 @@ pub(crate) fn theme(program: &Path) -> Result<Theme, String> {
 
 /// Write the theme into `packing-app.toml`, the data folder kept.
 pub(crate) fn set_theme(program: &Path, theme: Theme) -> Result<(), String> {
-    let mut root = read_root(program)?;
-    root.theme = theme;
-    write_root(program, &root)
+    read_root(program)?;
+    write_key(program, "theme", theme.as_str())
 }
 
 /// The data folder in use, which holds `parser.toml` and `config.toml`.

@@ -11,6 +11,7 @@ use packing_engine::record::{
     AreasFilled, BatchSaved, Datetime, JOURNAL_SCHEMA, OutputFile, OutputRestored, Record,
     RecordBody, ReprintMade, SavedOrder, Sha256, WeightsFilled,
 };
+use packing_engine::schema::{Schema, SchemaFit};
 
 /// Where a journal is damaged: the line, counted from 1, and why.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -41,6 +42,11 @@ pub enum DamageReason {
     },
     /// A record that breaks its rule of the fold.
     Rule(String),
+    /// `started` names a newer major schema: a newer copy's journal, which this copy does not read.
+    Newer {
+        schema: String,
+        app: String,
+    },
 }
 
 impl fmt::Display for DamageReason {
@@ -53,6 +59,11 @@ impl fmt::Display for DamageReason {
             }
             DamageReason::OtherDate { date } => write!(f, "it names the date {date}"),
             DamageReason::Rule(rule) => f.write_str(rule),
+            DamageReason::Newer { schema, app } => write!(
+                f,
+                "it is of a newer format (schema {schema}, Packing v{app}): this copy reads {}",
+                JOURNAL_SCHEMA.family()
+            ),
         }
     }
 }
@@ -86,6 +97,8 @@ impl LiveBatch {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LastWrites {
     Nothing,
+    /// A record of a type this copy does not know: what it wrote is not known either.
+    Unknown,
     /// `batch_saved`, `output_restored` or `reprint_made`: these files with their SHA-256.
     Files(Vec<(String, Sha256)>),
     /// `batch_reverted`: the reverted batch's files, moved aside.
@@ -102,6 +115,19 @@ pub struct Fold {
     pub inputs: BTreeMap<PdfId, Sha256>,
     pub reprints: Vec<Reprint>,
     pub last_writes: LastWrites,
+    /// The records of a newer copy's type, passed over.
+    pub passed_over: Vec<PassedOver>,
+}
+
+/// A record whose `type` this copy does not know: a newer copy wrote it, and an older one may pass
+/// over it (data/README.md, *Types, versions and names*).
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+pub struct PassedOver {
+    pub seq: u32,
+    /// The version of the app that wrote it.
+    pub app: String,
+    #[serde(rename = "type")]
+    pub kind: String,
 }
 
 /// A reprint of the date and when it was made.
@@ -120,6 +146,7 @@ impl Fold {
             inputs: BTreeMap::new(),
             reprints: Vec::new(),
             last_writes: LastWrites::Nothing,
+            passed_over: Vec::new(),
         }
     }
 
@@ -150,17 +177,7 @@ impl Fold {
 
     /// Apply one record by its rule; a record that breaks it leaves the fold unchanged.
     pub fn apply(&mut self, record: &Record) -> Result<(), DamageReason> {
-        let expected = self.last_seq + 1;
-        if record.seq != expected {
-            return Err(DamageReason::SeqGap {
-                expected,
-                found: record.seq,
-            });
-        }
-        let is_started = matches!(record.body, RecordBody::Started(_));
-        if (record.seq == 1) != is_started {
-            return Err(rule("`started` is the first record, and only there"));
-        }
+        self.check_seq(record.seq, matches!(record.body, RecordBody::Started(_)))?;
         let mut next = self.clone();
         next.last_writes = LastWrites::Nothing;
         next.apply_body(record)?;
@@ -169,15 +186,33 @@ impl Fold {
         Ok(())
     }
 
+    /// Pass over a newer copy's record: only its `seq` is checked.
+    pub fn pass_over(&mut self, record: &PassedOver) -> Result<(), DamageReason> {
+        self.check_seq(record.seq, false)?;
+        self.last_seq = record.seq;
+        self.last_writes = LastWrites::Unknown;
+        self.passed_over.push(record.clone());
+        Ok(())
+    }
+
+    fn check_seq(&self, seq: u32, is_started: bool) -> Result<(), DamageReason> {
+        let expected = self.last_seq + 1;
+        if seq != expected {
+            return Err(DamageReason::SeqGap {
+                expected,
+                found: seq,
+            });
+        }
+        if (seq == 1) != is_started {
+            return Err(rule("`started` is the first record, and only there"));
+        }
+        Ok(())
+    }
+
     fn apply_body(&mut self, record: &Record) -> Result<(), DamageReason> {
         match &record.body {
             RecordBody::Started(started) => {
-                if started.schema != JOURNAL_SCHEMA {
-                    return Err(rule(format!(
-                        "schema {} is not {JOURNAL_SCHEMA}",
-                        started.schema
-                    )));
-                }
+                check_journal_schema(&started.schema, &record.app)?;
                 if started.date != self.date {
                     return Err(DamageReason::OtherDate { date: started.date });
                 }
@@ -371,6 +406,21 @@ fn with_pickup_tracking(saved: &BatchSaved) -> BatchSaved {
         }
     }
     saved
+}
+
+/// A journal of this copy's major reads, whatever its minor.
+pub(crate) fn check_journal_schema(schema: &str, app: &str) -> Result<(), DamageReason> {
+    match Schema::parse(schema).map(|found| JOURNAL_SCHEMA.fit(found)) {
+        Some(SchemaFit::Reads) => Ok(()),
+        Some(SchemaFit::Newer) => Err(DamageReason::Newer {
+            schema: schema.to_string(),
+            app: app.to_string(),
+        }),
+        Some(SchemaFit::Older) | None => Err(rule(format!(
+            "schema {schema} is not one this copy reads ({})",
+            JOURNAL_SCHEMA.family()
+        ))),
+    }
 }
 
 fn rule(text: impl Into<String>) -> DamageReason {

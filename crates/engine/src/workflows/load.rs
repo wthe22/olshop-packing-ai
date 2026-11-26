@@ -8,6 +8,7 @@ use toml::Spanned;
 
 use super::{Workflows, WorkflowsError, config_file, parser_file};
 use crate::record::SCHEMA;
+use crate::schema::{Schema, SchemaFit};
 
 /// One file's text and name, for the errors its checks raise.
 pub(super) struct File<'a> {
@@ -38,17 +39,22 @@ impl File<'_> {
         })
     }
 
+    /// Every version of this copy's major reads: a key it does not know is passed over.
     pub(super) fn check_schema(&self, schema: &Spanned<String>) -> Result<(), WorkflowsError> {
-        if schema.get_ref() == SCHEMA {
-            return Ok(());
-        }
-        Err(self.error(
-            &schema.span(),
-            format!(
-                "schema {} is not {SCHEMA}, the one this version reads",
-                schema.get_ref()
+        let found = schema.get_ref();
+        let message = match Schema::parse(found).map(|version| SCHEMA.fit(version)) {
+            Some(SchemaFit::Reads) => return Ok(()),
+            Some(SchemaFit::Newer) => format!(
+                "schema {found} is of a newer format: this copy reads {}. Update this copy",
+                SCHEMA.family()
             ),
-        ))
+            Some(SchemaFit::Older) => format!(
+                "schema {found} is of an older format: this copy reads {}",
+                SCHEMA.family()
+            ),
+            None => format!("schema {found:?} is not a version (X.Y)"),
+        };
+        Err(self.error(&schema.span(), message))
     }
 }
 

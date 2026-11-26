@@ -17,10 +17,11 @@ written files embed whole fonts (about 1.4 MB); they print the same, and the siz
 
 **Decision.** Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at
 `1.0`. The schema version is not the app version: app `v0.2` writes `1.0`, and a schema change raises the app
-version. Data written by an older version is not read and not changed (D-APP-27: nor deleted; a separate
+version. A copy reads every version of its own major and passes over what it does not know (D-APP-34).
+Data of an older major is not read and not changed (D-APP-27: nor deleted; a separate
 script copies v0.4 dates once), except by a migration the owner starts (D-APP-33). A schema is raised once
 for each release the owner's data moves to, never for a development step between two (R-APP-18): the
-owner's data is at v0.7 (`session.toml` `2.0`), so everything v0.8 changes is `session.toml` `2.1`.
+owner's data is at v0.7 (`session.toml` `2.0`), so everything v0.8 changes is `day.toml` `2.1` (D-APP-35).
 
 **Why.** The owner's choice: the data is a working set, and the labels can be read again.
 
@@ -57,7 +58,7 @@ source. An append-only file of sealed lines commits atomically, shows damage, an
 
 ## D-APP-8 — The draft's data files are views of the journal
 
-**Decision.** `session.toml`, `orders.csv` and `order-contents.toml` are written from the journal after every
+**Decision.** `day.toml`, `orders.csv` and `order-contents.toml` are written from the journal after every
 commit, never read for a decision, and rebuilt when missing or when `journal_seq` is stale.
 
 **Why.** The owner's files stay readable by people and other programs, and there is still one truth.

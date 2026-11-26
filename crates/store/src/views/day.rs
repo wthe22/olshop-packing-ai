@@ -1,4 +1,4 @@
-//! `session.toml`: the date's inputs, sort rules, live batches with their group PDFs and order
+//! `day.toml`: the date's inputs, sort rules, live batches with their group PDFs and order
 //! contents, and the reprints.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -10,14 +10,15 @@ use packing_engine::record::{
     Datetime, Finding, InputPdf, ItemPick, LabelSortRule, LeftOutCopy, SavedOrder, Sha256,
     account_counts,
 };
+use packing_engine::schema::Schema;
 use serde::Serialize;
 
-use super::{ContentIds, Numbered, SESSION_SCHEMA};
+use super::{ContentIds, Numbered, VIEWS_SCHEMA};
 use crate::fold::{Fold, LiveBatch};
 
 #[derive(Serialize)]
 struct Root<'a> {
-    schema: &'static str,
+    schema: Schema,
     date: Date,
     journal_seq: u32,
     input_pdfs: Numbered<LabelPdf<'a>>,
@@ -106,7 +107,7 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
         batches.push(label_batch(*batch, live, rule_id as u16, ids));
     }
     let root = Root {
-        schema: SESSION_SCHEMA,
+        schema: VIEWS_SCHEMA,
         date: fold.date,
         journal_seq: fold.last_seq,
         input_pdfs: input_pdfs(fold),

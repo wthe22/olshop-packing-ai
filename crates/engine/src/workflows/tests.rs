@@ -91,6 +91,18 @@ fn a_rule_file_with_filters_reads_its_groups_in_order() {
 }
 
 #[test]
+fn a_newer_minor_reads_and_its_unknown_keys_are_passed_over() {
+    let parser = PARSER_HEAD.replace("1.0", "1.4") + "colour = \"red\"\n";
+    let config = with_rule(
+        "[[label_sort_rules.label_groups]]\ncode = \"Z\"\nname = \"Lainnya\"\nicon = \"box\"\n",
+    )
+    .replace("1.0", "1.4");
+    let workflows = loaded(&parser, &config);
+    assert_eq!(workflows.couriers[0].name, "J&T Express");
+    assert_eq!(workflows.sort_rules[0].groups[0].code.as_str(), "Z");
+}
+
+#[test]
 fn a_rule_is_on_unless_the_file_says_it_is_off() {
     let rest = "[[label_sort_rules.label_groups]]\ncode = \"Z\"\nname = \"Lainnya\"\n";
     let text = format!(
@@ -121,18 +133,25 @@ fn every_check_names_its_line_and_column() {
             "string",
         ),
         (
-            "an unknown key",
-            In::Parser,
-            format!("{PARSER_HEAD}colour = 1\n"),
-            (5, 1),
-            "unknown field",
-        ),
-        (
-            "another schema",
+            "a newer major",
             In::Parser,
             "schema = \"2.0\"\n".into(),
             (1, 10),
-            "schema 2.0",
+            "schema 2.0 is of a newer format: this copy reads 1.x. Update this copy",
+        ),
+        (
+            "an older major",
+            In::Config,
+            "schema = \"0.9\"\n".into(),
+            (1, 10),
+            "schema 0.9 is of an older format",
+        ),
+        (
+            "no version",
+            In::Config,
+            "schema = \"1\"\n".into(),
+            (1, 10),
+            "is not a version (X.Y)",
         ),
         (
             "a bad courier code",

@@ -7,7 +7,7 @@ use jiff::civil::date;
 use packing_engine::ids::BatchId;
 use packing_engine::record::RecordBody;
 use packing_store::{
-    DateFolder, Journal, OlderData, OlderVersion, SESSION_TOML, dates, journal_lengths,
+    DAY_TOML, DateFolder, Journal, OlderData, OlderVersion, dates, journal_lengths,
     newest_batch_rule, older_data, open_date,
 };
 use testkit::TempDir;
@@ -135,15 +135,15 @@ fn each_date_opens_again_as_it_was_saved() {
         let folder = DateFolder::new(data.path(), date(2026, 10, day));
         let first = open_date(&folder).unwrap();
         assert!(first.journal.damage().is_none() && first.outputs.is_empty());
-        let session = fs::read_to_string(folder.dir().join(SESSION_TOML)).unwrap();
-        assert!(session.starts_with(&format!("schema = \"2.1\"\ndate = \"2026-10-0{day}\"\n")));
+        let day_view = fs::read_to_string(folder.dir().join(DAY_TOML)).unwrap();
+        assert!(day_view.starts_with(&format!("schema = \"2.1\"\ndate = \"2026-10-0{day}\"\n")));
 
         let again = open_date(&folder).unwrap();
         assert_eq!(again.journal.fold(), first.journal.fold(), "day {day}");
         assert!(!again.views_written, "day {day}: the views are current");
         assert_eq!(
-            fs::read_to_string(folder.dir().join(SESSION_TOML)).unwrap(),
-            session
+            fs::read_to_string(folder.dir().join(DAY_TOML)).unwrap(),
+            day_view
         );
     }
     let live = |day: i8| {

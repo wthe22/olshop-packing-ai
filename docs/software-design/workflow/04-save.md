@@ -59,7 +59,7 @@ Into the date folder's `.partial/` (the open-time check has settled any earlier 
 1. Move every file of `.partial/` into the date folder, replacing a file of the same name; delete `.partial/`
    with `replaced/`. A move Windows refuses leaves the batch saved: the message names the file, and the
    next open moves it forward.
-2. Write `orders.csv`, `order-contents.toml`, then `session.toml`, each to a temporary file renamed into
+2. Write `orders.csv`, `order-contents.toml`, then `day.toml`, each to a temporary file renamed into
    place ([views](../data/views.md)).
 3. Add the record to the search index. The Day screen shows the batch on top.
 

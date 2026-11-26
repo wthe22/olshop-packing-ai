@@ -746,7 +746,7 @@ fn a_batch_saved_before_the_area_and_weight_were_read_gets_them_from_its_stored_
         last_seq,
         "a batch it cannot read is left as it was"
     );
-    assert!(changed.dir().join("session.toml").is_file());
+    assert!(changed.dir().join("day.toml").is_file());
 
     let (flat, mut journal) = saved_before_reading(&day, 11, &record, stored);
     as_v0_7(&day, &flat, &record);

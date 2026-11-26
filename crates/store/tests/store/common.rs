@@ -5,7 +5,7 @@ use std::path::Path;
 
 use jiff::civil::date;
 use packing_engine::record::{JOURNAL_SCHEMA, OutputFile, Record, RecordBody, Started};
-use packing_store::{DateFolder, encode_line, sha256_of};
+use packing_store::{DateFolder, encode_line, seal, sha256_of};
 use testkit::TempDir;
 
 pub use testkit::{batch, sha, time};
@@ -84,4 +84,9 @@ pub fn write_journal(folder: &DateFolder, records: &[Record], tail: &[u8]) {
 
 pub fn journal_text(folder: &DateFolder) -> String {
     fs::read_to_string(folder.dir().join("journal.jsonl")).unwrap()
+}
+
+/// `json` as a sealed journal line: a record of a type or shape no `Record` writes.
+pub fn sealed_line(json: &str) -> Vec<u8> {
+    format!("{} {json}\n", seal(json.as_bytes())).into_bytes()
 }

@@ -39,7 +39,10 @@ Every message says what happened and what to do. A **stop** ends the step with n
 |---|---|---|
 | Stop | `parser.toml` or `config.toml` does not parse | **A rules file has an error:** `<file, line, col: message>`. Fix that file in the data folder. [Open folder] |
 | Stop | A sort rule's filter has an error | **Sort rule `<name>` has an error:** `<line, col: message>`. The Sort rules screen opens on it. |
-| Damage | The journal of a date is damaged, or names another date or schema | **`<date>` cannot be changed:** line `<n>` of its journal `<is damaged / names another date / is of schema x.y>`. It can be viewed; nothing is written to it. |
+| Damage | The journal of a date is damaged, or names another date or an older schema | **`<date>` cannot be changed:** line `<n>` of its journal `<is damaged / names another date / is of schema x.y>`. It can be viewed; nothing is written to it. |
+| Newer | The journal of a date is of a newer major schema | **This date was saved by a newer Packing (v`<app>`, journal schema `<x.y>`); this copy reads `<2.x>`. Update this copy to work on it.** Nothing of it is shown or written. |
+| Note | The journal holds a record type this copy does not know | **This date holds records of a newer Packing (v`<app>`) that this copy does not know and passes over. Update this copy to see all of it.** |
+| Stop | `packing-app.toml`, `parser.toml` or `config.toml` is of a newer major | **`<file>`: schema `<x.y>` is of a newer format: this copy reads `<1.x>`. Update this copy.** |
 | Warning | An input of a live batch is missing or changed | **`<file>`, an input of batch `<b>`, is missing or has changed.** Amend, reprint and restore cannot use it. |
 | Warning | An output is missing or changed | On its batch card: **⚠ missing** and **Open** (writes it again) / **⚠ changed** and **Restore**. |
 | Note | Data of v0.1 or v0.4 in the data folder | **This folder also holds data of Packing `<v0.1 / v0.4>` (`<labels\ / Toko Contoh\, …>`). It is not read.** [Open folder] |

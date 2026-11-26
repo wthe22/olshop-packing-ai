@@ -2,11 +2,13 @@
 
 Three files of the owner's draft, written from the journal after every commit so a person or another
 program can read a date without the app ([D-APP-8](../decisions/app.md)). Each is written to a temporary
-file and renamed into place; `session.toml` is written last, so its `journal_seq` vouches for all three.
-A view is never read for a decision. When one is missing or `session.toml`'s `journal_seq` is not the
+file and renamed into place; `day.toml` is written last, so its `journal_seq` vouches for all three.
+A view is never read for a decision. When one is missing or `day.toml`'s `journal_seq` is not the
 journal's last `seq`, all three are written again ([journal › When a date opens](journal.md#when-a-date-opens));
-when its `schema` is not this version's, only by the migration the owner starts
-([D-APP-33](../decisions/app.md)).
+when its `schema` is older than this version's, or the date still has v0.7's `session.toml`, only by the
+migration the owner starts ([D-APP-33](../decisions/app.md)), which deletes `session.toml`. An older copy
+writes no view of a date whose journal holds a record it passed over, nor over a newer `day.toml`
+([D-APP-34](../decisions/versions.md)).
 
 Only live batches appear; a reverted batch is gone from the views and stays in the journal. IDs that
 the journal does not hold (`RuleID`, `OrderContentID`) are numbered by the fold in order of first
@@ -18,7 +20,7 @@ Day screen, and never checked for staleness: each says what the journal said whe
 ([day summary](../labels/day-summary.md), [summary PDF](../labels/summary-pdf.md#one-account)). A revert or
 an amend deletes the batch's account summaries after its commit.
 
-## `session.toml`
+## `day.toml`
 
 ```
 Root {
@@ -93,7 +95,9 @@ Reprint {
 ## `orders.csv`
 
 One row per order written by a live batch; `order_id` is unique. The field names are the CSV headers;
-an absent value is an empty cell.
+an absent value is an empty cell. The last column's header is `schema:2.1`, the version `day.toml` has too,
+and its cells are empty: a reader finds a column by its header and passes over that one; a new column goes
+before it ([D-APP-35](../decisions/versions.md)).
 
 ```
 Order {

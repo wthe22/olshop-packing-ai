@@ -10,7 +10,6 @@ use super::{Classifier, Courier, TrackingForm, WorkflowsError};
 use crate::ids::CourierCode;
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
 struct RawParser {
     schema: Spanned<String>,
     #[serde(default)]
@@ -22,14 +21,12 @@ struct RawParser {
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
 struct RawCourier {
     code: Spanned<String>,
     name: String,
 }
 
 #[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
 struct RawClassifier {
     courier_code: Spanned<String>,
     #[serde(default)]
@@ -44,7 +41,6 @@ struct RawClassifier {
 }
 
 #[derive(Default, Deserialize)]
-#[serde(deny_unknown_fields)]
 struct RawNotCourier {
     #[serde(default)]
     logos: Vec<Spanned<String>>,

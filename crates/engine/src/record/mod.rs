@@ -1,6 +1,7 @@
 //! The records of the journal (records.md): what one line of `journal.jsonl` says. The engine
 //! builds a batch's record from its plan; `packing-store` seals, appends and folds them. A field
-//! may be added without a new schema version; a field that changes meaning may not.
+//! or a record type an older copy may pass over is added without a new major version; a field that
+//! changes meaning is not.
 
 mod accounts;
 mod time;
@@ -11,15 +12,16 @@ use jiff::civil::Date;
 use serde::{Deserialize, Serialize};
 
 use crate::ids::{BatchId, CourierCode, OrderId, PdfId, TrackingId};
+use crate::schema::Schema;
 
 pub use self::accounts::{AccountCount, account_counts, of_account, order_units};
 pub use self::time::Datetime;
 
 /// The schema version of a date's journal (its `started` record): one date for every account.
-pub const JOURNAL_SCHEMA: &str = "2.0";
+pub const JOURNAL_SCHEMA: Schema = Schema::new(2, 0);
 
 /// The schema version of the TOML files beside the program and of `order-contents.toml`.
-pub const SCHEMA: &str = "1.0";
+pub const SCHEMA: Schema = Schema::new(1, 0);
 
 /// One line of the journal: the numbering every record carries, then its own fields.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -48,6 +50,20 @@ pub enum RecordBody {
 }
 
 impl RecordBody {
+    /// Every `type` this copy reads; a line of another type is a newer copy's, passed over.
+    pub const KINDS: [&'static str; 10] = [
+        "started",
+        "batch_saved",
+        "batch_reverted",
+        "printed_marked",
+        "print_sent",
+        "output_restored",
+        "reprint_made",
+        "areas_filled",
+        "weights_filled",
+        "recovered",
+    ];
+
     /// The record's `type`, as the line writes it.
     pub fn kind(&self) -> &'static str {
         match self {

@@ -4,7 +4,7 @@ use std::fs;
 
 use packing_engine::ids::BatchId;
 use packing_engine::record::{PrintSent, PrintedMarked, RecordBody};
-use packing_store::{ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, open_date, partial_dir};
+use packing_store::{DAY_TOML, ORDER_CONTENTS_TOML, ORDERS_CSV, open_date, partial_dir};
 
 use crate::common::*;
 
@@ -55,10 +55,7 @@ fn the_views_of_a_small_batch() {
         view(&folder, ORDER_CONTENTS_TOML),
         include_str!("expected/order-contents.toml")
     );
-    assert_eq!(
-        view(&folder, SESSION_TOML),
-        include_str!("expected/session.toml")
-    );
+    assert_eq!(view(&folder, DAY_TOML), include_str!("expected/day.toml"));
 }
 
 #[test]
@@ -73,26 +70,54 @@ fn a_missing_or_stale_view_is_written_again_and_a_current_one_is_left() {
     assert!(open_date(&folder).unwrap().views_written, "a missing view");
     assert!(folder.dir().join(ORDERS_CSV).is_file());
 
-    let stale = view(&folder, SESSION_TOML).replace("journal_seq = 4", "journal_seq = 3");
-    fs::write(folder.dir().join(SESSION_TOML), stale).unwrap();
+    let stale = view(&folder, DAY_TOML).replace("journal_seq = 4", "journal_seq = 3");
+    fs::write(folder.dir().join(DAY_TOML), stale).unwrap();
     assert!(
         open_date(&folder).unwrap().views_written,
-        "a stale session.toml"
+        "a stale day.toml"
     );
-    assert!(view(&folder, SESSION_TOML).contains("journal_seq = 4"));
+    assert!(view(&folder, DAY_TOML).contains("journal_seq = 4"));
 
-    let older = view(&folder, SESSION_TOML).replace("schema = \"2.1\"", "schema = \"2.0\"");
-    fs::write(folder.dir().join(SESSION_TOML), older).unwrap();
+    let older = view(&folder, DAY_TOML).replace("schema = \"2.1\"", "schema = \"2.0\"");
+    fs::write(folder.dir().join(DAY_TOML), older).unwrap();
     assert!(
         !open_date(&folder).unwrap().views_written,
-        "a session.toml of another version waits for the owner's migration"
+        "a day.toml of an older version waits for the owner's migration"
     );
-    assert!(view(&folder, SESSION_TOML).starts_with("schema = \"2.0\""));
+    assert!(view(&folder, DAY_TOML).starts_with("schema = \"2.0\""));
 
-    fs::write(folder.dir().join(SESSION_TOML), "not toml [").unwrap();
+    fs::write(folder.dir().join(DAY_TOML), "not toml [").unwrap();
     assert!(
         open_date(&folder).unwrap().views_written,
-        "an unreadable session.toml"
+        "an unreadable day.toml"
     );
     assert!(!partial_dir(folder.dir()).exists());
+}
+
+#[test]
+fn a_newer_copys_views_are_left_to_it() {
+    let (_data, folder) = opened_batch("views-newer");
+    let newer = view(&folder, DAY_TOML)
+        .replace("schema = \"2.1\"", "schema = \"2.5\"")
+        .replace("journal_seq = 4", "journal_seq = 3");
+    fs::write(folder.dir().join(DAY_TOML), &newer).unwrap();
+    assert!(
+        !open_date(&folder).unwrap().views_written,
+        "a newer minor's day.toml is not written over, stale or not"
+    );
+    assert_eq!(view(&folder, DAY_TOML), newer);
+
+    fs::remove_file(folder.dir().join(DAY_TOML)).unwrap();
+    let journal = folder.dir().join("journal.jsonl");
+    let mut bytes = fs::read(&journal).unwrap();
+    bytes.extend(sealed_line(
+        r#"{"seq":5,"time":"2026-10-07T09:00:00+07:00","app":"0.9.0","type":"orders_moved","to":2}"#,
+    ));
+    fs::write(&journal, bytes).unwrap();
+    let opened = open_date(&folder).unwrap();
+    assert!(opened.journal.damage().is_none());
+    assert!(
+        !opened.views_written && !folder.dir().join(DAY_TOML).exists(),
+        "a date with a record this copy passed over gets no views from it"
+    );
 }

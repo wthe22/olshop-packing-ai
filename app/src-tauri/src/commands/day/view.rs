@@ -7,9 +7,11 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use packing_engine::ids::{BatchId, PdfId};
-use packing_engine::record::{BatchSaved, LeftOutReason, account_counts};
+use packing_engine::record::{BatchSaved, JOURNAL_SCHEMA, LeftOutReason, account_counts};
 use packing_engine::sorting::{REST_CODE, REST_NAME};
-use packing_store::{InputState, LiveBatch, OlderData, OlderVersion, OutputState};
+use packing_store::{
+    Damage, DamageReason, InputState, LiveBatch, OlderData, OlderVersion, OutputState, PassedOver,
+};
 use serde::Serialize;
 
 use crate::OpenDay;
@@ -134,12 +136,7 @@ pub(super) fn overview(day: &OpenDay, older: Vec<OlderView>) -> DayOverview {
         .map(|(batch, live)| batch_view(day, *batch, live, output))
         .collect();
     let mut problems = Vec::new();
-    if let Some(damage) = day.journal.damage() {
-        problems.push(format!(
-            "The journal of this date is damaged at {damage}. The date can be viewed; nothing is \
-             written to it."
-        ));
-    }
+    problems.extend(journal_problem(day.journal.damage(), &fold.passed_over));
     for input in &day.inputs {
         let state = match input.state {
             InputState::Missing => "is missing",
@@ -312,4 +309,84 @@ pub(super) fn older_views(data_dir: &Path, older: &[OlderData]) -> Vec<OlderView
                 .collect(),
         })
         .collect()
+}
+
+/// What the journal keeps from use: damage, a newer copy's format, or a newer copy's records this
+/// copy passed over (data/README.md, *Types, versions and names*).
+fn journal_problem(damage: Option<&Damage>, passed_over: &[PassedOver]) -> Option<String> {
+    if let Some(damage) = damage {
+        return Some(match &damage.reason {
+            DamageReason::Newer { schema, app } => format!(
+                "This date was saved by a newer Packing (v{app}, journal schema {schema}); this \
+                 copy reads {}. Update this copy to work on it. Nothing of it is shown.",
+                JOURNAL_SCHEMA.family()
+            ),
+            _ => format!(
+                "The journal of this date is damaged at {damage}. The date can be viewed; nothing \
+                 is written to it."
+            ),
+        });
+    }
+    // The last one written: app versions do not sort as text (0.10 after 0.9).
+    let newest = &passed_over.last()?.app;
+    Some(format!(
+        "This date holds records of a newer Packing (v{newest}) that this copy does not know and \
+         passes over. Update this copy to see all of it."
+    ))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn passed(app: &str) -> PassedOver {
+        PassedOver {
+            seq: 3,
+            app: app.to_string(),
+            kind: "orders_moved".to_string(),
+        }
+    }
+
+    #[test]
+    fn the_journal_names_damage_a_newer_format_or_newer_records() {
+        let newer = Damage {
+            line: 1,
+            reason: DamageReason::Newer {
+                schema: "3.0".to_string(),
+                app: "0.9.0".to_string(),
+            },
+        };
+        let bad = Damage {
+            line: 3,
+            reason: DamageReason::Unreadable,
+        };
+        let cases = [
+            (
+                Some(&newer),
+                vec![],
+                Some("newer Packing (v0.9.0, journal schema 3.0); this copy reads 2.x"),
+            ),
+            (
+                Some(&bad),
+                vec![passed("0.9.0")],
+                Some("damaged at line 3: it is not a record"),
+            ),
+            (
+                None,
+                vec![passed("0.8.9"), passed("0.9.1")],
+                Some("newer Packing (v0.9.1) that this copy does not know"),
+            ),
+            (None, vec![], None),
+        ];
+        for (damage, passed_over, want) in cases {
+            let got = journal_problem(damage, &passed_over);
+            match want {
+                Some(text) => assert!(
+                    got.as_deref().is_some_and(|got| got.contains(text)),
+                    "{got:?}"
+                ),
+                None => assert_eq!(got, None),
+            }
+        }
+    }
 }

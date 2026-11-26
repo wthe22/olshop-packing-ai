@@ -16,7 +16,10 @@ Crate `packing-store` owns it.
 - Every record carries `seq` (1, 2, 3, … with no gap), `time`, `app` (the app version that wrote it) and
   `type`. The record types and their fields are in [records.md](records.md).
 - Seq 1 is `started`: the schema (`2.0`) and the date, which must equal the folder's name. A journal of
-  another schema is not read ([D-APP-3](../decisions/app.md)).
+  another major is not read and is checked before any other line: a newer major is a newer copy's
+  ([D-APP-34](../decisions/versions.md)), an older one is damage.
+- A sealed line whose `type` this copy does not know is a newer copy's record, **passed over**: only its `seq`
+  is checked. A line of a known type that does not read is damage.
 
 ## A commit
 
@@ -33,7 +36,7 @@ the journal as it is on disk, never from a view or the search index.
 
 | Record | Rule the fold checks |
 |---|---|
-| `started` | Seq 1, and only there; schema `2.0`; its date equals the folder's |
+| `started` | Seq 1, and only there; schema `2.x`; its date equals the folder's |
 | `batch_saved`, `amends: false` | `batch` = the highest live batch + 1 (1 on a date with none) |
 | `batch_saved`, `amends: true` | `batch` = the highest live batch |
 | `batch_reverted` | `batch` = the highest live batch |
@@ -44,6 +47,7 @@ the journal as it is on disk, never from a view or the search index.
 | `areas_filled` | The batch is live; each order it names is one of the batch's orders with no area yet |
 | `weights_filled` | The batch is live; each order it names is one of the batch's orders with no weight yet |
 | `recovered` | — |
+| a type this copy does not know | Not seq 1; passed over |
 | every record | A `PdfID` always names the same `sha256`, and a `sha256` one `PdfID` |
 
 A batch is **live** from its `batch_saved` until a `batch_reverted` of it; an amend's record replaces the
@@ -75,12 +79,14 @@ and 5 write, and run only while this copy holds the data folder's lock: [data �
      file — or a `batch_reverted`, `.partial/replaced/` holds that batch's files and `.partial/` nothing
      else: the new files are moved into the date folder and `replaced/` is deleted. (A file the record does not
      name is a later operation's that did not commit);
-   - **back** otherwise: the files of `replaced/` are moved back into the date folder, the rest is deleted.
+   - **back** otherwise: the files of `replaced/` are moved back into the date folder, the rest is deleted;
+   - **left** when the last record is one this copy passed over: what it wrote is the newer copy's to settle.
 4. **Outputs**: every output of a live batch must exist in the date folder with the size the newest record that
    wrote it names (`batch_saved` or `output_restored`). A missing one is shown on its batch card with
    **Restore** ([reprint](../app/reprint.md#restore)).
-5. **Views**: rebuilt when one is missing or `session.toml`'s `journal_seq` differs from the journal's
-   last `seq`; a `schema` of another version waits for the migration the owner starts
+5. **Views**: rebuilt when one is missing or `day.toml`'s `journal_seq` differs from the journal's
+   last `seq`; a `schema` of an older version waits for the migration the owner starts; a date with a record
+   this copy passed over, or a newer `day.toml`, is left to the newer copy
    ([views](views.md), [D-APP-33](../decisions/app.md)). In read-only mode nothing is written: steps 3 and 5
    are skipped.
 

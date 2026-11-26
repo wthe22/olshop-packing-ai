@@ -1,9 +1,10 @@
 //! `orders.csv`: one row per order written by a live batch, the field names as headers, an
-//! absent value as an empty cell.
+//! absent value as an empty cell. The last column's header is `schema:X.Y` and its cells are empty:
+//! a reader finds the columns by their headers and passes over that one.
 
 use packing_engine::record::{CourierClueKind, Weight};
 
-use super::ContentIds;
+use super::{ContentIds, VIEWS_SCHEMA};
 use crate::fold::Fold;
 
 const HEADER: [&str; 20] = [
@@ -30,8 +31,7 @@ const HEADER: [&str; 20] = [
 ];
 
 pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
-    let mut out = HEADER.join(",");
-    out.push('\n');
+    let mut out = format!("{},schema:{VIEWS_SCHEMA}\n", HEADER.join(","));
     for (batch, live) in &fold.live {
         for order in &live.saved.orders {
             let area = order.area.clone().unwrap_or_default();
@@ -85,7 +85,8 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
             ];
             let row: Vec<String> = cells.iter().map(|cell| quoted(cell)).collect();
             out.push_str(&row.join(","));
-            out.push('\n');
+            // The schema column's empty cell.
+            out.push_str(",\n");
         }
     }
     out

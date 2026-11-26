@@ -305,7 +305,7 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
     let (_data, folder) = date_folder("damage");
     let saved = |n| RecordBody::BatchSaved(batch(n, false, Vec::new()));
     let other = RecordBody::Started(packing_engine::record::Started {
-        schema: packing_engine::record::JOURNAL_SCHEMA.into(),
+        schema: packing_engine::record::JOURNAL_SCHEMA.to_string(),
         date: folder.date().tomorrow().unwrap(),
     });
     let v0_4 = RecordBody::Started(packing_engine::record::Started {
@@ -376,4 +376,86 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
         assert!(matches!(error, StoreError::Damaged(_)), "{what}: {error}");
         assert_eq!(journal_text(&folder), before, "{what}: nothing written");
     }
+}
+
+#[test]
+fn a_newer_copys_record_type_is_passed_over_and_the_date_still_takes_commits() {
+    let (_data, folder) = date_folder("passed-over");
+    let mut tail = sealed_line(
+        r#"{"seq":3,"time":"2026-10-07T09:00:00+07:00","app":"0.9.0","type":"orders_moved","to":2}"#,
+    );
+    tail.extend(packing_store::encode_line(&record(
+        4,
+        RecordBody::BatchSaved(batch(2, false, Vec::new())),
+    )));
+    let records = [
+        record(1, started()),
+        record(2, RecordBody::BatchSaved(batch(1, false, Vec::new()))),
+    ];
+    write_journal(&folder, &records, &tail);
+
+    let mut journal = Journal::open(&folder).unwrap();
+    assert!(journal.damage().is_none());
+    let fold = journal.fold();
+    assert_eq!(fold.last_seq, 4);
+    assert_eq!(fold.live.len(), 2, "the records after it fold as before");
+    let passed: Vec<_> = fold
+        .passed_over
+        .iter()
+        .map(|r| (r.seq, r.app.as_str(), r.kind.as_str()))
+        .collect();
+    assert_eq!(passed, [(3, "0.9.0", "orders_moved")]);
+    let reverted = RecordBody::BatchReverted(BatchReverted {
+        batch: BatchId::new(2),
+    });
+    journal.commit(vec![reverted], APP).unwrap();
+    assert_eq!(Journal::open(&folder).unwrap().fold().last_seq, 5);
+}
+
+#[test]
+fn a_journal_of_another_major_stops_at_its_first_line() {
+    let (_data, folder) = date_folder("newer-major");
+    let first = |schema: &str| {
+        sealed_line(&format!(
+            r#"{{"seq":1,"time":"2026-10-07T07:00:00+07:00","app":"0.9.0","type":"started","schema":"{schema}","date":"2026-10-07"}}"#
+        ))
+    };
+    let unreadable = sealed_line(r#"{"seq":2,"app":"0.9.0","type":"batch_saved","batch":"one"}"#);
+    let cases = [
+        (
+            "3.0",
+            Some(DamageReason::Newer {
+                schema: "3.0".into(),
+                app: "0.9.0".into(),
+            }),
+        ),
+        ("2.7", None),
+    ];
+    for (schema, newer) in cases {
+        let bytes = [first(schema), unreadable.clone()].concat();
+        write_journal(&folder, &[], &bytes);
+        let damage = Journal::open(&folder).unwrap().damage().cloned().unwrap();
+        match newer {
+            Some(reason) => assert_eq!((damage.line, damage.reason), (1, reason), "{schema}"),
+            None => assert_eq!(
+                (damage.line, damage.reason),
+                (2, DamageReason::Unreadable),
+                "{schema}: a minor of this major reads, and a known type that does not read is damage"
+            ),
+        }
+    }
+    let damaged = Journal::open(&folder).unwrap();
+    assert!(matches!(
+        damaged.prepare(Vec::new(), APP),
+        Err(StoreError::Damaged(_))
+    ));
+    let text = DamageReason::Newer {
+        schema: "3.0".into(),
+        app: "0.9.0".into(),
+    }
+    .to_string();
+    assert_eq!(
+        text,
+        "it is of a newer format (schema 3.0, Packing v0.9.0): this copy reads 2.x"
+    );
 }

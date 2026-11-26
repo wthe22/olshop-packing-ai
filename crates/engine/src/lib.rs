@@ -11,6 +11,7 @@ pub mod orders;
 pub mod record;
 pub mod repeats;
 pub mod rules;
+pub mod schema;
 
 pub mod slip;
 pub mod sorting;

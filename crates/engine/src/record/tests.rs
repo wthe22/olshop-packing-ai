@@ -100,3 +100,23 @@ fn a_sha256_is_64_lower_case_hex_characters() {
     assert_eq!(sha.as_str(), "b".repeat(64));
     assert!(serde_json::from_str::<Sha256>("\"xyz\"").is_err());
 }
+
+#[test]
+fn every_type_this_copy_reads_is_one_of_its_kinds() {
+    let error = |kind: &str| {
+        let json = format!(
+            r#"{{"seq":2,"time":"2026-10-07T07:40:12+07:00","app":"0.8.0","type":"{kind}"}}"#
+        );
+        serde_json::from_str::<Record>(&json)
+            .unwrap_err()
+            .to_string()
+    };
+    for kind in RecordBody::KINDS {
+        assert!(
+            !error(kind).contains("unknown variant"),
+            "{kind}: {}",
+            error(kind)
+        );
+    }
+    assert!(error("orders_moved").contains("unknown variant"));
+}

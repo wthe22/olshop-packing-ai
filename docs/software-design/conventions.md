@@ -10,8 +10,9 @@ Apply to every design, document and code line of the PC app.
 - Dates and batches are identified by their names and numbers in the data folder ([data](data/README.md)),
   an account and a shop by their names ([accounts](app/accounts.md)); an input by its SHA-256; a courier by its code.
 - Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at `1.0`. The
-  schema version is separate from the app version; data of an older schema is not read and not migrated
-  ([D-APP-3](decisions/app.md)).
+  schema version is separate from the app version; a copy reads every version of its own major and passes over
+  what it does not know; data of another major is not read ([D-APP-3](decisions/app.md),
+  [D-APP-34](decisions/versions.md)).
 - A saved fact has one home, the journal ([D-APP-7](decisions/app.md)). Anything else that holds it is a view or
   a cache, rebuilt from the journal and never read for a decision.
 - Requirement IDs (`F-LABEL-3`) are stable references for documents; code, comments and tests do not cite them

@@ -7,7 +7,7 @@ use jiff::civil::date;
 use packing_engine::ids::BatchId;
 use packing_engine::record::{BatchSaved, RecordBody};
 use packing_store::{
-    DateFolder, DateMigration, Journal, SESSION_TOML, input_path, migrations, open_date,
+    DAY_TOML, DateFolder, DateMigration, Journal, SESSION_TOML, input_path, migrations, open_date,
 };
 use testkit::TempDir;
 
@@ -54,12 +54,13 @@ fn the_migration_names_older_views_and_the_batches_whose_labels_it_can_read() {
     saved_on(&data, 7, batch(2, false, Vec::new()), true);
     saved_on(&data, 7, saved_before_the_weight(3), true);
     let older = saved_on(&data, 8, batch(1, false, Vec::new()), true);
-    let session = fs::read_to_string(older.dir().join(SESSION_TOML)).unwrap();
+    let day = fs::read_to_string(older.dir().join(DAY_TOML)).unwrap();
     fs::write(
         older.dir().join(SESSION_TOML),
-        session.replace("schema = \"2.1\"", "schema = \"2.0\""),
+        day.replace("schema = \"2.1\"", "schema = \"2.0\""),
     )
     .unwrap();
+    fs::remove_file(older.dir().join(DAY_TOML)).unwrap();
     saved_on(&data, 9, saved_before_the_area(1), false);
     let damaged = data.path().join("2026-10-10");
     fs::create_dir_all(&damaged).unwrap();

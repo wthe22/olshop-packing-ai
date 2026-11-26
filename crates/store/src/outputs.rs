@@ -91,7 +91,8 @@ pub enum Settled {
 /// Settle `.partial/` by the journal's last record (journal.md, *When a date opens*).
 pub fn settle_partial(date_dir: &Path, fold: &Fold) -> Result<Settled, StoreError> {
     let partial = partial_dir(date_dir);
-    if !partial.is_dir() {
+    // After a newer copy's record, what `.partial/` holds is that copy's to settle.
+    if !partial.is_dir() || fold.last_writes == LastWrites::Unknown {
         return Ok(Settled::Nothing);
     }
     if wrote_what_partial_holds(date_dir, fold)? {
@@ -109,7 +110,7 @@ fn wrote_what_partial_holds(date_dir: &Path, fold: &Fold) -> Result<bool, StoreE
     let partial = partial_dir(date_dir);
     let held = files_in(&partial)?;
     match &fold.last_writes {
-        LastWrites::Nothing => Ok(false),
+        LastWrites::Nothing | LastWrites::Unknown => Ok(false),
         LastWrites::Files(files) => {
             if !held
                 .iter()

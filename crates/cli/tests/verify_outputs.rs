@@ -178,7 +178,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
         time: Datetime::now(),
         app: "0.3.3".into(),
         body: RecordBody::Started(packing_engine::record::Started {
-            schema: packing_engine::record::JOURNAL_SCHEMA.into(),
+            schema: packing_engine::record::JOURNAL_SCHEMA.to_string(),
             date: folder.date(),
         }),
     };
