@@ -9,6 +9,7 @@ use std::ops::RangeInclusive;
 use jiff::civil::Date;
 use packing_batch::{ReprintOutcome, ReprintRequest, reprint as write_reprint};
 use packing_engine::ids::{BatchId, OrderId};
+use packing_engine::record::Weight;
 use packing_engine::rules::parse_filter;
 use packing_engine::workflows::{Courier, courier_name};
 use packing_store::{IndexedOrder, SearchIndex};
@@ -66,8 +67,8 @@ pub struct OrderRow {
     pickup_code: Option<String>,
     /// None: saved before the area was read, and the data folder not updated since.
     area: Option<AreaView>,
-    /// What named the courier: `logo`, `shape`, `text`, `form`, `tag` or `none`.
-    courier_clue: &'static str,
+    /// None: saved before the weight was read, and the data folder not updated since.
+    weight: Option<Weight>,
     batch: BatchId,
     /// `<batch>-<code>`.
     group: String,
@@ -183,7 +184,7 @@ fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> Order
             city: area.city.clone(),
             district: area.district.clone(),
         }),
-        courier_clue: saved.courier_clue.kind.as_str(),
+        weight: saved.weight,
         batch: order.batch,
         group: format!("{}-{}", order.batch, saved.group),
         file: order.file.clone(),

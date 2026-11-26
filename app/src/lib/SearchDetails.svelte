@@ -1,49 +1,28 @@
 <script lang="ts">
-  // A Search row's details, under the row: every field of the order, each under its head (its account,
-  // the receiver's province, city and district, the ship-by date, Qty Total, the pickup code and what
-  // named its courier); its items with their variation and Seller SKU; and where it came from: the
-  // input PDF, its pages there, its batch's save time and the group's code.
+  // A Search row's details, under the row: what the label prints that the row does not show, each head
+  // before its value in one line that wraps (the receiver's area, the weight, the ship-by date, Qty
+  // Total, the pickup code, the account of a shop of another name); and where it came from: the input
+  // PDF, its pages there, its batch's save time and the group's code. The items' Seller SKUs are in
+  // the row, under each item.
   import type { SearchRow } from "./api/search";
-  import { detailFields } from "./search.svelte";
+  import { detailFacts } from "./search.svelte";
   import { texts } from "../texts";
   import Icon from "./Icon.svelte";
 
   let { row }: { row: SearchRow } = $props();
 
   const words = texts.search;
-  const heads = words.details;
-  const fields = $derived(detailFields(row));
+  const facts = $derived(detailFacts(row));
 </script>
 
 <div class="details">
-  <dl class="fields">
-    {#each fields as field (field.head)}
-      <div>
-        <dt>{field.head}</dt>
-        <dd class:missing={field.missing}>{field.value}</dd>
-      </div>
-    {/each}
-  </dl>
-  <table class="lines">
-    <thead>
-      <tr>
-        <th class="qty">{heads.quantity}</th>
-        <th>{heads.item}</th>
-        <th>{heads.variation}</th>
-        <th>{heads.sellerSku}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each row.items as item, i (i)}
-        <tr>
-          <td class="qty">×{item.quantity}</td>
-          <td class="name">{item.name}</td>
-          <td class:missing={!item.variant}>{item.variant || words.none}</td>
-          <td class="sku" class:missing={!item.seller_sku}>{item.seller_sku ?? words.none}</td>
-        </tr>
+  {#if facts.length > 0}
+    <p class="facts">
+      {#each facts as fact (fact.head)}
+        <span class="fact"><span class="head">{fact.head}</span><span class:faint={fact.notRead}>{fact.value}</span></span>
       {/each}
-    </tbody>
-  </table>
+    </p>
+  {/if}
   <p class="trace">
     {words.from}
     <span class="input"><Icon name="file" size={14} />{row.input}<span class="hash">{row.input_hash}</span></span>
@@ -57,23 +36,27 @@
   .details {
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
+    gap: 0.5rem;
     grid-column: 2 / -1;
     padding-top: 0.55rem;
     border-top: 1px solid var(--border-soft);
     font-size: 0.86rem;
   }
 
-  /* Each field's head over its value, as many to a line as fit. */
-  .fields {
+  .facts {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1.75rem;
+    gap: 0.3rem 1.5rem;
     margin: 0;
   }
 
-  dt,
-  th {
+  .fact {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+  }
+
+  .head {
     color: var(--text-faint);
     font-size: 0.72rem;
     font-weight: 600;
@@ -81,58 +64,8 @@
     text-transform: uppercase;
   }
 
-  dd {
-    margin: 0.1rem 0 0;
-  }
-
-  .missing {
+  .faint {
     color: var(--text-faint);
-  }
-
-  /* The items as the slip lists them, a line between items. */
-  .lines {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-collapse: separate;
-    border-spacing: 0;
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  th {
-    padding: 0.3rem 0.6rem;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface-2);
-    text-align: left;
-  }
-
-  td {
-    padding: 0.3rem 0.6rem;
-    vertical-align: top;
-  }
-
-  tr + tr td {
-    border-top: 1px solid var(--border-soft);
-  }
-
-  .qty {
-    width: 1%;
-    white-space: nowrap;
-  }
-
-  td.qty {
-    color: var(--accent-text);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-
-  .name {
-    overflow-wrap: anywhere;
-  }
-
-  .sku {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
   }
 
   .trace {

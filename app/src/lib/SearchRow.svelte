@@ -2,7 +2,8 @@
   // One order of Search's results as a row of the results' grid: its tick; its shop over its Order
   // ID; its courier over its tracking ID; its items, which take the room left; the date and batch over
   // the group's name and the page the label is on; **Open**, the chevron of its details and its
-  // *Reprinted* mark. The chevron opens the order's details under it (`SearchDetails`). The order and
+  // *Reprinted* mark. The chevron puts each item's Seller SKU under it and opens the rest of the
+  // order's details under the row (`SearchDetails`). The order and
   // label columns take only their own width, so a long
   // product name keeps the rest; on a narrow window the items go under them. A click on the row's
   // text ticks it, for the mouse only: the tick is the keyboard's way.
@@ -67,7 +68,12 @@
   </div>
   <ul class="items">
     {#each row.items as item, i (i)}
-      <li><span class="qty">×{item.quantity}</span><span class="name">{itemName(item)}</span></li>
+      <li>
+        <span class="qty">×{item.quantity}</span>
+        <span class="name"
+          >{itemName(item)}{#if traced && item.seller_sku}<span class="sku">{item.seller_sku}</span>{/if}</span
+        >
+      </li>
     {/each}
   </ul>
   <div class="where">
@@ -218,6 +224,13 @@
   .name {
     min-width: 0;
     overflow-wrap: anywhere;
+  }
+
+  .sku {
+    display: block;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
   }
 
   .where {

@@ -1,5 +1,5 @@
 //! What the owner's migration would change: views of another schema and batches saved before the
-//! receiver's area was read, found without writing.
+//! receiver's area or the weight was read, found without writing.
 
 use std::fs;
 
@@ -38,19 +38,26 @@ fn saved_before_the_area(number: u8) -> BatchSaved {
     saved
 }
 
+fn saved_before_the_weight(number: u8) -> BatchSaved {
+    let mut saved = batch(number, false, Vec::new());
+    saved.orders[0].weight = None;
+    saved
+}
+
 #[test]
-fn the_migration_names_older_views_and_the_batches_whose_areas_it_can_read() {
+fn the_migration_names_older_views_and_the_batches_whose_labels_it_can_read() {
     let data = TempDir::new("migrations");
     assert!(migrations(data.path()).unwrap().is_empty());
 
     saved_on(&data, 6, batch(1, false, Vec::new()), true);
     let seventh = saved_on(&data, 7, saved_before_the_area(1), true);
     saved_on(&data, 7, batch(2, false, Vec::new()), true);
+    saved_on(&data, 7, saved_before_the_weight(3), true);
     let older = saved_on(&data, 8, batch(1, false, Vec::new()), true);
     let session = fs::read_to_string(older.dir().join(SESSION_TOML)).unwrap();
     fs::write(
         older.dir().join(SESSION_TOML),
-        session.replace("schema = \"2.2\"", "schema = \"2.1\""),
+        session.replace("schema = \"2.1\"", "schema = \"2.0\""),
     )
     .unwrap();
     saved_on(&data, 9, saved_before_the_area(1), false);
@@ -64,7 +71,8 @@ fn the_migration_names_older_views_and_the_batches_whose_areas_it_can_read() {
         .orders
         .iter()
         .filter(|order| order.area.is_none())
-        .count();
+        .count()
+        + 1;
     assert_eq!(
         migrations(data.path()).unwrap(),
         [
@@ -72,13 +80,13 @@ fn the_migration_names_older_views_and_the_batches_whose_areas_it_can_read() {
                 date: date(2026, 10, 7),
                 v0_7: false,
                 older_views: None,
-                batches: vec![BatchId::new(1)],
+                batches: vec![BatchId::new(1), BatchId::new(3)],
                 orders,
             },
             DateMigration {
                 date: date(2026, 10, 8),
                 v0_7: false,
-                older_views: Some("2.1".into()),
+                older_views: Some("2.0".into()),
                 batches: Vec::new(),
                 orders: 0,
             },

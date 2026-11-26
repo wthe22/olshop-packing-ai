@@ -8,17 +8,19 @@
   part of an ID is enough, e.g. *Order ID contains 00000012*.
   The first box has the cursor when Search opens, and **Enter** searches: scan an Order ID barcode and
   its order is found at once. For a tracking ID, switch the box to *Tracking ID* first.
+  Search opens again with the boxes as they were left, until the program is closed; **Reset** empties them
+  and sets the dates back to the viewed day.
 - **Dates**: **Viewed day** (the date the Day screen shows, the default; not listed when that is today),
   **Today**, **Yesterday**, **Last 7 days**, **Last 30 days**, **Custom range** (pick the first and last
   date) or **All days**, of every account, then **Search**: "3 orders in 2 batches" and one row per order.
   **Order**: the shop (the account's name when the label printed none) and the Order ID over the courier
   and the tracking ID. **Items**, with the most room. **Label**: the date and the batch over the group's
   name and the **page** the label is on (to find the printed label in its stack). **Open** opens that group
-  PDF. The arrow opens the order's details: its account, the receiver's province, city and district, the
-  ship-by date, the slip's Qty Total, the pickup code of an instant label, and what named the courier; its
-  items with their variation and Seller SKU; and the label file it was read from with its pages, the
-  batch's save time and the group's code ("From … p. 3, saved at 09:12 into group 2-A"). A dash marks what
-  the label does not print. In a narrow window the items move under the order.
+  PDF. The arrow opens the order's details: each item's Seller SKU under it; one line with the receiver's
+  district, city and province, the weight, the ship-by date, the slip's Qty Total, the pickup code of an
+  instant label, and the account when the shop has another name (what the label does not print is left
+  out); and the label file it was read from with its pages, the batch's save time and the group's code
+  ("From … p. 3, saved at 09:12 into group 2-A"). In a narrow window the items move under the order.
 - **Account** and **Shop**: *Account equals* picks one account from the list and narrows the search to its
   orders; *Shop* does the same for a shop name. Without them every account is searched.
 - **Courier**: *equals* picks one courier from the list; *contains* or *starts with* takes typed text, so

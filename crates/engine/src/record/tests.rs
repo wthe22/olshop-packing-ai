@@ -75,6 +75,16 @@ fn an_areas_filled_record_names_each_order_with_its_area_flat() {
 }
 
 #[test]
+fn a_weights_filled_record_names_each_order_with_its_grams_or_none_printed() {
+    let json = r#"{"seq":6,"time":"2026-10-07T09:00:00+07:00","app":"0.8.4","type":"weights_filled","batch":1,"orders":[{"order_id":"580000000000000001","weight":{"grams":490}},{"order_id":"580000000000000002","weight":"not_printed"}]}"#;
+    let RecordBody::WeightsFilled(filled) = round_trip(json).body else {
+        panic!("a weights_filled record");
+    };
+    let weights: Vec<Weight> = filled.orders.iter().map(|order| order.weight).collect();
+    assert_eq!(weights, [Weight::Grams(490), Weight::NotPrinted]);
+}
+
+#[test]
 fn a_sha256_is_64_lower_case_hex_characters() {
     let good = "a".repeat(64);
     assert!(Sha256::try_from(good).is_ok());

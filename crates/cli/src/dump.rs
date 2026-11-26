@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
 
 use packing_engine::copies::{Copy, read_copies};
+use packing_engine::record::Weight;
 use packing_engine::workflows::{Workflows, courier_name, load_bundled};
 use packing_pdf::read;
 use packing_pdf::worker::PdfWorker;
@@ -108,6 +109,10 @@ fn copy_json(copy: &Copy, workflows: &Workflows) -> Value {
         "ship_by_date": copy.ship_by_date.map(|date| date.to_string()),
         "sender": copy.sender.as_ref().map(|sender| sender.name.as_str()),
         "area": [copy.area.province, copy.area.city, copy.area.district],
+        "weight": match copy.weight {
+            Weight::Grams(grams) => json!(grams),
+            Weight::NotPrinted => Value::Null,
+        },
         "lines": lines,
         "qty_total": copy.total_quantity,
     })
@@ -145,7 +150,7 @@ mod tests {
         for copy in copies {
             let id = copy["order_id"].as_str().expect("order_id");
             let want = &answer[id];
-            for field in ["lines", "qty_total", "tracking_id", "area"] {
+            for field in ["lines", "qty_total", "tracking_id", "area", "weight"] {
                 assert_eq!(copy[field], want[field], "{id}: {field}");
             }
             assert_eq!(

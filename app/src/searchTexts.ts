@@ -24,6 +24,8 @@ export const searchTexts = {
   rangeFrom: "First date",
   rangeUntil: "Last date",
   search: "Search",
+  reset: "Reset",
+  resetTitle: "Empty the boxes and set the dates back to the viewed day",
   // The search index is still being built.
   loading: "Loading",
   // One line of an order's items, "name × quantity".
@@ -67,36 +69,21 @@ export const searchTexts = {
   // A row's **Open**, named for its group PDF.
   open: "Open",
   openFile: (file: string) => `Open ${file}`,
-  // The chevron that opens a row's details: every field of the order, its items with their variation
-  // and Seller SKU, and "From [input.pdf] p. 3, saved at 09:12 into group 2-A".
+  // The chevron that opens a row's details: each item's Seller SKU under it, what else the label
+  // prints, and "From [input.pdf] p. 3, saved at 09:12 into group 2-A".
   trace: "Details",
   details: {
-    account: "Account",
-    province: "Province",
-    city: "City",
-    district: "District",
-    area: "Receiver's area",
+    receiver: "Receiver",
+    weight: "Weight",
     shipBy: "Ship by",
     totalQuantity: "Qty Total",
     pickupCode: "Pickup code",
-    courierBy: "Courier named by",
-    quantity: "Qty",
-    item: "Item",
-    variation: "Variation",
-    sellerSku: "Seller SKU",
+    account: "Account",
   },
-  // A detail the label does not print.
-  none: "—",
-  // An order saved before the area was read, its data folder not updated since.
-  areaNotRead: "not read yet: the data folder is not updated",
-  clue: {
-    logo: "its logo",
-    shape: "its logo's shape",
-    text: "the label's text",
-    form: "its tracking ID",
-    tag: "its service tag",
-    none: "nothing",
-  },
+  // "1,250 g".
+  grams: (grams: number) => `${grams.toLocaleString("en-US")} g`,
+  // An order saved before the area or the weight was read, its data folder not updated since.
+  notRead: "not read yet: the data folder is not updated",
   batch: (n: number) => `Batch ${n}`,
   from: "From",
   inputPages: (first: number, last: number) => (first === last ? `p. ${first}` : `p. ${first}–${last}`),

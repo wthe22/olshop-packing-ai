@@ -6,8 +6,39 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-26)
 
+- **Handoff of 2026-11-26 (night) — v0.8.4-alpha: the weight; Search details without repeats; one schema
+  step for v0.8.** Built, checked and pushed; `target/portable/` is rebuilt. No dev task is left.
+  - **R-LABEL-19**: each order records the parcel's weight in grams as its label prints it (`Weight :
+    0.490 KG` on the TikTok labels, `Weight` `5 KG` on J&T Cargo's, `Berat: 450 gr` on the Shopee-style
+    one), in the journal and as `weight_grams` in `orders.csv` ([D-LABEL-27](../../software-design/decisions/label.md)).
+    **Update** reads it for the batches saved before, with the addresses (*Addresses and weights of 2
+    batches, 61 orders*). On the samples every order reads one but the instant labels (Gojek, Grab) and 5
+    IDX and Anteraja labels, which print none; nothing else the samples read changed.
+  - **R-UI-55**: a Search row's arrow puts each item's Seller SKU under it and opens one line of facts:
+    *Receiver* (district, city, province), *Weight*, *Ship by*, *Qty Total*, *Pickup code*, and *Account*
+    only when the shop has another name; what the label does not print is left out; then the *From* line.
+    The items table, the repeated account and *Courier named by* are gone (the clue only explains a courier
+    named wrong; the journal and `orders.csv` keep it). Three designs were shown; A is built.
+  - **R-UI-56**: Search opens again with its boxes as they were left, while the program runs; the dates start
+    from the viewed day. **Reset** beside **Search** empties the boxes and sets the dates back.
+  - **R-APP-18** ([D-APP-3](../../software-design/decisions/app.md)): `session.toml` is schema 2.1 for all of
+    v0.8 (v0.7 wrote 2.0); a test copy updated by v0.8.2 or v0.8.3 (2.2) is asked about once more.
+  - **Q-APP-20 answered** ([D-APP-33](../../software-design/decisions/app.md)): the theme and Settings ›
+    **Change** still work in read-only; nothing in the data folder changes. The program already did so.
+  - **Tried on a copy** of `2026-11-25` put back into the v0.7 layout: **Update** asked *Files of v0.7 moved
+    in · Addresses and weights of 1 batch, 75 orders · the date's lists*; read-only changed no file; Update
+    moved the files back, read the labels (*Reading labels: 2026-11-25, batch 1, page 3 of 75*) and wrote the
+    lists: all 75 orders have an area and 72 a weight (the 3 others are Grab and Gojek labels, which print
+    none); `session.toml` is 2.1; the next start did not ask again; `remove-v07-backup.py` removed the backup.
+  - **The owner's steps for the v0.7 data**: as below (keep a copy, start, **Update**, check, then
+    `remove-v07-backup.py --dry-run`); Search now shows the weight too.
+  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-19`,
+    [reviews/label.md](../../reviews/label.md) as `R-LABEL-20` (a weight or an area read wrong: the date, the
+    order and what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-57`. A new session turns
+    each into a task and builds it.
+
 - **Handoff of 2026-11-26 (later) — v0.8.3-alpha: Packing converts a v0.7 data folder itself; Search
-  shows the whole order.** Built, checked and pushed; `target/portable/` is rebuilt. No dev task is left.
+  shows the whole order.** Built, checked and pushed.
   - **R-APP-17** (the owner's flow: the program converts, a script cleans up): a date folder of v0.7
     (with `input\` or `output\`) is one more line of **Update the data folder?** (*Files of v0.7 moved
     in*). **Update** moves its `input\`, `output\` and old summaries unchanged into `v0.7 backup\` of the
@@ -22,16 +53,12 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     moved in, addresses of 1 batch, 75 orders); read-only changed no file and the Day screen named the
     date as v0.7; **Update** showed the files being moved and the pages being read, put all 11 PDFs back
     under their names with their bytes, filled the addresses of all 75 orders and wrote `session.toml`
-    2.2; the next start did not ask again; `remove-v07-backup.py --dry-run` named the backup and the run
-    without it removed it.
+    2.2 (2.1 since v0.8.4); the next start did not ask again; `remove-v07-backup.py --dry-run` named the
+    backup and the run without it removed it.
   - **The owner's steps for the v0.7 data**: keep a copy of the data folder. Close every copy of Packing,
     put the new program in place, start it: it asks. **Update**, then look at a few dates (Open opens the
     group PDFs; Search shows the addresses). Then close Packing and run
     `python tools\remove-v07-backup.py "<data folder>" --dry-run`, then without `--dry-run`.
-  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-18`,
-    [reviews/label.md](../../reviews/label.md) as `R-LABEL-19` (an area read wrong: the date, the order and
-    what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-55`. A new session turns each into a
-    task and builds it. Q-APP-20 below is still open.
 
 - **Handoff of 2026-11-26 — v0.8.2-alpha: the receiver's area, migrations that ask, read-only.** Built,
   checked and pushed; `target/portable/` is rebuilt.
@@ -54,9 +81,6 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **What to try**: keep a copy of the data folder first. Start the new program: it asks. Choose **Open
     read-only**, look around (no file of the data folder changes), close it, start again and choose
     **Update**. Then a date's `orders.csv` shows the three columns.
-  - **The question Q-APP-20** ([questions/app.md](../../software-design/questions/app.md)): may the theme
-    and Settings › **Change** still work in read-only mode? They write `packing-app.toml` beside the program,
-    not the data folder. Default A: yes. The answer goes into that file.
 
 - **Handoff of 2026-11-25 (evening) — v0.8.0-alpha: one flat folder per date; the split and Sameday labels
   read.** Built, checked and pushed; `target/portable/` is rebuilt.

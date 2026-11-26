@@ -92,7 +92,7 @@ impl fmt::Display for BatchError {
             ),
             BatchError::InputChanged { file, date } => write!(
                 f,
-                "{file}, an input of {date}, is missing or has changed: its addresses cannot be read."
+                "{file}, an input of {date}, is missing or has changed: its labels cannot be read."
             ),
             BatchError::NoOutput { file } => {
                 write!(f, "{file} is not a file of a saved batch of this date.")

@@ -10,6 +10,7 @@
       "KOTA CONTOH BARAT",
       "KEBON CONTOH"
     ],
+    "weight": 1000,
     "has_slip": true,
     "lines": [
       [
@@ -33,6 +34,7 @@
       "KOTA CONTOH",
       null
     ],
+    "weight": 150,
     "has_slip": true,
     "lines": [
       [
@@ -56,6 +58,7 @@
       "KAB. CONTOH",
       "CONTOH TENGAH"
     ],
+    "weight": 490,
     "has_slip": true,
     "lines": [
       [
@@ -79,6 +82,7 @@
       "KOTA CONTOH BARAT",
       "KEBON CONTOH"
     ],
+    "weight": 1000,
     "has_slip": true,
     "lines": [
       [
@@ -102,6 +106,7 @@
       "KOTA CONTOH",
       null
     ],
+    "weight": 150,
     "has_slip": true,
     "lines": [
       [
@@ -125,6 +130,7 @@
       "KAB. CONTOH",
       "CONTOH TENGAH"
     ],
+    "weight": 490,
     "has_slip": true,
     "lines": [
       [
@@ -154,6 +160,7 @@
       "KOTA CONTOH BARAT",
       "KEBON CONTOH"
     ],
+    "weight": 1000,
     "has_slip": true,
     "lines": [
       [
@@ -183,6 +190,7 @@
       "KAB. CONTOH",
       "CONTOH TENGAH"
     ],
+    "weight": 490,
     "has_slip": true,
     "lines": [
       [
@@ -206,6 +214,7 @@
       "KOTA CONTOH BARAT",
       "KEBON CONTOH"
     ],
+    "weight": 1000,
     "has_slip": true,
     "lines": [
       [
@@ -229,6 +238,7 @@
       "KOTA CONTOH",
       null
     ],
+    "weight": 150,
     "has_slip": true,
     "lines": [
       [
@@ -252,6 +262,7 @@
       "KAB. CONTOH",
       "CONTOH TENGAH"
     ],
+    "weight": 490,
     "has_slip": true,
     "lines": [
       [
@@ -275,6 +286,7 @@
       "KOTA CONTOH BARAT",
       "KEBON CONTOH"
     ],
+    "weight": 1000,
     "has_slip": true,
     "lines": [
       [
@@ -298,6 +310,7 @@
       "KOTA CONTOH",
       null
     ],
+    "weight": 150,
     "has_slip": true,
     "lines": [
       [
@@ -321,6 +334,7 @@
       "KAB. CONTOH",
       "CONTOH TENGAH"
     ],
+    "weight": 490,
     "has_slip": true,
     "lines": [
       [
@@ -344,6 +358,7 @@
       "KOTA CONTOH BARAT",
       "KEBON CONTOH"
     ],
+    "weight": 1000,
     "has_slip": true,
     "lines": [
       [
@@ -367,6 +382,7 @@
       "KOTA CONTOH",
       null
     ],
+    "weight": 150,
     "has_slip": true,
     "lines": [
       [
@@ -390,6 +406,7 @@
       "KAB. CONTOH",
       "CONTOH TENGAH"
     ],
+    "weight": 490,
     "has_slip": true,
     "lines": [
       [
@@ -413,6 +430,7 @@
       "KOTA CONTOH BARAT",
       "KEBON CONTOH"
     ],
+    "weight": 1000,
     "has_slip": true,
     "lines": [
       [
@@ -436,6 +454,7 @@
       "KOTA CONTOH",
       null
     ],
+    "weight": 150,
     "has_slip": true,
     "lines": [
       [
@@ -465,6 +484,7 @@
       "KAB. CONTOH",
       "CONTOH TENGAH"
     ],
+    "weight": 490,
     "has_slip": true,
     "lines": [
       [
@@ -488,6 +508,7 @@
       "KOTA CONTOH BARAT",
       "KEBON CONTOH"
     ],
+    "weight": 1000,
     "has_slip": true,
     "lines": [
       [
@@ -511,6 +532,7 @@
       "KAB. CONTOH",
       "CONTOH TENGAH"
     ],
+    "weight": 490,
     "has_slip": true,
     "lines": [
       [
@@ -540,6 +562,7 @@
       null,
       null
     ],
+    "weight": null,
     "has_slip": true,
     "lines": [
       [
@@ -563,6 +586,7 @@
       null,
       null
     ],
+    "weight": null,
     "has_slip": false,
     "lines": [],
     "qty_total": null,
@@ -579,6 +603,7 @@
       null,
       null
     ],
+    "weight": null,
     "has_slip": false,
     "lines": [],
     "qty_total": null,
@@ -595,6 +620,7 @@
       null,
       null
     ],
+    "weight": null,
     "has_slip": false,
     "lines": [],
     "qty_total": null,

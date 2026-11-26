@@ -43,6 +43,7 @@ fn entry(label: &Label) -> Vec<(&'static str, Value)> {
         ),
         ("sender", json!(label.sender.name())),
         ("area", area(label.area)),
+        ("weight", json!(label.weight_grams)),
         ("has_slip", json!(label.slip.is_some())),
         ("lines", Value::Array(lines)),
         ("qty_total", qty_total),

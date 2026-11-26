@@ -17,6 +17,7 @@ const SENDER_TOP: f64 = 145.0;
 const RECEIVER_TOP: f64 = 175.0;
 /// The area line sits this much lower than the receiver's caption.
 const AREA_STEP: f64 = 9.0;
+const WEIGHT_TOP: f64 = 210.0;
 const SLIP_HEADER_Y: f64 = 290.0;
 /// A wrapped line sits this much lower than the line above.
 const LINE_STEP: f64 = 8.2;
@@ -119,6 +120,13 @@ fn label_part(label: &Label) -> Vec<Text> {
     if let Some(area) = label.area {
         texts.push(regular(LEFT, RECEIVER_TOP, "Penerima :"));
         texts.push(regular(LEFT, RECEIVER_TOP + AREA_STEP, area));
+    }
+    if let Some(grams) = label.weight_grams {
+        let caption = "Weight :";
+        let value = format!("{}.{:03} KG", grams / 1000, grams % 1000);
+        let value_x = LEFT + text_width(Font::Regular, caption) + 12.0;
+        texts.push(regular(LEFT, WEIGHT_TOP, caption));
+        texts.push(regular(value_x, WEIGHT_TOP, value));
     }
     texts
 }

@@ -31,21 +31,21 @@ When `packing-app.toml` is missing beside the program, or names no data folder:
 
 When the data folder holds data this version keeps more of, before any date opens
 ([D-APP-33](../decisions/app.md)): a date folder of v0.7, a date whose views are of an older `schema`, or a
-batch saved before the receiver's area was read whose label PDFs are in its date folder. Choosing another data folder (the start's
+batch saved before the receiver's area or the weight was read whose label PDFs are in its date folder. Choosing another data folder (the start's
 **Choose a folder**, Settings › **Change**) asks the same about that folder.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ◈ Packing v0.8.3-alpha                                                                │
+│  ◈ Packing v0.8.4-alpha                                                                │
 │  Update the data folder?                                                               │
 │  Update moves the files of 1 date out of the input and output folders of Packing v0.7  │
 │  into their date folders, keeping the old folders in v0.7 backup. It reads the         │
-│  receivers' addresses of 3 batches from their label PDFs and writes the files that     │
-│  list each date again. No batch, label or PDF is changed or deleted. Read-only shows   │
-│  the data as it is and changes nothing.                                                │
+│  receivers' addresses and the parcels' weights of 3 batches from their label PDFs and  │
+│  writes the files that list each date again. No batch, label or PDF is changed or      │
+│  deleted. Read-only shows the data as it is and changes nothing.                       │
 │  ┌ DATE ─────────────── WHAT CHANGES ──────────────────────────────────────────────┐   │
-│  │ Tue, 24 Nov 2026     Files of v0.7 moved in · Addresses of 2 batches, 61 orders │   │
-│  │                      · the date's lists                                         │   │
+│  │ Tue, 24 Nov 2026     Files of v0.7 moved in · Addresses and weights of 2        │   │
+│  │                      batches, 61 orders · the date's lists                      │   │
 │  │ Wed, 25 Nov 2026     the date's lists                                           │   │
 │  └─────────────────────────────────────────────────────────────────────────────────┘   │
 │                                                     [ Open read-only ]  [ Update ]     │
@@ -53,13 +53,14 @@ batch saved before the receiver's area was read whose label PDFs are in its date
 ```
 
 - **Update** runs the dates in order, oldest first; the card then shows its progress under the table: a line
-  per date done (*2026-11-24: files moved, addresses of 2 batches read, lists written*) and the step running
-  (*Moving files: 2026-11-24, file 3 of 12*, then *Reading addresses: 2026-11-24, batch 1, page 3 of 120*). Each batch is one append to its date's journal; then the
+  per date done (*2026-11-24: files moved, addresses and weights of 2 batches read, lists written*) and the
+  step running (*Moving files: 2026-11-24, file 3 of 12*, then *Reading labels: 2026-11-24, batch 1, page 3 of
+  120*). Each batch is one append to its date's journal; then the
   date's views are written. While another copy of the app writes, Update waits for it. When all are done,
   *Done. The data folder is up to date.* and **Continue** opens the Day screen.
 - A batch whose label PDF has changed is named in red on its date's line (*Batch 2 not read: …*) and skipped;
   the rest go on, and the next start asks about it again. A batch whose label PDF is missing is not offered:
-  it cannot be read, and its addresses stay empty.
+  it cannot be read, and its addresses and weights stay empty.
 - An Update that stops (the data folder cannot be written) says why, and both buttons show again.
 - **Open read-only** opens the Day screen in read-only mode. It is the only way into it.
 
@@ -74,7 +75,7 @@ rules screen's changes (its groups take no input; its switch shows the rule's st
 its state and cannot be clicked. **Open**, Search, the panel and the Day screen of any date work as usual; a
 write asked for anyway is refused with the same line. Starting the program again asks again. The theme and
 Settings › **Change** still work: they write `packing-app.toml` beside the program, not the data folder
-(Q-APP-20); a folder chosen there opens as at start.
+([D-APP-33](../decisions/app.md)); a folder chosen there opens as at start.
 
 ## No first account
 

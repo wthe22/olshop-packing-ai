@@ -6,7 +6,7 @@ use packing_engine::ids::{BatchId, CourierCode, OrderId, PdfId, TrackingId};
 use packing_engine::record::{
     Area, BatchSaved, CourierClue, CourierClueKind, Datetime, Finding, FindingKind, InputPdf,
     ItemPick, LabelGroupRule, LabelSortRule, LeftOutCopy, LeftOutReason, OrderContent, OutputFile,
-    SavedOrder, Sha256,
+    SavedOrder, Sha256, Weight,
 };
 
 pub fn time(text: &str) -> Datetime {
@@ -39,6 +39,7 @@ fn saved_order(id: &str, content: u16, group: &str, page: u16) -> SavedOrder {
             city: Some("KAB. CONTOH".into()),
             district: Some("CONTOH TENGAH".into()),
         }),
+        weight: Some(Weight::Grams(500)),
         pdf: PdfId::new(1),
         page_start: page,
         page_end: page,

@@ -20,9 +20,8 @@ export interface SearchArea {
   district: string | null;
 }
 
-// What named an order's courier: its logo, its logo's shape, the label's text, its tracking ID's
-// form, its service tag, or nothing.
-export type CourierClue = "logo" | "shape" | "text" | "form" | "tag" | "none";
+// The parcel's weight as the label prints it: its grams, or none printed.
+export type SearchWeight = { grams: number } | "not_printed";
 
 // One saved order the filter matches.
 export interface SearchRow {
@@ -45,7 +44,8 @@ export interface SearchRow {
   pickup_code: string | null;
   // `null`: saved before the area was read, and the data folder not updated since.
   area: SearchArea | null;
-  courier_clue: CourierClue;
+  // `null`: saved before the weight was read, and the data folder not updated since.
+  weight: SearchWeight | null;
   batch: number;
   // `<batch>-<code>`.
   group: string;

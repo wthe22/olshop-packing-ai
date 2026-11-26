@@ -100,9 +100,12 @@
           />
         </div>
       {/if}
-      <button class="primary go" disabled={search.busy} onclick={search.run}
-        ><Icon name="search" size={16} />{words.search}</button
-      >
+      <div class="run">
+        <button title={words.resetTitle} disabled={search.busy} onclick={search.reset}>{words.reset}</button>
+        <button class="primary go" disabled={search.busy} onclick={search.run}
+          ><Icon name="search" size={16} />{words.search}</button
+        >
+      </div>
     </div>
   </div>
 
@@ -254,12 +257,18 @@
     color: var(--text-muted);
   }
 
+  .run {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+  }
+
   .go {
     display: inline-flex;
+    flex: 1;
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-    margin-top: auto;
   }
 
   /* A narrow window: the dates and **Search** in one line under the filter, so the box stays low
@@ -278,8 +287,11 @@
       border-left: none;
     }
 
-    .go {
+    .run {
       margin-top: 0;
+    }
+
+    .go {
       padding-inline: 1.5rem;
     }
   }

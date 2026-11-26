@@ -22,7 +22,7 @@ an amend deletes the batch's account summaries after its commit.
 
 ```
 Root {
-  schema: String                // "2.2": orders.csv has the receiver's area
+  schema: String                // "2.1": orders.csv has the receiver's area and the weight
   date: Date
   journal_seq: u32              // the journal's last seq when this file was written
   input_pdfs: Map<PdfID, LabelPdf>
@@ -109,6 +109,7 @@ Order {
   province: String              // the receiver's area as printed (records.md, Area); empty: not printed or not read
   city: String
   district: String
+  weight_grams: u32             // records.md, Weight; empty: not printed or not read
   content_id: OrderContentID
   skus: String                  // its Seller SKUs in its content's item order, joined by "; "
   total_quantity: u16           // the printed Qty Total

@@ -7,15 +7,16 @@
    **Choose a folder**) and writes the file.
 2. **Migration.** Find, reading only, what the migration would change: date folders of v0.7 (with
    `input/` or `output/`, or a backup whose conversion stopped), dates whose `session.toml` is of another
-   `schema`, and live batches saved before the receiver's area was read whose label PDFs are in the date
+   `schema`, and live batches saved before the receiver's area or the weight was read whose label PDFs are in the date
    folder (on a date of v0.7, will be once it is flat); a damaged journal is passed over. If there is any, the
    [Start](../ui/start.md#update-the-data-folder) screen asks before any date opens: **Update** or **Open
    read-only** ([D-APP-33](../decisions/app.md)). Choosing another data folder asks the same.
    - **Update**, holding the data folder's lock, date by date, oldest first: a date of v0.7 is made flat
      first ([D-APP-32](../decisions/app.md)): its old folders move into `v0.7 backup/`, and each file is
      copied up under its new name and checked by its hash; then the orders of each batch are
-     read again from the first page of their copies in its stored label PDFs and recorded in one
-     `areas_filled` record ([records](../data/records.md)); then the date's views are written. A batch
+     read again from the first page of their copies in its stored label PDFs and recorded in an
+     `areas_filled` and a `weights_filled` record, each for the orders without it
+     ([records](../data/records.md)); then the date's views are written. A batch
      whose label PDF has changed is skipped and named; the next start asks again.
    - **Open read-only**: the steps below run without writing. No lock is taken, a missing rules file is read
      from its bundled copy, and every date opens for viewing only.

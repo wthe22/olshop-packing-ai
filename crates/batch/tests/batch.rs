@@ -1,7 +1,7 @@
 //! The batch steps on the repeat fixture (an order printed twice in a row, an order in both
 //! inputs): read → plan → save → verify → reopen, a second read of the same files, revert, the
 //! Printed tick, amend, a finding that stops the save until *Save anyway*, the shop prompt, and
-//! the migration that reads the area of a batch saved before it was read.
+//! the migration that reads the area and the weight of a batch saved before they were read.
 //!
 //! Skipped with a message when `pdfium.dll` has not been downloaded (tools/get-pdfium.sh).
 
@@ -641,9 +641,9 @@ fn an_accounts_summary_is_checked_kept_and_dropped_by_an_amend_or_a_revert() {
     );
 }
 
-/// The batch as a version that did not read the area saved it, on `day` of the same data folder,
+/// The batch as a version that read neither the area nor the weight saved it, on `day` of the same data folder,
 /// with its label PDFs as `inputs` gives them.
-fn saved_before_the_area(
+fn saved_before_reading(
     day: &Day,
     on: i8,
     record: &BatchSaved,
@@ -658,6 +658,7 @@ fn saved_before_the_area(
     let mut before = record.clone();
     for order in &mut before.orders {
         order.area = None;
+        order.weight = None;
     }
     let mut journal = Journal::open(&folder).unwrap();
     journal
@@ -682,7 +683,7 @@ fn as_v0_7(day: &Day, folder: &DateFolder, record: &BatchSaved) {
 }
 
 #[test]
-fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
+fn a_batch_saved_before_the_area_and_weight_were_read_gets_them_from_its_stored_label_pdfs() {
     let Some(mut day) = day("batch-migrate") else {
         return skipped();
     };
@@ -704,7 +705,7 @@ fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
         progress,
     };
 
-    let (older, mut journal) = saved_before_the_area(&day, 9, &record, stored);
+    let (older, mut journal) = saved_before_reading(&day, 9, &record, stored);
     assert!(
         migrate_date(&older, &mut journal, &request)
             .unwrap()
@@ -714,7 +715,7 @@ fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
     assert_eq!(
         journal.fold().live[&record.batch].saved.orders,
         record.orders,
-        "each order has the area the save read"
+        "each order has the area and the weight the save read"
     );
     let pages: Vec<usize> = seen
         .try_iter()
@@ -733,7 +734,7 @@ fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
     let csv = fs::read_to_string(older.dir().join("orders.csv")).unwrap();
     assert!(csv.contains(&area.province.unwrap()), "the views show it");
 
-    let (changed, mut journal) = saved_before_the_area(&day, 10, &record, |_| b"changed".to_vec());
+    let (changed, mut journal) = saved_before_reading(&day, 10, &record, |_| b"changed".to_vec());
     let last_seq = journal.fold().last_seq;
     let migrated = migrate_date(&changed, &mut journal, &request).unwrap();
     let skipped = migrated.skipped;
@@ -747,7 +748,7 @@ fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
     );
     assert!(changed.dir().join("session.toml").is_file());
 
-    let (flat, mut journal) = saved_before_the_area(&day, 11, &record, stored);
+    let (flat, mut journal) = saved_before_reading(&day, 11, &record, stored);
     as_v0_7(&day, &flat, &record);
     let found = migrations(data_dir).unwrap();
     assert!(

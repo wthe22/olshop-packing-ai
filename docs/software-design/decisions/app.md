@@ -18,7 +18,9 @@ written files embed whole fonts (about 1.4 MB); they print the same, and the siz
 **Decision.** Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at
 `1.0`. The schema version is not the app version: app `v0.2` writes `1.0`, and a schema change raises the app
 version. Data written by an older version is not read and not changed (D-APP-27: nor deleted; a separate
-script copies v0.4 dates once), except by a migration the owner starts (D-APP-33).
+script copies v0.4 dates once), except by a migration the owner starts (D-APP-33). A schema is raised once
+for each release the owner's data moves to, never for a development step between two (R-APP-18): the
+owner's data is at v0.7 (`session.toml` `2.0`), so everything v0.8 changes is `session.toml` `2.1`.
 
 **Why.** The owner's choice: the data is a working set, and the labels can be read again.
 
@@ -144,7 +146,7 @@ name it records keeps its case.
 view of an older `schema`) or data filled in from the stored PDFs (a field a newer reader records). When
 the data folder needs one, the app asks at its start: what would change (which dates, how many batches),
 with **Update** and **Open read-only**; choosing another data folder asks the same. Update shows its
-progress: the step, the date and file, and how far (*Reading addresses: 2026-11-25, batch 1, page 3 of
+progress: the step, the date and file, and how far (*Reading labels: 2026-11-25, batch 1, page 3 of
 120*). **Read-only** writes nothing at all in the data folder: no migration, no lock file, no rules file
 from the bundled copy, no recovery of a stopped save, no view, no batch, revert, amend, reprint, mark or
 summary; the screens do not offer them, and the back end refuses every write. It lasts until the program
@@ -152,11 +154,13 @@ starts again. Outside read-only mode, recovery and upkeep that change no file's 
 settling `.partial/` and writing a missing or stale view (journal › When a date opens).
 
 The migrations, in this order for each date: a date folder of v0.7 is made flat (D-APP-32); the views of
-another `schema` are written again; the receiver's area of each order of a live batch saved before it was
-read is read from the batch's stored label PDFs, one `areas_filled` record per batch (D-LABEL-26). A batch whose label PDF is missing is not offered (it cannot be read); one whose
+another `schema` are written again; the receiver's area and the weight of each order of a live batch saved
+before they were read are read from the batch's stored label PDFs, an `areas_filled` and a `weights_filled`
+record per batch (D-LABEL-26, D-LABEL-27). A batch whose label PDF is missing is not offered (it cannot be read); one whose
 label PDF has changed is skipped and named, and the next start asks again. A damaged journal is passed
-over. Whether the theme and the data folder choice, kept in `packing-app.toml` beside the program, may
-change in read-only mode is open (Q-APP-20).
+over. The program's own settings, kept in `packing-app.toml` beside the program, still change in read-only
+mode: the theme, and **Change** of the data folder, which opens the folder chosen as at start and asks again
+when it would be updated. The accounts, sort rules and logos are the data folder's and do not change.
 
 **Why.** The owner's rule: no surprises; a long migration must not look like a frozen program, and the
 owner must be able to look at data without changing it.

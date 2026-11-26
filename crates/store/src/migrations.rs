@@ -1,6 +1,6 @@
 //! What the owner's migration would change in the data folder (journal.md, *When a date opens*):
 //! date folders of v0.7 to make flat, views of another `schema`, and live batches saved before the
-//! receiver's area was read. Finding them reads only; a damaged journal is passed over, as nothing
+//! receiver's area or the weight was read. Finding them reads only; a damaged journal is passed over, as nothing
 //! may be appended to it.
 
 use std::path::Path;
@@ -25,7 +25,7 @@ pub struct DateMigration {
     pub v0_7: bool,
     /// The `schema` of its `session.toml`, when another than this version writes.
     pub older_views: Option<String>,
-    /// Its batches whose orders' areas would be read, and how many orders that is.
+    /// Its batches whose labels would be read for the area or the weight, and how many orders that is.
     pub batches: Vec<BatchId>,
     pub orders: usize,
 }
@@ -43,16 +43,16 @@ pub fn migrations(data_dir: &Path) -> Result<Vec<DateMigration>, StoreError> {
         let older_views = views_schema(folder.dir()).filter(|schema| schema != SESSION_SCHEMA);
         // A date of v0.7 has its label PDFs in the date folder once it is flat.
         let batches = if v0_7 {
-            without_area(journal.fold()).collect()
+            unread(journal.fold()).collect()
         } else {
-            areas_to_read(&folder, journal.fold())
+            batches_to_read(&folder, journal.fold())
         };
         if !v0_7 && older_views.is_none() && batches.is_empty() {
             continue;
         }
         let orders = batches
             .iter()
-            .map(|batch| orders_without_area(journal.fold(), *batch))
+            .map(|batch| orders_unread(journal.fold(), *batch))
             .sum();
         found.push(DateMigration {
             date,
@@ -65,10 +65,10 @@ pub fn migrations(data_dir: &Path) -> Result<Vec<DateMigration>, StoreError> {
     Ok(found)
 }
 
-/// The live batches with an order saved before its area was read whose label PDFs are all in the
-/// date folder: the only ones the migration can read.
-pub fn areas_to_read(folder: &DateFolder, fold: &Fold) -> Vec<BatchId> {
-    without_area(fold)
+/// The live batches with an order saved before its area or weight was read whose label PDFs are
+/// all in the date folder: the only ones the migration can read.
+pub fn batches_to_read(folder: &DateFolder, fold: &Fold) -> Vec<BatchId> {
+    unread(fold)
         .filter(|batch| {
             fold.live[batch]
                 .saved
@@ -79,19 +79,19 @@ pub fn areas_to_read(folder: &DateFolder, fold: &Fold) -> Vec<BatchId> {
         .collect()
 }
 
-/// The live batches with an order saved before its area was read.
-fn without_area(fold: &Fold) -> impl Iterator<Item = BatchId> + '_ {
+/// The live batches with an order saved before its area or weight was read.
+fn unread(fold: &Fold) -> impl Iterator<Item = BatchId> + '_ {
     fold.live
         .keys()
         .copied()
-        .filter(|batch| orders_without_area(fold, *batch) > 0)
+        .filter(|batch| orders_unread(fold, *batch) > 0)
 }
 
-fn orders_without_area(fold: &Fold, batch: BatchId) -> usize {
+fn orders_unread(fold: &Fold, batch: BatchId) -> usize {
     fold.live[&batch]
         .saved
         .orders
         .iter()
-        .filter(|order| order.area.is_none())
+        .filter(|order| order.area.is_none() || order.weight.is_none())
         .count()
 }

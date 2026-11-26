@@ -449,7 +449,7 @@ fn assert_details(row: &Value) {
     let wanted = json!({
         "items": [{"name": "Jok Kulit Vario | Custom", "variant": "", "quantity": 1, "seller_sku": "SELL-JOK-01"}],
         "area": {"province": "DKI JAKARTA", "city": "KOTA CONTOH BARAT", "district": "KEBON CONTOH"},
-        "ship_by": DAY, "total_quantity": 1, "pickup_code": null, "courier_clue": "none",
+        "ship_by": DAY, "total_quantity": 1, "pickup_code": null, "weight": {"grams": 1000},
     });
     for (key, value) in wanted.as_object().unwrap() {
         assert_eq!(&row[key], value, "{key}");

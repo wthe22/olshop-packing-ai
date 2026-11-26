@@ -1,6 +1,6 @@
 //! The v0.2 reading of the committed fixture: `labels-slip.pdf` read into copies gives
 //! `expected-labels.json` — one copy per order, its pages, tracking ID, deadline date, receiver's
-//! area, lines and printed total — each courier with the clue the label offers, and its sender's name; the repeat
+//! area, weight, lines and printed total — each courier with the clue the label offers, and its sender's name; the repeat
 //! inputs ask about the shop no account lists, as their answer has it; `labels-plain.pdf` stops.
 
 mod common;
@@ -12,7 +12,7 @@ use packing_engine::account_questions::{
 };
 
 use packing_engine::copies::{CopiesStop, read_copies};
-use packing_engine::record::CourierClueKind;
+use packing_engine::record::{CourierClueKind, Weight};
 
 use packing_engine::workflows::load_bundled;
 use packing_pdf::read;
@@ -64,6 +64,14 @@ fn the_fixture_reads_into_one_copy_per_order_as_its_answer() {
         let area = &copy.area;
         let area = serde_json::json!([area.province, area.city, area.district]);
         assert_eq!(area, want["area"], "{id}: area");
+        let weight = want["weight"]
+            .as_u64()
+            .map(|grams| Weight::Grams(grams as u32));
+        assert_eq!(
+            copy.weight,
+            weight.unwrap_or(Weight::NotPrinted),
+            "{id}: weight"
+        );
 
         // The fixture prints no image: J&T is named by its printed site, IDX by its lettered
         // form, and SiCepat's bare-number form names nothing.

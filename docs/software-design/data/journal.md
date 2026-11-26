@@ -42,14 +42,15 @@ the journal as it is on disk, never from a view or the search index.
 | `output_restored` | The batch is live and the file is one of its outputs |
 | `reprint_made` | `number` = the date's reprints so far + 1 |
 | `areas_filled` | The batch is live; each order it names is one of the batch's orders with no area yet |
+| `weights_filled` | The batch is live; each order it names is one of the batch's orders with no weight yet |
 | `recovered` | — |
 | every record | A `PdfID` always names the same `sha256`, and a `sha256` one `PdfID` |
 
 A batch is **live** from its `batch_saved` until a `batch_reverted` of it; an amend's record replaces the
 batch's earlier one. An order whose label printed no tracking ID and a pickup code reads with the pickup
 code as its tracking ID, a record saved before that rule too ([D-LABEL-24](../decisions/label.md)); an
-`areas_filled` gives its batch's orders their area. The inputs table holds every input any record named, live or not, so a `PdfID` is
-never given twice within a date.
+`areas_filled` gives its batch's orders their area, a `weights_filled` their weight. The inputs table holds
+every input any record named, live or not, so a `PdfID` is never given twice within a date.
 
 ## A torn write, and damage
 

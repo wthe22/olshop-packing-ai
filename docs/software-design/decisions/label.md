@@ -164,3 +164,17 @@ normalising would be a guess the owner did not ask for.
 
 **Applies to.** [reading](../labels/reading.md#the-receivers-area), [records](../data/records.md),
 [views](../data/views.md#orderscsv).
+
+## D-LABEL-27 — The weight is read as printed, in grams
+
+**Decision.** Each order records the parcel's weight its label prints (R-LABEL-19): in the journal's order
+record (`weight`: its grams, or *not printed*) and as the `weight_grams` column of `orders.csv`. The TikTok
+labels print kilograms (`0.490 KG`), the Shopee-style one grams (`450 gr`); both are kept as whole grams. A
+batch saved before gets its weight from its stored inputs by the migration the owner starts (D-APP-33): one
+`weights_filled` record per batch, beside its `areas_filled`. No other field of the label is added: the
+rest is unreliable or of no use to the owner.
+
+**Why.** The owner's request: the weight is worth keeping; it is on every label but the instant ones.
+
+**Applies to.** [reading](../labels/reading.md#the-weight), [records](../data/records.md),
+[views](../data/views.md#orderscsv), [Search](../ui/search.md).

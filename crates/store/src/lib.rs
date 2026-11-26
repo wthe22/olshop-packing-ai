@@ -29,7 +29,7 @@ pub use inputs::{InputProblem, InputState, StoredInput, check_inputs, input_path
 pub use journal::{Journal, Pending};
 pub use line::{encode_line, seal};
 pub use lock::DataLock;
-pub use migrations::{DateMigration, areas_to_read, migrations};
+pub use migrations::{DateMigration, batches_to_read, migrations};
 pub use older::{OlderData, OlderVersion, older_data};
 pub use outputs::{
     OutputProblem, OutputState, Settled, check_outputs, discard_partial, move_aside, move_forward,

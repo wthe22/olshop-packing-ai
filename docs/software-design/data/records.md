@@ -58,6 +58,7 @@ SavedOrder {
   ship_by_date: Option<Date>
   pickup_code: Option<String>   // the instant-service label's Kode Pengambilan
   area: Option<Area>            // none: saved before the area was read, until an areas_filled names it
+  weight: Option<Weight>        // none: saved before the weight was read, until a weights_filled names it
   pdf: PdfID                    // the copy that is written
   page_start: u16
   page_end: u16
@@ -68,6 +69,11 @@ Area {                          // the receiver's area as the label prints it (r
   province: Option<String>      // none: the layout does not print it, or it could not be read
   city: Option<String>
   district: Option<String>
+}
+
+Weight {                        // the parcel's weight as the label prints it (reading.md, The weight)
+  grams: u32                    // JSON {"grams": 490}
+  | not_printed                 // JSON "not_printed": the layout prints none
 }
 
 CourierClue {
@@ -136,6 +142,16 @@ OrderArea {
   district: Option<String>
 }
 
+WeightsFilled {                 // type "weights_filled": the migration's read of a batch saved before
+  batch: BatchID
+  orders: List<OrderWeight>     // every order of the batch with no weight, in its printing order
+}
+
+OrderWeight {
+  order_id: String
+  weight: Weight
+}
+
 Recovered {                     // type "recovered"
   dropped_bytes: u64
   dropped_text: String          // the cut-off bytes, as UTF-8 with invalid bytes replaced
@@ -152,8 +168,9 @@ Recovered {                     // type "recovered"
 - The ledger (pages read, written, left out) is not stored: it follows from `inputs`, `orders` and
   `left_out`, and the verifier computes it.
 - `courier_clue` and the page range make every order traceable to the page and the clue it came from.
-- `area` is read with the rest of the label. A batch saved before it was read gets it from its stored
-  inputs by the migration the owner starts ([D-APP-33](../decisions/app.md)): one `areas_filled` record per
-  batch, so no record is edited. An amend reads the area again with the rest.
+- `area` and `weight` are read with the rest of the label. A batch saved before they were read gets them
+  from its stored inputs by the migration the owner starts ([D-APP-33](../decisions/app.md)): an
+  `areas_filled` and a `weights_filled` record per batch, each for the orders without it, so no record is
+  edited. An amend reads them again with the rest.
 - `account` and `shop` are the names at the save: a renamed or deleted account changes no record, and an
   account's summary is made from these fields ([summary PDF](../labels/summary-pdf.md#one-account)).

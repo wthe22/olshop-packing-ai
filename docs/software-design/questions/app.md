@@ -18,14 +18,3 @@ the name the account has now.
 - **C. An account keeps its earlier names** in `config.toml`: Search's *account* and the Accounts
   screen count an order saved under an earlier name as the account's. A new account cannot take an earlier
   name.
-
-## Q-APP-20 — The program's own settings in read-only mode
-
-Read-only mode writes nothing in the data folder ([D-APP-33](../decisions/app.md)). The theme and the data
-folder in use are kept elsewhere: in `packing-app.toml` beside the program, each copy's own.
-
-- **A. Settings still change them.** The theme changes at once; **Change** of the data folder opens the
-  folder chosen as at start, asking again when it would be updated. Nothing in the data folder is
-  written. *(Default)*
-- **B. Read-only changes nothing at all.** Settings shows the theme and the folder without **Change**; the
-  owner starts the program again to change them.

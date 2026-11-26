@@ -17,8 +17,12 @@ const LOADING_RETRY_MS = 500;
 
 const key = (row: { day: string; order_id: string }) => `${row.day} ${row.order_id}`;
 
+// The boxes as the owner left them: Search opens with them again while the program runs. The dates
+// are not kept; they start from the viewed day each time.
+let keptTree: UiTree | null = null;
+
 export class Search {
-  tree = $state<UiTree>(firstTree());
+  tree = $state<UiTree>(keptTree ?? firstTree());
   preset = $state<RangePreset>("viewed");
   // The range's two dates as shown; kept under *All days*, so *Custom range* finds them again.
   range = $state<DateRange>({ from: "", to: "" });
@@ -51,9 +55,14 @@ export class Search {
     this.day = day;
     this.today = today;
     this.onReprinted = onReprinted;
-    this.preset = this.presets()[0];
-    this.range = { from: day(), to: day() };
+    keptTree = this.tree;
+    this.setFirstDates();
   }
+
+  private setFirstDates = () => {
+    this.preset = this.presets()[0];
+    this.range = { from: this.day(), to: this.day() };
+  };
 
   // The Dates list.
   presets = () => rangePresets(this.day(), this.today());
@@ -84,6 +93,16 @@ export class Search {
   setRange = (range: DateRange) => {
     this.preset = "custom";
     this.range = range;
+    this.invalidate();
+  };
+
+  // **Reset**: the boxes and the dates as Search first opens them.
+  reset = () => {
+    this.tree = firstTree();
+    keptTree = this.tree;
+    this.setFirstDates();
+    this.made = null;
+    this.findings = [];
     this.invalidate();
   };
 
@@ -208,30 +227,34 @@ export function itemName(item: api.SearchItem): string {
   return item.variant ? `${item.name} — ${item.variant}` : item.name;
 }
 
-// One field of a row's details: its head, and its value or the mark of one the label does not print.
-export interface DetailField {
+// One fact of a row's details: its head and its value; `notRead` when the order was saved before it
+// was read.
+export interface DetailFact {
   head: string;
   value: string;
-  missing: boolean;
+  notRead: boolean;
 }
 
-// The fields of a row's details, in their order; the pickup code only when the label prints one.
-export function detailFields(row: api.SearchRow): DetailField[] {
+// What a row's details add to the row, in their order: the receiver's district, city and province
+// as one line, the weight, the ship-by date, Qty Total and the pickup code, each only when the label
+// prints it, and the account when the row shows a shop of another name.
+export function detailFacts(row: api.SearchRow): DetailFact[] {
   const words = texts.search;
   const heads = words.details;
-  const field = (head: string, value: string | number | null): DetailField =>
-    value === null ? { head, value: words.none, missing: true } : { head, value: String(value), missing: false };
-  const area = row.area
-    ? [field(heads.province, row.area.province), field(heads.city, row.area.city), field(heads.district, row.area.district)]
-    : [{ head: heads.area, value: words.areaNotRead, missing: true }];
-  return [
-    field(heads.account, row.account),
-    ...area,
-    field(heads.shipBy, row.ship_by && formatDay(row.ship_by)),
-    field(heads.totalQuantity, row.total_quantity),
-    ...(row.pickup_code === null ? [] : [field(heads.pickupCode, row.pickup_code)]),
-    field(heads.courierBy, words.clue[row.courier_clue]),
-  ];
+  const notRead = (head: string): DetailFact => ({ head, value: words.notRead, notRead: true });
+  const facts: DetailFact[] = [];
+  const add = (head: string, value: string | number | null) => {
+    if (value !== null && value !== "") facts.push({ head, value: String(value), notRead: false });
+  };
+  if (row.area === null) facts.push(notRead(heads.receiver));
+  else add(heads.receiver, [row.area.district, row.area.city, row.area.province].filter((part) => part).join(", "));
+  if (row.weight === null) facts.push(notRead(heads.weight));
+  else if (row.weight !== "not_printed") add(heads.weight, words.grams(row.weight.grams));
+  add(heads.shipBy, row.ship_by && formatDay(row.ship_by));
+  add(heads.totalQuantity, row.total_quantity);
+  add(heads.pickupCode, row.pickup_code);
+  if (row.shop !== null && row.shop !== row.account) add(heads.account, row.account);
+  return facts;
 }
 
 // A row's group PDF beside its code's chip: the file name without `.pdf` and without the code it

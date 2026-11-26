@@ -11,6 +11,7 @@
 | `pickup_code` | The instant-service label's code: two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together); on the Shopee-style instant label two digits and two capital letters after the caption in its own text run (kept in the record; its label prints it) |
 | `account`, `shop` | The listed shop name found in the sender, and the account that lists it ([accounts](../app/accounts.md#the-account-of-an-order)) |
 | `area` | The receiver's province, city and district as printed ([below](#the-receivers-area)) |
+| `weight` | The parcel's weight as printed, in grams ([below](#the-weight)) |
 | item lines | The slip table: product name, variation, Seller SKU, quantity |
 | `total_quantity` | The slip's printed `Qty Total`; none on the Shopee-style slip (a filter counts the lines instead: [conditions](../rules-file/conditions.md)) |
 
@@ -139,3 +140,18 @@ Each layout prints them in its own place, found by its captions:
   edge is left of the city line's start.
 - On the owner's samples (744 orders of the four layouts) every order reads a province, a city and a
   district.
+
+## The weight
+
+The parcel's weight, read from the copy's first page as printed and kept in grams
+([D-LABEL-27](../decisions/label.md)). The value is the number on its caption's line (within 2 pt of its
+baseline); a caption's word elsewhere, as in a product name, is passed over.
+
+| Layout | Caption | Value |
+|---|---|---|
+| TikTok standard (J&T Express, SiCepat, IDX, Anteraja) | `Weight :` (its run may start with the date printed left of it) | Kilograms with three decimals: `0.490 KG` is 490 g |
+| TikTok boxed (J&T Cargo) | `Weight` | Whole kilograms: `5 KG` is 5000 g |
+| Shopee-style (SPX, Grab Express) | `Berat:` | Grams: `450 gr` |
+
+The instant labels (Gojek, Grab) print none, and so do some boxed IDX and Anteraja labels: the weight is
+*not printed*. On the owner's samples every other order reads one.

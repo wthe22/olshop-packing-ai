@@ -6,10 +6,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use jiff::civil::Date;
-use packing_engine::ids::{BatchId, PdfId, TrackingId};
+use packing_engine::ids::{BatchId, OrderId, PdfId, TrackingId};
 use packing_engine::record::{
     AreasFilled, BatchSaved, Datetime, JOURNAL_SCHEMA, OutputFile, OutputRestored, Record,
-    RecordBody, ReprintMade, Sha256,
+    RecordBody, ReprintMade, SavedOrder, Sha256, WeightsFilled,
 };
 
 /// Where a journal is damaged: the line, counted from 1, and why.
@@ -240,6 +240,7 @@ impl Fold {
                     LastWrites::Files(vec![(reprint.file.clone(), reprint.sha256.clone())]);
             }
             RecordBody::AreasFilled(filled) => self.fill_areas(filled)?,
+            RecordBody::WeightsFilled(filled) => self.fill_weights(filled)?,
             RecordBody::Recovered(_) => {}
         }
         Ok(())
@@ -304,26 +305,39 @@ impl Fold {
 
     /// Each order named gets its area: an order of the batch that has none yet.
     fn fill_areas(&mut self, filled: &AreasFilled) -> Result<(), DamageReason> {
-        let batch = filled.batch;
-        let live = self.live_batch(batch)?;
         for named in &filled.orders {
-            let order = live
-                .saved
-                .orders
-                .iter_mut()
-                .find(|order| order.order_id == named.order_id)
-                .ok_or_else(|| {
-                    rule(format!(
-                        "{} is not an order of batch {batch}",
-                        named.order_id
-                    ))
-                })?;
+            let order = self.batch_order(filled.batch, &named.order_id)?;
             if order.area.is_some() {
                 return Err(rule(format!("{} has its area already", named.order_id)));
             }
             order.area = Some(named.area.clone());
         }
         Ok(())
+    }
+
+    /// Each order named gets its weight: an order of the batch that has none yet.
+    fn fill_weights(&mut self, filled: &WeightsFilled) -> Result<(), DamageReason> {
+        for named in &filled.orders {
+            let order = self.batch_order(filled.batch, &named.order_id)?;
+            if order.weight.is_some() {
+                return Err(rule(format!("{} has its weight already", named.order_id)));
+            }
+            order.weight = Some(named.weight);
+        }
+        Ok(())
+    }
+
+    fn batch_order(
+        &mut self,
+        batch: BatchId,
+        order_id: &OrderId,
+    ) -> Result<&mut SavedOrder, DamageReason> {
+        self.live_batch(batch)?
+            .saved
+            .orders
+            .iter_mut()
+            .find(|order| order.order_id == *order_id)
+            .ok_or_else(|| rule(format!("{order_id} is not an order of batch {batch}")))
     }
 
     fn live_batch(&mut self, batch: BatchId) -> Result<&mut LiveBatch, DamageReason> {

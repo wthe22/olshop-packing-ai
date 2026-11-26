@@ -7,27 +7,24 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 ```
 ┌ Search ──────────────────────────────────────────────────────────────────────────────────────── [×] ┐
 │ ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│ │ [All of these ▾]  [ ] not                                   │ Dates [Last 7 days            ▾] │ │
-│ │ [Tracking ID ▾] [contains ▾] [00000012          ] [ ] not [×] │ [21/10/2026] to [27/10/2026]     │ │
-│ │ [+ condition] [+ group]                                     │ [            Search            ] │ │
+│ │ [All of these ▾]  [ ] not                                     │ Dates [Last 7 days          ▾]  │ │
+│ │ [Tracking ID ▾] [contains ▾] [00000012          ] [ ] not [×] │ [21/10/2026] to [27/10/2026]    │ │
+│ │ [+ condition] [+ group]                                       │ [Reset] [       Search       ]  │ │
 │ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
 │ 3 orders in 2 batches   [–] Select all                                                              │
 │ ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│ │     Order                  Tracking          Items                          Label                       │ │
-│ │ [✓] Toko Alfa              (J&T Express)     ×1  Sepatu Standar Samping     Wed, 7 Oct Batch 2 [Open] ›│ │
-│ │     580000000000000042     JY0000001234      — honda                        Sepatu x88 page 14  Reprinted│ │
+│ │     Order                  Tracking          Items                  Label                       │ │
+│ │ [✓] Toko Alfa              (J&T Express)     ×1  Sepatu Standar     Wed, 7 Oct Batch 2 [Open] › │ │
+│ │     580000000000000042     JY0000001234          Samping — honda    Sepatu x88 page 14 Reprinted│ │
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ [ ] Toko Beta              (J&T Express)     ×2  Spion Beat                 Wed, 7 Oct Batch 2 [Open] ⌄│ │
-│ │     580000000000000057     JY0000001235                                     Spion x35 page 3            │ │
-│ │     ACCOUNT    PROVINCE     CITY          DISTRICT   SHIP BY          QTY TOTAL   COURIER NAMED BY │ │
-│ │     Toko Beta  JAWA BARAT   KOTA CONTOH   CONTOH     Thu, 8 Oct 2026  2           its logo         │ │
-│ │     ┌ QTY ─ ITEM ───────────────────────────────── VARIATION ─ SELLER SKU ┐                        │ │
-│ │     │ ×2    Spion Beat                             honda       SPI-01     │                        │ │
-│ │     └─────────────────────────────────────────────────────────────────────┘                        │ │
-│ │     From [▯ 10-07_09-05-49_Shipping label+Packing slip_2.pdf] p. 3, saved at 09:12 into group (2-B)│ │
+│ │ [ ] Toko Beta              (J&T Express)     ×2  Spion Beat — honda Wed, 7 Oct Batch 2 [Open] ⌄ │ │
+│ │     580000000000000057     JY0000001235          SPI-01             Spion x35 page 3            │ │
+│ │     RECEIVER CONTOH, KOTA CONTOH, JAWA BARAT   WEIGHT 490 g   SHIP BY Thu, 8 Oct 2026           │ │
+│ │     QTY TOTAL 2                                                                                 │ │
+│ │     From [▯ labels pagi.pdf | e731bbe96035] p. 3, saved at 09:12 into group (2-B)               │ │
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ [✓] Toko Alfa 580000000000000061 ×1  Kaca Spion                   Tue, 6 Oct Batch 1 [Open] ›    │ │
-│ │     (Unknown) no tracking ID    ×1  Spion Beat                   Spion x12 page 7               │ │
+│ │ [✓] Toko Alfa              (Unknown)         ×1  Kaca Spion         Tue, 6 Oct Batch 1 [Open] › │ │
+│ │     580000000000000061     no tracking ID    ×1  Spion Beat         Spion x12 page 7            │ │
 │ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
 │ ─────────────────────────────────────────────────────────────────────────────────────────────────── │
 │ 2 of 3 selected                                                      [Clear]  [ Reprint ]           │
@@ -50,7 +47,9 @@ On a narrower window the items take a line of their own under the order:
   account or one shop: *Account equals* picks an account from the list ([D-RULES-6](../decisions/rules.md)). Matching ignores case; an item field
   matches when one line matches. The Courier row works as there: *equals* picks a courier from the list,
   *contains* and *starts with* take typed text matched against the couriers' names
-  ([D-RULES-4](../decisions/rules.md)).
+  ([D-RULES-4](../decisions/rules.md)). Search opens again with the boxes as the owner left them, for as
+  long as the program runs; the dates start from *Viewed day* each time (R-UI-56). **Reset**, left of
+  **Search**, empties the boxes to the first one and sets the dates back.
 - **Dates**: *Viewed day* (the date the Day screen shows, the default; left out while that date is today),
   *Today*, *Yesterday*, *Last 7 days* and *Last 30 days* (today and the dates before it), *Custom range* or
   *All days* ([D-UI-3](../decisions/ui.md)). Every account is searched unless the filter names one.
@@ -70,16 +69,17 @@ On a narrower window the items take a line of their own under the order:
   row and a long product name wraps in one wide column. Results narrower than 54 rem (a window much less
   than full width) put the items on a line of their own under the order; narrower than 34 rem, the label
   too, and the heads are hidden. **Open** opens that group PDF, written again first when it is not there any
-  more (as on the [Day](day.md) screen). The chevron opens the row's **details** under it, everything saved
-  of the order: its fields, each with its head over its value, as many to a line as fit (*Account*;
-  *Province*, *City* and *District* as the label prints them, or *Receiver's area: not read yet* for an
-  order saved before they were read in a data folder not updated since; *Ship by*; *Qty Total*; *Pickup
-  code* only when the label prints one; *Courier named by* its logo, its logo's shape, the label's text,
-  its tracking ID, its service tag or nothing), a dash for a field the label does not print; a table of its
-  items (*Qty*, *Item*, *Variation*, *Seller SKU*); and one line, *From* the input PDF it was read from (its
-  file name in a box with a file icon in monospace, then its short hash, the one its file name carries) and
-  its pages there, *saved at 09:12* (its batch's last save) *into group* and the group PDF's code (`2-B`)
-  as a chip.
+  more (as on the [Day](day.md) screen). The chevron opens the row's **details**: what the label prints
+  that the row does not show, nothing twice (R-UI-55). Each item's **Seller SKU** stands under the item in
+  the row, small and in monospace. Under the row, one line of facts, each head before its value, wrapping
+  as the window needs: *Receiver* (district, city and province as the label prints them, in one line),
+  *Weight* (`1,250 g`), *Ship by*, *Qty Total*, *Pickup code*, and *Account* when the row shows a shop of
+  another name. A fact the label does not print is left out; for an order saved before the area or the
+  weight was read, in a data folder not updated since, *not read yet: the data folder is not updated*
+  stands in its place. Then one line, *From* the input PDF it was read from (its file name in a box with a
+  file icon in monospace, then its short hash, the one its file name carries) and its pages there, *saved
+  at 09:12* (its batch's last save) *into group* and the group PDF's code (`2-B`) as a chip. How the
+  courier was named is not shown (the journal keeps it).
 - **Reprinted**: an order printed again before carries the mark *Reprinted* under **Open** (*Reprinted 2×* for more);
   its tooltip names each reprint and its date.
 - **Saved orders only**: an open draft's orders have no file yet and are not searched.

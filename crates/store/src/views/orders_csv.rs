@@ -1,12 +1,12 @@
 //! `orders.csv`: one row per order written by a live batch, the field names as headers, an
 //! absent value as an empty cell.
 
-use packing_engine::record::CourierClueKind;
+use packing_engine::record::{CourierClueKind, Weight};
 
 use super::ContentIds;
 use crate::fold::Fold;
 
-const HEADER: [&str; 19] = [
+const HEADER: [&str; 20] = [
     "pdf_num",
     "page_start",
     "page_end",
@@ -19,6 +19,7 @@ const HEADER: [&str; 19] = [
     "province",
     "city",
     "district",
+    "weight_grams",
     "content_id",
     "skus",
     "total_quantity",
@@ -64,6 +65,10 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
                 area.province.unwrap_or_default(),
                 area.city.unwrap_or_default(),
                 area.district.unwrap_or_default(),
+                match order.weight {
+                    Some(Weight::Grams(grams)) => grams.to_string(),
+                    _ => String::new(),
+                },
                 ids.id(*batch, order.content).to_string(),
                 skus.join("; "),
                 order

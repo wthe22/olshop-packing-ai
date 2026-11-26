@@ -20,6 +20,9 @@ pub const AREAS: [&str; 3] = [
     "JAWA TIMUR,KOTA CONTOH,",
 ];
 
+/// The weights the labels print, in grams.
+pub const WEIGHTS: [u32; 3] = [490, 1000, 150];
+
 /// Where a label prints its sender beside the `Pengirim` caption: three of the places the downloads
 /// use, or no caption at all.
 #[derive(Clone, Copy)]
@@ -78,6 +81,8 @@ pub struct Label {
     pub sender: Sender,
     /// The line under the `Penerima :` caption, `province,city,district`; none: no caption.
     pub area: Option<&'static str>,
+    /// The grams printed after the `Weight :` caption, in kilograms; none: no caption.
+    pub weight_grams: Option<u32>,
     pub slip: Option<Slip>,
     pub style: Style,
 }
@@ -313,6 +318,7 @@ pub fn slip_labels() -> Vec<Label> {
                     _ => Sender::Right(SHOP),
                 },
                 area: Some(AREAS[number as usize % AREAS.len()]),
+                weight_grams: Some(WEIGHTS[number as usize % WEIGHTS.len()]),
                 slip: Some(Slip {
                     rows,
                     qty_total,
@@ -332,6 +338,7 @@ pub fn slip_labels() -> Vec<Label> {
         spaced: false,
         sender: Sender::Right(SHOP),
         area: Some(AREAS[0]),
+        weight_grams: Some(WEIGHTS[0]),
         slip: Some(Slip {
             rows: vec![
                 Row {
@@ -368,6 +375,7 @@ pub fn slip_labels() -> Vec<Label> {
         spaced: false,
         sender: Sender::Joined(SHOP),
         area: None,
+        weight_grams: None,
         slip: Some(Slip {
             rows: vec![row(
                 &Product {
@@ -397,6 +405,7 @@ pub fn plain_labels() -> Vec<Label> {
         spaced: false,
         sender: Sender::Right(SHOP),
         area: None,
+        weight_grams: None,
         slip: None,
         style: Style::Glyphs,
     };
@@ -432,6 +441,7 @@ pub fn repeat_inputs() -> [Vec<Label>; 2] {
         spaced: false,
         sender: Sender::Right(SHOP),
         area: Some(AREAS[1]),
+        weight_grams: Some(WEIGHTS[1]),
         slip: Some(Slip {
             rows: vec![row(product, quantity, "Default")],
             qty_total: quantity,

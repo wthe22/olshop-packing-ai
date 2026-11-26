@@ -15,7 +15,7 @@ use crate::{READ_ONLY, settings};
 const DAY: &str = "2026-10-07";
 
 /// A program folder naming a data folder of an older version: one date with a batch saved before
-/// the area was read, its label PDF not kept, views of schema 2.1, and a summary made on request
+/// the area was read, its label PDF not kept, views of schema 2.0, and a summary made on request
 /// still in v0.7's output folder.
 fn older_folder(tag: &str) -> (TempDir, AppState, PathBuf) {
     let program = TempDir::new(tag);
@@ -34,7 +34,7 @@ fn older_folder(tag: &str) -> (TempDir, AppState, PathBuf) {
     let text = fs::read_to_string(&session).unwrap();
     fs::write(
         &session,
-        text.replace("schema = \"2.2\"", "schema = \"2.1\""),
+        text.replace("schema = \"2.1\"", "schema = \"2.0\""),
     )
     .unwrap();
     fs::remove_file(folder.dir().join("orders.csv")).unwrap();
@@ -130,7 +130,7 @@ fn update_writes_the_views_again_and_opens_the_folder() {
     assert_eq!(fs::read(summary).unwrap(), b"account summary");
     assert!(!dir.join(DAY).join("output").exists());
     let session = fs::read_to_string(dir.join(DAY).join(SESSION_TOML)).unwrap();
-    assert!(session.starts_with("schema = \"2.2\""), "{session}");
+    assert!(session.starts_with("schema = \"2.1\""), "{session}");
     assert!(dir.join(DAY).join("orders.csv").is_file());
     assert!(pending(&dir).unwrap().is_empty());
     assert!(!start_information(&state).unwrap().read_only);

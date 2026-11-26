@@ -12,7 +12,7 @@ import { searchSummary, texts } from "../src/texts.ts";
 import { answerQuestions } from "./answers.mjs";
 
 useRunes();
-const { Search, detailFields, fileLabel, itemsText, reprintedMark } = await import("../src/lib/search.svelte.ts");
+const { Search, detailFacts, fileLabel, itemsText, reprintedMark } = await import("../src/lib/search.svelte.ts");
 
 const row = (order_id, group = "1-A") => ({
   day: "2026-10-07",
@@ -240,41 +240,64 @@ test("the Courier box lists the couriers of the rules, and a row names its page"
   assert.match(search.error, /rules_list/, "a failed load is shown");
 });
 
-test("a row's details show every field of the order, a dash where the label prints none", () => {
+test("a row's details add what the label prints that the row does not show", () => {
   const order = {
     ...row("580000000000000042"),
     account: "Toko Alfa",
+    shop: "Toko Alfa Cabang",
     items: [{ name: "Spion Beat", variant: "honda", quantity: 2, seller_sku: "SKU-01" }],
     ship_by: "2026-10-08",
     total_quantity: 2,
     pickup_code: null,
     area: { province: "JAWA BARAT", city: "KOTA CONTOH", district: null },
-    courier_clue: "logo",
+    weight: { grams: 1250 },
   };
   assert.equal(itemsText(order), "Spion Beat — honda ×2");
+  const facts = (row) => detailFacts(row).map((fact) => [fact.head, fact.value, fact.notRead]);
+  assert.deepEqual(facts(order), [
+    ["Receiver", "KOTA CONTOH, JAWA BARAT", false],
+    ["Weight", "1,250 g", false],
+    ["Ship by", "Thu, 8 Oct 2026", false],
+    ["Qty Total", "2", false],
+    ["Account", "Toko Alfa", false],
+  ]);
+
+  const instant = { ...order, shop: "Toko Alfa", weight: "not_printed", total_quantity: null, pickup_code: "12AB" };
   assert.deepEqual(
-    detailFields(order).map((field) => [field.head, field.value, field.missing]),
+    facts(instant),
     [
-      ["Account", "Toko Alfa", false],
-      ["Province", "JAWA BARAT", false],
-      ["City", "KOTA CONTOH", false],
-      ["District", "—", true],
+      ["Receiver", "KOTA CONTOH, JAWA BARAT", false],
       ["Ship by", "Thu, 8 Oct 2026", false],
-      ["Qty Total", "2", false],
-      ["Courier named by", "its logo", false],
+      ["Pickup code", "12AB", false],
     ],
+    "what the label does not print is left out, and the account when the shop has its name",
   );
 
-  const older = { ...order, area: null, ship_by: null, total_quantity: null, pickup_code: "12AB", courier_clue: "none" };
-  assert.deepEqual(
-    detailFields(older).map((field) => [field.head, field.value]),
-    [
-      ["Account", "Toko Alfa"],
-      ["Receiver's area", "not read yet: the data folder is not updated"],
-      ["Ship by", "—"],
-      ["Qty Total", "—"],
-      ["Pickup code", "12AB"],
-      ["Courier named by", "nothing"],
-    ],
-  );
+  const older = { ...order, shop: null, area: null, weight: null, ship_by: null, total_quantity: null };
+  assert.deepEqual(facts(older), [
+    ["Receiver", "not read yet: the data folder is not updated", true],
+    ["Weight", "not read yet: the data folder is not updated", true],
+  ]);
+});
+
+test("Search opens again with the boxes it was left with, the dates from the viewed day; Reset starts over", () => {
+  useBackend({});
+  const first = new Search(() => "2026-10-07", () => "2026-10-27", () => {});
+  first.reset();
+  first.tree.root.children[0].value = "JY0000001234";
+  first.setPreset("all");
+
+  const again = new Search(() => "2026-10-08", () => "2026-10-27", () => {});
+  assert.equal(again.tree.root.children[0].value, "JY0000001234", "the boxes are kept");
+  assert.equal(again.preset, again.presets()[0], "the dates are not");
+  assert.deepEqual(again.range, { from: "2026-10-08", to: "2026-10-08" });
+
+  again.setPreset("all");
+  again.reset();
+  const [box] = again.tree.root.children;
+  assert.deepEqual([again.tree.root.children.length, box.field, box.operator, box.value], [1, "order_id", "contains", ""]);
+  assert.equal(again.preset, again.presets()[0]);
+  assert.equal(again.result, null);
+  const third = new Search(() => "2026-10-08", () => "2026-10-27", () => {});
+  assert.equal(third.tree.root.children[0].value, "", "what Reset left is kept");
 });

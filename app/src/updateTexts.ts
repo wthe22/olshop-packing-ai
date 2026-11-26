@@ -13,7 +13,7 @@ export const updateTexts = {
         ? `Update moves the files of ${count(v07Dates, "date", "dates")} out of the input and output folders of Packing v0.7 into their date folders, keeping the old folders in v0.7 backup.`
         : null,
       batches > 0
-        ? `${moves ? "It" : "Update"} reads the receivers' addresses of ${count(batches, "batch", "batches")} from their label PDFs and writes the files that list each date again.`
+        ? `${moves ? "It" : "Update"} reads the receivers' addresses and the parcels' weights of ${count(batches, "batch", "batches")} from their label PDFs and writes the files that list each date again.`
         : `${moves ? "It" : "Update"} writes the files that list each date again.`,
       "No batch, label or PDF is changed or deleted.",
     ]
@@ -23,12 +23,13 @@ export const updateTexts = {
   readOnlyExplain: "Read-only shows the data as it is and changes nothing.",
   dateHead: "Date",
   changesHead: "What changes",
-  // One date's row: "Files of v0.7 moved in · Addresses of 2 batches, 61 orders · the date's lists".
+  // One date's row: "Files of v0.7 moved in · Addresses and weights of 2 batches, 61 orders · the
+  // date's lists".
   changes: (batches: number, orders: number, olderViews: boolean, v07: boolean) =>
     [
       v07 ? "Files of v0.7 moved in" : null,
       batches > 0
-        ? `Addresses of ${count(batches, "batch", "batches")}, ${count(orders, "order", "orders")}`
+        ? `Addresses and weights of ${count(batches, "batch", "batches")}, ${count(orders, "order", "orders")}`
         : null,
       olderViews || batches > 0 || v07 ? "the date's lists" : null,
     ]
@@ -40,11 +41,11 @@ export const updateTexts = {
   // The step running and each date done.
   moving: (date: string, file: number, files: number) => `Moving files: ${date}, file ${file} of ${files}`,
   reading: (date: string, batch: number, page: number, pages: number) =>
-    `Reading addresses: ${date}, batch ${batch}, page ${page} of ${pages}`,
+    `Reading labels: ${date}, batch ${batch}, page ${page} of ${pages}`,
   updated: (date: string, moved: boolean, batches: number) =>
     `${date}: ${[
       moved ? "files moved" : null,
-      batches > 0 ? `addresses of ${count(batches, "batch", "batches")} read` : null,
+      batches > 0 ? `addresses and weights of ${count(batches, "batch", "batches")} read` : null,
       "lists written",
     ]
       .filter((part) => part !== null)

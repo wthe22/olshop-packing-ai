@@ -2,8 +2,8 @@
 
 use packing_engine::ids::{BatchId, OrderId, TrackingId};
 use packing_engine::record::{
-    Area, AreasFilled, BatchReverted, OrderArea, PrintSent, PrintedMarked, RecordBody, Recovered,
-    ReprintMade,
+    Area, AreasFilled, BatchReverted, OrderArea, OrderWeight, PrintSent, PrintedMarked, RecordBody,
+    Recovered, ReprintMade, Weight, WeightsFilled,
 };
 use packing_store::{DamageReason, Journal, StoreError, open_date};
 
@@ -184,6 +184,9 @@ fn a_record_the_fold_refuses_writes_nothing() {
         areas_filled(1, "580000000000000001"),
         areas_filled(1, "580000000000000009"),
         areas_filled(2, "580000000000000001"),
+        weights_filled(1, "580000000000000001"),
+        weights_filled(1, "580000000000000009"),
+        weights_filled(2, "580000000000000001"),
         started(),
     ];
     for body in cases {
@@ -208,8 +211,19 @@ fn areas_filled(batch: u8, order_id: &str) -> RecordBody {
     })
 }
 
+/// The weight of one order of `batch`.
+fn weights_filled(batch: u8, order_id: &str) -> RecordBody {
+    RecordBody::WeightsFilled(WeightsFilled {
+        batch: BatchId::new(batch),
+        orders: vec![OrderWeight {
+            order_id: OrderId::new(order_id),
+            weight: Weight::Grams(490),
+        }],
+    })
+}
+
 #[test]
-fn an_older_record_reads_its_pickup_code_as_tracking_id_and_gets_its_area_once() {
+fn an_older_record_reads_its_pickup_code_as_tracking_id_and_gets_its_area_and_weight_once() {
     let (_data, folder) = date_folder("older-record");
     let mut journal = Journal::open(&folder).unwrap();
     let mut older = batch(1, false, Vec::new());
@@ -217,6 +231,7 @@ fn an_older_record_reads_its_pickup_code_as_tracking_id_and_gets_its_area_once()
     older.orders[0].pickup_code = Some("WX1234".into());
     for order in &mut older.orders {
         order.area = None;
+        order.weight = None;
     }
     journal
         .commit(vec![RecordBody::BatchSaved(older)], APP)
@@ -238,6 +253,15 @@ fn an_older_record_reads_its_pickup_code_as_tracking_id_and_gets_its_area_once()
     );
     assert_eq!(orders[1].area, None, "an order not named keeps none");
     let again = journal.commit(vec![areas_filled(1, "580000000000000001")], APP);
+    assert!(matches!(again, Err(StoreError::Rejected(_))), "once only");
+
+    journal
+        .commit(vec![weights_filled(1, "580000000000000001")], APP)
+        .unwrap();
+    let orders = &journal.fold().live[&BatchId::new(1)].saved.orders;
+    assert_eq!(orders[0].weight, Some(Weight::Grams(490)));
+    assert_eq!(orders[1].weight, None, "an order not named keeps none");
+    let again = journal.commit(vec![weights_filled(1, "580000000000000001")], APP);
     assert!(matches!(again, Err(StoreError::Rejected(_))), "once only");
     assert_eq!(Journal::open(&folder).unwrap().fold(), journal.fold());
 }

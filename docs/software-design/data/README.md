@@ -87,7 +87,7 @@ journal that grew meanwhile. A date opened while another copy holds the lock is 
   `OrderContentID: u16` and `RuleID: u8` (numbered in the views). `CourierCode` is `Courier.code` of
   `parser.toml`.
 - Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at `1.0`.
-  The schema version is not the app version: the journal and `session.toml` are `2.0` (a date for all
+  The schema version is not the app version: the journal is `2.0` and `session.toml` `2.1` (a date for all
   accounts), `packing-app.toml`, `parser.toml`, `config.toml` and `order-contents.toml` `1.0`. Every journal record also carries the
   app version that wrote it. Data of an older schema is not read and not migrated
   ([D-APP-3](../decisions/app.md)).

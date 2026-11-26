@@ -43,6 +43,7 @@ pub enum RecordBody {
     OutputRestored(OutputRestored),
     ReprintMade(ReprintMade),
     AreasFilled(AreasFilled),
+    WeightsFilled(WeightsFilled),
     Recovered(Recovered),
 }
 
@@ -58,6 +59,7 @@ impl RecordBody {
             RecordBody::OutputRestored(_) => "output_restored",
             RecordBody::ReprintMade(_) => "reprint_made",
             RecordBody::AreasFilled(_) => "areas_filled",
+            RecordBody::WeightsFilled(_) => "weights_filled",
             RecordBody::Recovered(_) => "recovered",
         }
     }
@@ -156,6 +158,8 @@ pub struct SavedOrder {
     pub pickup_code: Option<String>,
     /// None: saved before the area was read, until an `areas_filled` record names the order.
     pub area: Option<Area>,
+    /// None: saved before the weight was read, until a `weights_filled` record names the order.
+    pub weight: Option<Weight>,
     /// The input that holds the copy written.
     pub pdf: PdfId,
     pub page_start: u16,
@@ -170,6 +174,15 @@ pub struct Area {
     pub province: Option<String>,
     pub city: Option<String>,
     pub district: Option<String>,
+}
+
+/// The parcel's weight as the label prints it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Weight {
+    Grams(u32),
+    /// The layout prints no weight.
+    NotPrinted,
 }
 
 /// The clue that named an order's courier.
@@ -328,6 +341,21 @@ pub struct OrderArea {
     pub order_id: OrderId,
     #[serde(flatten)]
     pub area: Area,
+}
+
+/// The weight of every order of a batch saved before the weight was read, read from its stored
+/// inputs.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct WeightsFilled {
+    pub batch: BatchId,
+    /// In the batch's printing order.
+    pub orders: Vec<OrderWeight>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OrderWeight {
+    pub order_id: OrderId,
+    pub weight: Weight,
 }
 
 /// The cut-off tail of an append that did not finish.
