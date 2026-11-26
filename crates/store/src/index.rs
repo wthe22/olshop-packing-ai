@@ -28,6 +28,8 @@ pub struct IndexedOrder {
     pub order: SavedOrder,
     /// Its content's items, in their order.
     pub items: Vec<ItemPick>,
+    /// Its group's name in the batch's sort rule.
+    pub group_name: String,
     /// The group PDF that holds it.
     pub file: String,
     /// The pages it fills in that group PDF, counted from 1.
@@ -247,6 +249,12 @@ fn indexed(date: Date, batch: BatchId, live: &LiveBatch) -> Vec<IndexedOrder> {
                 .get(order.content as usize)
                 .map(|content| content.items.clone())
                 .unwrap_or_default(),
+            group_name: saved
+                .sort_rule
+                .label_groups
+                .iter()
+                .find(|group| group.code == order.group)
+                .map_or_else(String::new, |group| group.name.clone()),
             file: saved
                 .outputs
                 .iter()

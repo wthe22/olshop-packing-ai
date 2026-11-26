@@ -470,7 +470,7 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
         (4.into(), 1.into())
     );
     let row = &found["rows"][0];
-    assert_eq!(row["group"], "1-Z");
+    assert_eq!([&row["group"], &row["group_name"]], ["1-Z", "Lainnya"]);
     assert_eq!(row["file"], GROUP_FILE);
     assert_eq!(row["input"], "labels-repeat-1.pdf");
     assert!(row["input_first_page"].as_u64().unwrap() >= 1);

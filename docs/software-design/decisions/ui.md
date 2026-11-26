@@ -113,24 +113,26 @@ open: the owner wants a batch there to be a choice, never a slip, and the date i
 [Repeated orders](../ui/duplicates.md).
 
 
-## D-UI-16 — Search shows each order as a card on columns all cards share; its first box is *Order ID contains*
+## D-UI-16 — Search shows each order as a card under heads; its first box is *Order ID contains*
 
-**Decision.** Search's results are one card per order with no head row (R-UI-57). The card's head is two
-lines on columns every card shares: the shop over the Order ID, the courier over the tracking ID, the date and
-time its batch was saved over the batch, the ship-by date over the weight; then **Open** and the *Reprinted*
-mark. Under it the items as a table: the quantity, the name, then the variation and the Seller SKU at fixed
-widths, so they line up from card to card; the Qty Total at their foot when there are several lines. A bar
-under the items opens the details: the receiver's address, the input PDF with its pages and short hash, the
-group's code and name and the order's page in its PDF; the pickup code and the account only when the head
-does not show them already; not the clue that named the courier. On a narrower window the date and the
-parcel move under the shop and the courier. The filter and the dates share one box side by side. The first
-box is *Order ID contains* (R-UI-50), not *starts with* (R-UI-33). It replaces D-UI-12, one row per order
-under heads.
+**Decision.** Search's results are the heads *Order*, *Tracking*, *Saved* and *Label*, with **Select all** as
+their tick, then one card per order (R-UI-57, R-UI-58). The card's head is one row on the heads' columns: the
+shop and the Order ID, the courier and the tracking ID, the date and time its batch was saved, the batch and
+the group's code, then the group's name and the order's page in its PDF where the row has room (else in the
+details); the *Reprinted* mark and **Open**. Under it the items as a table without heads: the quantity, the
+name, then the variation and the Seller SKU at fixed widths, so they line up from card to card; the Qty
+Total at their foot when there are several lines. A click on the card opens its details, which hold what the
+head does not: the receiver's address, the ship-by date, the weight, the input PDF with its pages and its
+hash named *SHA256*; the pickup code and the account only when the head does not show them already; not the
+clue that named the courier. Only the tick ticks a card. The filter and the dates share one box side by
+side. The first box is *Order ID contains* (R-UI-50), not *starts with* (R-UI-33). It replaces D-UI-12, one
+row per order with its items between the IDs and the label.
 
-**Why.** The owner drew this card (2026-11-26): the row repeated facts in its details and kept the parcel's
-weight out of sight. The cards the owner found hard to search through (2026-10-29) scattered the fields over
-a grid; these keep each field in one column down the list, and fit the owner's 15-inch screen at 125 %.
-*Starts with* surprised the owner: a part of an ID typed or pasted from the middle found nothing. The owner
-looks an order up by its Order ID first (2026-11-23).
+**Why.** The owner drew the card (2026-11-26) and then put its head back in one row under heads (R-UI-58):
+the row repeated facts in its details, and the ship-by date and the weight belong in the details. The owner
+wants only the tick to tick and a click on the card to open it. The cards the owner found hard to search
+through (2026-10-29) scattered the fields over a grid; these keep each field in one column down the list,
+and fit the owner's 15-inch screen at 125 %. *Starts with* surprised the owner: a part of an ID typed or pasted from the middle found nothing.
+The owner looks an order up by its Order ID first (2026-11-23).
 
 **Applies to.** [Search](../ui/search.md).

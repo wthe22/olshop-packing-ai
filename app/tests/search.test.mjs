@@ -12,9 +12,7 @@ import { searchSummary, texts } from "../src/texts.ts";
 import { answerQuestions } from "./answers.mjs";
 
 useRunes();
-const { Search, detailLines, fileLabel, itemsText, reprintedMark, totalLine, weightValue } = await import(
-  "../src/lib/search.svelte.ts"
-);
+const { Search, detailLines, itemsText, reprintedMark, totalLine } = await import("../src/lib/search.svelte.ts");
 
 const row = (order_id, group = "1-A") => ({
   day: "2026-10-07",
@@ -199,25 +197,28 @@ test("one order found is ticked; an order reprinted before is printed again only
   assert.deepEqual(search.ticked, []);
 });
 
-test("a click ticks a row, a drag or a double click selects its text instead", async () => {
+test("a click on a card opens its details and ticks nothing; a drag or a double click selects its text", async () => {
   useBackend({ tree_to_filter: () => "", search_orders: () => found });
   const search = new Search(() => "2026-10-07", () => "2026-10-07", () => {});
   await search.run();
   const [first, second] = search.result.rows;
-  search.clickRow(first, 1, false);
-  assert.equal(search.isTicked(first), true, "a click ticks");
-  search.clickRow(first, 1, true);
-  assert.equal(search.isTicked(first), true, "a drag that selected text leaves the tick");
-  search.clickRow(second, 1, false);
-  search.clickRow(second, 2, true);
-  assert.equal(search.isTicked(second), false, "a double click undoes its first click");
-  search.clickRow(second, 3, true);
-  assert.equal(search.isTicked(second), false, "a triple click changes nothing");
-  search.clickRow(first, 2, true);
-  assert.equal(search.isTicked(first), true, "a second click on another row's double click undoes nothing");
+  search.clickCard(first, 1, false);
+  assert.equal(search.isTraced(first), true, "a click opens the details");
+  assert.equal(search.isTicked(first), false, "only the tick ticks");
+  search.clickCard(first, 1, true);
+  assert.equal(search.isTraced(first), true, "a drag that selected text leaves them open");
+  search.clickCard(second, 1, false);
+  search.clickCard(second, 2, true);
+  assert.equal(search.isTraced(second), false, "a double click undoes its first click");
+  search.clickCard(second, 3, true);
+  assert.equal(search.isTraced(second), false, "a triple click changes nothing");
+  search.clickCard(first, 2, true);
+  assert.equal(search.isTraced(first), true, "a second click on another card's double click undoes nothing");
+  search.clickCard(first, 1, false);
+  assert.equal(search.isTraced(first), false, "a click closes them again");
 });
 
-test("the Courier box lists the couriers of the rules, and a row names its page", async () => {
+test("the Courier box lists the couriers of the rules, and a card names its page", async () => {
   const couriers = [{ code: "jnt", name: "J&T Express" }];
   useBackend({ rules_list: () => ({ rules: ["default"], text: "", couriers, draft_rule: null }) });
   const search = new Search(() => "2026-10-07", () => "2026-10-07", () => {});
@@ -227,36 +228,26 @@ test("the Courier box lists the couriers of the rules, and a row names its page"
     [texts.search.pages(14, 14), texts.search.pages(14, 15), texts.search.noCourier],
     ["page 14", "pages 14–15", "Unknown"],
   );
-  assert.deepEqual(
-    [
-      fileLabel({ group: "2-A", file: "2-A Sepatu x88.pdf" }),
-      fileLabel({ group: "2-A", file: "sepatu pagi.pdf" }),
-      fileLabel({ group: "2-A", file: "2-AB x3.pdf" }),
-    ],
-    ["Sepatu x88", "sepatu pagi", "2-AB x3"],
-    "the code the name starts with is on the chip",
-  );
+  assert.equal(texts.search.hash("e731bbe96035"), "SHA256: e731bbe96035");
 
   useBackend({});
   await search.loadCouriers();
   assert.match(search.error, /rules_list/, "a failed load is shown");
 });
 
-test("a card shows the weight, the Qty Total only when it says more, and its details' lines", () => {
+test("a card shows the Qty Total only when it says more; its details say what the head does not", () => {
   const order = {
     ...row("580000000000000042"),
     account: "Toko Alfa",
     shop: "Toko Alfa Cabang",
     items: [{ name: "Spion Beat", variant: "honda", quantity: 2, seller_sku: "SKU-01" }],
+    ship_by: null,
     total_quantity: 2,
     pickup_code: null,
     area: { province: "JAWA BARAT", city: "KOTA CONTOH", district: null },
-    weight: { grams: 1250 },
+    weight: "not_printed",
   };
   assert.equal(itemsText(order), "Spion Beat — honda ×2");
-  assert.deepEqual(weightValue(order), { text: "1,250 g", notRead: false });
-  assert.equal(weightValue({ ...order, weight: "not_printed" }), null, "a label that prints none shows none");
-  assert.deepEqual(weightValue({ ...order, weight: null }), { text: "not read yet", notRead: true });
 
   assert.equal(totalLine(order), null, "one line of the whole total says it already");
   assert.equal(totalLine({ ...order, total_quantity: 3 }), 3, "a total its line does not add up to");
@@ -264,18 +255,24 @@ test("a card shows the weight, the Qty Total only when it says more, and its det
   assert.equal(totalLine({ ...row("580000000000000042"), total_quantity: 3 }), 3, "several lines");
 
   const lines = (row) => detailLines(row).map((line) => [line.head, line.text, line.notRead]);
-  assert.deepEqual(lines(order), [
+  assert.deepEqual(lines({ ...order, ship_by: "2026-10-08", weight: { grams: 1250 } }), [
     ["Address", "JAWA BARAT, KOTA CONTOH", false],
+    ["Ship by", "Thu, 8 Oct 2026", false],
+    ["Weight", "1,250 g", false],
     ["Account", "Toko Alfa", false],
   ]);
   const instant = { ...order, shop: "Toko Alfa", tracking_id: "12AB", pickup_code: "12AB" };
   assert.deepEqual(
     lines(instant),
     [["Address", "JAWA BARAT, KOTA CONTOH", false]],
-    "a pickup code that is the tracking ID, and the account the shop is named after, are not said again",
+    "what the label does not print is left out; a pickup code that is the tracking ID, and the account " +
+      "the shop is named after, are not said again",
   );
   assert.deepEqual(lines({ ...instant, tracking_id: "JY0000001234" }).at(-1), ["Pickup code", "12AB", false]);
-  assert.deepEqual(lines({ ...order, shop: null, area: null }), [["Address", "not read yet", true]]);
+  assert.deepEqual(lines({ ...order, shop: null, area: null, weight: null }), [
+    ["Address", "not read yet", true],
+    ["Weight", "not read yet", true],
+  ]);
 });
 
 test("Search opens again with the boxes it was left with, the dates from the viewed day; Reset starts over", () => {

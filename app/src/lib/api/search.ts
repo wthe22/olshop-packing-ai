@@ -49,6 +49,8 @@ export interface SearchRow {
   batch: number;
   // `<batch>-<code>`.
   group: string;
+  // The group's name in the batch's sort rule, `Sepatu`.
+  group_name: string;
   // The group PDF's file name, for *Open*.
   file: string;
   // The pages the order fills in that group PDF, counted from 1.

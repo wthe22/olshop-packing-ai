@@ -121,8 +121,12 @@ fn every_live_order_of_the_data_folder_is_found_by_its_fields() {
     };
     let found = seventh("order_id equals \"580000000000000002\"")[0];
     assert_eq!(
-        (found.file.as_str(), found.input.as_str()),
-        ("", "labels_1.pdf")
+        (
+            found.file.as_str(),
+            found.input.as_str(),
+            found.group_name.as_str()
+        ),
+        ("", "labels_1.pdf", "Lainnya")
     );
     assert_eq!(found.items[0].name, "Spion Beat");
     let pages: Vec<_> = seventh("distinct_items >= 1")

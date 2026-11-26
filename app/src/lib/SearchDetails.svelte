@@ -1,9 +1,10 @@
 <script lang="ts">
-  // A Search card's details, under its bar: one line per head. The receiver's address and, when they
-  // apply, the pickup code and the account (`detailLines`); the input PDF it was read from, its pages
-  // there and its short hash; the group's code, its PDF's name and the order's pages in it.
+  // A Search card's details, under its bar: one line per head. The receiver's address, the ship-by
+  // date, the weight and, when they apply, the pickup code and the account (`detailLines`); the
+  // input PDF it was read from, its pages there and its short hash; and, when the card's head has no
+  // room for them, the group's name and the order's page in the group PDF.
   import type { SearchRow } from "./api/search";
-  import { detailLines, fileLabel } from "./search.svelte";
+  import { detailLines } from "./search.svelte";
   import { texts } from "../texts";
   import Icon from "./Icon.svelte";
 
@@ -23,12 +24,12 @@
   <dd>
     <span class="file"><Icon name="file" size={14} />{row.input}</span>
     {words.pages(row.input_first_page, row.input_last_page)}
-    <span class="hash">{row.input_hash}</span>
+    <span class="hash">{words.hash(row.input_hash)}</span>
   </dd>
-  <dt>{heads.group}</dt>
-  <dd>
+  <dt class="cramped">{heads.group}</dt>
+  <dd class="cramped">
     <span class="code">{row.group}</span>
-    <span title={row.file}>{fileLabel(row)}</span>
+    {row.group_name}
     <span class="strong">{words.pages(row.first_page, row.last_page)}</span>
   </dd>
 </dl>
@@ -44,6 +45,7 @@
     gap: 0.3rem 1.1rem;
     margin: 0.2rem 0 0.45rem;
     font-size: 0.88rem;
+    cursor: auto;
   }
 
   dt {
@@ -104,9 +106,18 @@
     font-weight: 700;
   }
 
-  @container results (max-width: 52rem) {
-    .details {
-      grid-row: 5;
+  /* The group's line only when the card's head has no room for its name and page (`SearchRow`). */
+  .cramped {
+    display: none;
+  }
+
+  @container results (max-width: 72rem) {
+    dt.cramped {
+      display: block;
+    }
+
+    dd.cramped {
+      display: flex;
     }
   }
 </style>

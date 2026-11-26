@@ -1,13 +1,14 @@
 <script lang="ts">
-  // One order of Search's results as a card. Its head is two lines on the results' own columns, so
-  // the cards line up: the shop over the Order ID, the courier over the tracking ID, the batch's date
-  // and save time over its number, the ship-by date over the weight; at the right **Open** and the
-  // *Reprinted* mark. Under the head, the items one line each (quantity, name, variation, Seller SKU),
-  // with the Qty Total at their foot when it says more than the one line. The bar under the items
-  // opens the rest (`SearchDetails`). A click on the card's text ticks it, for the mouse only: the
-  // tick is the keyboard's way.
+  // One order of Search's results as a card. Its head is one row on the results' columns, under the
+  // heads `SearchScreen` puts above the cards: the tick; the shop and the Order ID; the courier and
+  // the tracking ID; the date and time its batch was saved; the batch, the group's code, its name and
+  // the order's page in the group PDF (the name and page move to the details when the row has no
+  // room); the *Reprinted* mark and **Open**. Under the head the items, one line each (quantity,
+  // name, variation, Seller SKU), with the Qty Total at their foot when it says more than the one
+  // line. A click on the card, or on the bar under the items, opens and closes the rest
+  // (`SearchDetails`); only the tick ticks.
   import type { SearchRow } from "./api/search";
-  import { reprintedMark, totalLine, weightValue } from "./search.svelte";
+  import { reprintedMark, totalLine } from "./search.svelte";
   import { texts } from "../texts";
   import { formatShortDay } from "../dates";
   import Icon from "./Icon.svelte";
@@ -35,13 +36,12 @@
 
   const words = texts.search;
   const mark = $derived(reprintedMark(row));
-  const weight = $derived(weightValue(row));
   const total = $derived(totalLine(row));
 
-  // The tick, **Open** and the details' bar have their own clicks.
-  const textClicks = (card: HTMLElement) => {
+  // The tick and the buttons have their own clicks; the open details are for reading and copying.
+  const cardClicks = (card: HTMLElement) => {
     const onClick = (event: MouseEvent) => {
-      if ((event.target as Element).closest("button, input")) return;
+      if ((event.target as Element).closest("button, input, .details")) return;
       onClickText(event.detail, (window.getSelection()?.toString() ?? "") !== "");
     };
     card.addEventListener("click", onClick);
@@ -49,13 +49,13 @@
   };
 </script>
 
-<div class="card" class:ticked {@attach textClicks}>
+<div class="card" class:ticked {@attach cardClicks}>
   {#if access.readOnly}
-    <span></span>
+    <span class="tick"></span>
   {:else}
-    <input type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
+    <input class="tick" type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
   {/if}
-  <div class="cell who">
+  <div class="cell">
     {#if row.shop}
       <span class="shop" title={row.shop}>{row.shop}</span>
     {:else}
@@ -63,28 +63,20 @@
     {/if}
     <span class="order">{row.order_id}</span>
   </div>
-  <div class="cell track">
-    <span><span class="courier" class:unknown={!row.courier}>{row.courier ?? words.noCourier}</span></span>
+  <div class="cell">
+    <span class="courier" class:unknown={!row.courier}>{row.courier ?? words.noCourier}</span>
     <span class="tracking" class:faint={!row.tracking_id}>{row.tracking_id ?? words.noTracking}</span>
   </div>
-  <div class="cell saved">
-    <span class="muted">{formatShortDay(row.day)} {row.batch_time}</span>
+  <div class="cell muted">{formatShortDay(row.day)} {row.batch_time}</div>
+  <div class="cell label">
     <span class="strong">{words.batch(row.batch)}</span>
+    <span class="code">{row.group}</span>
+    <span class="roomy group-name" title={row.group_name}>{row.group_name}</span>
+    <span class="roomy strong">{words.pages(row.first_page, row.last_page)}</span>
   </div>
-  <div class="cell parcel">
-    <span>
-      {#if row.ship_by}<span class="head">{words.shipBy}</span>{formatShortDay(row.ship_by)}{/if}
-    </span>
-    <span>
-      {#if weight}<span class="head">{words.weight}</span><span
-          class:faint={weight.notRead}
-          title={weight.notRead ? words.notReadWhy : undefined}>{weight.text}</span
-        >{/if}
-    </span>
-  </div>
-  <div class="tools">
-    <button class="small" title={words.openFile(row.file)} onclick={onOpenOutput}>{words.open}</button>
+  <div class="cell tools">
     {#if mark}<span class="mark" title={mark.title}>{mark.text}</span>{/if}
+    <button class="small" title={words.openFile(row.file)} onclick={onOpenOutput}>{words.open}</button>
   </div>
   <ul class="items">
     {#each row.items as item, i (i)}
@@ -118,18 +110,19 @@
 </div>
 
 <style>
-  /* The columns are the results' own (`SearchScreen`), so every card's head lines up. */
+  /* The columns are the results' own (`SearchScreen`), so every card's head lines up under the
+     heads. */
   .card {
     display: grid;
     grid-column: 1 / -1;
     grid-template-columns: subgrid;
-    align-items: start;
+    align-items: center;
     padding: 0.5rem 0.8rem 0.15rem;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     background: var(--surface);
     box-shadow: var(--shadow);
-    cursor: default;
+    cursor: pointer;
     transition: background-color 0.12s;
   }
 
@@ -143,50 +136,40 @@
     box-shadow: inset 3px 0 0 var(--accent);
   }
 
-  input[type="checkbox"] {
+  /* The tick in the first column; the head's cells fill the next ones in their order. */
+  .tick {
     grid-row: 1;
     grid-column: 1;
-    margin-top: 0.3rem;
   }
 
-  /* Each cell is the head's two lines, so a cell with an empty line keeps the other on its row. */
   .cell {
-    display: grid;
+    display: flex;
     grid-row: 1;
-    grid-template-rows: repeat(2, 1.5rem);
     align-items: center;
+    gap: 0.55rem;
     min-width: 0;
     white-space: nowrap;
   }
 
-  .who {
-    grid-column: 2;
-  }
-
-  .track {
-    grid-column: 3;
-  }
-
-  .saved {
-    grid-column: 4;
-  }
-
-  .parcel {
-    grid-column: 5;
-  }
-
   .tools {
-    display: flex;
-    grid-row: 1;
-    grid-column: 6;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.3rem;
+    justify-content: flex-end;
+    gap: 0.4rem;
   }
 
-  /* A long shop name never widens the column: it ends at the Order ID's width, whole in its tooltip. */
+  /* The label's column takes the room left: a long group name ends with dots before the page does. */
+  .label {
+    overflow: hidden;
+  }
+
+  .group-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* A long shop name ends with dots; its tooltip has it whole. */
   .shop {
-    contain: inline-size;
+    max-width: 7.5rem;
     overflow: hidden;
     color: var(--text-muted);
     font-size: 0.9rem;
@@ -224,13 +207,9 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .saved,
-  .parcel {
-    font-size: 0.88rem;
-  }
-
   .muted {
     color: var(--text-muted);
+    font-size: 0.88rem;
   }
 
   .strong {
@@ -241,8 +220,15 @@
     color: var(--text-faint);
   }
 
+  .code {
+    padding: 0 0.4rem;
+    border-radius: var(--radius);
+    background: var(--chip);
+    color: var(--chip-text);
+    font-weight: 700;
+  }
+
   .head {
-    margin-right: 0.45rem;
     color: var(--text-faint);
     font-size: 0.72rem;
     font-weight: 600;
@@ -264,7 +250,6 @@
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1.5;
-    white-space: nowrap;
   }
 
   /* The items as a table without heads: the quantity, the name taking the room left, then the
@@ -358,42 +343,10 @@
     transform: rotate(-90deg);
   }
 
-  /* Too narrow for the head's four columns: the date and the parcel go under the shop and the
-     courier, and each item's variation and Seller SKU under its name. */
-  @container results (max-width: 52rem) {
-    .saved,
-    .parcel {
-      grid-row: 2;
-      margin-top: 0.2rem;
-    }
-
-    .saved {
-      grid-column: 2;
-    }
-
-    .parcel {
-      grid-column: 3;
-    }
-
-    .items {
-      grid-row: 3;
-      grid-template-columns: 2.2rem minmax(0, 1fr);
-    }
-
-    .more {
-      display: flex;
-      flex-wrap: wrap;
-      grid-column: 2;
-      gap: 0 0.9rem;
-      margin-top: -0.15rem;
-    }
-
-    .variant.none {
+  /* No room for the whole head in one row: the group's name and the page are in the details. */
+  @container results (max-width: 72rem) {
+    .roomy {
       display: none;
-    }
-
-    button.expand {
-      grid-row: 4;
     }
   }
 </style>

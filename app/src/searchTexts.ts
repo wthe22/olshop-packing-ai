@@ -31,9 +31,15 @@ export const searchTexts = {
   // One line of an order's items, "name × quantity".
   item: (name: string, quantity: number) => `${name} ×${quantity}`,
   noMatch: "No saved order matches.",
-  // The heads in a card's head and at the foot of its items.
-  shipBy: "Ship by",
-  weight: "Weight",
+  // The heads over the cards' columns: the shop and the Order ID, the courier and the tracking ID,
+  // the batch's date and save time, the batch and group the label is in.
+  columns: {
+    order: "Order",
+    tracking: "Tracking",
+    saved: "Saved",
+    label: "Label",
+  },
+  // At the foot of a card's items.
   total: "Total",
   // In place of the tracking ID of a label that printed none.
   noTracking: "no tracking ID",
@@ -43,7 +49,7 @@ export const searchTexts = {
   // second page.
   pages: (first: number, last: number) =>
     first === last ? `page ${first}` : `pages ${first}–${last}`,
-  // Ticks every order the filter found, or none.
+  // The tick in the heads' row: ticks every order the filter found, or none.
   selectAll: "Select all",
   tick: (order: string) => `Reprint ${order}`,
   // An order printed again before, and its tooltip, one line per reprint.
@@ -62,18 +68,22 @@ export const searchTexts = {
         : `${before} of them ${before === 1 ? "was" : "were"} reprinted before.`,
     ok: "Reprint",
   }),
-  // A row's **Open**, named for its group PDF.
+  // A card's **Open**, named for its group PDF.
   open: "Open",
   openFile: (file: string) => `Open ${file}`,
   // The bar under a card's items that opens its details, and the details' heads.
   trace: "Details",
   details: {
     address: "Address",
+    shipBy: "Ship by",
+    weight: "Weight",
     pickupCode: "Pickup code",
     account: "Account",
     input: "Input file",
     group: "Group",
   },
+  // The input's short hash, named by its algorithm: "SHA256: e731bbe96035".
+  hash: (hash: string) => `SHA256: ${hash}`,
   // "1,250 g".
   grams: (grams: number) => `${grams.toLocaleString("en-US")} g`,
   // An order saved before the area or the weight was read, its data folder not updated since.

@@ -72,6 +72,8 @@ pub struct OrderRow {
     batch: BatchId,
     /// `<batch>-<code>`.
     group: String,
+    /// The group's name in the batch's sort rule, `Sepatu`.
+    group_name: String,
     /// The group PDF's file name, for *Open*.
     file: String,
     /// The pages the order fills in that group PDF, counted from 1.
@@ -187,6 +189,7 @@ fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> Order
         weight: saved.weight,
         batch: order.batch,
         group: format!("{}-{}", order.batch, saved.group),
+        group_name: order.group_name.clone(),
         file: order.file.clone(),
         first_page: *order.file_pages.start(),
         last_page: *order.file_pages.end(),

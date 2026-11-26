@@ -120,22 +120,28 @@
     {#if search.result.orders === 0}
       <p class="empty">{words.noMatch}</p>
     {:else}
-      <div class="found">
-        <span class="summary">{searchSummary(search.result.orders, search.result.batches)}</span>
-        {#if !access.readOnly}
-          <label class="all">
-            <input
-              type="checkbox"
-              checked={search.allTicked()}
-              indeterminate={search.someTicked()}
-              onchange={(event) => search.selectAll(event.currentTarget.checked)}
-            />
-            {words.selectAll}
-          </label>
-        {/if}
-      </div>
+      <p class="summary">{searchSummary(search.result.orders, search.result.batches)}</p>
       <div class="results">
         <div class="cards">
+          <div class="head">
+            {#if access.readOnly}
+              <span></span>
+            {:else}
+              <input
+                type="checkbox"
+                aria-label={words.selectAll}
+                title={words.selectAll}
+                checked={search.allTicked()}
+                indeterminate={search.someTicked()}
+                onchange={(event) => search.selectAll(event.currentTarget.checked)}
+              />
+            {/if}
+            <span>{words.columns.order}</span>
+            <span>{words.columns.tracking}</span>
+            <span>{words.columns.saved}</span>
+            <span>{words.columns.label}</span>
+            <span></span>
+          </div>
           {#each search.result.rows as row (row.day + row.order_id)}
             <SearchRow
               {row}
@@ -143,7 +149,7 @@
               traced={search.isTraced(row)}
               onToggle={() => search.toggle(row)}
               onTrace={() => search.toggleTrace(row)}
-              onClickText={(clicks, selecting) => search.clickRow(row, clicks, selecting)}
+              onClickText={(clicks, selecting) => search.clickCard(row, clicks, selecting)}
               onOpenOutput={() => onOpenOutput(row.day, row.file)}
             />
           {/each}
@@ -288,24 +294,10 @@
     }
   }
 
-  .found {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 0.8rem 0 0.5rem;
-  }
-
   .summary {
+    margin: 0.8rem 0 0.5rem;
     font-size: 1.05rem;
     font-weight: 650;
-  }
-
-  .all {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: var(--text-muted);
-    cursor: pointer;
   }
 
   .empty {
@@ -322,8 +314,8 @@
     color: var(--text-muted);
   }
 
-  /* One card per order, on columns all cards share: the tick, the shop, the courier and the date as
-     wide as their longest, the ship-by date taking the rest, then **Open** (`SearchRow`). */
+  /* The heads, then one card per order, on columns all share: the tick, the order, the tracking and
+     the date as wide as their longest, the label taking the rest, then **Open** (`SearchRow`). */
   .results {
     container: results / inline-size;
     margin-bottom: 1rem;
@@ -332,7 +324,30 @@
   .cards {
     display: grid;
     grid-template-columns: auto max-content max-content max-content minmax(0, 1fr) auto;
-    gap: 0.5rem 1.4rem;
+    gap: 0.5rem 1.2rem;
+  }
+
+  /* The heads line up with the cards' heads: the cards' border and padding. */
+  .head {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: center;
+    padding: 0.3rem calc(0.8rem + 1px);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+    color: var(--text-faint);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  /* A head's words never widen its column. */
+  .head span {
+    contain: inline-size;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* The reprint bar stays at the foot of the overlay while the rows scroll under it: the reprint

@@ -6,8 +6,27 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-26)
 
+- **Handoff of 2026-11-26 (latest) — v0.8.6-alpha: Search's cards under heads, one row each.** Built,
+  checked and pushed; `target/portable/` is rebuilt. No dev task is left.
+  - **R-UI-58** ([D-UI-16](../../software-design/decisions/ui.md),
+    [ui/search.md](../../software-design/ui/search.md)): the heads *Order*, *Tracking*, *Saved*, *Label* are
+    back over the cards, with **Select all** as their tick. A card's head is one row: the shop and Order ID,
+    the courier and tracking ID, the batch's date and save time, the batch and group code; then the group's
+    name (from the sort rule, without the count) and the page where the results are 72 rem wide or more,
+    else under *GROUP* in the details. *Ship by* and *Weight* are in the details; the hash reads
+    *SHA256: …*. Only the tick ticks; a click on a card opens and closes its details (a drag or a double
+    click selects text and changes nothing; a click inside the open details changes nothing).
+  - Search now sends each order's group name from its batch's sort rule (`group_name`); no stored data
+    changes.
+  - **To check**: Search on the owner's screen at 125 %: whether the group's name and page fit in the row
+    there; a click on a card opens it; the ticks and **Select all** still choose the reprint.
+  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-19`,
+    [reviews/label.md](../../reviews/label.md) as `R-LABEL-20` (a weight or an area read wrong: the date,
+    the order and what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-59`. A new session
+    turns each into a task and builds it.
+
 - **Handoff of 2026-11-26 (late) — v0.8.5-alpha: Search shows each order as a card.** Built, checked and
-  pushed; `target/portable/` is rebuilt. No dev task is left.
+  pushed.
   - **R-UI-57**, the owner's drawing ([D-UI-16](../../software-design/decisions/ui.md),
     [ui/search.md](../../software-design/ui/search.md)): one card per order, no head row. Its head is two
     lines on columns all cards share: the shop over the Order ID, the courier over the tracking ID, the
@@ -21,10 +40,6 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     shop name ends at the Order ID's width, whole in its tooltip.
   - **To check**: Search on the owner's screen at 125 % over a few dates: the columns line up from card to
     card, long names wrap, and a narrower window puts the date and the weight under the shop and courier.
-  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-19`,
-    [reviews/label.md](../../reviews/label.md) as `R-LABEL-20` (a weight or an area read wrong: the date,
-    the order and what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-58`. A new session
-    turns each into a task and builds it.
 
 - **Handoff of 2026-11-26 (night) — v0.8.4-alpha: the weight; Search details without repeats; one schema
   step for v0.8.** Built, checked and pushed.

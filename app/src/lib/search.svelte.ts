@@ -8,7 +8,7 @@ import { rulesList, treeToFilter, type Courier } from "./api/rules";
 import { accountsList } from "./api/accounts";
 import { newRow, newTree, toRustTree, type UiTree } from "./conditions";
 import { texts } from "../texts";
-import { formatShortDay } from "../dates";
+import { formatDay, formatShortDay } from "../dates";
 import { confirmBox } from "./confirm.svelte";
 import { presetRange, rangePresets, type DateRange, type RangePreset } from "./searchRange";
 
@@ -140,15 +140,15 @@ export class Search {
     this.ticked = flip(this.ticked, key(row));
   };
 
-  // A click on a card's text ticks it. A drag or a double click selects text instead and leaves the
-  // tick as it was: `selecting` says the click ended a selection, and a double click's second
-  // click undoes its first.
-  clickRow = (row: api.SearchRow, clicks: number, selecting: boolean) => {
+  // A click on a card opens or closes its details; only its tick ticks it. A drag or a double click
+  // selects text instead and leaves the details as they were: `selecting` says the click ended a
+  // selection, and a double click's second click undoes its first.
+  clickCard = (row: api.SearchRow, clicks: number, selecting: boolean) => {
     if (clicks === 1 && !selecting) {
-      this.toggle(row);
+      this.toggleTrace(row);
       this.clicked = key(row);
     } else if (clicks === 2 && this.clicked === key(row)) {
-      this.toggle(row);
+      this.toggleTrace(row);
       this.clicked = null;
     }
   };
@@ -227,20 +227,6 @@ export function itemName(item: api.SearchItem): string {
   return item.variant ? `${item.name} — ${item.variant}` : item.name;
 }
 
-// A value of a row's card; `notRead` when the order was saved before it was read and the data
-// folder not updated since.
-export interface CardValue {
-  text: string;
-  notRead: boolean;
-}
-
-// The weight in a card's head; `null` when the label prints none.
-export function weightValue(row: api.SearchRow): CardValue | null {
-  if (row.weight === null) return { text: texts.search.notRead, notRead: true };
-  if (row.weight === "not_printed") return null;
-  return { text: texts.search.grams(row.weight.grams), notRead: false };
-}
-
 // The Qty Total at the foot of a card's items, when it says more than its one item line: an order of
 // several lines, or a total the item lines do not add up to.
 export function totalLine(row: api.SearchRow): number | null {
@@ -250,34 +236,34 @@ export function totalLine(row: api.SearchRow): number | null {
   return row.items.length > 1 || sum !== total ? total : null;
 }
 
-// One line of a card's details above its input file and group: its head and its value.
-export interface DetailLine extends CardValue {
+// One line of a card's details above its input file and group: its head and its value; `notRead`
+// when the order was saved before it was read and the data folder not updated since.
+export interface DetailLine {
   head: string;
+  text: string;
+  notRead: boolean;
 }
 
-// The details' lines above the input file and group: the receiver's province, city and district;
-// the pickup code when the tracking ID is another; the account when the card shows a shop of another
-// name.
+// The details' lines above the input file and group, each only when the label prints it: the
+// receiver's province, city and district; the ship-by date; the weight; the pickup code when the
+// tracking ID is another; the account when the card shows a shop of another name.
 export function detailLines(row: api.SearchRow): DetailLine[] {
   const words = texts.search;
   const heads = words.details;
   const lines: DetailLine[] = [];
   const add = (head: string, text: string) => lines.push({ head, text, notRead: false });
-  if (row.area === null) lines.push({ head: heads.address, text: words.notRead, notRead: true });
+  const notRead = (head: string) => lines.push({ head, text: words.notRead, notRead: true });
+  if (row.area === null) notRead(heads.address);
   else {
     const area = [row.area.province, row.area.city, row.area.district].filter((part) => part).join(", ");
     if (area) add(heads.address, area);
   }
+  if (row.ship_by) add(heads.shipBy, formatDay(row.ship_by));
+  if (row.weight === null) notRead(heads.weight);
+  else if (row.weight !== "not_printed") add(heads.weight, words.grams(row.weight.grams));
   if (row.pickup_code && row.pickup_code !== row.tracking_id) add(heads.pickupCode, row.pickup_code);
   if (row.shop !== null && row.shop !== row.account) add(heads.account, row.account);
   return lines;
-}
-
-// A row's group PDF beside its code's chip: the file name without `.pdf` and without the code it
-// starts with, "Sepatu x88" for "2-A Sepatu x88.pdf"; a name the owner changed stays whole.
-export function fileLabel(row: api.SearchRow): string {
-  const name = row.file.replace(/\.pdf$/i, "");
-  return name.startsWith(`${row.group} `) ? name.slice(row.group.length + 1) : name;
 }
 
 // The mark of an order printed again before, and its tooltip naming each reprint:
