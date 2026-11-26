@@ -6,7 +6,16 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-26)
 
-- **Handoff of 2026-11-26 (latest) — v0.8.6-alpha: Search's cards under heads, one row each.** Built,
+- **Handoff of 2026-11-26 (latest) — three data questions for the owner.** No code changed.
+  - [Q-APP-21](../../software-design/questions/app.md) (a new name for `session.toml`),
+    [Q-APP-22](../../software-design/questions/app.md) (why v0.7 calls a v0.8 journal damaged at line 3:
+    `areas_filled`, a record type it does not know; what newer copies say instead),
+    [Q-APP-23](../../software-design/questions/app.md) (a version for `orders.csv`).
+  - **Where to answer**: under each question in [questions/app.md](../../software-design/questions/app.md),
+    or in a session. A new session writes each answer into `decisions/app.md` and the design files, deletes
+    the question, and builds it as a v0.8 task.
+
+- **Handoff of 2026-11-26 — v0.8.6-alpha: Search's cards under heads, one row each.** Built,
   checked and pushed; `target/portable/` is rebuilt. No dev task is left.
   - **R-UI-58** ([D-UI-16](../../software-design/decisions/ui.md),
     [ui/search.md](../../software-design/ui/search.md)): the heads *Order*, *Tracking*, *Saved*, *Label* are
