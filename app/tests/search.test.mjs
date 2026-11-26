@@ -12,7 +12,9 @@ import { searchSummary, texts } from "../src/texts.ts";
 import { answerQuestions } from "./answers.mjs";
 
 useRunes();
-const { Search, detailFacts, fileLabel, itemsText, reprintedMark } = await import("../src/lib/search.svelte.ts");
+const { Search, detailLines, fileLabel, itemsText, reprintedMark, totalLine, weightValue } = await import(
+  "../src/lib/search.svelte.ts"
+);
 
 const row = (order_id, group = "1-A") => ({
   day: "2026-10-07",
@@ -240,44 +242,40 @@ test("the Courier box lists the couriers of the rules, and a row names its page"
   assert.match(search.error, /rules_list/, "a failed load is shown");
 });
 
-test("a row's details add what the label prints that the row does not show", () => {
+test("a card shows the weight, the Qty Total only when it says more, and its details' lines", () => {
   const order = {
     ...row("580000000000000042"),
     account: "Toko Alfa",
     shop: "Toko Alfa Cabang",
     items: [{ name: "Spion Beat", variant: "honda", quantity: 2, seller_sku: "SKU-01" }],
-    ship_by: "2026-10-08",
     total_quantity: 2,
     pickup_code: null,
     area: { province: "JAWA BARAT", city: "KOTA CONTOH", district: null },
     weight: { grams: 1250 },
   };
   assert.equal(itemsText(order), "Spion Beat — honda ×2");
-  const facts = (row) => detailFacts(row).map((fact) => [fact.head, fact.value, fact.notRead]);
-  assert.deepEqual(facts(order), [
-    ["Receiver", "KOTA CONTOH, JAWA BARAT", false],
-    ["Weight", "1,250 g", false],
-    ["Ship by", "Thu, 8 Oct 2026", false],
-    ["Qty Total", "2", false],
+  assert.deepEqual(weightValue(order), { text: "1,250 g", notRead: false });
+  assert.equal(weightValue({ ...order, weight: "not_printed" }), null, "a label that prints none shows none");
+  assert.deepEqual(weightValue({ ...order, weight: null }), { text: "not read yet", notRead: true });
+
+  assert.equal(totalLine(order), null, "one line of the whole total says it already");
+  assert.equal(totalLine({ ...order, total_quantity: 3 }), 3, "a total its line does not add up to");
+  assert.equal(totalLine({ ...row("580000000000000042"), total_quantity: null }), null, "no Qty Total printed");
+  assert.equal(totalLine({ ...row("580000000000000042"), total_quantity: 3 }), 3, "several lines");
+
+  const lines = (row) => detailLines(row).map((line) => [line.head, line.text, line.notRead]);
+  assert.deepEqual(lines(order), [
+    ["Address", "JAWA BARAT, KOTA CONTOH", false],
     ["Account", "Toko Alfa", false],
   ]);
-
-  const instant = { ...order, shop: "Toko Alfa", weight: "not_printed", total_quantity: null, pickup_code: "12AB" };
+  const instant = { ...order, shop: "Toko Alfa", tracking_id: "12AB", pickup_code: "12AB" };
   assert.deepEqual(
-    facts(instant),
-    [
-      ["Receiver", "KOTA CONTOH, JAWA BARAT", false],
-      ["Ship by", "Thu, 8 Oct 2026", false],
-      ["Pickup code", "12AB", false],
-    ],
-    "what the label does not print is left out, and the account when the shop has its name",
+    lines(instant),
+    [["Address", "JAWA BARAT, KOTA CONTOH", false]],
+    "a pickup code that is the tracking ID, and the account the shop is named after, are not said again",
   );
-
-  const older = { ...order, shop: null, area: null, weight: null, ship_by: null, total_quantity: null };
-  assert.deepEqual(facts(older), [
-    ["Receiver", "not read yet: the data folder is not updated", true],
-    ["Weight", "not read yet: the data folder is not updated", true],
-  ]);
+  assert.deepEqual(lines({ ...instant, tracking_id: "JY0000001234" }).at(-1), ["Pickup code", "12AB", false]);
+  assert.deepEqual(lines({ ...order, shop: null, area: null }), [["Address", "not read yet", true]]);
 });
 
 test("Search opens again with the boxes it was left with, the dates from the viewed day; Reset starts over", () => {

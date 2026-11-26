@@ -4,7 +4,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { DateRange } from "../searchRange";
 
-// One line of a Search row: the product name, its variation (empty for none), its quantity and the
+// One item of a saved order: the product name, its variation (empty for none), its quantity and the
 // Seller SKU the slip prints for it.
 export interface SearchItem {
   name: string;

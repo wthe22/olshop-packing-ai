@@ -31,14 +31,10 @@ export const searchTexts = {
   // One line of an order's items, "name × quantity".
   item: (name: string, quantity: number) => `${name} ×${quantity}`,
   noMatch: "No saved order matches.",
-  // The heads of the results' columns: the shop over the Order ID, the courier over the tracking ID,
-  // the items, the date and batch over the group's name and page.
-  columns: {
-    order: "Order",
-    tracking: "Tracking",
-    items: "Items",
-    label: "Label",
-  },
+  // The heads in a card's head and at the foot of its items.
+  shipBy: "Ship by",
+  weight: "Weight",
+  total: "Total",
   // In place of the tracking ID of a label that printed none.
   noTracking: "no tracking ID",
   // The courier of an order whose label named none.
@@ -69,25 +65,21 @@ export const searchTexts = {
   // A row's **Open**, named for its group PDF.
   open: "Open",
   openFile: (file: string) => `Open ${file}`,
-  // The chevron that opens a row's details: each item's Seller SKU under it, what else the label
-  // prints, and "From [input.pdf] p. 3, saved at 09:12 into group 2-A".
+  // The bar under a card's items that opens its details, and the details' heads.
   trace: "Details",
   details: {
-    receiver: "Receiver",
-    weight: "Weight",
-    shipBy: "Ship by",
-    totalQuantity: "Qty Total",
+    address: "Address",
     pickupCode: "Pickup code",
     account: "Account",
+    input: "Input file",
+    group: "Group",
   },
   // "1,250 g".
   grams: (grams: number) => `${grams.toLocaleString("en-US")} g`,
   // An order saved before the area or the weight was read, its data folder not updated since.
-  notRead: "not read yet: the data folder is not updated",
+  notRead: "not read yet",
+  notReadWhy: "Saved before this was read. Start the program again and choose Update.",
   batch: (n: number) => `Batch ${n}`,
-  from: "From",
-  inputPages: (first: number, last: number) => (first === last ? `p. ${first}` : `p. ${first}–${last}`),
-  savedInto: (time: string) => `, saved at ${time} into group`,
   reprint: "Reprint",
   // "Reprint 1 written: 2 orders, 2 pages."
   made: (n: number, orders: number, pages: number) =>

@@ -75,28 +75,6 @@ and turned down the same day; the owner named Zed and Claude Code as the look to
 
 **Applies to.** [Screens](../ui/README.md#the-look), every screen.
 
-## D-UI-12 — Search shows each order as a compact row; its first box is *Order ID contains*
-
-**Decision.** Search's results are one row per order (R-UI-35, R-UI-38) under the heads *Order*, *Items* and
-*Label*: the tick; the shop and the Order ID over the courier and the tracking ID; the items, which take the width the
-other columns leave; the date and batch over the group's name and page; **Open**, the details chevron and the
-*Reprinted* mark. The details show only what the row does not, as one line: the input PDF, its file name set
-apart as a file, and its pages, the batch's save time and the group's code; not the clue that named the
-courier. The order column and the label column are
-as wide as their longest entry and no wider. On a narrower window the items move to a line of their own under
-the order; narrower still, the label goes under the order too. The filter and the dates share one box
-side by side. The first box is *Order ID contains* (R-UI-50), not *starts with* (R-UI-33). It replaces D-UI-10,
-which showed the results as cards.
-
-**Why.** The owner found the cards hard to search through (2026-10-29): rows read down one column, cards
-scatter the same field over a grid. The table before the cards (R-UI-30) gave each long ID a column of its own
-and squeezed the items between eight columns on the owner's 15-inch screen at 125 %, often a window less than
-full width; two IDs over each other and the group PDF over the courier leave the items most of a row.
-*Starts with* surprised the owner: a part of an ID typed or pasted from the middle found nothing. The owner
-looks an order up by its Order ID first (2026-11-23).
-
-**Applies to.** [Search](../ui/search.md).
-
 ## D-UI-13 — The Accounts screen shows one account at a time
 
 **Decision.** **Accounts** in the title bar, beside Search, Sort rules and Settings, opens a page in the look of
@@ -118,6 +96,8 @@ the open and the current one; each date counts the orders of every account (Q-UI
 **Why.** A date holds every account's batches, and the Day screen shows them all; one account's counts are on
 the Accounts screen, so the panel needs no chooser.
 
+**Applies to.** [Panel](../ui/panel.md).
+
 ## D-UI-15 — A batch on a date that is not today is asked for, and its screens show the date
 
 **Decision.** On a date that is not today, the Day screen's **+ New batch** is muted and asks *Add a batch to
@@ -132,4 +112,25 @@ open: the owner wants a batch there to be a choice, never a slip, and the date i
 **Applies to.** [Day](../ui/day.md), [New batch](../ui/new-batch.md), [Plan](../ui/plan.md),
 [Repeated orders](../ui/duplicates.md).
 
-**Applies to.** [Panel](../ui/panel.md).
+
+## D-UI-16 — Search shows each order as a card on columns all cards share; its first box is *Order ID contains*
+
+**Decision.** Search's results are one card per order with no head row (R-UI-57). The card's head is two
+lines on columns every card shares: the shop over the Order ID, the courier over the tracking ID, the date and
+time its batch was saved over the batch, the ship-by date over the weight; then **Open** and the *Reprinted*
+mark. Under it the items as a table: the quantity, the name, then the variation and the Seller SKU at fixed
+widths, so they line up from card to card; the Qty Total at their foot when there are several lines. A bar
+under the items opens the details: the receiver's address, the input PDF with its pages and short hash, the
+group's code and name and the order's page in its PDF; the pickup code and the account only when the head
+does not show them already; not the clue that named the courier. On a narrower window the date and the
+parcel move under the shop and the courier. The filter and the dates share one box side by side. The first
+box is *Order ID contains* (R-UI-50), not *starts with* (R-UI-33). It replaces D-UI-12, one row per order
+under heads.
+
+**Why.** The owner drew this card (2026-11-26): the row repeated facts in its details and kept the parcel's
+weight out of sight. The cards the owner found hard to search through (2026-10-29) scattered the fields over
+a grid; these keep each field in one column down the list, and fit the owner's 15-inch screen at 125 %.
+*Starts with* surprised the owner: a part of an ID typed or pasted from the middle found nothing. The owner
+looks an order up by its Order ID first (2026-11-23).
+
+**Applies to.** [Search](../ui/search.md).

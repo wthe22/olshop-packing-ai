@@ -1,8 +1,8 @@
 <script lang="ts">
   // Search: saved orders found by a filter made with the boxes, over a range
-  // of dates or all of them. Each order is a row that names the group PDF and the page the order
-  // is on, opens its details and carries its *Reprinted* mark; the ticked rows are reprinted
-  // into one PDF from the bar at the foot. Enter in a box searches, so a scanned tracking ID finds
+  // of dates or all of them. Each order is a card (`SearchRow`) that opens its group PDF and its
+  // details and carries its *Reprinted* mark; the ticked cards are reprinted into one PDF from the
+  // bar at the foot. Enter in a box searches, so a scanned tracking ID finds
   // its order at once. The state and the commands are `search.svelte.ts`.
   import { onMount } from "svelte";
   import { Search } from "./search.svelte";
@@ -135,15 +135,7 @@
         {/if}
       </div>
       <div class="results">
-        <div class="rows">
-          <div class="head" aria-hidden="true">
-            <span></span>
-            <span>{words.columns.order}</span>
-            <span>{words.columns.tracking}</span>
-            <span class="head-items">{words.columns.items}</span>
-            <span>{words.columns.label}</span>
-            <span></span>
-          </div>
+        <div class="cards">
           {#each search.result.rows as row (row.day + row.order_id)}
             <SearchRow
               {row}
@@ -330,55 +322,17 @@
     color: var(--text-muted);
   }
 
-  /* One row per order. The IDs and the group PDF are as wide as their longest; the items take the
-     rest (`SearchRow` moves them under the IDs on a narrow window). */
+  /* One card per order, on columns all cards share: the tick, the shop, the courier and the date as
+     wide as their longest, the ship-by date taking the rest, then **Open** (`SearchRow`). */
   .results {
     container: results / inline-size;
     margin-bottom: 1rem;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-    box-shadow: var(--shadow);
   }
 
-  .rows {
+  .cards {
     display: grid;
-    grid-template-columns: auto max-content max-content minmax(0, 1fr) max-content auto;
-    column-gap: 0.9rem;
-  }
-
-  .head {
-    display: grid;
-    grid-column: 1 / -1;
-    grid-template-columns: subgrid;
-    padding: 0.35rem 0.75rem;
-    background: var(--surface-2);
-    color: var(--text-faint);
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-  }
-
-  /* A head's words never widen its column. */
-  .head span {
-    contain: inline-size;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* The items go under the IDs (`SearchRow`), so the group PDF's head takes their column. */
-  @container results (max-width: 54rem) {
-    .head-items {
-      display: none;
-    }
-  }
-
-  @container results (max-width: 34rem) {
-    .head {
-      display: none;
-    }
+    grid-template-columns: auto max-content max-content max-content minmax(0, 1fr) auto;
+    gap: 0.5rem 1.4rem;
   }
 
   /* The reprint bar stays at the foot of the overlay while the rows scroll under it: the reprint

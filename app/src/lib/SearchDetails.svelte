@@ -1,62 +1,52 @@
 <script lang="ts">
-  // A Search row's details, under the row: what the label prints that the row does not show, each head
-  // before its value in one line that wraps (the receiver's area, the weight, the ship-by date, Qty
-  // Total, the pickup code, the account of a shop of another name); and where it came from: the input
-  // PDF, its pages there, its batch's save time and the group's code. The items' Seller SKUs are in
-  // the row, under each item.
+  // A Search card's details, under its bar: one line per head. The receiver's address and, when they
+  // apply, the pickup code and the account (`detailLines`); the input PDF it was read from, its pages
+  // there and its short hash; the group's code, its PDF's name and the order's pages in it.
   import type { SearchRow } from "./api/search";
-  import { detailFacts } from "./search.svelte";
+  import { detailLines, fileLabel } from "./search.svelte";
   import { texts } from "../texts";
   import Icon from "./Icon.svelte";
 
   let { row }: { row: SearchRow } = $props();
 
   const words = texts.search;
-  const facts = $derived(detailFacts(row));
+  const heads = words.details;
+  const lines = $derived(detailLines(row));
 </script>
 
-<div class="details">
-  {#if facts.length > 0}
-    <p class="facts">
-      {#each facts as fact (fact.head)}
-        <span class="fact"><span class="head">{fact.head}</span><span class:faint={fact.notRead}>{fact.value}</span></span>
-      {/each}
-    </p>
-  {/if}
-  <p class="trace">
-    {words.from}
-    <span class="input"><Icon name="file" size={14} />{row.input}<span class="hash">{row.input_hash}</span></span>
-    {words.inputPages(row.input_first_page, row.input_last_page)}{words.savedInto(row.batch_time)}
-    <span class="group">{row.group}</span>
-  </p>
-</div>
+<dl class="details">
+  {#each lines as line (line.head)}
+    <dt>{line.head}</dt>
+    <dd class:faint={line.notRead} title={line.notRead ? words.notReadWhy : undefined}>{line.text}</dd>
+  {/each}
+  <dt>{heads.input}</dt>
+  <dd>
+    <span class="file"><Icon name="file" size={14} />{row.input}</span>
+    {words.pages(row.input_first_page, row.input_last_page)}
+    <span class="hash">{row.input_hash}</span>
+  </dd>
+  <dt>{heads.group}</dt>
+  <dd>
+    <span class="code">{row.group}</span>
+    <span title={row.file}>{fileLabel(row)}</span>
+    <span class="strong">{words.pages(row.first_page, row.last_page)}</span>
+  </dd>
+</dl>
 
 <style>
-  /* Under the row, from the order's column to its end. */
+  /* Under the bar, from the shop's column to the card's end: the heads in a column of their own. */
   .details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    display: grid;
+    grid-row: 4;
     grid-column: 2 / -1;
-    padding-top: 0.55rem;
-    border-top: 1px solid var(--border-soft);
-    font-size: 0.86rem;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    gap: 0.3rem 1.1rem;
+    margin: 0.2rem 0 0.45rem;
+    font-size: 0.88rem;
   }
 
-  .facts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem 1.5rem;
-    margin: 0;
-  }
-
-  .fact {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.45rem;
-  }
-
-  .head {
+  dt {
     color: var(--text-faint);
     font-size: 0.72rem;
     font-weight: 600;
@@ -64,21 +54,25 @@
     text-transform: uppercase;
   }
 
+  dd {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem 0.6rem;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
   .faint {
     color: var(--text-faint);
   }
 
-  .trace {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.3rem 0.4rem;
-    margin: 0;
-    color: var(--text-muted);
+  .strong {
+    font-weight: 600;
   }
 
   /* The input's file name, set apart as a file: its icon, a box, monospace. */
-  .input {
+  .file {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
@@ -87,28 +81,32 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--surface-2);
-    color: var(--text);
     font-family: var(--font-mono);
     font-size: 0.8rem;
-    overflow-wrap: anywhere;
   }
 
-  .hash {
-    padding-left: 0.4rem;
-    border-left: 1px solid var(--border);
-    opacity: 0.7;
-  }
-
-  .input :global(svg) {
+  .file :global(svg) {
     flex: none;
     color: var(--text-faint);
   }
 
-  .group {
+  .hash {
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .code {
     padding: 0 0.4rem;
     border-radius: var(--radius);
     background: var(--chip);
     color: var(--chip-text);
     font-weight: 700;
+  }
+
+  @container results (max-width: 52rem) {
+    .details {
+      grid-row: 5;
+    }
   }
 </style>

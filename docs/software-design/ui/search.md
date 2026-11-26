@@ -13,37 +13,62 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 │ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
 │ 3 orders in 2 batches   [–] Select all                                                              │
 │ ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐ │
-│ │     Order                  Tracking          Items                  Label                       │ │
-│ │ [✓] Toko Alfa              (J&T Express)     ×1  Sepatu Standar     Wed, 7 Oct Batch 2 [Open] › │ │
-│ │     580000000000000042     JY0000001234          Samping — honda    Sepatu x88 page 14 Reprinted│ │
-│ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ [ ] Toko Beta              (J&T Express)     ×2  Spion Beat — honda Wed, 7 Oct Batch 2 [Open] ⌄ │ │
-│ │     580000000000000057     JY0000001235          SPI-01             Spion x35 page 3            │ │
-│ │     RECEIVER CONTOH, KOTA CONTOH, JAWA BARAT   WEIGHT 490 g   SHIP BY Thu, 8 Oct 2026           │ │
-│ │     QTY TOTAL 2                                                                                 │ │
-│ │     From [▯ labels pagi.pdf | e731bbe96035] p. 3, saved at 09:12 into group (2-B)               │ │
-│ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
-│ │ [✓] Toko Alfa              (Unknown)         ×1  Kaca Spion         Tue, 6 Oct Batch 1 [Open] › │ │
-│ │     580000000000000061     no tracking ID    ×1  Spion Beat         Spion x12 page 7            │ │
+│ │ [✓] Toko Alfa              (J&T Express)    Wed, 7 Oct 09:12   SHIP BY Thu, 8 Oct        [Open] │ │
+│ │     580000000000000042     JY0000001234     Batch 2            WEIGHT  1,250 g        Reprinted │ │
+│ │     ─────────────────────────────────────────────────────────────────────────────────────────── │ │
+│ │     ×2  Sepatu Standar Samping Motor | Pelindung Rantai    Hitam, Beat Fi     SST-BEAT-01       │ │
+│ │         Honda Beat Scoopy Vario                                                                 │ │
+│ │     ×1  Spion Beat | Kaca Spion Motor Honda Beat           honda              SPI-01            │ │
+│ │     ──                                                                                          │ │
+│ │     3   TOTAL                                                                                   │ │
+│ │     ───────────────────────────────────────────────────────────────────────────────────────── ⌄ │ │
+│ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐ │
+│ │ [ ] Toko Beta              (J&T Express)    Wed, 7 Oct 09:12   SHIP BY Thu, 8 Oct        [Open] │ │
+│ │     580000000000000057     JY0000001235     Batch 2            WEIGHT  490 g                    │ │
+│ │     ─────────────────────────────────────────────────────────────────────────────────────────── │ │
+│ │     ×1  Jok Kulit Vario | Custom                           Merah              JOK-01            │ │
+│ │     ───────────────────────────────────────────────────────────────────────────────────────── ⌃ │ │
+│ │     ADDRESS     JAWA BARAT, KOTA CONTOH, KECAMATAN CONTOH                                       │ │
+│ │     INPUT FILE  [▯ labels pagi.pdf] page 3  e731bbe96035                                        │ │
+│ │     GROUP       (2-B) Sepatu x88  page 14                                                       │ │
+│ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────────────────────────────────────────────────────────┐ │
+│ │ [✓] Toko Alfa              (Unknown)        Tue, 6 Oct 16:40   SHIP BY Wed, 7 Oct        [Open] │ │
+│ │     580000000000000061     no tracking ID   Batch 1            WEIGHT  300 g                    │ │
+│ │     ─────────────────────────────────────────────────────────────────────────────────────────── │ │
+│ │     ×1  Kaca Spion                                                            SPI-RTR           │ │
+│ │     ───────────────────────────────────────────────────────────────────────────────────────── ⌄ │ │
 │ └─────────────────────────────────────────────────────────────────────────────────────────────────┘ │
 │ ─────────────────────────────────────────────────────────────────────────────────────────────────── │
 │ 2 of 3 selected                                                      [Clear]  [ Reprint ]           │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-On a narrower window the items take a line of their own under the order:
+On a narrower window the date and the parcel go under the shop and the courier, and each item's variation and
+Seller SKU under its name:
 
 ```
-[✓] Toko Alfa              (J&T Express)     Wed, 7 Oct (2-A)          [Open] ›
-    580000000000000042     JY0000001234      Sepatu x88 page 14       Reprinted
-    ×1  Sepatu Standar Samping Motor Pelindung Rantai Honda Beat — honda
+[✓] Toko Alfa              (J&T Express)                [Open]
+    580000000000000042     JY0000001234              Reprinted
+    Wed, 7 Oct 09:12       SHIP BY Thu, 8 Oct
+    Batch 2                WEIGHT  1,250 g
+    ──────────────────────────────────────────────────────────
+    ×2  Sepatu Standar Samping Motor | Pelindung Rantai Honda
+        Beat Scoopy Vario
+        Hitam, Beat Fi   SST-BEAT-01
+    ×1  Spion Beat | Kaca Spion Motor Honda Beat
+        honda   SPI-01
+    ──
+    3   TOTAL
+    ──────────────────────────────────────────────────────── ⌄
 ```
 
 - **The filter** is made with the boxes of [Sort rules](sort-rules.md), in one box with the dates: the
   boxes at the left, the dates and **Search** at the right; when Search is narrower than 60 rem, the dates
   and **Search** stand in one line under the boxes, so the box stays low. The fields are those of the
   filter language ([fields](../rules-file/conditions.md#fields)). The first box is *Order ID contains*,
-  so part of an ID finds its order ([D-UI-12](../decisions/ui.md)). *Account* and *Shop* narrow it to one
+  so part of an ID finds its order ([D-UI-16](../decisions/ui.md)). *Account* and *Shop* narrow it to one
   account or one shop: *Account equals* picks an account from the list ([D-RULES-6](../decisions/rules.md)). Matching ignores case; an item field
   matches when one line matches. The Courier row works as there: *equals* picks a courier from the list,
   *contains* and *starts with* take typed text matched against the couriers' names
@@ -58,28 +83,31 @@ On a narrower window the items take a line of their own under the order:
   index ([reprint](../app/reprint.md#the-search-index)); until it is built the screen says *Loading*.
 - **Enter** in a box searches, so a scanned Order ID finds its order at once; the first box has the
   focus when Search opens.
-- **Results**: the number of orders and batches and **Select all**, then one **row** per order under the
-  heads *Order*, *Tracking*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; in the **Order**
-  column, its **shop** in grey (the account's name in grey italics when the label printed no sender) over its
-  Order ID in bold, both at 0.9rem; in the **Tracking** column, its courier's name as a pill (*Unknown* when
-  the label named none) over the tracking ID (*no tracking ID* when the label printed none); its items, one line each (quantity, then name and its variation, *Spion Beat — honda*); the date it was saved on and its batch
-  (*Wed, 7 Oct Batch 2*) over the group's name and the **page** the label is on there (*page 14*,
-  *pages 14–15* for a label with a second page), so the printed label is found in its stack; **Open** and the
-  chevron. The order and label columns are as wide as their longest entry, so the items keep the rest of the
-  row and a long product name wraps in one wide column. Results narrower than 54 rem (a window much less
-  than full width) put the items on a line of their own under the order; narrower than 34 rem, the label
-  too, and the heads are hidden. **Open** opens that group PDF, written again first when it is not there any
-  more (as on the [Day](day.md) screen). The chevron opens the row's **details**: what the label prints
-  that the row does not show, nothing twice (R-UI-55). Each item's **Seller SKU** stands under the item in
-  the row, small and in monospace. Under the row, one line of facts, each head before its value, wrapping
-  as the window needs: *Receiver* (district, city and province as the label prints them, in one line),
-  *Weight* (`1,250 g`), *Ship by*, *Qty Total*, *Pickup code*, and *Account* when the row shows a shop of
-  another name. A fact the label does not print is left out; for an order saved before the area or the
-  weight was read, in a data folder not updated since, *not read yet: the data folder is not updated*
-  stands in its place. Then one line, *From* the input PDF it was read from (its file name in a box with a
-  file icon in monospace, then its short hash, the one its file name carries) and its pages there, *saved
-  at 09:12* (its batch's last save) *into group* and the group PDF's code (`2-B`) as a chip. How the
-  courier was named is not shown (the journal keeps it).
+- **Results**: the number of orders and batches and **Select all**, then one **card** per order, with no head
+  row ([D-UI-16](../decisions/ui.md), R-UI-57). The card's **head** is two lines on columns all cards share,
+  each as wide as its longest entry, so a field is found down the list: its tick; its **shop** in grey (the
+  account's name in grey italics when the label printed no sender; a long name ends at the Order ID's width,
+  whole in its tooltip) over its **Order ID** in bold; its courier's name as a pill (*Unknown* when the label
+  named none) over the **tracking ID** (*no tracking ID* when the label printed none); the date and time its
+  batch was saved (*Wed, 7 Oct 09:12*) over the batch; *SHIP BY* and the date over *WEIGHT* and the grams
+  (`1,250 g`), each left empty when the label prints none; at the right **Open** and the *Reprinted* mark.
+  Under a line, the **items** as a table without heads, one line each: the quantity, the name (it wraps and
+  takes the room left), the variation and the **Seller SKU** in monospace, these two at fixed widths so they
+  line up from card to card. When the order has several lines, or a Qty Total its one line does not add up
+  to, the slip's **Qty Total** stands at their foot under the quantities, after a short stroke. Results
+  narrower than 52 rem (a window much less than full width) put the date and the parcel under the shop and
+  the courier, and each item's variation and Seller SKU under its name. **Open** opens the order's group
+  PDF, written again first when it is not there any more (as on the [Day](day.md) screen).
+- **Details**: the line under the items is a bar with a chevron at its end; it opens the card's details
+  under it, one line per head (R-UI-55): *ADDRESS* (the receiver's province, city and district as the label
+  prints them); *PICKUP CODE* when the tracking ID is another; *ACCOUNT* when the shop has another name;
+  *INPUT FILE*, the input PDF it was read from (its file name in a box with a file icon, in monospace), its
+  pages there and its short hash, the one its file name carries; *GROUP*, the group's code as a chip, its
+  PDF's name and the **page** the order is on there (*page 14*, *pages 14–15* for a label with a second
+  page), so the printed label is found in its stack. For an order saved before the address or the weight was
+  read, in a data folder not updated since, *not read yet* stands in its place, grey, and its tooltip says to
+  start the program again and choose **Update**. How the courier was named is not shown (the journal keeps
+  it).
 - **Reprinted**: an order printed again before carries the mark *Reprinted* under **Open** (*Reprinted 2×* for more);
   its tooltip names each reprint and its date.
 - **Saved orders only**: an open draft's orders have no file yet and are not searched.
@@ -87,11 +115,11 @@ On a narrower window the items take a line of their own under the order:
 
 ## Reprint
 
-- A tick at the left of each row; a click on the row's text ticks it too, and a ticked row has a tinted
-  ground and an accent bar at its left. A drag or a double click selects text instead (to copy an Order ID or
+- A tick at the left of each card; a click on the card's text ticks it too, and a ticked card has a tinted
+  ground, an accent border and an accent bar at its left. A drag or a double click selects text instead (to copy an Order ID or
   a tracking ID) and leaves the tick as it was. **Select all** ticks every order the filter found or none;
   its tick shows a dash when only some are ticked. A search that finds one order ticks it.
-- **The reprint bar** stays at the foot of the screen while the rows scroll: `<n> of <m> selected`,
+- **The reprint bar** stays at the foot of the screen while the cards scroll: `<n> of <m> selected`,
   **Clear**, and **Reprint `<n>` orders**. When a ticked order was reprinted before, the bar says how many,
   and **Reprint** asks first: "Reprint 3 orders?" — "2 of them were reprinted before." [Reprint]
   [Cancel].
@@ -99,6 +127,6 @@ On a narrower window the items take a line of their own under the order:
   into today's date: `Reprint 1 x2.pdf` ([reprint](../app/reprint.md#reprint)). It is verified before it is
   kept; a finding stops it and nothing is kept.
 - When it is written, a green note at the bar's left, in the bar's line while both fit, says "Reprint 1
-  written: 2 orders, 2 pages." with **Open**; the rows are searched again, so the orders just printed
+  written: 2 orders, 2 pages." with **Open**; the orders are searched again, so the orders just printed
   carry *Reprinted*, and the Day screen of today lists it under **Reprints**.
 - A reprint changes nothing else: the orders stay saved in their batches and their printed ticks stay.

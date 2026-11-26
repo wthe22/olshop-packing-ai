@@ -4,7 +4,7 @@ members = ["crates/*", "app/src-tauri"]
 
 [workspace.package]
 edition = "2024"
-version = "0.8.4-alpha"
+version = "0.8.5-alpha"
 publish = false
 
 [workspace.dependencies]

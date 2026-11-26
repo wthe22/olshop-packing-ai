@@ -144,8 +144,8 @@ try {
   await until(shows("Last 7 days"));
   await click("Search", ".search .scope button");
   await until(shows("orders in 1 batch"));
-  await run(`document.querySelector(".search .rows .row input[type=checkbox]").click()`);
-  await run(`document.querySelector(".search .rows .row button.chevron").click()`);
+  await run(`document.querySelector(".search .cards .card input[type=checkbox]").click()`);
+  await run(`document.querySelector(".search .cards .card button.expand").click()`);
   await wait(400);
   await picture("06-search.png");
   await click("Reprint");

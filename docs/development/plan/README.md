@@ -6,8 +6,28 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-26)
 
+- **Handoff of 2026-11-26 (late) — v0.8.5-alpha: Search shows each order as a card.** Built, checked and
+  pushed; `target/portable/` is rebuilt. No dev task is left.
+  - **R-UI-57**, the owner's drawing ([D-UI-16](../../software-design/decisions/ui.md),
+    [ui/search.md](../../software-design/ui/search.md)): one card per order, no head row. Its head is two
+    lines on columns all cards share: the shop over the Order ID, the courier over the tracking ID, the
+    batch's date and save time over the batch, *Ship by* over *Weight*; **Open** and *Reprinted* at the
+    right. Under it the items as a table (quantity, name, variation, Seller SKU), the Qty Total at its foot
+    when the order has several lines. The bar under the items opens *Address* (province, city, district, in
+    the drawing's order), *Input file* (pages, short hash) and *Group* (code, name, the page in the group PDF).
+  - **Kept although the drawing has no place for them** (the owner asked what was missing): the tick for
+    Reprint; the *Reprinted* mark under **Open**; the order's page in its group PDF, in *Group*; the pickup
+    code, only when the tracking ID is another; the account, only when the shop has another name. A long
+    shop name ends at the Order ID's width, whole in its tooltip.
+  - **To check**: Search on the owner's screen at 125 % over a few dates: the columns line up from card to
+    card, long names wrap, and a narrower window puts the date and the weight under the shop and courier.
+  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-19`,
+    [reviews/label.md](../../reviews/label.md) as `R-LABEL-20` (a weight or an area read wrong: the date,
+    the order and what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-58`. A new session
+    turns each into a task and builds it.
+
 - **Handoff of 2026-11-26 (night) — v0.8.4-alpha: the weight; Search details without repeats; one schema
-  step for v0.8.** Built, checked and pushed; `target/portable/` is rebuilt. No dev task is left.
+  step for v0.8.** Built, checked and pushed.
   - **R-LABEL-19**: each order records the parcel's weight in grams as its label prints it (`Weight :
     0.490 KG` on the TikTok labels, `Weight` `5 KG` on J&T Cargo's, `Berat: 450 gr` on the Shopee-style
     one), in the journal and as `weight_grams` in `orders.csv` ([D-LABEL-27](../../software-design/decisions/label.md)).
@@ -32,10 +52,6 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     none); `session.toml` is 2.1; the next start did not ask again; `remove-v07-backup.py` removed the backup.
   - **The owner's steps for the v0.7 data**: as below (keep a copy, start, **Update**, check, then
     `remove-v07-backup.py --dry-run`); Search now shows the weight too.
-  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-19`,
-    [reviews/label.md](../../reviews/label.md) as `R-LABEL-20` (a weight or an area read wrong: the date, the
-    order and what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-57`. A new session turns
-    each into a task and builds it.
 
 - **Handoff of 2026-11-26 (later) — v0.8.3-alpha: Packing converts a v0.7 data folder itself; Search
   shows the whole order.** Built, checked and pushed.

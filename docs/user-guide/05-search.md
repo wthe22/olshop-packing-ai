@@ -1,6 +1,6 @@
 # Find and reprint a saved order (Search)
 
-![Search with a row's details open](images/06-search.png)
+![Search with a card's details open](images/06-search.png)
 
 **Search** opens over the screen; **Close** returns. Searching changes nothing.
 
@@ -12,21 +12,22 @@
   and sets the dates back to the viewed day.
 - **Dates**: **Viewed day** (the date the Day screen shows, the default; not listed when that is today),
   **Today**, **Yesterday**, **Last 7 days**, **Last 30 days**, **Custom range** (pick the first and last
-  date) or **All days**, of every account, then **Search**: "3 orders in 2 batches" and one row per order.
-  **Order**: the shop (the account's name when the label printed none) and the Order ID over the courier
-  and the tracking ID. **Items**, with the most room. **Label**: the date and the batch over the group's
-  name and the **page** the label is on (to find the printed label in its stack). **Open** opens that group
-  PDF. The arrow opens the order's details: each item's Seller SKU under it; one line with the receiver's
-  district, city and province, the weight, the ship-by date, the slip's Qty Total, the pickup code of an
-  instant label, and the account when the shop has another name (what the label does not print is left
-  out); and the label file it was read from with its pages, the batch's save time and the group's code
-  ("From … p. 3, saved at 09:12 into group 2-A"). In a narrow window the items move under the order.
+  date) or **All days**, of every account, then **Search**: "3 orders in 2 batches" and one card per order.
+- A card's head: the shop (the account's name when the label printed none) over the Order ID; the courier
+  over the tracking ID; the date and time the batch was saved over the batch; the ship-by date over the
+  parcel's weight. **Open** opens the group PDF the order is in. Under it the items, one line each: the
+  quantity, the name, the variation and the Seller SKU; the slip's Qty Total under them when there are
+  several lines.
+- The arrow on the line under the items opens the rest: the receiver's address, the label file it was read
+  from with its page and short hash, and the group with the **page** the label is on in the group PDF (to
+  find the printed label in its stack). The pickup code and the account show there only when the card does
+  not show them already. In a narrow window the date and the weight move under the shop and the courier.
 - **Account** and **Shop**: *Account equals* picks one account from the list and narrows the search to its
   orders; *Shop* does the same for a shop name. Without them every account is searched.
 - **Courier**: *equals* picks one courier from the list; *contains* or *starts with* takes typed text, so
   `J&T` finds J&T Express and J&T Cargo.
 - An order printed again before carries **Reprinted** under **Open**; point at it to see which reprint and when.
-- Tick the orders to print again: click a row, or its tick; **Select all** ticks every order or none. A
+- Tick the orders to print again: click a card, or its tick; **Select all** ticks every order or none. A
   search that finds one order ticks it. A double click or a drag selects text to copy (an Order ID, a
   tracking ID) and leaves the tick alone.
 - The bar at the foot says how many are selected and has **Reprint**: one PDF of their label
