@@ -59,6 +59,15 @@ pub struct OrderRow {
     /// The courier's name; none when no courier was named.
     courier: Option<String>,
     items: Vec<ItemView>,
+    /// The date the slip says to ship by, `2026-10-08`.
+    ship_by: Option<String>,
+    /// The `Qty Total` the slip prints; none on the Shopee-style slip.
+    total_quantity: Option<u16>,
+    pickup_code: Option<String>,
+    /// None: saved before the area was read, and the data folder not updated since.
+    area: Option<AreaView>,
+    /// What named the courier: `logo`, `shape`, `text`, `form`, `tag` or `none`.
+    courier_clue: &'static str,
     batch: BatchId,
     /// `<batch>-<code>`.
     group: String,
@@ -89,7 +98,18 @@ pub struct ReprintMarkView {
 #[derive(Serialize)]
 pub struct ItemView {
     name: String,
+    /// Empty for none.
+    variant: String,
     quantity: u16,
+    seller_sku: Option<String>,
+}
+
+/// The receiver's province, city and district as the label prints them; none where it prints none.
+#[derive(Serialize)]
+pub struct AreaView {
+    province: Option<String>,
+    city: Option<String>,
+    district: Option<String>,
 }
 
 /// The saved orders `filter` matches on the dates of `range`; none searches every date.
@@ -147,11 +167,23 @@ fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> Order
         items: order
             .items
             .iter()
-            .map(|item| ItemView {
+            .enumerate()
+            .map(|(at, item)| ItemView {
                 name: item.name.clone(),
+                variant: item.variant.clone(),
                 quantity: item.quantity,
+                seller_sku: saved.skus.get(at).cloned().flatten(),
             })
             .collect(),
+        ship_by: saved.ship_by_date.map(|date| date.to_string()),
+        total_quantity: saved.total_quantity,
+        pickup_code: saved.pickup_code.clone(),
+        area: saved.area.as_ref().map(|area| AreaView {
+            province: area.province.clone(),
+            city: area.city.clone(),
+            district: area.district.clone(),
+        }),
+        courier_clue: saved.courier_clue.kind.as_str(),
         batch: order.batch,
         group: format!("{}-{}", order.batch, saved.group),
         file: order.file.clone(),

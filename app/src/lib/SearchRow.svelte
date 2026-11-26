@@ -2,15 +2,16 @@
   // One order of Search's results as a row of the results' grid: its tick; its shop over its Order
   // ID; its courier over its tracking ID; its items, which take the room left; the date and batch over
   // the group's name and the page the label is on; **Open**, the chevron of its details and its
-  // *Reprinted* mark. The details are what the row does not show: the input PDF it was read from,
-  // its batch's save time and the group's code. The order and label columns take only their own width, so a long
+  // *Reprinted* mark. The chevron opens the order's details under it (`SearchDetails`). The order and
+  // label columns take only their own width, so a long
   // product name keeps the rest; on a narrow window the items go under them. A click on the row's
   // text ticks it, for the mouse only: the tick is the keyboard's way.
   import type { SearchRow } from "./api/search";
-  import { fileLabel, reprintedMark } from "./search.svelte";
+  import { fileLabel, itemName, reprintedMark } from "./search.svelte";
   import { texts } from "../texts";
   import { formatShortDay } from "../dates";
   import Icon from "./Icon.svelte";
+  import SearchDetails from "./SearchDetails.svelte";
   import { access } from "./readOnly.svelte";
 
   let {
@@ -66,7 +67,7 @@
   </div>
   <ul class="items">
     {#each row.items as item, i (i)}
-      <li><span class="qty">×{item.quantity}</span><span class="name">{item.name}</span></li>
+      <li><span class="qty">×{item.quantity}</span><span class="name">{itemName(item)}</span></li>
     {/each}
   </ul>
   <div class="where">
@@ -94,12 +95,7 @@
     {#if mark}<span class="mark" title={mark.title}>{mark.text}</span>{/if}
   </div>
   {#if traced}
-    <p class="trace">
-      {words.from}
-      <span class="input"><Icon name="file" size={14} />{row.input}<span class="hash">{row.input_hash}</span></span>
-      {words.inputPages(row.input_first_page, row.input_last_page)}{words.savedInto(row.batch_time)}
-      <span class="group">{row.group}</span>
-    </p>
+    <SearchDetails {row} />
   {/if}
 </div>
 
@@ -234,14 +230,6 @@
     gap: 0.4rem;
   }
 
-  .group {
-    padding: 0 0.4rem;
-    border-radius: var(--radius);
-    background: var(--chip);
-    color: var(--chip-text);
-    font-weight: 700;
-  }
-
   /* The group's name only hints; its code and the page find the label. */
   .file {
     max-width: 10rem;
@@ -313,46 +301,6 @@
     font-weight: 600;
     line-height: 1.5;
     white-space: nowrap;
-  }
-
-  .trace {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.3rem 0.4rem;
-    grid-column: 2 / -1;
-    margin: 0;
-    padding-top: 0.4rem;
-    border-top: 1px solid var(--border-soft);
-    color: var(--text-muted);
-    font-size: 0.84rem;
-  }
-
-  /* The input's file name, set apart as a file: its icon, a box, monospace. */
-  .input {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    min-width: 0;
-    padding: 0.05rem 0.45rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    color: var(--text);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    overflow-wrap: anywhere;
-  }
-
-  .hash {
-    padding-left: 0.4rem;
-    border-left: 1px solid var(--border);
-    opacity: 0.7;
-  }
-
-  .input :global(svg) {
-    flex: none;
-    color: var(--text-faint);
   }
 
   /* Too narrow for the items beside the order and the label: the label stands next to the order and

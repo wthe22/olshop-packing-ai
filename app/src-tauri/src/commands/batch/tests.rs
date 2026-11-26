@@ -444,6 +444,18 @@ fn a_logo_answer_is_remembered_in_the_rules_and_the_prompt_moves_on() {
     assert!(rules.contains("fedcba9876543210"));
 }
 
+/// What a row's details show of the first order the search finds in the saved fixtures.
+fn assert_details(row: &Value) {
+    let wanted = json!({
+        "items": [{"name": "Jok Kulit Vario | Custom", "variant": "", "quantity": 1, "seller_sku": "SELL-JOK-01"}],
+        "area": {"province": "DKI JAKARTA", "city": "KOTA CONTOH BARAT", "district": "KEBON CONTOH"},
+        "ship_by": DAY, "total_quantity": 1, "pickup_code": null, "courier_clue": "none",
+    });
+    for (key, value) in wanted.as_object().unwrap() {
+        assert_eq!(&row[key], value, "{key}");
+    }
+}
+
 #[test]
 fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     let Some((program, state, _guard)) = started("app-search") else {
@@ -464,6 +476,7 @@ fn a_saved_order_is_found_reprinted_and_a_lost_output_restored() {
     assert!(row["input_first_page"].as_u64().unwrap() >= 1);
     let time = row["batch_time"].as_str().unwrap();
     assert!(time.len() == 5 && time.as_bytes()[2] == b':', "{time}");
+    assert_details(&found["rows"][0]);
     let range = |from: &str, to: &str| DateRange {
         from: from.into(),
         to: to.into(),

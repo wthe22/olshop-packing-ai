@@ -12,7 +12,7 @@ import { searchSummary, texts } from "../src/texts.ts";
 import { answerQuestions } from "./answers.mjs";
 
 useRunes();
-const { Search, fileLabel, itemsText, reprintedMark } = await import("../src/lib/search.svelte.ts");
+const { Search, detailFields, fileLabel, itemsText, reprintedMark } = await import("../src/lib/search.svelte.ts");
 
 const row = (order_id, group = "1-A") => ({
   day: "2026-10-07",
@@ -238,4 +238,43 @@ test("the Courier box lists the couriers of the rules, and a row names its page"
   useBackend({});
   await search.loadCouriers();
   assert.match(search.error, /rules_list/, "a failed load is shown");
+});
+
+test("a row's details show every field of the order, a dash where the label prints none", () => {
+  const order = {
+    ...row("580000000000000042"),
+    account: "Toko Alfa",
+    items: [{ name: "Spion Beat", variant: "honda", quantity: 2, seller_sku: "SKU-01" }],
+    ship_by: "2026-10-08",
+    total_quantity: 2,
+    pickup_code: null,
+    area: { province: "JAWA BARAT", city: "KOTA CONTOH", district: null },
+    courier_clue: "logo",
+  };
+  assert.equal(itemsText(order), "Spion Beat — honda ×2");
+  assert.deepEqual(
+    detailFields(order).map((field) => [field.head, field.value, field.missing]),
+    [
+      ["Account", "Toko Alfa", false],
+      ["Province", "JAWA BARAT", false],
+      ["City", "KOTA CONTOH", false],
+      ["District", "—", true],
+      ["Ship by", "Thu, 8 Oct 2026", false],
+      ["Qty Total", "2", false],
+      ["Courier named by", "its logo", false],
+    ],
+  );
+
+  const older = { ...order, area: null, ship_by: null, total_quantity: null, pickup_code: "12AB", courier_clue: "none" };
+  assert.deepEqual(
+    detailFields(older).map((field) => [field.head, field.value]),
+    [
+      ["Account", "Toko Alfa"],
+      ["Receiver's area", "not read yet: the data folder is not updated"],
+      ["Ship by", "—"],
+      ["Qty Total", "—"],
+      ["Pickup code", "12AB"],
+      ["Courier named by", "nothing"],
+    ],
+  );
 });

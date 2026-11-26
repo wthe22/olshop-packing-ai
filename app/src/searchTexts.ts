@@ -67,8 +67,36 @@ export const searchTexts = {
   // A row's **Open**, named for its group PDF.
   open: "Open",
   openFile: (file: string) => `Open ${file}`,
-  // The chevron that opens a row's details: "From [input.pdf] p. 3, saved at 09:12 into group 2-A".
-  trace: "Where it came from",
+  // The chevron that opens a row's details: every field of the order, its items with their variation
+  // and Seller SKU, and "From [input.pdf] p. 3, saved at 09:12 into group 2-A".
+  trace: "Details",
+  details: {
+    account: "Account",
+    province: "Province",
+    city: "City",
+    district: "District",
+    area: "Receiver's area",
+    shipBy: "Ship by",
+    totalQuantity: "Qty Total",
+    pickupCode: "Pickup code",
+    courierBy: "Courier named by",
+    quantity: "Qty",
+    item: "Item",
+    variation: "Variation",
+    sellerSku: "Seller SKU",
+  },
+  // A detail the label does not print.
+  none: "—",
+  // An order saved before the area was read, its data folder not updated since.
+  areaNotRead: "not read yet: the data folder is not updated",
+  clue: {
+    logo: "its logo",
+    shape: "its logo's shape",
+    text: "the label's text",
+    form: "its tracking ID",
+    tag: "its service tag",
+    none: "nothing",
+  },
   batch: (n: number) => `Batch ${n}`,
   from: "From",
   inputPages: (first: number, last: number) => (first === last ? `p. ${first}` : `p. ${first}–${last}`),

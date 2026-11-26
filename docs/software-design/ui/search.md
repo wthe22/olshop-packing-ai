@@ -19,6 +19,11 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
 │ │ [ ] Toko Beta              (J&T Express)     ×2  Spion Beat                 Wed, 7 Oct Batch 2 [Open] ⌄│ │
 │ │     580000000000000057     JY0000001235                                     Spion x35 page 3            │ │
+│ │     ACCOUNT    PROVINCE     CITY          DISTRICT   SHIP BY          QTY TOTAL   COURIER NAMED BY │ │
+│ │     Toko Beta  JAWA BARAT   KOTA CONTOH   CONTOH     Thu, 8 Oct 2026  2           its logo         │ │
+│ │     ┌ QTY ─ ITEM ───────────────────────────────── VARIATION ─ SELLER SKU ┐                        │ │
+│ │     │ ×2    Spion Beat                             honda       SPI-01     │                        │ │
+│ │     └─────────────────────────────────────────────────────────────────────┘                        │ │
 │ │     From [▯ 10-07_09-05-49_Shipping label+Packing slip_2.pdf] p. 3, saved at 09:12 into group (2-B)│ │
 │ │ ─────────────────────────────────────────────────────────────────────────────────────────────── │ │
 │ │ [✓] Toko Alfa 580000000000000061 ×1  Kaca Spion                   Tue, 6 Oct Batch 1 [Open] ›    │ │
@@ -58,17 +63,23 @@ On a narrower window the items take a line of their own under the order:
   heads *Order*, *Tracking*, *Items* and *Label* ([D-UI-12](../decisions/ui.md)): its tick; in the **Order**
   column, its **shop** in grey (the account's name in grey italics when the label printed no sender) over its
   Order ID in bold, both at 0.9rem; in the **Tracking** column, its courier's name as a pill (*Unknown* when
-  the label named none) over the tracking ID (*no tracking ID* when the label printed none); its items, one line each (quantity, then name); the date it was saved on and its batch
+  the label named none) over the tracking ID (*no tracking ID* when the label printed none); its items, one line each (quantity, then name and its variation, *Spion Beat — honda*); the date it was saved on and its batch
   (*Wed, 7 Oct Batch 2*) over the group's name and the **page** the label is on there (*page 14*,
   *pages 14–15* for a label with a second page), so the printed label is found in its stack; **Open** and the
   chevron. The order and label columns are as wide as their longest entry, so the items keep the rest of the
   row and a long product name wraps in one wide column. Results narrower than 54 rem (a window much less
   than full width) put the items on a line of their own under the order; narrower than 34 rem, the label
   too, and the heads are hidden. **Open** opens that group PDF, written again first when it is not there any
-  more (as on the [Day](day.md) screen). The chevron opens the row's details under it, only what the row
-  does not show, as one line: *From* the input PDF it was read from (its file name in a box with a file icon
-  in monospace, then its short hash, the one its file name carries) and its pages there, *saved at 09:12* (its batch's last save) *into group* and the group PDF's
-  code (`2-B`) as a chip.
+  more (as on the [Day](day.md) screen). The chevron opens the row's **details** under it, everything saved
+  of the order: its fields, each with its head over its value, as many to a line as fit (*Account*;
+  *Province*, *City* and *District* as the label prints them, or *Receiver's area: not read yet* for an
+  order saved before they were read in a data folder not updated since; *Ship by*; *Qty Total*; *Pickup
+  code* only when the label prints one; *Courier named by* its logo, its logo's shape, the label's text,
+  its tracking ID, its service tag or nothing), a dash for a field the label does not print; a table of its
+  items (*Qty*, *Item*, *Variation*, *Seller SKU*); and one line, *From* the input PDF it was read from (its
+  file name in a box with a file icon in monospace, then its short hash, the one its file name carries) and
+  its pages there, *saved at 09:12* (its batch's last save) *into group* and the group PDF's code (`2-B`)
+  as a chip.
 - **Reprinted**: an order printed again before carries the mark *Reprinted* under **Open** (*Reprinted 2×* for more);
   its tooltip names each reprint and its date.
 - **Saved orders only**: an open draft's orders have no file yet and are not searched.

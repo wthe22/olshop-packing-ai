@@ -8,7 +8,7 @@ import { rulesList, treeToFilter, type Courier } from "./api/rules";
 import { accountsList } from "./api/accounts";
 import { newRow, newTree, toRustTree, type UiTree } from "./conditions";
 import { texts } from "../texts";
-import { formatShortDay } from "../dates";
+import { formatDay, formatShortDay } from "../dates";
 import { confirmBox } from "./confirm.svelte";
 import { presetRange, rangePresets, type DateRange, type RangePreset } from "./searchRange";
 
@@ -200,7 +200,38 @@ function flip(list: string[], item: string): string[] {
 
 // One row's items: "Sepatu ×2, Spion Beat ×1".
 export function itemsText(row: api.SearchRow): string {
-  return row.items.map((item) => texts.search.item(item.name, item.quantity)).join(", ");
+  return row.items.map((item) => texts.search.item(itemName(item), item.quantity)).join(", ");
+}
+
+// An item as the row names it: "Spion Beat — honda", or the name alone without a variation.
+export function itemName(item: api.SearchItem): string {
+  return item.variant ? `${item.name} — ${item.variant}` : item.name;
+}
+
+// One field of a row's details: its head, and its value or the mark of one the label does not print.
+export interface DetailField {
+  head: string;
+  value: string;
+  missing: boolean;
+}
+
+// The fields of a row's details, in their order; the pickup code only when the label prints one.
+export function detailFields(row: api.SearchRow): DetailField[] {
+  const words = texts.search;
+  const heads = words.details;
+  const field = (head: string, value: string | number | null): DetailField =>
+    value === null ? { head, value: words.none, missing: true } : { head, value: String(value), missing: false };
+  const area = row.area
+    ? [field(heads.province, row.area.province), field(heads.city, row.area.city), field(heads.district, row.area.district)]
+    : [{ head: heads.area, value: words.areaNotRead, missing: true }];
+  return [
+    field(heads.account, row.account),
+    ...area,
+    field(heads.shipBy, row.ship_by && formatDay(row.ship_by)),
+    field(heads.totalQuantity, row.total_quantity),
+    ...(row.pickup_code === null ? [] : [field(heads.pickupCode, row.pickup_code)]),
+    field(heads.courierBy, words.clue[row.courier_clue]),
+  ];
 }
 
 // A row's group PDF beside its code's chip: the file name without `.pdf` and without the code it

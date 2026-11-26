@@ -4,11 +4,25 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { DateRange } from "../searchRange";
 
-// One line of a Search row: the product name and its quantity.
+// One line of a Search row: the product name, its variation (empty for none), its quantity and the
+// Seller SKU the slip prints for it.
 export interface SearchItem {
   name: string;
+  variant: string;
   quantity: number;
+  seller_sku: string | null;
 }
+
+// The receiver's province, city and district as the label prints them; `null` where it prints none.
+export interface SearchArea {
+  province: string | null;
+  city: string | null;
+  district: string | null;
+}
+
+// What named an order's courier: its logo, its logo's shape, the label's text, its tracking ID's
+// form, its service tag, or nothing.
+export type CourierClue = "logo" | "shape" | "text" | "form" | "tag" | "none";
 
 // One saved order the filter matches.
 export interface SearchRow {
@@ -23,6 +37,15 @@ export interface SearchRow {
   // The courier's name; `null` when no courier was named.
   courier: string | null;
   items: SearchItem[];
+  // The date the slip says to ship by; `null` when it prints none.
+  ship_by: string | null;
+  // The `Qty Total` the slip prints; `null` on the Shopee-style slip.
+  total_quantity: number | null;
+  // The instant-service label's pickup code.
+  pickup_code: string | null;
+  // `null`: saved before the area was read, and the data folder not updated since.
+  area: SearchArea | null;
+  courier_clue: CourierClue;
   batch: number;
   // `<batch>-<code>`.
   group: string;
