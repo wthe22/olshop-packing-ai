@@ -5,12 +5,15 @@
 1. **Data folder.** Read `packing-app.toml` beside the program; `data_dir` is absolute or relative to
    the program's folder. Missing: the [Start](../ui/start.md) screen asks once (**Use `Packing\packing-data`** or
    **Choose a folder**) and writes the file.
-2. **Migration.** Find, reading only, what the migration would change: dates whose `session.toml` is of
-   another `schema`, and live batches saved before the receiver's area was read whose label PDFs are in the
-   date folder; a damaged journal is passed over. If there is any, the
+2. **Migration.** Find, reading only, what the migration would change: date folders of v0.7 (with
+   `input/` or `output/`, or a backup whose conversion stopped), dates whose `session.toml` is of another
+   `schema`, and live batches saved before the receiver's area was read whose label PDFs are in the date
+   folder (on a date of v0.7, will be once it is flat); a damaged journal is passed over. If there is any, the
    [Start](../ui/start.md#update-the-data-folder) screen asks before any date opens: **Update** or **Open
    read-only** ([D-APP-33](../decisions/app.md)). Choosing another data folder asks the same.
-   - **Update**, holding the data folder's lock, date by date, oldest first: the orders of each batch are
+   - **Update**, holding the data folder's lock, date by date, oldest first: a date of v0.7 is made flat
+     first ([D-APP-32](../decisions/app.md)): its old folders move into `v0.7 backup/`, and each file is
+     copied up under its new name and checked by its hash; then the orders of each batch are
      read again from the first page of their copies in its stored label PDFs and recorded in one
      `areas_filled` record ([records](../data/records.md)); then the date's views are written. A batch
      whose label PDF has changed is skipped and named; the next start asks again.

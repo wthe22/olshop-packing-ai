@@ -70,12 +70,14 @@ fn the_migration_names_older_views_and_the_batches_whose_areas_it_can_read() {
         [
             DateMigration {
                 date: date(2026, 10, 7),
+                v0_7: false,
                 older_views: None,
                 batches: vec![BatchId::new(1)],
                 orders,
             },
             DateMigration {
                 date: date(2026, 10, 8),
+                v0_7: false,
                 older_views: Some("2.1".into()),
                 batches: Vec::new(),
                 orders: 0,

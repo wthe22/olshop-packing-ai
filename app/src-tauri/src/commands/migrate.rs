@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Sender};
 use std::thread;
 
-use packing_batch::{AreaProgress, MigrateRequest, migrate_date};
+use packing_batch::{MigrateProgress, MigrateRequest, migrate_date};
 use packing_engine::ids::BatchId;
 use packing_engine::workflows::Workflows;
 use packing_store::{DataLock, DateFolder, DateMigration, Journal, migrations};
@@ -19,6 +19,8 @@ use crate::{APP_VERSION, AppState, Data, settings};
 #[derive(Debug, PartialEq, Eq, Serialize)]
 pub struct MigrationView {
     date: String,
+    /// Its files are still in v0.7's input and output folders and are moved into the date folder.
+    v0_7: bool,
     /// Its views are of an older version and are written again.
     older_views: bool,
     /// The batches whose receivers' areas are read, and how many orders they hold.
@@ -33,6 +35,7 @@ pub(crate) fn pending(dir: &Path) -> Result<Vec<MigrationView>, String> {
         .into_iter()
         .map(|date| MigrationView {
             date: date.date.to_string(),
+            v0_7: date.v0_7,
             older_views: date.older_views.is_some(),
             batches: date.batches.len(),
             orders: date.orders,
@@ -44,6 +47,8 @@ pub(crate) fn pending(dir: &Path) -> Result<Vec<MigrationView>, String> {
 #[derive(Clone, Debug, Serialize)]
 pub struct DateUpdated {
     date: String,
+    /// Its files of v0.7 were moved into the date folder.
+    moved: bool,
     /// Its batches whose areas were read.
     batches: usize,
     skipped: Vec<SkippedView>,
@@ -56,10 +61,16 @@ pub struct SkippedView {
     reason: String,
 }
 
-/// What the Update shows as it runs: the label page being read, and each date finished.
+/// What the Update shows as it runs: the file of v0.7 being moved, the label page being read, and
+/// each date finished.
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum MigrationStep {
+    Moving {
+        date: String,
+        file: usize,
+        files: usize,
+    },
     Reading {
         date: String,
         batch: BatchId,
@@ -103,15 +114,21 @@ fn update_date(
 ) -> Result<DateUpdated, String> {
     let folder = DateFolder::new(dir, found.date);
     let mut journal = Journal::open(&folder).map_err(|error| error.to_string())?;
-    let (progress, read) = mpsc::channel::<AreaProgress>();
+    let (progress, read) = mpsc::channel::<MigrateProgress>();
     let (date, out) = (found.date.to_string(), steps.clone());
     let forwarder = thread::spawn(move || {
-        for page in read {
-            let _ = out.send(MigrationStep::Reading {
-                date: date.clone(),
-                batch: page.batch,
-                page: page.page,
-                pages: page.pages,
+        for step in read {
+            let date = date.clone();
+            let _ = out.send(match step {
+                MigrateProgress::Moving { file, files } => {
+                    MigrationStep::Moving { date, file, files }
+                }
+                MigrateProgress::Reading { batch, page, pages } => MigrationStep::Reading {
+                    date,
+                    batch,
+                    page,
+                    pages,
+                },
             });
         }
     });
@@ -125,11 +142,13 @@ fn update_date(
         migrate_date(&folder, &mut journal, &request)
     });
     let _ = forwarder.join();
-    let skipped = migrated?.map_err(|error| error.to_string())?;
+    let migrated = migrated?.map_err(|error| error.to_string())?;
     Ok(DateUpdated {
         date: found.date.to_string(),
-        batches: found.batches.len() - skipped.len(),
-        skipped: skipped
+        moved: found.v0_7,
+        batches: migrated.read,
+        skipped: migrated
+            .skipped
             .into_iter()
             .map(|batch| SkippedView {
                 batch: batch.batch,

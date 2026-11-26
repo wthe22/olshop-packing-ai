@@ -55,13 +55,16 @@ A data folder used by version 0.1 (with `labels\`, `state.json`, `categories.tom
 
 ### When a new version asks to update the data folder
 
-A new version may keep more of each order than the one before: from version 0.8.2 the receiver's province,
-city and district. Then, before any date opens, it asks **Update the data folder?** and lists each date it
-would change:
+A new version may keep its files another way, or more of each order, than the one before: from version 0.8
+every file of a date sits directly in its date folder, and from version 0.8.2 each order keeps the
+receiver's province, city and district. Then, before any date opens, it asks **Update the data folder?** and
+lists each date it would change:
 
-- **Update** reads the addresses of the batches saved before from their label PDFs in the date folders and
-  writes each date's lists again. A line shows how far it is (*Reading addresses: 2026-11-25, batch 1, page 3
-  of 120*). No batch, label or PDF is changed or deleted. **Continue** opens the Day screen.
+- **Update** first moves the files of a date of version 0.7 out of its `input` and `output` folders into the
+  date folder, keeping the old folders unchanged in `v0.7 backup` inside the date folder. It then reads the
+  addresses of the batches saved before from their label PDFs and writes each date's lists again. A line
+  shows how far it is (*Moving files: 2026-11-25, file 3 of 12*, *Reading addresses: 2026-11-25, batch 1,
+  page 3 of 120*). No batch, label or PDF is changed or deleted. **Continue** opens the Day screen.
 - **Open read-only** shows the data as it is and changes nothing in the data folder. The title bar says
   *Read-only*, and what would change something is not shown: **+ New batch**, **Amend**, **Revert**,
   **Print**, the **Printed** tick, **Reprint**, and the changes on the Accounts and Sort rules screens.
@@ -70,3 +73,7 @@ would change:
 A batch named in red was not read: its label PDF in the date folder has changed. The other batches are
 updated, and the next start asks about it again. The same question comes when another data folder is chosen
 that needs it.
+
+Once the dates look right, the backups can go: close Packing, then run
+`python tools\remove-v07-backup.py "<data folder>"` (`--dry-run` first lists what it would remove). It deletes
+a date's `v0.7 backup` only when every file in it is in the date folder, and names what is missing otherwise.

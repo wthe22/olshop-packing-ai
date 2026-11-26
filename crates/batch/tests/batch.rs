@@ -14,11 +14,11 @@ use std::sync::mpsc;
 
 use jiff::civil::date;
 use packing_batch::{
-    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, MigrateRequest, ReadRequest,
-    ReprintOutcome, ReprintRequest, RestoreOutcome, RestoreRequest, RevertedPdfs, SaveOutcome,
-    SaveRequest, Saved, account_summary, account_summary_file, amend, check_files, day_summary,
-    day_summary_file, migrate_date, read_draft, reprint, restore, revert, save, set_printed,
-    set_sent,
+    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, MigrateProgress,
+    MigrateRequest, ReadRequest, ReprintOutcome, ReprintRequest, RestoreOutcome, RestoreRequest,
+    RevertedPdfs, SaveOutcome, SaveRequest, Saved, account_summary, account_summary_file, amend,
+    check_files, day_summary, day_summary_file, migrate_date, read_draft, reprint, restore, revert,
+    save, set_printed, set_sent,
 };
 use packing_engine::account_questions::{NoSenderQuestion, Others, ShopQuestion};
 use packing_engine::accounts::{Account, ShopAccount, add_shop};
@@ -26,7 +26,9 @@ use packing_engine::ids::{BatchId, OrderId, PdfId};
 use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked, RecordBody};
 use packing_engine::workflows::{SortRule, Workflows, load_bundled};
 use packing_pdf::worker::PdfWorker;
-use packing_store::{DateFolder, Journal, Settled, input_path, migrations, open_date, partial_dir};
+use packing_store::{
+    DateFolder, Journal, Settled, V0_7_BACKUP, input_path, migrations, open_date, partial_dir,
+};
 use testkit::{PdfiumGuard, TempDir, shop_accounts, testdata, vendor_dir};
 
 const INPUTS: [&str; 2] = ["labels-repeat-1.pdf", "labels-repeat-2.pdf"];
@@ -664,6 +666,21 @@ fn saved_before_the_area(
     (folder, journal)
 }
 
+/// The date folder as v0.7 kept it: the label PDFs in `input/` under the names they were chosen
+/// by, the outputs of `day` in `output/`.
+fn as_v0_7(day: &Day, folder: &DateFolder, record: &BatchSaved) {
+    let (input, output) = (folder.dir().join("input"), folder.dir().join("output"));
+    fs::create_dir_all(&input).unwrap();
+    fs::create_dir_all(&output).unwrap();
+    for pdf in &record.inputs {
+        let stored = input_path(folder, record.batch, pdf.pdf, &pdf.sha256);
+        fs::rename(stored, input.join(&pdf.filename)).unwrap();
+    }
+    for file in &record.outputs {
+        fs::copy(day.folder.dir().join(&file.file), output.join(&file.file)).unwrap();
+    }
+}
+
 #[test]
 fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
     let Some(mut day) = day("batch-migrate") else {
@@ -691,6 +708,7 @@ fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
     assert!(
         migrate_date(&older, &mut journal, &request)
             .unwrap()
+            .skipped
             .is_empty()
     );
     assert_eq!(
@@ -698,7 +716,13 @@ fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
         record.orders,
         "each order has the area the save read"
     );
-    let pages: Vec<usize> = seen.try_iter().map(|progress| progress.page).collect();
+    let pages: Vec<usize> = seen
+        .try_iter()
+        .map(|step| match step {
+            MigrateProgress::Reading { page, .. } => page,
+            moving => panic!("{moving:?}"),
+        })
+        .collect();
     assert_eq!(pages, (1..=record.orders.len()).collect::<Vec<_>>());
     let data_dir = day.folder.dir().parent().unwrap();
     assert!(
@@ -711,7 +735,9 @@ fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
 
     let (changed, mut journal) = saved_before_the_area(&day, 10, &record, |_| b"changed".to_vec());
     let last_seq = journal.fold().last_seq;
-    let skipped = migrate_date(&changed, &mut journal, &request).unwrap();
+    let migrated = migrate_date(&changed, &mut journal, &request).unwrap();
+    let skipped = migrated.skipped;
+    assert_eq!(migrated.read, 0);
     assert_eq!(skipped.len(), 1);
     assert!(matches!(skipped[0].error, BatchError::InputChanged { .. }));
     assert_eq!(
@@ -720,4 +746,30 @@ fn a_batch_saved_before_the_area_was_read_gets_it_from_its_stored_label_pdfs() {
         "a batch it cannot read is left as it was"
     );
     assert!(changed.dir().join("session.toml").is_file());
+
+    let (flat, mut journal) = saved_before_the_area(&day, 11, &record, stored);
+    as_v0_7(&day, &flat, &record);
+    let found = migrations(data_dir).unwrap();
+    assert!(
+        found
+            .iter()
+            .any(|date| date.v0_7 && date.batches == [record.batch]),
+        "{found:?}"
+    );
+    assert_eq!(migrate_date(&flat, &mut journal, &request).unwrap().read, 1);
+    let moving = seen
+        .try_iter()
+        .filter(|step| matches!(step, MigrateProgress::Moving { .. }))
+        .count();
+    assert_eq!(moving, record.inputs.len() + record.outputs.len());
+    assert_eq!(
+        journal.fold().live[&record.batch].saved.orders,
+        record.orders,
+        "the label PDFs moved up are read"
+    );
+    for output in &record.outputs {
+        assert!(flat.dir().join(&output.file).is_file(), "{}", output.file);
+    }
+    assert!(flat.dir().join(V0_7_BACKUP).join("input").is_dir());
+    assert!(!flat.dir().join("input").exists());
 }

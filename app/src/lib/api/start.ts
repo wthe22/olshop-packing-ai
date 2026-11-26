@@ -8,6 +8,8 @@ import type { Theme } from "../theme";
 // A date the migration would change (start.md, *Update the data folder?*).
 export interface MigrationView {
   date: string;
+  // Its files are still in the input and output folders of v0.7 and are moved into the date folder.
+  v0_7: boolean;
   // Its lists are of an older version and are written again.
   older_views: boolean;
   // The batches whose receivers' addresses are read, and their orders.
@@ -21,15 +23,18 @@ export interface SkippedView {
   reason: string;
 }
 
-// A date the Update finished: its batches whose addresses were read, and those not read.
+// A date the Update finished: whether its files of v0.7 were moved, its batches whose addresses were
+// read, and those not read.
 export interface DateUpdated {
   date: string;
+  moved: boolean;
   batches: number;
   skipped: SkippedView[];
 }
 
 // What the Update sends as it runs (the `migration-step` event).
 export type MigrationStep =
+  | { kind: "moving"; date: string; file: number; files: number }
   | { kind: "reading"; date: string; batch: number; page: number; pages: number }
   | ({ kind: "updated" } & DateUpdated);
 

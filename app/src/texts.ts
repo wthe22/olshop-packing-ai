@@ -138,10 +138,11 @@ export const texts = {
     writingAgain: (file: string) => `Writing ${file} again`,
     amended: " · amended",
     // The data folder also holds data of an older version, which is not read; dates of v0.7 are
-    // read, but their files are not found until flatten-data.py has moved them.
+    // read, but their files are not found until the Update at the start has moved them (shown only
+    // in read-only mode, as the start asks first).
     older: (version: string, names: string[]) =>
       version === "v0.7"
-        ? `These dates still keep their files in the input and output folders of Packing v0.7 (${names.join(", ")}). Run flatten-data.py once to move them.`
+        ? `These dates still keep their files in the input and output folders of Packing v0.7 (${names.join(", ")}). Start the program again and choose Update to move them.`
         : `This folder also holds data of Packing ${version} (${names.join(", ")}). It is not read.`,
     // The batch's stored warnings, expanding to the texts.
     warnings: (n: number) => `Warnings: ${n} ▸`,

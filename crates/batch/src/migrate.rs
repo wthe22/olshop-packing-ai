@@ -1,7 +1,7 @@
-//! The migration the owner starts (journal.md, *When a date opens*): each order saved before the
-//! receiver's area was read gets it from its batch's stored label PDFs, one `areas_filled` record
-//! per batch, and the date's views are written again in this version's schema. The caller holds
-//! the data folder's lock.
+//! The migration the owner starts (journal.md, *When a date opens*): a date folder of v0.7 is made
+//! flat, each order saved before the receiver's area was read gets it from its batch's stored label
+//! PDFs, one `areas_filled` record per batch, and the date's views are written again in this
+//! version's schema. The caller holds the data folder's lock.
 
 use std::collections::BTreeMap;
 use std::sync::mpsc::Sender;
@@ -13,7 +13,9 @@ use packing_engine::workflows::Workflows;
 use packing_pdf::PdfError;
 use packing_pdf::read;
 use packing_pdf::worker::PdfWorker;
-use packing_store::{DateFolder, Journal, areas_to_read, input_path, sha256_of, write_views};
+use packing_store::{
+    DateFolder, Journal, areas_to_read, flatten_date, input_path, is_v0_7, sha256_of, write_views,
+};
 
 use crate::BatchError;
 
@@ -22,15 +24,29 @@ pub struct MigrateRequest<'a> {
     /// The rules, for the page reader's logos.
     pub workflows: &'a Workflows,
     pub app: &'a str,
-    pub progress: Sender<AreaProgress>,
+    pub progress: Sender<MigrateProgress>,
 }
 
-/// How far the reading of a batch's areas has got: its label pages read of those to read.
+/// How far the migration of a date has got: the files of v0.7 copied up of how many, or a batch's
+/// label pages read of those to read.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct AreaProgress {
-    pub batch: BatchId,
-    pub page: usize,
-    pub pages: usize,
+pub enum MigrateProgress {
+    Moving {
+        file: usize,
+        files: usize,
+    },
+    Reading {
+        batch: BatchId,
+        page: usize,
+        pages: usize,
+    },
+}
+
+/// What the migration of a date did: how many batches' areas it read, and the batches it skipped.
+#[derive(Debug)]
+pub struct DateMigrated {
+    pub read: usize,
+    pub skipped: Vec<SkippedBatch>,
 }
 
 /// A batch whose areas were not read, and why; the next migration tries it again.
@@ -40,26 +56,37 @@ pub struct SkippedBatch {
     pub error: BatchError,
 }
 
-/// Migrate the date of `journal`: the areas of every batch [`areas_to_read`] names, then the views.
-/// A batch that cannot be read is skipped and returned; a commit or a view that cannot be written
-/// stops the date.
+/// Migrate the date of `journal`: its folder made flat when it is of v0.7, the areas of every batch
+/// [`areas_to_read`] names, then the views. A batch that cannot be read is skipped and named; a
+/// file that cannot be moved, a commit or a view that cannot be written stops the date.
 pub fn migrate_date(
     folder: &DateFolder,
     journal: &mut Journal,
     request: &MigrateRequest<'_>,
-) -> Result<Vec<SkippedBatch>, BatchError> {
-    let mut skipped = Vec::new();
+) -> Result<DateMigrated, BatchError> {
+    if is_v0_7(folder.dir()) {
+        flatten_date(folder, journal, &mut |file, files| {
+            let _ = request
+                .progress
+                .send(MigrateProgress::Moving { file, files });
+        })?;
+    }
+    let mut migrated = DateMigrated {
+        read: 0,
+        skipped: Vec::new(),
+    };
     for batch in areas_to_read(folder, journal.fold()) {
         let saved = journal.fold().live[&batch].saved.clone();
         match read_areas(folder, &saved, request) {
             Ok(filled) => {
                 journal.commit(vec![RecordBody::AreasFilled(filled)], request.app)?;
+                migrated.read += 1;
             }
-            Err(error) => skipped.push(SkippedBatch { batch, error }),
+            Err(error) => migrated.skipped.push(SkippedBatch { batch, error }),
         }
     }
     write_views(folder.dir(), journal.fold())?;
-    Ok(skipped)
+    Ok(migrated)
 }
 
 /// The area of each order of `saved` that has none, read from the first page of its copy.
@@ -99,7 +126,7 @@ fn read_areas(
             for (order_id, page) in on_input {
                 read.push((order_id, find_area(&file.page_text(page, &rules)?)));
                 let page = read_before + read.len();
-                let _ = progress.send(AreaProgress { batch, page, pages });
+                let _ = progress.send(MigrateProgress::Reading { batch, page, pages });
             }
             Ok::<_, PdfError>(read)
         })??;

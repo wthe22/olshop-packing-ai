@@ -25,11 +25,12 @@
 
   const update = new Update();
   const batches = $derived(dates.reduce((sum, date) => sum + date.batches, 0));
+  const v07Dates = $derived(dates.filter((date) => date.v0_7).length);
   const skipped = $derived(update.lines.some((line) => line.skipped));
 </script>
 
 <StartCard title={words.title} {version}>
-  <p class="explain">{words.explain(batches)} {words.readOnlyExplain}</p>
+  <p class="explain">{words.explain(batches, v07Dates)} {words.readOnlyExplain}</p>
   <table>
     <thead>
       <tr><th>{words.dateHead}</th><th>{words.changesHead}</th></tr>
@@ -38,7 +39,7 @@
       {#each dates as date (date.date)}
         <tr>
           <td class="date">{formatDay(date.date)}</td>
-          <td>{words.changes(date.batches, date.orders, date.older_views)}</td>
+          <td>{words.changes(date.batches, date.orders, date.older_views, date.v0_7)}</td>
         </tr>
       {/each}
     </tbody>

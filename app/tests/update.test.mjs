@@ -71,7 +71,7 @@ test("Update shows the step running and a line for each date done", async () => 
   assert.deepEqual(
     update.lines.map((line) => [line.text, line.skipped]),
     [
-      [words.updated("2026-11-25", 1), false],
+      [words.updated("2026-11-25", false, 1), false],
       [words.skipped(2, done.skipped[0].reason), true],
     ],
   );
@@ -141,4 +141,26 @@ test("a second Update while one runs starts nothing", async () => {
   assert.equal(calls.filter((call) => call.command === "update_data").length, 1);
   assert.deepEqual(update.lines, [{ text: "2026-11-24: lists written", skipped: false }]);
   assert.equal(words.failed("the disk is full"), "The update stopped: the disk is full");
+});
+
+test("a date of v0.7 says its files are moved, and the move shows how far it is", async () => {
+  assert.equal(words.changes(0, 0, false, true), "Files of v0.7 moved in · the date's lists");
+  assert.equal(
+    words.explain(2, 1),
+    "Update moves the files of 1 date out of the input and output folders of Packing v0.7 into their date folders, keeping the old folders in v0.7 backup. It reads the receivers' addresses of 2 batches from their label PDFs and writes the files that list each date again. No batch, label or PDF is changed or deleted.",
+  );
+  assert.match(words.explain(0, 3), /of 3 dates .* It writes the files/);
+
+  let finish;
+  useBackend(backend({ update_data: () => new Promise((resolve) => (finish = resolve)) }));
+  const update = new Update();
+  const running = update.run();
+  await tick();
+  emitEvent("migration-step", { kind: "moving", date: "2026-11-25", file: 3, files: 12 });
+  assert.equal(update.current, "Moving files: 2026-11-25, file 3 of 12");
+  finish([{ date: "2026-11-25", moved: true, batches: 2, skipped: [] }]);
+  await running;
+  assert.deepEqual(update.lines, [
+    { text: "2026-11-25: files moved, addresses of 2 batches read, lists written", skipped: false },
+  ]);
 });

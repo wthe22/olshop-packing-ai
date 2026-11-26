@@ -12,7 +12,7 @@ export interface UpdateLine {
 }
 
 export const linesOf = (date: start.DateUpdated): UpdateLine[] => [
-  { text: words.updated(date.date, date.batches), skipped: false },
+  { text: words.updated(date.date, date.moved, date.batches), skipped: false },
   ...date.skipped.map((batch) => ({ text: words.skipped(batch.batch, batch.reason), skipped: true })),
 ];
 
@@ -42,6 +42,10 @@ export class Update {
   };
 
   step = (step: start.MigrationStep) => {
+    if (step.kind === "moving") {
+      this.current = words.moving(step.date, step.file, step.files);
+      return;
+    }
     if (step.kind === "reading") {
       this.current = words.reading(step.date, step.batch, step.page, step.pages);
       return;

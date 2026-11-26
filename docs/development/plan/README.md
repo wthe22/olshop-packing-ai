@@ -6,9 +6,35 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-26)
 
+- **Handoff of 2026-11-26 (later) — v0.8.3-alpha: Packing converts a v0.7 data folder itself; Search
+  shows the whole order.** Built, checked and pushed; `target/portable/` is rebuilt. No dev task is left.
+  - **R-APP-17** (the owner's flow: the program converts, a script cleans up): a date folder of v0.7
+    (with `input\` or `output\`) is one more line of **Update the data folder?** (*Files of v0.7 moved
+    in*). **Update** moves its `input\`, `output\` and old summaries unchanged into `v0.7 backup\` of the
+    date, copies each file up under its v0.8 name and checks its bytes, then reads the addresses and writes
+    the lists (*Moving files: 2026-11-25, file 3 of 12*). **Open read-only** changes nothing, as before.
+    `tools/flatten-data.py` is now `tools/remove-v07-backup.py`: it only deletes each backup whose files
+    are all in the date folder (`--dry-run` lists first) ([D-APP-32](../../software-design/decisions/app.md)).
+  - **R-UI-54**: a Search row's arrow opens every field of the order: account, province, city, district,
+    ship-by date, Qty Total, the pickup code of an instant label, what named the courier; a table of its
+    items with variation and Seller SKU; and the line it came from. The row's items show their variation.
+  - **Tried on a copy** of `2026-11-25` put back into the v0.7 layout: the start asked (files of v0.7
+    moved in, addresses of 1 batch, 75 orders); read-only changed no file and the Day screen named the
+    date as v0.7; **Update** showed the files being moved and the pages being read, put all 11 PDFs back
+    under their names with their bytes, filled the addresses of all 75 orders and wrote `session.toml`
+    2.2; the next start did not ask again; `remove-v07-backup.py --dry-run` named the backup and the run
+    without it removed it.
+  - **The owner's steps for the v0.7 data**: keep a copy of the data folder. Close every copy of Packing,
+    put the new program in place, start it: it asks. **Update**, then look at a few dates (Open opens the
+    group PDFs; Search shows the addresses). Then close Packing and run
+    `python tools\remove-v07-backup.py "<data folder>" --dry-run`, then without `--dry-run`.
+  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-18`,
+    [reviews/label.md](../../reviews/label.md) as `R-LABEL-19` (an area read wrong: the date, the order and
+    what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-55`. A new session turns each into a
+    task and builds it. Q-APP-20 below is still open.
+
 - **Handoff of 2026-11-26 — v0.8.2-alpha: the receiver's area, migrations that ask, read-only.** Built,
-  checked and pushed; `target/portable/` is rebuilt. No dev task is left: the next one comes from the
-  owner's findings.
+  checked and pushed; `target/portable/` is rebuilt.
   - **R-LABEL-17**: each order records the receiver's province, city and district as the label prints them
     (the standard, boxed, instant and Shopee-style layouts; empty where a layout prints none), in the
     journal and as three columns of `orders.csv` after `shop` ([D-LABEL-26](../../software-design/decisions/label.md)).
@@ -31,23 +57,10 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **The question Q-APP-20** ([questions/app.md](../../software-design/questions/app.md)): may the theme
     and Settings › **Change** still work in read-only mode? They write `packing-app.toml` beside the program,
     not the data folder. Default A: yes. The answer goes into that file.
-  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-17`,
-    [reviews/label.md](../../reviews/label.md) as `R-LABEL-19` (an area read wrong: the date, the order and
-    what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-54`. A new session turns each into a
-    task and builds it.
 
 - **Handoff of 2026-11-25 (evening) — v0.8.0-alpha: one flat folder per date; the split and Sameday labels
   read.** Built, checked and pushed; `target/portable/` is rebuilt.
-  - **The owner's step first**: close every copy of Packing, put the new program in place of every copy,
-    then run `python tools\flatten-data.py "<data folder>"` (`--dry-run` lists first, changing
-    nothing). Each date's `input\`, `output\` and old summaries move unchanged into `v0.7 backup\` of the
-    date, and the new files are copied up from there: the label PDFs as `{batch} Input {pdf} {short
-    hash}.pdf`, the outputs unchanged, the summaries made on request under their new names. Nothing is
-    deleted; the journal and the views are not touched (their paths stay out of date until the
-    migration of the next dev, which asks first). Run it again at any time: it copies again from the backup whatever is missing or
-    wrong, and leaves what the program wrote since. Once every date checks out, `--remove-backup` deletes
-    each backup whose files are all in the date folder, and names the rest (a file no journal names stays
-    in the backup until the owner moves it). With `--no-backup` the files are moved instead.
+  - **The conversion of the data folder** is the program's own since v0.8.3 (above); no script runs first.
   - **R-APP-12 to R-APP-15** ([D-APP-32](../../software-design/decisions/app.md)): every file of a date sits
     in its date folder; what a save writes waits in `.partial\` of the date folder until its commit.
     Inputs `2 Input 03 0a1b2c3d4e5f.pdf` (the batch whose record names them; bytes a second batch uses are
@@ -72,9 +85,6 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     logo prompt shows the badge, once the form is changed). A new data folder has both already.
   - **Dead code removed**: the old reading path (`couriers.toml`, its courier table and deduction, the
     pages → orders step and its warnings), never used since copies; and one unused PDF reader function.
-  - **Where to answer**: findings into [reviews/app.md](../../reviews/app.md) as `R-APP-16`,
-    [reviews/label.md](../../reviews/label.md) as `R-LABEL-17`, [reviews/ui.md](../../reviews/ui.md) as
-    `R-UI-54`. A new session turns each into a task and builds it.
 
 - **Handoff of 2026-11-25 — the source PDF's short hash in Search.** Built and pushed:
   [R-UI-53](../../reviews/ui.md): an expanded search row shows the source PDF's short hash after its file name

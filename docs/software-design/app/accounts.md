@@ -93,5 +93,5 @@ what it found, a line on the Day screen with **Open folder** ([Messages](../ui/m
 - **v0.4**: a folder not named as a date that holds a `settings.toml` or a date folder with a
   `journal.jsonl` (a v0.4 workspace).
 - **v0.7**: a date folder that holds `input/` or `output/`. Its journal is read, but its inputs and outputs
-  are not found until `tools/flatten-data.py` has moved them ([D-APP-32](../decisions/app.md)); the line
-  says to run it.
+  are not found until the migration has moved them ([D-APP-32](../decisions/app.md)); as the program asks
+  for it at its start, the line shows only in read-only mode, and says to start again and choose **Update**.

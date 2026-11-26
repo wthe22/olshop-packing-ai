@@ -21,7 +21,7 @@ pub use amend::{Amend, amend};
 pub use draft::{Draft, ReadRequest, read_draft};
 pub use error::BatchError;
 pub use files::{ChosenFile, check_files};
-pub use migrate::{AreaProgress, MigrateRequest, SkippedBatch, migrate_date};
+pub use migrate::{DateMigrated, MigrateProgress, MigrateRequest, SkippedBatch, migrate_date};
 pub use reprint::{ReprintOutcome, ReprintRequest, reprint};
 pub use restore::{RestoreOutcome, RestoreRequest, restore};
 pub use reverted::RevertedPdfs;

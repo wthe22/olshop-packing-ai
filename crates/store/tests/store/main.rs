@@ -3,6 +3,7 @@
 
 mod common;
 mod dates;
+mod flatten;
 mod index;
 mod journal;
 mod lock_and_files;

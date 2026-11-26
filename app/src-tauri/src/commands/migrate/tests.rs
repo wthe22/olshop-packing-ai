@@ -15,7 +15,8 @@ use crate::{READ_ONLY, settings};
 const DAY: &str = "2026-10-07";
 
 /// A program folder naming a data folder of an older version: one date with a batch saved before
-/// the area was read, its label PDF not kept, and views of schema 2.1.
+/// the area was read, its label PDF not kept, views of schema 2.1, and a summary made on request
+/// still in v0.7's output folder.
 fn older_folder(tag: &str) -> (TempDir, AppState, PathBuf) {
     let program = TempDir::new(tag);
     let dir = settings::set_data_dir(program.path(), &program.path().join("data")).unwrap();
@@ -37,6 +38,12 @@ fn older_folder(tag: &str) -> (TempDir, AppState, PathBuf) {
     )
     .unwrap();
     fs::remove_file(folder.dir().join("orders.csv")).unwrap();
+    fs::create_dir_all(folder.dir().join("output")).unwrap();
+    fs::write(
+        folder.dir().join("output").join("1 summary Toko Alfa.pdf"),
+        b"account summary",
+    )
+    .unwrap();
     let state = AppState::new(program.path().to_path_buf());
     (program, state, dir)
 }
@@ -65,11 +72,12 @@ fn the_start_asks_first_and_read_only_writes_nothing() {
         info.migration,
         [MigrationView {
             date: DAY.into(),
+            v0_7: true,
             older_views: true,
-            batches: 0,
-            orders: 0,
+            batches: 1,
+            orders: 3,
         }],
-        "a batch whose label PDF is gone cannot be read"
+        "a date of v0.7 counts the batches it reads once its label PDFs are moved up"
     );
     assert!(!state.has_data(), "no date opens before the owner answers");
     let chosen = use_folder(&state, &dir).unwrap();
@@ -99,11 +107,28 @@ fn update_writes_the_views_again_and_opens_the_folder() {
     let (steps, sent) = mpsc::channel();
     let updated = update(&state, steps).unwrap();
     assert_eq!(updated.len(), 1);
-    assert_eq!(updated[0].date, DAY);
+    assert_eq!(
+        (
+            updated[0].date.as_str(),
+            updated[0].moved,
+            updated[0].batches
+        ),
+        (DAY, true, 0),
+        "a batch whose label PDF is gone is not read"
+    );
+    let sent: Vec<MigrationStep> = sent.try_iter().collect();
     assert!(matches!(
-        sent.try_iter().last(),
-        Some(MigrationStep::Updated(_))
+        sent.first(),
+        Some(MigrationStep::Moving {
+            file: 1,
+            files: 1,
+            ..
+        })
     ));
+    assert!(matches!(sent.last(), Some(MigrationStep::Updated(_))));
+    let summary = dir.join(DAY).join("1 Summary - Toko Alfa.pdf");
+    assert_eq!(fs::read(summary).unwrap(), b"account summary");
+    assert!(!dir.join(DAY).join("output").exists());
     let session = fs::read_to_string(dir.join(DAY).join(SESSION_TOML)).unwrap();
     assert!(session.starts_with("schema = \"2.2\""), "{session}");
     assert!(dir.join(DAY).join("orders.csv").is_file());

@@ -5,6 +5,7 @@ use std::path::Path;
 
 use crate::StoreError;
 use crate::dates::{date_named, subfolders};
+use crate::flatten::V0_7_FOLDERS;
 use crate::journal::JOURNAL;
 
 /// What a v0.1 data folder holds at its top.
@@ -19,15 +20,12 @@ const V0_1_NAMES: [&str; 5] = [
 /// What a v0.4 workspace folder holds besides its dates.
 const V0_4_SETTINGS: &str = "settings.toml";
 
-/// The subfolders a date folder of v0.7 and older keeps its inputs and outputs in.
-const V0_7_FOLDERS: [&str; 2] = ["input", "output"];
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum OlderVersion {
     V0_1,
     V0_4,
-    /// Date folders not yet converted by `flatten-data.py`: their journal is read, their files
-    /// are not found.
+    /// Date folders the migration has not made flat yet: their journal is read, their files are
+    /// not found.
     V0_7,
 }
 
