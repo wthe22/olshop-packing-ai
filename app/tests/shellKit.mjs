@@ -16,6 +16,7 @@ export const overview = (batches = 2) => ({
   totals: { batches, orders: 7, files: 3, pdfs: 4, packing_lists: 4, warnings: 0 },
   batches: [],
   days: [],
+  edited: { files: [], read_only: false },
 });
 
 // A read result, clean unless the caller says otherwise.

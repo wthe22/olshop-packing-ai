@@ -2,6 +2,7 @@
 //! the Sent mark, the Printed tick, revert and restore — each one append through `packing-batch`; the day
 //! summary, a view written from the fold; and *Open* on an output, which writes a missing one again.
 
+pub mod edited;
 mod journal;
 mod view;
 
@@ -22,6 +23,7 @@ use tauri::{AppHandle, Manager, State};
 use crate::commands::start::open_with_explorer;
 use crate::{APP_VERSION, AppState, settings};
 
+pub use self::edited::EditedNote;
 pub use self::view::{BatchView, DayOverview, GroupPdfView, Totals};
 
 pub(crate) fn date_of(day: &str) -> Result<Date, String> {
@@ -36,8 +38,10 @@ pub(crate) fn overview(state: &AppState, day: &str) -> Result<DayOverview, Strin
     state.with_data(|data| {
         let older = older_data(&data.dir).map_err(|error| error.to_string())?;
         let older = view::older_views(&data.dir, &older);
+        let choice = data.edited_choices.get(&date).copied();
         let open = data.open_day(date)?;
-        Ok(view::overview(open, older, &accounts))
+        let edited = edited::note(open, choice);
+        Ok(view::overview(open, older, edited, &accounts))
     })
 }
 

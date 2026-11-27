@@ -24,8 +24,17 @@ pub fn sha256_of(path: &Path) -> Result<Sha256, StoreError> {
         }
         hasher.update(&buffer[..read]);
     }
+    Ok(digest(hasher))
+}
+
+/// The SHA-256 of bytes in memory.
+pub(crate) fn sha256_of_bytes(bytes: &[u8]) -> Sha256 {
+    digest(Hasher::new_with_prefix(bytes))
+}
+
+fn digest(hasher: Hasher) -> Sha256 {
     let hex = format!("{:x}", hasher.finalize());
-    Ok(Sha256::try_from(hex).expect("a SHA-256 digest is 64 hex characters"))
+    Sha256::try_from(hex).expect("a SHA-256 digest is 64 hex characters")
 }
 
 /// Write `bytes` to a temporary file beside `path`, sync it and rename it into place.

@@ -112,6 +112,7 @@
             onAmend={shell.amend}
             onRevert={shell.revert}
             onRestore={shell.outputs.restore}
+            onEdited={shell.outputs.answerEdited}
           />
         {:else if shell.screen === "new-batch"}
           <NewBatchScreen

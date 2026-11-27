@@ -80,6 +80,17 @@ export class DayOutputs {
     await this.shell.refreshOverview();
   };
 
+  // The owner's answer to the date's files changed outside the program; the Day screen shows the
+  // date again.
+  answerEdited = async (choice: dayData.EditedChoice) => {
+    try {
+      await dayData.answerEdited(this.shell.day, choice);
+    } catch (e) {
+      this.shell.error = String(e);
+    }
+    await this.shell.refreshOverview();
+  };
+
   // *Open* on a group PDF or a summary PDF of `day`, in the PC's PDF viewer; a summary PDF written
   // again has today's layout.
   open = async (day: string, file: string) => {

@@ -39,7 +39,7 @@
     {#if pdf.sent && !pdf.printed}
       {texts.day.sent(pdf.sent)}
     {/if}
-    {#if pdf.sent && !pdf.printed && !access.readOnly}
+    {#if pdf.sent && !pdf.printed && !access.dateLocked}
       <button
         class="icon"
         title={texts.day.unsend(pdf.file)}
@@ -52,7 +52,7 @@
     <input
       type="checkbox"
       checked={pdf.printed}
-      disabled={access.readOnly}
+      disabled={access.dateLocked}
       aria-label={texts.day.printedLabel(pdf.file)}
       title={texts.day.printedLabel(pdf.file)}
       onchange={(event) => onSetPrinted(batch, pdf, event.currentTarget.checked)}

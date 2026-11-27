@@ -1,10 +1,14 @@
-//! The views: their text for a small batch, and rebuilt when missing or stale.
+//! The views: their text for a small batch, rebuilt when missing or stale, and named when changed
+//! by hand.
 
 use std::fs;
 
 use packing_engine::ids::BatchId;
 use packing_engine::record::{PrintSent, PrintedMarked, RecordBody};
-use packing_store::{DAY_TOML, ORDER_CONTENTS_TOML, ORDERS_CSV, open_date, partial_dir};
+use packing_store::{
+    ChangedLine, DAY_TOML, EditedView, ORDER_CONTENTS_TOML, ORDERS_CSV, edited_views, open_date,
+    partial_dir,
+};
 
 use crate::common::*;
 
@@ -37,6 +41,12 @@ fn opened_batch(tag: &str) -> (testkit::TempDir, packing_store::DateFolder) {
     );
     assert!(open_date(&folder).unwrap().views_written);
     (data, folder)
+}
+
+/// The views of the date changed by hand, against its journal.
+fn edited(folder: &packing_store::DateFolder) -> Vec<EditedView> {
+    let opened = open_date(folder).unwrap();
+    edited_views(folder.dir(), Some(opened.journal.fold()))
 }
 
 fn view(folder: &packing_store::DateFolder, name: &str) -> String {
@@ -131,5 +141,76 @@ fn a_newer_copys_views_are_left_to_it() {
     assert!(
         !opened.views_written && !folder.dir().join(DAY_TOML).exists(),
         "a date with a record this copy passed over gets no views from it"
+    );
+}
+
+#[test]
+fn a_view_changed_by_hand_is_named_with_its_changed_lines() {
+    let (_data, folder) = opened_batch("views-edited");
+    assert_eq!(edited(&folder), []);
+    for file in [ORDERS_CSV, ORDER_CONTENTS_TOML, DAY_TOML] {
+        let (_data, folder) = opened_batch(&format!("views-edited-{file}"));
+        let written = view(&folder, file);
+        let line = written.lines().nth(1).unwrap().to_string();
+        let changed = written.replacen(&line, &format!("{line} "), 1);
+        fs::write(folder.dir().join(file), &changed).unwrap();
+        assert!(
+            !open_date(&folder).unwrap().views_written,
+            "{file} is not written over"
+        );
+        // A row of orders.csv gives its changed cell: the last, the schema column's.
+        let change = match file {
+            ORDERS_CSV => ChangedLine {
+                number: 2,
+                column: Some("schema:2.1".into()),
+                written: String::new(),
+                found: " ".into(),
+            },
+            _ => ChangedLine {
+                number: 2,
+                column: None,
+                written: line.clone(),
+                found: format!("{line} "),
+            },
+        };
+        assert_eq!(
+            edited(&folder),
+            [EditedView {
+                file,
+                lines: vec![change],
+                more: 0,
+            }],
+            "{file}"
+        );
+        assert_eq!(view(&folder, file), changed);
+    }
+}
+
+#[test]
+fn a_day_toml_without_hashes_is_not_checked() {
+    let (_data, folder) = opened_batch("views-unsealed");
+    let day = view(&folder, DAY_TOML);
+    let unsealed: String = day
+        .lines()
+        .filter(|line| !line.contains("sha256"))
+        .map(|line| format!("{line}\n"))
+        .collect();
+    fs::write(folder.dir().join(DAY_TOML), unsealed).unwrap();
+    fs::write(folder.dir().join(ORDERS_CSV), "changed\n").unwrap();
+    assert_eq!(edited(&folder), []);
+}
+
+#[test]
+fn a_view_without_a_journal_to_compare_is_named_alone() {
+    let (_data, folder) = opened_batch("views-no-fold");
+    fs::write(folder.dir().join(ORDERS_CSV), "changed\n").unwrap();
+    let edited = edited_views(folder.dir(), None);
+    assert_eq!(
+        edited,
+        [EditedView {
+            file: ORDERS_CSV,
+            lines: Vec::new(),
+            more: 0,
+        }]
     );
 }

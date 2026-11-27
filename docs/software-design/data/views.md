@@ -14,10 +14,11 @@ view of a date whose journal holds a record it passed over, nor over a newer `da
 ([D-APP-34](../decisions/versions.md)). A view is the program's: each commit writes it whole, so a column or
 a key added by hand is not kept; the owner edits a copy.
 
-`day.toml` holds the SHA-256 of `orders.csv` and `order-contents.toml`, and its last line the SHA-256 of
-the text before it. When a date opens and a view's hash differs while `journal_seq` is the journal's, the Day
-screen names the file with **Rebuild**, **Read only** and **Ignore** (D-APP-38); a view written by a copy
-that wrote no hash is not checked. A date whose journal is missing is shown from its views alone.
+`day.toml` holds the SHA-256 of `orders.csv` and `order-contents.toml`, and its last line, a TOML comment
+`# sha256: <hex>`, the SHA-256 of the text before it. A view whose hash differs while `journal_seq` is the
+journal's is named on the [Day screen](../ui/day.md) with the lines where it differs from the views the
+journal gives, and **Rebuild**, **Read only** and **Ignore** (D-APP-38); a `day.toml` with no last-line hash
+(an older copy's) is not checked. A date whose journal is missing is shown from its views alone.
 
 Only live batches appear; a reverted batch is gone from the views and stays in the journal. IDs that
 the journal does not hold (`RuleID`, `OrderContentID`) are numbered by the fold in order of first
@@ -36,14 +37,13 @@ Root {
   schema: String                // "2.1": this file's own version (orders.csv has its own)
   date: Date
   journal_seq: u32              // the journal's last seq when this file was written
+  orders_csv_sha256: Sha256     // of orders.csv as written
+  order_contents_sha256: Sha256 // of order-contents.toml as written
   input_pdfs: Map<PdfID, LabelPdf>
   label_sort_rules: Map<RuleID, LabelSortRule>   // each distinct rule snapshot once
   label_batches: List<LabelBatch>
   reprints: List<Reprint>
-  orders_csv_sha256: Sha256     // of orders.csv as written
-  order_contents_sha256: Sha256 // of order-contents.toml as written
-  sha256: Sha256                // the last line: of this file's text before it
-}
+}                               // then the line # sha256: <hex> of the text before it
 
 LabelPdf {
   filename: String

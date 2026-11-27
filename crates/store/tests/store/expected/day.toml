@@ -1,6 +1,8 @@
 schema = "2.1"
 date = "2026-10-07"
 journal_seq = 4
+orders_csv_sha256 = "cb3e6ed15633aa1d08e2a0f9a5d3036d9ea45e956ed53cd6799326585792d13d"
+order_contents_sha256 = "ecb3c2245043a5d36176eed1dbcb11cc1511afc5b88c271c86c4fee744b0b133"
 reprints = []
 
 [input_pdfs.1]
@@ -83,3 +85,4 @@ reason = "repeat"
 [label_batches.left_out.kept]
 pdf = 1
 page_start = 1
+# sha256: 42e436926bcd389eebb5d866f3ed88aaf44e40415bac5302945f2367a3e403eb

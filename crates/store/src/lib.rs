@@ -41,6 +41,6 @@ pub use outputs::{
 };
 pub use update_log::{UPDATE_LOG, UpdateLog, UpdateStep};
 pub use views::{
-    DAY_TOML, DAY_TOML_SCHEMA, ORDER_CONTENTS_TOML, ORDERS_CSV, ORDERS_CSV_SCHEMA, SESSION_TOML,
-    views_current, write_views, write_views_again,
+    ChangedLine, DAY_TOML, DAY_TOML_SCHEMA, EditedView, ORDER_CONTENTS_TOML, ORDERS_CSV,
+    ORDERS_CSV_SCHEMA, SESSION_TOML, edited_views, views_current, write_views, write_views_again,
 };

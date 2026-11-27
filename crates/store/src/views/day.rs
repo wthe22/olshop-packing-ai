@@ -20,6 +20,8 @@ struct Root<'a> {
     schema: Schema,
     date: Date,
     journal_seq: u32,
+    orders_csv_sha256: &'a Sha256,
+    order_contents_sha256: &'a Sha256,
     input_pdfs: Numbered<LabelPdf<'a>>,
     label_sort_rules: Numbered<&'a LabelSortRule>,
     label_batches: Vec<LabelBatch<'a>>,
@@ -83,7 +85,8 @@ struct Reprint<'a> {
     order_ids: Vec<&'a OrderId>,
 }
 
-pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
+/// The text of `day.toml` before its last line, the hashes of the two other views in it.
+pub(super) fn text(fold: &Fold, ids: &ContentIds, views: [&Sha256; 2]) -> String {
     let mut rules: Vec<&LabelSortRule> = Vec::new();
     let mut batches = Vec::new();
     for (batch, live) in &fold.live {
@@ -101,6 +104,8 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
         schema: DAY_TOML_SCHEMA,
         date: fold.date,
         journal_seq: fold.last_seq,
+        orders_csv_sha256: views[0],
+        order_contents_sha256: views[1],
         input_pdfs: input_pdfs(fold),
         label_sort_rules: Numbered(
             rules

@@ -13,6 +13,7 @@ use packing_engine::sorting::{REST_CODE, REST_NAME};
 use packing_store::{InputState, LiveBatch, OlderData, OlderVersion, OutputState};
 use serde::Serialize;
 
+use super::edited::EditedNote;
 use super::journal::{journal_notes, journal_problem};
 use crate::{APP_VERSION, OpenDay};
 
@@ -111,6 +112,8 @@ pub struct DayOverview {
     problems: Vec<String>,
     /// Quiet notes: what the journal holds that this version does not know, all of it kept.
     notes: Vec<String>,
+    /// The date's files changed outside the program.
+    edited: EditedNote,
     /// Data of older versions in the data folder, which is not read.
     older: Vec<OlderView>,
     /// The reprints made on this date.
@@ -128,7 +131,12 @@ pub struct ReprintRow {
     path: String,
 }
 
-pub(super) fn overview(day: &OpenDay, older: Vec<OlderView>, accounts: &[Account]) -> DayOverview {
+pub(super) fn overview(
+    day: &OpenDay,
+    older: Vec<OlderView>,
+    edited: EditedNote,
+    accounts: &[Account],
+) -> DayOverview {
     let fold = day.journal.fold();
     let output = day.folder.dir();
     let batches: Vec<BatchView> = fold
@@ -159,6 +167,7 @@ pub(super) fn overview(day: &OpenDay, older: Vec<OlderView>, accounts: &[Account
         batches,
         problems,
         notes: journal_notes(&fold.unknown, APP_VERSION),
+        edited,
         older,
         reprints: fold
             .reprints

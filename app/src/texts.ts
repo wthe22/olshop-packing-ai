@@ -116,6 +116,22 @@ export const texts = {
     // An output found missing or changed when the date opened; **Restore** writes it again.
     problem: (kind: "missing" | "changed") => `⚠ ${kind}`,
     restore: "Restore",
+    // A file of the date changed outside the program: named with the lines that differ
+    // from the journal, and three answers, each with what it does.
+    edited: (files: string[]) =>
+      `${files.join(", ")} ${files.length === 1 ? "was" : "were"} changed outside the program`,
+    editedLine: (number: number, column: string | null) =>
+      column === null ? `Line ${number}` : `Line ${number} · ${column}`,
+    editedJournal: "Journal",
+    editedFile: "File",
+    editedMore: (n: number) => `${n} more ${n === 1 ? "change" : "changes"}`,
+    rebuild: "Rebuild",
+    rebuildTitle: "Write the files again from the journal now: the change is lost",
+    readOnly: "Read only",
+    readOnlyTitle: "Show the files as they are and save nothing to this date until the program starts again",
+    ignore: "Ignore",
+    ignoreTitle: "Show the files as they are; the next save to this date writes them again from the journal",
+    editedReadOnly: "Read only until the program starts again: nothing of this date is saved.",
     restoreFailed: (file: string, errors: string[]) =>
       `${file} was not restored: the written file did not pass the check. ${errors.join(" ")}`,
     // The Reprints card: "Reprints · 2 files · 5 orders", then one row per reprint,

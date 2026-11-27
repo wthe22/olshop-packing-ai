@@ -4,6 +4,7 @@
 //! A view is never read for a decision.
 
 mod day;
+mod edited;
 mod orders_csv;
 
 use std::collections::BTreeMap;
@@ -17,7 +18,7 @@ use serde::ser::{Serialize, SerializeMap, Serializer};
 use serde::{Deserialize, Serialize as SerializeDerive};
 
 use crate::StoreError;
-use crate::files::write_atomic;
+use crate::files::{sha256_of_bytes, write_atomic};
 use crate::fold::Fold;
 
 pub const DAY_TOML: &str = "day.toml";
@@ -25,6 +26,8 @@ pub const ORDERS_CSV: &str = "orders.csv";
 pub const ORDER_CONTENTS_TOML: &str = "order-contents.toml";
 /// `day.toml` under its older name, which the migration replaces.
 pub const SESSION_TOML: &str = "session.toml";
+
+pub use edited::{ChangedLine, EditedView, edited_views};
 
 /// The schema version of each view, its own: a view is bumped only when its own shape changes. The
 /// version of `orders.csv` is its last column's header. A file of an older version is written again
@@ -38,16 +41,24 @@ pub fn write_views(date_dir: &Path, fold: &Fold) -> Result<(), StoreError> {
     if left_to_a_newer_copy(date_dir, fold) {
         return Ok(());
     }
+    for (name, text) in texts(fold) {
+        write_atomic(&date_dir.join(name), text.as_bytes())?;
+    }
+    Ok(())
+}
+
+/// The text of each view of the fold, `day.toml` last.
+pub(crate) fn texts(fold: &Fold) -> [(&'static str, String); 3] {
     let ids = ContentIds::of(fold);
-    write_atomic(
-        &date_dir.join(ORDERS_CSV),
-        orders_csv::text(fold, &ids).as_bytes(),
-    )?;
-    write_atomic(
-        &date_dir.join(ORDER_CONTENTS_TOML),
-        contents_toml(&ids).as_bytes(),
-    )?;
-    write_atomic(&date_dir.join(DAY_TOML), day::text(fold, &ids).as_bytes())
+    let orders = orders_csv::text(fold, &ids);
+    let contents = contents_toml(&ids);
+    let hashes = [&orders, &contents].map(|text| sha256_of_bytes(text.as_bytes()));
+    let day = edited::sealed(day::text(fold, &ids, [&hashes[0], &hashes[1]]));
+    [
+        (ORDERS_CSV, orders),
+        (ORDER_CONTENTS_TOML, contents),
+        (DAY_TOML, day),
+    ]
 }
 
 /// The views are a newer copy's to write: the journal holds a record or a field a newer copy wrote

@@ -33,6 +33,19 @@ pub(crate) const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 /// What a write in read-only mode says.
 pub(crate) const READ_ONLY: &str = "Read-only: this copy changes nothing in the data folder.";
 
+/// What a write to a date the owner made read only says.
+pub(crate) const DATE_READ_ONLY: &str = "This date is read only until the program starts again: a file of it was changed outside the program.";
+
+/// The owner's answer to a date whose views were changed outside the program, kept until the
+/// program closes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum EditedChoice {
+    /// The date is shown and nothing of it is written.
+    ReadOnly,
+    /// The date is shown and written as usual; the next write rewrites the views.
+    Ignore,
+}
+
 /// The data folder in use and its open date.
 pub(crate) struct Data {
     pub dir: PathBuf,
@@ -41,6 +54,8 @@ pub(crate) struct Data {
     pub day: Option<OpenDay>,
     /// The data folder's dates as the last look for other copies' changes found them.
     pub dates: Vec<Date>,
+    /// The owner's answers to dates with views changed outside the program.
+    pub edited_choices: HashMap<Date, EditedChoice>,
 }
 
 impl Data {
@@ -53,6 +68,7 @@ impl Data {
             read_only: false,
             day: None,
             dates: Vec::new(),
+            edited_choices: HashMap::new(),
         })
     }
 
@@ -63,6 +79,7 @@ impl Data {
             read_only: true,
             day: None,
             dates: Vec::new(),
+            edited_choices: HashMap::new(),
         }
     }
 
@@ -71,7 +88,7 @@ impl Data {
     /// viewing only and the next read opens it again; read-only, it always opens for viewing.
     pub(crate) fn open_day(&mut self, date: Date) -> Result<&mut OpenDay, String> {
         if !self.is_open(date) {
-            let lock = match self.read_only {
+            let lock = match self.read_only || self.is_read_only(date) {
                 true => None,
                 false => DataLock::try_acquire(&self.dir).map_err(|error| error.to_string())?,
             };
@@ -87,16 +104,24 @@ impl Data {
         date: Date,
         lock: &DataLock,
     ) -> Result<&mut OpenDay, String> {
+        if self.is_read_only(date) {
+            return Err(DATE_READ_ONLY.to_string());
+        }
         if !self.is_open(date) {
             self.open(date, Some(lock))?;
         }
         Ok(self.day.as_mut().expect("opened above"))
     }
 
+    /// The owner made `date` read only: its views were changed outside the program.
+    pub(crate) fn is_read_only(&self, date: Date) -> bool {
+        self.edited_choices.get(&date) == Some(&EditedChoice::ReadOnly)
+    }
+
     fn is_open(&self, date: Date) -> bool {
         self.day.as_ref().is_some_and(|day| {
             day.folder.date() == date
-                && (day.settled || self.read_only)
+                && (day.settled || self.read_only || self.is_read_only(date))
                 && !day.journal.changed_on_disk()
         })
     }
@@ -381,6 +406,9 @@ pub fn run() {
             commands::migrate::update_data,
             commands::migrate::read_only,
             commands::day::day_overview,
+            commands::day::edited::rebuild_views,
+            commands::day::edited::views_read_only,
+            commands::day::edited::ignore_views,
             commands::day::set_printed,
             commands::day::set_sent,
             commands::day::revert_last,

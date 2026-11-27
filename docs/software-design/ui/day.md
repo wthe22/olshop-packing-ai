@@ -84,6 +84,13 @@ The start screen: what has been saved on the open date, for every account, and t
   the date's live batches hold more than one account it is a menu: *All accounts*, then each account; while it
   is written the dialog *Writing the day summary* shows and the button is off, so it is written once. It is
   off while the date has no batch.
+- A view changed outside the program (`day.toml`, `orders.csv` or `order-contents.toml`,
+  [D-APP-38](../decisions/app.md)) is a yellow card above the batches: *orders.csv was changed outside the
+  program*, then each file's first five changes as a table (*Line 12*, or *Line 12 · tracking_id* for a cell of
+  `orders.csv`, then the journal's text and the file's) and *3 more changes*. **Rebuild** writes the files again from the journal; **Read only** shows
+  them as they are, hides every write of the date and refuses it until the program starts again; **Ignore**
+  hides the card until then, and the next save to the date writes the files again. Each button's tooltip says
+  so. Once Read only, the card's foot is the line *Read only until the program starts again*.
 - An input that is missing or changed is a line above the batches, naming the file and the batches that
   use it ([Messages](messages.md)).
 - A data folder that also holds data of an older version shows one line: *This folder also holds data of

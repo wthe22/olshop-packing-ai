@@ -44,7 +44,7 @@
         onclick={() => list.toggle(reprint.number)}
         >{texts.day.reprintOrders} {list.isOpen(reprint.number) ? "▾" : "▸"}</button
       >
-      {#if !access.readOnly}
+      {#if !access.dateLocked}
         <button title={texts.day.printTitle(reprint.file)} onclick={() => onPrint(reprint.file)}
           >{texts.day.print}</button
         >

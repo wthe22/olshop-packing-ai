@@ -11,8 +11,9 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   shop now; *No account* for an order of no listed shop) and [D-APP-38](../../software-design/decisions/app.md)
   (the screens read the views; a view changed by hand is named with Rebuild, Read only, Ignore; a date with
   no journal takes saves). T1 is done: the journal no longer stores an account, *No account* holds the orders of
-  no listed shop, the shop prompt asks only about shops. A new session takes the first task left in that
-  file (T2). No build until all four are done.
+  no listed shop, the shop prompt asks only about shops. T2 is done: `day.toml` holds the views' hashes and
+  the Day screen names a file changed by hand with its changed lines and Rebuild, Read only, Ignore. A new
+  session takes the first task left in that file (T3). No build until all four are done.
 
 - **Handoff of 2026-11-27 (latest) — v0.8.0-alpha.11: Update lists its moves and copies what it changes.**
   The owner's rule ([D-APP-36](../../software-design/decisions/versions.md)): a file only moved or renamed is

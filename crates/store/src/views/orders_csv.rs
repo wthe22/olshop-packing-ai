@@ -84,9 +84,37 @@ fn quoted(cell: &str) -> String {
     }
 }
 
+/// The cells of a CSV line as [`quoted`] writes them: a quoted cell may hold commas and doubled
+/// quotes.
+pub(super) fn cells(line: &str) -> Vec<String> {
+    let mut cells = vec![String::new()];
+    let mut in_quotes = false;
+    let mut chars = line.chars().peekable();
+    while let Some(c) = chars.next() {
+        let cell = cells.last_mut().expect("one cell at least");
+        match (c, in_quotes) {
+            ('"', true) if chars.peek() == Some(&'"') => {
+                chars.next();
+                cell.push('"');
+            }
+            ('"', _) => in_quotes = !in_quotes,
+            (',', false) => cells.push(String::new()),
+            _ => cell.push(c),
+        }
+    }
+    cells
+}
+
 #[cfg(test)]
 mod tests {
-    use super::quoted;
+    use super::{cells, quoted};
+
+    #[test]
+    fn cells_read_back_what_quoted_writes() {
+        let row = ["JY0000001234", "", "A, B", "say \"hi\""];
+        let line: Vec<String> = row.iter().map(|cell| quoted(cell)).collect();
+        assert_eq!(cells(&line.join(",")), row);
+    }
 
     #[test]
     fn a_cell_is_quoted_only_when_it_must_be() {

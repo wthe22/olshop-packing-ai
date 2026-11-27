@@ -5,7 +5,13 @@
   // PDF.
   import { texts } from "../texts";
   import { formatShortDay } from "../dates";
-  import type { BatchView, DayOverview, GroupPdfView, LeftOutView } from "./api/day";
+  import type {
+    BatchView,
+    DayOverview,
+    EditedChoice,
+    GroupPdfView,
+    LeftOutView,
+  } from "./api/day";
   import type { SentMark } from "./dayOutputs.svelte";
   import GroupPdfRow from "./GroupPdfRow.svelte";
   import OutputButtons from "./OutputButtons.svelte";
@@ -15,6 +21,7 @@
   import { accountsOf } from "./dayAccounts";
   import { access } from "./readOnly.svelte";
   import { updateTexts } from "../updateTexts";
+  import EditedViews from "./EditedViews.svelte";
 
   let {
     day,
@@ -36,6 +43,7 @@
     onAmend,
     onRevert,
     onRestore,
+    onEdited,
   }: {
     // The open date, the screen's title, and today, which it is marked as.
     day: string;
@@ -72,6 +80,8 @@
     onRevert: (batch: BatchView) => void;
     // **Restore** an output the open-time check found changed.
     onRestore: (file: string) => void;
+    // The owner's answer to the date's files changed outside the program.
+    onEdited: (choice: EditedChoice) => void;
   } = $props();
 
   // The batch numbers whose *Warnings ▸*, *Saved with `<n>` errors ▸* and *Left out ▸* are
@@ -102,7 +112,7 @@
         {/each}
       {/if}
     </span>
-    {#if !access.readOnly}
+    {#if !access.dateLocked}
       <SummaryMenu
         label={texts.day.daySummary}
         title={texts.day.daySummaryTitle}
@@ -128,6 +138,7 @@
   {/if}
 
   {#if overview}
+    <EditedViews note={overview.edited} {onEdited} />
     {#each overview.problems as problem}
       <p class="problem">{problem}</p>
     {/each}
@@ -167,7 +178,7 @@
               )}{#if batch.amended}{texts.day.amended}{/if}</span
             >
           </span>
-          {#if i === 0 && !access.readOnly}
+          {#if i === 0 && !access.dateLocked}
             <span class="grow"></span>
             <button onclick={() => onAmend(batch)}>{texts.day.amend}</button>
             <button onclick={() => onRevert(batch)}>{texts.day.revert}</button>
@@ -186,7 +197,7 @@
         {/each}
         <div class="batch-foot">
           <span class="packing">
-            {#if batch.accounts.length > 1 && batch.summary_problem !== "changed" && !access.readOnly}
+            {#if batch.accounts.length > 1 && batch.summary_problem !== "changed" && !access.dateLocked}
               <SummaryMenu
                 label={texts.day.summaryPdf}
                 title={texts.day.summaryPdfTitle}

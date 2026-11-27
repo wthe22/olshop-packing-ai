@@ -87,3 +87,26 @@ test("the Sent mark's ✕ takes it back in place; a failed write is shown and ke
   assert.equal(kept.sent, "09:14");
   assert.equal(failing.shell.error, "the batch is gone");
 });
+
+test("an answer to the date's changed files reaches its command and shows the date again", async () => {
+  const calls = useBackend({
+    ...backend(),
+    views_read_only: () => {},
+    rebuild_views: () => {
+      throw "the date is read only";
+    },
+  });
+  const shell = new Shell();
+  shell.day = "2026-10-07";
+  await shell.outputs.answerEdited("read_only");
+  await shell.outputs.answerEdited("rebuild");
+  const answered = calls
+    .filter((call) => call.command.includes("views"))
+    .map((call) => [call.command, call.args.day]);
+  assert.deepEqual(answered, [
+    ["views_read_only", "2026-10-07"],
+    ["rebuild_views", "2026-10-07"],
+  ]);
+  assert.equal(shell.error, "the date is read only");
+  assert.equal(calls.filter((call) => call.command === "day_overview").length, 2);
+});

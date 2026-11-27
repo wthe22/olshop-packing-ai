@@ -30,11 +30,11 @@
   <span class="problem">{texts.day.problem(problem)}</span>
 {/if}
 {#if problem === "changed"}
-  {#if !access.readOnly}
+  {#if !access.dateLocked}
     <button onclick={() => onRestore(file)}>{texts.day.restore}</button>
   {/if}
 {:else}
-  {#if printable && !access.readOnly}
+  {#if printable && !access.dateLocked}
     <button title={texts.day.printTitle(file)} onclick={() => onPrint(file, mark)}
       >{texts.day.print}</button
     >

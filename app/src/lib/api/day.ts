@@ -75,7 +75,44 @@ export interface DayOverview {
   // Data of older versions in the data folder, which is not read.
   older: OlderData[];
   reprints: ReprintRow[];
+  // The date's files changed outside the program.
+  edited: EditedNote;
 }
+
+// The date's files whose hash differs from the one `day.toml` states; none once the owner answered
+// *Ignore*.
+export interface EditedNote {
+  files: EditedFile[];
+  // The owner answered *Read only*: nothing of the date is written until the program starts again.
+  read_only: boolean;
+}
+
+export interface EditedFile {
+  file: string;
+  // The first lines, or cells of `orders.csv`, that differ from what the journal gives; none when
+  // the journal cannot be read.
+  lines: EditedLine[];
+  // How many more differ.
+  more: number;
+}
+
+export interface EditedLine {
+  number: number;
+  // The cell's column in `orders.csv`; null for a whole line.
+  column: string | null;
+  // As the journal gives it; empty past its end.
+  written: string;
+  // As the file holds it now; empty past its end.
+  found: string;
+}
+
+export type EditedChoice = "rebuild" | "read_only" | "ignore";
+
+// The owner's answer to the date's changed files: **Rebuild** writes them again from the journal.
+export const answerEdited = (day: string, choice: EditedChoice): Promise<void> =>
+  invoke({ rebuild: "rebuild_views", read_only: "views_read_only", ignore: "ignore_views" }[choice], {
+    day,
+  });
 
 // One older version's data as the Day screen's note names it.
 export interface OlderData {

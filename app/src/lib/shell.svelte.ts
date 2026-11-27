@@ -134,6 +134,7 @@ export class Shell {
   refreshOverview = async () => {
     try {
       this.overview = await dayData.dayOverview(this.day);
+      access.date = this.overview.edited.read_only;
     } catch (e) {
       this.error = String(e);
     }
