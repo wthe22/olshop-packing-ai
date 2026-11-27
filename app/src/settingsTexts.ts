@@ -18,6 +18,9 @@ export const settingsTexts = {
   dataFolder: "Data folder",
   change: "Change",
   open: "Open",
+  // A row only when a file holds keys this version does not know; each key on its own line.
+  unknownKeys: "Kept, not read",
+  unknownKeysHint: "Keys this version does not know. They stay in their file.",
   askChange: (folder: string, old: string): Question => ({
     title: "Change the data folder?",
     body: `New: ${folder}. The data in ${old} stays where it is.`,

@@ -10,9 +10,10 @@ use std::path::{Path, PathBuf};
 use packing_engine::accounts::Account;
 use packing_engine::record::SCHEMA;
 use packing_engine::schema::{Schema, SchemaFit};
+use packing_engine::unknown::{UnknownKey, unknown_toml_keys};
 use packing_engine::workflows::{
     BUNDLED_CONFIG, BUNDLED_PARSER, CONFIG_FILE, PARSER_FILE, Workflows, load_workflows,
-    write_accounts,
+    of_a_newer_version, unknown_rules_keys, write_accounts,
 };
 use serde::{Deserialize, Serialize};
 
@@ -132,6 +133,33 @@ pub(crate) fn theme(program: &Path) -> Result<Theme, String> {
 pub(crate) fn set_theme(program: &Path, theme: Theme) -> Result<(), String> {
     read_root(program)?;
     write_key(program, "theme", theme.as_str())
+}
+
+/// The keys of `packing-app.toml`, `parser.toml` and `config.toml` this version does not know, as
+/// Settings names them: each is kept and not used. A file of a newer version is expected to hold
+/// some and names none; a rules file that does not load names none (its error does).
+pub(crate) fn unknown_keys(program: &Path) -> Result<Vec<String>, String> {
+    let app = read_text(program)?;
+    let mut found: Vec<(&str, UnknownKey)> = Vec::new();
+    if !of_a_newer_version(&app) {
+        // `schema` is read on its own, before the rest.
+        found.extend(
+            unknown_toml_keys::<Root>(&app)
+                .into_iter()
+                .filter(|key| key.path != "schema")
+                .map(|key| (APP_FILE, key)),
+        );
+    }
+    if data_dir(program)?.is_some() {
+        let (parser, config) = texts(program)?;
+        found.extend(unknown_rules_keys(&parser, &config));
+    }
+    Ok(found
+        .into_iter()
+        .map(|(file, key)| {
+            format!("{file}, {key} is not a key this version knows. It is kept and not used.")
+        })
+        .collect())
 }
 
 /// The data folder in use, which holds `parser.toml` and `config.toml`.

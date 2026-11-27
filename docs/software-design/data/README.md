@@ -94,8 +94,11 @@ journal that grew meanwhile. A date opened while another copy holds the lock is 
 - **A copy reads every version of its own X** and passes over what it does not know: a key, a field, a
   record type, a column. A change an older copy of the same X can pass over keeps X; one that needs another
   way of reading or changes what data means raises X. A file of a higher X is not read: the copy says it is
-  of a newer format. A file of a lower X is read only by the migration the owner starts. An older copy writes
-  nothing that would drop what it passed over ([D-APP-34](../decisions/versions.md)).
+  of a newer format. A file of a lower X is read only by the migration the owner starts.
+- **Nothing is lost** but by an action meant to remove it: what a copy does not know stays in its file, and
+  an older copy writes nothing that would drop it. In data of this copy's version or older, what it does not
+  know is named quietly: in Settings for the TOML files, on the Day screen for the journal
+  ([D-APP-34](../decisions/versions.md)).
 - **Default file names** use only letters, digits, space, `-` and `_`. Any other character becomes a space,
   repeated spaces become one, the ends are trimmed, and a name is cut at 100 characters. The owner may
   still change an output's name before saving; such a name must be a valid Windows file name and unique in

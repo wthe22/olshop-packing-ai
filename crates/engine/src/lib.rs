@@ -16,4 +16,5 @@ pub mod schema;
 pub mod slip;
 pub mod sorting;
 pub mod text;
+pub mod unknown;
 pub mod workflows;

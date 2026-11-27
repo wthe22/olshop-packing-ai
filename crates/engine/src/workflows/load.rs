@@ -9,6 +9,7 @@ use toml::Spanned;
 use super::{Workflows, WorkflowsError, config_file, parser_file};
 use crate::record::SCHEMA;
 use crate::schema::{Schema, SchemaFit};
+use crate::unknown::UnknownKey;
 
 /// One file's text and name, for the errors its checks raise.
 pub(super) struct File<'a> {
@@ -83,6 +84,35 @@ pub fn load_workflows(parser: &str, config: &str) -> Result<Workflows, Workflows
         accounts: config.accounts,
         sort_rules: config.sort_rules,
     })
+}
+
+/// The keys of the two files this version does not read, each with its file: they are kept, and
+/// named for the owner to look at. A file of a newer version than this copy writes is expected to
+/// hold keys it does not know and names none.
+pub fn unknown_rules_keys(parser: &str, config: &str) -> Vec<(&'static str, UnknownKey)> {
+    let named = |name: &'static str, text: &str, keys: fn(&str) -> Vec<UnknownKey>| {
+        let keys = if of_a_newer_version(text) {
+            Vec::new()
+        } else {
+            keys(text)
+        };
+        keys.into_iter().map(move |key| (name, key))
+    };
+    named(super::PARSER_FILE, parser, parser_file::unknown_keys)
+        .chain(named(super::CONFIG_FILE, config, config_file::unknown_keys))
+        .collect()
+}
+
+/// Whether a TOML text names a `schema` newer than this copy writes.
+pub fn of_a_newer_version(text: &str) -> bool {
+    #[derive(serde::Deserialize)]
+    struct Version {
+        schema: String,
+    }
+    toml::from_str::<Version>(text)
+        .ok()
+        .and_then(|found| Schema::parse(&found.schema))
+        .is_some_and(|found| found > SCHEMA)
 }
 
 /// The 1-based line and column of a byte offset.

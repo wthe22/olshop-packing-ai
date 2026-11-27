@@ -3,7 +3,9 @@
 //! space and the `\n`.
 
 use packing_engine::record::{Record, RecordBody};
+use packing_engine::unknown::unknown_json_fields;
 use serde::Deserialize;
+use serde_json::Value;
 use xxhash_rust::xxh3::xxh3_64;
 
 use crate::fold::{Damage, DamageReason, PassedOver, check_journal_schema};
@@ -21,9 +23,13 @@ pub fn encode_line(record: &Record) -> Vec<u8> {
     line
 }
 
-/// A sealed line: a record this copy reads, or a newer copy's it passes over.
+/// A sealed line: a record this copy reads, with the fields it does not know, or one of a type it
+/// does not know, which it passes over.
 pub(crate) enum Entry {
-    Record(Box<Record>),
+    Record {
+        record: Box<Record>,
+        unknown_fields: Vec<String>,
+    },
     PassedOver(PassedOver),
 }
 
@@ -81,10 +87,16 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Parsed, Damage> {
     })
 }
 
-/// A record, or a line of a type this copy does not know; none when it is neither.
+/// A record, or a line of a type this copy does not know; none when it is neither. A record's
+/// fields this version does not know are the ones it lacks once written back.
 fn entry(json: &[u8]) -> Option<Entry> {
-    if let Ok(record) = serde_json::from_slice::<Record>(json) {
-        return Some(Entry::Record(Box::new(record)));
+    let found: Value = serde_json::from_slice(json).ok()?;
+    if let Ok(record) = serde_json::from_value::<Record>(found.clone()) {
+        let known = serde_json::to_value(&record).expect("a record is plain JSON");
+        return Some(Entry::Record {
+            unknown_fields: unknown_json_fields(&found, &known),
+            record: Box::new(record),
+        });
     }
     let head: PassedOver = serde_json::from_slice(json).ok()?;
     (!RecordBody::KINDS.contains(&head.kind.as_str())).then_some(Entry::PassedOver(head))

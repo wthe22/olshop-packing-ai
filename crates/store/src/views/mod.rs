@@ -12,7 +12,7 @@ use std::path::Path;
 
 use packing_engine::ids::BatchId;
 use packing_engine::record::{OrderContent, SCHEMA};
-use packing_engine::schema::Schema;
+use packing_engine::schema::{Schema, newer_app};
 use serde::ser::{Serialize, SerializeMap, Serializer};
 use serde::{Deserialize, Serialize as SerializeDerive};
 
@@ -48,10 +48,12 @@ pub fn write_views(date_dir: &Path, fold: &Fold) -> Result<(), StoreError> {
     write_atomic(&date_dir.join(DAY_TOML), day::text(fold, &ids).as_bytes())
 }
 
-/// The views are a newer copy's to write: the journal holds a record this copy passed over, or
-/// `day.toml` is of a newer version than this copy writes.
+/// The views are a newer copy's to write: the journal holds a record or a field a newer copy wrote
+/// and this one does not know, or `day.toml` is of a newer version than this copy writes.
 fn left_to_a_newer_copy(date_dir: &Path, fold: &Fold) -> bool {
-    !fold.passed_over.is_empty()
+    fold.unknown
+        .iter()
+        .any(|unknown| newer_app(&unknown.app, env!("CARGO_PKG_VERSION")))
         || views_schema(date_dir, DAY_TOML).is_some_and(|found| {
             Schema::parse(&found).is_some_and(|version| version > VIEWS_SCHEMA)
         })

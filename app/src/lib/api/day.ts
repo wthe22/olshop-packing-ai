@@ -70,6 +70,8 @@ export interface DayOverview {
   totals: Totals;
   // A damaged journal, an input missing or changed.
   problems: string[];
+  // Quiet notes: what the journal holds that this version does not know, all of it kept.
+  notes: string[];
   // Data of older versions in the data folder, which is not read.
   older: OlderData[];
   reprints: ReprintRow[];

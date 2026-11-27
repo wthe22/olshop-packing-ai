@@ -3,7 +3,7 @@
   // rows (the setting at the left, its control at the right). Every other choice has one fixed
   // default, shown where it acts.
   import { texts } from "../texts";
-  import type { About } from "./api/start";
+  import { unknownKeys, type About } from "./api/start";
   import { themes, type Theme } from "./theme";
   import Icon from "./Icon.svelte";
   import Logo from "./Logo.svelte";
@@ -25,6 +25,14 @@
   } = $props();
 
   const words = texts.settings;
+
+  // Read each time Settings opens, so a rules file changed meanwhile is read again.
+  let unknown: string[] = $state([]);
+  $effect(() => {
+    unknownKeys()
+      .then((found) => (unknown = found))
+      .catch(() => (unknown = []));
+  });
 </script>
 
 <div class="settings">
@@ -64,6 +72,17 @@
           <button onclick={onChangeFolder}>{words.change}</button>
         </div>
       </div>
+      {#if unknown.length > 0}
+        <div class="row">
+          <div class="what">
+            <span class="name">{words.unknownKeys}</span>
+            <span class="hint">{words.unknownKeysHint}</span>
+            {#each unknown as key (key)}
+              <span class="path">{key}</span>
+            {/each}
+          </div>
+        </div>
+      {/if}
     </div>
   </section>
 

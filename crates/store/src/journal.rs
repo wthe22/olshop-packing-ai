@@ -64,7 +64,14 @@ impl Journal {
         };
         for (line, entry) in &parsed.records {
             let applied = match entry {
-                Entry::Record(record) => journal.fold.apply(record),
+                Entry::Record {
+                    record,
+                    unknown_fields,
+                } => journal.fold.apply(record).map(|()| {
+                    journal
+                        .fold
+                        .note_unknown_fields(record, unknown_fields.clone())
+                }),
                 Entry::PassedOver(record) => journal.fold.pass_over(record),
             };
             if let Err(reason) = applied {

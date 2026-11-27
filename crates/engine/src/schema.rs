@@ -53,6 +53,19 @@ impl Schema {
     }
 }
 
+/// Whether app version `found` (`0.9.0`, `0.8.7-alpha`) is newer than `ours`, by its numbers; a
+/// version whose numbers do not read is not newer.
+pub fn newer_app(found: &str, ours: &str) -> bool {
+    fn numbers(version: &str) -> Option<Vec<u32>> {
+        let numbers = version.split('-').next()?;
+        numbers.split('.').map(|part| part.parse().ok()).collect()
+    }
+    match (numbers(found), numbers(ours)) {
+        (Some(found), Some(ours)) => found > ours,
+        _ => false,
+    }
+}
+
 impl fmt::Display for Schema {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}.{}", self.major, self.minor)
@@ -102,6 +115,21 @@ mod tests {
             assert_eq!(ours.fit(Schema::parse(text).unwrap()), want, "{text}");
         }
         assert!(Schema::new(2, 2) > ours && Schema::new(10, 0) > Schema::new(9, 9));
+    }
+
+    #[test]
+    fn an_app_version_is_newer_by_its_numbers() {
+        let cases = [
+            ("0.9.0", "0.8.7-alpha", true),
+            ("0.10.0", "0.9.1", true),
+            ("0.8.7-beta", "0.8.7-alpha", false),
+            ("0.8.6-alpha", "0.8.7-alpha", false),
+            ("0.8.7", "0.8.7-alpha", false),
+            ("next", "0.8.7", false),
+        ];
+        for (found, ours, want) in cases {
+            assert_eq!(newer_app(found, ours), want, "{found} after {ours}");
+        }
     }
 
     #[test]

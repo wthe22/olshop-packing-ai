@@ -18,8 +18,10 @@ Crate `packing-store` owns it.
 - Seq 1 is `started`: the schema (`2.0`) and the date, which must equal the folder's name. A journal of
   another major is not read and is checked before any other line: a newer major is a newer copy's
   ([D-APP-34](../decisions/versions.md)), an older one is damage.
-- A sealed line whose `type` this copy does not know is a newer copy's record, **passed over**: only its `seq`
-  is checked. A line of a known type that does not read is damage.
+- A sealed line whose `type` this copy does not know is **passed over**: only its `seq` is checked. A line of
+  a known type that does not read is damage. A field of a record this copy reads but does not know (one the
+  record lacks once written back) is kept in the line and noted with the record's `seq` and `app`; a newer
+  copy's leave the views to it ([D-APP-34](../decisions/versions.md)).
 
 ## A commit
 

@@ -23,7 +23,9 @@ pub use dates::{dates, journal_lengths, newest_batch_rule};
 pub use error::StoreError;
 pub use files::sha256_of;
 pub use flatten::{V0_7_BACKUP, flatten_date, is_v0_7};
-pub use fold::{Damage, DamageReason, Fold, LastWrites, LiveBatch, PassedOver, Reprint};
+pub use fold::{
+    Damage, DamageReason, Fold, LastWrites, LiveBatch, PassedOver, Reprint, Unknown, UnknownPart,
+};
 pub use index::{AccountDate, IndexedOrder, ReprintMark, SearchIndex};
 pub use inputs::{InputProblem, InputState, StoredInput, check_inputs, input_path, store_input};
 pub use journal::{Journal, Pending};

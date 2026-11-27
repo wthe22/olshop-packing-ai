@@ -115,12 +115,12 @@ pub struct Fold {
     pub inputs: BTreeMap<PdfId, Sha256>,
     pub reprints: Vec<Reprint>,
     pub last_writes: LastWrites,
-    /// The records of a newer copy's type, passed over.
-    pub passed_over: Vec<PassedOver>,
+    /// What the journal holds that this version does not know: kept in the file, not used.
+    pub unknown: Vec<Unknown>,
 }
 
-/// A record whose `type` this copy does not know: a newer copy wrote it, and an older one may pass
-/// over it (data/README.md, *Types, versions and names*).
+/// The numbering of a record whose `type` this copy does not know: it passes over the rest
+/// (data/README.md, *Types, versions and names*).
 #[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
 pub struct PassedOver {
     pub seq: u32,
@@ -128,6 +128,26 @@ pub struct PassedOver {
     pub app: String,
     #[serde(rename = "type")]
     pub kind: String,
+}
+
+/// A record, or a field of one, this version does not know.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Unknown {
+    /// The record's `seq`, which is its line.
+    pub seq: u32,
+    /// The version of the app that wrote it.
+    pub app: String,
+    /// The record's `type`.
+    pub kind: String,
+    pub part: UnknownPart,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum UnknownPart {
+    /// A record of a type this version does not know, passed over.
+    Record,
+    /// A field of a record it reads, by its path (`orders[3].colour`).
+    Field(String),
 }
 
 /// A reprint of the date and when it was made.
@@ -146,7 +166,7 @@ impl Fold {
             inputs: BTreeMap::new(),
             reprints: Vec::new(),
             last_writes: LastWrites::Nothing,
-            passed_over: Vec::new(),
+            unknown: Vec::new(),
         }
     }
 
@@ -191,8 +211,23 @@ impl Fold {
         self.check_seq(record.seq, false)?;
         self.last_seq = record.seq;
         self.last_writes = LastWrites::Unknown;
-        self.passed_over.push(record.clone());
+        self.unknown.push(Unknown {
+            seq: record.seq,
+            app: record.app.clone(),
+            kind: record.kind.clone(),
+            part: UnknownPart::Record,
+        });
         Ok(())
+    }
+
+    /// Note the fields of an applied record this version does not know.
+    pub fn note_unknown_fields(&mut self, record: &Record, fields: Vec<String>) {
+        self.unknown.extend(fields.into_iter().map(|field| Unknown {
+            seq: record.seq,
+            app: record.app.clone(),
+            kind: record.body.kind().to_string(),
+            part: UnknownPart::Field(field),
+        }));
     }
 
     fn check_seq(&self, seq: u32, is_started: bool) -> Result<(), DamageReason> {

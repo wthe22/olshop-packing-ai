@@ -131,6 +131,9 @@
     {#each overview.problems as problem}
       <p class="problem">{problem}</p>
     {/each}
+    {#each overview.notes as note}
+      <p class="muted">{note}</p>
+    {/each}
     {#each overview.older as older (older.version)}
       <p class="muted">
         {texts.day.older(older.version, older.names)}

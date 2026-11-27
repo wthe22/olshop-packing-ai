@@ -5,7 +5,7 @@ use packing_engine::record::{
     Area, AreasFilled, BatchReverted, OrderArea, OrderWeight, PrintSent, PrintedMarked, RecordBody,
     Recovered, ReprintMade, Weight, WeightsFilled,
 };
-use packing_store::{DamageReason, Journal, StoreError, open_date};
+use packing_store::{DamageReason, Journal, StoreError, UnknownPart, open_date};
 
 use crate::common::*;
 
@@ -379,15 +379,20 @@ fn damage_is_named_by_its_line_and_nothing_is_written() {
 }
 
 #[test]
-fn a_newer_copys_record_type_is_passed_over_and_the_date_still_takes_commits() {
+fn what_this_version_does_not_know_is_noted_kept_and_the_date_still_takes_commits() {
     let (_data, folder) = date_folder("passed-over");
     let mut tail = sealed_line(
         r#"{"seq":3,"time":"2026-10-07T09:00:00+07:00","app":"0.9.0","type":"orders_moved","to":2}"#,
     );
-    tail.extend(packing_store::encode_line(&record(
+    let line = String::from_utf8(packing_store::encode_line(&record(
         4,
         RecordBody::BatchSaved(batch(2, false, Vec::new())),
-    )));
+    )))
+    .unwrap();
+    let mut saved: serde_json::Value = serde_json::from_str(&line[17..]).unwrap();
+    saved["orders"][1]["colour"] = "red".into();
+    saved["note"] = "x".into();
+    tail.extend(sealed_line(&saved.to_string()));
     let records = [
         record(1, started()),
         record(2, RecordBody::BatchSaved(batch(1, false, Vec::new()))),
@@ -399,17 +404,33 @@ fn a_newer_copys_record_type_is_passed_over_and_the_date_still_takes_commits() {
     let fold = journal.fold();
     assert_eq!(fold.last_seq, 4);
     assert_eq!(fold.live.len(), 2, "the records after it fold as before");
-    let passed: Vec<_> = fold
-        .passed_over
+    let unknown: Vec<_> = fold
+        .unknown
         .iter()
-        .map(|r| (r.seq, r.app.as_str(), r.kind.as_str()))
+        .map(|u| (u.seq, u.kind.as_str(), u.part.clone()))
         .collect();
-    assert_eq!(passed, [(3, "0.9.0", "orders_moved")]);
+    assert_eq!(
+        unknown,
+        [
+            (3, "orders_moved", UnknownPart::Record),
+            (4, "batch_saved", UnknownPart::Field("note".into())),
+            (
+                4,
+                "batch_saved",
+                UnknownPart::Field("orders[1].colour".into())
+            ),
+        ]
+    );
+    let before = journal_text(&folder);
     let reverted = RecordBody::BatchReverted(BatchReverted {
         batch: BatchId::new(2),
     });
     journal.commit(vec![reverted], APP).unwrap();
     assert_eq!(Journal::open(&folder).unwrap().fold().last_seq, 5);
+    assert!(
+        journal_text(&folder).starts_with(&before),
+        "every line is kept as it was"
+    );
 }
 
 #[test]

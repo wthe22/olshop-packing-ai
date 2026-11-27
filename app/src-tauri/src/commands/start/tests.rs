@@ -77,6 +77,24 @@ fn the_theme_and_the_data_folder_are_kept_apart_in_the_settings() {
 }
 
 #[test]
+fn a_key_this_version_does_not_know_is_named_only_in_a_file_of_its_version() {
+    let program = TempDir::new("app-unknown");
+    let file = program.path().join(APP_FILE);
+    fs::write(&file, "schema = \"1.0\"\ntheme = \"dark\"\nzoom = 125\n").unwrap();
+    assert_eq!(
+        settings::unknown_keys(program.path()).unwrap(),
+        [
+            "packing-app.toml, line 3: zoom is not a key this version knows. It is kept and not used."
+        ]
+    );
+    fs::write(&file, "schema = \"1.3\"\ntheme = \"dark\"\nzoom = 125\n").unwrap();
+    assert!(
+        settings::unknown_keys(program.path()).unwrap().is_empty(),
+        "a newer minor's keys"
+    );
+}
+
+#[test]
 fn a_newer_minor_of_the_settings_reads_and_keeps_its_keys() {
     let program = TempDir::new("app-newer");
     let file = program.path().join(APP_FILE);

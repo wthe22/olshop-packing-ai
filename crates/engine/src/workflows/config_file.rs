@@ -11,6 +11,7 @@ use super::{Filter, GroupRule, SortRule, WorkflowsError};
 use crate::accounts::{Account, check_account_name, check_shop_name};
 use crate::ids::CourierCode;
 use crate::rules::{Condition, TextOp, parse_filter};
+use crate::unknown::{UnknownKey, unknown_toml_keys};
 
 #[derive(Deserialize)]
 struct RawConfig {
@@ -51,6 +52,11 @@ struct RawGroup {
 pub(super) struct Config {
     pub(super) accounts: Vec<Account>,
     pub(super) sort_rules: Vec<SortRule>,
+}
+
+/// The keys of `config.toml` this version does not read.
+pub(super) fn unknown_keys(text: &str) -> Vec<UnknownKey> {
+    unknown_toml_keys::<RawConfig>(text)
 }
 
 pub(super) fn read(file: &File, codes: &[&CourierCode]) -> Result<Config, WorkflowsError> {

@@ -35,8 +35,11 @@ Open **Settings** in the title bar. Each row is a setting at the left and its co
 - **Data folder** — where the dates of every account are kept (the default is `packing-data` beside
   the program). **Change** asks "Use `<folder>` for the data from now on? The data in `<old>` stays where
   it is." and opens that folder; nothing is moved. **Open** shows it in Explorer.
+- **Kept, not read** — shown only when `packing-app.toml`, `parser.toml` or `config.toml` holds a key this
+  version does not know (a typing slip such as `enabeld`, say): the file, the line and the key. The key stays
+  in the file and does nothing; fix or delete it in the file if it was a slip.
 - The accounts and their shops are on the **Accounts** screen ([Accounts](03-changes.md#accounts)), not here.
-- **About** — what the program does, its version (**v0.8.7-alpha**), the time it was built, the PDFium version
+- **About** — what the program does, its version (**v0.8.8-alpha**), the time it was built, the PDFium version
   and the journal's schema version.
 
 There are no other settings: the sort rule you used last is preselected, the summary PDF is

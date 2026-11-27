@@ -2,6 +2,7 @@
 //! the Sent mark, the Printed tick, revert and restore — each one append through `packing-batch`; the day
 //! summary, a view written from the fold; and *Open* on an output, which writes a missing one again.
 
+mod journal;
 mod view;
 
 use std::path::PathBuf;

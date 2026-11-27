@@ -374,6 +374,7 @@ pub fn run() {
             commands::start::use_program_folder,
             commands::start::choose_data_folder,
             commands::start::about,
+            commands::start::unknown_keys,
             commands::start::set_theme,
             commands::start::open_path,
             commands::start::show_in_folder,

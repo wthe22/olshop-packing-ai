@@ -22,6 +22,7 @@ name and a line under it) and its control at the right.
 |---|---|---|
 | Appearance | Theme | **Light**, **Dark** or **System** (Windows' own, the default), side by side; the chosen one raised ([D-UI-8](../decisions/ui.md)) |
 | Data | Data folder | The folder of `packing-app.toml` + **Open** + **Change** |
+| Data | *Kept, not read*, only when there is one: each key of `packing-app.toml`, `parser.toml` or `config.toml` this version does not know, with its file and line, in a file of this version or older ([D-APP-34](../decisions/versions.md)); read each time Settings opens | — |
 | About | The program's name, version and what it does; then Version (`v0.4.0`), Built (the time the program was compiled, `2026-10-30 09:15`), PDFium and Journal schema (`2.0`) | — |
 
 There are no other settings: every other choice has one fixed default, shown where it acts

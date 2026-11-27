@@ -104,7 +104,7 @@ fn named(folder: &DateFolder, journal: &Journal) -> Result<Named, StoreError> {
     let parsed = parse(&journal.bytes()?).map_err(StoreError::Damaged)?;
     let mut inputs: BTreeMap<Sha256, BTreeSet<String>> = BTreeMap::new();
     for (_, record) in &parsed.records {
-        if let Entry::Record(record) = record
+        if let Entry::Record { record, .. } = record
             && let RecordBody::BatchSaved(saved) = &record.body
         {
             for input in &saved.inputs {

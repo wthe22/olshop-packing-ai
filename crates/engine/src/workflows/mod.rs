@@ -24,7 +24,7 @@ pub use self::edit::{
     EditError, GroupEdit, NewRule, add_rule, delete_rule, rename_rule, set_rule_enabled,
     write_groups,
 };
-pub use self::load::load_workflows;
+pub use self::load::{load_workflows, of_a_newer_version, unknown_rules_keys};
 pub use self::remember::{LogoIs, remember_logo};
 
 pub const PARSER_FILE: &str = "parser.toml";

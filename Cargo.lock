@@ -2776,7 +2776,7 @@ checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
 name = "packing-app"
-version = "0.8.7-alpha"
+version = "0.8.8-alpha"
 dependencies = [
  "jiff",
  "packing-batch",
@@ -2795,7 +2795,7 @@ dependencies = [
 
 [[package]]
 name = "packing-batch"
-version = "0.8.7-alpha"
+version = "0.8.8-alpha"
 dependencies = [
  "jiff",
  "packing-engine",
@@ -2807,7 +2807,7 @@ dependencies = [
 
 [[package]]
 name = "packing-cli"
-version = "0.8.7-alpha"
+version = "0.8.8-alpha"
 dependencies = [
  "jiff",
  "packing-batch",
@@ -2824,11 +2824,12 @@ dependencies = [
 
 [[package]]
 name = "packing-engine"
-version = "0.8.7-alpha"
+version = "0.8.8-alpha"
 dependencies = [
  "jiff",
  "regex",
  "serde",
+ "serde_ignored",
  "serde_json",
  "testkit",
  "toml 1.1.8+spec-1.1.0",
@@ -2838,7 +2839,7 @@ dependencies = [
 
 [[package]]
 name = "packing-fixtures"
-version = "0.8.7-alpha"
+version = "0.8.8-alpha"
 dependencies = [
  "lopdf",
  "serde_json",
@@ -2846,7 +2847,7 @@ dependencies = [
 
 [[package]]
 name = "packing-pdf"
-version = "0.8.7-alpha"
+version = "0.8.8-alpha"
 dependencies = [
  "image",
  "jiff",
@@ -2859,7 +2860,7 @@ dependencies = [
 
 [[package]]
 name = "packing-store"
-version = "0.8.7-alpha"
+version = "0.8.8-alpha"
 dependencies = [
  "jiff",
  "packing-engine",
@@ -2873,7 +2874,7 @@ dependencies = [
 
 [[package]]
 name = "packing-verify"
-version = "0.8.7-alpha"
+version = "0.8.8-alpha"
 dependencies = [
  "lopdf",
  "regex",
@@ -3730,6 +3731,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_ignored"
+version = "0.1.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "115dffd5f3853e06e746965a20dcbae6ee747ae30b543d91b0e089668bb07798"
+dependencies = [
+ "serde",
+ "serde_core",
+]
+
+[[package]]
 name = "serde_json"
 version = "1.0.151"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4422,7 +4433,7 @@ dependencies = [
 
 [[package]]
 name = "testkit"
-version = "0.8.7-alpha"
+version = "0.8.8-alpha"
 dependencies = [
  "jiff",
  "packing-engine",

@@ -98,3 +98,6 @@ export const showInFolder = (path: string): Promise<void> =>
 export const setTheme = (theme: Theme): Promise<void> => invoke("set_theme", { theme });
 
 export const about = (): Promise<About> => invoke("about");
+
+// Settings › *Data*: the keys of the program's files this version does not know, kept and not used.
+export const unknownKeys = (): Promise<string[]> => invoke("unknown_keys");

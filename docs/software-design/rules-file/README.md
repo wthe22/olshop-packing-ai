@@ -27,8 +27,8 @@ owner's. The app edits them keeping comments and order. The filter language is i
 Both files are read together, so the checks across them hold. Each check names its **file**, line and
 column; a file that does not parse stops the start.
 
-A missing required field; a schema of another major than `1.x` (a key this copy does not know is passed
-over, [D-APP-34](../decisions/versions.md)); a duplicate courier code,
+A missing required field; a schema of another major than `1.x` (a key this copy does not know is kept,
+not used, and named in Settings unless the file is of a newer version, [D-APP-34](../decisions/versions.md)); a duplicate courier code,
 classifier, account, rule name, or group code or name within a rule; a courier code that is not
 lower-case letters, digits and `-`; a group code that is not 1–3 letters or digits; a classifier, a
 `courier equals` value or a logo answer naming no courier; a hash that is not 16 lower-case hex

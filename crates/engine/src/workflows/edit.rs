@@ -7,7 +7,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use toml_edit::{ArrayOfTables, DocumentMut, Item, Table};
+use toml_edit::{ArrayOfTables, DocumentMut, Item, Table, Value};
 
 use super::{BUILT_IN_RULE, Workflows, WorkflowsError, load_workflows};
 
@@ -224,7 +224,23 @@ fn rule_table<'a>(rules: &'a mut ArrayOfTables, rule: &str) -> Result<&'a mut Ta
 /// Set a text key only when it changes, so an unchanged value keeps its spelling.
 fn set_text(table: &mut Table, key: &str, value: &str) {
     if table.get(key).and_then(Item::as_str) != Some(value) {
-        table.insert(key, toml_edit::value(value));
+        set_value(table, key, value.into());
+    }
+}
+
+/// Set `key` to `value`; a key already there keeps its place, its comments and the comment after
+/// its value.
+pub(super) fn set_value(table: &mut Table, key: &str, mut value: Value) {
+    match table.get_mut(key) {
+        Some(item) => {
+            if let Some(old) = item.as_value() {
+                *value.decor_mut() = old.decor().clone();
+            }
+            *item = Item::Value(value);
+        }
+        None => {
+            table.insert(key, Item::Value(value));
+        }
     }
 }
 

@@ -185,6 +185,12 @@ pub fn about() -> About {
     }
 }
 
+/// Settings › *Data*: the keys of the program's files this version does not know, kept and not used.
+#[tauri::command]
+pub fn unknown_keys(state: State<'_, AppState>) -> Result<Vec<String>, String> {
+    settings::unknown_keys(state.program())
+}
+
 /// The Explorer command for `path` (separate so a test can read its arguments back).
 fn explorer_command(path: &str) -> Command {
     let mut command = Command::new("explorer");

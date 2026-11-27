@@ -394,3 +394,68 @@ fn a_config_without_a_sort_rule_stands_in_with_the_built_in_one() {
     assert_eq!(rule.groups[0].code, "Z");
     assert!(rule.groups[0].filter.is_none());
 }
+
+#[test]
+fn a_key_no_reader_knows_is_named_unless_the_file_is_newer() {
+    let config = with_rule(
+        "[[label_sort_rules.label_groups]]\ncode = \"Z\"\nname = \"Lainnya\"\nicon = \"box\"\n",
+    );
+    let parser = format!("{PARSER_HEAD}colour = \"red\"\n");
+    let found: Vec<String> = unknown_rules_keys(&parser, &config)
+        .iter()
+        .map(|(file, key)| format!("{file} {key}"))
+        .collect();
+    assert_eq!(
+        found,
+        [
+            "parser.toml line 5: couriers[0].colour",
+            "config.toml line 7: label_sort_rules[0].label_groups[0].icon",
+        ]
+    );
+    let newer = config.replace("1.0", "1.4");
+    assert_eq!(unknown_rules_keys(PARSER_HEAD, &newer), []);
+    assert!(of_a_newer_version(&newer) && !of_a_newer_version(&config));
+}
+
+#[test]
+fn an_account_keeps_the_keys_this_version_does_not_know_through_a_rename() {
+    let config = format!(
+        "{CONFIG_HEAD}[[accounts]]\nname = \"Toko Alfa\"\nshops = [\"Alfa\"]\ncolour = \"red\"\n\n\
+         [[accounts]]\n# the second\nname = \"Toko Beta\"\nshops = []\nicon = \"b\"\n"
+    );
+    let account = |name: &str, shops: &[&str]| Account {
+        name: name.into(),
+        shops: shops.iter().map(|shop| shop.to_string()).collect(),
+    };
+    let renamed = [
+        account("Toko Alfa Jaya", &["Alfa"]),
+        account("Toko Beta", &["Beta"]),
+    ];
+    let (written, _) = write_accounts(PARSER_HEAD, &config, &renamed).unwrap();
+    assert!(
+        written.contains("name = \"Toko Alfa Jaya\"\nshops = [\"Alfa\"]\ncolour = \"red\""),
+        "{written}"
+    );
+    assert!(
+        written.contains("# the second\nname = \"Toko Beta\"\nshops = [\"Beta\"]\nicon = \"b\""),
+        "{written}"
+    );
+
+    let added = [
+        account("Toko Alfa", &["Alfa"]),
+        account("Toko Beta", &[]),
+        account("Toko Gama", &[]),
+    ];
+    let (written, _) = write_accounts(PARSER_HEAD, &config, &added).unwrap();
+    assert_eq!(
+        written.matches("colour").count() + written.matches("icon").count(),
+        2,
+        "{written}"
+    );
+    let deleted = [account("Toko Beta", &[])];
+    let (written, _) = write_accounts(PARSER_HEAD, &config, &deleted).unwrap();
+    assert!(
+        !written.contains("colour") && written.contains("icon"),
+        "{written}"
+    );
+}

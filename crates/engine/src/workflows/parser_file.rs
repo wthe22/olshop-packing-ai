@@ -8,6 +8,7 @@ use toml::Spanned;
 use super::load::File;
 use super::{Classifier, Courier, TrackingForm, WorkflowsError};
 use crate::ids::CourierCode;
+use crate::unknown::{UnknownKey, unknown_toml_keys};
 
 #[derive(Deserialize)]
 struct RawParser {
@@ -51,6 +52,11 @@ pub(super) struct Parser {
     pub(super) couriers: Vec<Courier>,
     pub(super) classifiers: Vec<Classifier>,
     pub(super) not_courier_logos: Vec<String>,
+}
+
+/// The keys of `parser.toml` this version does not read.
+pub(super) fn unknown_keys(text: &str) -> Vec<UnknownKey> {
+    unknown_toml_keys::<RawParser>(text)
 }
 
 pub(super) fn read(file: &File) -> Result<Parser, WorkflowsError> {

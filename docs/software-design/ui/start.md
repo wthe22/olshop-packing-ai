@@ -36,7 +36,7 @@ batch saved before the receiver's area or the weight was read whose label PDFs a
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ◈ Packing v0.8.7-alpha                                                                │
+│  ◈ Packing v0.8.8-alpha                                                                │
 │  Update the data folder?                                                               │
 │  Update moves the files of 1 date out of the input and output folders of Packing v0.7  │
 │  into their date folders, keeping the old folders in v0.7 backup. It reads the         │

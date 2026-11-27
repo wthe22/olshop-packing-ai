@@ -6,7 +6,23 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-27)
 
-- **Handoff of 2026-11-27 (latest) — v0.8.7-alpha: a copy reads its own major version; `day.toml`.**
+- **Handoff of 2026-11-27 (latest) — v0.8.8-alpha: nothing is lost; what is not known is named quietly.**
+  The owner's rule ([D-APP-34](../../software-design/decisions/versions.md)): nothing is lost but by an action
+  meant to remove it, and what the program does not know in data of its own version is named without
+  getting in the way.
+  - An account edited on the Accounts screen or by the shop prompt now keeps its other keys and the owner's
+    comments in `config.toml` (it was rebuilt from its name and shops); a label group already did. A key
+    keeps the comment above it and the one after its value when its value changes.
+  - **Settings › Data › Kept, not read** (only when there is one): each key of `packing-app.toml`,
+    `parser.toml` or `config.toml` this version does not know, with file and line, unless the file is of a
+    newer version. A slip such as *enabeld = false* shows there.
+  - **Day screen, muted**: a record type or field of the journal this version does not know, once per type or
+    field with its lines; one note for a newer copy's. The owner's data (two folders, four dates) shows none.
+  - **To check**: add `colour = "red"` under an account in `config.toml`, open Settings (the row names it),
+    rename that account on the Accounts screen, and see the key still in the file.
+  - **Where to answer**: [reviews/app.md](../../reviews/app.md) as `R-APP-19`.
+
+- **Handoff of 2026-11-27 — v0.8.7-alpha: a copy reads its own major version; `day.toml`.**
   The owner's answers to Q-APP-21 to 23 ([decisions/versions.md](../../software-design/decisions/versions.md)).
   - **D-APP-34**: a copy reads every `X.Y` of its own X and passes over what it does not know (a key, a
     field, a record type, a column); a higher X says *newer format, update this copy*. The journal stays
@@ -15,12 +31,10 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     `packing-app.toml`, `parser.toml` and `config.toml`. v0.7 still calls v0.8's `areas_filled` damage.
   - **D-APP-35**: `session.toml` is `day.toml` (**Update** writes it and deletes `session.toml`);
     `orders.csv` ends with the column `schema:2.1`, its cells empty.
-  - **Changed for the owner**: a mistyped key in `config.toml` or `parser.toml` (*enabeld = false*) is now
-    passed over silently, where it used to stop the start.
+  - **Changed for the owner**: a mistyped key in `config.toml` or `parser.toml` (*enabeld = false*) no longer
+    stops the start; v0.8.8 names it in Settings.
   - **To check**: **Update** on a copy of the v0.7 data: each date gets `day.toml`, loses `session.toml`, and
     `orders.csv` opens in Excel with the empty *schema:2.1* column at the right.
-  - **Where to answer**: [reviews/app.md](../../reviews/app.md) as `R-APP-19`. Whether a key a rules file
-    does not know should be named on the start screen, not only passed over, is the owner's call there.
 
 - **Handoff of 2026-11-26 — v0.8.6-alpha: Search's cards under heads, one row each.** Built,
   checked and pushed; `target/portable/` is rebuilt. No dev task is left.
