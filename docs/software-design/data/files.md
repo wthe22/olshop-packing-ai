@@ -141,5 +141,5 @@ consecutive ([groups](../labels/groups.md#a-group-pdf)).
 ## The summaries made on request
 
 `Day Summary.pdf`, `Day Summary - {account}.pdf` and `{batch} Summary - {account}.pdf` are written only by
-**Day summary** and a batch card's account buttons on the Day screen. Each says what the files said when it
+**PDF** on the [Summary](../ui/summary.md) screen. Each says what the files said when it
 was made ([day summary](../labels/day-summary.md)); a revert or an amend deletes the batch's account summaries.

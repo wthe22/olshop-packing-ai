@@ -11,13 +11,13 @@ The start screen: what has been saved on the open date, for every account, and t
 │  ┌ Batch 2  saved 09:12 · 2 files · 129 orders · 2 accounts ───────── [Amend] [Revert] │
 │  │  2-A  Sepatu            88 orders    3 contents               [✓] [Print] [Open]  │ │
 │  │  2-Z  Lainnya           41 orders   12 contents  Sent 09:14 ✕ [ ] [Print] [Open]  │ │
-│  │  [Summary PDF ▾]                          Saved with 2 errors ▸   Warnings: 1 ▸    │ │
+│  │  [Summary]                                Saved with 2 errors ▸   Warnings: 1 ▸    │ │
 │  └───────────────────────────────────────────────────────────────────────────────────┘ │
 │  ┌ Batch 1  saved 07:40 · 3 files · 600 orders · 1 account ──────────────────────────┐ │
 │  │  1-A  Sepatu           172 orders    4 contents               [ ] [Print] [Open]  │ │
 │  │  1-B  Spion & Knalpot   35 orders    4 contents    [ ]  ⚠ missing [Print] [Open]  │ │
 │  │  1-Z  Lainnya          393 orders   38 contents               [ ] [Print] [Open]  │ │
-│  │  Summary PDF [Open]       Warnings: none   Left out: 3 ▸           [Open folder]  │ │
+│  │  [Summary]                Warnings: none   Left out: 3 ▸           [Open folder]  │ │
 │  └───────────────────────────────────────────────────────────────────────────────────┘ │
 │  ┌ Reprints · 1 file · 3 orders ─────────────────────────────────────────────────────┐ │
 │  │  R1   made 09:40     3 orders     3 pages            Orders ▾   [Print] [Open]    │ │
@@ -53,11 +53,10 @@ The start screen: what has been saved on the open date, for every account, and t
   is written again, checked like a **Restore**, with the dialog *Writing `<file>` again*; a summary PDF
   written again has the program's current layout. **Open folder** opens the date's `output\` folder in
   Explorer.
-- **Summary PDF** is a menu, like **Day summary**, when the batch holds more than one account: *All
-  accounts* opens the batch's summary PDF; an account writes that account's summary of the batch and opens it
-  ([summary PDF](../labels/summary-pdf.md#one-account)), with the dialog *Writing the summary of Toko Alfa*; a
-  finding of its check is shown and nothing is kept. A summary PDF found changed shows **Restore** in place
-  of the menu.
+- **Summary** opens the batch's [Summary](summary.md) in the app, read from the date's files; its **PDF**
+  writes and opens the PDF. A summary PDF found changed shows **Restore** beside **Summary**.
+- **▸** on a group PDF's row lists its order contents in printing order, as on the Plan screen
+  (`Sepatu Standar Samping Motor ×1 · 80 orders`), read from the date's files.
 - **Amend** and **Revert** appear only on the newest batch ([05 After the save](../workflow/05-after-save.md)):
   - Revert asks: "Undo batch 2?" — "Its 2 group PDFs and summary PDF are removed. Save asks for a folder
     to copy its label PDFs into; Discard keeps no copy. Throw away its printed labels." [Save] [Discard]
@@ -80,10 +79,8 @@ The start screen: what has been saved on the open date, for every account, and t
   orders as Search shows them (Order ID, tracking ID, courier, items, the date and group PDF it was saved
   in). An order whose batch was reverted since shows its Order ID and *saved `<date>` in batch `<b>`*.
   Reprints are made on [Search](search.md).
-- **Day summary** writes the [day summary](../labels/day-summary.md) of the open date and opens it. When
-  the date's live batches hold more than one account it is a menu: *All accounts*, then each account; while it
-  is written the dialog *Writing the day summary* shows and the button is off, so it is written once. It is
-  off while the date has no batch.
+- **Day summary** opens the open date's [Summary](summary.md) in the app; its **PDF** writes the
+  [day summary](../labels/day-summary.md) and opens it. It is off while the date has no batch.
 - **Check data** lists each empty cell of the date's orders that this version reads from a label (the shop,
   the receiver's area, the weight) and offers **Read labels again** ([D-APP-41](../decisions/date-files.md)).
   With none it says *Every order has what its label holds.* It is off while the date has no batch.

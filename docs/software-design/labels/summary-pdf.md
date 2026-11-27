@@ -79,7 +79,7 @@ What to take from stock for the whole batch: one line per item (product name and
 
 ## One account
 
-A batch card's account button on the [Day screen](../ui/day.md) writes `{date}/{batch} Summary -
+**PDF** on a batch's [Summary](../ui/summary.md) screen, with an account chosen, writes `{date}/{batch} Summary -
 {account}.pdf` from the batch's files and opens it ([D-APP-29](../decisions/accounts.md)): written again on every request, never read for a decision; a revert or an
 amend deletes it. It is checked before it is kept (V6 on the account's orders); a finding stops it and
 nothing is kept.

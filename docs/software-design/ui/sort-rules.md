@@ -9,7 +9,7 @@ filter language: each filter is made from boxes. A text view is there for typing
 │ │ default │ harian  last used  │ promo 11.11  off  │  + New rule                        │
 │ └─────────┴────────────────────┴───────────────────┘                                    │
 │ ┌────────────────────────────────────────────────────────────────────────────────────┐ │
-│ │ (●━) On  New batch offers this rule.                       [Rename]   [Delete]      │ │
+│ │ (●━) On  The Plan screen offers this rule.                       [Rename]   [Delete]      │ │
 │ │ GROUP  Order matters: an order goes to the first group …            IN BATCH 3      │ │
 │ ├────────────────────────────────────────────────────────────────────────────────────┤ │
 │ │ [A] [Sepatu          ] [Boxes|Text]                                    130   ↑ ↓ 🗑 │ │
@@ -35,7 +35,9 @@ filter language: each filter is made from boxes. A text view is there for typing
   choice; the rule shown is raised. The rule of the data folder's newest batch carries *last used*; a rule
   that is switched off carries *off* and its name is faint. **+ New rule** asks for a name in a line
   under the tabs and adds a rule with one group `Z Lainnya` and no filter, or *a copy of* the rule shown;
-  a new rule and a copy start on.
+  a new rule and a copy start on. A name equal to another rule's, or *Custom* (the name of a plan changed
+  for one batch, [D-RULES-7](../decisions/rules.md)), is refused under the line; upper and lower case
+  count as the same.
 - **Opened with a batch** (the Plan screen's **Edit sort rule**) the screen shows the batch's rule and the
   counts are its counts. Opened from the title bar it shows the rule the next batch preselects.
 - **Another tab**, or **+ New rule**, while the rule shown has unsaved changes asks first: *Discard the
@@ -45,7 +47,7 @@ filter language: each filter is made from boxes. A text view is there for typing
 
 The rule shown is one card: its head is the rule, its rows the groups.
 
-- **The switch** in the head: **On** — *New batch offers this rule.* — or **Off** — *Kept, but New batch
+- **The switch** in the head: **On** — *The Plan screen offers this rule.* — or **Off** — *Kept, but New batch
   does not offer it.* It writes the file at once, and leaves the groups being edited as they are. The
   only rule that is on cannot be switched off, so New batch always has one
   ([D-RULES-5](../decisions/rules.md)); its switch is greyed with that reason as its tooltip.

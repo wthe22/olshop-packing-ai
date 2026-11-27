@@ -11,7 +11,7 @@
 | `day_open(date)` | Open a date: the open-time checks ([save](../data/save.md#when-a-date-opens)) | Its batches, groups, Sent times and printed ticks, reprints, findings; or the damage message |
 | `check_files(paths)` | SHA-256 and page count of each chosen file; *used in batch n*; one file chosen twice is listed once | The file list |
 | `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, the senders and files to ask an account for, repeats, the plan; or the stop |
-| `sort_rules()` | New batch's **Sort rule**: the rules that are on, and the one to preselect ([New batch](../ui/new-batch.md#the-sort-rule)) | The names, the preselected one, the rule used last |
+| `sort_rules()` | The Plan screen's **Sort rule**: the rules that are on, and the one to preselect ([Plan](../ui/plan.md#the-sort-rule)) | The names, the preselected one, the rule used last |
 | `cancel_read()` | Stop reading | — |
 | `name_logo(hash, answer)` | The logo prompt's answer: a courier, *Not a courier*, *I don't know* ([New batch](../ui/new-batch.md#the-logo-prompt)) | The recount |
 | `answer_shop(answer)` | The shop prompt's answer: a sender's account or a new account, written into `config.toml`; or the account of a file's labels with no sender, for this read ([New batch](../ui/new-batch.md#the-shop-prompt)) | What is still to ask, or the recount |

@@ -9,11 +9,12 @@ column. Sketches show the English texts and made-up names, IDs and counts.
 |---|---|
 | [Panel](panel.md) | The side panel: the dates of every account |
 | [Day](day.md) | The start screen: the batches of the open date, printed ticks, revert, amend, restore, the day's reprints, the day summary |
-| [New batch](new-batch.md) | Choosing the label files and the sort rule, reading them, the logo and shop prompts |
+| [New batch](new-batch.md) | Choosing the label files, reading them with the stops under their file, the logo and shop prompts |
 | [Repeated orders](duplicates.md) | The orders that appear more than once in a batch, grouped, and the copy that stays |
-| [Plan](plan.md) | The label groups, the per-batch changes and Save |
+| [Plan](plan.md) | The sort rule, the label groups, the per-batch changes (*Custom*) and Save |
 | [Messages](messages.md) | Every stop message and warning, and what to do |
 | [Sort rules](sort-rules.md) | The boxes editor for the sort rules of `config.toml` |
+| [Summary](summary.md) | A batch's or the open date's summary in the app, without a PDF |
 | [Search](search.md) | Finding saved orders, their trace, and **Reprint** |
 | [Accounts](accounts.md) | One account at a time: its shops, its orders per date, rename and delete |
 | [Settings](settings.md) | The theme, the data folder and *About* |
@@ -23,7 +24,7 @@ column. Sketches show the English texts and made-up names, IDs and counts.
 
 ```
  Day ──[New batch]──► New batch ──[Read labels]──► (reading…) ──► Plan ──[Save batch]──► (writing, verifying)
-  ▲                    choose files, sort rule                    adjust groups                 │
+  ▲                    choose files                    sort rule, adjust groups                 │
   └──────────────────────────────── back to the Day screen, new batch shown ◄───────────────────┘
  From the Day screen: [Open] a file to print it · the printed tick · [Amend] / [Revert] the newest batch ·
  [Search] (and Reprint) · [Accounts] · [Sort rules] · [Settings] · the panel: another date

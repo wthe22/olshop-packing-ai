@@ -20,7 +20,7 @@ Account {
 
 LabelSortRule {
   name: String // unique
-  enabled: bool // default true; false: kept, not offered on New batch; at least one rule is on
+  enabled: bool // default true; false: kept, not offered on the Plan screen; at least one rule is on
   label_groups: List<LabelGroupRule>
 }
 
@@ -79,10 +79,10 @@ name = "Lainnya"
   filter's double quotes need no escaping.
 - The bundled copy holds no rule. A config with none stands in with the built-in rule `default`: one group
   `Z Lainnya`, no filter, for every order. It is written into the file when the owner first edits the rules.
-- **Which rule a batch uses** is chosen on [New batch](../ui/new-batch.md#the-sort-rule) among the rules
+- **Which rule a batch uses** is chosen on the [Plan](../ui/plan.md#the-sort-rule) screen among the rules
   that are on; the rule of the data folder's newest batch, on whichever date, is preselected
-  ([D-RULES-1](../decisions/rules.md)).
-- **A rule that is off** (`enabled = false`) is kept with its groups and is not offered on New batch; an
+  ([D-RULES-7](../decisions/rules.md)).
+- **A rule that is off** (`enabled = false`) is kept with its groups and is not offered on the Plan screen; an
   amend of a batch saved with it still uses it. The Sort rules screen switches it; on is written as no key
   ([D-RULES-5](../decisions/rules.md)).
 - **A saved batch keeps a snapshot** of its rule in its `day.toml`, so its outputs stay traceable

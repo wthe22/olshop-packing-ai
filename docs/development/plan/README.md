@@ -16,6 +16,13 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   courier clue). A new session
   takes the first task left in journal-removal.md (J1). No build until J6.
 
+- **Then — the batch screens, [batch-screens.md](batch-screens.md) U1 to U5**, after the journal removal. The
+  owner's findings (2026-11-27): no examples in boxes, reading stays on New batch with each stop under its
+  file, the sort rule chosen on the Plan screen with *Custom* for a plan changed for one batch, **Add Group**,
+  and a Summary screen read in the app ([D-UI-17 to D-UI-19](../../software-design/decisions/ui-screens.md),
+  [D-RULES-7](../../software-design/decisions/rules.md)). Open for the owner: archive mode,
+  [Q-APP-27](../../software-design/questions/app.md); answers go under the question.
+
 - **Handoff of 2026-11-27 (latest) — v0.8.0-alpha.11: Update lists its moves and copies what it changes.**
   The owner's rule ([D-APP-36](../../software-design/decisions/versions.md)): a file only moved or renamed is
   not backed up, the move is written down so a script can undo it; a file whose content changes is copied.

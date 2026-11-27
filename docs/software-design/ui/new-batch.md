@@ -1,11 +1,11 @@
 # New batch
 
-Choose the label files of this batch and the sort rule it uses, then read them.
+Choose the label files of this batch, then read them. The sort rule is chosen on the [Plan](plan.md#the-sort-rule) screen.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │  Wed, 7 Oct 2026 (today)                                                               │
-│  New batch 3   Sort rule: [default ▾]                                   [Cancel]       │
+│  New batch 3                                                            [Cancel]       │
 │  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐       │
 │     Drop label PDFs here, or  [Add files]                                              │
 │  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘       │
@@ -34,22 +34,11 @@ Choose the label files of this batch and the sort rule it uses, then read them.
   repeat. **Cancel** leaves the batch and returns to the Day screen; **Back** on the Plan screen returns here
   with the files still listed, and **Read labels** reads them again from the start (plan changes are lost).
 
-## The sort rule
-
-**Sort rule** lists the rules of `config.toml` that are on ([rules file](../rules-file/README.md);
-a rule switched off on the Sort rules screen is not listed, [D-RULES-5](../decisions/rules.md)). The rule
-of the data folder's newest batch is preselected, on whichever date it was saved, so an owner who always
-uses one rule never touches it, and a new day starts on the rule used last. **Back** from the Plan screen
-keeps the rule just read. A rule that is off, or gone, is never preselected: the first rule that is on
-is ([D-RULES-1](../decisions/rules.md)). `day.toml` keeps a snapshot of the rule it was saved with.
-
 ## The amend's file list
 
 **Back** on an amend's Plan screen opens this page, titled *Redo batch 2*, so the batch's files can change:
 
 - The batch's own inputs are listed first, from the date folder, in `day.toml`'s order, then what the owner added.
-- The sort rule is shown, not chosen: *Sort rule: default (as now)*, or *default (as saved)* when no rule
-  has that name any more ([D-RULES-2](../decisions/rules.md)).
 - **Add files** and a drop add any PDF on the PC; **×** takes a file off, and its orders stay unsaved for a
   later batch ([D-APP-19](../decisions/app-features.md)).
 - **Read labels** reads the list as an amend and opens the Plan screen again. **Cancel** returns to the Day
@@ -57,13 +46,28 @@ is ([D-RULES-1](../decisions/rules.md)). `day.toml` keeps a snapshot of the rule
 
 ## Reading
 
+The screen stays as it is while the labels are read ([D-UI-18](../decisions/ui-screens.md)): the drop
+area and the file list stay in place, and the progress bar stands under the list.
+
 ```
-│  Reading labels …  page 143 of 257 (file 1 of 2)                                       │
+│  1  10-07_11-02-10_Shipping label+Packing slip_1.pdf 200 pages downloaded 11:02    [×] │
+│  2  10-07_11-02-21_Shipping label+Packing slip_2.pdf  57 pages downloaded 11:02    [×] │
+│  Reading labels: page 143 of 257 (file 1 of 2)                                         │
 │  ███████████████████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░         [Cancel]    │
 ```
 
-**Cancel** stops reading and returns to the file list; nothing is written. A batch that cannot be used ends
-in a stop message ([Messages](messages.md)) with **Back**.
+**Cancel** stops reading; nothing is written. A stop ([Messages](messages.md)) ends the reading: the bar
+goes, and the message stands under the file it is about, whose row is marked red; a stop about no one file
+(every order saved already) stands under the list. The files stay listed, so one can be taken off or added
+and **Read labels** pressed again.
+
+```
+│  1  10-07_11-02-10_Shipping label+Packing slip_1.pdf 200 pages downloaded 11:02    [×] │
+│  2▌ labels (3).pdf                                     41 pages downloaded 09:05    [×] │
+│   ▌ These labels have no packing slip: pages 1 to 41 are plain shipping labels.        │
+│   ▌ Download them again with Shipping label + Packing slip.                            │
+│  Selected: 2 files · 241 pages                                         [ Read labels ] │
+```
 
 ## The logo prompt
 

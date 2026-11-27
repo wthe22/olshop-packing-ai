@@ -1,7 +1,7 @@
 # Day summary (A4)
 
-One file for the whole open date, of all accounts or of one, made on request: **Day summary** on the
-[Day screen](../ui/day.md) writes `{date}/Day Summary.pdf` (all accounts) or `{date}/Day Summary -
+One file for the whole open date, of all accounts or of one, made on request: **PDF** on the date's
+[Summary](../ui/summary.md) screen writes `{date}/Day Summary.pdf` (all accounts) or `{date}/Day Summary -
 {account}.pdf` from the date's files and opens it in the PC's default PDF viewer. It says what the files said ([files](../data/files.md#the-summaries-made-on-request)): written again
 on every request, never read for a decision, not checked by the verifier. It holds the
 batches as their Day cards show them, the couriers, the inputs, the day's picks and the day's order

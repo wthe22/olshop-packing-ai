@@ -2,18 +2,21 @@
 
 Where a record names a former question (`Q-…`), the owner accepted its default.
 
-## D-RULES-1 — A batch chooses its sort rule; the rule used last is preselected
+## D-RULES-7 — The sort rule is chosen after reading; a plan changed for one batch is *Custom*
 
-**Decision.** The sort rule is chosen per batch on New batch, before **Read labels**; the rule of the
-data folder's newest batch is preselected, on whichever date it was saved, so a new day starts on the rule
-used last (Q-RULES-1 (a), R-RULES-5). While a batch is being prepared, its own rule is preselected, so
-the Plan screen's **Back** keeps the rule just read. A rule that is off is never preselected (D-RULES-5).
-The rules live in `config.toml` (D-APP-30), which answers Q-RULES-1 (b).
+**Decision.** The sort rule is chosen on the Plan screen, after the labels are read; choosing another one
+builds the plan again. The rule of the data folder's newest batch is preselected, on whichever date it was
+saved; a rule that is off is never preselected (D-RULES-5). A tick, a move or **Add Group** on the Plan
+screen makes the plan *Custom (from <rule>)*: it never changes `config.toml`, and the batch is saved with its
+groups as they are under the name *Custom*, which no rule may take. A *Custom* batch preselects the rule it
+came from. It replaces D-RULES-1 (chosen on New batch, before reading) and the Plan screen's *Also add to the
+sort rule*.
 
-**Why.** An owner who always uses one rule never touches the control, and nothing new is stored to remember
-the last choice: the newest batch of the data folder already says it.
+**Why.** The owner's words (2026-11-27): a rule chosen before reading cannot be changed once the counts show,
+which makes no sense; a group changed for one batch must not edit the rule. Nothing new is stored to remember
+the last choice: the newest batch already says it.
 
-**Applies to.** [New batch › The sort rule](../ui/new-batch.md#the-sort-rule), [rules file](../rules-file/README.md#sort-rules).
+**Applies to.** [Plan › The sort rule](../ui/plan.md#the-sort-rule), [Sort rules](../ui/sort-rules.md).
 
 ## D-RULES-2 — A sort rule can be renamed; a saved batch keeps its snapshot
 
@@ -54,15 +57,15 @@ that name. The names are what the owner sees everywhere; the code stays the one 
 ## D-RULES-5 — A sort rule can be switched off
 
 **Decision.** A sort rule is **on** or **off** (R-RULES-6): `enabled = false` in `config.toml`,
-no key when on. New batch offers only the rules that are on; a rule that is off keeps its groups, can be
+no key when on. The Plan screen offers only the rules that are on; a rule that is off keeps its groups, can be
 edited, renamed and deleted, and an amend of a batch saved with it still reads with it. At least one rule
 is on: the only one cannot be switched off or deleted, and a file with every rule off fails its check.
 
-**Why.** The owner asked for it: a rule not in use leaves the New batch list without being deleted, so it
+**Why.** The owner asked for it: a rule not in use leaves the list of rules offered without being deleted, so it
 can be switched on again as it was, and an old batch saved with it can still be amended.
 
 **Applies to.** [rules file](../rules-file/README.md#sort-rules), [Sort rules](../ui/sort-rules.md),
-[New batch › The sort rule](../ui/new-batch.md#the-sort-rule).
+[Plan › The sort rule](../ui/plan.md#the-sort-rule).
 
 ## D-RULES-6 — Account and shop are fields of the filter language
 

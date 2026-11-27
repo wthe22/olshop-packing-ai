@@ -53,7 +53,7 @@ run through a date. A date folder has no subfolder but `.partial/` ([D-APP-32](.
 | `day.toml`, `orders.csv`, `order-contents.toml` | **Truth** | Whole, at every commit ([save](save.md)) | Every decision, the screens, the owner and other programs |
 | `{batch} Input {pdf} {short hash}.pdf` | Inputs | At save, before the commit | Reading, amend, reprint, restore, the verifier |
 | The group PDFs, `{batch} Summary.pdf`, `Reprint {n} x{count}.pdf` | Outputs | Written into `.partial/`, verified, moved in after the commit | Printing |
-| The summaries made on request | Outputs | **Day summary** and a batch card's account buttons | Reading and printing |
+| The summaries made on request | Outputs | **PDF** on the Summary screen | Reading and printing |
 | `parser.toml` | The owner's parser rules | The owner, the logo prompt | Reading labels; a saved batch keeps what it used |
 | `config.toml` | The accounts and the sort rules | The owner, the Sort rules screen, the Accounts screen, the shop prompt | Planning, and an order's account when it is shown ([accounts](../app/accounts.md#the-account-of-an-order)); a saved batch keeps its own copy of the rule it used |
 | `packing-app.toml` (beside the program) | Preferences | First start, Settings | Finding the data folder; the theme |
