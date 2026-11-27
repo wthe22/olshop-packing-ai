@@ -1,8 +1,8 @@
 # Archive
 
 One page for keeping old dates small ([archive](../app/archive.md), [D-APP-43](../decisions/date-files.md)).
-It is opened by **Archive** in the top bar, between **Sort rules** and **Settings**; it archives dates and
-nothing else. Archiving old dates on its own is a setting ([Settings](settings.md)); nothing about storage
+It is opened by **Archive** beside *Dates* at the head of the panel ([panel](panel.md)); it archives dates
+and nothing else. Archiving old dates on its own is a setting ([Settings](settings.md)); nothing about storage
 shows on the daily screens.
 
 ```

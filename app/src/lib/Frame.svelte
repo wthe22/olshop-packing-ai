@@ -26,7 +26,6 @@
     { id: "search", label: texts.nav.search, icon: "search" },
     { id: "accounts", label: texts.nav.accounts, icon: "accounts" },
     { id: "sort-rules", label: texts.nav.sortRules, icon: "rules" },
-    { id: "archive", label: texts.nav.archive, icon: "archive" },
     { id: "settings", label: texts.nav.settings, icon: "settings" },
   ];
 </script>

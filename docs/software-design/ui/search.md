@@ -71,23 +71,24 @@ Where the results are 72 rem wide or more, the label column also holds the group
   with **Select all** as the tick at their left) and one **card** per order under them
   ([D-UI-16](../decisions/ui.md), R-UI-58). The card's **head** is one row on the heads' columns, each as
   wide as its longest entry: its tick; its **shop** in grey (*No account* in grey italics when the
-  label printed no sender; a long name ends with dots, whole in its tooltip) and its **Order ID** in bold;
+  label printed no sender; a name longer than 16 rem ends with dots, whole in its tooltip) and its **Order ID** in bold;
   its courier's name as a pill (*Unknown* when the label named none) and the **tracking ID** (*no tracking
   ID* when the label printed none); the date and time its batch was saved (*Wed, 7 Oct 09:12*); the batch
   and the group's code as a chip (*Batch 2* `2-B`), then, where the results are 72 rem wide or more, the
   group's name (from the batch's sort rule, without the count its PDF's name carries) and the **page** the
   order is on in the group PDF (*page 14*, *pages 14–15* for a label with a second page), so the printed
   label is found in its stack; a long group name ends with dots before the page does. At the right the
-  *Reprinted* mark and **Open**. Under a line, the **items** as a table without heads, one line each: the
-  quantity, the name (it wraps and takes the room left), the variation and the **Seller SKU** in monospace,
-  these two at fixed widths so they line up from card to card. When the order has several lines, or a Qty
-  Total its one line does not add up to, the slip's **Qty Total** stands at their foot under the
-  quantities, after a short stroke. **Open** opens the order's group PDF, written again first when it is not
+  *Reprinted* mark, **Open** and the details' chevron. Under a line, the **items** as a table without heads,
+  one line each, all in one size on one baseline: the quantity (*×2*, grey), the name (it wraps and takes the
+  room left), the variation in grey and the **Seller SKU** as a quiet monospace chip, these two at fixed
+  widths so they line up from card to card. When the order has several lines, or a Qty Total its one line
+  does not add up to, the slip's **Qty Total** stands at their foot under the quantities. No line or gap
+  follows the items. **Open** opens the order's group PDF, written again first when it is not
   there any more (as on the [Day](day.md) screen).
 - **An order of an archived date** ([archive](../app/archive.md)) has no tick and no **Open**; its card
   carries *archived* in grey after the date, and **Select all** passes it over.
-- **Details**: a click on the card (not on its tick or **Open**), or on the bar under its items (a line with
-  a chevron at its end), opens the card's details under the bar, one line per head; a click there again
+- **Details**: a click on the card (not on its tick or **Open**), or on the chevron, opens the card's details
+  under its items, one line per head; a click there again
   closes them, and a click inside the open details changes nothing, so their text can be selected. The
   lines: *ADDRESS* (the receiver's province, city and district as the label prints them); *SHIP BY*;
   *WEIGHT* (`1,250 g`); *ACCOUNT* when the shop has another

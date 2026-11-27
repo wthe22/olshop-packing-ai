@@ -54,7 +54,7 @@ The app is in English. Every screen text is in one file, so another language can
 
 An old date needs its orders and summaries, not its PDFs. Archiving a date deletes every PDF of it: the label
 downloads, the group PDFs, the summary PDFs, the reprints and the summaries made on request. It is done on the
-Archive page: **Archive** in the title bar. `Esc` closes it. Archiving on its own is a setting (above).
+Archive page: **Archive** beside *Dates* at the top of the panel. `Esc` closes it. Archiving on its own is a setting (above).
 
 - **Dates** — every date, newest first, by month, with its orders and its size; the data folder's size
   stands at the right (*3.2 GB in all*), and an archived date says *Archived*. A date that can be archived has

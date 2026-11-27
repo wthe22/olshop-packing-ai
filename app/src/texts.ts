@@ -29,7 +29,6 @@ export const texts = {
     search: "Search",
     accounts: "Accounts",
     sortRules: "Sort rules",
-    archive: "Archive",
     settings: "Settings",
     // Closes a screen opened over the current one.
     close: "Close",

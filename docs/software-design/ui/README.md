@@ -51,7 +51,7 @@ A normal batch: **New batch** → **Add files** → **Read labels** → (the pla
   from the one place ([Settings › The version](settings.md#the-version)).
 - **The open date** is the [Day](day.md) screen's title: it says where everything is saved. Changing the
   date while a draft is open asks first ("Discard the batch being prepared?").
-- **Search**, **Accounts**, **Sort rules**, **Archive** and **Settings** open over the current screen; the **×**, a click beside it or
+- **Search**, **Accounts**, **Sort rules** and **Settings** open over the current screen; the **×**, a click beside it or
   `Esc` returns to it (an open draft is kept and recounted). In a window under 56 rem (a window well under
   full width) the four show their icons only, their names as tooltips.
 - The theme (**Light**, **Dark** or **System**) is chosen in [Settings](settings.md) ([D-UI-8](../decisions/ui.md)).

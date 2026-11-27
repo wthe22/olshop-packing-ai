@@ -38,12 +38,12 @@
   /* Under the bar, from the shop's column to the card's end: the heads in a column of their own. */
   .details {
     display: grid;
-    grid-row: 4;
+    grid-row: 3;
     grid-column: 2 / -1;
     grid-template-columns: max-content minmax(0, 1fr);
     align-items: center;
     gap: 0.3rem 1.1rem;
-    margin: 0.2rem 0 0.45rem;
+    margin: 0.5rem 0 0;
     font-size: 0.88rem;
     cursor: auto;
   }

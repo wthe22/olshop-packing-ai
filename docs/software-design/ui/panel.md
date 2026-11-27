@@ -8,7 +8,7 @@ or hides it.
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │ [▯] ◈ Packing v0.7                            Search  Accounts  Sort rules  Settings    │
 ├──────────────────────────┬─────────────────────────────────────────────────────────────┤
-│ DATES                    │  Wed, 21 Oct 2026 (today) (2 batches) (729 orders)          │
+│ DATES        [Archive]   │  Wed, 21 Oct 2026 (today) (2 batches) (729 orders)          │
 │ ▾ October 2026           │                                         [ + New batch ]     │
 │ ▌ Wed, 21 Oct · today 729│  ┌ Batch 2  saved 09:12 · 129 orders ── [Amend] ┐           │
 │   Tue, 20 Oct        530 │  │  2-A  Sepatu         88 orders  [✓] [Open]   │           │
@@ -20,6 +20,7 @@ or hides it.
 
 ## The panel
 
+- **Archive** beside the *Dates* head opens the [Archive](archive.md) page.
 - **Dates** of the data folder, newest first (*Wed, 21 Oct*), each with its number of orders of every
   account, from the search index. Today is always listed, with *· today*, even before it has a folder. The
   open date is marked ▌ and shaded. One account's orders per date are on the [Accounts](accounts.md) screen.

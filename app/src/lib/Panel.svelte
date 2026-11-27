@@ -16,12 +16,14 @@
     today,
     onOpenDate,
     onOpenFolder,
+    onOpenArchive,
   }: {
     panel: PanelView;
     day: string;
     today: string;
     onOpenDate: (date: string) => void;
     onOpenFolder: (path: string) => void;
+    onOpenArchive: () => void;
   } = $props();
 
   const list = $derived(months(panel.dates, day, today));
@@ -47,7 +49,10 @@
 </script>
 
 <aside>
-  <h2>{texts.panel.dates}</h2>
+  <div class="head">
+    <h2>{texts.panel.dates}</h2>
+    <button class="ghost archive" onclick={onOpenArchive}><Icon name="archive" size={14} />{texts.archive.title}</button>
+  </div>
   <ul class="months">
     {#each list as month (month.key)}
       {@const open = folds.isOpen(month)}
@@ -117,8 +122,20 @@
     padding: 0.9rem 0.6rem;
   }
 
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 0.4rem;
+  }
+
+  button.archive {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
   h2 {
-    margin: 0 0.2rem 0.4rem;
+    margin: 0 0.2rem;
     color: var(--text-faint);
     font-size: 0.75rem;
     font-weight: 600;
