@@ -5,7 +5,7 @@ app, then print.
 
 ## The window
 
-The title bar has the panel button at the left, the program and its version (**Packing v0.8.0-alpha.12**), and at
+The title bar has the panel button at the left, the program and its version (**Packing v0.8.0-beta.1**), and at
 the right **Search** ([finding a saved order](05-search.md)), **Accounts** ([Accounts](03-changes.md#accounts)),
 **Sort rules** and **Settings**. `Esc` closes each of them.
 
@@ -31,18 +31,18 @@ The **Day** screen shows what has been saved on the open date and is the way to 
 - **+ New batch** starts a new batch, saved into the open date. On another date than today it is grey and
   asks first: "Add a batch to Wed, 7 Oct 2026? It is not today: today is Mon, 23 Nov 2026." Click
   **Add** only when the batch belongs to that date.
-- **Day summary** writes one PDF of the whole date and opens it: each batch as its card shows it; the
-  orders per courier (the count to hand over at each pickup); each batch's label files with their pages;
-  the pick list of the whole day; last, every order content of the day with its orders, the most orders
-  first. It is written again each time you press it, so press it after the last batch of the day. When the
-  date holds more than one account it is a menu: **All accounts**, then each account for that account's
-  orders alone. A day summary still open in a PDF viewer may have to be closed first.
+- **Day summary** shows the summary of the whole date in the app, no PDF written: each batch as its card
+  shows it; the orders per courier (the count to hand over at each pickup); each batch's label files with
+  their pages; the pick list of the whole day; last, every order content of the day with its orders, the
+  most orders first. When the date holds more than one account, the list beside the title shows **All
+  accounts** or one account's orders alone. **PDF** writes that summary as a PDF and opens it; **Back**
+  returns to the day. A day summary still open in a PDF viewer may have to be closed first.
 - Each batch is a card: "Batch 2", "saved 09:12 · 2 files · 129 orders · 2 accounts" (how many accounts
   the batch's orders are of), one line per group PDF (`2-A`, its name,
-  "88 orders", "3 contents") with **Print** and **Open**, and a line for the batch's summary PDF with
-  **Open** (a summary PDF is opened and printed from the PDF viewer, so it has no **Print**). In a batch
-  with several accounts **Summary PDF** is a menu: **All accounts** opens the batch's summary PDF, **Toko
-  Alfa** writes the summary of that account's orders in the batch and opens it.
+  "88 orders", "3 contents") with **Print** and **Open**, and **Summary**, which shows the batch's summary in
+  the app the same way: its facts, each group with its order contents, the picks. There **PDF** opens the
+  batch's summary PDF (print it from the PDF viewer), or, with one account chosen, writes the summary of
+  that account's orders in the batch and opens it.
 - **Reprints**, under the batches, lists each reprint made on the date: `R1`, when it was made, its
   orders and pages, **Open**, and **Orders ▸** for the orders in it.
 - The tick beside **Open** notes that you have printed that group PDF. It is only a note — nothing is

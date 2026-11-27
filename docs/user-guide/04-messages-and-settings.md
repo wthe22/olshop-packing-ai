@@ -42,7 +42,7 @@ Open **Settings** in the title bar. Each row is a setting at the left and its co
   dates are archived at each start, after the question to update the data folder. Turning it on, or a lower
   number, asks first when it would archive a date at once ([Archiving old dates](#archiving-old-dates)).
 - The accounts and their shops are on the **Accounts** screen ([Accounts](03-changes.md#accounts)), not here.
-- **About** — what the program does, its version (**v0.8.0-alpha.12**), the time it was built, the PDFium version
+- **About** — what the program does, its version (**v0.8.0-beta.1**), the time it was built, the PDFium version
   and the journal's schema version.
 
 There are no other settings but the Archive page's: the sort rule you used last is preselected, the summary PDF is

@@ -38,8 +38,8 @@ Nothing the owner did not approve (AGENTS.md).
 
 ## U4 — The Summary screen
 
-- [Summary](../../software-design/ui/summary.md): a batch's or the date's summary from the three files, the
-  account list, **PDF**, **Back**; **Summary** and **Day summary** on the Day screen open it.
+- The Summary screen reads the three files once J1 makes them the truth (it reads the journal's fold now,
+  as the summary PDFs do).
 - A group row's **▸** on the Day screen lists its order contents.
 - Tests: the screen's counts and rows equal the summary PDF's for the known-answer fixtures; it opens in
   read-only mode and on a date whose PDFs are deleted.

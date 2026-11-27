@@ -76,8 +76,8 @@ pub(crate) struct GroupSection {
 
 /// One order content of a group: its number in the group (`A-1`), its items as
 /// `display name ×quantity`, and its orders.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct ContentRow {
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+pub struct ContentRow {
     pub number: String,
     pub items: Vec<String>,
     pub orders: usize,

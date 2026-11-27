@@ -4,6 +4,7 @@
 
 pub mod edited;
 mod journal;
+pub mod summary;
 mod view;
 
 use std::path::PathBuf;

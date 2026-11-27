@@ -1,8 +1,8 @@
 <script lang="ts">
   // The Day screen: what has been saved on the date. Batches come from the date's journal, each
   // with its warnings and each group PDF with its *Sent* mark and **Printed** tick (notes), then the
-  // date's reprints; *New batch* starts the batch flow and *Day summary* writes the date's summary
-  // PDF.
+  // date's reprints; *New batch* starts the batch flow; *Day summary* and a batch's *Summary* open the
+  // Summary screen.
   import { texts } from "../texts";
   import { formatShortDay } from "../dates";
   import type {
@@ -16,9 +16,7 @@
   import GroupPdfRow from "./GroupPdfRow.svelte";
   import OutputButtons from "./OutputButtons.svelte";
   import ReprintsCard from "./ReprintsCard.svelte";
-  import SummaryMenu from "./SummaryMenu.svelte";
   import DayTitle from "./DayTitle.svelte";
-  import { accountsOf } from "./dayAccounts";
   import { access } from "./readOnly.svelte";
   import { updateTexts } from "../updateTexts";
   import EditedViews from "./EditedViews.svelte";
@@ -30,7 +28,6 @@
     dataFolder,
     saved,
     reading,
-    writing,
     onOpen,
     onOpenOutput,
     onPrint,
@@ -38,8 +35,7 @@
     onUnsend,
     onSetPrinted,
     onNewBatch,
-    onDaySummary,
-    onAccountSummary,
+    onSummary,
     onAmend,
     onRevert,
     onRestore,
@@ -55,8 +51,6 @@
     // *Amend*'s read of the batch's own files (`read-progress`): its page progress is shown until
     // the Plan screen opens; `null` when nothing reads.
     reading: { page: number; pages: number } | null;
-    // A write the owner waits for runs (its dialog is the shell's): *Day summary* waits.
-    writing: boolean;
     // A reprint's file.
     onOpen: (path: string) => void;
     // A group PDF or summary PDF of the date, by its file name: one that is not there any more is
@@ -72,10 +66,8 @@
     // printed; it is written to the date's journal the moment it is clicked.
     onSetPrinted: (batch: BatchView, pdf: GroupPdfView, printed: boolean) => void;
     onNewBatch: () => void;
-    // `null`: the summary of every account.
-    onDaySummary: (account: string | null) => void;
-    // One account's summary of a batch, written and opened.
-    onAccountSummary: (batch: BatchView, account: string) => void;
+    // The Summary screen of a batch, or of the date when `null`.
+    onSummary: (batch: number | null) => void;
     onAmend: (batch: BatchView) => void;
     onRevert: (batch: BatchView) => void;
     // **Restore** an output the open-time check found changed.
@@ -112,14 +104,10 @@
         {/each}
       {/if}
     </span>
+    <button disabled={!overview || overview.batches.length === 0} onclick={() => onSummary(null)}
+      >{texts.day.daySummary}</button
+    >
     {#if !access.dateLocked}
-      <SummaryMenu
-        label={texts.day.daySummary}
-        title={texts.day.daySummaryTitle}
-        accounts={accountsOf(overview?.batches ?? [])}
-        disabled={writing || !overview || overview.batches.length === 0}
-        onWrite={onDaySummary}
-      />
       <!-- On a date that is not today the button is muted, and the shell asks before the batch. -->
       {#if !access.archived}
         <button
@@ -203,18 +191,8 @@
         {/each}
         <div class="batch-foot">
           <span class="packing">
-            {#if batch.accounts.length > 1 && batch.summary_problem !== "changed" && !access.dateLocked}
-              <SummaryMenu
-                label={texts.day.summaryPdf}
-                title={texts.day.summaryPdfTitle}
-                accounts={batch.accounts.map(({ account }) => account)}
-                disabled={writing}
-                everyAccount={!access.archived}
-                onWrite={(account) =>
-                  account === null ? onOpenOutput(batch.summary) : onAccountSummary(batch, account)}
-              />
-            {:else if !access.archived}
-              {texts.day.summaryPdf}
+            <button onclick={() => onSummary(batch.batch)}>{texts.day.summary}</button>
+            {#if batch.summary_problem === "changed"}
               <OutputButtons
                 file={batch.summary}
                 problem={batch.summary_problem}
@@ -399,7 +377,7 @@
     box-shadow: var(--shadow);
   }
 
-  /* Not `overflow: hidden` on the card: the Summary PDF menu opens below the card's foot. */
+  /* The card's head, rounded at the top. */
   .batch-head {
     display: flex;
     flex-wrap: wrap;

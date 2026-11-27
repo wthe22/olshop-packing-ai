@@ -4,6 +4,8 @@
 //! it, so the numbers of a page stand under each other. A section that breaks to a new page repeats
 //! its bar there.
 
+use serde::Serialize;
+
 use crate::page::fonts::Font;
 use crate::page::measure::Measure;
 use crate::page::{BAR_H, BODY_TOP, BOTTOM, Builder, CELL_MARGIN, Cell, MARGIN};
@@ -32,8 +34,8 @@ const GAP_ABOVE_BAR: f32 = 1.0;
 const GAP_BELOW_BAR: f32 = 1.0;
 
 /// A number and the word it counts: `1 order`, `3 orders`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct Count {
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub struct Count {
     pub n: usize,
     pub one: &'static str,
     pub many: &'static str,
@@ -47,8 +49,8 @@ impl Count {
 
 /// One ruled row: its key, its text (wrapped at spaces), a count per column and a tail at the
 /// right edge.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Row {
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct Row {
     pub key: Option<String>,
     pub text: String,
     pub bold: bool,
@@ -97,8 +99,8 @@ impl Row {
 }
 
 /// A heading bar, its counts at the right, and its rows.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Section {
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct Section {
     pub heading: String,
     pub right: Option<String>,
     pub rows: Vec<Row>,

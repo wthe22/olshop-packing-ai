@@ -96,10 +96,8 @@ export const texts = {
     // apart from another's.
     printedLabel: (file: string) => `Printed ${file}`,
     openFolder: "Open folder",
-    summaryPdf: "Summary PDF",
-    // A batch's summary PDF with several accounts is a menu: *All accounts* opens the batch's file,
-    // an account writes that account's summary of the batch and opens it.
-    summaryPdfTitle: "Open the batch's summary PDF, or write one account's",
+    // A batch's *Summary* and *Day summary* open the Summary screen.
+    summary: "Summary",
     // The words of a card's counts, each count in a column of its own after its number: a group
     // PDF's orders and their order contents ("88 orders  3 contents"), a reprint's orders and pages.
     orderWord: (n: number) => (n === 1 ? "order" : "orders"),
@@ -145,10 +143,7 @@ export const texts = {
     reprintOrders: "Orders",
     // An order of a reprint whose batch was reverted since: only the record's facts are left.
     savedIn: (day: string, batch: number) => `saved ${day} in batch ${batch}`,
-    // *Day summary*: the day summary PDF of the open date, written and opened.
     daySummary: "Day summary",
-    daySummaryTitle: "Write the summary of the whole day as a PDF and open it",
-    allAccounts: "All accounts",
     writingAccountSummary: (account: string) => `Writing the summary of ${account}`,
     // The dialog while a file is written that the owner waits for: the day summary, or an output
     // that *Open* found missing.
@@ -238,6 +233,17 @@ export const texts = {
   // Plan screen. The buttons are the courier names, then *Not a courier*, *I don't know* and
   // *Skip all*; Esc skips only the one logo shown.
   // The shop prompt: an account for each sender no account lists, and for the labels with no sender.
+  // The Summary screen: a batch's or the date's summary as its PDF shows it, read in the app.
+  summary: {
+    batch: (n: number) => `Summary · Batch ${n}`,
+    day: "Day summary",
+    allAccounts: "All accounts",
+    account: "Account",
+    pdf: "PDF",
+    pdfTitle: "Write this summary as a PDF and open it",
+    back: "Back",
+    loading: "Reading the summary",
+  },
   shops: {
     title: "Which account are these orders for?",
     intro: "A shop is remembered with its account.",

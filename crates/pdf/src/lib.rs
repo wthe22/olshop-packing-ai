@@ -20,6 +20,7 @@ pub mod logo;
 mod page;
 pub mod read;
 pub mod summary_pdf;
+pub mod summary_view;
 pub mod worker;
 pub mod write;
 

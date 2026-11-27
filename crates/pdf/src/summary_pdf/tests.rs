@@ -9,6 +9,7 @@ use testkit::{TempDir, batch, sha, vendor_dir};
 use super::content::{ContentRow, Counts, GroupSection, counts, group_sections, picks};
 use super::{SummaryFacts, write_summary};
 use crate::facts::{Row, Section};
+use crate::summary_view::{Part, Pick};
 
 /// Toko Alfa and Toko Beta, each listing its own shop.
 fn accounts() -> Vec<Account> {
@@ -27,7 +28,6 @@ fn facts(record: &BatchSaved, whole: &BatchSaved, app: &str, couriers: &[Courier
         date: date(2026, 10, 7),
         record: whole,
         account: None,
-        printed: "09:12",
         app,
         couriers,
         accounts: &accounts,
@@ -234,11 +234,11 @@ fn written(tag: &str, record: &BatchSaved, check: impl FnOnce(&Pdfium, &std::pat
             date: date(2026, 10, 7),
             record,
             account: None,
-            printed: "09:12",
             app: "0.3.3",
             couriers: &couriers,
             accounts: &accounts(),
         },
+        "09:12",
     )
     .expect("write the summary");
     check(&pdfium, &path);
@@ -295,4 +295,48 @@ fn the_same_item_drawn_twice_is_drawn_alike() {
             times[1]
         );
     });
+}
+
+#[test]
+fn the_parts_are_the_facts_then_each_group_then_the_picks() {
+    let record = record();
+    let accounts = accounts();
+    let couriers = couriers();
+    let view = super::summary_view(&SummaryFacts {
+        date: date(2026, 10, 7),
+        record: &record,
+        account: None,
+        app: "0.3.3",
+        couriers: &couriers,
+        accounts: &accounts,
+    });
+    assert_eq!(view.title, "Summary · All accounts · 2026-10-07 · batch 1");
+    assert_eq!(view.counts, "3 orders · 4 units · 2 groups");
+    let heads: Vec<&str> = view
+        .parts
+        .iter()
+        .map(|part| match part {
+            Part::Facts(section) => section.heading.as_str(),
+            Part::Contents { heading, .. } | Part::Picks { heading, .. } => heading.as_str(),
+        })
+        .collect();
+    assert_eq!(
+        heads[heads.len() - 3..],
+        [
+            "A  Sepatu",
+            "Z  Lainnya",
+            "Pick summary (units to take from stock)"
+        ]
+    );
+    assert!(matches!(&view.parts[0], Part::Facts(section) if section.heading == "Accounts"));
+    let Some(Part::Picks { rows, .. }) = view.parts.last() else {
+        panic!("the picks come last");
+    };
+    assert_eq!(
+        rows[1],
+        Pick {
+            units: 2,
+            item: "Spion Beat".to_string()
+        }
+    );
 }

@@ -245,11 +245,11 @@ fn write_outputs(
                 date,
                 record: &snapshot,
                 account: None,
-                printed: &printed,
                 app: &app,
                 couriers: &couriers,
                 accounts: &accounts,
             },
+            &printed,
         )
     })??;
     record.outputs.push(described(&out, None, pages)?);

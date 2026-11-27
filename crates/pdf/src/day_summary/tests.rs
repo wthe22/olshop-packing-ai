@@ -11,6 +11,7 @@ use super::content::{contents_counts, header_counts, order_contents, picks, sect
 use super::{DayBatch, DayFacts, write_day_summary};
 use crate::facts::Row;
 use crate::summary_pdf::content::ContentRow;
+use crate::summary_view::Part;
 
 fn output(file: &str, group: Option<&str>, pages: u16) -> OutputFile {
     OutputFile {
@@ -71,7 +72,6 @@ fn facts<'a>(
                 time: "07:40".into(),
             },
         ],
-        printed: "17:05",
         couriers,
         account: None,
         accounts: &ACCOUNTS,
@@ -206,7 +206,7 @@ fn the_batches_then_the_picks_then_the_order_contents_from_new_pages() {
     let path = dir.path().join("Day Summary.pdf");
     let (first, second) = records();
     let couriers = couriers();
-    let pages = write_day_summary(&pdfium, &path, &facts(&first, &second, &couriers))
+    let pages = write_day_summary(&pdfium, &path, &facts(&first, &second, &couriers), "17:05")
         .expect("write the day summary");
     assert_eq!(pages, 3);
     let doc = pdfium.load_pdf_from_file(&path, None).expect("open it");
@@ -243,7 +243,7 @@ fn an_accounts_day_summary_counts_its_orders_in_the_batches_that_hold_one() {
         account: Some("Toko Beta"),
         ..facts(&first, &second, &couriers)
     };
-    write_day_summary(&pdfium, &path, &day).expect("write the day summary");
+    write_day_summary(&pdfium, &path, &day, "17:05").expect("write the day summary");
     let doc = pdfium.load_pdf_from_file(&path, None).expect("open it");
     let first_page = doc.pages().get(0).expect("page 1").text().unwrap().all();
     for shown in [
@@ -257,4 +257,27 @@ fn an_accounts_day_summary_counts_its_orders_in_the_batches_that_hold_one() {
     for hidden in ["Batch 1", "Accounts", "Toko Alfa"] {
         assert!(!first_page.contains(hidden), "{hidden}: {first_page}");
     }
+}
+
+#[test]
+fn an_accounts_day_summary_has_its_batches_then_the_picks_then_the_contents() {
+    let (first, mut second) = records();
+    second.orders[2].shop = Some("Toko Beta".into());
+    let couriers = couriers();
+    let view = super::day_summary_view(&DayFacts {
+        account: Some("Toko Beta"),
+        ..facts(&first, &second, &couriers)
+    });
+    assert_eq!(view.title, "Day summary · Toko Beta · 2026-10-07");
+    assert_eq!(view.counts, "1 order · 2 units · 1 batch · 1 group");
+    let kinds: Vec<&str> = view
+        .parts
+        .iter()
+        .map(|part| match part {
+            Part::Facts(_) => "facts",
+            Part::Contents { .. } => "contents",
+            Part::Picks { .. } => "picks",
+        })
+        .collect();
+    assert_eq!(kinds, ["facts", "facts", "facts", "picks", "contents"]);
 }

@@ -433,6 +433,7 @@ pub fn run() {
             commands::day::print_output,
             commands::day::output_pdf,
             commands::day::day_summary,
+            commands::day::summary::summary_view,
             commands::day::account_summary_pdf,
             commands::panel::panel_dates,
             commands::archive::archive_preview,

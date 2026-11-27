@@ -787,3 +787,5 @@ fn a_shop_answer_is_written_into_the_settings_and_gives_the_orders_their_account
     assert!(text.contains("[[accounts]]"), "{text}");
     save(&state);
 }
+
+mod summary;

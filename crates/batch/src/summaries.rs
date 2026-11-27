@@ -12,8 +12,9 @@ use packing_engine::ids::BatchId;
 use packing_engine::record::BatchSaved;
 use packing_engine::workflows::Courier;
 use packing_pdf::PdfError;
-use packing_pdf::day_summary::{DayBatch, DayFacts, write_day_summary};
-use packing_pdf::summary_pdf::{SummaryFacts, write_summary};
+use packing_pdf::day_summary::{DayBatch, DayFacts, day_summary_view, write_day_summary};
+use packing_pdf::summary_pdf::{SummaryFacts, summary_view, write_summary};
+use packing_pdf::summary_view::SummaryView;
 use packing_pdf::worker::PdfWorker;
 use packing_store::{DateFolder, Fold, Journal, StoreError};
 use packing_verify::{AccountSummaryCheck, Findings, verify_account_summary};
@@ -76,14 +77,7 @@ pub fn day_summary(request: &DaySummaryRequest<'_>) -> Result<PathBuf, BatchErro
         accounts,
         account,
     } = *request;
-    let holds = |account: &str| {
-        fold.live
-            .values()
-            .any(|live| holds_account(&live.saved, account, accounts))
-    };
-    if fold.live.is_empty() || account.is_some_and(|account| !holds(account)) {
-        return Err(BatchError::NoBatch);
-    }
+    has_day_summary(fold, accounts, account)?;
     let target = folder.dir().join(day_summary_file(account));
     let partial = partial_of(&target);
     let (fold, out, couriers) = (fold.clone(), partial.clone(), couriers.to_vec());
@@ -91,27 +85,104 @@ pub fn day_summary(request: &DaySummaryRequest<'_>) -> Result<PathBuf, BatchErro
     let account = account.map(str::to_string);
     let printed = now();
     let written = worker.run(move |pdfium| {
-        let facts = DayFacts {
-            date: fold.date,
-            batches: fold
-                .live
-                .values()
-                .rev()
-                .map(|live| DayBatch {
-                    record: &live.saved,
-                    time: live.modify_time.zoned().strftime("%H:%M").to_string(),
-                })
-                .collect(),
-            printed: &printed,
-            couriers: &couriers,
-            account: account.as_deref(),
-            accounts: &accounts,
-        };
-        write_day_summary(pdfium, &out, &facts)
+        let facts = day_facts(&fold, &couriers, &accounts, account.as_deref());
+        write_day_summary(pdfium, &out, &facts, &printed)
     });
     flatten(written, &partial)?;
     replace(&partial, &target)?;
     Ok(target)
+}
+
+/// The date's day summary of all accounts or of `account` as its parts, for the Summary screen:
+/// nothing is written.
+pub fn day_summary_parts(
+    fold: &Fold,
+    couriers: &[Courier],
+    accounts: &[Account],
+    account: Option<&str>,
+) -> Result<SummaryView, BatchError> {
+    has_day_summary(fold, accounts, account)?;
+    Ok(day_summary_view(&day_facts(
+        fold, couriers, accounts, account,
+    )))
+}
+
+/// What a batch's summary is read from: the date's fold, the batch, the account it is of (none:
+/// all accounts), the couriers and accounts of the settings, and the app version it names.
+pub struct BatchSummaryRequest<'a> {
+    pub fold: &'a Fold,
+    pub batch: BatchId,
+    pub account: Option<&'a str>,
+    pub couriers: &'a [Courier],
+    pub accounts: &'a [Account],
+    pub app: &'a str,
+}
+
+/// The live `batch`'s summary of all accounts or of `account` as its parts, for the Summary
+/// screen: nothing is written.
+pub fn batch_summary_parts(request: &BatchSummaryRequest<'_>) -> Result<SummaryView, BatchError> {
+    let BatchSummaryRequest {
+        fold,
+        batch,
+        account,
+        couriers,
+        accounts,
+        app,
+    } = *request;
+    let live = fold.live.get(&batch).ok_or(BatchError::NoBatch)?;
+    if account.is_some_and(|account| !holds_account(&live.saved, account, accounts)) {
+        return Err(BatchError::NoBatch);
+    }
+    Ok(summary_view(&SummaryFacts {
+        date: fold.date,
+        record: &live.saved,
+        account,
+        app,
+        couriers,
+        accounts,
+    }))
+}
+
+/// A day summary needs a live batch, and one holding an order of `account` when it is one
+/// account's.
+fn has_day_summary(
+    fold: &Fold,
+    accounts: &[Account],
+    account: Option<&str>,
+) -> Result<(), BatchError> {
+    let holds = |account: &str| {
+        fold.live
+            .values()
+            .any(|live| holds_account(&live.saved, account, accounts))
+    };
+    match fold.live.is_empty() || account.is_some_and(|account| !holds(account)) {
+        true => Err(BatchError::NoBatch),
+        false => Ok(()),
+    }
+}
+
+/// The date's live batches, newest first, as the day summary takes them.
+fn day_facts<'a>(
+    fold: &'a Fold,
+    couriers: &'a [Courier],
+    accounts: &'a [Account],
+    account: Option<&'a str>,
+) -> DayFacts<'a> {
+    DayFacts {
+        date: fold.date,
+        batches: fold
+            .live
+            .values()
+            .rev()
+            .map(|live| DayBatch {
+                record: &live.saved,
+                time: live.modify_time.zoned().strftime("%H:%M").to_string(),
+            })
+            .collect(),
+        couriers,
+        account,
+        accounts,
+    }
 }
 
 /// What an account's summary of a batch came to: written and kept, or not kept for the
@@ -167,12 +238,11 @@ pub fn account_summary(
             date,
             record: &record,
             account: Some(&account),
-            printed: &printed,
             app: &app,
             couriers: &couriers,
             accounts: &accounts,
         };
-        write_summary(pdfium, &out, &facts)
+        write_summary(pdfium, &out, &facts, &printed)
     });
     flatten(written, &partial)?;
     let findings = verify_account_summary(&AccountSummaryCheck {

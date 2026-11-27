@@ -17,12 +17,8 @@ use packing_engine::workflows::Courier;
 use pdfium_render::prelude::Pdfium;
 
 use crate::PdfError;
-use crate::facts::{ROW_H, draw_bar, draw_section, new_page};
-use crate::page::emit::{emit, header_ops};
-use crate::page::fonts::FONT_DIR;
-use crate::page::measure::Measure;
-use crate::page::{Builder, Op};
-use crate::summary_pdf::{draw_content, draw_picks};
+use crate::summary_pdf::write_view;
+use crate::summary_view::{Part, SummaryView};
 
 /// One live batch of the date.
 pub struct DayBatch<'a> {
@@ -35,8 +31,6 @@ pub struct DayFacts<'a> {
     pub date: Date,
     /// Newest first, as on the Day screen.
     pub batches: Vec<DayBatch<'a>>,
-    /// `hh:mm`.
-    pub printed: &'a str,
     /// The couriers of `packing-workflows.toml`, which name the records' courier codes.
     pub couriers: &'a [Courier],
     /// The account whose day summary this is; none: all accounts.
@@ -45,12 +39,9 @@ pub struct DayFacts<'a> {
     pub accounts: &'a [Account],
 }
 
-/// Write the day summary and return its page count.
-pub fn write_day_summary(
-    pdfium: &Pdfium,
-    path: &Path,
-    facts: &DayFacts<'_>,
-) -> Result<usize, PdfError> {
+/// The day summary as its parts: each batch, the accounts, couriers and inputs; the day's picks;
+/// the day's order contents.
+pub fn day_summary_view(facts: &DayFacts<'_>) -> SummaryView {
     let mine: Vec<BatchSaved> = match facts.account {
         Some(account) => facts
             .batches
@@ -80,47 +71,36 @@ pub fn write_day_summary(
             &account_facts
         }
     };
-    let title = format!(
-        "Day summary · {} · {}",
-        facts.account.unwrap_or("All accounts"),
-        facts.date
-    );
-    let subtitle = format!(
-        "{} · printed {}",
-        content::header_counts(shown),
-        facts.printed
-    );
-
-    let font_dir = Path::new(FONT_DIR);
-    let measure = Measure::new(pdfium, font_dir)?;
-    let mut builder = Builder::new(&measure);
-    for section in content::sections(shown, facts) {
-        draw_section(&mut builder, &section, &measure);
-    }
-    draw_picks(&mut builder, &content::picks(shown));
     let contents = content::order_contents(shown);
-    if !contents.is_empty() {
-        new_page(&mut builder);
-        let heading = "Order contents (orders per content)";
-        let right = content::contents_counts(&contents);
-        draw_bar(&mut builder, heading, Some(&right), ROW_H * 2.0);
-        for row in &contents {
-            draw_content(&mut builder, row, &measure, heading);
-        }
+    let contents = (!contents.is_empty()).then(|| Part::Contents {
+        heading: "Order contents (orders per content)".to_string(),
+        right: content::contents_counts(&contents),
+        rows: contents,
+    });
+    SummaryView {
+        title: format!(
+            "Day summary · {} · {}",
+            facts.account.unwrap_or("All accounts"),
+            facts.date
+        ),
+        counts: content::header_counts(shown),
+        parts: content::sections(shown, facts)
+            .into_iter()
+            .map(Part::Facts)
+            .chain(Part::picks(content::picks(shown)))
+            .chain(contents)
+            .collect(),
     }
+}
 
-    let body = builder.pages;
-    let count = body.len();
-    let pages: Vec<Vec<Op>> = body
-        .into_iter()
-        .enumerate()
-        .map(|(index, ops)| {
-            let mut page = header_ops(&title, &subtitle, index + 1, count, &measure);
-            page.extend(ops);
-            page
-        })
-        .collect();
-    emit(pdfium, path, &pages, font_dir, &measure)
+/// Write the day summary, printed at `printed` (`hh:mm`), and return its page count.
+pub fn write_day_summary(
+    pdfium: &Pdfium,
+    path: &Path,
+    facts: &DayFacts<'_>,
+    printed: &str,
+) -> Result<usize, PdfError> {
+    write_view(pdfium, path, &day_summary_view(facts), printed)
 }
 
 #[cfg(test)]

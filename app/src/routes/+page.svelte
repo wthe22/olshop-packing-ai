@@ -13,6 +13,7 @@
   import StartPrompt from "../lib/StartPrompt.svelte";
   import UpdatePrompt from "../lib/UpdatePrompt.svelte";
   import DayScreen from "../lib/DayScreen.svelte";
+  import SummaryScreen from "../lib/SummaryScreen.svelte";
   import NewBatchScreen from "../lib/NewBatchScreen.svelte";
   import PlanScreen from "../lib/PlanScreen.svelte";
   import RepeatsScreen from "../lib/RepeatsScreen.svelte";
@@ -100,7 +101,6 @@
             dataFolder={shell.dataFolder}
             saved={shell.savedMessage}
             reading={shell.amendReading}
-            writing={shell.writing}
             onOpen={shell.openFile}
             onOpenOutput={(file) => shell.outputs.open(shell.day, file)}
             onPrint={(file, mark) => shell.outputs.print(shell.day, file, mark)}
@@ -108,12 +108,21 @@
             onUnsend={shell.outputs.unsend}
             onSetPrinted={shell.outputs.setPrinted}
             onNewBatch={shell.startBatch}
-            onDaySummary={shell.daySummary}
-            onAccountSummary={(batch, account) => shell.accountSummary(batch.batch, account)}
+            onSummary={shell.openSummary}
             onAmend={shell.amend}
             onRevert={shell.revert}
             onRestore={shell.outputs.restore}
             onEdited={shell.outputs.answerEdited}
+          />
+        {:else if shell.screen === "summary" && shell.overview}
+          <SummaryScreen
+            day={shell.day}
+            today={shell.today}
+            overview={shell.overview}
+            batch={shell.summaryBatch}
+            writing={shell.writing}
+            onPdf={shell.summaryPdf}
+            onBack={() => (shell.screen = "day")}
           />
         {:else if shell.screen === "new-batch"}
           <NewBatchScreen

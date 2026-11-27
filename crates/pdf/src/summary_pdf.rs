@@ -2,7 +2,7 @@
 //! say what the batch is so the paper alone can be traced; each group with its numbered order
 //! contents; and the pick pages, what to take from stock. The verifier reads the header's counts,
 //! the ledger and each group bar's counts back as text, so their words are fixed and their numbers
-//! have no thousands separator.
+//! have no thousands separator. The day summary is drawn the same way from its own parts.
 
 pub(crate) mod content;
 
@@ -23,8 +23,9 @@ use crate::page::emit::{emit, header_ops};
 use crate::page::fonts::{FONT_DIR, Font};
 use crate::page::measure::Measure;
 use crate::page::{Builder, CELL_MARGIN, Cell, Op};
+use crate::summary_view::{Part, SummaryView};
 
-use self::content::{ContentRow, GroupSection};
+use self::content::ContentRow;
 
 /// The width of an order content's count of orders, at the right edge.
 const COUNT_W: f32 = 20.0;
@@ -35,8 +36,6 @@ pub struct SummaryFacts<'a> {
     pub record: &'a BatchSaved,
     /// The account whose summary this is (summary-pdf.md, *One account*); none: all accounts.
     pub account: Option<&'a str>,
-    /// `hh:mm`.
-    pub printed: &'a str,
     /// The app version the journal's records carry.
     pub app: &'a str,
     /// The couriers of `packing-workflows.toml`, which name the record's courier codes.
@@ -45,51 +44,101 @@ pub struct SummaryFacts<'a> {
     pub accounts: &'a [Account],
 }
 
-/// Write the summary PDF and return its page count.
-pub fn write_summary(
-    pdfium: &Pdfium,
-    path: &Path,
-    facts: &SummaryFacts<'_>,
-) -> Result<usize, PdfError> {
+/// The batch's summary as its parts: the facts, each group, the picks.
+pub fn summary_view(facts: &SummaryFacts<'_>) -> SummaryView {
     let whole = facts.record;
     let mine = facts
         .account
         .map(|account| of_account(whole, account, facts.accounts));
     let record = mine.as_ref().unwrap_or(whole);
     let counts = content::counts(record);
-    let title = format!(
-        "Summary · {} · {} · batch {}",
-        facts.account.unwrap_or("All accounts"),
-        facts.date,
-        record.batch
-    );
-    let subtitle = format!(
-        "{} orders · {} units · {} groups · printed {}",
-        counts.orders, counts.units, counts.groups, facts.printed
-    );
+    let groups = content::group_sections(record)
+        .into_iter()
+        .map(|group| Part::Contents {
+            heading: format!("{}  {}", group.code, group.name),
+            right: format!("{} orders · {} units", group.orders, group.units),
+            rows: group.contents,
+        });
+    SummaryView {
+        title: format!(
+            "Summary · {} · {} · batch {}",
+            facts.account.unwrap_or("All accounts"),
+            facts.date,
+            record.batch
+        ),
+        counts: format!(
+            "{} orders · {} units · {} groups",
+            counts.orders, counts.units, counts.groups
+        ),
+        parts: content::facts(record, whole, facts)
+            .into_iter()
+            .map(Part::Facts)
+            .chain(groups)
+            .chain(Part::picks(content::picks([record])))
+            .collect(),
+    }
+}
 
+/// Write the summary PDF, printed at `printed` (`hh:mm`), and return its page count.
+pub fn write_summary(
+    pdfium: &Pdfium,
+    path: &Path,
+    facts: &SummaryFacts<'_>,
+    printed: &str,
+) -> Result<usize, PdfError> {
+    write_view(pdfium, path, &summary_view(facts), printed)
+}
+
+/// Draw `view`'s parts, a part of another kind than the one before from a new page, under the
+/// header of its title and counts.
+pub(crate) fn write_view(
+    pdfium: &Pdfium,
+    path: &Path,
+    view: &SummaryView,
+    printed: &str,
+) -> Result<usize, PdfError> {
     let font_dir = Path::new(FONT_DIR);
     let measure = Measure::new(pdfium, font_dir)?;
     let mut builder = Builder::new(&measure);
-    for section in content::facts(record, whole, facts) {
-        draw_section(&mut builder, &section, &measure);
-    }
-    let groups = content::group_sections(record);
-    if !groups.is_empty() {
-        new_page(&mut builder);
-        for group in &groups {
-            draw_group(&mut builder, group, &measure);
+    let mut before = None;
+    for part in &view.parts {
+        let kind = std::mem::discriminant(part);
+        if before.is_some_and(|before| before != kind) {
+            new_page(&mut builder);
+        }
+        before = Some(kind);
+        match part {
+            Part::Facts(section) => draw_section(&mut builder, section, &measure),
+            Part::Contents {
+                heading,
+                right,
+                rows,
+            } => {
+                draw_bar(&mut builder, heading, Some(right), ROW_H * 2.0);
+                for row in rows {
+                    draw_content(&mut builder, row, &measure, heading);
+                }
+                builder.y += GAP_BELOW_SECTION;
+            }
+            Part::Picks { heading, rows } => {
+                draw_bar(&mut builder, heading, None, ROW_H);
+                let rows: Vec<(i64, String)> = rows
+                    .iter()
+                    .map(|pick| (pick.units, pick.item.clone()))
+                    .collect();
+                builder.draw_summary_rows(&rows);
+            }
         }
     }
-    draw_picks(&mut builder, &content::picks([record]));
 
+    let subtitle = format!("{} · printed {printed}", view.counts);
     let body = builder.pages;
     let count = body.len();
     let pages: Vec<Vec<Op>> = body
         .into_iter()
         .enumerate()
         .map(|(index, ops)| {
-            let mut page = header_ops(&title, &subtitle, index + 1, count, &measure);
+            let mut page = header_ops(&view.title, &subtitle, index + 1, count, &measure);
             page.extend(ops);
             page
         })
@@ -97,36 +146,9 @@ pub fn write_summary(
     emit(pdfium, path, &pages, font_dir, &measure)
 }
 
-/// From a new page, the pick bar and the units per item in two columns.
-pub(crate) fn draw_picks(builder: &mut Builder<'_, '_>, picks: &[(i64, String)]) {
-    if picks.is_empty() {
-        return;
-    }
-    new_page(builder);
-    draw_bar(
-        builder,
-        "Pick summary (units to take from stock)",
-        None,
-        ROW_H,
-    );
-    builder.draw_summary_rows(picks);
-}
-
-/// A group's bar with its counts, which the verifier reads (always `orders` and `units`), then
-/// each of its order contents under a rule.
-fn draw_group(builder: &mut Builder<'_, '_>, group: &GroupSection, measure: &Measure<'_>) {
-    let heading = format!("{}  {}", group.code, group.name);
-    let counts = format!("{} orders · {} units", group.orders, group.units);
-    draw_bar(builder, &heading, Some(&counts), ROW_H * 2.0);
-    for content in &group.contents {
-        draw_content(builder, content, measure, &heading);
-    }
-    builder.y += GAP_BELOW_SECTION;
-}
-
 /// One order content: its number, its items, each wrapped at spaces, and its number of orders at
 /// the right; a content that does not fit starts on the next page under its section's bar.
-pub(crate) fn draw_content(
+fn draw_content(
     builder: &mut Builder<'_, '_>,
     content: &ContentRow,
     measure: &Measure<'_>,

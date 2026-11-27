@@ -95,11 +95,11 @@ pub fn restore(
                             date,
                             record: &record,
                             account: None,
-                            printed: &printed,
                             app: &app,
                             couriers: &couriers,
                             accounts: &accounts,
                         },
+                        &printed,
                     )
                 })
                 .map_err(BatchError::from)

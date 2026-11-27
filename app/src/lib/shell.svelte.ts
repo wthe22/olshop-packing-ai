@@ -23,7 +23,7 @@ import { formatDay } from "../dates";
 import type { Theme } from "./theme";
 
 // The screens the shell routes between; the batch flow's screens are not in the nav.
-export type Screen = "day" | "new-batch" | "repeats" | "plan";
+export type Screen = "day" | "summary" | "new-batch" | "repeats" | "plan";
 export type OverlayId = "search" | "accounts" | "sort-rules" | "settings" | "archive";
 
 // A write the owner waits for shows its dialog only when it takes longer than this, so an *Open*
@@ -55,6 +55,8 @@ export class Shell {
   panelShown = $state(true);
   private panelTimer: ReturnType<typeof setTimeout> | undefined;
   screen = $state<Screen>("day");
+  // The batch the Summary screen shows; `null`: the open date's day summary.
+  summaryBatch = $state<number | null>(null);
   // Settings opens over the current screen and closes back to it.
   overlay = $state<OverlayId | null>(null);
 
@@ -434,8 +436,24 @@ export class Shell {
     }
   };
 
-  // *Day summary*: the open date's summary PDF of every account or of one, written from its
-  // journal, then opened.
+  // *Day summary* and a batch's *Summary*: the Summary screen of the date (`null`) or of the batch.
+  openSummary = (batch: number | null) => {
+    this.summaryBatch = batch;
+    this.screen = "summary";
+  };
+
+  // **PDF** on the Summary screen: the batch's own summary PDF of every account, else the summary
+  // written for the date or for one account, then opened.
+  summaryPdf = async (account: string | null) => {
+    const batch = this.summaryBatch;
+    if (batch === null) return this.daySummary(account);
+    if (account !== null) return this.accountSummary(batch, account);
+    const file = this.overview?.batches.find((view) => view.batch === batch)?.summary;
+    if (file) await this.outputs.open(this.day, file);
+  };
+
+  // The open date's day summary PDF of every account or of one, written from its journal, then
+  // opened.
   daySummary = async (account: string | null) => {
     await this.waitFor(texts.day.writingDaySummary, async () =>
       start.openPath(await dayData.writeDaySummary(this.day, account)),
