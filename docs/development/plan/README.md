@@ -30,7 +30,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     before the move) and the folder keeps copies of the journal, `day.toml`/`session.toml`, `orders.csv` and
     `order-contents.toml`. A date of v0.7 is made flat by moving its files, not copying them: no
     `v0.7 backup\` any more. A file in the way goes to `replaced\` of the update folder.
-  - **`tools/revert-update.py "<data folder>"`** (`--dry-run` first) undoes it date by date; a date
+  - **`tools/update-backup.py revert "<data folder>"`** (`--dry-run` first) undoes it date by date; a date
     saved to after the Update is left and named. Tried on a made-up v0.7 date: after Update and revert every
     file had its old name and bytes again.
   - **Version numbers** are semver pre-releases: this build is `0.8.0-alpha.11`; app versions compare in

@@ -1,6 +1,6 @@
 //! What an Update does to a date folder (versions.md): `update v{app}/update.toml` lists each move before
 //! it is made, and the update folder keeps a copy of each file whose content the Update changes, so the
-//! owner's `tools/revert-update.py` can undo it. A moved file is not copied.
+//! owner's `tools/update-backup.py revert` can undo it. A moved file is not copied.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -18,7 +18,7 @@ pub const UPDATE_LOG: &str = "update.toml";
 const REPLACED: &str = "replaced";
 /// How the revert script renames an update folder it has undone.
 const REVERTED: &str = " reverted";
-const HEAD: &str = "# What Packing's Update did to this date folder, in order. tools/revert-update.py undoes it.\n";
+const HEAD: &str = "# What Packing's Update did to this date folder, in order. tools/update-backup.py revert undoes it.\n";
 
 fn unreadable(path: &Path, error: impl std::fmt::Display) -> StoreError {
     StoreError::io(path, std::io::Error::other(error.to_string()))

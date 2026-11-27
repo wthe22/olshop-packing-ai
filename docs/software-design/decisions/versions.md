@@ -63,11 +63,12 @@ Excel as before, the version out of the way at the end.
   copies.
 - `update.toml` holds the SHA-256 of `day.toml` as Update last left it, and `flattened = true` once a date of
   v0.7 is flat. What v0.7 left that Update does not move stays where it is.
-- The owner's `tools/revert-update.py` undoes the Update of one version on every date (the only one there,
+- The owner's `tools/update-backup.py` reverts the Update of one version on every date (the only one there,
   or the one named when there are several): it moves each file
   back, deletes each copy and file it wrote, puts back each file it changed, and renames the folder
   `update v0.8.0-alpha.11 reverted`. It leaves a date whose `day.toml` has changed since (a save after the Update) and
-  names it. The app deletes no update folder; the owner deletes one once the dates look right.
+  names it. The app deletes no update folder; the owner runs `update-backup.py delete` once the dates look right, which
+  removes `update v…` and `update v… reverted` of that version on every date.
 
 **Why.** The owner's rule: nothing is lost but on purpose. A moved file is not lost, and a list undoes the
 move without a second copy of every PDF; a converted file comes back only from its copy.

@@ -8,8 +8,15 @@
   import SettingsScreen from "./SettingsScreen.svelte";
   import AccountsScreen from "./AccountsScreen.svelte";
   import { texts } from "../texts";
+  import { shiftDay } from "./searchRange";
 
   let { shell }: { shell: Shell } = $props();
+
+  // Storage's range starts at the oldest date and ends yesterday.
+  const storageRange = () => ({
+    from: shell.panel?.dates.at(-1)?.date ?? shell.today,
+    to: shiftDay(shell.today, -1),
+  });
 </script>
 
 {#if shell.overlay === "search"}
@@ -43,6 +50,8 @@
       onTheme={shell.chooseTheme}
       onChangeFolder={shell.changeFolder}
       onOpenFolder={() => shell.dataFolder && shell.openFolder(shell.dataFolder)}
+      archiving={shell.archiving}
+      range={storageRange()}
     />
   </Overlay>
 {/if}

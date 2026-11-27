@@ -26,7 +26,7 @@ fn output_names(folder: &packing_store::DateFolder) -> Vec<String> {
                 .is_file()
                 .then(|| entry.file_name().to_string_lossy().into_owned())
         })
-        .filter(|name| name.ends_with(".pdf"))
+        .filter(|name| name.ends_with(".pdf") && !name.contains(" Input "))
         .collect();
     names.sort();
     names
@@ -45,6 +45,7 @@ fn saved_batch_one(tag: &str) -> (testkit::TempDir, packing_store::DateFolder, J
         .commit(vec![RecordBody::BatchSaved(batch(1, false, files))], APP)
         .unwrap();
     move_forward(folder.dir()).unwrap();
+    input_file(&folder, 1);
     (data, folder, journal)
 }
 
@@ -78,6 +79,7 @@ fn a_date_viewed_while_another_copy_writes_leaves_partial_and_the_views_alone() 
         .commit(vec![RecordBody::BatchSaved(batch(1, false, files))], APP)
         .unwrap();
     // The other copy has committed and not yet moved its files in.
+    input_file(&folder, 1);
 
     let viewed = view_date(&folder).unwrap();
     assert_eq!(viewed.settled, Settled::Nothing);

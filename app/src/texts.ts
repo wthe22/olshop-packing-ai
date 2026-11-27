@@ -1,11 +1,13 @@
 // Every screen text of the PC app, in English. Components import from here; no screen text is
-// written in a component. The Search and Settings screens' texts are their own files, joined here.
+// written in a component. The Search and Settings screens' texts and archiving's are their own
+// files, joined here.
 
 import type { Choice, Question } from "./lib/confirm.svelte";
 import { count } from "./count";
 import { searchTexts } from "./searchTexts";
 import { settingsTexts } from "./settingsTexts";
 import { accountsTexts } from "./accountsTexts";
+import { archiveTexts } from "./archiveTexts";
 
 // "1", "1 and 3", "1, 2 and 3".
 function listed(numbers: number[]): string {
@@ -370,6 +372,7 @@ export const texts = {
 
   settings: settingsTexts,
   accounts: accountsTexts,
+  archive: archiveTexts,
 
   // The Sort rules screen: the rule row, the label groups with their boxes, and the file editor.
   sortRules: {

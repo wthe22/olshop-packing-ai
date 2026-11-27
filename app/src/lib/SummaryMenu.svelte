@@ -1,13 +1,16 @@
 <script lang="ts">
   // A summary's button (*Day summary*, a batch's *Summary PDF*): one button, or, when its batches
-  // hold more than one account, a menu of *All accounts* and each account.
+  // hold more than one account, a menu of *All accounts* and each account. The menu closes on Esc
+  // and on a click outside it.
   import { texts } from "../texts";
+  import { dismiss } from "./dismiss";
 
   let {
     label,
     title,
     accounts,
     disabled,
+    everyAccount = true,
     onWrite,
   }: {
     label: string;
@@ -15,6 +18,8 @@
     // The accounts of the summary's batches; the button is a menu when there are several.
     accounts: string[];
     disabled: boolean;
+    // *All accounts* is offered; not on an archived date, whose batch summary PDF is gone.
+    everyAccount?: boolean;
     // `null`: every account.
     onWrite: (account: string | null) => void;
   } = $props();
@@ -28,7 +33,7 @@
 </script>
 
 {#if accounts.length > 1}
-  <span class="menu">
+  <span class="menu" {@attach menuOpen && dismiss(() => (menuOpen = false))}>
     <button
       {title}
       {disabled}
@@ -38,7 +43,9 @@
     >
     {#if menuOpen}
       <span class="items" role="menu">
-        <button role="menuitem" onclick={() => choose(null)}>{texts.day.allAccounts}</button>
+        {#if everyAccount}
+          <button role="menuitem" onclick={() => choose(null)}>{texts.day.allAccounts}</button>
+        {/if}
         {#each accounts as account (account)}
           <button role="menuitem" onclick={() => choose(account)}>{account}</button>
         {/each}

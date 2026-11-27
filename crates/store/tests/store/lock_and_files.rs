@@ -74,8 +74,14 @@ fn an_input_missing_or_changed_is_named_at_open() {
     let source = data.path().join("labels_1.pdf");
     fs::write(&source, b"%PDF-1.4 made up").unwrap();
     let stored = store_input(&folder, BatchId::FIRST, PdfId::FIRST, &source).unwrap();
+    let second = data.path().join("labels_2.pdf");
+    fs::write(&second, b"%PDF-1.4 the second").unwrap();
+    let kept = store_input(&folder, BatchId::FIRST, PdfId::new(2), &second).unwrap();
     let mut saved = batch(1, false, Vec::new());
     saved.inputs[0].sha256 = stored.sha256.clone();
+    let mut other = saved.inputs[0].clone();
+    (other.pdf, other.sha256, other.filename) = (PdfId::new(2), kept.sha256, "labels_2.pdf".into());
+    saved.inputs.push(other);
     let mut journal = Journal::open(&folder).unwrap();
     journal
         .commit(vec![RecordBody::BatchSaved(saved)], APP)
@@ -92,6 +98,7 @@ fn an_input_missing_or_changed_is_named_at_open() {
     fs::remove_file(&path).unwrap();
     let opened = open_date(&folder).unwrap();
     assert_eq!(opened.inputs[0].state, InputState::Missing);
+    assert!(!opened.archived, "the other input is there");
 }
 
 #[test]

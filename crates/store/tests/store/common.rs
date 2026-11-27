@@ -4,8 +4,9 @@ use std::fs;
 use std::path::Path;
 
 use jiff::civil::date;
+use packing_engine::ids::{BatchId, PdfId};
 use packing_engine::record::{JOURNAL_SCHEMA, OutputFile, Record, RecordBody, Started};
-use packing_store::{DateFolder, encode_line, seal, sha256_of};
+use packing_store::{DateFolder, encode_line, input_path, seal, sha256_of};
 use testkit::TempDir;
 
 pub use testkit::{batch, sha, time};
@@ -55,6 +56,14 @@ pub fn outputs(dir: &Path, number: u8, tag: &str) -> Vec<OutputFile> {
             format!("S {tag}").as_bytes(),
         ),
     ]
+}
+
+/// A batch's first input in the date folder, so the date is not archived; its bytes are not
+/// the ones its record hashes.
+pub fn input_file(folder: &DateFolder, number: u8) {
+    fs::create_dir_all(folder.dir()).unwrap();
+    let path = input_path(folder, BatchId::new(number), PdfId::new(1), &sha('a'));
+    fs::write(path, b"%PDF made up").unwrap();
 }
 
 /// A record as a line would hold it, at a fixed time.

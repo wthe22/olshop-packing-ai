@@ -14,6 +14,10 @@ export interface DateRow {
   damaged: boolean;
   // The date's folder, for *Open folder*; `null` before its first commit.
   folder: string | null;
+  // Every file of its folder together, in bytes.
+  size_bytes: number;
+  // Its PDFs were removed (archive.md).
+  archived: boolean;
 }
 
 export interface PanelView {

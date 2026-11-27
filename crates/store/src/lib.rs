@@ -2,6 +2,7 @@
 //! inputs stored by content, the outputs settled by the journal, and the views written from it.
 //! The journal is the only truth; every decision is taken from its fold as it is on disk.
 
+mod archive;
 mod date;
 mod dates;
 mod error;
@@ -20,16 +21,21 @@ mod outputs;
 mod update_log;
 mod views;
 
+pub use archive::{
+    ArchivePlan, Archived, NotArchivable, PdfFile, archive, is_archived, plan_archive,
+};
 pub use date::{DateFolder, OpenedDate, open_date, view_date};
 pub use dates::{dates, journal_lengths, newest_batch_rule};
 pub use error::StoreError;
-pub use files::sha256_of;
+pub use files::{folder_size, sha256_of};
 pub use flatten::{V0_7_BACKUP, flatten_date, is_v0_7};
 pub use fold::{
     Damage, DamageReason, Fold, LastWrites, LiveBatch, PassedOver, Reprint, Unknown, UnknownPart,
 };
 pub use index::{AccountDate, IndexedOrder, ReprintMark, SearchIndex};
-pub use inputs::{InputProblem, InputState, StoredInput, check_inputs, input_path, store_input};
+pub use inputs::{
+    InputProblem, InputState, StoredInput, check_inputs, input_path, live_inputs, store_input,
+};
 pub use journal::{Journal, Pending};
 pub use line::{encode_line, seal};
 pub use lock::DataLock;

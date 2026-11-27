@@ -1,8 +1,14 @@
 <script lang="ts">
-  // Settings: the theme, the data folder and *About*, as full-width groups of
+  // Settings: the theme, the data folder, its storage and *About*, as full-width groups of
   // rows (the setting at the left, its control at the right). Every other choice has one fixed
-  // default, shown where it acts.
+  // default, shown where it acts. Read-only, Storage shows the sizes only.
+  import { onMount } from "svelte";
   import { texts } from "../texts";
+  import { formatSize } from "../size";
+  import type { Archiving } from "./archiving.svelte";
+  import { Storage } from "./storage.svelte";
+  import { access } from "./readOnly.svelte";
+  import type { DateRange } from "./searchRange";
   import { unknownKeys, type About } from "./api/start";
   import { themes, type Theme } from "./theme";
   import Icon from "./Icon.svelte";
@@ -15,6 +21,8 @@
     onTheme,
     onChangeFolder,
     onOpenFolder,
+    archiving,
+    range,
   }: {
     about: About | null;
     dataFolder: string | null;
@@ -22,9 +30,19 @@
     onTheme: (theme: Theme) => void;
     onChangeFolder: () => void;
     onOpenFolder: () => void;
+    archiving: Archiving;
+    // The range Storage's **Archive** starts with.
+    range: DateRange;
   } = $props();
 
   const words = texts.settings;
+  const store = texts.archive;
+  // Made as the screen opens, from the range it opens with.
+  let storage = $state<Storage | null>(null);
+  onMount(() => {
+    storage = new Storage(archiving, { ...range });
+    storage.load();
+  });
 
   // Read each time Settings opens, so a rules file changed meanwhile is read again.
   let unknown: string[] = $state([]);
@@ -84,6 +102,95 @@
         </div>
       {/if}
     </div>
+  </section>
+
+  <section>
+    <h3>{store.storage}</h3>
+    {#if storage}
+      {@const rows = storage}
+      <div class="group">
+        <div class="row">
+          <div class="what">
+            <span class="name">{store.used}</span>
+            <span class="hint">{store.usedHint}</span>
+          </div>
+          {#if rows.used}
+            <span class="value"
+              >{store.usedValue(formatSize(rows.used.bytes), rows.used.dates, rows.used.archived)}</span
+            >
+          {/if}
+        </div>
+        {#if !access.readOnly}
+          <div class="row">
+            <div class="what">
+              <span class="name">{store.archiveDates}</span>
+              <span class="hint">{store.archiveDatesHint}</span>
+            </div>
+            <div class="controls">
+              <label class="field"
+                >{store.from}
+                <input
+                  type="date"
+                  value={rows.range.from}
+                  onchange={(event) => rows.setRange({ ...rows.range, from: event.currentTarget.value })}
+                /></label
+              >
+              <label class="field"
+                >{store.to}
+                <input
+                  type="date"
+                  value={rows.range.to}
+                  onchange={(event) => rows.setRange({ ...rows.range, to: event.currentTarget.value })}
+                /></label
+              >
+              <span class="value range-value"
+                >{rows.preview
+                  ? store.rangeValue(rows.preview.dates.length, formatSize(rows.preview.bytes))
+                  : ""}</span
+              >
+              <button
+                disabled={!rows.preview || rows.preview.dates.length === 0}
+                onclick={rows.archiveRange}><Icon name="archive" size={16} />{store.archive}</button
+              >
+            </div>
+          </div>
+          <div class="row">
+            <div class="what">
+              <span class="name">{store.auto}</span>
+              <span class="hint">{store.autoHint}</span>
+            </div>
+            <div class="controls">
+              <label class="field"
+                >{store.olderThan}
+                <input
+                  class="days"
+                  type="number"
+                  min="1"
+                  value={rows.days}
+                  onblur={(event) => rows.changeDays(event.currentTarget.valueAsNumber)}
+                />
+                {store.days}</label
+              >
+              <div class="segmented" role="radiogroup" aria-label={store.auto}>
+                {#each [false, true] as on (on)}
+                  <button
+                    role="radio"
+                    aria-checked={rows.auto === on}
+                    class:chosen={rows.auto === on}
+                    onclick={() => rows.turn(on)}>{on ? store.on : store.off}</button
+                  >
+                {/each}
+              </div>
+            </div>
+          </div>
+        {/if}
+        {#if rows.error}
+          <div class="row">
+            <span class="problem">{rows.error}</span>
+          </div>
+        {/if}
+      </div>
+    {/if}
   </section>
 
   <section>
@@ -185,10 +292,37 @@
     flex: none;
   }
 
+  .controls {
+    align-items: center;
+  }
+
   .controls button {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
+  }
+
+  .field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  input.days {
+    width: 4.5rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The range's count, wide enough that the button beside it does not move as it changes. */
+  .range-value {
+    min-width: 9rem;
+    text-align: right;
+  }
+
+  .problem {
+    color: var(--danger);
   }
 
   /* Three choices side by side; the chosen one is raised. */

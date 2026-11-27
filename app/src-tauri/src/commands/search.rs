@@ -5,6 +5,7 @@
 
 use std::collections::BTreeSet;
 use std::ops::RangeInclusive;
+use std::path::Path;
 
 use jiff::civil::Date;
 use packing_batch::{ReprintOutcome, ReprintRequest, reprint as write_reprint};
@@ -19,7 +20,7 @@ use tauri::{AppHandle, Manager, State};
 
 use crate::commands::day::date_of;
 use crate::settings;
-use crate::{APP_VERSION, AppState, today};
+use crate::{APP_VERSION, ARCHIVED, AppState, today};
 
 /// The dates a search covers, both ends included, as `2026-10-07`.
 #[derive(Deserialize)]
@@ -89,6 +90,8 @@ pub struct OrderRow {
     input_last_page: u16,
     /// The reprints that printed it again, oldest first.
     reprints: Vec<ReprintMarkView>,
+    /// Its date is archived: it is not reprinted and its group PDF is not opened.
+    archived: bool,
 }
 
 #[derive(Serialize)]
@@ -128,11 +131,16 @@ pub(crate) fn search(
         Some(range) => range.dates()?,
         None => Date::MIN..=Date::MAX,
     };
+    let data_dir = data_dir(state)?;
     let rows = state.index().with(|index| {
+        let archived = index.archived_dates(&data_dir);
         index
             .search(&filter, dates, couriers, accounts)
             .into_iter()
-            .map(|order| row(index, order, couriers, accounts))
+            .map(|order| {
+                let archived = archived.contains(&order.date);
+                row(index, order, couriers, accounts, archived)
+            })
             .collect::<Vec<_>>()
     })?;
     let Some(rows) = rows else {
@@ -155,11 +163,16 @@ pub(crate) fn search(
     })
 }
 
+fn data_dir(state: &AppState) -> Result<std::path::PathBuf, String> {
+    state.with_data(|data| Ok(data.dir.clone()))
+}
+
 fn row(
     index: &SearchIndex,
     order: &IndexedOrder,
     couriers: &[Courier],
     accounts: &[Account],
+    archived: bool,
 ) -> OrderRow {
     let saved = &order.order;
     OrderRow {
@@ -209,6 +222,23 @@ fn row(
                 number: mark.number,
             })
             .collect(),
+        archived,
+    }
+}
+
+/// Refuse a reprint of an order of an archived date: its input is gone.
+fn refuse_archived(
+    state: &AppState,
+    data_dir: &Path,
+    orders: &[(Date, OrderId)],
+) -> Result<(), String> {
+    let archived = state
+        .index()
+        .with(|index| index.archived_dates(data_dir))?
+        .unwrap_or_default();
+    match orders.iter().any(|(date, _)| archived.contains(date)) {
+        true => Err(ARCHIVED.to_string()),
+        false => Ok(()),
     }
 }
 
@@ -254,6 +284,7 @@ pub(crate) fn reprint_orders(
         .collect::<Result<Vec<_>, String>>()?;
     state.write_data(|data, lock| {
         let data_dir = data.dir.clone();
+        refuse_archived(state, &data_dir, &orders)?;
         let day = data.day_to_write(today(), lock)?;
         let outcome = state
             .with_worker(|worker| {
@@ -340,16 +371,25 @@ pub(crate) fn reprinted_orders(
             .map(|reprint| reprint.made.orders.clone())
             .ok_or_else(|| format!("{day} has no reprint {number}."))
     })?;
+    let data_dir = data_dir(state)?;
     let orders = state.index().with(|index| {
+        let archived = index.archived_dates(&data_dir);
         printed
             .iter()
             .map(|order| ReprintedView {
                 order_id: order.order_id.to_string(),
                 day: order.date.to_string(),
                 batch: order.batch,
-                found: index
-                    .find(order.date, &order.order_id)
-                    .map(|found| row(index, found, &workflows.couriers, &workflows.accounts)),
+                found: index.find(order.date, &order.order_id).map(|found| {
+                    let archived = archived.contains(&order.date);
+                    row(
+                        index,
+                        found,
+                        &workflows.couriers,
+                        &workflows.accounts,
+                        archived,
+                    )
+                }),
             })
             .collect()
     })?;

@@ -1,11 +1,12 @@
 //! The window commands, grouped by screen: [`start`] (the data folder, *About*), [`migrate`] (the
 //! question at start: Update or read-only), [`accounts`] (the Accounts screen), [`panel`] (the
-//! dates), [`day`] (the Day screen, Printed, revert, restore), [`batch`] (new batch, plan, save,
+//! dates), [`archive`] (a date's PDFs deleted, Settings › Storage), [`day`] (the Day screen, Printed, revert, restore), [`batch`] (new batch, plan, save,
 //! amend), [`search`] (search and reprint), [`rules`] (the Sort rules screen) and [`changes`] (what
 //! other copies of the app wrote). Each command is a thin wrapper over a plain function the tests
 //! call.
 
 pub mod accounts;
+pub mod archive;
 pub mod batch;
 pub mod changes;
 pub mod day;

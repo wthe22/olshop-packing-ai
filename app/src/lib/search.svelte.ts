@@ -125,7 +125,7 @@ export class Search {
       if (result.loading) setTimeout(this.find, LOADING_RETRY_MS);
       else {
         this.result = result;
-        if (result.rows.length === 1) this.ticked = [key(result.rows[0])];
+        if (result.rows.length === 1 && !result.rows[0].archived) this.ticked = [key(result.rows[0])];
       }
     } catch (e) {
       this.error = String(e);
@@ -157,17 +157,19 @@ export class Search {
     this.traced = flip(this.traced, key(row));
   };
 
-  // **Select all**: every row the filter found, or none.
+  // The rows a tick can take: an order of an archived date has none.
+  private tickable = () => this.result?.rows.filter((row) => !row.archived) ?? [];
+
+  // **Select all**: every row the filter found that can be ticked, or none.
   selectAll = (all: boolean) => {
-    this.ticked = all && this.result ? this.result.rows.map(key) : [];
+    this.ticked = all ? this.tickable().map(key) : [];
   };
 
   clear = () => {
     this.ticked = [];
   };
 
-  allTicked = () =>
-    this.result !== null && this.result.rows.length > 0 && this.ticked.length === this.result.rows.length;
+  allTicked = () => this.tickable().length > 0 && this.ticked.length === this.tickable().length;
 
   // Some rows ticked, not all: the head row's tick shows a dash.
   someTicked = () => this.ticked.length > 0 && !this.allTicked();

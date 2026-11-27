@@ -268,6 +268,7 @@ pub(crate) fn amend_start(
 ) -> Result<AmendStart, String> {
     let files = state.with_data(|data| {
         let open = data.open_day(date)?;
+        open.not_archived()?;
         check_newest(open.journal.fold(), batch)?;
         let (_, workflows) = settings::workflows(state.program())?;
         let redo = packing_batch::amend(&open.folder, open.journal.fold(), &workflows)

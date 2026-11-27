@@ -60,6 +60,7 @@ pub(super) fn read_into_draft(
     });
     let read = state.with_data(|data| {
         let day = data.open_day(reading.date)?;
+        day.not_archived()?;
         let fold = day.journal.fold();
         let (rule, record) = match reading.redo {
             Some(batch) => {

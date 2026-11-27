@@ -1,12 +1,14 @@
 //! A date folder of the data folder, and what happens when it opens (journal.md, *When a date opens*):
-//! fold, inputs, `.partial/`, outputs, views — in that order, before the date is shown.
+//! fold, inputs, `.partial/`, outputs, views — in that order, before the date is shown. An archived
+//! date has no inputs and outputs to check.
 
 use std::path::{Path, PathBuf};
 
 use jiff::civil::Date;
 
 use crate::StoreError;
-use crate::inputs::{InputProblem, check_inputs};
+use crate::archive::is_archived;
+use crate::inputs::{InputProblem, check_inputs, live_inputs};
 use crate::journal::Journal;
 use crate::outputs::{OutputProblem, Settled, check_outputs, settle_partial};
 use crate::views::{views_current, write_views};
@@ -38,6 +40,8 @@ impl DateFolder {
 /// An opened date: its journal and what the open-time checks found and did.
 pub struct OpenedDate {
     pub journal: Journal,
+    /// Its PDFs were removed (archive.md): its inputs and outputs are not checked.
+    pub archived: bool,
     pub inputs: Vec<InputProblem>,
     pub settled: Settled,
     pub outputs: Vec<OutputProblem>,
@@ -66,25 +70,34 @@ fn open(folder: &DateFolder, may_write: bool) -> Result<OpenedDate, StoreError> 
     if journal.damage().is_none() && fold.last_seq == 0 {
         return Ok(OpenedDate {
             journal,
+            archived: false,
             inputs: Vec::new(),
             settled: Settled::Nothing,
             outputs: Vec::new(),
             views_written: false,
         });
     }
-    let inputs = check_inputs(folder, fold)?;
+    let archived = is_archived(dir, &live_inputs(fold));
+    let inputs = match archived {
+        true => Vec::new(),
+        false => check_inputs(folder, fold)?,
+    };
     let settled = if writable {
         settle_partial(dir, fold)?
     } else {
         Settled::Nothing
     };
-    let outputs = check_outputs(dir, fold)?;
+    let outputs = match archived {
+        true => Vec::new(),
+        false => check_outputs(dir, fold)?,
+    };
     let views_written = writable && !views_current(dir, fold);
     if views_written {
         write_views(dir, fold)?;
     }
     Ok(OpenedDate {
         journal,
+        archived,
         inputs,
         settled,
         outputs,

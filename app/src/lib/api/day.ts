@@ -66,6 +66,8 @@ export interface Totals {
 
 export interface DayOverview {
   day: string;
+  // Its PDFs were removed (archive.md): nothing that needs one is offered.
+  archived: boolean;
   batches: BatchView[];
   totals: Totals;
   // A damaged journal, an input missing or changed.

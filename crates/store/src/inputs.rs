@@ -15,13 +15,29 @@ use crate::fold::Fold;
 /// `{batch} Input {pdf} {short hash}.pdf`, the number in two digits, so a file list sorted by name
 /// shows a batch's inputs beside its outputs, in the order they were first read.
 pub fn input_path(folder: &DateFolder, batch: BatchId, pdf: PdfId, sha256: &Sha256) -> PathBuf {
-    let name = format!(
+    folder.dir().join(input_name(batch, pdf, sha256))
+}
+
+fn input_name(batch: BatchId, pdf: PdfId, sha256: &Sha256) -> String {
+    format!(
         "{} Input {:02} {}.pdf",
         batch.get(),
         pdf.get(),
         sha256.short()
-    );
-    folder.dir().join(name)
+    )
+}
+
+/// The file names of the live batches' inputs.
+pub fn live_inputs(fold: &Fold) -> Vec<String> {
+    fold.live
+        .iter()
+        .flat_map(|(batch, live)| {
+            live.saved
+                .inputs
+                .iter()
+                .map(|input| input_name(*batch, input.pdf, &input.sha256))
+        })
+        .collect()
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

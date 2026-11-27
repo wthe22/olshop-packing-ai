@@ -56,7 +56,7 @@ the title bar of every screen and *About*, all fed from that one place.
 
 ## Storage
 
-The rows of [archive](../app/archive.md). **Archive** of a range is off while the range holds no date to
+The rows of [archive](../app/archive.md). The range starts at the oldest date and ends yesterday; **Archive** of a range is off while the range holds no date to
 archive (today, a date with no batch and an archived date are passed over), and asks first, naming the dates,
 the PDFs and their size. **Archive automatically** starts *Off*; **On** keeps the number (at least 1, 60 to
 begin with), asks first when it would archive any date now, and writes `archive_after_days` into

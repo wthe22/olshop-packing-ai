@@ -64,6 +64,8 @@ export interface SearchRow {
   input_last_page: number;
   // The reprints that printed it again, oldest first.
   reprints: ReprintMark[];
+  // Its date is archived: it has no tick and no *Open*.
+  archived: boolean;
 }
 
 // A reprint that printed an order again.

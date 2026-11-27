@@ -121,13 +121,19 @@
         onWrite={onDaySummary}
       />
       <!-- On a date that is not today the button is muted, and the shell asks before the batch. -->
-      <button
-        class={day === today ? "primary" : "muted"}
-        title={day === today ? undefined : texts.day.newBatchNotToday(formatShortDay(day))}
-        onclick={onNewBatch}>{texts.day.newBatch}</button
-      >
+      {#if !access.archived}
+        <button
+          class={day === today ? "primary" : "muted"}
+          title={day === today ? undefined : texts.day.newBatchNotToday(formatShortDay(day))}
+          onclick={onNewBatch}>{texts.day.newBatch}</button
+        >
+      {/if}
     {/if}
   </div>
+
+  {#if access.archived}
+    <p class="muted">{texts.archive.dayLine}</p>
+  {/if}
 
   {#if access.readOnly}
     <p class="read-only">{updateTexts.dayLine}</p>
@@ -178,7 +184,7 @@
               )}{#if batch.amended}{texts.day.amended}{/if}</span
             >
           </span>
-          {#if i === 0 && !access.dateLocked}
+          {#if i === 0 && !access.dateLocked && !access.archived}
             <span class="grow"></span>
             <button onclick={() => onAmend(batch)}>{texts.day.amend}</button>
             <button onclick={() => onRevert(batch)}>{texts.day.revert}</button>
@@ -203,10 +209,11 @@
                 title={texts.day.summaryPdfTitle}
                 accounts={batch.accounts.map(({ account }) => account)}
                 disabled={writing}
+                everyAccount={!access.archived}
                 onWrite={(account) =>
                   account === null ? onOpenOutput(batch.summary) : onAccountSummary(batch, account)}
               />
-            {:else}
+            {:else if !access.archived}
               {texts.day.summaryPdf}
               <OutputButtons
                 file={batch.summary}

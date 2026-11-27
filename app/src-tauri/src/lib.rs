@@ -36,6 +36,9 @@ pub(crate) const READ_ONLY: &str = "Read-only: this copy changes nothing in the 
 /// What a write to a date the owner made read only says.
 pub(crate) const DATE_READ_ONLY: &str = "This date is read only until the program starts again: a file of it was changed outside the program.";
 
+/// What a change that needs a date's PDFs says on an archived date.
+pub(crate) const ARCHIVED: &str = "This date is archived: its PDFs were removed, so it can no longer be printed, amended, reverted, reprinted or read again.";
+
 /// The owner's answer to a date whose views were changed outside the program, kept until the
 /// program closes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -137,6 +140,7 @@ impl Data {
         self.day = Some(OpenDay {
             folder,
             journal: opened.journal,
+            archived: opened.archived,
             inputs: opened.inputs,
             outputs: opened.outputs,
             settled: lock.is_some(),
@@ -149,11 +153,23 @@ impl Data {
 pub(crate) struct OpenDay {
     pub folder: DateFolder,
     pub journal: Journal,
+    /// Its PDFs were removed: nothing that needs one is offered or done.
+    pub archived: bool,
     pub inputs: Vec<InputProblem>,
     pub outputs: Vec<OutputProblem>,
     /// Opened while no other copy of the app wrote: `.partial/` settled and the outputs checked
     /// after that copy's moves.
     pub settled: bool,
+}
+
+impl OpenDay {
+    /// Refuse a change that needs the date's PDFs when they were removed.
+    pub(crate) fn not_archived(&self) -> Result<(), String> {
+        match self.archived {
+            true => Err(ARCHIVED.to_string()),
+            false => Ok(()),
+        }
+    }
 }
 
 /// One group of the open draft's plan as the owner left it.
@@ -419,6 +435,11 @@ pub fn run() {
             commands::day::day_summary,
             commands::day::account_summary_pdf,
             commands::panel::panel_dates,
+            commands::archive::archive_preview,
+            commands::archive::archive_scope,
+            commands::archive::storage,
+            commands::archive::archive_after_days,
+            commands::archive::set_archive_after_days,
             commands::accounts::accounts_list,
             commands::accounts::account_dates,
             commands::accounts::account_new,

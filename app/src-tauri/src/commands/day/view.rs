@@ -105,6 +105,8 @@ pub struct Totals {
 #[derive(Serialize)]
 pub struct DayOverview {
     day: String,
+    /// Its PDFs were removed (archive.md): nothing that needs one is offered.
+    archived: bool,
     batches: Vec<BatchView>,
     totals: Totals,
     /// What keeps a part of the date from being used: a damaged journal, an input missing or
@@ -159,6 +161,7 @@ pub(super) fn overview(
     }
     DayOverview {
         day: fold.date.to_string(),
+        archived: day.archived,
         totals: Totals {
             batches: batches.len(),
             orders: batches.iter().map(|b| b.orders).sum(),

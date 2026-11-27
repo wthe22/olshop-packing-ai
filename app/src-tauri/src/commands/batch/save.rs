@@ -14,6 +14,7 @@ pub(super) fn save_draft(
 ) -> Result<SaveResultView, String> {
     let (batch, outcome) = state.with_draft(|open| {
         state.write_day(open.date, |day| {
+            day.not_archived()?;
             let batch = open.draft.batch(day.journal.fold());
             let outcome = state
                 .with_worker(|worker| {

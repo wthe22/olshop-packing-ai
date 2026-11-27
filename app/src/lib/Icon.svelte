@@ -20,6 +20,7 @@
     up: "M12 19V5M6 11l6-6 6 6",
     down: "M12 5v14M6 13l6 6 6-6",
     trash: "M4 7h16M10 7V4h4v3M6 7l1 13h10l1-13M10 11v6M14 11v6",
+    archive: "M3 4h18v4H3zM5 8v12h14V8M10 12h4",
   } as const;
 
   export type IconName = keyof typeof paths;

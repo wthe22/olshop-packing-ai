@@ -70,7 +70,7 @@ tools/make-portable.sh     builds Packing.exe and pdfium.dll into target/portabl
 tools/make-portable.bat    the same, for Explorer or cmd (runs the .sh through Git's bash)
 tools/dev.bat            run the app as a debug build with the Vite dev server (no release build)
 tools/guide-pictures.mjs   the user guide's pictures from the built program on testdata/ (WebView2 DevTools)
-tools/revert-update.py     the owner's undo of an Update of one version on every date, from each date's update folder (D-APP-36); --dry-run lists (Python 3.11)
+tools/update-backup.py     the owner's `revert` of an Update of one version on every date, or `delete` of its backup folders (D-APP-36); --dry-run lists (Python 3.11)
 tools/remove-v07-backup.py the owner's removal of the v0.7 backups the app's migration keeps, each once every file of it is in its date folder; --dry-run lists (Python, as asked)
 tools/check.sh, *.mjs      the gates of code-rules.md
 testdata/                  made-up fixtures for the tests

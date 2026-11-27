@@ -293,3 +293,18 @@ test("Search opens again with the boxes it was left with, the dates from the vie
   const third = new Search(() => "2026-10-08", () => "2026-10-27", () => {});
   assert.equal(third.tree.root.children[0].value, "", "what Reset left is kept");
 });
+
+test("an order of an archived date takes no tick: Select all passes it over, one found is not ticked", async () => {
+  const archived = { ...row("580000000000000099"), archived: true };
+  useBackend({ tree_to_filter: () => "", search_orders: () => ({ ...found, orders: 3, rows: [...found.rows, archived] }) });
+  const search = new Search(() => "2026-10-07", () => "2026-10-07", () => {});
+  await search.run();
+  search.selectAll(true);
+  assert.equal(search.ticked.length, 2);
+  assert.equal(search.isTicked(archived), false);
+  assert.equal(search.allTicked(), true, "every row that can be ticked is");
+
+  useBackend({ tree_to_filter: () => "", search_orders: () => ({ ...found, orders: 1, rows: [archived] }) });
+  await search.run();
+  assert.deepEqual(search.ticked, []);
+});

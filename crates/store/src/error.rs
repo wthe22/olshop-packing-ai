@@ -1,6 +1,7 @@
 use std::fmt;
 use std::path::{Path, PathBuf};
 
+use crate::archive::NotArchivable;
 use crate::fold::{Damage, DamageReason};
 
 #[derive(Debug)]
@@ -23,6 +24,8 @@ pub enum StoreError {
 
     /// Windows refused to move a file, most often because a viewer has it open.
     FileInUse { path: PathBuf },
+    /// The date is not archived, for this reason.
+    NotArchivable(NotArchivable),
 }
 
 impl StoreError {
@@ -56,6 +59,7 @@ impl fmt::Display for StoreError {
             StoreError::FileInUse { path } => {
                 write!(f, "{} is open in another program", path.display())
             }
+            StoreError::NotArchivable(reason) => write!(f, "the date is not archived: {reason}"),
         }
     }
 }

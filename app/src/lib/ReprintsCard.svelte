@@ -44,12 +44,14 @@
         onclick={() => list.toggle(reprint.number)}
         >{texts.day.reprintOrders} {list.isOpen(reprint.number) ? "▾" : "▸"}</button
       >
-      {#if !access.dateLocked}
-        <button title={texts.day.printTitle(reprint.file)} onclick={() => onPrint(reprint.file)}
-          >{texts.day.print}</button
-        >
+      {#if !access.archived}
+        {#if !access.dateLocked}
+          <button title={texts.day.printTitle(reprint.file)} onclick={() => onPrint(reprint.file)}
+            >{texts.day.print}</button
+          >
+        {/if}
+        <button onclick={() => onOpen(reprint.path)}>{texts.day.open}</button>
       {/if}
-      <button onclick={() => onOpen(reprint.path)}>{texts.day.open}</button>
     </div>
     {#if list.isOpen(reprint.number)}
       {@const printed = list.orders[reprint.number]}

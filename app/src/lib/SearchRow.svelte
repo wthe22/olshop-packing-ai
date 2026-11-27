@@ -6,7 +6,8 @@
   // room); the *Reprinted* mark and **Open**. Under the head the items, one line each (quantity,
   // name, variation, Seller SKU), with the Qty Total at their foot when it says more than the one
   // line. A click on the card, or on the bar under the items, opens and closes the rest
-  // (`SearchDetails`); only the tick ticks.
+  // (`SearchDetails`); only the tick ticks. An order of an archived date has no tick and no **Open**,
+  // and *archived* after its date.
   import type { SearchRow } from "./api/search";
   import { reprintedMark, totalLine } from "./search.svelte";
   import { texts } from "../texts";
@@ -50,7 +51,7 @@
 </script>
 
 <div class="card" class:ticked {@attach cardClicks}>
-  {#if access.readOnly}
+  {#if access.readOnly || row.archived}
     <span class="tick"></span>
   {:else}
     <input class="tick" type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
@@ -67,7 +68,11 @@
     <span class="courier" class:unknown={!row.courier}>{row.courier ?? words.noCourier}</span>
     <span class="tracking" class:faint={!row.tracking_id}>{row.tracking_id ?? words.noTracking}</span>
   </div>
-  <div class="cell muted">{formatShortDay(row.day)} {row.batch_time}</div>
+  <div class="cell muted">
+    {formatShortDay(row.day)}
+    {row.batch_time}
+    {#if row.archived}<span class="archived">{texts.archive.searchMark}</span>{/if}
+  </div>
   <div class="cell label">
     <span class="strong">{words.batch(row.batch)}</span>
     <span class="code">{row.group}</span>
@@ -76,7 +81,9 @@
   </div>
   <div class="cell tools">
     {#if mark}<span class="mark" title={mark.title}>{mark.text}</span>{/if}
-    <button class="small" title={words.openFile(row.file)} onclick={onOpenOutput}>{words.open}</button>
+    {#if !row.archived}
+      <button class="small" title={words.openFile(row.file)} onclick={onOpenOutput}>{words.open}</button>
+    {/if}
   </div>
   <ul class="items">
     {#each row.items as item, i (i)}
@@ -205,6 +212,11 @@
     color: var(--text-muted);
     font-size: 0.9rem;
     font-variant-numeric: tabular-nums;
+  }
+
+  .archived {
+    color: var(--text-faint);
+    font-style: italic;
   }
 
   .muted {

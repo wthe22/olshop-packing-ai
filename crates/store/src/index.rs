@@ -2,7 +2,7 @@
 //! journal of the data folder, with the fields a filter reads and its trace back to the input page,
 //! and every date's reprints. It is only read: every decision is still taken from a date's own fold.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::ops::RangeInclusive;
 use std::path::Path;
 
@@ -14,9 +14,11 @@ use packing_engine::rules::{Condition, FilterFields, FilterLine, evaluate_filter
 use packing_engine::workflows::Courier;
 
 use crate::StoreError;
+use crate::archive::is_archived;
 use crate::date::DateFolder;
 use crate::dates::dates;
 use crate::fold::{Damage, Fold, LiveBatch};
+use crate::inputs::live_inputs;
 use crate::journal::Journal;
 
 /// One saved order as Search finds it.
@@ -117,6 +119,8 @@ pub struct SearchIndex {
     dates: BTreeMap<Date, Vec<IndexedOrder>>,
     /// The reprints of each date that has any, in the order they were made.
     reprints: BTreeMap<Date, Vec<ReprintMade>>,
+    /// The file names of each date's live inputs, which tell an archived date.
+    inputs: BTreeMap<Date, Vec<String>>,
     /// The dates whose journal is damaged: left out, and named in the panel.
     pub damaged: BTreeMap<Date, Damage>,
 }
@@ -139,6 +143,7 @@ impl SearchIndex {
                 let date = journal.fold().date;
                 self.dates.remove(&date);
                 self.reprints.remove(&date);
+                self.inputs.remove(&date);
                 self.damaged.insert(date, damage.clone());
             }
             None => self.refresh(journal.fold()),
@@ -153,6 +158,12 @@ impl SearchIndex {
             .flat_map(|(batch, live)| indexed(fold.date, *batch, live))
             .collect();
         self.damaged.remove(&fold.date);
+        let inputs = live_inputs(fold);
+        if inputs.is_empty() {
+            self.inputs.remove(&fold.date);
+        } else {
+            self.inputs.insert(fold.date, inputs);
+        }
         if orders.is_empty() {
             self.dates.remove(&fold.date);
         } else {
@@ -230,6 +241,15 @@ impl SearchIndex {
                     batches: batches.len(),
                 })
             })
+            .collect()
+    }
+
+    /// The dates of the data folder that are archived, as their folders are now.
+    pub fn archived_dates(&self, data_dir: &Path) -> BTreeSet<Date> {
+        self.inputs
+            .iter()
+            .filter(|(date, inputs)| is_archived(DateFolder::new(data_dir, **date).dir(), inputs))
+            .map(|(date, _)| *date)
             .collect()
     }
 

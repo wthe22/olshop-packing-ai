@@ -46,7 +46,8 @@ test("starting the shell loads the folder, today and the day's overview", async 
   assert.equal(shell.overlay, null);
   assert.deepEqual(
     calls.map((call) => call.command),
-    ["start_info", "panel_dates", "day_overview", "about"],
+    ["start_info", "panel_dates", "day_overview", "about", "archive_after_days"],
+    "the archive at start asks whether it is on",
   );
   assert.deepEqual(calls[2].args, { day: "2026-10-07" });
 

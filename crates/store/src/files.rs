@@ -1,5 +1,5 @@
 //! File helpers the store shares: a file's SHA-256, a write that a crash cannot leave half done,
-//! and a move that names a file Windows refuses to move.
+//! a move that names a file Windows refuses to move, and a folder's size.
 
 use std::fs;
 use std::io::{Read, Write};
@@ -106,4 +106,24 @@ pub(crate) fn files_in(dir: &Path) -> Result<Vec<String>, StoreError> {
     }
     names.sort();
     Ok(names)
+}
+
+/// The size of every file in `dir` and its subfolders together; 0 when `dir` does not exist.
+pub fn folder_size(dir: &Path) -> Result<u64, StoreError> {
+    let entries = match fs::read_dir(dir) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(0),
+        Err(error) => return Err(StoreError::io(dir, error)),
+    };
+    let mut total = 0;
+    for entry in entries {
+        let entry = entry.map_err(|e| StoreError::io(dir, e))?;
+        let meta = entry.metadata().map_err(|e| StoreError::io(dir, e))?;
+        total += if meta.is_dir() {
+            folder_size(&entry.path())?
+        } else {
+            meta.len()
+        };
+    }
+    Ok(total)
 }

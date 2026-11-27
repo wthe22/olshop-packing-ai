@@ -1,6 +1,7 @@
 <script lang="ts">
   // The buttons of one output file on the Day screen: **Print** (not on a summary PDF) and **Open**,
-  // or **Restore** for a file found changed, with the open-time check's warning before them.
+  // or **Restore** for a file found changed, with the open-time check's warning before them. An
+  // archived date's outputs are gone: none.
   import { texts } from "../texts";
   import type { FileProblem } from "./api/day";
   import type { SentMark } from "./dayOutputs.svelte";
@@ -26,18 +27,20 @@
   } = $props();
 </script>
 
-{#if problem}
-  <span class="problem">{texts.day.problem(problem)}</span>
-{/if}
-{#if problem === "changed"}
-  {#if !access.dateLocked}
-    <button onclick={() => onRestore(file)}>{texts.day.restore}</button>
+{#if !access.archived}
+  {#if problem}
+    <span class="problem">{texts.day.problem(problem)}</span>
   {/if}
-{:else}
-  {#if printable && !access.dateLocked}
-    <button title={texts.day.printTitle(file)} onclick={() => onPrint(file, mark)}
-      >{texts.day.print}</button
-    >
+  {#if problem === "changed"}
+    {#if !access.dateLocked}
+      <button onclick={() => onRestore(file)}>{texts.day.restore}</button>
+    {/if}
+  {:else}
+    {#if printable && !access.dateLocked}
+      <button title={texts.day.printTitle(file)} onclick={() => onPrint(file, mark)}
+        >{texts.day.print}</button
+      >
+    {/if}
+    <button onclick={() => onOpenOutput(file)}>{texts.day.open}</button>
   {/if}
-  <button onclick={() => onOpenOutput(file)}>{texts.day.open}</button>
 {/if}

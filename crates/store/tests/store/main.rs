@@ -1,6 +1,7 @@
 //! The store on a temporary data folder: the journal and its fold, `.partial/` settled by
 //! the journal, the views, the lock and the inputs.
 
+mod archive;
 mod common;
 mod dates;
 mod flatten;

@@ -1,5 +1,5 @@
 //! The files the app keeps (data/README.md): `packing-app.toml` beside the program, the app's own
-//! preferences (the data folder and the theme); and, inside the data folder, `parser.toml` (how
+//! preferences (the data folder, the theme and archiving on its own); and, inside the data folder, `parser.toml` (how
 //! labels are read) and `config.toml` (the accounts and the sort rules), each written from the
 //! bundled copy when it is missing and from then on the owner's.
 
@@ -48,6 +48,7 @@ struct Root {
     data_dir: Option<PathBuf>,
     #[serde(default)]
     theme: Theme,
+    archive_after_days: Option<u16>,
 }
 
 /// `packing-app.toml`'s text; empty when the file is missing.
@@ -92,16 +93,21 @@ fn read_root(program: &Path) -> Result<Root, String> {
     toml::from_str(&text).map_err(|e| error(e.message().to_string()))
 }
 
-/// Set `key` in `packing-app.toml`, every other key kept as it is, a newer copy's too; a new file
-/// starts with this copy's `schema`.
-fn write_key(program: &Path, key: &str, value: &str) -> Result<(), String> {
+/// Set `key` in `packing-app.toml`, or remove it with `None`, every other key kept as it is, a
+/// newer copy's too; a new file starts with this copy's `schema`.
+fn write_key(program: &Path, key: &str, value: Option<toml_edit::Value>) -> Result<(), String> {
     let mut doc: toml_edit::DocumentMut = read_text(program)?
         .parse()
         .map_err(|error| format!("{APP_FILE}: {error}"))?;
     if !doc.contains_key("schema") {
         doc["schema"] = toml_edit::value(SCHEMA.to_string());
     }
-    doc[key] = toml_edit::value(value);
+    match value {
+        Some(value) => doc[key] = toml_edit::Item::Value(value),
+        None => {
+            doc.remove(key);
+        }
+    }
     let path = program.join(APP_FILE);
     fs::write(&path, doc.to_string())
         .map_err(|error| format!("Cannot write {}: {error}.", path.display()))
@@ -120,7 +126,11 @@ pub(crate) fn set_data_dir(program: &Path, dir: &Path) -> Result<PathBuf, String
         .strip_prefix(program)
         .map_or_else(|_| dir.to_path_buf(), Path::to_path_buf);
     read_root(program)?;
-    write_key(program, "data_dir", &stored.to_string_lossy())?;
+    write_key(
+        program,
+        "data_dir",
+        Some(stored.to_string_lossy().as_ref().into()),
+    )?;
     Ok(program.join(stored))
 }
 
@@ -132,7 +142,22 @@ pub(crate) fn theme(program: &Path) -> Result<Theme, String> {
 /// Write the theme into `packing-app.toml`, the data folder kept.
 pub(crate) fn set_theme(program: &Path, theme: Theme) -> Result<(), String> {
     read_root(program)?;
-    write_key(program, "theme", theme.as_str())
+    write_key(program, "theme", Some(theme.as_str().into()))
+}
+
+/// The number of days after which a date is archived at start; none: off.
+pub(crate) fn archive_after_days(program: &Path) -> Result<Option<u16>, String> {
+    Ok(read_root(program)?.archive_after_days)
+}
+
+/// Write `archive_after_days` into `packing-app.toml`, or remove it with `None`, the rest kept.
+pub(crate) fn set_archive_after_days(program: &Path, days: Option<u16>) -> Result<(), String> {
+    read_root(program)?;
+    write_key(
+        program,
+        "archive_after_days",
+        days.map(|days| i64::from(days).into()),
+    )
 }
 
 /// The keys of `packing-app.toml`, `parser.toml` and `config.toml` this version does not know, as

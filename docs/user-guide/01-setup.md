@@ -79,10 +79,11 @@ updated, and the next start asks about it again. The same question comes when an
 that needs it.
 
 If something looks wrong after an Update, close Packing and run
-`python tools\revert-update.py "<data folder>"` (`--dry-run` first lists what it would do; Python 3.11 or
-later). It moves every file back, deletes what the Update copied or wrote, and puts back each changed file; the
+`python tools\update-backup.py revert "<data folder>"` (`--dry-run` first lists what it would do; Python 3.11
+or later). It moves every file back, deletes what the Update copied or wrote, and puts back each changed file; the
 folder becomes `update v0.8.0-alpha.11 reverted`. A date saved to after the Update is left as it is and named. Once the
-dates look right, the update folders can be deleted by hand.
+dates look right, `python tools\update-backup.py delete "<data folder>"` deletes the update folders (`--dry-run`
+first lists them with their sizes). Started with a double-click, the script asks what to do.
 
 A date converted by version 0.8.0-alpha.8 or older keeps its old folders in `v0.7 backup`. Close Packing, then run
 `python tools\remove-v07-backup.py "<data folder>"` (`--dry-run` first lists what it would remove). It deletes

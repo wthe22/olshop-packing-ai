@@ -14,6 +14,7 @@ import * as dayData from "./api/day";
 import * as panelData from "./api/panel";
 import * as batch from "./api/batch";
 import { DayOutputs } from "./dayOutputs.svelte";
+import { Archiving } from "./archiving.svelte";
 import { texts } from "../texts";
 import { amendOpens } from "./planFlow";
 import { confirmBox } from "./confirm.svelte";
@@ -82,6 +83,8 @@ export class Shell {
   writing = $state(false);
   // **Print**, *Sent*, the **Printed** tick, *Open* and **Restore** on the Day screen's outputs.
   readonly outputs = new DayOutputs(this);
+  // **Archive** of a date or a range, and the archive at start.
+  readonly archiving = new Archiving(this);
 
   // The batch number the next save will get (continuing the day).
   nextBatch = $derived((this.overview?.totals.batches ?? 0) + 1);
@@ -129,12 +132,15 @@ export class Shell {
     } catch (e) {
       this.error = String(e);
     }
+    // Not awaited: the window shows first, and the archive's progress over it.
+    void this.archiving.atStart();
   };
 
   refreshOverview = async () => {
     try {
       this.overview = await dayData.dayOverview(this.day);
       access.date = this.overview.edited.read_only;
+      access.archived = this.overview.archived;
     } catch (e) {
       this.error = String(e);
     }

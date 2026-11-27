@@ -45,6 +45,7 @@ export function backend(extra = {}) {
     panel_dates: () => ({ dates: [{ date: "2026-10-07" }] }),
     day_overview: () => overview(),
     about: () => ({ version: "0.2", pdfium: "140.0", schema: "1.0" }),
+    archive_after_days: () => null,
     "plugin:event|listen": () => 1,
     "plugin:event|unlisten": () => undefined,
     ...extra,

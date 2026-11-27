@@ -85,6 +85,7 @@
           today={shell.today}
           onOpenDate={shell.openDate}
           onOpenFolder={shell.openFolder}
+          onArchive={shell.archiving.date}
         />
       {/if}
       <div class="screen">

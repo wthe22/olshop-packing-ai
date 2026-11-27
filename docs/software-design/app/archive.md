@@ -26,8 +26,8 @@ Nothing is stored to say so. A date with some inputs missing is not archived: it
   first: the outputs first, the inputs last, so a date that stops half way is not archived and can be archived
   again. A file Windows refuses to delete (open in a viewer) is left and named; the rest go on. More than one
   date shows its progress: *Archiving: 2026-10-07, 3 of 18*.
-- A date with `.partial/`, with no live batch, or opened read-only is not archived. Read-only mode archives
-  nothing and does not show **Archive**.
+- A date with `.partial/`, with no live batch, damaged, or opened read-only is not archived. Read-only mode
+  archives nothing and does not show **Archive**.
 
 ## An archived date
 

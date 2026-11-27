@@ -156,6 +156,7 @@ pub(crate) fn revert(
     let date = date_of(day)?;
     let pdfs = save_to.map_or(RevertedPdfs::Discard, RevertedPdfs::Save);
     state.write_day(date, |open| {
+        open.not_archived()?;
         check_newest(open.journal.fold(), batch)?;
         let reverted = packing_batch::revert(&open.folder, &mut open.journal, APP_VERSION, pdfs)
             .map_err(|error| error.to_string())?;
@@ -176,6 +177,7 @@ pub(crate) fn restore_file(state: &AppState, day: &str, file: &str) -> Result<Re
     let date = date_of(day)?;
     let (_, workflows) = settings::workflows(state.program())?;
     state.write_day(date, |open| {
+        open.not_archived()?;
         let outcome = state
             .with_worker(|worker| {
                 restore(
