@@ -6,6 +6,13 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-27)
 
+- **Work in progress (2026-11-27) — the data rework, [data-rework.md](data-rework.md) T1 to T4.** The owner's
+  answers: [D-APP-37](../../software-design/decisions/accounts.md) (an order's account is the one that lists its
+  shop now; *No account* for an order of no listed shop) and [D-APP-38](../../software-design/decisions/app.md)
+  (the screens read the views; a view changed by hand is named with Rebuild, Read only, Ignore; a date with
+  no journal takes saves). A new session takes the first task left in that file. No build until all four are
+  done.
+
 - **Handoff of 2026-11-27 (latest) — v0.8.0-alpha.11: Update lists its moves and copies what it changes.**
   The owner's rule ([D-APP-36](../../software-design/decisions/versions.md)): a file only moved or renamed is
   not backed up, the move is written down so a script can undo it; a file whose content changes is copied.

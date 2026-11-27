@@ -76,9 +76,9 @@ click beside it or `Esc` closes it.
 - **The tabs** are the accounts, in the order they were made; **+ New account** asks for a name in a dialog. A name
   that is taken is refused under the field. With no account yet, the first read of labels asks
   ([The shop prompt](02-a-day.md#the-shop-prompt)).
-- **Rename** changes the name for the orders read from then on; orders saved before keep the name they
-  were saved with. **Delete** asks first: its saved orders stay under its name and Search still
-  finds them; its shops are asked about again at the next read.
+- **Rename** changes the name, for the orders saved before too: an order's account is always the one that
+  lists its shop now. **Delete** asks first: its saved orders go under **No account**, where Search
+  still finds them; its shops are asked about again at the next read.
 - **Shops** are the names its labels are sent by: one field each, **×** takes one off, **+ Add shop**
   adds one. A name another account lists, or listed twice, is told under its field and **Save** stays off.
   **Save** (with **Cancel** and *Unsaved changes* at the foot) writes the shops to `config.toml`;

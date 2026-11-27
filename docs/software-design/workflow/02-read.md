@@ -69,12 +69,12 @@ Order ID; a page that starts a copy and has no slip table (plain labels). Each n
   before the plan. A courier or *Not a courier* is written into `parser.toml` at once, so it is
   asked once ever; *I don't know* writes nothing ([New batch](../ui/new-batch.md#the-logo-prompt)).
 
-- **The account of each copy**: the longest listed shop name found in its sender names its shop and account
-  ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo prompt, *Which account are these orders for?*
-  asks about each sender no account lists, once per name, and each file with labels that have no sender
-  ([New batch](../ui/new-batch.md#the-shop-prompt)). A shop's answer is written into
-  `config.toml` at once; a file's answer holds for this read. **Back** returns to the file list
-  ([D-APP-28](../decisions/accounts.md)).
+- **The account of each copy**: the longest listed shop name found in its sender names its shop; its account
+  is the account that lists that shop ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo
+  prompt, *Which account are these orders for?* asks about each sender no account lists, once per name
+  ([New batch](../ui/new-batch.md#the-shop-prompt)). The answer is written into `config.toml` at once.
+  **Back** returns to the file list. A label with no sender is under **No account**
+  ([D-APP-37](../decisions/accounts.md)).
 
-**Check:** these are warnings, not stops; the owner may disagree for *no tracking ID*. Every order has an
+**Check:** these are warnings, not stops; the owner may disagree for *no tracking ID*. Every listed shop has an
 account before the plan.

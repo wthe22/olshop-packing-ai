@@ -92,8 +92,6 @@ for each file whose labels show no shop name.
 - A **shop** row shows the shop name as printed and its orders. Its list holds the accounts, a new account
   another row names (*New: Toko Gamma*), and **New account**, which opens a box for the name, starting on
   the shop name. The shop is remembered with its account in `config.toml` and never asked about again.
-- A **No shop name** row names the file and how many of its orders show no shop name. Its account holds for
-  this read only. It starts on the account of the file's other orders, or follows their shop's row.
 - With no account yet, every shop starts on **New account** named after the shop: **Continue** makes them.
 - **Continue** is off until every row has an account. **Back** (or `Esc`) returns to the file list and
   remembers nothing.

@@ -1,9 +1,10 @@
 # Views
 
 Three files of the owner's draft, written from the journal after every commit so a person or another
-program can read a date without the app ([D-APP-8](../decisions/app.md)). Each is written to a temporary
+program can read a date without the app ([D-APP-38](../decisions/app.md)). Each is written to a temporary
 file and renamed into place; `day.toml` is written last, so its `journal_seq` vouches for all three.
-A view is never read for a decision. When one is missing or `day.toml`'s `journal_seq` is not the
+The screens read the views; the journal is read to write, recover, migrate and audit
+([D-APP-38](../decisions/app.md)). When one is missing or `day.toml`'s `journal_seq` is not the
 journal's last `seq`, all three are written again ([journal › When a date opens](journal.md#when-a-date-opens));
 when its `schema` is older than this version's, or the date still has v0.7's `session.toml`, only by the
 migration the owner starts ([D-APP-33](../decisions/app.md)), which first copies them into the date's
@@ -11,6 +12,11 @@ update folder and then deletes `session.toml` ([D-APP-36](../decisions/versions.
 view of a date whose journal holds a record it passed over, nor over a newer `day.toml` or `orders.csv`
 ([D-APP-34](../decisions/versions.md)). A view is the program's: each commit writes it whole, so a column or
 a key added by hand is not kept; the owner edits a copy.
+
+`day.toml` holds the SHA-256 of `orders.csv` and `order-contents.toml`, and its last line the SHA-256 of
+the text before it. When a date opens and a view's hash differs while `journal_seq` is the journal's, the Day
+screen names the file with **Rebuild**, **Read only** and **Ignore** (D-APP-38); a view written by a copy
+that wrote no hash is not checked. A date whose journal is missing is shown from its views alone.
 
 Only live batches appear; a reverted batch is gone from the views and stays in the journal. IDs that
 the journal does not hold (`RuleID`, `OrderContentID`) are numbered by the fold in order of first
@@ -33,6 +39,9 @@ Root {
   label_sort_rules: Map<RuleID, LabelSortRule>   // each distinct rule snapshot once
   label_batches: List<LabelBatch>
   reprints: List<Reprint>
+  orders_csv_sha256: Sha256     // of orders.csv as written
+  order_contents_sha256: Sha256 // of order-contents.toml as written
+  sha256: Sha256                // the last line: of this file's text before it
 }
 
 LabelPdf {

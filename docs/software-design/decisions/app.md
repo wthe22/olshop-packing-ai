@@ -56,14 +56,25 @@ source. An append-only file of sealed lines commits atomically, shows damage, an
 
 **Applies to.** [journal](../data/journal.md), [records](../data/records.md).
 
-## D-APP-8 — The draft's data files are views of the journal
+## D-APP-38 — The screens read the views; the journal is read to write, recover, migrate and audit
 
 **Decision.** `day.toml`, `orders.csv` and `order-contents.toml` are written from the journal after every
-commit, never read for a decision, and rebuilt when missing or when `journal_seq` is stale.
+commit, and the screens read them: the dates, the Day screen, Search and its index, the Accounts screen's
+counts, the reprint list and the summaries. The journal is read to write (a commit and its checks, the
+already-saved guard, amend, revert, restore, a reprint's record), to recover, to migrate, by the verifier and
+for the Day screen's journal notes. A missing view or a stale `journal_seq` is written again when the date
+opens, as recovery. `day.toml` keeps the SHA-256 of the other two views and of itself; a view that differs is
+named on the Day screen with **Rebuild** (written again from the journal), **Read only** (the date shows the
+files as they are and takes no write until the program starts again) and **Ignore** (it shows them as they are;
+the next commit writes them again). A date with views and no journal is shown from its views; its first commit,
+asked first, starts its journal with the views' batches (`restored`), which can be reprinted but not amended
+or reverted. It replaces D-APP-8.
 
-**Why.** The owner's files stay readable by people and other programs, and there is still one truth.
+**Why.** The owner's words (2026-11-27): the journal is the only truth, kept for recovery, migration and
+audit, not read day to day; a date must stay usable without it. The owner may open a view in Excel but not
+save it there: a save turns an Order ID into `5.8E+17`, which the hash names.
 
-**Applies to.** [views](../data/views.md).
+**Applies to.** [views](../data/views.md), [journal](../data/journal.md#when-a-date-opens), [Day](../ui/day.md).
 
 ## D-APP-9 — Copies of the app share a data folder; one writes at a time
 

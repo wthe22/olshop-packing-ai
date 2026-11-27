@@ -1,8 +1,8 @@
 # Accounts and dates
 
 An **account** is one shop owner's group of shops ([D-APP-27](../decisions/accounts.md)). Every order
-names its account and the shop its label was sent by; the account is found from the shop name on the label
-([D-APP-28](../decisions/accounts.md)). The data folder holds one folder per date for all accounts
+names the shop its label was sent by; its account is the account that lists that shop now
+([D-APP-37](../decisions/accounts.md)). The data folder holds one folder per date for all accounts
 together ([data](../data/README.md#the-data-folder)): a batch may hold the orders of several accounts.
 
 | Word | Meaning |
@@ -52,26 +52,26 @@ shops = ["Toko Beta"]
 - A copy's **shop** is the listed name found in the sender of its first page, spaces and upper and lower case
   ignored ([reading](../labels/reading.md#the-sender)). When several listed names are found, the longest
   wins (`Toko Alfa Official` before `Toko Alfa`), then the one listed first. Its **account** is the account
-  that lists that shop.
-- An order's account and shop are those of the copy that is written; the record keeps both as they are at
-  the save ([records](../data/records.md)). A copy left out keeps neither.
+  that lists that shop in `config.toml` now: not stored, looked up wherever an order is shown, counted,
+  filtered or summarised ([records](../data/records.md)).
+- **No account** holds every order whose shop no account lists: a shop taken off its account, an order
+  saved before shops were kept (v0.4), a label with no sender. It is not in `config.toml`, cannot be made,
+  renamed or deleted, and no account can take its name; Search, the counts and the summaries show it like
+  any account, and only while it has orders.
 - **A sender no account lists** is asked about before the plan, once per name: an account, or **New
   account**, named after the shop unless the owner types another name. The answer is written into the accounts file at once, so the name is
   asked about once ever ([New batch](../ui/new-batch.md#the-shop-prompt)).
-- **A label with no sender** (no `Pengirim` caption) is asked about per file: the account its orders go to
-  for this read, which may be a new one. Such an order has no shop, and nothing else is stored. An amend's first read gives each such
-  order the account its record names.
-- Every order of a batch has an account: the plan waits for the answers.
+- **A label with no sender** (no `Pengirim` caption) is not asked about: its order has no shop and is under
+  **No account**.
+- The plan waits for the answers to the shop prompt.
 
 ## Creating, renaming and deleting
 
 - **+ New account** on the Accounts screen, or **New account** in the shop prompt, adds an account with that
   name (and the shop, from the prompt).
-- **Rename** changes the name for the orders read from then on. The orders saved before keep the name they
-  were saved with: the journal is never rewritten.
+- **Rename** changes the name of the account of every order of its shops, saved ones too.
 - **Delete** (asked first) removes the account and its shop names from the accounts file. Its saved orders
-  stay in the journals under its name and are found by Search; their shops are asked about again at the
-  next read.
+  are then under **No account**; their shops are asked about again at the next read.
 
 ## Listing and opening dates
 

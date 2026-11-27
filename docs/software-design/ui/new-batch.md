@@ -92,22 +92,17 @@ QR never are. The picture is the image as printed, and the count says how many p
 
 ## The shop prompt
 
-Every order needs an account ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo prompt,
-before the Plan screen, one question has a row for each shop name no account has and for each file with
-labels that show no shop name, each with one list ([D-APP-28](../decisions/accounts.md)):
+An order's account is its shop's ([accounts](../app/accounts.md#the-account-of-an-order)). After the logo
+prompt, before the Plan screen, one question has a row for each shop name no account has, each with one list
+([D-APP-37](../decisions/accounts.md)):
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │  Which account are these orders for?                                         │
-│  A shop is remembered with its account. Labels with no shop name are asked   │
-│  about each time.                                                            │
+│  A shop is remembered with its account.                                      │
 │  ──────────────────────────────────────────────────────────────────────────  │
 │  Toko Gamma                                  12 orders   [New account     ▾] │
 │                                                          [Toko Gamma       ] │
-│  ──────────────────────────────────────────────────────────────────────────  │
-│  No shop name [Shipping label_3.pdf]          2 orders   [New: Toko Gamma ▾] │
-│  ──────────────────────────────────────────────────────────────────────────  │
-│  No shop name [Shipping label_5.pdf]          1 order   [Choose an account▾] │
 │                                                            [Back] [Continue] │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -118,14 +113,9 @@ labels that show no shop name, each with one list ([D-APP-28](../decisions/accou
   (not editable), with its orders. **New account** starts on the shop's name. **Continue** writes every shop
   into `config.toml` with its account, so it is never asked again; a shop another copy of the app listed
   meanwhile keeps that account.
-- **Labels with no shop name**: one row per file, *No shop name*, the file and its orders that show none.
-  Their account holds for this read only; nothing is stored but a new account the row names, which is
-  made with no shop.
-- **Where a row starts**: with no account yet, a shop on **New account** with its name. A file on the
-  account its other orders go to, or following the shop row they share (so it takes that shop's answer);
-  else on the only account when no shop is asked; else *Choose an account*.
+- **Where a row starts**: with no account yet, a shop on **New account** with its name.
 - **Continue** is off until every row has an account and every new account a name; a name refused
   ([accounts › Names](../app/accounts.md#names)) is said above the buttons. **Back** (and `Esc`) returns
   to the file list and writes nothing, where a file can be taken off.
-- The plan is then counted with every order's account; an amend's first read takes a no-sender order's
-  account from the batch's record and asks only about a shop no account lists any more.
+- The plan is then counted with every order's account; a label with no sender is not asked about and its
+  order is under **No account**.

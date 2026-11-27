@@ -51,7 +51,7 @@ SavedOrder {
   tracking_id: Option<String>   // an instant label's pickup code; the fold reads it so for an older record too
   courier: Option<CourierCode>
   courier_clue: CourierClue
-  account: String               // the account the order was read as (accounts.md, The account of an order)
+  account: String               // written by 2.0 only, never read: the account is its shop's now (D-APP-37)
   shop: Option<String>          // the shop name found, as the account listed it; none: no sender on the label
   content: u16                  // index into contents
   total_quantity: Option<u16>   // Qty Total printed on the slip; none on the Shopee-style slip
@@ -152,6 +152,11 @@ OrderWeight {
   weight: Weight
 }
 
+Restored {                      // type "restored", seq 2 of a journal started over views (D-APP-38)
+  batches: List<BatchSaved>     // the live batches as the views state them; outputs without hashes;
+                                // reprinted and summarised, never amended or reverted
+}
+
 Recovered {                     // type "recovered"
   dropped_bytes: u64
   dropped_text: String          // the cut-off bytes, as UTF-8 with invalid bytes replaced
@@ -172,5 +177,5 @@ Recovered {                     // type "recovered"
   from its stored inputs by the migration the owner starts ([D-APP-33](../decisions/app.md)): an
   `areas_filled` and a `weights_filled` record per batch, each for the orders without it, so no record is
   edited. An amend reads them again with the rest.
-- `account` and `shop` are the names at the save: a renamed or deleted account changes no record, and an
-  account's summary is made from these fields ([summary PDF](../labels/summary-pdf.md#one-account)).
+- `shop` is the name at the save. An order's account is looked up from it in `config.toml` when it is
+  needed ([accounts](../app/accounts.md#the-account-of-an-order)), so a rename or delete changes no record.

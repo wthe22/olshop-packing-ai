@@ -87,6 +87,8 @@ namespaces.
 | D-UI-7 (the theme in the title bar's menu) | replaced by D-UI-8 (the theme in Settings) |
 | D-UI-10 (Search's results as cards) | replaced by D-UI-12 (one compact row per order) |
 | D-UI-12 (one compact row per order) | replaced by D-UI-16 (a card per order on shared columns) |
+| D-APP-8 (views never read for a decision) | replaced by D-APP-38 (the screens read the views) |
+| D-APP-28 (an order's account stored; a file with no sender asked) | replaced by D-APP-37 (the shop's account now; No account) |
 | D-LABEL-22 (the day's order contents, the one-line ones first) | replaced by D-LABEL-23 (most orders first; the inputs after the couriers) |
 | F-APP-6 (several sessions a day), F-UI-5 (the sessions panel) | F-APP-8 (namespaces), F-UI-7 (the panel) |
 | R-APP-1, R-LABEL-1, R-UI-4, R-UI-5, R-RULES-2 | resolved by the v0.2 design |

@@ -37,18 +37,18 @@ of [Sort rules](sort-rules.md); **×**, a click beside it or `Esc` returns.
 
 - **The head**: the account's name, **Rename** and **Delete**.
   - **Rename** puts the name in a field in place, with **Cancel** and **Rename**; Enter renames, `Esc`
-    cancels. A refused name is told under the field. The line under it says: *Orders saved before keep the
-    name they were saved with.*
+    cancels. A refused name is told under the field. The line under it says: *Its saved orders move to the
+    new name.*
   - **Delete** asks "Delete account Toko Beta?" — "Its shops are asked about again at the next read.
-    Its saved orders stay, under its name." [Delete] [Cancel].
+    Its saved orders go under No account." [Delete] [Cancel].
 - **Shops**: one field per shop name, its **×**, and **+ Add shop**. A name listed twice, or listed by
   another account (spaces and case ignored), is told under its field and keeps **Save** off, with the
   reason as its tooltip ([accounts › Names](../app/accounts.md#names)). An account with no shop says
-  *No shops: only a label with no sender can be put here.*
+  *No shops yet.*
 - **Dates**: the dates with orders of this account, newest first, months folded as in the [panel](panel.md);
   each with the account's orders and the batches that hold them, as count columns. A folded month shows its
   orders. A click on a date opens it on the Day screen and closes this page; a draft being prepared asks
-  first. The counts come from the search index (*Loading* until it is built) and are the orders saved
-  under this name.
+  first. The counts come from the search index (*Loading* until it is built) and are the orders of
+  its shops.
 - **The foot** stays in view: *Unsaved changes*, **Cancel** and **Save** for the shops, as on Sort rules.
   Save writes `config.toml` under the data folder's lock.

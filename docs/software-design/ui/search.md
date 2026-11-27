@@ -70,7 +70,7 @@ Where the results are 72 rem wide or more, the label column also holds the group
 - **Results**: the number of orders and batches, then the **heads** (*Order*, *Tracking*, *Saved*, *Label*,
   with **Select all** as the tick at their left) and one **card** per order under them
   ([D-UI-16](../decisions/ui.md), R-UI-58). The card's **head** is one row on the heads' columns, each as
-  wide as its longest entry: its tick; its **shop** in grey (the account's name in grey italics when the
+  wide as its longest entry: its tick; its **shop** in grey (*No account* in grey italics when the
   label printed no sender; a long name ends with dots, whole in its tooltip) and its **Order ID** in bold;
   its courier's name as a pill (*Unknown* when the label named none) and the **tracking ID** (*no tracking
   ID* when the label printed none); the date and time its batch was saved (*Wed, 7 Oct 09:12*); the batch

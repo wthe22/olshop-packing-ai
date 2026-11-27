@@ -43,11 +43,11 @@ has a digest of its own.
 | V6 | The summary PDF's printed counts (orders, units, pages read, written and left out, each group bar's orders and units), read as text, equal the record's; on an account's summary, those of its orders | Error |
 
 The checks of a **reprint** and a **restore** are V2, V5 and V6 for the files they write
-([reprint](reprint.md)); an **account's summary** is checked by V6 against its batch's record, the account's
-orders only ([summary PDF](../labels/summary-pdf.md#one-account)). A finding stops it and nothing is kept.
+([reprint](reprint.md)); an **account's summary** is checked by V6 against its batch's record, the orders
+whose shop the account lists in `config.toml` (*No account*: those of no listed shop) only ([summary PDF](../labels/summary-pdf.md#one-account)). A finding stops it and nothing is kept.
 
-V4 also checks the accounts: every order names one, and no shop name (spaces and case ignored) stands under
-two accounts in the record.
+V4 also checks the accounts: no shop name (spaces and case ignored) stands under two accounts in
+`config.toml`.
 
 ## Two severities, never one list
 

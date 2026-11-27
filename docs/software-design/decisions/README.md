@@ -8,10 +8,10 @@ reused. A decision that changes gets a new record that names the one it replaces
 
 | File | Records |
 |---|---|
-| [app.md](app.md) | D-APP-1, D-APP-3, D-APP-4, D-APP-6 to D-APP-12, D-APP-32: PDFium, the schema version, order data from the labels, the courier list, the journal, views, one writer, inputs by content, outputs, the verifier, one flat folder per date |
+| [app.md](app.md) | D-APP-1, D-APP-3, D-APP-4, D-APP-6, D-APP-7, D-APP-9 to D-APP-12, D-APP-32, D-APP-38: PDFium, the schema version, order data from the labels, the courier list, the journal, the screens read the views, one writer, inputs by content, outputs, the verifier, one flat folder per date |
 | [app-features.md](app-features.md) | D-APP-14 to D-APP-16, D-APP-18 to D-APP-23, D-APP-26, D-APP-30, D-APP-31: the three config files' places, reprint, the search index, the summary PDF, findings stop the save, amend, item identity, ship-by date, repeats, Print and the Sent mark, a revert's saved label PDFs |
 | [versions.md](versions.md) | D-APP-34, D-APP-35: a copy reads its own major version and passes over what it does not know; `day.toml` and the version column of `orders.csv` |
-| [accounts.md](accounts.md) | D-APP-27 to D-APP-29: accounts replace workspaces, an order's account from its shop, an account's summary on request |
+| [accounts.md](accounts.md) | D-APP-27, D-APP-29, D-APP-37: accounts replace workspaces, an account's summary on request, an order's account is its shop's account now |
 | [label.md](label.md) | D-LABEL-2, D-LABEL-4 to D-LABEL-6, D-LABEL-9 to D-LABEL-15, D-LABEL-21, D-LABEL-24 to D-LABEL-27: two clues, remembered images, the Shopee-style label, appearance hash, the header band, copies and the split label, page identities, the courier clue, order contents, instant labels by their tag, the pickup code as the tracking ID, the regular SPX badge, the receiver's area and the weight as printed |
 | [summaries.md](summaries.md) | D-LABEL-16, D-LABEL-19, D-LABEL-20, D-LABEL-23: the summary PDF's parts, one row everywhere and couriers by name, the day summary as the Day cards, its inputs and its order contents by most orders |
 | [rules.md](rules.md) | D-RULES-1 to D-RULES-6: choosing (the rule used last preselected) and renaming a sort rule, *is empty*, a courier typed by name or picked by code, switching a rule off, account and shop in the filter language |
