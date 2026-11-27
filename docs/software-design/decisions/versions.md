@@ -29,7 +29,7 @@ type or meaning, a record an older copy must apply to be right, a field it needs
   type or field of the journal as a muted note on the Day screen (*Journal lines 2, 5: orders[].colour in
   batch_saved is not known to this version. It is kept and not used.*). The journal's version for this is the
   `app` of the record. Data of a newer version is expected to hold such keys and is not named.
-- The journal stays `2.0` for v0.8: the records v0.8 adds (`areas_filled`, `weights_filled`) are passed over
+- The journal is `2.1` for v0.8 (a saved order no longer writes its pickup code, and an item carries its `sku`; a 2.0 record's pickup code and SKUs are still read). The records v0.8 adds (`areas_filled`, `weights_filled`) are passed over
   by a copy that knows this rule. v0.7 and older read only their exact version and call such a record damage;
   what they write, v0.8 and later read.
 
@@ -46,8 +46,8 @@ never drops data silently; what it does not expect, it names without getting in 
 **Decision.** The view that was `session.toml` is `day.toml`, the glossary's word for one date with its
 journal folded. **Update** writes it for a date that still has `session.toml` and deletes the old file.
 `orders.csv` carries its schema as its last column: the header `schema:2.1`, every cell of it empty. A reader
-finds the columns by their headers and passes over that one; a new column goes before it. `day.toml` and
-`orders.csv` share one version, `2.1`.
+finds the columns by their headers and passes over that one; a new column goes before it. Each file has its own version and changes it only when its own shape changes: `day.toml` is `2.1`,
+`orders.csv` is `2.1` (no `account`, `courier_clue` or `seller_skus` column), and `order-contents.toml` is `1.1` (an item has its `sku`).
 
 **Why.** The owner's choice: *session* is a word of v0.1; the CSV tells its version alone and still opens in
 Excel as before, the version out of the way at the end.

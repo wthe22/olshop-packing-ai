@@ -1,6 +1,6 @@
 <script lang="ts">
   // A Search card's details, under its bar: one line per head. The receiver's address, the ship-by
-  // date, the weight and, when they apply, the pickup code and the account (`detailLines`); the
+  // date, the weight and, when it applies, the account (`detailLines`); the
   // input PDF it was read from, its pages there and its short hash; and, when the card's head has no
   // room for them, the group's name and the order's page in the group PDF.
   import type { SearchRow } from "./api/search";

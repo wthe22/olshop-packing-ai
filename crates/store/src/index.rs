@@ -52,16 +52,10 @@ impl FilterFields for IndexedOrder {
     fn lines(&self) -> Vec<FilterLine<'_>> {
         self.items
             .iter()
-            .enumerate()
-            .map(|(at, item)| FilterLine {
+            .map(|item| FilterLine {
                 name: &item.name,
                 variation: &item.variant,
-                seller_sku: self
-                    .order
-                    .skus
-                    .get(at)
-                    .and_then(Option::as_deref)
-                    .unwrap_or_default(),
+                seller_sku: item.sku.as_deref().unwrap_or_default(),
                 quantity: i64::from(item.quantity),
             })
             .collect()

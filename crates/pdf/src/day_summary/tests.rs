@@ -148,6 +148,7 @@ fn the_order_contents_are_the_days_most_orders_first_one_line_ones_before_mixed(
         name: name.into(),
         variant: String::new(),
         quantity,
+        sku: None,
     };
     second.contents.push(OrderContent {
         items: vec![item("Kaca Spion", 1), item("Spion Beat", 1)],

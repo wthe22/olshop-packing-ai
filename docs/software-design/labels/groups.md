@@ -14,9 +14,9 @@
 ## A group PDF
 
 - **Order contents**: inside a group PDF, orders with the same **order content** — their lines as
-  (product name, variation, quantity), sorted — are consecutive ([D-APP-20](../decisions/app-features.md),
-  [D-LABEL-15](../decisions/label.md)). The Seller SKU and the printed `Qty Total` are kept with the order
-  ([records](../data/records.md)), so they never split an order content. Order contents are sorted by number
+  (product name, variation, quantity, Seller SKU), sorted — are consecutive ([D-APP-20](../decisions/app-features.md),
+  [D-LABEL-15](../decisions/label.md)). The printed `Qty Total` is kept with the order
+  ([records](../data/records.md)); the Seller SKU is part of the content, so it splits one. Order contents are sorted by number
   of orders (most first), then as text in line order, name first (upper case before lower case; a quantity
   compares as a number). Inside one order content the orders keep their **reading position**: the input's
   place in the batch, then the page.

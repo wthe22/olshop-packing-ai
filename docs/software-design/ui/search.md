@@ -88,7 +88,7 @@ Where the results are 72 rem wide or more, the label column also holds the group
   a chevron at its end), opens the card's details under the bar, one line per head; a click there again
   closes them, and a click inside the open details changes nothing, so their text can be selected. The
   lines: *ADDRESS* (the receiver's province, city and district as the label prints them); *SHIP BY*;
-  *WEIGHT* (`1,250 g`); *PICKUP CODE* when the tracking ID is another; *ACCOUNT* when the shop has another
+  *WEIGHT* (`1,250 g`); *ACCOUNT* when the shop has another
   name; *INPUT FILE*, the input PDF it was read from (its file name in a box with a file icon, in
   monospace), its pages there and its short hash named by its algorithm (*SHA256: e731bbe96035*, the one its
   file name carries); and, where the card's head has no room for them, *GROUP*: the group's code, its name

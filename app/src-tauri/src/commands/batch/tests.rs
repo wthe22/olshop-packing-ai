@@ -447,7 +447,7 @@ fn a_logo_answer_is_remembered_in_the_rules_and_the_prompt_moves_on() {
 /// What a row's details show of the first order the search finds in the saved fixtures.
 fn assert_details(row: &Value) {
     let wanted = json!({
-        "items": [{"name": "Jok Kulit Vario | Custom", "variant": "", "quantity": 1, "seller_sku": "SELL-JOK-01"}],
+        "items": [{"name": "Jok Kulit Vario | Custom", "variant": "", "quantity": 1, "sku": "SELL-JOK-01"}],
         "area": {"province": "DKI JAKARTA", "city": "KOTA CONTOH BARAT", "district": "KEBON CONTOH"},
         "ship_by": DAY, "total_quantity": 1, "pickup_code": null, "weight": {"grams": 1000},
     });

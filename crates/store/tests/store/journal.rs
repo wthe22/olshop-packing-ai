@@ -5,9 +5,27 @@ use packing_engine::record::{
     Area, AreasFilled, BatchReverted, OrderArea, OrderWeight, PrintSent, PrintedMarked, RecordBody,
     Recovered, ReprintMade, Weight, WeightsFilled,
 };
-use packing_store::{DamageReason, Journal, StoreError, UnknownPart, open_date};
+use std::fs;
+
+use packing_store::{DamageReason, DateFolder, Journal, StoreError, UnknownPart, open_date};
+use xxhash_rust::xxh3::xxh3_64;
 
 use crate::common::*;
+
+/// Rewrites the journal's last line (its batch, saved by this copy) the way a 2.0 copy wrote it:
+/// `edit` changes its JSON, and the line is sealed again as 2.0 sealed it (XXH3-64 of the JSON).
+fn with_2_0_batch(folder: &DateFolder, edit: impl FnOnce(&mut serde_json::Value)) {
+    let path = folder.dir().join("journal.jsonl");
+    let text = fs::read_to_string(&path).unwrap();
+    let mut lines: Vec<String> = text.lines().map(str::to_string).collect();
+    let last = lines.pop().unwrap();
+    let (_, json) = last.split_once(' ').unwrap();
+    let mut record: serde_json::Value = serde_json::from_str(json).unwrap();
+    edit(&mut record);
+    let json = serde_json::to_string(&record).unwrap();
+    lines.push(format!("{:016x} {json}", xxh3_64(json.as_bytes())));
+    fs::write(&path, lines.join("\n") + "\n").unwrap();
+}
 
 #[test]
 fn a_first_commit_starts_the_journal_and_reads_back() {
@@ -228,7 +246,6 @@ fn an_older_record_reads_its_pickup_code_as_tracking_id_and_gets_its_area_and_we
     let mut journal = Journal::open(&folder).unwrap();
     let mut older = batch(1, false, Vec::new());
     older.orders[0].tracking_id = None;
-    older.orders[0].pickup_code = Some("WX1234".into());
     for order in &mut older.orders {
         order.area = None;
         order.weight = None;
@@ -236,6 +253,10 @@ fn an_older_record_reads_its_pickup_code_as_tracking_id_and_gets_its_area_and_we
     journal
         .commit(vec![RecordBody::BatchSaved(older)], APP)
         .unwrap();
+    with_2_0_batch(&folder, |record| {
+        record["orders"][0]["pickup_code"] = "WX1234".into()
+    });
+    let mut journal = Journal::open(&folder).unwrap();
     let order = &journal.fold().live[&BatchId::new(1)].saved.orders[0];
     assert_eq!(order.tracking_id, Some(TrackingId::new("WX1234")));
     assert_eq!(order.area, None);
@@ -479,4 +500,60 @@ fn a_journal_of_another_major_stops_at_its_first_line() {
         text,
         "it is of a newer format (schema 3.0, Packing v0.9.0): this copy reads 2.x"
     );
+}
+
+#[test]
+fn a_2_0_batch_keeps_each_orders_skus_as_its_items_and_splits_contents_by_sku() {
+    let (_data, folder) = date_folder("legacy-skus");
+    let mut journal = Journal::open(&folder).unwrap();
+    journal
+        .commit(
+            vec![RecordBody::BatchSaved(batch(1, false, Vec::new()))],
+            APP,
+        )
+        .unwrap();
+    // 2.0 kept the SKUs beside each order and wrote no SKU in an item. Orders 01 and 03 share a
+    // content (the same items) with two SKUs; order 02 has its own content.
+    with_2_0_batch(&folder, |record| {
+        for content in record["contents"].as_array_mut().unwrap() {
+            for item in content["items"].as_array_mut().unwrap() {
+                item.as_object_mut().unwrap().remove("sku");
+            }
+        }
+        let skus = [vec![Some("SELL-A")], vec![None], vec![Some("SELL-B")]];
+        for (order, sku) in record["orders"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .zip(skus)
+        {
+            order["skus"] = sku
+                .into_iter()
+                .map(|sku| sku.map_or(serde_json::Value::Null, Into::into))
+                .collect::<Vec<_>>()
+                .into();
+        }
+    });
+    let journal = Journal::open(&folder).unwrap();
+    let saved = &journal.fold().live[&BatchId::new(1)].saved;
+    let skus: Vec<Option<String>> = saved
+        .orders
+        .iter()
+        .map(|order| {
+            saved.contents[usize::from(order.content)].items[0]
+                .sku
+                .clone()
+        })
+        .collect();
+    assert_eq!(
+        skus,
+        [Some("SELL-A".to_string()), None, Some("SELL-B".to_string())],
+        "each order's SKU is its item's, the content is made again with it"
+    );
+    assert_eq!(
+        saved.contents.len(),
+        3,
+        "the same items with two SKUs are two contents"
+    );
+    assert!(saved.orders.iter().all(|order| order.skus.is_empty()));
 }

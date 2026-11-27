@@ -245,8 +245,8 @@ export interface DetailLine {
 }
 
 // The details' lines above the input file and group, each only when the label prints it: the
-// receiver's province, city and district; the ship-by date; the weight; the pickup code when the
-// tracking ID is another; the account when the card shows a shop of another name.
+// receiver's province, city and district; the ship-by date; the weight; the account when the card
+// shows a shop of another name.
 export function detailLines(row: api.SearchRow): DetailLine[] {
   const words = texts.search;
   const heads = words.details;
@@ -261,7 +261,6 @@ export function detailLines(row: api.SearchRow): DetailLine[] {
   if (row.ship_by) add(heads.shipBy, formatDay(row.ship_by));
   if (row.weight === null) notRead(heads.weight);
   else if (row.weight !== "not_printed") add(heads.weight, words.grams(row.weight.grams));
-  if (row.pickup_code && row.pickup_code !== row.tracking_id) add(heads.pickupCode, row.pickup_code);
   if (row.shop !== null && row.shop !== row.account) add(heads.account, row.account);
   return lines;
 }

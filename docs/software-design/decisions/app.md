@@ -21,7 +21,7 @@ version. A copy reads every version of its own major and passes over what it doe
 Data of an older major is not read and not changed (D-APP-27: nor deleted; a separate
 script copies v0.4 dates once), except by a migration the owner starts (D-APP-33). A schema is raised once
 for each release the owner's data moves to, never for a development step between two (R-APP-18): the
-owner's data is at v0.7 (`session.toml` `2.0`), so everything v0.8 changes is `day.toml` `2.1` (D-APP-35).
+owner's data is at v0.7 (`session.toml` `2.0`), so what v0.8 changes is the journal, `day.toml` and `orders.csv` `2.1` and `order-contents.toml` `1.1` (D-APP-35).
 
 **Why.** The owner's choice: the data is a working set, and the labels can be read again.
 

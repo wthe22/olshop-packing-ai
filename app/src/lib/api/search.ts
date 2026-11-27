@@ -10,7 +10,7 @@ export interface SearchItem {
   name: string;
   variant: string;
   quantity: number;
-  seller_sku: string | null;
+  sku: string | null;
 }
 
 // The receiver's province, city and district as the label prints them; `null` where it prints none.
@@ -40,8 +40,6 @@ export interface SearchRow {
   ship_by: string | null;
   // The `Qty Total` the slip prints; `null` on the Shopee-style slip.
   total_quantity: number | null;
-  // The instant-service label's pickup code.
-  pickup_code: string | null;
   // `null`: saved before the area was read, and the data folder not updated since.
   area: SearchArea | null;
   // `null`: saved before the weight was read, and the data folder not updated since.

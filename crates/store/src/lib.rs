@@ -11,6 +11,7 @@ mod fold;
 mod index;
 mod inputs;
 mod journal;
+mod legacy;
 mod line;
 mod lock;
 mod migrations;
@@ -40,6 +41,6 @@ pub use outputs::{
 };
 pub use update_log::{UPDATE_LOG, UpdateLog, UpdateStep};
 pub use views::{
-    DAY_TOML, ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, VIEWS_SCHEMA, views_current,
-    write_views, write_views_again,
+    DAY_TOML, DAY_TOML_SCHEMA, ORDER_CONTENTS_TOML, ORDERS_CSV, ORDERS_CSV_SCHEMA, SESSION_TOML,
+    views_current, write_views, write_views_again,
 };

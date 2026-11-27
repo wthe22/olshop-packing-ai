@@ -113,25 +113,20 @@ impl SortedBatch {
     }
 }
 
-/// An order's content — its lines as (name, variation, quantity), sorted — with the Seller SKU of
-/// each item in that order, which an order content does not hold.
-pub fn content_of(copy: &Copy) -> (OrderContent, Vec<Option<String>>) {
-    let mut items: Vec<(ItemPick, Option<String>)> = copy
+/// An order's content: its lines as (name, variation, quantity, SKU), sorted.
+pub fn content_of(copy: &Copy) -> OrderContent {
+    let mut items: Vec<ItemPick> = copy
         .lines
         .iter()
-        .map(|line| {
-            let item = ItemPick {
-                name: line.name.clone(),
-                variant: line.variation.clone(),
-                quantity: u16::try_from(line.quantity).unwrap_or(u16::MAX),
-            };
-            let sku = (!line.seller_sku.is_empty()).then(|| line.seller_sku.clone());
-            (item, sku)
+        .map(|line| ItemPick {
+            name: line.name.clone(),
+            variant: line.variation.clone(),
+            quantity: u16::try_from(line.quantity).unwrap_or(u16::MAX),
+            sku: (!line.seller_sku.is_empty()).then(|| line.seller_sku.clone()),
         })
         .collect();
     items.sort();
-    let (items, skus) = items.into_iter().unzip();
-    (OrderContent { items }, skus)
+    OrderContent { items }
 }
 
 /// Sort the kept copies of a batch by its plan; `couriers` name the couriers a filter compares.
@@ -181,7 +176,7 @@ pub fn sort_batch(
 fn blocks(copies: &[Copy], orders: &[usize]) -> Vec<ContentBlock> {
     let mut blocks: Vec<ContentBlock> = Vec::new();
     for &copy in orders {
-        let (content, _) = content_of(&copies[copy]);
+        let content = content_of(&copies[copy]);
         match blocks.iter_mut().find(|block| block.content == content) {
             Some(block) => block.orders.push(copy),
             None => blocks.push(ContentBlock {

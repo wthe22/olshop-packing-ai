@@ -64,7 +64,6 @@ pub struct OrderRow {
     ship_by: Option<String>,
     /// The `Qty Total` the slip prints; none on the Shopee-style slip.
     total_quantity: Option<u16>,
-    pickup_code: Option<String>,
     /// None: saved before the area was read, and the data folder not updated since.
     area: Option<AreaView>,
     /// None: saved before the weight was read, and the data folder not updated since.
@@ -104,7 +103,7 @@ pub struct ItemView {
     /// Empty for none.
     variant: String,
     quantity: u16,
-    seller_sku: Option<String>,
+    sku: Option<String>,
 }
 
 /// The receiver's province, city and district as the label prints them; none where it prints none.
@@ -170,17 +169,15 @@ fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> Order
         items: order
             .items
             .iter()
-            .enumerate()
-            .map(|(at, item)| ItemView {
+            .map(|item| ItemView {
                 name: item.name.clone(),
                 variant: item.variant.clone(),
                 quantity: item.quantity,
-                seller_sku: saved.skus.get(at).cloned().flatten(),
+                sku: item.sku.clone(),
             })
             .collect(),
         ship_by: saved.ship_by_date.map(|date| date.to_string()),
         total_quantity: saved.total_quantity,
-        pickup_code: saved.pickup_code.clone(),
         area: saved.area.as_ref().map(|area| AreaView {
             province: area.province.clone(),
             city: area.city.clone(),

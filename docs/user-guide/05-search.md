@@ -22,7 +22,7 @@
 - A click on a card (or on the arrow under its items) opens the rest; another click closes it. The rest:
   the receiver's address, the ship-by date, the parcel's weight, the label file it was read from with its
   page and hash (*SHA256: …*), and, when the window had no room for them in the first row, the group's
-  name and page. The pickup code and the account show there only when the card does not show them
+  name and page. The account shows there only when the card does not show it
   already.
 - **Account** and **Shop**: *Account equals* picks one account from the list and narrows the search to its
   orders; *Shop* does the same for a shop name. Without them every account is searched.

@@ -85,7 +85,7 @@
         <span class="name">{item.name}</span>
         <span class="more">
           <span class="variant" class:none={!item.variant}>{item.variant}</span>
-          <span class="sku">{item.seller_sku ?? ""}</span>
+          <span class="sku">{item.sku ?? ""}</span>
         </span>
       </li>
     {/each}

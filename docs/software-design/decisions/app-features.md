@@ -91,10 +91,10 @@ read again.
 
 **Applies to.** [05 After the save](../workflow/05-after-save.md#18-amend-newest-live-batch-only), [New batch](../ui/new-batch.md#the-amends-file-list).
 
-## D-APP-20 — An item is its product name and variation
+## D-APP-20 — An item is its product name, variation and Seller SKU
 
-**Decision.** Name and variation identify an item (Q-APP-8): the order content of a group PDF and the units of
-the pick pages. The Seller SKU is stored with the order's line but is not part of its order content.
+**Decision.** Name, variation and Seller SKU identify an item (Q-APP-8): the order content of a group PDF and the units of
+the pick pages. The same name and variation with another Seller SKU is another item.
 
 **Why.** The platform's `SKU ID` is not on the label PDFs, and one item can come with or without a Seller SKU.
 

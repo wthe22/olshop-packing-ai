@@ -1,10 +1,11 @@
-schema = "1.0"
+schema = "1.1"
 auto_increment = 3
 
 [[order_content.1.items]]
 name = "Sepatu Standar Samping Motor | Pelindung Rantai"
 variant = "honda"
 quantity = 1
+sku = "SELL-SEP-01"
 
 [[order_content.2.items]]
 name = "Spion Beat"

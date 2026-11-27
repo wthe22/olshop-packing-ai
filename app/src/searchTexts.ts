@@ -77,7 +77,6 @@ export const searchTexts = {
     address: "Address",
     shipBy: "Ship by",
     weight: "Weight",
-    pickupCode: "Pickup code",
     account: "Account",
     input: "Input file",
     group: "Group",

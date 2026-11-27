@@ -55,9 +55,9 @@ rest takes: no order is in two groups and none is in none.
 
 ## 10. Order contents and file names
 
-- **Order content** of an order: its lines as (product name, variation, quantity), sorted. Orders with the
-  same order content are packed the same way ([D-APP-20](../decisions/app-features.md)). The Seller SKU and
-  the printed `Qty Total` are stored with the order, not with its content ([D-LABEL-15](../decisions/label.md)).
+- **Order content** of an order: its lines as (product name, variation, quantity, Seller SKU), sorted. Orders with the
+  same order content are packed the same way ([D-APP-20](../decisions/app-features.md)). The
+  printed `Qty Total` is stored with the order, not with its content ([D-LABEL-15](../decisions/label.md)).
 - **Inside a group**, orders with the same order content are consecutive. Order contents are sorted by
   number of orders (most first), then as text, name first; inside one order content the orders keep their
   reading position. They carry no number.
@@ -71,6 +71,6 @@ rest takes: no order is in two groups and none is in none.
 
 **Check:**
 
-- Two orders with the same name and variation but a different Seller SKU share one order content.
+- Two orders with the same name and variation but a different Seller SKU do not share one order content.
 - Order contents of equal size are sorted as text, so a name in capitals sorts before one in lower case; a
   quantity compares as a number.

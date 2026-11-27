@@ -146,10 +146,14 @@ fn an_amend_records_the_copies_saved_earlier_and_its_contents_once() {
     assert!(record.amends);
     assert_eq!(
         record.contents.len(),
-        1,
-        "two orders that differ only in Seller SKU"
+        2,
+        "two orders that differ only in Seller SKU are two contents"
     );
-    let skus: Vec<Vec<Option<String>>> = record.orders.iter().map(|o| o.skus.clone()).collect();
+    let skus: Vec<Vec<Option<String>>> = record
+        .contents
+        .iter()
+        .map(|content| content.items.iter().map(|item| item.sku.clone()).collect())
+        .collect();
     assert_eq!(
         skus,
         [vec![Some("S-1".to_string())], vec![Some("S-2".to_string())]]

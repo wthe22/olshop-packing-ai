@@ -31,7 +31,7 @@ pub fn batch_saved(facts: BatchFacts<'_>) -> BatchSaved {
     let mut orders = Vec::new();
     for (group, at) in facts.sorted.printing_order() {
         let copy = &facts.copies[at];
-        let (content, skus) = content_of(copy);
+        let content = content_of(copy);
         let index = match contents.iter().position(|known| *known == content) {
             Some(index) => index,
             None => {
@@ -51,12 +51,12 @@ pub fn batch_saved(facts: BatchFacts<'_>) -> BatchSaved {
             account: account.account,
             shop: account.shop,
             content: index as u16,
-            skus,
+            skus: Vec::new(),
             total_quantity: copy
                 .total_quantity
                 .map(|n| u16::try_from(n).unwrap_or(u16::MAX)),
             ship_by_date: copy.ship_by_date,
-            pickup_code: copy.pickup_code.clone(),
+            pickup_code: None,
             area: Some(copy.area.clone()),
             weight: Some(copy.weight),
             pdf: facts.inputs[copy.input].pdf,

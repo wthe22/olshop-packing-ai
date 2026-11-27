@@ -13,7 +13,7 @@ use packing_engine::record::{
 use packing_engine::schema::Schema;
 use serde::Serialize;
 
-use super::{ContentIds, Numbered, VIEWS_SCHEMA};
+use super::{ContentIds, DAY_TOML_SCHEMA, Numbered};
 use crate::fold::{Fold, LiveBatch};
 
 #[derive(Serialize)]
@@ -107,7 +107,7 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
         batches.push(label_batch(*batch, live, rule_id as u16, ids));
     }
     let root = Root {
-        schema: VIEWS_SCHEMA,
+        schema: DAY_TOML_SCHEMA,
         date: fold.date,
         journal_seq: fold.last_seq,
         input_pdfs: input_pdfs(fold),
@@ -278,6 +278,7 @@ fn picking_list(live: &LiveBatch) -> Vec<ItemPick> {
             name,
             variant,
             quantity,
+            sku: None,
         })
         .collect();
     list.sort_by_cached_key(|item| {

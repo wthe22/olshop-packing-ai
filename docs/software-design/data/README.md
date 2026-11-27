@@ -86,10 +86,10 @@ journal that grew meanwhile. A date opened while another copy holds the lock is 
 - `PdfID: u8` (an input of the date), `BatchID: u8` (1, 2, 3, … within the date),
   `OrderContentID: u16` and `RuleID: u8` (numbered in the views). `CourierCode` is `Courier.code` of
   `parser.toml`.
-- Every TOML file, the journal's first record and `orders.csv` (its last column's header, `schema:2.1`)
+- Every TOML file, the journal's first record and `orders.csv` (`orders.csv`: its last column's header, `schema:2.1`)
   carry `schema` as an `X.Y` version, starting at `1.0`. The schema version is not the app version: the
-  journal is `2.0`, `day.toml` and `orders.csv` `2.1` (a date for all accounts), `packing-app.toml`,
-  `parser.toml`, `config.toml` and `order-contents.toml` `1.0`. Every journal record also carries the app
+  journal, `day.toml` and `orders.csv` `2.1` (a date for all accounts), `packing-app.toml`,
+  `parser.toml`, `config.toml` and `order-contents.toml` `1.1`. Every journal record also carries the app
   version that wrote it ([D-APP-3](../decisions/app.md)).
 - **A copy reads every version of its own X** and passes over what it does not know: a key, a field, a
   record type, a column. A change an older copy of the same X can pass over keeps X; one that needs another

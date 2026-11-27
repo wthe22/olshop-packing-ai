@@ -240,10 +240,9 @@ test("a card shows the Qty Total only when it says more; its details say what th
     ...row("580000000000000042"),
     account: "Toko Alfa",
     shop: "Toko Alfa Cabang",
-    items: [{ name: "Spion Beat", variant: "honda", quantity: 2, seller_sku: "SKU-01" }],
+    items: [{ name: "Spion Beat", variant: "honda", quantity: 2, sku: "SKU-01" }],
     ship_by: null,
     total_quantity: 2,
-    pickup_code: null,
     area: { province: "JAWA BARAT", city: "KOTA CONTOH", district: null },
     weight: "not_printed",
   };
@@ -261,14 +260,12 @@ test("a card shows the Qty Total only when it says more; its details say what th
     ["Weight", "1,250 g", false],
     ["Account", "Toko Alfa", false],
   ]);
-  const instant = { ...order, shop: "Toko Alfa", tracking_id: "12AB", pickup_code: "12AB" };
+  const instant = { ...order, shop: "Toko Alfa", tracking_id: "12AB" };
   assert.deepEqual(
     lines(instant),
     [["Address", "JAWA BARAT, KOTA CONTOH", false]],
-    "what the label does not print is left out; a pickup code that is the tracking ID, and the account " +
-      "the shop is named after, are not said again",
+    "what the label does not print is left out, and the account the shop is named after is not said again",
   );
-  assert.deepEqual(lines({ ...instant, tracking_id: "JY0000001234" }).at(-1), ["Pickup code", "12AB", false]);
   assert.deepEqual(lines({ ...order, shop: null, area: null, weight: null }), [
     ["Address", "not read yet", true],
     ["Weight", "not read yet", true],

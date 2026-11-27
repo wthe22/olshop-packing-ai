@@ -6,12 +6,14 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
 use jiff::civil::Date;
-use packing_engine::ids::{BatchId, OrderId, PdfId, TrackingId};
+use packing_engine::ids::{BatchId, OrderId, PdfId};
 use packing_engine::record::{
     AreasFilled, BatchSaved, Datetime, JOURNAL_SCHEMA, OutputFile, OutputRestored, Record,
     RecordBody, ReprintMade, SavedOrder, Sha256, WeightsFilled,
 };
 use packing_engine::schema::{Schema, SchemaFit};
+
+use crate::legacy;
 
 /// Where a journal is damaged: the line, counted from 1, and why.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -355,7 +357,7 @@ impl Fold {
         self.live.insert(
             saved.batch,
             LiveBatch {
-                saved: with_pickup_tracking(saved),
+                saved: legacy::as_read(saved),
                 create_time,
                 modify_time: time.clone(),
                 sent: BTreeMap::new(),
@@ -429,18 +431,6 @@ impl Fold {
         }
         Ok(live)
     }
-}
-
-/// The record as the fold reads it: an order whose label printed no tracking ID and a pickup code
-/// has the pickup code as its tracking ID, whichever version of the app saved it.
-fn with_pickup_tracking(saved: &BatchSaved) -> BatchSaved {
-    let mut saved = saved.clone();
-    for order in &mut saved.orders {
-        if order.tracking_id.is_none() {
-            order.tracking_id = order.pickup_code.as_deref().map(TrackingId::new);
-        }
-    }
-    saved
 }
 
 /// A journal of this copy's major reads, whatever its minor.

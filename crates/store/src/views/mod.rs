@@ -11,7 +11,7 @@ use std::fs;
 use std::path::Path;
 
 use packing_engine::ids::BatchId;
-use packing_engine::record::{OrderContent, SCHEMA};
+use packing_engine::record::{ORDER_CONTENTS_SCHEMA, OrderContent};
 use packing_engine::schema::{Schema, newer_app};
 use serde::ser::{Serialize, SerializeMap, Serializer};
 use serde::{Deserialize, Serialize as SerializeDerive};
@@ -26,9 +26,11 @@ pub const ORDER_CONTENTS_TOML: &str = "order-contents.toml";
 /// `day.toml` under its older name, which the migration replaces.
 pub const SESSION_TOML: &str = "session.toml";
 
-/// The schema version of `day.toml` and of `orders.csv` (its last column's header). A file of an
-/// older version is written again only by the migration the owner starts, never when a date opens.
-pub const VIEWS_SCHEMA: Schema = Schema::new(2, 1);
+/// The schema version of each view, its own: a view is bumped only when its own shape changes. The
+/// version of `orders.csv` is its last column's header. A file of an older version is written again
+/// only by the migration the owner starts, never when a date opens.
+pub const DAY_TOML_SCHEMA: Schema = Schema::new(2, 1);
+pub const ORDERS_CSV_SCHEMA: Schema = Schema::new(2, 1);
 
 /// Write the three views of the fold, `day.toml` last. A copy writes none it could not write
 /// whole: none of a date with a newer copy's record, none over a newer copy's `day.toml`.
@@ -52,16 +54,16 @@ pub fn write_views(date_dir: &Path, fold: &Fold) -> Result<(), StoreError> {
 /// and this one does not know, or `day.toml` or `orders.csv` is of a newer version than this copy
 /// writes.
 fn left_to_a_newer_copy(date_dir: &Path, fold: &Fold) -> bool {
-    let newer = |found: Option<String>| {
+    let newer = |found: Option<String>, own: Schema| {
         found
             .and_then(|found| Schema::parse(&found))
-            .is_some_and(|version| version > VIEWS_SCHEMA)
+            .is_some_and(|version| version > own)
     };
     fold.unknown
         .iter()
         .any(|unknown| newer_app(&unknown.app, env!("CARGO_PKG_VERSION")))
-        || newer(views_schema(date_dir, DAY_TOML))
-        || newer(csv_schema(date_dir))
+        || newer(views_schema(date_dir, DAY_TOML), DAY_TOML_SCHEMA)
+        || newer(csv_schema(date_dir), ORDERS_CSV_SCHEMA)
 }
 
 /// The `X.Y` of the last header of the date's `orders.csv` (`schema:X.Y`); none when there is no
@@ -101,7 +103,7 @@ pub(crate) fn older_views(date_dir: &Path) -> Option<String> {
         return Some(found);
     }
     views_schema(date_dir, DAY_TOML)
-        .filter(|found| Schema::parse(found).is_none_or(|version| version < VIEWS_SCHEMA))
+        .filter(|found| Schema::parse(found).is_none_or(|version| version < DAY_TOML_SCHEMA))
 }
 
 /// The views written again by the migration: `session.toml` goes once `day.toml` is there.
@@ -169,7 +171,7 @@ fn contents_toml(ids: &ContentIds) -> String {
         order_content: Numbered<&'a OrderContent>,
     }
     let root = Root {
-        schema: SCHEMA,
+        schema: ORDER_CONTENTS_SCHEMA,
         auto_increment: ids.contents.len() as u16 + 1,
         order_content: Numbered(
             ids.contents

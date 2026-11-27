@@ -2,48 +2,35 @@
 //! absent value as an empty cell. The last column's header is `schema:X.Y` and its cells are empty:
 //! a reader finds the columns by their headers and passes over that one.
 
-use packing_engine::record::{CourierClueKind, Weight};
+use packing_engine::record::Weight;
 
-use super::{ContentIds, VIEWS_SCHEMA};
+use super::{ContentIds, ORDERS_CSV_SCHEMA};
 use crate::fold::Fold;
 
-const HEADER: [&str; 20] = [
+const HEADER: [&str; 16] = [
     "pdf_num",
     "page_start",
     "page_end",
     "order_id",
     "tracking_id",
     "courier_code",
-    "courier_clue",
-    "account",
     "shop",
     "province",
     "city",
     "district",
     "weight_grams",
     "content_id",
-    "skus",
     "total_quantity",
     "ship_by_date",
-    "pickup_code",
     "batch_id",
     "group_code",
 ];
 
 pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
-    let mut out = format!("{},schema:{VIEWS_SCHEMA}\n", HEADER.join(","));
+    let mut out = format!("{},schema:{ORDERS_CSV_SCHEMA}\n", HEADER.join(","));
     for (batch, live) in &fold.live {
         for order in &live.saved.orders {
             let area = order.area.clone().unwrap_or_default();
-            let clue = match order.courier_clue.kind {
-                CourierClueKind::None => "",
-                kind => kind.as_str(),
-            };
-            let skus: Vec<&str> = order
-                .skus
-                .iter()
-                .map(|sku| sku.as_deref().unwrap_or(""))
-                .collect();
             let cells = [
                 order.pdf.to_string(),
                 order.page_start.to_string(),
@@ -59,8 +46,6 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
                     .as_ref()
                     .map(ToString::to_string)
                     .unwrap_or_default(),
-                clue.to_string(),
-                order.account.clone(),
                 order.shop.clone().unwrap_or_default(),
                 area.province.unwrap_or_default(),
                 area.city.unwrap_or_default(),
@@ -70,7 +55,6 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
                     _ => String::new(),
                 },
                 ids.id(*batch, order.content).to_string(),
-                skus.join("; "),
                 order
                     .total_quantity
                     .map(|n| n.to_string())
@@ -79,7 +63,6 @@ pub(super) fn text(fold: &Fold, ids: &ContentIds) -> String {
                     .ship_by_date
                     .map(|d| d.to_string())
                     .unwrap_or_default(),
-                order.pickup_code.clone().unwrap_or_default(),
                 batch.to_string(),
                 order.group.clone(),
             ];

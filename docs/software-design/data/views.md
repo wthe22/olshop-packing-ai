@@ -26,7 +26,7 @@ an amend deletes the batch's account summaries after its commit.
 
 ```
 Root {
-  schema: String                // "2.1": orders.csv has the receiver's area and the weight
+  schema: String                // "2.1": this file's own version (orders.csv has its own)
   date: Date
   journal_seq: u32              // the journal's last seq when this file was written
   input_pdfs: Map<PdfID, LabelPdf>
@@ -97,7 +97,7 @@ Reprint {
 ## `orders.csv`
 
 One row per order written by a live batch; `order_id` is unique. The field names are the CSV headers;
-an absent value is an empty cell. The last column's header is `schema:2.1`, the version `day.toml` has too,
+an absent value is an empty cell. The last column's header is `schema:2.1`, its own version (`day.toml` has its own),
 and its cells are empty: a reader finds a column by its header and passes over that one; a new column goes
 before it ([D-APP-35](../decisions/versions.md)).
 
@@ -109,18 +109,14 @@ Order {
   order_id: String
   tracking_id: String
   courier_code: CourierCode
-  courier_clue: String          // logo, shape, text, form, tag or empty
-  account: String
   shop: String                  // empty: no sender on the label
   province: String              // the receiver's area as printed (records.md, Area); empty: not printed or not read
   city: String
   district: String
   weight_grams: u32             // records.md, Weight; empty: not printed or not read
   content_id: OrderContentID
-  skus: String                  // its Seller SKUs in its content's item order, joined by "; "
   total_quantity: u16           // the printed Qty Total
   ship_by_date: Date
-  pickup_code: String
   batch_id: BatchID
   group_code: String            // LabelGroup.code
 }
@@ -130,12 +126,12 @@ Order {
 
 ```
 Root {
-  schema: String                // "1.0"
+  schema: String                // "1.1"
   auto_increment: OrderContentID          // the next free ID
   order_content: Map<OrderContentID, OrderContent>
 }
 ```
 
 `OrderContent` and `ItemPick` are those of the journal ([records](records.md)). Two orders with the same
-content share one ID, and the orders of one content ID in a group PDF are consecutive
+content share one ID (a content is its items with their SKUs), and the orders of one content ID in a group PDF are consecutive
 ([groups](../labels/groups.md#a-group-pdf)).

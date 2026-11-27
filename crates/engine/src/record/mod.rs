@@ -18,10 +18,15 @@ pub use self::accounts::{AccountCount, account_counts, of_account, order_units};
 pub use self::time::Datetime;
 
 /// The schema version of a date's journal (its `started` record): one date for every account.
-pub const JOURNAL_SCHEMA: Schema = Schema::new(2, 0);
+/// 2.1: an item carries its `sku`; a saved order no longer writes its SKUs or its pickup code (its
+/// tracking ID is the pickup code).
+pub const JOURNAL_SCHEMA: Schema = Schema::new(2, 1);
 
-/// The schema version of the TOML files beside the program and of `order-contents.toml`.
+/// The schema version of the TOML files beside the program.
 pub const SCHEMA: Schema = Schema::new(1, 0);
+
+/// The schema version of `order-contents.toml`. 1.1: an item has its `sku`.
+pub const ORDER_CONTENTS_SCHEMA: Schema = Schema::new(1, 1);
 
 /// One line of the journal: the numbering every record carries, then its own fields.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -151,6 +156,10 @@ pub struct ItemPick {
     /// Empty for `Default` or none.
     pub variant: String,
     pub quantity: u16,
+    /// The item's Seller SKU on the slip; none when the slip prints none. Part of the content: the same
+    /// items with other SKUs are another content.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sku: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -165,12 +174,16 @@ pub struct SavedOrder {
     pub shop: Option<String>,
     /// Index into the batch's `contents`.
     pub content: u16,
-    /// The Seller SKU of each of its content's items, in their order.
+    /// Written by 2.0 only: the Seller SKU of each of its content's items, in their order.
+    /// The fold moves them into the content's items; a saved order of 2.1 never writes them.
+    #[serde(default, skip_serializing)]
     pub skus: Vec<Option<String>>,
     /// The `Qty Total` the slip prints; none on the Shopee-style slip.
     pub total_quantity: Option<u16>,
     pub ship_by_date: Option<Date>,
-    /// The instant-service label's pickup code.
+    /// Written by 2.0 only: the instant-service label's pickup code, read to give an order with no
+    /// tracking ID its tracking ID. A saved order of 2.1 never writes it.
+    #[serde(default, skip_serializing)]
     pub pickup_code: Option<String>,
     /// None: saved before the area was read, until an `areas_filled` record names the order.
     pub area: Option<Area>,

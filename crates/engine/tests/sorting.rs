@@ -189,7 +189,7 @@ fn a_group_that_takes_nothing_has_no_file_and_a_last_group_without_filter_leaves
 }
 
 #[test]
-fn an_order_content_leaves_out_the_seller_sku_and_keeps_it_beside() {
+fn an_order_content_holds_each_items_seller_sku_and_a_sku_splits_a_content() {
     let one = copy(
         "580000000000000001",
         0,
@@ -205,22 +205,21 @@ fn an_order_content_leaves_out_the_seller_sku_and_keeps_it_beside() {
             line("Spion", "honda", "S-1", 1),
         ],
     );
-    let (content, skus) = content_of(&one);
-    let names: Vec<&str> = content.items.iter().map(|i| i.name.as_str()).collect();
+    let content = content_of(&one);
+    let items: Vec<(&str, Option<&str>)> = content
+        .items
+        .iter()
+        .map(|i| (i.name.as_str(), i.sku.as_deref()))
+        .collect();
     assert_eq!(
-        names,
-        ["Knalpot", "Spion"],
-        "sorted by name, variant, quantity"
+        items,
+        [("Knalpot", None), ("Spion", Some("S-2"))],
+        "sorted by name, variant, quantity; each item with its SKU"
     );
-    assert_eq!(
-        skus,
-        [None, Some("S-2".to_string())],
-        "aligned with the sorted items"
-    );
-    assert_eq!(
-        content_of(&other_sku).0,
+    assert_ne!(
+        content_of(&other_sku),
         content,
-        "a Seller SKU does not split a content"
+        "the same items with other SKUs are another content"
     );
 }
 

@@ -8,7 +8,7 @@ as damage.
 
 ```
 Started {                       // type "started", seq 1
-  schema: String                // "2.0"
+  schema: String                // "2.1" (2.0 before v0.8)
   date: Date
 }
 
@@ -43,6 +43,7 @@ ItemPick {
   name: String
   variant: String               // empty for `Default` or none
   quantity: u16
+  sku: Option<String>       // the item's Seller SKU on the slip; none: the slip prints none
 }
 
 SavedOrder {
@@ -53,10 +54,9 @@ SavedOrder {
   account: String               // the account the order was read as (accounts.md, The account of an order)
   shop: Option<String>          // the shop name found, as the account listed it; none: no sender on the label
   content: u16                  // index into contents
-  skus: List<Option<String>>    // the Seller SKU of each of its content's items, in their order
   total_quantity: Option<u16>   // Qty Total printed on the slip; none on the Shopee-style slip
   ship_by_date: Option<Date>
-  pickup_code: Option<String>   // the instant-service label's Kode Pengambilan
+  pickup_code: Option<String>   // 2.0 records only: read to give tracking_id; 2.1 never writes it
   area: Option<Area>            // none: saved before the area was read, until an areas_filled names it
   weight: Option<Weight>        // none: saved before the weight was read, until a weights_filled names it
   pdf: PdfID                    // the copy that is written
@@ -164,7 +164,7 @@ Recovered {                     // type "recovered"
   for the already-saved guard) into its own types ([verification](../app/verification.md)).
 - `inputs` repeats the facts of an input a batch reuses; the fold checks they agree.
 - `contents` stores each distinct content once per batch: most orders share a few contents. What can differ
-  between orders of one content (the Seller SKU, the printed total) is on the order.
+  between orders of one content (the printed total) is on the order; the Seller SKU is an item's.
 - The ledger (pages read, written, left out) is not stored: it follows from `inputs`, `orders` and
   `left_out`, and the verifier computes it.
 - `courier_clue` and the page range make every order traceable to the page and the clue it came from.
