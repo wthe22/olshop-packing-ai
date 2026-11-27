@@ -120,13 +120,20 @@ fn update_writes_the_views_again_and_opens_the_folder() {
     let sent: Vec<MigrationStep> = sent.try_iter().collect();
     assert!(matches!(
         sent.first(),
+        Some(MigrationStep::Starting {
+            number: 1,
+            of: 1,
+            ..
+        })
+    ));
+    assert!(matches!(
+        sent.get(1),
         Some(MigrationStep::Moving {
             file: 1,
             files: 1,
             ..
         })
     ));
-    assert!(matches!(sent.last(), Some(MigrationStep::Updated(_))));
     let summary = dir.join(DAY).join("1 Summary - Toko Alfa.pdf");
     assert_eq!(fs::read(summary).unwrap(), b"account summary");
     assert!(!dir.join(DAY).join("output").exists());
@@ -140,4 +147,17 @@ fn update_writes_the_views_again_and_opens_the_folder() {
     assert!(pending(&dir).unwrap().is_empty());
     assert!(!start_information(&state).unwrap().read_only);
     assert!(state.write_data(|_, _| Ok(())).is_ok());
+}
+
+#[test]
+fn a_changed_label_pdf_is_named_as_such_and_another_error_keeps_its_words() {
+    let changed = SkipReason::from(BatchError::InputChanged {
+        file: "1 Input 01 abc.pdf".to_string(),
+        date: date(2026, 10, 7),
+    });
+    assert!(matches!(changed, SkipReason::LabelChanged));
+    let SkipReason::Failed { error } = SkipReason::from(BatchError::TooManyReprints) else {
+        panic!("another error is not a changed label PDF");
+    };
+    assert_eq!(error, BatchError::TooManyReprints.to_string());
 }

@@ -1,13 +1,13 @@
-//! Archive (archive.md): a date's PDFs deleted and its data kept, for one date (the panel's row
-//! menu), a range of dates (Settings › Storage) or the dates older than `archive_after_days` (at
-//! start); what that would delete, asked first; and the data folder's size Settings shows.
+//! The Archive page (ui/archive.md): every date with its orders, its size and what archiving it
+//! would delete; a date's PDFs deleted and its data kept, for the ticked dates or the dates older
+//! than `archive_after_days` (Automatic, and at start); what that would delete, asked first.
 
 use std::path::Path;
 
 use jiff::ToSpan;
 use jiff::civil::Date;
 use packing_store::{
-    ArchivePlan, DateFolder, StoreError, archive, dates, folder_size, plan_archive,
+    ArchivePlan, DateFolder, NotArchivable, StoreError, archive, dates, folder_size, plan_archive,
 };
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
@@ -19,8 +19,8 @@ use crate::{AppState, settings, today};
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum ArchiveScope {
-    /// The dates from `from` to `to`, both included; one date is a range of one.
-    Range { from: String, to: String },
+    /// The ticked dates.
+    Dates { dates: Vec<String> },
     /// The dates more than `days` days before today.
     OlderThan { days: u16 },
 }
@@ -35,11 +35,14 @@ impl ArchiveScope {
     /// The dates of `all` (oldest first) it covers.
     fn dates(&self, all: &[Date], today: Date) -> Result<Vec<Date>, String> {
         Ok(match self {
-            ArchiveScope::Range { from, to } => {
-                let (from, to) = (date_of(from)?, date_of(to)?);
+            ArchiveScope::Dates { dates } => {
+                let asked = dates
+                    .iter()
+                    .map(|date| date_of(date))
+                    .collect::<Result<Vec<Date>, String>>()?;
                 all.iter()
                     .copied()
-                    .filter(|date| (from..=to).contains(date))
+                    .filter(|date| asked.contains(date))
                     .collect()
             }
             ArchiveScope::OlderThan { days } => older_than(all, today, *days),
@@ -151,24 +154,75 @@ pub(crate) fn archive_dates(
     })
 }
 
-/// Settings › Storage › *Used*: the data folder's size, its dates and how many are archived.
+/// What archiving a date would delete.
 #[derive(Debug, Serialize)]
-pub struct StorageUsed {
+pub struct PdfsView {
+    pdfs: usize,
     bytes: u64,
-    dates: usize,
-    /// None while the search index is being built.
-    archived: Option<usize>,
 }
 
-pub(crate) fn storage_used(state: &AppState) -> Result<StorageUsed, String> {
+/// One date of the Archive page.
+#[derive(Debug, Serialize)]
+pub struct ArchiveRow {
+    date: String,
+    today: bool,
+    /// Its saved orders, from the search index; none while it is being built.
+    orders: Option<usize>,
+    /// Every file of its folder together.
+    size_bytes: u64,
+    archived: bool,
+    /// What archiving it would delete; none: it cannot be archived (today, nothing saved, damaged,
+    /// archived, or an operation waiting in `.partial/`).
+    archive: Option<PdfsView>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ArchivePage {
+    /// The search index is still being built: no orders yet.
+    loading: bool,
+    /// The data folder's size.
+    total_bytes: u64,
+    /// Newest first.
+    dates: Vec<ArchiveRow>,
+}
+
+pub(crate) fn page(state: &AppState) -> Result<ArchivePage, String> {
     let dir = state.with_data(|data| Ok(data.dir.clone()))?;
-    let archived = state
-        .index()
-        .with(|index| index.archived_dates(&dir).len())?;
-    Ok(StorageUsed {
-        bytes: folder_size(&dir).map_err(|error| error.to_string())?,
-        dates: dates(&dir).map_err(|error| error.to_string())?.len(),
-        archived,
+    let counts = state.index().with(|index| index.counts())?;
+    let today = today();
+    let mut rows = Vec::new();
+    for date in dates(&dir)
+        .map_err(|error| error.to_string())?
+        .into_iter()
+        .rev()
+    {
+        let folder = DateFolder::new(&dir, date);
+        let (archived, archive) = match plan_archive(&folder, today) {
+            Ok(plan) => (
+                false,
+                Some(PdfsView {
+                    pdfs: plan.pdfs.len(),
+                    bytes: plan.bytes(),
+                }),
+            ),
+            Err(StoreError::NotArchivable(reason)) => (reason == NotArchivable::Archived, None),
+            Err(error) => return Err(error.to_string()),
+        };
+        rows.push(ArchiveRow {
+            date: date.to_string(),
+            today: date == today,
+            orders: counts
+                .as_ref()
+                .map(|counts| counts.get(&date).copied().unwrap_or(0)),
+            size_bytes: folder_size(folder.dir()).map_err(|error| error.to_string())?,
+            archived,
+            archive,
+        });
+    }
+    Ok(ArchivePage {
+        loading: counts.is_none(),
+        total_bytes: folder_size(&dir).map_err(|error| error.to_string())?,
+        dates: rows,
     })
 }
 
@@ -195,11 +249,11 @@ pub async fn archive_scope(app: AppHandle, scope: ArchiveScope) -> Result<Archiv
 }
 
 #[tauri::command]
-pub fn storage(state: State<'_, AppState>) -> Result<StorageUsed, String> {
-    storage_used(&state)
+pub fn archive_page(state: State<'_, AppState>) -> Result<ArchivePage, String> {
+    page(&state)
 }
 
-/// Settings › Storage › *Archive automatically*: its number of days; none: off.
+/// The Archive page's *Automatic*: its number of days; none: off.
 #[tauri::command]
 pub fn archive_after_days(state: State<'_, AppState>) -> Result<Option<u16>, String> {
     settings::archive_after_days(state.program())
@@ -208,7 +262,7 @@ pub fn archive_after_days(state: State<'_, AppState>) -> Result<Option<u16>, Str
 #[tauri::command]
 pub fn set_archive_after_days(state: State<'_, AppState>, days: Option<u16>) -> Result<(), String> {
     if days == Some(0) {
-        return Err("Archive automatically takes at least 1 day.".to_string());
+        return Err("Automatic archiving takes at least 1 day.".to_string());
     }
     settings::set_archive_after_days(state.program(), days)
 }

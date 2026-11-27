@@ -11,13 +11,13 @@ the right **Search** ([finding a saved order](05-search.md)), **Accounts** ([Acc
 
 The **panel** at the left lists the dates of the data folder, for every account together:
 
-- The dates, newest first, by month, each with its number of saved orders of every account and, muted, the
-  size of its folder (*84 MB*). Today is always there, marked *today*. Click a date to open it — for a
+- The dates, newest first, by month, each with its number of saved orders of every account. Today is always
+  there, marked *today*. Click a date to open it — for a
   download just after midnight that belongs to the evening before. A batch being prepared asks first.
-- **⋯** on a date opens a small menu: **Open folder** shows its folder in Explorer; **Archive** deletes the
-  date's PDFs ([Archiving a date](04-messages-and-settings.md#archiving-a-date)). `Esc` or a click elsewhere
-  closes the menu. A date marked **⚠ damaged** opens for viewing only.
-- An archived date is muted, with the archive mark before it.
+- **⋯** on a date opens a small menu: **Open folder** shows its folder in Explorer. `Esc` or a click
+  elsewhere closes the menu. A date marked **⚠ damaged** opens for viewing only.
+- An archived date is muted, with the archive mark before it ([Archiving old
+  dates](04-messages-and-settings.md#archiving-old-dates)).
 - The panel button in the title bar (or `Ctrl+B`) hides and shows the panel.
 
 ## A normal batch, step by step

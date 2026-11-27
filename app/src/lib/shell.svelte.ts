@@ -24,7 +24,7 @@ import type { Theme } from "./theme";
 
 // The screens the shell routes between; the batch flow's screens are not in the nav.
 export type Screen = "day" | "new-batch" | "repeats" | "plan";
-export type OverlayId = "search" | "accounts" | "sort-rules" | "settings";
+export type OverlayId = "search" | "accounts" | "sort-rules" | "settings" | "archive";
 
 // A write the owner waits for shows its dialog only when it takes longer than this, so an *Open*
 // of a file that is there does not flash one.
@@ -329,7 +329,7 @@ export class Shell {
     this.panelShown = !this.panelShown;
   };
 
-  // *Search*, *Accounts*, *Sort rules* and *Settings* open over the current screen.
+  // *Search*, *Accounts*, *Sort rules*, *Settings* and the Archive page open over the current screen.
   navigate = (id: OverlayId) => {
     this.overlay = id;
   };

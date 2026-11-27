@@ -1,10 +1,10 @@
 <script lang="ts">
   // The question at start when the data folder holds data this version keeps more of (start.md,
-  // *Update the data folder?*): what changes on each date, then **Update** with its progress, or
-  // **Open read-only**. No date opens before the answer.
+  // *Update the data folder?*): how many dates and that a copy is kept, then **Update** with one
+  // line and a bar for the whole run, or **Open read-only**. No date opens before the answer; when
+  // all are done the Day screen opens, after one line when a batch was not read.
   import type { MigrationView } from "./api/start";
   import { updateTexts as words } from "../updateTexts";
-  import { formatDay } from "../dates";
   import StartCard from "./StartCard.svelte";
   import { Update } from "./update.svelte";
 
@@ -24,117 +24,71 @@
   } = $props();
 
   const update = new Update();
-  const batches = $derived(dates.reduce((sum, date) => sum + date.batches, 0));
-  const v07Dates = $derived(dates.filter((date) => date.v0_7).length);
-  const skipped = $derived(update.lines.some((line) => line.skipped));
+
+  async function run() {
+    if (await update.run()) onDone();
+  }
 </script>
 
 <StartCard title={words.title} {version}>
-  <p class="explain">{words.explain(batches, v07Dates)} {words.readOnlyExplain}</p>
-  <table>
-    <thead>
-      <tr><th>{words.dateHead}</th><th>{words.changesHead}</th></tr>
-    </thead>
-    <tbody>
-      {#each dates as date (date.date)}
-        <tr>
-          <td class="date">{formatDay(date.date)}</td>
-          <td>{words.changes(date.batches, date.orders, date.older_views, date.v0_7)}</td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
+  <p class="explain">{words.explain(dates.length)}</p>
 
-  {#if update.lines.length > 0 || update.current}
-    <ul class="progress">
-      {#each update.lines as line, i (i)}
-        <li class:skipped={line.skipped}>{line.text}</li>
-      {/each}
-      {#if update.current}
-        <li class="running">{update.current}</li>
-      {/if}
-    </ul>
-  {/if}
-  {#if update.done}
-    <p class="done">{skipped ? words.doneSkipped : words.done}</p>
-  {/if}
-  {#if update.error}
-    <p class="error">{words.failed(update.error)}</p>
-  {:else if error}
-    <p class="error">{error}</p>
-  {/if}
-
-  <div class="buttons">
-    {#if update.done}
+  {#if update.skipped.length > 0}
+    <p class="skipped">{words.skipped(update.skipped)}</p>
+    <div class="buttons">
       <button class="primary" onclick={onDone}>{words.continue}</button>
-    {:else}
-      <button disabled={update.running} onclick={onReadOnly}>{words.readOnly}</button>
-      <button class="primary" disabled={update.running} onclick={update.run}>{words.update}</button>
+    </div>
+  {:else if update.running && update.line}
+    <div class="progress">
+      <p class="line">{update.line}</p>
+      <progress max={update.of} value={update.done}></progress>
+      <p class="step">{update.step ?? ""}</p>
+    </div>
+  {:else}
+    {#if update.error}
+      <p class="error">{words.failed(update.error)}</p>
+    {:else if error}
+      <p class="error">{error}</p>
     {/if}
-  </div>
+    <div class="buttons">
+      <button disabled={update.running} onclick={onReadOnly}>{words.readOnly}</button>
+      <button class="primary" disabled={update.running} onclick={run}>{words.update}</button>
+    </div>
+  {/if}
 </StartCard>
 
 <style>
   .explain {
-    margin: 0 0 1.25rem;
+    margin: 0;
     color: var(--text-muted);
-  }
-
-  table {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-collapse: separate;
-    border-spacing: 0;
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  th {
-    padding: 0.4rem 0.75rem;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface-2);
-    color: var(--text-muted);
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    text-align: left;
-    text-transform: uppercase;
-  }
-
-  td {
-    padding: 0.45rem 0.75rem;
-  }
-
-  tr + tr td {
-    border-top: 1px solid var(--border);
-  }
-
-  .date {
-    white-space: nowrap;
   }
 
   .progress {
-    margin: 1rem 0 0;
-    padding: 0;
-    list-style: none;
-    font-size: 0.9rem;
+    margin-top: 1.5rem;
+  }
+
+  .progress p {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  progress {
+    display: block;
+    width: 100%;
+    height: 1.1rem;
+    margin: 0.5rem 0;
+  }
+
+  /* The step: room kept, so the card does not move between steps. */
+  .step {
+    min-height: 1.4em;
     color: var(--text-muted);
+    font-size: 0.9rem;
   }
 
-  .progress li {
-    padding: 0.15rem 0;
-  }
-
-  .progress .running {
-    color: var(--text);
-  }
-
-  .progress .skipped {
+  .skipped {
+    margin: 1rem 0 0;
     color: var(--danger);
-  }
-
-  .done {
-    margin: 0.75rem 0 0;
   }
 
   .error {

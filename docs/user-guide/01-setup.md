@@ -57,14 +57,14 @@ A data folder used by version 0.1 (with `labels\`, `state.json`, `categories.tom
 
 A new version may keep its files another way, or more of each order, than the one before: from version 0.8
 every file of a date sits directly in its date folder, and each order keeps the receiver's province, city
-and district and the parcel's weight. Then, before any date opens, it asks **Update the data folder?** and
-lists each date it would change:
+and district and the parcel's weight. Then, before any date opens, it asks **Update the data folder?**: *29 dates
+were saved by an older Packing. Updating takes a few minutes and keeps a copy of every file it changes.*
 
-- **Update** first moves the files of a date of version 0.7 out of its `input` and `output` folders into the
-  date folder. It then reads the addresses and the weights of the batches saved before from their label
-  PDFs and writes each date's lists again. A line shows how far it is (*Moving files: 2026-11-25, file 3 of 12*, *Reading labels: 2026-11-25,
-  batch 1, page 3 of 120*). No batch, label or PDF is changed or deleted. **Continue** opens the Day screen.
-  Each date it changes gets a folder `update v0.8.0-alpha.11` (the version's number): `update.toml` lists every file
+- **Update** moves the files of a date of version 0.7 out of its `input` and `output` folders into the date
+  folder, reads the addresses and the weights of the batches saved before from their label PDFs, and writes
+  each date's lists again. One line and a bar show how far it is (*Updating 2026-11-24, 3 of 29*), and under
+  it the step (*Reading labels: page 3 of 120*). No batch, label or PDF is changed or deleted. When it is done
+  the Day screen opens. Each date it changes gets a folder `update v0.8.0-alpha.11` (the version's number): `update.toml` lists every file
   it moved, from where to where, and the folder keeps a copy of each file whose content it changed (the
   journal, `day.toml` or `session.toml`, `orders.csv`, `order-contents.toml`). Those three lists are the
   program's: every save writes them whole, so a column added to `orders.csv` by hand is not kept; edit a
@@ -74,8 +74,9 @@ lists each date it would change:
   **Print**, the **Printed** tick, **Reprint**, and the changes on the Accounts and Sort rules screens.
   Starting the program again asks again.
 
-A batch named in red was not read: its label PDF in the date folder has changed. The other batches are
-updated, and the next start asks about it again. The same question comes when another data folder is chosen
+A batch whose label PDF in the date folder has changed is not read; when one is skipped, a line says so
+(*1 batch not read: 2026-11-24 batch 2, its label PDF has changed.*) and **Continue** opens the Day screen. The
+other batches are updated, and the next start asks about it again. The same question comes when another data folder is chosen
 that needs it.
 
 If something looks wrong after an Update, close Packing and run

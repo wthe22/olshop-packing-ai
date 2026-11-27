@@ -4,6 +4,7 @@
   // the date; what that asks and closes is the shell's.
   import type { AccountDates } from "./api/accounts";
   import { months } from "./panel";
+  import { Folds } from "./folds.svelte";
   import { texts } from "../texts";
   import { formatMonth, formatShortDay } from "../dates";
   import Count from "./Count.svelte";
@@ -21,10 +22,7 @@
   const words = texts.accounts;
 
   const list = $derived(months(dates?.dates ?? [], "", today));
-  // A month the owner folded or unfolded; the others follow `startsOpen`.
-  let toggled = $state<Record<string, boolean>>({});
-
-  const isOpen = (key: string, startsOpen: boolean) => toggled[key] ?? startsOpen;
+  const folds = new Folds();
   const total = (rows: { orders: number }[]) => rows.reduce((sum, row) => sum + row.orders, 0);
 </script>
 
@@ -42,8 +40,8 @@
     <p class="note">{words.noDates}</p>
   {/if}
   {#each list as month (month.key)}
-    {@const open = isOpen(month.key, month.startsOpen)}
-    <button class="month" onclick={() => (toggled[month.key] = !open)}>
+    {@const open = folds.isOpen(month)}
+    <button class="month" onclick={() => folds.toggle(month)}>
       <span class="chevron" class:open>▸</span>
       <span class="grow">{formatMonth(month.key)}</span>
       {#if !open}

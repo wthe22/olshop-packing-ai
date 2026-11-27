@@ -93,29 +93,61 @@ fn panel_row(state: &AppState, date: Date) -> Value {
         .clone()
 }
 
-fn range(date: Date) -> ArchiveScope {
-    ArchiveScope::Range {
-        from: date.to_string(),
-        to: date.to_string(),
+fn ticked(dates: &[Date]) -> ArchiveScope {
+    ArchiveScope::Dates {
+        dates: dates.iter().map(ToString::to_string).collect(),
     }
+}
+
+/// The Archive page's row of `date`.
+fn page_row(state: &AppState, date: Date) -> Value {
+    let shown = serde_json::to_value(page(state).unwrap()).unwrap();
+    shown["dates"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|row| row["date"] == date.to_string())
+        .unwrap()
+        .clone()
 }
 
 #[test]
 fn an_old_date_is_archived_and_shown_without_its_pdfs() {
     let (_program, state, [old, recent, today]) = three_dates("app-archive");
     overview(&state, &old.to_string()).unwrap();
-    let before = panel_row(&state, old);
-    assert_eq!(before["archived"], false);
-    assert!(before["size_bytes"].as_u64().unwrap() > 0);
+    let shown = serde_json::to_value(page(&state).unwrap()).unwrap();
+    let listed: Vec<&str> = shown["dates"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row["date"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        listed,
+        [today.to_string(), recent.to_string(), old.to_string()],
+        "newest first"
+    );
+    assert!(shown["total_bytes"].as_u64().unwrap() > 0);
+    let before = page_row(&state, old);
+    assert_eq!(
+        (
+            &before["archived"],
+            &before["orders"],
+            &before["archive"]["pdfs"]
+        ),
+        (&Value::Bool(false), &Value::from(3), &Value::from(3)),
+        "three orders; the input and two outputs to delete"
+    );
+    assert_eq!(
+        page_row(&state, today)["archive"],
+        Value::Null,
+        "today has no tick"
+    );
 
     let asked = preview(&state, &ArchiveScope::OlderThan { days: 60 }).unwrap();
     assert_eq!(asked.dates, [old.to_string()]);
-    assert_eq!(asked.pdfs, 3, "the input and two outputs");
-    let range_of_all = ArchiveScope::Range {
-        from: old.to_string(),
-        to: today.to_string(),
-    };
-    let all = preview(&state, &range_of_all).unwrap();
+    assert_eq!(asked.pdfs, 3);
+    let all = preview(&state, &ticked(&[old, recent, today])).unwrap();
     assert_eq!(
         all.dates,
         [old.to_string(), recent.to_string()],
@@ -123,7 +155,7 @@ fn an_old_date_is_archived_and_shown_without_its_pdfs() {
     );
 
     let steps = std::sync::Mutex::new(Vec::new());
-    let done = archive_dates(&state, &range(old), &|step| {
+    let done = archive_dates(&state, &ticked(&[old]), &|step| {
         steps
             .lock()
             .unwrap()
@@ -134,9 +166,13 @@ fn an_old_date_is_archived_and_shown_without_its_pdfs() {
     assert!(done.left.is_empty());
     assert_eq!(*steps.lock().unwrap(), [(old.to_string(), 1, 1)]);
 
-    let after = panel_row(&state, old);
-    assert_eq!(after["archived"], true);
+    let after = page_row(&state, old);
+    assert_eq!(
+        (&after["archived"], &after["archive"]),
+        (&Value::Bool(true), &Value::Null)
+    );
     assert!(after["size_bytes"].as_u64() < before["size_bytes"].as_u64());
+    assert_eq!(panel_row(&state, old)["archived"], true);
     let shown = serde_json::to_value(overview(&state, &old.to_string()).unwrap()).unwrap();
     assert_eq!(shown["archived"], true);
     assert_eq!(
@@ -150,12 +186,9 @@ fn an_old_date_is_archived_and_shown_without_its_pdfs() {
         Err(ARCHIVED.to_string())
     );
     assert!(
-        preview(&state, &range(old)).unwrap().dates.is_empty(),
+        preview(&state, &ticked(&[old])).unwrap().dates.is_empty(),
         "archived already"
     );
-
-    let used = storage_used(&state).unwrap();
-    assert_eq!((used.dates, used.archived), (3, Some(1)));
 }
 
 #[test]
@@ -167,7 +200,7 @@ fn read_only_archives_nothing() {
             Ok(())
         })
         .unwrap();
-    let refused = archive_dates(&state, &range(old), &|_| {}).unwrap_err();
+    let refused = archive_dates(&state, &ticked(&[old]), &|_| {}).unwrap_err();
     assert_eq!(refused, crate::READ_ONLY);
     assert_eq!(panel_row(&state, old)["archived"], false);
 }

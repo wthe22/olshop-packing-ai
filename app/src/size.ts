@@ -1,4 +1,4 @@
-// A size on disk as the panel and Settings show it: `KB`, `MB` or `GB`, one decimal under 10
+// A size on disk as the Archive page shows it: `KB`, `MB` or `GB`, one decimal under 10
 // ("0.1 MB", "84 MB", "1.2 GB"). A size from a tenth of a megabyte is in megabytes, from one
 // gigabyte in gigabytes.
 

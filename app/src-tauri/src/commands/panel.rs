@@ -1,8 +1,8 @@
 //! The side panel (panel.md): the dates of the data folder with their orders of every account, from
-//! the search index, each date's size and whether it is archived.
+//! the search index, and whether each is archived.
 
 use jiff::civil::Date;
-use packing_store::{DateFolder, dates, folder_size};
+use packing_store::dates;
 use serde::Serialize;
 use tauri::State;
 
@@ -26,8 +26,6 @@ pub struct DateRow {
     damaged: bool,
     /// The date's folder, for *Open folder*; none before its first commit.
     folder: Option<String>,
-    /// Every file of its folder together.
-    size_bytes: u64,
     /// Its PDFs were removed (archive.md).
     archived: bool,
 }
@@ -54,11 +52,9 @@ pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
         .with(|index| index.archived_dates(&data_dir))?
         .unwrap_or_default();
     let loading = counts.is_none();
-    let mut dates = Vec::with_capacity(folders.len());
-    for date in folders {
-        let size_bytes = folder_size(DateFolder::new(&data_dir, date).dir())
-            .map_err(|error| error.to_string())?;
-        dates.push(DateRow {
+    let dates = folders
+        .into_iter()
+        .map(|date| DateRow {
             date: date.to_string(),
             today: date == today,
             orders: counts
@@ -69,10 +65,9 @@ pub(crate) fn panel(state: &AppState) -> Result<PanelView, String> {
                 .is_some_and(|(_, damaged)| damaged.contains(&date)),
             folder: (date != today || today_has_folder)
                 .then(|| data_dir.join(date.to_string()).display().to_string()),
-            size_bytes,
             archived: archived.contains(&date),
-        });
-    }
+        })
+        .collect();
     Ok(PanelView { dates, loading })
 }
 

@@ -20,7 +20,7 @@ export interface MigrationView {
 // A batch the Update could not read, and why.
 export interface SkippedView {
   batch: number;
-  reason: string;
+  reason: { kind: "label_changed" } | { kind: "failed"; error: string };
 }
 
 // A date the Update finished: whether its files of v0.7 were moved, its batches whose addresses were
@@ -32,11 +32,12 @@ export interface DateUpdated {
   skipped: SkippedView[];
 }
 
-// What the Update sends as it runs (the `migration-step` event).
+// What the Update sends as it runs (the `migration-step` event): the date it starts (`number` of
+// `of`, from 1), the file of v0.7 being moved and the label page being read.
 export type MigrationStep =
+  | { kind: "starting"; date: string; number: number; of: number }
   | { kind: "moving"; date: string; file: number; files: number }
-  | { kind: "reading"; date: string; batch: number; page: number; pages: number }
-  | ({ kind: "updated" } & DateUpdated);
+  | { kind: "reading"; date: string; batch: number; page: number; pages: number };
 
 // The data folder chosen, and what the migration would change in it: while there is something,
 // the folder is not opened until the owner answers.

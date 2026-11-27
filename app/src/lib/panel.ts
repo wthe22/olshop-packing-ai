@@ -30,15 +30,3 @@ export function months<T extends { date: string }>(
   }
   return list;
 }
-
-// Whether a date's row menu offers **Archive** (archive.md): a date with a saved batch that is not
-// archived, damaged or today. The back end refuses the rest too, a date with `.partial/` among them.
-export function canArchive(row: {
-  today: boolean;
-  orders: number | null;
-  damaged: boolean;
-  folder: string | null;
-  archived: boolean;
-}): boolean {
-  return row.folder !== null && !row.today && !row.damaged && !row.archived && (row.orders ?? 0) > 0;
-}

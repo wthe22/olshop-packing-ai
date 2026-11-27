@@ -1,6 +1,6 @@
 // The question at start when the data folder would be updated, with a faked back end: no date
-// opens before the answer, **Update** shows its progress line by line, and **Open read-only**
-// opens the folder in read-only mode.
+// opens before the answer, **Update** shows the date running, a bar and the step, and **Open
+// read-only** opens the folder in read-only mode.
 //
 // Run in `app/`: `npm test` (Node's own test runner; the project has no test framework).
 
@@ -51,35 +51,46 @@ test("no date opens before the owner answers; read-only opens the folder for vie
   assert.deepEqual(shell.migration, asked);
 });
 
-test("Update shows the step running and a line for each date done", async () => {
+test("Update shows the date running, a bar for the whole run and the step under it", async () => {
   let finish;
   useBackend(backend({ update_data: () => new Promise((resolve) => (finish = resolve)) }));
   const update = new Update();
   const running = update.run();
   await tick();
   assert.equal(update.running, true);
-  emitEvent("migration-step", { kind: "reading", date: "2026-11-25", batch: 1, page: 3, pages: 120 });
-  assert.equal(update.current, "Reading labels: 2026-11-25, batch 1, page 3 of 120");
-
-  const done = {
-    date: "2026-11-25",
-    batches: 1,
-    skipped: [{ batch: 2, reason: "labels_2.pdf, an input of 2026-11-25, is missing or has changed: its labels cannot be read." }],
-  };
-  emitEvent("migration-step", { kind: "updated", ...done });
-  assert.equal(update.current, null);
-  assert.deepEqual(
-    update.lines.map((line) => [line.text, line.skipped]),
-    [
-      [words.updated("2026-11-25", false, 1), false],
-      [words.skipped(2, done.skipped[0].reason), true],
-    ],
-  );
-  finish([done]);
-  await running;
-  assert.equal(update.done, true);
+  emitEvent("migration-step", { kind: "starting", date: "2026-11-24", number: 3, of: 29 });
+  assert.deepEqual([update.line, update.step, update.done, update.of], ["Updating 2026-11-24, 3 of 29", null, 2, 29]);
+  emitEvent("migration-step", { kind: "reading", date: "2026-11-24", batch: 1, page: 30, pages: 120 });
+  assert.deepEqual([update.step, update.done], ["Reading labels: page 30 of 120", 2.25]);
+  emitEvent("migration-step", { kind: "moving", date: "2026-11-24", file: 12, files: 12 });
+  assert.deepEqual([update.step, update.done], ["Moving files: 12 of 12", 3]);
+  emitEvent("migration-step", { kind: "moving", date: "2026-11-24", file: 6, files: 12 });
+  assert.equal(update.done, 2.5, "the bar counts from the dates finished");
+  finish([{ date: "2026-11-24", moved: false, batches: 1, skipped: [] }]);
+  assert.equal(await running, true, "every batch read: the Day screen opens at once");
   assert.equal(update.running, false);
-  assert.equal(update.lines.length, 2, "the dates returned are the lines kept");
+  assert.deepEqual(update.skipped, []);
+});
+
+test("a batch not read is named in one line, and the card waits for Continue", async () => {
+  useBackend(
+    backend({
+      update_data: () => [
+        { date: "2026-11-24", moved: false, batches: 1, skipped: [{ batch: 2, reason: { kind: "label_changed" } }] },
+        { date: "2026-11-25", moved: false, batches: 0, skipped: [] },
+      ],
+    }),
+  );
+  const update = new Update();
+  assert.equal(await update.run(), false);
+  assert.equal(words.skipped(update.skipped), "1 batch not read: 2026-11-24 batch 2, its label PDF has changed.");
+  assert.equal(
+    words.skipped([
+      { date: "2026-11-24", batch: 2, error: null },
+      { date: "2026-11-25", batch: 1, error: "The labels could not be read." },
+    ]),
+    "2 batches not read: 2026-11-24 batch 2, its label PDF has changed; 2026-11-25 batch 1, The labels could not be read.",
+  );
 });
 
 test("an Update that stops says why and offers both answers again", async () => {
@@ -93,16 +104,16 @@ test("an Update that stops says why and offers both answers again", async () => 
   const update = new Update();
   await update.run();
   assert.equal(update.error, "another copy of the app is writing");
-  assert.equal(update.done, false);
+  assert.equal(update.line, null);
   assert.equal(update.running, false);
 });
 
-test("each date's row says what changes", () => {
-  assert.equal(words.changes(2, 61, true), "Addresses and weights of 2 batches, 61 orders · the date's lists");
-  assert.equal(words.changes(0, 0, true), "the date's lists");
-  assert.equal(words.changes(1, 1, false), "Addresses and weights of 1 batch, 1 order · the date's lists");
-  assert.match(words.explain(3), /addresses and the parcels' weights of 3 batches/);
-  assert.doesNotMatch(words.explain(0), /addresses/);
+test("the card says how many dates and that a copy is kept", () => {
+  assert.equal(
+    words.explain(29),
+    "29 dates were saved by an older Packing. Updating takes a few minutes and keeps a copy of every file it changes.",
+  );
+  assert.match(words.explain(1), /^1 date was saved/);
 });
 
 test("Continue after the update opens the Day screen; a read-only open that fails keeps the question", async () => {
@@ -139,28 +150,5 @@ test("a second Update while one runs starts nothing", async () => {
   finish([{ date: "2026-11-24", batches: 0, skipped: [] }]);
   await running;
   assert.equal(calls.filter((call) => call.command === "update_data").length, 1);
-  assert.deepEqual(update.lines, [{ text: "2026-11-24: lists written", skipped: false }]);
   assert.equal(words.failed("the disk is full"), "The update stopped: the disk is full");
-});
-
-test("a date of v0.7 says its files are moved, and the move shows how far it is", async () => {
-  assert.equal(words.changes(0, 0, false, true), "Files of v0.7 moved in · the date's lists");
-  assert.equal(
-    words.explain(2, 1),
-    "Update moves the files of 1 date out of the input and output folders of Packing v0.7 into their date folders. It reads the receivers' addresses and the parcels' weights of 2 batches from their label PDFs and writes the files that list each date again. Each date's update folder lists every file moved and keeps a copy of each file changed. No batch, label or PDF is changed or deleted.",
-  );
-  assert.match(words.explain(0, 3), /of 3 dates .* It writes the files/);
-
-  let finish;
-  useBackend(backend({ update_data: () => new Promise((resolve) => (finish = resolve)) }));
-  const update = new Update();
-  const running = update.run();
-  await tick();
-  emitEvent("migration-step", { kind: "moving", date: "2026-11-25", file: 3, files: 12 });
-  assert.equal(update.current, "Moving files: 2026-11-25, file 3 of 12");
-  finish([{ date: "2026-11-25", moved: true, batches: 2, skipped: [] }]);
-  await running;
-  assert.deepEqual(update.lines, [
-    { text: "2026-11-25: files moved, addresses and weights of 2 batches read, lists written", skipped: false },
-  ]);
 });

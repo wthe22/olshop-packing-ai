@@ -1,22 +1,16 @@
 <script lang="ts">
-  // The screens that open over the current one: Search, Accounts, Sort rules and Settings, in the shared frame with
-  // their titles. An open draft is kept; whether it shows is the shell's own state.
+  // The screens that open over the current one: Search, Accounts, Sort rules, Settings and Archive, in the shared
+  // frame with their titles. An open draft is kept; whether it shows is the shell's own state.
   import type { Shell } from "./shell.svelte";
   import Overlay from "./Overlay.svelte";
   import SearchScreen from "./SearchScreen.svelte";
   import SortRulesScreen from "./SortRulesScreen.svelte";
   import SettingsScreen from "./SettingsScreen.svelte";
   import AccountsScreen from "./AccountsScreen.svelte";
+  import ArchiveScreen from "./ArchiveScreen.svelte";
   import { texts } from "../texts";
-  import { shiftDay } from "./searchRange";
 
   let { shell }: { shell: Shell } = $props();
-
-  // Storage's range starts at the oldest date and ends yesterday.
-  const storageRange = () => ({
-    from: shell.panel?.dates.at(-1)?.date ?? shell.today,
-    to: shiftDay(shell.today, -1),
-  });
 </script>
 
 {#if shell.overlay === "search"}
@@ -50,8 +44,11 @@
       onTheme={shell.chooseTheme}
       onChangeFolder={shell.changeFolder}
       onOpenFolder={() => shell.dataFolder && shell.openFolder(shell.dataFolder)}
-      archiving={shell.archiving}
-      range={storageRange()}
+      onOpenArchive={() => shell.navigate("archive")}
     />
+  </Overlay>
+{:else if shell.overlay === "archive"}
+  <Overlay title={texts.archive.title} onClose={shell.closeOverlay}>
+    <ArchiveScreen archiving={shell.archiving} today={shell.today} />
   </Overlay>
 {/if}

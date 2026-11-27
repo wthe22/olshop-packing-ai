@@ -1,13 +1,12 @@
-// Archiving (archive.md) as the shell runs it: one date from the panel's row menu, the dates of a
-// range or of *Archive automatically* from Settings, and the dates older than that number at each
-// start. Each asks first, naming the dates, the PDFs and their size, except the one at start, which
-// the owner chose in Settings. More than one date shows its progress in the shell's dialog.
+// Archiving (archive.md) as the shell runs it: the ticked dates and the dates of *Automatic* from
+// the Archive page, and the dates older than that number at each start. Each asks first, naming
+// the dates and the size of their PDFs, except the one at start, which the owner chose on the
+// page. More than one date shows its progress in the shell's dialog.
 
 import * as archive from "./api/archive";
 import type { Shell } from "./shell.svelte";
 import { access } from "./readOnly.svelte";
 import { confirmBox } from "./confirm.svelte";
-import { formatDay } from "../dates";
 import { formatSize } from "../size";
 import { texts } from "../texts";
 
@@ -18,11 +17,10 @@ export class Archiving {
     this.shell = shell;
   }
 
-  // The question for what `preview` would delete; `false` when the owner cancels.
-  ask = (preview: archive.ArchivePreview): Promise<boolean> =>
-    confirmBox.ask(
-      texts.archive.ask(preview.dates.map(formatDay), preview.pdfs, formatSize(preview.bytes)),
-    );
+  // The question for archiving `dates` dates whose PDFs take `bytes`; `false` when the owner
+  // cancels.
+  ask = (dates: number, bytes: number): Promise<boolean> =>
+    confirmBox.ask(texts.archive.ask(dates, formatSize(bytes)));
 
   // Archive what `scope` covers; when anything changed, the panel and the open date are shown
   // again. A PDF that was not deleted is named.
@@ -50,24 +48,7 @@ export class Archiving {
     return outcome;
   };
 
-  // **Archive** in a date's row menu.
-  date = async (day: string) => {
-    const scope: archive.ArchiveScope = { kind: "range", from: day, to: day };
-    try {
-      const preview = await archive.archivePreview(scope);
-      if (preview.dates.length === 0) {
-        this.shell.error = texts.archive.nothing;
-        return;
-      }
-      if (!(await this.ask(preview))) return;
-    } catch (e) {
-      this.shell.error = String(e);
-      return;
-    }
-    await this.run(scope);
-  };
-
-  // At start, after the migration's question: the dates older than *Archive automatically*'s
+  // At start, after the migration's question: the dates older than *Automatic*'s
   // number, when it is on. Read-only, nothing.
   atStart = async () => {
     if (access.readOnly) return;

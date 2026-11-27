@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Sender};
 use std::thread;
 
-use packing_batch::{MigrateProgress, MigrateRequest, migrate_date};
+use packing_batch::{BatchError, MigrateProgress, MigrateRequest, migrate_date};
 use packing_engine::ids::BatchId;
 use packing_engine::workflows::Workflows;
 use packing_store::{DataLock, DateFolder, DateMigration, Journal, migrations};
@@ -58,14 +58,41 @@ pub struct DateUpdated {
 #[derive(Clone, Debug, Serialize)]
 pub struct SkippedView {
     batch: BatchId,
-    reason: String,
+    reason: SkipReason,
 }
 
-/// What the Update shows as it runs: the file of v0.7 being moved, the label page being read, and
-/// each date finished.
+#[derive(Clone, Debug, Serialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum SkipReason {
+    /// Its label PDF is not the one it was saved with.
+    LabelChanged,
+    Failed {
+        error: String,
+    },
+}
+
+impl From<BatchError> for SkipReason {
+    fn from(error: BatchError) -> Self {
+        match error {
+            BatchError::InputChanged { .. } => SkipReason::LabelChanged,
+            error => SkipReason::Failed {
+                error: error.to_string(),
+            },
+        }
+    }
+}
+
+/// What the Update shows as it runs: the date it starts, the file of v0.7 being moved and the label
+/// page being read.
 #[derive(Clone, Debug, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum MigrationStep {
+    /// Date `number` of `of`, counted from 1.
+    Starting {
+        date: String,
+        number: usize,
+        of: usize,
+    },
     Moving {
         date: String,
         file: usize,
@@ -77,7 +104,6 @@ pub enum MigrationStep {
         page: usize,
         pages: usize,
     },
-    Updated(DateUpdated),
 }
 
 fn data_dir(state: &AppState) -> Result<PathBuf, String> {
@@ -94,11 +120,15 @@ pub(crate) fn update(
     let lock = DataLock::acquire(&dir).map_err(|error| error.to_string())?;
     settings::ensure_files(state.program())?;
     let (_, workflows) = settings::workflows(state.program())?;
+    let found = migrations(&dir).map_err(|error| error.to_string())?;
     let mut updated = Vec::new();
-    for found in migrations(&dir).map_err(|error| error.to_string())? {
-        let date = update_date(state, &dir, &found, &workflows, &steps)?;
-        let _ = steps.send(MigrationStep::Updated(date.clone()));
-        updated.push(date);
+    for (at, date) in found.iter().enumerate() {
+        let _ = steps.send(MigrationStep::Starting {
+            date: date.date.to_string(),
+            number: at + 1,
+            of: found.len(),
+        });
+        updated.push(update_date(state, &dir, date, &workflows, &steps)?);
     }
     drop(lock);
     open_data(state, dir)?;
@@ -152,7 +182,7 @@ fn update_date(
             .into_iter()
             .map(|batch| SkippedView {
                 batch: batch.batch,
-                reason: batch.error.to_string(),
+                reason: batch.error.into(),
             })
             .collect(),
     })

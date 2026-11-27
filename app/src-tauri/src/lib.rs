@@ -437,7 +437,7 @@ pub fn run() {
             commands::panel::panel_dates,
             commands::archive::archive_preview,
             commands::archive::archive_scope,
-            commands::archive::storage,
+            commands::archive::archive_page,
             commands::archive::archive_after_days,
             commands::archive::set_archive_after_days,
             commands::accounts::accounts_list,

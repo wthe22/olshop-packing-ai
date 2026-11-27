@@ -38,28 +38,33 @@ Open **Settings** in the title bar. Each row is a setting at the left and its co
 - **Kept, not read** — shown only when `packing-app.toml`, `parser.toml` or `config.toml` holds a key this
   version does not know (a typing slip such as `enabeld`, say): the file, the line and the key. The key stays
   in the file and does nothing; fix or delete it in the file if it was a slip.
-- **Storage** — **Used**: the size of the data folder, its dates and how many are archived. **Archive dates**:
-  a **From** and a **To** date, how many of those dates can be archived and the size of their PDFs, and
-  **Archive**. **Archive automatically**: *Dates older than* a number of days (60 to begin with) and **Off** /
-  **On**; when on, those dates are archived at each start, after the question to update the data folder.
-  Turning it on, or a lower number, asks first when it would archive a date at once. In read-only mode only
-  the sizes show. See [Archiving a date](#archiving-a-date).
+- **Archive** — *Old dates without their PDFs*: **Open** opens the Archive page ([Archiving old
+  dates](#archiving-old-dates)).
 - The accounts and their shops are on the **Accounts** screen ([Accounts](03-changes.md#accounts)), not here.
 - **About** — what the program does, its version (**v0.8.0-alpha.12**), the time it was built, the PDFium version
   and the journal's schema version.
 
-There are no other settings but Storage: the sort rule you used last is preselected, the summary PDF is
+There are no other settings but the Archive page's: the sort rule you used last is preselected, the summary PDF is
 always written, and the couriers live in `parser.toml` and the sort rules in `config.toml`, both in the data folder.
 
 The app is in English. Every screen text is in one file, so another language can be added.
 
-## Archiving a date
+## Archiving old dates
 
-An old date needs its orders and summaries, not its PDFs. **Archive** (in a date's **⋯** menu on the panel,
-or for a range in Settings › Storage) deletes every PDF of the date: the label downloads, the group PDFs,
-the summary PDFs, the reprints and the summaries made on request. It asks first, naming the date, the number
-of PDFs and their size: *Archive Wed, 7 Oct 2026? Its 14 PDFs (210 MB) are deleted.* followed by what stays
-and what can no longer be done.
+An old date needs its orders and summaries, not its PDFs. Archiving a date deletes every PDF of it: the label
+downloads, the group PDFs, the summary PDFs, the reprints and the summaries made on request. It is done on the
+Archive page: Settings › **Archive** › **Open**. `Esc` closes it.
+
+- **Automatic** — *Archive dates older than* a number of days (60 to begin with) and **Off** / **On**. When
+  on, those dates are archived at each start, after the question to update the data folder. Turning it on, or
+  a lower number, asks first when it would archive a date at once.
+- **Dates** — every date, newest first, by month, with its orders and its size; the data folder's size
+  stands at the right (*3.2 GB in all*), and an archived date says *Archived*. A date that can be archived has
+  a tick: **Shift**+click ticks every date between the last tick and this one, and a month's tick ticks or
+  clears its dates.
+- The foot names the dates ticked and the size of their PDFs (*1 date · 72.3 MB of PDFs*). **Archive** asks
+  first: *Archive 3 dates? Their PDFs (210 MB) are deleted; their orders and summaries stay.*
+- In read-only mode the page shows the dates and sizes only.
 
 - What stays: the date's orders, its order contents and the record of each batch. The Day screen still shows
   the batches with their groups, counts, Sent times, Printed ticks, warnings and **Left out**; **Day summary**
@@ -70,4 +75,4 @@ and what can no longer be done.
 - Today is never archived, and neither is a date with nothing saved.
 - A PDF open in a viewer cannot be deleted: it is named and stays. The label downloads go last, so such a
   date is not archived yet; close the viewer and archive it again.
-- More than one date shows its progress: *Archiving: 2026-10-07, 3 of 18*.
+- More than one date shows its progress: *Archiving: 2026-10-07, 2 of 3*.

@@ -44,6 +44,7 @@ fixed truths, broken outputs the verifier must catch, coverage not lower. Nothin
 
 - Save, amend, revert, reprint, restore, Print and the printed tick commit through J1.
 - The Day screen: *Sent hh:mm* from `press_print_time`; no *amended* anywhere; the file-changed note of J1.
+- Settings › About says *Date schema*, not *Journal schema*.
 - Search's index reads every date's `orders.csv` and `order-contents.toml`.
 - Tests: save → reopen → the same Day screen; Search finds what it found before.
 

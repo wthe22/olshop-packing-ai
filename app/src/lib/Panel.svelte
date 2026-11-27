@@ -1,14 +1,13 @@
 <script lang="ts">
-  // The side panel: the dates of the data folder by month with their saved orders of every account
-  // and their size, an archived date muted, and the way to another date. What a click does (asking
-  // about an open draft first) and **Archive** are the shell's.
+  // The side panel: the dates of the data folder by month with their saved orders of every account,
+  // an archived date muted, and the way to another date. What a click does (asking about an open
+  // draft first) is the shell's.
   import type { PanelView } from "./api/panel";
-  import { canArchive, months } from "./panel";
+  import { months } from "./panel";
+  import { Folds } from "./folds.svelte";
   import { texts } from "../texts";
   import { formatMonth, formatShortDay } from "../dates";
-  import { formatSize } from "../size";
   import { dismiss } from "./dismiss";
-  import { access } from "./readOnly.svelte";
   import Icon from "./Icon.svelte";
 
   let {
@@ -17,34 +16,43 @@
     today,
     onOpenDate,
     onOpenFolder,
-    onArchive,
   }: {
     panel: PanelView;
     day: string;
     today: string;
     onOpenDate: (date: string) => void;
     onOpenFolder: (path: string) => void;
-    // **Archive** in a date's row menu; the shell asks first.
-    onArchive: (date: string) => void;
   } = $props();
 
   const list = $derived(months(panel.dates, day, today));
-  // A month the owner folded or unfolded; the others follow `startsOpen`.
-  let toggled = $state<Record<string, boolean>>({});
+  const folds = new Folds();
   // The date whose row menu is open.
   let menuFor = $state<string | null>(null);
+  // The menu opens upward when its row is too near the window's foot.
+  let menuUp = $state(false);
 
-  const isOpen = (key: string, startsOpen: boolean) => toggled[key] ?? startsOpen;
   const closeMenu = () => (menuFor = null);
+  // Room the menu needs below its row, in pixels.
+  const MENU_ROOM = 64;
+
+  function toggleMenu(event: MouseEvent, date: string) {
+    if (menuFor === date) {
+      closeMenu();
+      return;
+    }
+    const row = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    menuUp = window.innerHeight - row.bottom < MENU_ROOM;
+    menuFor = date;
+  }
 </script>
 
 <aside>
   <h2>{texts.panel.dates}</h2>
   <ul class="months">
     {#each list as month (month.key)}
-      {@const open = isOpen(month.key, month.startsOpen)}
+      {@const open = folds.isOpen(month)}
       <li>
-        <button class="month" onclick={() => (toggled[month.key] = !open)}>
+        <button class="month" onclick={() => folds.toggle(month)}>
           <span class="chevron" class:open>▸</span>
           {formatMonth(month.key)}
         </button>
@@ -66,7 +74,6 @@
                   <span class="count">
                     {#if row.damaged}{texts.panel.damaged}{:else}{row.orders ?? ""}{/if}
                   </span>
-                  <span class="size">{row.size_bytes > 0 ? formatSize(row.size_bytes) : ""}</span>
                 </button>
                 {#if row.folder}
                   <span class="row-menu" {@attach menuFor === row.date && dismiss(closeMenu)}>
@@ -76,10 +83,10 @@
                       aria-label={texts.panel.menu}
                       aria-haspopup="menu"
                       aria-expanded={menuFor === row.date}
-                      onclick={() => (menuFor = menuFor === row.date ? null : row.date)}>⋯</button
+                      onclick={(event) => toggleMenu(event, row.date)}>⋯</button
                     >
                     {#if menuFor === row.date}
-                      <span class="items" role="menu">
+                      <span class="items" class:up={menuUp} role="menu">
                         <button
                           role="menuitem"
                           onclick={() => {
@@ -87,15 +94,6 @@
                             if (row.folder) onOpenFolder(row.folder);
                           }}><Icon name="folder" size={16} />{texts.panel.openFolder}</button
                         >
-                        {#if canArchive(row) && !access.readOnly}
-                          <button
-                            role="menuitem"
-                            onclick={() => {
-                              closeMenu();
-                              onArchive(row.date);
-                            }}><Icon name="archive" size={16} />{texts.archive.archive}</button
-                          >
-                        {/if}
                       </span>
                     {/if}
                   </span>
@@ -111,7 +109,7 @@
 
 <style>
   aside {
-    width: 18rem;
+    width: 16rem;
     flex: none;
     border-right: 1px solid var(--border);
     background: var(--panel-bg);
@@ -162,7 +160,6 @@
   .date {
     position: relative;
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     margin: 1px 0;
     border-radius: var(--radius);
@@ -183,6 +180,7 @@
 
   button.pick-date {
     flex: 1;
+    min-width: 0;
     display: flex;
     gap: 0.5rem;
     border: none;
@@ -196,6 +194,7 @@
   }
 
   .today {
+    flex: none;
     margin-left: 0.35rem;
     padding: 0 0.4rem;
     border-radius: 999px;
@@ -205,24 +204,23 @@
     font-weight: 600;
   }
 
+  /* One line each: the date gives way, cut short, before anything wraps. */
   .label {
     flex: 1;
+    min-width: 0;
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .count {
+    flex: none;
     color: var(--text-muted);
     font-variant-numeric: tabular-nums;
-  }
-
-  /* The size after the orders, in a column of its own so the sizes stand under each other. */
-  .size {
-    width: 4.2rem;
-    color: var(--text-faint);
-    font-variant-numeric: tabular-nums;
-    text-align: right;
+    white-space: nowrap;
   }
 
   .date.archived .label,
@@ -257,6 +255,11 @@
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow: var(--shadow-lg);
+  }
+
+  .items.up {
+    top: auto;
+    bottom: 100%;
   }
 
   .items button {

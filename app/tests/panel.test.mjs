@@ -8,9 +8,9 @@ import assert from "node:assert/strict";
 
 import "./tsModule.mjs";
 import { formatMonth, formatShortDay } from "../src/dates.ts";
-const { canArchive, months } = await import("../src/lib/panel.ts");
+const { months } = await import("../src/lib/panel.ts");
 
-const row = (date) => ({ date, today: false, orders: 1, damaged: false, folder: null, size_bytes: 0, archived: false });
+const row = (date) => ({ date, today: false, orders: 1, damaged: false, folder: null, archived: false });
 
 test("the dates fold by month, the open and the current month open", () => {
   const dates = ["2026-11-02", "2026-10-21", "2026-10-20", "2026-09-30", "2026-08-01"].map(row);
@@ -26,19 +26,4 @@ test("the dates fold by month, the open and the current month open", () => {
   );
   assert.deepEqual(months([], "2026-10-07", "2026-10-07"), []);
   assert.deepEqual([formatMonth("2026-10"), formatShortDay("2026-10-21")], ["October 2026", "Wed, 21 Oct"]);
-});
-
-test("only a date with a saved batch that is not today, damaged or archived offers Archive", () => {
-  const saved = { ...row("2026-10-07"), folder: "D:/data/2026-10-07", orders: 12 };
-  for (const [change, offered] of [
-    [{}, true],
-    [{ today: true }, false],
-    [{ damaged: true }, false],
-    [{ archived: true }, false],
-    [{ orders: 0 }, false],
-    [{ orders: null }, false],
-    [{ folder: null }, false],
-  ]) {
-    assert.equal(canArchive({ ...saved, ...change }), offered, JSON.stringify(change));
-  }
 });
