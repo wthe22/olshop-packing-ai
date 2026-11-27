@@ -1,16 +1,20 @@
 //! The migration the owner starts (journal.md, *When a date opens*): a date folder of v0.7 is made
-//! flat, each order saved before the receiver's area or the weight was read gets it from its
-//! batch's stored label PDFs, in an `areas_filled` and a `weights_filled` record per batch, and the
+//! flat, each order saved before the receiver's area, the weight or the shop (v0.4) was read gets it
+//! from its batch's stored label PDFs, in an `areas_filled`, a `weights_filled` and a `shops_filled`
+//! record per batch, and the
 //! date's views are written again in this version's schema (`session.toml` becomes `day.toml`). The journal
 //! and the views are copied first, and every move is listed. The caller holds the data folder's lock.
 
 use std::collections::BTreeMap;
 use std::sync::mpsc::Sender;
 
-use packing_engine::ids::{BatchId, OrderId};
-use packing_engine::label::{find_area, find_weight};
+use packing_engine::accounts::account_of;
+use packing_engine::copies::label_courier;
+use packing_engine::ids::{BatchId, CourierCode, OrderId, TrackingId};
+use packing_engine::label::{find_area, find_sender, find_weight};
 use packing_engine::record::{
-    Area, AreasFilled, BatchSaved, OrderArea, OrderWeight, RecordBody, Weight, WeightsFilled,
+    Area, AreasFilled, BatchSaved, CourierClue, CouriersFilled, OrderArea, OrderCourier, OrderShop,
+    OrderWeight, RecordBody, SavedOrder, ShopsFilled, Weight, WeightsFilled,
 };
 use packing_engine::workflows::Workflows;
 use packing_pdf::PdfError;
@@ -96,9 +100,19 @@ pub fn migrate_date(
     Ok(migrated)
 }
 
-/// The area and the weight of each order of `saved` that has none, read from the first page of its
-/// copy: an `areas_filled` record for the orders without an area, a `weights_filled` one for those
-/// without a weight.
+/// What a label page gives the Update.
+struct Read {
+    area: Area,
+    weight: Weight,
+    shop: Option<String>,
+    courier: (Option<TrackingId>, Option<CourierCode>, CourierClue),
+}
+
+/// What each order of `saved` lacks, read from the first page of its copy: an `areas_filled` record
+/// for the orders without an area, a `weights_filled` one for those without a weight, a
+/// `shops_filled` one for those saved by v0.4 (the listed shop the label shows, as a new batch finds
+/// it, else the sender as printed), and a `couriers_filled` one for those the label now gives a
+/// tracking ID or a courier they had none of.
 fn read_labels(
     folder: &DateFolder,
     saved: &BatchSaved,
@@ -107,10 +121,10 @@ fn read_labels(
     let wanted: Vec<_> = saved
         .orders
         .iter()
-        .filter(|order| order.area.is_none() || order.weight.is_none())
+        .filter(|order| order.unread() || order.tracking_id.is_none() || order.courier.is_none())
         .collect();
     let pages = wanted.len();
-    let mut read: BTreeMap<OrderId, (Area, Weight)> = BTreeMap::new();
+    let mut read: BTreeMap<OrderId, Read> = BTreeMap::new();
     for input in &saved.inputs {
         let path = input_path(folder, saved.batch, input.pdf, &input.sha256);
         if !path.is_file() || sha256_of(&path)? != input.sha256 {
@@ -134,7 +148,22 @@ fn read_labels(
             let mut found = Vec::with_capacity(on_input.len());
             for (order_id, page) in on_input {
                 let text = file.page_text(page, &rules)?;
-                found.push((order_id, (find_area(&text), find_weight(&text))));
+                let shop = find_sender(&text).map(|sender| {
+                    account_of(&sender.text, &rules.accounts)
+                        .and_then(|account| account.shop)
+                        .unwrap_or(sender.name)
+                });
+                let courier = label_courier(&rules, &text, &order_id);
+                let (area, weight) = (find_area(&text), find_weight(&text));
+                found.push((
+                    order_id,
+                    Read {
+                        area,
+                        weight,
+                        shop,
+                        courier,
+                    },
+                ));
                 let page = read_before + found.len();
                 let _ = progress.send(MigrateProgress::Reading { batch, page, pages });
             }
@@ -142,36 +171,87 @@ fn read_labels(
         })??;
         read.extend(found);
     }
-    let mut areas = Vec::new();
-    let mut weights = Vec::new();
+    let mut filled = Filled::default();
     for order in wanted {
-        let Some((area, weight)) = read.remove(&order.order_id) else {
-            continue;
-        };
+        if let Some(label) = read.remove(&order.order_id) {
+            filled.add(order, label);
+        }
+    }
+    Ok(filled.records(saved.batch))
+}
+
+/// The records of one batch's read, each order in the batch's printing order.
+#[derive(Default)]
+struct Filled {
+    areas: Vec<OrderArea>,
+    weights: Vec<OrderWeight>,
+    shops: Vec<OrderShop>,
+    couriers: Vec<OrderCourier>,
+}
+
+impl Filled {
+    fn add(&mut self, order: &SavedOrder, label: Read) {
         let order_id = order.order_id.clone();
         if order.area.is_none() {
-            areas.push(OrderArea {
+            let area = label.area;
+            self.areas.push(OrderArea {
                 order_id: order_id.clone(),
                 area,
             });
         }
         if order.weight.is_none() {
-            weights.push(OrderWeight { order_id, weight });
+            let weight = label.weight;
+            self.weights.push(OrderWeight {
+                order_id: order_id.clone(),
+                weight,
+            });
+        }
+        if order.shop_unread() {
+            let shop = label.shop;
+            self.shops.push(OrderShop {
+                order_id: order_id.clone(),
+                shop,
+            });
+        }
+        let (tracking_id, courier, courier_clue) = label.courier;
+        let tracking_id = tracking_id.filter(|_| order.tracking_id.is_none());
+        let courier = courier.filter(|_| order.courier.is_none());
+        if tracking_id.is_some() || courier.is_some() {
+            self.couriers.push(OrderCourier {
+                order_id,
+                tracking_id,
+                courier,
+                courier_clue,
+            });
         }
     }
-    let batch = saved.batch;
-    let mut filled = Vec::new();
-    if !areas.is_empty() {
-        filled.push(RecordBody::AreasFilled(AreasFilled {
-            batch,
-            orders: areas,
-        }));
+
+    fn records(self, batch: BatchId) -> Vec<RecordBody> {
+        let mut records = Vec::new();
+        if !self.areas.is_empty() {
+            records.push(RecordBody::AreasFilled(AreasFilled {
+                batch,
+                orders: self.areas,
+            }));
+        }
+        if !self.weights.is_empty() {
+            records.push(RecordBody::WeightsFilled(WeightsFilled {
+                batch,
+                orders: self.weights,
+            }));
+        }
+        if !self.shops.is_empty() {
+            records.push(RecordBody::ShopsFilled(ShopsFilled {
+                batch,
+                orders: self.shops,
+            }));
+        }
+        if !self.couriers.is_empty() {
+            records.push(RecordBody::CouriersFilled(CouriersFilled {
+                batch,
+                orders: self.couriers,
+            }));
+        }
+        records
     }
-    if !weights.is_empty() {
-        filled.push(RecordBody::WeightsFilled(WeightsFilled {
-            batch,
-            orders: weights,
-        }));
-    }
-    Ok(filled)
 }

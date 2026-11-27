@@ -34,11 +34,6 @@ export const archiveTexts = {
   left: (files: string[]) =>
     `Not deleted, open in another program: ${files.join(", ")}. Close them and archive again.`,
 
-  automatic: "Automatic",
-  olderThan: "Archive dates older than",
-  days: "days",
-  off: "Off",
-  on: "On",
   dates: "Dates",
   // At the right of the Dates head: "3.2 GB in all".
   total: (size: string) => `${size} in all`,
@@ -52,8 +47,10 @@ export const archiveTexts = {
   // The foot: "1 date · 72.3 MB of PDFs".
   foot: (dates: number, size: string) => `${count(dates, "date", "dates")} · ${size} of PDFs`,
 
-  // Settings › Data.
-  settingsRow: "Archive",
-  settingsHint: "Old dates without their PDFs",
-  open: "Open",
+  // Settings › Data: "Archive dates older than [60] days".
+  olderThan: "Archive dates older than",
+  days: "days",
+  autoHint: "Their PDFs are deleted; their orders stay",
+  off: "Off",
+  on: "On",
 } as const;

@@ -7,7 +7,7 @@ app, then print.
 
 The title bar has the panel button at the left, the program and its version (**Packing v0.8.0-alpha.12**), and at
 the right **Search** ([finding a saved order](05-search.md)), **Accounts** ([Accounts](03-changes.md#accounts)),
-**Sort rules** and **Settings**. `Esc` closes Search, Accounts, Sort rules and Settings.
+**Sort rules**, **Archive** and **Settings**. `Esc` closes each of them.
 
 The **panel** at the left lists the dates of the data folder, for every account together:
 

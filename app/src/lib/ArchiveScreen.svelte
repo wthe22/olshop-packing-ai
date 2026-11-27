@@ -1,6 +1,5 @@
 <script lang="ts">
-  // The Archive page (ui/archive.md): *Automatic* with its number of days, and every date by month
-  // with its orders and size, a tick on each date that can be archived, and a foot with what the
+  // The Archive page (ui/archive.md): every date by month with its orders and size, a tick on each date that can be archived, and a foot with what the
   // ticked dates' PDFs take and **Archive**. Read-only, the dates and sizes only. The state is
   // `archivePage.svelte.ts`.
   import { onMount } from "svelte";
@@ -34,47 +33,15 @@
   {@const shown = page}
   <div class="archive">
     <section>
-      <h3>{words.automatic}</h3>
-      <div class="group">
-        <div class="row">
-          <label class="field"
-            >{words.olderThan}
-            <input
-              class="days"
-              type="number"
-              min="1"
-              value={shown.days}
-              disabled={access.readOnly}
-              onblur={(event) => shown.changeDays(event.currentTarget.valueAsNumber)}
-            />
-            {words.days}</label
-          >
-          <span class="grow"></span>
-          <div class="segmented" role="radiogroup" aria-label={words.automatic}>
-            {#each [false, true] as on (on)}
-              <button
-                role="radio"
-                aria-checked={shown.auto === on}
-                class:chosen={shown.auto === on}
-                disabled={access.readOnly}
-                onclick={() => shown.turn(on)}>{on ? words.on : words.off}</button
-              >
-            {/each}
-          </div>
-        </div>
-      </div>
-      {#if shown.error}
-        <p class="problem">{shown.error}</p>
-      {/if}
-    </section>
-
-    <section>
       <div class="head">
         <h3>{words.dates}</h3>
         {#if shown.view}
           <span class="total">{words.total(formatSize(shown.view.total_bytes))}</span>
         {/if}
       </div>
+      {#if shown.error}
+        <p class="problem">{shown.error}</p>
+      {/if}
       <div class="group">
         <table>
           <thead>
@@ -195,29 +162,12 @@
     box-shadow: var(--shadow);
   }
 
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    min-height: 3.4rem;
-    padding: 0.6rem 1rem;
-  }
 
   .grow {
     flex: 1;
   }
 
-  .field {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    white-space: nowrap;
-  }
 
-  input.days {
-    width: 4.5rem;
-    font-variant-numeric: tabular-nums;
-  }
 
   .problem {
     margin: 0.5rem 0 0;

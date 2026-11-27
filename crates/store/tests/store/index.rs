@@ -97,7 +97,7 @@ fn every_live_order_of_the_data_folder_is_found_by_its_fields() {
             vec!["7 580000000000000001", "7 580000000000000003"],
         ),
         (
-            "courier equals \"jnt\" and ship_by = \"2026-10-08\" and total_quantity = 1",
+            "courier equals \"jnt-express\" and ship_by = \"2026-10-08\" and total_quantity = 1",
             Some((9, 9)),
             vec![],
         ),

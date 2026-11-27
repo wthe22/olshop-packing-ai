@@ -8,8 +8,8 @@ use std::fmt;
 use jiff::civil::Date;
 use packing_engine::ids::{BatchId, OrderId, PdfId};
 use packing_engine::record::{
-    AreasFilled, BatchSaved, Datetime, JOURNAL_SCHEMA, OutputFile, OutputRestored, Record,
-    RecordBody, ReprintMade, SavedOrder, Sha256, WeightsFilled,
+    AreasFilled, BatchSaved, CouriersFilled, Datetime, JOURNAL_SCHEMA, OutputFile, OutputRestored,
+    Record, RecordBody, ReprintMade, SavedOrder, Sha256, ShopsFilled, WeightsFilled,
 };
 use packing_engine::schema::{Schema, SchemaFit};
 
@@ -313,6 +313,8 @@ impl Fold {
             }
             RecordBody::AreasFilled(filled) => self.fill_areas(filled)?,
             RecordBody::WeightsFilled(filled) => self.fill_weights(filled)?,
+            RecordBody::ShopsFilled(filled) => self.fill_shops(filled)?,
+            RecordBody::CouriersFilled(filled) => self.fill_couriers(filled)?,
             RecordBody::Recovered(_) => {}
         }
         Ok(())
@@ -395,6 +397,38 @@ impl Fold {
                 return Err(rule(format!("{} has its weight already", named.order_id)));
             }
             order.weight = Some(named.weight);
+        }
+        Ok(())
+    }
+
+    /// Each order named gets its shop: an order saved by v0.4, with its account and no shop. Its
+    /// account of 2.0 goes, so the order is not read again.
+    fn fill_shops(&mut self, filled: &ShopsFilled) -> Result<(), DamageReason> {
+        for named in &filled.orders {
+            let order = self.batch_order(filled.batch, &named.order_id)?;
+            if !order.shop_unread() {
+                return Err(rule(format!("{} has its shop already", named.order_id)));
+            }
+            order.shop = named.shop.clone();
+            order.account_of_2_0 = None;
+        }
+        Ok(())
+    }
+
+    /// Each order named gets the tracking ID or the courier it had none of.
+    fn fill_couriers(&mut self, filled: &CouriersFilled) -> Result<(), DamageReason> {
+        for named in &filled.orders {
+            let order = self.batch_order(filled.batch, &named.order_id)?;
+            if order.tracking_id.is_some() && order.courier.is_some() {
+                return Err(rule(format!("{} has its courier already", named.order_id)));
+            }
+            if order.tracking_id.is_none() {
+                order.tracking_id = named.tracking_id.clone();
+            }
+            if order.courier.is_none() {
+                order.courier = named.courier.clone();
+                order.courier_clue = named.courier_clue.clone();
+            }
         }
         Ok(())
     }

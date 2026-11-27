@@ -51,12 +51,14 @@ pub enum RecordBody {
     ReprintMade(ReprintMade),
     AreasFilled(AreasFilled),
     WeightsFilled(WeightsFilled),
+    ShopsFilled(ShopsFilled),
+    CouriersFilled(CouriersFilled),
     Recovered(Recovered),
 }
 
 impl RecordBody {
     /// Every `type` this copy reads; a line of another type is a newer copy's, passed over.
-    pub const KINDS: [&'static str; 10] = [
+    pub const KINDS: [&'static str; 12] = [
         "started",
         "batch_saved",
         "batch_reverted",
@@ -66,6 +68,8 @@ impl RecordBody {
         "reprint_made",
         "areas_filled",
         "weights_filled",
+        "shops_filled",
+        "couriers_filled",
         "recovered",
     ];
 
@@ -81,6 +85,8 @@ impl RecordBody {
             RecordBody::ReprintMade(_) => "reprint_made",
             RecordBody::AreasFilled(_) => "areas_filled",
             RecordBody::WeightsFilled(_) => "weights_filled",
+            RecordBody::ShopsFilled(_) => "shops_filled",
+            RecordBody::CouriersFilled(_) => "couriers_filled",
             RecordBody::Recovered(_) => "recovered",
         }
     }
@@ -359,6 +365,18 @@ pub struct ReprintedOrder {
     pub page_end: u16,
 }
 
+impl SavedOrder {
+    /// Saved by v0.4, which kept the account and not the shop, until a `shops_filled` record names it.
+    pub fn shop_unread(&self) -> bool {
+        self.shop.is_none() && self.account_of_2_0.is_some()
+    }
+
+    /// Saved before its area, its weight or its shop was read from its label.
+    pub fn unread(&self) -> bool {
+        self.area.is_none() || self.weight.is_none() || self.shop_unread()
+    }
+}
+
 /// The area of every order of a batch saved before the area was read, read from its stored inputs.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AreasFilled {
@@ -387,6 +405,41 @@ pub struct WeightsFilled {
 pub struct OrderWeight {
     pub order_id: OrderId,
     pub weight: Weight,
+}
+
+/// The shop of every order of a batch saved by v0.4, which kept the account only, read from its
+/// stored inputs.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ShopsFilled {
+    pub batch: BatchId,
+    /// In the batch's printing order.
+    pub orders: Vec<OrderShop>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OrderShop {
+    pub order_id: OrderId,
+    /// The listed shop the label shows, else its sender as printed; none: no sender.
+    pub shop: Option<String>,
+}
+
+/// The tracking ID or the courier of orders saved without one, read again from the batch's stored
+/// inputs when the Update reads them: what the label gives now, where the order had none.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CouriersFilled {
+    pub batch: BatchId,
+    /// In the batch's printing order.
+    pub orders: Vec<OrderCourier>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OrderCourier {
+    pub order_id: OrderId,
+    /// Given only to an order that had none.
+    pub tracking_id: Option<TrackingId>,
+    /// Given, with its clue, only to an order that had none.
+    pub courier: Option<CourierCode>,
+    pub courier_clue: CourierClue,
 }
 
 /// The cut-off tail of an append that did not finish.

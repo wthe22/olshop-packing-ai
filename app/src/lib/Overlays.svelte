@@ -44,7 +44,7 @@
       onTheme={shell.chooseTheme}
       onChangeFolder={shell.changeFolder}
       onOpenFolder={() => shell.dataFolder && shell.openFolder(shell.dataFolder)}
-      onOpenArchive={() => shell.navigate("archive")}
+      archiving={shell.archiving}
     />
   </Overlay>
 {:else if shell.overlay === "archive"}

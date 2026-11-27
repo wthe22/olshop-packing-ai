@@ -1,7 +1,7 @@
 schema = "2.1"
 date = "2026-10-07"
 journal_seq = 4
-orders_csv_sha256 = "cb3e6ed15633aa1d08e2a0f9a5d3036d9ea45e956ed53cd6799326585792d13d"
+orders_csv_sha256 = "dc65539dce0d5d9543dea795a345cd8b24eb2ddaeb72604607909434b7435ccf"
 order_contents_sha256 = "ecb3c2245043a5d36176eed1dbcb11cc1511afc5b88c271c86c4fee744b0b133"
 reprints = []
 
@@ -15,7 +15,7 @@ order_count = 3
 page_count = 4
 earliest_ship_by_date = "2026-10-08"
 latest_ship_by_date = "2026-10-08"
-couriers = ["jnt"]
+couriers = ["jnt-express"]
 warnings = ["Slip total differs for JY0000000002: printed 3, lines add up to 2."]
 errors = []
 
@@ -39,7 +39,7 @@ input_pdfs = [1]
 sort_rule_id = 1
 earliest_ship_by_date = "2026-10-08"
 latest_ship_by_date = "2026-10-08"
-couriers = ["jnt"]
+couriers = ["jnt-express"]
 warnings = ["Slip total differs for JY0000000002: printed 3, lines add up to 2."]
 errors = []
 order_count = 3
@@ -85,4 +85,4 @@ reason = "repeat"
 [label_batches.left_out.kept]
 pdf = 1
 page_start = 1
-# sha256: 42e436926bcd389eebb5d866f3ed88aaf44e40415bac5302945f2367a3e403eb
+# sha256: e3195744f5a793b011fe6145a805d330c7eb0ac7f46e6aca4053ede9745006ac

@@ -1,24 +1,16 @@
 // The Archive page's state (ui/archive.md): every date with its size, the ticked dates and what
-// archiving them deletes, and *Automatic* with its number of days. **Archive**, turning *Automatic*
-// on and a changed number ask first when they would archive any date; **Off** removes the number.
-// Read-only, nothing is ticked or written. The markup is `ArchiveScreen.svelte`.
+// archiving them deletes. **Archive** asks first. Read-only, nothing is ticked or written. The markup is `ArchiveScreen.svelte`.
 
 import * as api from "./api/archive";
 import type { Archiving } from "./archiving.svelte";
 import { access } from "./readOnly.svelte";
 
-// The number *Automatic* starts with.
-export const FIRST_DAYS = 60;
 // While the search index is being built the page is read again after this many milliseconds.
 const LOADING_RETRY_MS = 500;
 
 export class ArchivePage {
   view = $state<api.ArchivePage | null>(null);
   ticked = $state<string[]>([]);
-  // The number box.
-  days = $state(FIRST_DAYS);
-  // *Automatic* is on: `packing-app.toml` holds the number.
-  auto = $state(false);
   error = $state("");
   // The date last ticked or cleared by a click without Shift: where a Shift+click's range starts.
   private anchor: string | null = null;
@@ -31,12 +23,7 @@ export class ArchivePage {
   }
 
   load = async () => {
-    await this.attempt(async () => {
-      const days = await api.archiveAfterDays();
-      this.auto = days !== null;
-      this.days = days ?? FIRST_DAYS;
-      await this.reread();
-    });
+    await this.attempt(this.reread);
   };
 
   // The page stopped showing: no more reads while the index is built.
@@ -104,43 +91,6 @@ export class ArchivePage {
     this.ticked = [];
     this.anchor = null;
     await this.attempt(this.reread);
-  };
-
-  // **Off** / **On**.
-  turn = async (on: boolean) => {
-    if (on) {
-      await this.apply(this.days);
-      return;
-    }
-    await this.attempt(async () => {
-      await api.setArchiveAfterDays(null);
-      this.auto = false;
-    });
-  };
-
-  // The number the box lost its focus with; written at once while *Automatic* is on.
-  changeDays = async (typed: number) => {
-    const days = Number.isFinite(typed) ? Math.max(1, Math.round(typed)) : FIRST_DAYS;
-    this.days = days;
-    if (this.auto) await this.apply(days);
-  };
-
-  // Write `days`, asking first when it would archive any date now, and archive those at once.
-  // Cancelled, the number written before stays.
-  private apply = async (days: number) => {
-    await this.attempt(async () => {
-      const scope: api.ArchiveScope = { kind: "older_than", days };
-      const preview = await api.archivePreview(scope);
-      const archives = preview.dates.length > 0;
-      if (archives && !(await this.archiving.ask(preview.dates.length, preview.bytes))) {
-        await this.load();
-        return;
-      }
-      await api.setArchiveAfterDays(days);
-      this.auto = true;
-      if (archives) await this.archiving.run(scope);
-      await this.reread();
-    });
   };
 
   private attempt = async (job: () => Promise<void>) => {

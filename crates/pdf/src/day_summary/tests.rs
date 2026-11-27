@@ -39,7 +39,7 @@ fn records() -> (BatchSaved, BatchSaved) {
 
 fn couriers() -> Vec<Courier> {
     vec![Courier {
-        code: CourierCode::new("jnt"),
+        code: CourierCode::new("jnt-express"),
         name: "J&T Express".into(),
     }]
 }

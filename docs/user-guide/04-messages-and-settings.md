@@ -38,8 +38,9 @@ Open **Settings** in the title bar. Each row is a setting at the left and its co
 - **Kept, not read** — shown only when `packing-app.toml`, `parser.toml` or `config.toml` holds a key this
   version does not know (a typing slip such as `enabeld`, say): the file, the line and the key. The key stays
   in the file and does nothing; fix or delete it in the file if it was a slip.
-- **Archive** — *Old dates without their PDFs*: **Open** opens the Archive page ([Archiving old
-  dates](#archiving-old-dates)).
+- **Archive dates older than** a number of days (60 to begin with) and **Off** / **On**. When on, those
+  dates are archived at each start, after the question to update the data folder. Turning it on, or a lower
+  number, asks first when it would archive a date at once ([Archiving old dates](#archiving-old-dates)).
 - The accounts and their shops are on the **Accounts** screen ([Accounts](03-changes.md#accounts)), not here.
 - **About** — what the program does, its version (**v0.8.0-alpha.12**), the time it was built, the PDFium version
   and the journal's schema version.
@@ -53,11 +54,8 @@ The app is in English. Every screen text is in one file, so another language can
 
 An old date needs its orders and summaries, not its PDFs. Archiving a date deletes every PDF of it: the label
 downloads, the group PDFs, the summary PDFs, the reprints and the summaries made on request. It is done on the
-Archive page: Settings › **Archive** › **Open**. `Esc` closes it.
+Archive page: **Archive** in the title bar. `Esc` closes it. Archiving on its own is a setting (above).
 
-- **Automatic** — *Archive dates older than* a number of days (60 to begin with) and **Off** / **On**. When
-  on, those dates are archived at each start, after the question to update the data folder. Turning it on, or
-  a lower number, asks first when it would archive a date at once.
 - **Dates** — every date, newest first, by month, with its orders and its size; the data folder's size
   stands at the right (*3.2 GB in all*), and an archived date says *Archived*. A date that can be archived has
   a tick: **Shift**+click ticks every date between the last tick and this one, and a month's tick ticks or

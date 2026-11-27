@@ -21,7 +21,7 @@ fn saved_order(id: &str, content: u16, group: &str, page: u16) -> SavedOrder {
     SavedOrder {
         order_id: OrderId::new(id),
         tracking_id: Some(TrackingId::new(format!("JY{}", &id[8..]))),
-        courier: Some(CourierCode::new("jnt")),
+        courier: Some(CourierCode::new("jnt-express")),
         courier_clue: CourierClue {
             kind: CourierClueKind::Logo,
             value: Some("39b9b7b9f61d0e7f".into()),

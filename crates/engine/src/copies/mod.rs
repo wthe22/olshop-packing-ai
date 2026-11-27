@@ -125,6 +125,29 @@ impl fmt::Display for CopiesStop {
     }
 }
 
+/// The tracking ID forms of the rules' classifiers.
+fn forms(workflows: &Workflows) -> Vec<Form<'_>> {
+    workflows
+        .classifiers
+        .iter()
+        .filter_map(|c| c.tracking_id.as_ref().map(|form| form.form()))
+        .collect()
+}
+
+/// The tracking ID, the courier and its clue of one label page, read as a batch reads them: for an
+/// order saved before they could be read.
+pub fn label_courier(
+    workflows: &Workflows,
+    page: &PageText,
+    order_id: &OrderId,
+) -> (Option<TrackingId>, Option<CourierCode>, CourierClue) {
+    let tracking_id = find_tracking_id(&page.text, order_id, &forms(workflows));
+    let (courier, clue) = courier::name_courier(workflows, page, tracking_id.as_ref());
+    let tracking_id =
+        tracking_id.or_else(|| courier::pickup_code(page).as_deref().map(TrackingId::new));
+    (tracking_id, courier, clue)
+}
+
 /// Read a batch's pages into copies. `pages` come in reading order; `inputs` names each input.
 pub fn read_copies<P>(
     pages: P,
@@ -134,11 +157,7 @@ pub fn read_copies<P>(
 where
     P: IntoIterator<Item = PageItem>,
 {
-    let forms: Vec<Form<'_>> = workflows
-        .classifiers
-        .iter()
-        .filter_map(|c| c.tracking_id.as_ref().map(|form| form.form()))
-        .collect();
+    let forms = forms(workflows);
     let name = |input: usize| {
         inputs
             .get(input)

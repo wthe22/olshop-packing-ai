@@ -1,14 +1,25 @@
 //! A batch as the fold reads it, whichever version of the app saved it. Journal 2.0 gave an
 //! order its pickup code as its tracking ID when its label printed none, and kept the Seller SKUs
-//! beside the order rather than in its content; both are made as 2.1 has them here.
+//! beside the order rather than in its content; both are made as 2.1 has them here. J&T Express was
+//! `jnt` until v0.6 and is `jnt-express` since.
 
-use packing_engine::ids::TrackingId;
+use packing_engine::ids::{CourierCode, TrackingId};
 use packing_engine::record::{BatchSaved, ItemPick, OrderContent};
+
+const OLD_JNT: &str = "jnt";
+const JNT_EXPRESS: &str = "jnt-express";
 
 /// The batch as the fold reads it.
 pub(crate) fn as_read(saved: &BatchSaved) -> BatchSaved {
     let mut saved = saved.clone();
     for order in &mut saved.orders {
+        if order
+            .courier
+            .as_ref()
+            .is_some_and(|code| code.as_str() == OLD_JNT)
+        {
+            order.courier = Some(CourierCode::new(JNT_EXPRESS));
+        }
         if order.tracking_id.is_none() {
             order.tracking_id = order.pickup_code.as_deref().map(TrackingId::new);
         }

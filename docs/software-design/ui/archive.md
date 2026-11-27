@@ -1,14 +1,12 @@
 # Archive
 
 One page for keeping old dates small ([archive](../app/archive.md), [D-APP-43](../decisions/date-files.md)).
-It is opened from Settings › Data › **Archive**; nothing about storage shows on the daily screens.
+It is opened by **Archive** in the top bar, between **Sort rules** and **Settings**; it archives dates and
+nothing else. Archiving old dates on its own is a setting ([Settings](settings.md)); nothing about storage
+shows on the daily screens.
 
 ```
 ┌ Archive ──────────────────────────────────────────────────────────────────────── [×] ┐
-│ AUTOMATIC                                                                            │
-│ ┌──────────────────────────────────────────────────────────────────────────────────┐ │
-│ │ Archive dates older than [ 60 ] days                              [Off] [On]     │ │
-│ └──────────────────────────────────────────────────────────────────────────────────┘ │
 │ DATES                                                                 3.2 GB in all  │
 │ ┌──────────────────────────────────────────────────────────────────────────────────┐ │
 │ │      DATE                 ORDERS        SIZE                                     │ │
@@ -24,9 +22,6 @@ It is opened from Settings › Data › **Archive**; nothing about storage shows
 └──────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Automatic**: *Off* to begin with. **On** keeps the number (at least 1, 60 to begin with), asks first when
-  it would archive any date now, and writes `archive_after_days` into `packing-app.toml`; **Off** removes it.
-  A changed number is written when the box loses focus, asking first the same way.
 - **Dates**: every date of the data folder, newest first, under month heads that fold as on the panel; each
   with its orders and its size (every file of its folder; `KB`, `MB` or `GB`, one decimal under 10). The total
   stands at the right of the group's head. An archived date says *Archived* in grey.
@@ -37,4 +32,4 @@ It is opened from Settings › Data › **Archive**; nothing about storage shows
   is ticked. **Archive** asks: *Archive 3 dates? Their PDFs (210 MB) are deleted; their orders and summaries
   stay.* [Archive] [Cancel]. While it runs, the dialog *Archiving: 2026-10-07, 2 of 3*; a file that could not
   be deleted is named after it.
-- In read-only mode the page shows the dates and sizes only: no ticks, no foot, *Automatic* not changeable.
+- In read-only mode the page shows the dates and sizes only: no ticks, no foot.

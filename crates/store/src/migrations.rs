@@ -93,6 +93,6 @@ fn orders_unread(fold: &Fold, batch: BatchId) -> usize {
         .saved
         .orders
         .iter()
-        .filter(|order| order.area.is_none() || order.weight.is_none())
+        .filter(|order| order.unread())
         .count()
 }

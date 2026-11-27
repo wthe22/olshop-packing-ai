@@ -59,7 +59,7 @@ fn record() -> BatchSaved {
 
 fn couriers() -> Vec<Courier> {
     vec![Courier {
-        code: CourierCode::new("jnt"),
+        code: CourierCode::new("jnt-express"),
         name: "J&T Express".into(),
     }]
 }
@@ -210,7 +210,10 @@ fn an_accounts_summary_has_its_own_couriers_and_the_batchs_inputs_but_no_account
 fn a_courier_the_rules_no_longer_name_shows_its_code() {
     let record = record();
     let rows = &facts(&record, &record, "0.3.3", &[])[1].rows;
-    assert_eq!(rows, &[Row::new("jnt").count(0, 3, "order", "orders")]);
+    assert_eq!(
+        rows,
+        &[Row::new("jnt-express").count(0, 3, "order", "orders")]
+    );
 }
 
 /// The summary of `record`, written with the vendored PDFium; `None` (the test skips) without it.

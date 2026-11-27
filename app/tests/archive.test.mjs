@@ -14,6 +14,7 @@ import { answerQuestions } from "./answers.mjs";
 import { texts } from "../src/texts.ts";
 
 const { ArchivePage } = await import("../src/lib/archivePage.svelte.ts");
+const { ArchiveAuto } = await import("../src/lib/archiveAuto.svelte.ts");
 const { access } = await import("../src/lib/readOnly.svelte.ts");
 
 const MB = 1024 * 1024;
@@ -167,7 +168,7 @@ test("Archive asks first, archives the ticked dates and reads the page again", a
 
 test("Automatic asks when it would archive now, keeps at least one day, and Off removes it", async () => {
   const { shell, commands } = archiving();
-  const page = new ArchivePage(shell.archiving);
+  const page = new ArchiveAuto(shell.archiving);
   await page.load();
   assert.deepEqual([page.auto, page.days], [false, 60]);
 

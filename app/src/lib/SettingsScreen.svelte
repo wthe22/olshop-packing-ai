@@ -1,9 +1,13 @@
 <script lang="ts">
-  // Settings: the theme, the data folder with the way to the Archive page, and *About*, as
+  // Settings: the theme, the data folder with archiving old dates on its own, and *About*, as
   // full-width groups of rows (the setting at the left, its control at the right). Every other
   // choice has one fixed default, shown where it acts.
+  import { untrack } from "svelte";
   import { texts } from "../texts";
   import { unknownKeys, type About } from "./api/start";
+  import { ArchiveAuto } from "./archiveAuto.svelte";
+  import type { Archiving } from "./archiving.svelte";
+  import { access } from "./readOnly.svelte";
   import { themes, type Theme } from "./theme";
   import Icon from "./Icon.svelte";
   import Logo from "./Logo.svelte";
@@ -15,7 +19,7 @@
     onTheme,
     onChangeFolder,
     onOpenFolder,
-    onOpenArchive,
+    archiving,
   }: {
     about: About | null;
     dataFolder: string | null;
@@ -23,8 +27,12 @@
     onTheme: (theme: Theme) => void;
     onChangeFolder: () => void;
     onOpenFolder: () => void;
-    onOpenArchive: () => void;
+    archiving: Archiving;
   } = $props();
+
+  // The archiving of this window, which does not change while Settings is open.
+  const auto = untrack(() => new ArchiveAuto(archiving));
+  void auto.load();
 
   const words = texts.settings;
 
@@ -76,11 +84,30 @@
       </div>
       <div class="row">
         <div class="what">
-          <span class="name">{texts.archive.settingsRow}</span>
-          <span class="hint">{texts.archive.settingsHint}</span>
+          <label class="name days-line"
+            >{texts.archive.olderThan}
+            <input
+              class="days"
+              type="number"
+              min="1"
+              value={auto.days}
+              disabled={access.readOnly}
+              onblur={(event) => auto.changeDays(event.currentTarget.valueAsNumber)}
+            />
+            {texts.archive.days}</label
+          >
+          <span class="hint">{auto.error || texts.archive.autoHint}</span>
         </div>
-        <div class="controls">
-          <button onclick={onOpenArchive}><Icon name="archive" size={16} />{texts.archive.open}</button>
+        <div class="segmented" role="radiogroup" aria-label={texts.archive.olderThan}>
+          {#each [false, true] as on (on)}
+            <button
+              role="radio"
+              aria-checked={auto.auto === on}
+              class:chosen={auto.auto === on}
+              disabled={access.readOnly}
+              onclick={() => auto.turn(on)}>{on ? texts.archive.on : texts.archive.off}</button
+            >
+          {/each}
         </div>
       </div>
       {#if unknown.length > 0}
@@ -125,6 +152,17 @@
     flex-direction: column;
     gap: 1.6rem;
     padding-bottom: 0.5rem;
+  }
+
+  .days-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  input.days {
+    width: 4.5rem;
+    font-variant-numeric: tabular-nums;
   }
 
   h3 {

@@ -12,7 +12,7 @@ name and a line under it) and its control at the right.
 │ └───────────────────────────────────────────────────────────────────────────────────────┘ │
 │ DATA                                                                                      │
 │ │ Data folder  C:Packingpacking-data                             [Open] [Change]     │ │
-│ │ Archive      Old dates without their PDFs                              [Open]      │ │
+│ │ Archive dates older than [ 60 ] days                          [Off] [On]       │ │
 │ ABOUT                                                                                     │
 │ │ ◈ Packing v0.7 — Sorts the day's label PDFs into group PDFs to print, …               │ │
 │ │ Version v0.7.0 · PDFium chromium/7881 · Date schema 2.1, one row each                   │ │
@@ -23,7 +23,7 @@ name and a line under it) and its control at the right.
 |---|---|---|
 | Appearance | Theme | **Light**, **Dark** or **System** (Windows' own, the default), side by side; the chosen one raised ([D-UI-8](../decisions/ui.md)) |
 | Data | Data folder | The folder of `packing-app.toml` + **Open** + **Change** |
-| Data | Archive: *Old dates without their PDFs* | **Open** opens the [Archive](archive.md) page |
+| Data | *Archive dates older than [60] days* | *Off* to begin with. **On** keeps the number (at least 1), asks first when it would archive any date now ([Archive](archive.md)'s question), archives those, and writes `archive_after_days` into `packing-app.toml`; **Off** removes it. A changed number is written when the box loses focus, asking first the same way. Read-only: not changeable |
 | Data | *Kept, not read*, only when there is one: each key of `packing-app.toml`, `parser.toml` or `config.toml` this version does not know, with its file and line, in a file of this version or older ([D-APP-34](../decisions/versions.md)); read each time Settings opens | — |
 | About | The program's name, version and what it does; then Version (`v0.4.0`), Built (the time the program was compiled, `2026-10-30 09:15`), PDFium and Date schema (`2.1`) | — |
 
