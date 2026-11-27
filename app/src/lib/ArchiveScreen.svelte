@@ -90,26 +90,29 @@
             {@const open = folds.isOpen(month)}
             <tbody>
               <tr class="month">
-                <td class="tick"></td>
+                <td class="tick">
+                  {#if !access.readOnly && shown.tickable(month.rows).length > 0}
+                    {@const partly = !shown.monthTicked(month.rows) && shown.tickable(month.rows).some(shown.isTicked)}
+                    <input
+                      type="checkbox"
+                      aria-label={words.tickMonth(formatMonth(month.key))}
+                      title={words.tickMonth(formatMonth(month.key))}
+                      checked={shown.monthTicked(month.rows)}
+                      {@attach (input) => {
+                        input.indeterminate = partly;
+                      }}
+                      onchange={(event) => {
+                        shown.tickMonth(month.rows);
+                        event.currentTarget.checked = shown.monthTicked(month.rows);
+                      }}
+                    />
+                  {/if}
+                </td>
                 <td colspan="4">
-                  <span class="month-head">
-                    <button class="month" onclick={() => folds.toggle(month)}>
-                      <span class="chevron" class:open>▸</span>
-                      {formatMonth(month.key)}
-                    </button>
-                    {#if !access.readOnly && shown.tickable(month.rows).length > 0}
-                      <input
-                        type="checkbox"
-                        aria-label={words.tickMonth(formatMonth(month.key))}
-                        title={words.tickMonth(formatMonth(month.key))}
-                        checked={shown.monthTicked(month.rows)}
-                        onchange={(event) => {
-                          shown.tickMonth(month.rows);
-                          event.currentTarget.checked = shown.monthTicked(month.rows);
-                        }}
-                      />
-                    {/if}
-                  </span>
+                  <button class="month" onclick={() => folds.toggle(month)}>
+                    <span class="chevron" class:open>▸</span>
+                    {formatMonth(month.key)}
+                  </button>
                 </td>
               </tr>
               {#if open}
@@ -265,12 +268,6 @@
     padding-left: 1rem;
   }
 
-  .month-head {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-  }
-
   button.month {
     display: inline-flex;
     align-items: center;
@@ -307,15 +304,22 @@
     color: var(--text-faint);
   }
 
-  td.state {
-    padding-left: 1.5rem;
+  /* The date takes the free width, so the numbers and the state stand at the right. */
+  td.date {
     width: 100%;
   }
 
-  /* Stays in view at the page's foot while the dates scroll. */
+  td.state {
+    min-width: 7rem;
+    padding-left: 1.5rem;
+    padding-right: 1rem;
+  }
+
+  /* Stays in view at the page's foot while the dates scroll; below the overlay's bottom padding,
+     so no row shows under it. */
   .foot {
     position: sticky;
-    bottom: 0;
+    bottom: -1rem;
     display: flex;
     align-items: center;
     gap: 1rem;

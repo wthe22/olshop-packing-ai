@@ -32,7 +32,7 @@ It is opened from Settings › Data › **Archive**; nothing about storage shows
   stands at the right of the group's head. An archived date says *Archived* in grey.
 - **The tick** of a date that can be archived (it has a saved batch, is not archived, not today, not damaged).
   **Shift**+click ticks every date between the last tick and this one. A month's tick ticks or clears its dates
-  that can be archived. The other dates have no tick.
+  that can be archived, and shows a dash while only some are ticked. The other dates have no tick.
 - **The foot** stays in view: the dates ticked and the size of their PDFs, and **Archive**, off while nothing
   is ticked. **Archive** asks: *Archive 3 dates? Their PDFs (210 MB) are deleted; their orders and summaries
   stay.* [Archive] [Cancel]. While it runs, the dialog *Archiving: 2026-10-07, 2 of 3*; a file that could not
