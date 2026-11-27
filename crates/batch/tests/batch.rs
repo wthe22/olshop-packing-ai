@@ -5,7 +5,6 @@
 //!
 //! Skipped with a message when `pdfium.dll` has not been downloaded (tools/get-pdfium.sh).
 
-use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -14,14 +13,15 @@ use std::sync::mpsc;
 
 use jiff::civil::date;
 use packing_batch::{
-    AccountSummaryOutcome, AccountSummaryRequest, BatchError, Draft, MigrateProgress,
-    MigrateRequest, ReadRequest, ReprintOutcome, ReprintRequest, RestoreOutcome, RestoreRequest,
-    RevertedPdfs, SaveOutcome, SaveRequest, Saved, account_summary, account_summary_file, amend,
-    check_files, day_summary, day_summary_file, migrate_date, read_draft, reprint, restore, revert,
-    save, set_printed, set_sent,
+    AccountSummaryOutcome, AccountSummaryRequest, BatchError, DaySummaryRequest, Draft,
+    MigrateProgress, MigrateRequest, ReadRequest, ReprintOutcome, ReprintRequest, RestoreOutcome,
+    RestoreRequest, RevertedPdfs, SaveOutcome, SaveRequest, Saved, account_summary,
+    account_summary_file, amend, check_files, day_summary, day_summary_file, migrate_date,
+    read_draft, reprint, restore, revert, save, set_printed, set_sent,
 };
-use packing_engine::account_questions::{NoSenderQuestion, Others, ShopQuestion};
+use packing_engine::account_questions::ShopQuestion;
 use packing_engine::accounts::{Account, ShopAccount, add_shop};
+use packing_engine::accounts::{NO_ACCOUNT, account_of_shop};
 use packing_engine::ids::{BatchId, OrderId, PdfId};
 use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked, RecordBody};
 use packing_engine::workflows::{SortRule, Workflows, load_bundled};
@@ -258,8 +258,7 @@ fn a_draft_saves_after_another_copys_batch_unless_that_batch_took_its_orders() {
     let mut other = day
         .read(&[testdata("labels-slip.pdf")], &rule, None)
         .unwrap();
-    let no_sender = BTreeMap::from([(0, "Toko Contoh".to_string())]);
-    other.answer_accounts(day.accounts.clone(), no_sender);
+    other.answer_accounts(day.accounts.clone());
 
     assert_eq!(saved(day.save(&other, false)).record.batch, BatchId::new(1));
     let record = saved(day.save(&mine, false)).record;
@@ -471,6 +470,7 @@ fn a_missing_output_is_restored_and_recorded() {
             file,
             app: APP,
             couriers: &day.workflows.couriers,
+            accounts: &day.accounts,
         };
         let restored = match restore(&request, &mut day.journal).unwrap() {
             RestoreOutcome::Restored(restored) => restored,
@@ -495,6 +495,7 @@ fn a_missing_output_is_restored_and_recorded() {
             file: "nothing.pdf",
             app: APP,
             couriers: &day.workflows.couriers,
+            accounts: &day.accounts,
         },
         &mut day.journal,
     );
@@ -502,7 +503,7 @@ fn a_missing_output_is_restored_and_recorded() {
 }
 
 #[test]
-fn a_shop_no_account_lists_and_a_file_with_no_sender_wait_for_the_shop_prompt() {
+fn a_shop_no_account_lists_waits_for_the_shop_prompt_and_no_sender_is_no_account() {
     let Some(mut day) = day("batch-accounts") else {
         return skipped();
     };
@@ -516,14 +517,11 @@ fn a_shop_no_account_lists_and_a_file_with_no_sender_wait_for_the_shop_prompt() 
         orders: 1,
         inputs: vec![0],
     };
-    assert_eq!(questions.shops, [shop]);
-    let file = NoSenderQuestion {
-        input: 1,
-        orders: 1,
-        of_orders: 23,
-        others: Some(Others::Account("Toko Contoh".into())),
-    };
-    assert_eq!(questions.no_sender, [file]);
+    assert_eq!(
+        questions,
+        [shop],
+        "the label with no sender is not asked about"
+    );
     assert!(matches!(
         day.try_save(&draft, false),
         Err(BatchError::NoAccount { .. })
@@ -536,25 +534,27 @@ fn a_shop_no_account_lists_and_a_file_with_no_sender_wait_for_the_shop_prompt() 
         &ShopAccount::New("Toko Lain".into()),
     )
     .unwrap();
-    let no_sender = BTreeMap::from([(1, "Toko Contoh".to_string())]);
-    draft.answer_accounts(accounts.clone(), no_sender);
+    draft.answer_accounts(accounts.clone());
     assert!(draft.account_questions().is_empty());
     let first = saved(day.save(&draft, false)).record;
     let account = |id: &str| {
         let order = first.orders.iter().find(|o| o.order_id.as_str() == id);
-        order.map(|order| (order.account.as_str(), order.shop.as_deref()))
+        order.map(|order| {
+            let shop = order.shop.as_deref();
+            (account_of_shop(shop, &accounts), shop)
+        })
     };
     assert_eq!(
         account("580000000000000104"),
         Some(("Toko Lain", Some("Toko Lain")))
     );
-    assert_eq!(account("580000000000000022"), Some(("Toko Contoh", None)));
+    assert_eq!(account("580000000000000022"), Some((NO_ACCOUNT, None)));
     assert_eq!(
         account("580000000000000021"),
         Some(("Toko Contoh", Some("Toko Contoh")))
     );
 
-    // An amend reads the label with no sender again and keeps the account its record names.
+    // An amend reads the labels again and asks nothing.
     day.accounts = accounts;
     let redo = amend(&day.folder, day.journal.fold(), &day.workflows).unwrap();
     let paths: Vec<PathBuf> = redo.files.iter().map(|f| f.path.clone()).collect();
@@ -571,7 +571,7 @@ fn an_accounts_summary_is_checked_kept_and_dropped_by_an_amend_or_a_revert() {
     };
     let draft = day.read_inputs().unwrap();
     let first = saved(day.save(&draft, false)).record;
-    let account = first.orders[0].account.clone();
+    let account = account_of_shop(first.orders[0].shop.as_deref(), &day.accounts).to_string();
     let write = |day: &Day, account: &str| {
         account_summary(&AccountSummaryRequest {
             worker: &day.worker,
@@ -580,6 +580,7 @@ fn an_accounts_summary_is_checked_kept_and_dropped_by_an_amend_or_a_revert() {
             batch: first.batch,
             account,
             couriers: &day.workflows.couriers,
+            accounts: &day.accounts,
             app: APP,
         })
     };
@@ -598,13 +599,14 @@ fn an_accounts_summary_is_checked_kept_and_dropped_by_an_amend_or_a_revert() {
         write(&day, "Toko Tanpa Pesanan"),
         Err(BatchError::NoBatch)
     ));
-    let whole = day_summary(
-        &day.worker,
-        &day.folder,
-        day.journal.fold(),
-        &day.workflows.couriers,
-        Some(&account),
-    )
+    let whole = day_summary(&DaySummaryRequest {
+        worker: &day.worker,
+        folder: &day.folder,
+        fold: day.journal.fold(),
+        couriers: &day.workflows.couriers,
+        accounts: &day.accounts,
+        account: Some(&account),
+    })
     .unwrap();
     assert_eq!(
         whole,

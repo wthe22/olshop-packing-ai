@@ -11,6 +11,7 @@ mod content;
 use std::path::Path;
 
 use jiff::civil::Date;
+use packing_engine::accounts::Account;
 use packing_engine::record::{BatchSaved, of_account};
 use packing_engine::workflows::Courier;
 use pdfium_render::prelude::Pdfium;
@@ -40,6 +41,8 @@ pub struct DayFacts<'a> {
     pub couriers: &'a [Courier],
     /// The account whose day summary this is; none: all accounts.
     pub account: Option<&'a str>,
+    /// The accounts of `config.toml`, which give each order its account by its shop.
+    pub accounts: &'a [Account],
 }
 
 /// Write the day summary and return its page count.
@@ -52,7 +55,7 @@ pub fn write_day_summary(
         Some(account) => facts
             .batches
             .iter()
-            .map(|batch| of_account(batch.record, account))
+            .map(|batch| of_account(batch.record, account, facts.accounts))
             .collect(),
         None => Vec::new(),
     };

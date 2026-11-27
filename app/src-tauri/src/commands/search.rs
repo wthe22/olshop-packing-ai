@@ -8,6 +8,7 @@ use std::ops::RangeInclusive;
 
 use jiff::civil::Date;
 use packing_batch::{ReprintOutcome, ReprintRequest, reprint as write_reprint};
+use packing_engine::accounts::Account;
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::record::Weight;
 use packing_engine::rules::parse_filter;
@@ -122,16 +123,16 @@ pub(crate) fn search(
 ) -> Result<SearchView, String> {
     let filter = parse_filter(filter).map_err(|error| error.to_string())?;
     let (_, workflows) = settings::workflows(state.program())?;
-    let couriers = &workflows.couriers;
+    let (couriers, accounts) = (&workflows.couriers, &workflows.accounts);
     let dates = match range {
         Some(range) => range.dates()?,
         None => Date::MIN..=Date::MAX,
     };
     let rows = state.index().with(|index| {
         index
-            .search(&filter, dates, couriers)
+            .search(&filter, dates, couriers, accounts)
             .into_iter()
-            .map(|order| row(index, order, couriers))
+            .map(|order| row(index, order, couriers, accounts))
             .collect::<Vec<_>>()
     })?;
     let Some(rows) = rows else {
@@ -154,12 +155,17 @@ pub(crate) fn search(
     })
 }
 
-fn row(index: &SearchIndex, order: &IndexedOrder, couriers: &[Courier]) -> OrderRow {
+fn row(
+    index: &SearchIndex,
+    order: &IndexedOrder,
+    couriers: &[Courier],
+    accounts: &[Account],
+) -> OrderRow {
     let saved = &order.order;
     OrderRow {
         day: order.date.to_string(),
         order_id: saved.order_id.to_string(),
-        account: saved.account.clone(),
+        account: order.account(accounts).to_string(),
         shop: saved.shop.clone(),
         tracking_id: saved.tracking_id.as_ref().map(ToString::to_string),
         courier: saved
@@ -343,7 +349,7 @@ pub(crate) fn reprinted_orders(
                 batch: order.batch,
                 found: index
                     .find(order.date, &order.order_id)
-                    .map(|found| row(index, found, &workflows.couriers)),
+                    .map(|found| row(index, found, &workflows.couriers, &workflows.accounts)),
             })
             .collect()
     })?;

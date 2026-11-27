@@ -30,9 +30,9 @@ OPTIONS:
   --program <dir>         The folder with packing-app.toml (default: .)
   --rule <name>           The sort rule of a new batch (default: default); an amend keeps the
                           rule its batch was made with
-  --account <name>        Put every order whose shop no account lists, and every file with
-                          labels that show no sender, under this account for this run only;
-                          without it such an order stops the command, naming the shops
+  --account <name>        Put every shop no account lists under this account for this run
+                          only (not written to config.toml, so its orders are under No account
+                          later); without it such an order stops the command, naming the shops
   --save-anyway           Save a batch the verifier found something in, recording the findings
   --pdfium <dir>          The folder with pdfium.dll (default: next to the exe, else vendor)
   --quiet-ids             Print counts only; no order IDs, tracking IDs, shops or names

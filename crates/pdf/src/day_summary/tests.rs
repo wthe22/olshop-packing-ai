@@ -1,4 +1,7 @@
+use std::sync::LazyLock;
+
 use jiff::civil::date;
+use packing_engine::accounts::Account;
 use packing_engine::ids::CourierCode;
 use packing_engine::record::{BatchSaved, ItemPick, OrderContent, OutputFile};
 use packing_engine::workflows::Courier;
@@ -41,6 +44,16 @@ fn couriers() -> Vec<Courier> {
     }]
 }
 
+/// Toko Alfa and Toko Beta, each listing its own shop.
+static ACCOUNTS: LazyLock<Vec<Account>> = LazyLock::new(|| {
+    ["Toko Alfa", "Toko Beta"]
+        .map(|name| Account {
+            name: name.into(),
+            shops: vec![name.into()],
+        })
+        .into()
+});
+
 fn facts<'a>(
     first: &'a BatchSaved,
     second: &'a BatchSaved,
@@ -61,6 +74,7 @@ fn facts<'a>(
         printed: "17:05",
         couriers,
         account: None,
+        accounts: &ACCOUNTS,
     }
 }
 
@@ -223,7 +237,7 @@ fn an_accounts_day_summary_counts_its_orders_in_the_batches_that_hold_one() {
     let dir = TempDir::new("day-summary-account");
     let path = dir.path().join("day summary Toko Beta.pdf");
     let (first, mut second) = records();
-    second.orders[2].account = "Toko Beta".into();
+    second.orders[2].shop = Some("Toko Beta".into());
     let couriers = couriers();
     let day = DayFacts {
         account: Some("Toko Beta"),

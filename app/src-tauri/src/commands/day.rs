@@ -9,8 +9,8 @@ use std::path::PathBuf;
 
 use jiff::civil::Date;
 use packing_batch::{
-    AccountSummaryOutcome, AccountSummaryRequest, RestoreOutcome, RestoreRequest, RevertedPdfs,
-    account_summary, restore,
+    AccountSummaryOutcome, AccountSummaryRequest, DaySummaryRequest, RestoreOutcome,
+    RestoreRequest, RevertedPdfs, account_summary, restore,
 };
 use packing_engine::ids::BatchId;
 use packing_engine::record::{PrintSent, PrintedMarked};
@@ -32,11 +32,12 @@ pub(crate) fn date_of(day: &str) -> Result<Date, String> {
 /// Open `day` (folded and checked unless it is open) and describe it.
 pub(crate) fn overview(state: &AppState, day: &str) -> Result<DayOverview, String> {
     let date = date_of(day)?;
+    let accounts = settings::accounts(state.program())?;
     state.with_data(|data| {
         let older = older_data(&data.dir).map_err(|error| error.to_string())?;
         let older = view::older_views(&data.dir, &older);
         let open = data.open_day(date)?;
-        Ok(view::overview(open, older))
+        Ok(view::overview(open, older, &accounts))
     })
 }
 
@@ -79,13 +80,14 @@ pub(crate) fn write_day_summary(
     state.write_day(date, |open| {
         let path = state
             .with_worker(|worker| {
-                packing_batch::day_summary(
+                packing_batch::day_summary(&DaySummaryRequest {
                     worker,
-                    &open.folder,
-                    open.journal.fold(),
-                    &workflows.couriers,
+                    folder: &open.folder,
+                    fold: open.journal.fold(),
+                    couriers: &workflows.couriers,
+                    accounts: &workflows.accounts,
                     account,
-                )
+                })
             })?
             .map_err(|error| error.to_string())?;
         Ok(path.display().to_string())
@@ -117,6 +119,7 @@ pub(crate) fn write_account_summary(
                     batch,
                     account,
                     couriers: &workflows.couriers,
+                    accounts: &workflows.accounts,
                     app: APP_VERSION,
                 })
             })?
@@ -178,6 +181,7 @@ pub(crate) fn restore_file(state: &AppState, day: &str, file: &str) -> Result<Re
                         file,
                         app: APP_VERSION,
                         couriers: &workflows.couriers,
+                        accounts: &workflows.accounts,
                     },
                     &mut open.journal,
                 )

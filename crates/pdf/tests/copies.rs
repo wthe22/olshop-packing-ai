@@ -7,9 +7,7 @@ mod common;
 
 use std::sync::atomic::AtomicBool;
 
-use packing_engine::account_questions::{
-    AccountChoices, ShopQuestion, account_questions, assign_accounts,
-};
+use packing_engine::account_questions::{ShopQuestion, account_questions, assign_accounts};
 
 use packing_engine::copies::{CopiesStop, read_copies};
 use packing_engine::record::{CourierClueKind, Weight};
@@ -151,7 +149,7 @@ fn the_repeat_inputs_ask_about_the_shop_no_account_lists() {
         serde_json::from_str(&std::fs::read_to_string(testdata("expected-repeat.json")).unwrap())
             .unwrap();
     let accounts = shop_accounts(&["Toko Contoh"]);
-    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
+    assign_accounts(&mut copies, &accounts);
 
     let other: Vec<&Value> = answer["copies"]
         .as_array()
@@ -170,6 +168,5 @@ fn the_repeat_inputs_ask_about_the_shop_no_account_lists() {
         inputs,
     };
     let questions = account_questions(&copies);
-    assert_eq!(questions.shops, [want]);
-    assert!(questions.no_sender.is_empty());
+    assert_eq!(questions, [want]);
 }

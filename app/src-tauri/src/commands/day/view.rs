@@ -6,6 +6,7 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
+use packing_engine::accounts::Account;
 use packing_engine::ids::{BatchId, PdfId};
 use packing_engine::record::{BatchSaved, LeftOutReason, account_counts};
 use packing_engine::sorting::{REST_CODE, REST_NAME};
@@ -127,14 +128,14 @@ pub struct ReprintRow {
     path: String,
 }
 
-pub(super) fn overview(day: &OpenDay, older: Vec<OlderView>) -> DayOverview {
+pub(super) fn overview(day: &OpenDay, older: Vec<OlderView>, accounts: &[Account]) -> DayOverview {
     let fold = day.journal.fold();
     let output = day.folder.dir();
     let batches: Vec<BatchView> = fold
         .live
         .iter()
         .rev()
-        .map(|(batch, live)| batch_view(day, *batch, live, output))
+        .map(|(batch, live)| batch_view(day, *batch, live, output, accounts))
         .collect();
     let mut problems = Vec::new();
     problems.extend(journal_problem(day.journal.damage()));
@@ -174,7 +175,13 @@ pub(super) fn overview(day: &OpenDay, older: Vec<OlderView>) -> DayOverview {
     }
 }
 
-fn batch_view(day: &OpenDay, batch: BatchId, live: &LiveBatch, output: &Path) -> BatchView {
+fn batch_view(
+    day: &OpenDay,
+    batch: BatchId,
+    live: &LiveBatch,
+    output: &Path,
+    accounts: &[Account],
+) -> BatchView {
     let saved = &live.saved;
     let problem = |file: &str| {
         day.outputs
@@ -234,7 +241,7 @@ fn batch_view(day: &OpenDay, batch: BatchId, live: &LiveBatch, output: &Path) ->
         sort_rule: saved.sort_rule.name.clone(),
         files: saved.inputs.len(),
         orders: saved.orders.len(),
-        accounts: account_counts([saved])
+        accounts: account_counts([saved], accounts)
             .into_iter()
             .map(|count| AccountOrders {
                 account: count.account,

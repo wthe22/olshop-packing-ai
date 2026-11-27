@@ -39,17 +39,18 @@ pub fn batch_saved(facts: BatchFacts<'_>) -> BatchSaved {
                 contents.len() - 1
             }
         };
-        let account = copy
+        let shop = copy
             .account
             .clone()
-            .expect("a batch is saved once every order has an account");
+            .expect("a batch is saved once every order has an account")
+            .shop;
         orders.push(SavedOrder {
             order_id: copy.order_id.clone(),
             tracking_id: copy.tracking_id.clone(),
             courier: copy.courier.clone(),
             courier_clue: copy.courier_clue.clone(),
-            account: account.account,
-            shop: account.shop,
+            account_of_2_0: None,
+            shop,
             content: index as u16,
             skus: Vec::new(),
             total_quantity: copy

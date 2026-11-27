@@ -14,6 +14,7 @@ use packing_engine::workflows::{Courier, courier_name};
 
 use crate::PDFIUM_VERSION;
 use crate::facts::{Row, Section};
+use crate::summary_pdf::SummaryFacts;
 
 /// The header's counts: orders, units and group PDFs.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -147,20 +148,25 @@ fn group_name<'r>(record: &'r BatchSaved, code: &str) -> &'r str {
 
 /// The facts pages of `record`, which is `whole` itself or one account's part of it: the accounts (on the
 /// summary of all accounts only), the couriers, the warnings, the whole batch's inputs with its
-/// ledger, the sort rule and the versions. `couriers` names the courier codes.
+/// ledger, the sort rule and the versions, from what `of` gives.
 pub(crate) fn facts(
     record: &BatchSaved,
     whole: &BatchSaved,
-    app: &str,
-    couriers: &[Courier],
+    of: &SummaryFacts<'_>,
 ) -> Vec<Section> {
+    let (app, couriers) = (of.app, of.couriers);
     let section = |heading: &str, rows: Vec<Row>| Section {
         heading: heading.to_string(),
         right: None,
         rows,
     };
     let all = std::ptr::eq(record, whole);
-    let accounts = all.then(|| section("Accounts", account_rows(&account_counts([whole]))));
+    let accounts = all.then(|| {
+        section(
+            "Accounts",
+            account_rows(&account_counts([whole], of.accounts)),
+        )
+    });
     accounts
         .into_iter()
         .chain([

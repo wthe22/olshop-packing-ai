@@ -8,9 +8,10 @@ use std::sync::OnceLock;
 use lopdf::Document;
 use regex::Regex;
 
-use crate::Findings;
 use crate::files::sha256_and_size;
+use crate::ledger::account_of;
 use crate::record::{Batch, Order};
+use crate::{AccountSummaryCheck, Findings};
 
 fn counts_re() -> &'static Regex {
     static R: OnceLock<Regex> = OnceLock::new();
@@ -62,10 +63,10 @@ pub(crate) fn check_summary(batch: &Batch, output_dir: &Path, findings: &mut Fin
 /// groups that hold one; its ledger is the whole batch's.
 pub(crate) fn check_account_summary(
     batch: &Batch,
-    account: &str,
-    path: &Path,
+    check: &AccountSummaryCheck<'_>,
     findings: &mut Findings,
 ) {
+    let path = check.path;
     let file = path
         .file_name()
         .map_or_else(String::new, |name| name.to_string_lossy().to_string());
@@ -74,7 +75,8 @@ pub(crate) fn check_account_summary(
         return;
     }
     let mut mine = batch.clone();
-    mine.orders.retain(|order| order.account == account);
+    mine.orders
+        .retain(|order| account_of(order.shop.as_deref(), check.accounts) == check.account);
     mine.outputs.retain(|output| {
         output
             .group

@@ -1,6 +1,7 @@
 //! The verifier on the repeat fixture's first input, with outputs made from it by `lopdf`: a right
-//! set passes; a journal, an input, a ledger, an order, an account, a batch number, a group PDF or a
-//! summary that is not what the record says is found, and an account's summary is checked too.
+//! set passes; a journal, an input, a ledger, an order, a batch number, a group PDF or a summary
+//! that is not what the record says is found, a shop under two accounts of `config.toml` is found,
+//! and an account's summary is checked too.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -8,7 +9,7 @@ use std::path::{Path, PathBuf};
 use lopdf::content::{Content, Operation};
 use lopdf::{Document, Object, Stream, dictionary};
 use packing_verify::{
-    AccountSummaryCheck, BatchCheck, Findings, ReprintCheck, RestoreCheck, page_digests,
+    Account, AccountSummaryCheck, BatchCheck, Findings, ReprintCheck, RestoreCheck, page_digests,
     verify_account_summary, verify_batch, verify_reprint, verify_restore,
 };
 use serde_json::{Value, json};
@@ -18,6 +19,16 @@ use xxhash_rust::xxh3::xxh3_64;
 const INPUT: &str = "labels-repeat-1.pdf";
 const GROUP_FILE: &str = "1-Z Lainnya x3.pdf";
 const SUMMARY_FILE: &str = "1 Summary.pdf";
+
+/// The accounts of `config.toml`: Toko Alfa and Toko Beta, each listing its own shop.
+fn accounts() -> Vec<Account> {
+    ["Toko Alfa", "Toko Beta"]
+        .map(|name| Account {
+            name: name.into(),
+            shops: vec![name.into()],
+        })
+        .into()
+}
 
 fn testdata(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -69,13 +80,13 @@ fn line(value: &Value) -> String {
 /// pages 4–5, order 102's second copy, are left out.
 fn record(input_sha: &str, group: (String, u64), summary: (String, u64)) -> Value {
     let order = |id: &str, content: u16, start: u16, end: u16| {
-        let account = if content < 2 {
+        let shop = if content < 2 {
             "Toko Alfa"
         } else {
             "Toko Beta"
         };
         json!({"order_id": id, "content": content, "pdf": 1, "page_start": start, "page_end": end,
-               "group": "Z", "account": account, "shop": account})
+               "group": "Z", "shop": shop})
     };
     json!({
         "seq": 2, "time": "2026-10-08T09:00:00+07:00", "app": "0.3.3", "type": "batch_saved",
@@ -171,13 +182,24 @@ fn right_summary() -> Vec<String> {
     ]
 }
 
-/// A set as the save leaves it: the input stored by content, the outputs written; `tamper` changes
-/// the record's JSON before it is sealed.
+/// A set as the save leaves it, checked with Toko Alfa's and Toko Beta's accounts.
 fn verify(
     tag: &str,
     group_order: &[u32],
     summary: &[String],
     tamper: impl Fn(&mut Value),
+) -> Findings {
+    verify_with(tag, group_order, summary, tamper, &accounts())
+}
+
+/// A set as the save leaves it: the input stored by content, the outputs written; `tamper` changes
+/// the record's JSON before it is sealed.
+fn verify_with(
+    tag: &str,
+    group_order: &[u32],
+    summary: &[String],
+    tamper: impl Fn(&mut Value),
+    accounts: &[Account],
 ) -> Findings {
     let folder = Folder::new(tag);
     let (input_sha, _) = sha_and_size(&testdata(INPUT));
@@ -198,6 +220,7 @@ fn verify(
         append: append.as_bytes(),
         date_dir: &folder.date(),
         output_dir: &folder.partial(),
+        accounts,
     })
 }
 
@@ -242,7 +265,7 @@ fn a_wrong_page_of_a_group_pdf_is_found() {
 #[test]
 fn a_record_that_does_not_add_up_is_found() {
     type Tamper = fn(&mut Value);
-    let cases: [(&str, Tamper, &str); 10] = [
+    let cases: [(&str, Tamper, &str); 8] = [
         (
             "a page in no copy",
             |b| b["left_out"] = json!([]),
@@ -272,16 +295,6 @@ fn a_record_that_does_not_add_up_is_found() {
             "a group PDF not the one named",
             |b| b["outputs"][0]["size"] = json!(1),
             "not the file the record names",
-        ),
-        (
-            "an order with no account",
-            |b| b["orders"][0]["account"] = json!(""),
-            "order 580000000000000101 names no account",
-        ),
-        (
-            "a shop under two accounts",
-            |b| b["orders"][2]["shop"] = json!("toko  ALFA"),
-            "stands under 2 accounts: Toko Alfa, Toko Beta",
         ),
         (
             "a batch number that skips",
@@ -351,6 +364,7 @@ fn a_journal_that_changed_is_found() {
         append: line(&next).as_bytes(),
         date_dir: &folder.date(),
         output_dir: &folder.partial(),
+        accounts: &[],
     });
     assert!(
         findings
@@ -584,23 +598,24 @@ fn an_accounts_summary_counts_its_orders_and_the_whole_ledger() {
             ("0".repeat(64), 1)
         ))
     );
+    let check_of =
+        |account: &str, accounts: &[Account], file: &str, lines: Option<&[String]>, batch: u8| {
+            let path = folder.partial().join(file);
+            if let Some(lines) = lines {
+                summary_pdf(&path, lines);
+            }
+            verify_account_summary(&AccountSummaryCheck {
+                journal: journal.as_bytes(),
+                batch,
+                account,
+                accounts,
+                path: &path,
+            })
+        };
     let check = |file: &str, lines: Option<&[String]>, batch: u8| {
-        let path = folder.partial().join(file);
-        if let Some(lines) = lines {
-            summary_pdf(&path, lines);
-        }
-        verify_account_summary(&AccountSummaryCheck {
-            journal: journal.as_bytes(),
-            batch,
-            account: "Toko Alfa",
-            path: &path,
-        })
+        check_of("Toko Alfa", &accounts(), file, lines, batch)
     };
-    let mut alfa = vec![
-        "2 orders - 2 units - 1 groups - printed 10:05".to_string(),
-        "6 pages read = 4 written + 2 left out (2 repeats, 0 saved earlier)".into(),
-        "Z  Lainnya - 2 orders - 2 units".into(),
-    ];
+    let mut alfa = alfa_right();
     let right = check("1 summary Toko Alfa.pdf", Some(&alfa), 1);
     assert!(right.is_clean(), "{right:?}");
 
@@ -633,5 +648,70 @@ fn an_accounts_summary_counts_its_orders_and_the_whole_ledger() {
             .iter()
             .any(|f| f.contains("batch 2 is not live")),
         "{not_live:?}"
+    );
+
+    let renamed = [Account {
+        name: "Toko Alfa Baru".into(),
+        shops: vec!["Toko Alfa".into()],
+    }];
+    let after_rename = check_of(
+        "Toko Alfa Baru",
+        &renamed,
+        "renamed.pdf",
+        Some(&alfa_right()),
+        1,
+    );
+    assert!(
+        after_rename.is_clean(),
+        "a renamed account counts its shop's orders: {after_rename:?}"
+    );
+    let unlisted = check_of(
+        "No account",
+        &renamed,
+        "no account.pdf",
+        Some(&beta_right()),
+        1,
+    );
+    assert!(
+        unlisted.is_clean(),
+        "No account counts the orders of no listed shop: {unlisted:?}"
+    );
+}
+
+/// Toko Alfa's summary of the record's batch: orders 101 and 102.
+fn alfa_right() -> Vec<String> {
+    vec![
+        "2 orders - 2 units - 1 groups - printed 10:05".to_string(),
+        "6 pages read = 4 written + 2 left out (2 repeats, 0 saved earlier)".into(),
+        "Z  Lainnya - 2 orders - 2 units".into(),
+    ]
+}
+
+/// Toko Beta's summary of the record's batch: order 103.
+fn beta_right() -> Vec<String> {
+    vec![
+        "1 orders - 1 units - 1 groups - printed 10:05".to_string(),
+        "6 pages read = 4 written + 2 left out (2 repeats, 0 saved earlier)".into(),
+        "Z  Lainnya - 1 orders - 1 units".into(),
+    ]
+}
+
+#[test]
+fn a_shop_two_accounts_list_is_found() {
+    let mut accounts = accounts();
+    accounts[1].shops.push("toko  ALFA".into());
+    let findings = verify_with(
+        "two-accounts",
+        &[1, 2, 3, 6],
+        &right_summary(),
+        |_| {},
+        &accounts,
+    );
+    assert!(
+        findings
+            .errors
+            .iter()
+            .any(|f| f.contains("stands under 2 accounts: Toko Alfa, Toko Beta")),
+        "{findings:?}"
     );
 }

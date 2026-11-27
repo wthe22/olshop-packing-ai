@@ -4,6 +4,7 @@
 
 use std::path::PathBuf;
 
+use packing_engine::accounts::Account;
 use packing_engine::record::{OutputRestored, RecordBody};
 use packing_engine::workflows::Courier;
 use packing_pdf::summary_pdf::{SummaryFacts, write_summary};
@@ -25,6 +26,8 @@ pub struct RestoreRequest<'a> {
     pub app: &'a str,
     /// The couriers of `packing-workflows.toml`: a summary PDF names them.
     pub couriers: &'a [Courier],
+    /// The accounts of `config.toml`: a summary PDF counts the orders of each.
+    pub accounts: &'a [Account],
 }
 
 #[derive(Debug)]
@@ -81,6 +84,7 @@ pub fn restore(
             let printed = jiff::Zoned::now().strftime("%H:%M").to_string();
             let (record, target) = (saved.clone(), out.clone());
             let couriers = request.couriers.to_vec();
+            let accounts = request.accounts.to_vec();
             request
                 .worker
                 .run(move |pdfium| {
@@ -94,6 +98,7 @@ pub fn restore(
                             printed: &printed,
                             app: &app,
                             couriers: &couriers,
+                            accounts: &accounts,
                         },
                     )
                 })

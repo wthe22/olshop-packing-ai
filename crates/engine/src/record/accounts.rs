@@ -1,7 +1,9 @@
 //! A batch record's orders by account (summary-pdf.md, *One account*): the orders and units of
-//! each account, and the part of a batch one account's summary shows.
+//! each account, and the part of a batch one account's summary shows. An order's account is the
+//! account that lists its shop in `accounts`.
 
 use super::{BatchSaved, Finding, SavedOrder};
+use crate::accounts::{Account, account_of_shop};
 
 /// An account's orders and units, as the Accounts sections and `session.toml` count them.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -12,15 +14,19 @@ pub struct AccountCount {
 }
 
 /// The orders and units of each account over `records`, most orders first, then by name.
-pub fn account_counts<'r>(records: impl IntoIterator<Item = &'r BatchSaved>) -> Vec<AccountCount> {
+pub fn account_counts<'r>(
+    records: impl IntoIterator<Item = &'r BatchSaved>,
+    accounts: &[Account],
+) -> Vec<AccountCount> {
     let mut counts: Vec<AccountCount> = Vec::new();
     for record in records {
         for order in &record.orders {
-            let at = match counts.iter().position(|c| c.account == order.account) {
+            let account = account_of_shop(order.shop.as_deref(), accounts);
+            let at = match counts.iter().position(|c| c.account == account) {
                 Some(at) => at,
                 None => {
                     counts.push(AccountCount {
-                        account: order.account.clone(),
+                        account: account.to_string(),
                         orders: 0,
                         units: 0,
                     });
@@ -47,9 +53,10 @@ pub fn order_units(record: &BatchSaved, order: &SavedOrder) -> u32 {
 /// `record` as one account's summary shows it: that account's orders, the group PDFs that hold one
 /// of them, the summary PDF, and the findings that name one of them. The inputs and the left-out
 /// copies stay the batch's, which its ledger counts.
-pub fn of_account(record: &BatchSaved, account: &str) -> BatchSaved {
+pub fn of_account(record: &BatchSaved, account: &str, accounts: &[Account]) -> BatchSaved {
     let mut mine = record.clone();
-    mine.orders.retain(|order| order.account == account);
+    mine.orders
+        .retain(|order| account_of_shop(order.shop.as_deref(), accounts) == account);
     mine.outputs.retain(|output| match &output.group {
         Some(group) => mine.orders.iter().any(|order| &order.group == group),
         None => true,

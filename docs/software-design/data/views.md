@@ -4,7 +4,8 @@ Three files of the owner's draft, written from the journal after every commit so
 program can read a date without the app ([D-APP-38](../decisions/app.md)). Each is written to a temporary
 file and renamed into place; `day.toml` is written last, so its `journal_seq` vouches for all three.
 The screens read the views; the journal is read to write, recover, migrate and audit
-([D-APP-38](../decisions/app.md)). When one is missing or `day.toml`'s `journal_seq` is not the
+([D-APP-38](../decisions/app.md)). A view holds no account: an order's account is looked up from its shop
+when it is shown ([D-APP-37](../decisions/accounts.md)). When one is missing or `day.toml`'s `journal_seq` is not the
 journal's last `seq`, all three are written again ([journal › When a date opens](journal.md#when-a-date-opens));
 when its `schema` is older than this version's, or the date still has v0.7's `session.toml`, only by the
 migration the owner starts ([D-APP-33](../decisions/app.md)), which first copies them into the date's
@@ -70,7 +71,6 @@ LabelBatch {
   earliest_ship_by_date: Option<Date>
   latest_ship_by_date: Option<Date>
   couriers: List<CourierCode>
-  accounts: List<AccountOrders> // the batch's accounts, most orders first
   warnings: List<String>
   errors: List<String>
   left_out: List<LeftOutCopy>   // as in the journal
@@ -84,11 +84,6 @@ LabelGroup {
   is_marked_as_sent: bool
   is_marked_as_printed: bool
   order_contents: List<OrderContentSummary>   // in printing order
-}
-
-AccountOrders {
-  account: String
-  order_count: u16
 }
 
 OrderContentSummary {

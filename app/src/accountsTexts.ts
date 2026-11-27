@@ -16,11 +16,11 @@ export const accountsTexts = {
   rename: "Rename",
   renameDone: "Rename",
   renameLabel: (name: string) => `New name for ${name}`,
-  renameHint: "Orders saved before keep the name they were saved with.",
+  renameHint: "Its saved orders move to the new name.",
   delete: "Delete",
   askDelete: (name: string): Question => ({
     title: `Delete account ${name}?`,
-    body: "Its shops are asked about again at the next read. Its saved orders stay, under its name.",
+    body: "Its shops are asked about again at the next read. Its saved orders go under No account.",
     ok: "Delete",
   }),
   askDiscard: (name: string): Question => ({
@@ -31,7 +31,7 @@ export const accountsTexts = {
 
   shops: "Shops",
   shopsHint: "The labels of these senders are this account's orders.",
-  noShops: "No shops: only a label with no sender can be put here.",
+  noShops: "No shops yet.",
   shopLabel: (n: number) => `Shop ${n}`,
   removeShop: (name: string) => (name ? `Take off ${name}` : "Take off this shop"),
   addShop: "+ Add shop",

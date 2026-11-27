@@ -50,8 +50,6 @@ pub(crate) struct Order {
     pub page_end: u16,
     pub group: String,
     #[serde(default)]
-    pub account: String,
-    #[serde(default)]
     pub shop: Option<String>,
 }
 

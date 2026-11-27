@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
 
 use jiff::civil::date;
-use packing_engine::account_questions::{AccountChoices, assign_accounts};
+use packing_engine::account_questions::assign_accounts;
 use packing_engine::batch_record::{BatchFacts, batch_saved};
 use packing_engine::copies::read_copies;
 use packing_engine::ids::{BatchId, PdfId};
@@ -50,7 +50,7 @@ fn draft(pdfium: &Pdfium, data: &Path) -> Draft {
     .unwrap();
     let mut copies = read_copies(pages, &INPUTS, &workflows).unwrap().copies;
     let accounts = shop_accounts(&["Toko Contoh", "Toko Lain"]);
-    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
+    assign_accounts(&mut copies, &accounts);
     let orders = sort_out(&copies, &BTreeMap::new(), &Choices::default()).unwrap();
     let rule = workflows.sort_rule("default").unwrap();
     let plan = plan_groups(rule);
@@ -164,6 +164,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
             printed: "07:00",
             app: "0.3.3",
             couriers: &[],
+            accounts: &[],
         },
     )
     .unwrap();
@@ -194,6 +195,7 @@ fn verify(pdfium: &Pdfium, tag: &str, change: impl Fn(&mut Vec<(usize, usize)>))
         append: &append,
         date_dir: folder.dir(),
         output_dir: &partial,
+        accounts: &[],
     })
 }
 

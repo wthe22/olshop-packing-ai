@@ -4,6 +4,7 @@
 use std::fs;
 
 use jiff::civil::{Date, date};
+use packing_engine::accounts::Account;
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::record::{BatchReverted, RecordBody, ReprintMade, ReprintedOrder};
 use packing_engine::rules::parse_filter;
@@ -11,6 +12,14 @@ use packing_store::{DateFolder, Journal, ReprintMark, SearchIndex};
 use testkit::{TempDir, sha};
 
 use crate::common::{APP, batch};
+
+/// Toko Alfa, which lists the shop of every order of `batch`.
+fn accounts() -> Vec<Account> {
+    vec![Account {
+        name: "Toko Alfa".into(),
+        shops: vec!["Toko Alfa".into()],
+    }]
+}
 
 fn commit(data: &TempDir, day: i8, bodies: Vec<RecordBody>) -> Journal {
     let folder = DateFolder::new(data.path(), date(2026, 10, day));
@@ -26,7 +35,7 @@ fn ids(index: &SearchIndex, filter: &str, days: Option<(i8, i8)>) -> Vec<String>
         date(2026, 10, from)..=date(2026, 10, to)
     });
     index
-        .search(&filter, dates, &[])
+        .search(&filter, dates, &[], &[])
         .iter()
         .map(|order| format!("{} {}", order.date.day(), order.order.order_id))
         .collect()
@@ -105,17 +114,25 @@ fn every_live_order_of_the_data_folder_is_found_by_its_fields() {
     assert_eq!(index.counts().get(&date(2026, 10, 7)), Some(&3));
     assert_eq!(index.counts().get(&date(2026, 10, 8)), Some(&6));
     let mine: Vec<(i8, usize, usize)> = index
-        .account_dates("Toko Alfa")
+        .account_dates("Toko Alfa", &accounts())
         .iter()
         .map(|day| (day.date.day(), day.orders, day.batches))
         .collect();
     assert_eq!(mine, [(8, 6, 2), (7, 3, 1)], "newest first");
-    assert!(index.account_dates("Toko Beta").is_empty());
+    assert!(index.account_dates("Toko Beta", &accounts()).is_empty());
+    let mut renamed = accounts();
+    renamed[0].name = "Alfa Baru".into();
+    assert_eq!(
+        index.account_dates("Alfa Baru", &renamed).len(),
+        2,
+        "a renamed account has its shop's saved orders"
+    );
 
     let seventh = |filter: &str| {
         index.search(
             &parse_filter(filter).unwrap(),
             date(2026, 10, 7)..=date(2026, 10, 7),
+            &[],
             &[],
         )
     };

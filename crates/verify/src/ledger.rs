@@ -1,11 +1,11 @@
 //! V3, the ledger — every page of every input in exactly one written or left-out copy — and V4,
 //! the orders: unique in the record and in the date's other live batches, each left-out copy
-//! naming what it was left out for, each order an account and no shop two; and the batch's number.
+//! naming what it was left out for, no shop under two accounts; and the batch's number.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::Findings;
 use crate::record::{Batch, Kept};
+use crate::{Account, Findings, NO_ACCOUNT};
 
 /// The input's file name in a message, by its `PdfID`.
 pub(crate) fn input_name(batch: &Batch, pdf: u8) -> String {
@@ -85,21 +85,13 @@ pub(crate) fn check_number(batch: &Batch, newest: Option<u8>, findings: &mut Fin
     }
 }
 
-/// Every order names an account, and no shop (spaces and case ignored) stands under two.
-pub(crate) fn check_accounts(batch: &Batch, findings: &mut Findings) {
+/// No shop (spaces and case ignored) stands under two accounts of `config.toml`.
+pub(crate) fn check_accounts(accounts: &[Account], findings: &mut Findings) {
     let mut shops: BTreeMap<String, (&str, BTreeSet<&str>)> = BTreeMap::new();
-    for order in &batch.orders {
-        if order.account.trim().is_empty() {
-            findings.error(format!("order {} names no account", order.order_id));
-        }
-        if let Some(shop) = &order.shop {
-            let key: String = shop
-                .chars()
-                .filter(|c| !c.is_whitespace())
-                .flat_map(char::to_lowercase)
-                .collect();
-            let entry = shops.entry(key).or_insert((shop, BTreeSet::new()));
-            entry.1.insert(&order.account);
+    for account in accounts {
+        for shop in &account.shops {
+            let entry = shops.entry(squash(shop)).or_insert((shop, BTreeSet::new()));
+            entry.1.insert(&account.name);
         }
     }
     for (shop, accounts) in shops.values() {
@@ -112,6 +104,27 @@ pub(crate) fn check_accounts(batch: &Batch, findings: &mut Findings) {
             ));
         }
     }
+}
+
+/// The account that lists `shop` in `accounts`; [`NO_ACCOUNT`] when none does or there is no shop.
+pub(crate) fn account_of<'a>(shop: Option<&str>, accounts: &'a [Account]) -> &'a str {
+    shop.and_then(|shop| {
+        accounts.iter().find(|account| {
+            account
+                .shops
+                .iter()
+                .any(|listed| squash(listed) == squash(shop))
+        })
+    })
+    .map_or(NO_ACCOUNT, |account| account.name.as_str())
+}
+
+/// A shop name with spaces and upper and lower case taken out.
+fn squash(name: &str) -> String {
+    name.chars()
+        .filter(|c| !c.is_whitespace())
+        .flat_map(char::to_lowercase)
+        .collect()
 }
 
 pub(crate) fn check_orders(batch: &Batch, live: &BTreeMap<u8, Batch>, findings: &mut Findings) {

@@ -222,8 +222,7 @@ export const texts = {
   // The shop prompt: an account for each sender no account lists, and for the labels with no sender.
   shops: {
     title: "Which account are these orders for?",
-    intro: "A shop is remembered with its account. Labels with no shop name are asked about each time.",
-    noShopName: "No shop name",
+    intro: "A shop is remembered with its account.",
     orders: (n: number) => count(n, "order", "orders"),
     choose: "Choose an account",
     newAccount: "New account",

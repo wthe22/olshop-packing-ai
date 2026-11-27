@@ -8,9 +8,7 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use std::sync::mpsc::Sender;
 
-use packing_engine::account_questions::{
-    AccountChoices, AccountQuestions, account_questions, assign_accounts,
-};
+use packing_engine::account_questions::{ShopQuestion, account_questions, assign_accounts};
 use packing_engine::accounts::Account;
 use packing_engine::batch_record::{read_findings, saved_orders};
 use packing_engine::copies::{Copy, read_copies};
@@ -58,27 +56,24 @@ pub struct Draft {
     pub couriers: Vec<Courier>,
     /// The batch an amend redoes.
     pub redo: Option<BatchId>,
-    /// The accounts the copies are matched with, and what the shop prompt chose.
+    /// The accounts the copies are matched with.
     pub accounts: Vec<Account>,
-    pub account_choices: AccountChoices,
 }
 
 impl Draft {
     /// The shop prompt's questions: the copies that have no account yet.
-    pub fn account_questions(&self) -> AccountQuestions {
+    pub fn account_questions(&self) -> Vec<ShopQuestion> {
         account_questions(&self.copies)
     }
 
-    /// Match the copies again with `accounts` (the prompt's shops written into them) and the
-    /// accounts chosen for each input's labels with no sender.
-    pub fn answer_accounts(&mut self, accounts: Vec<Account>, no_sender: BTreeMap<usize, String>) {
+    /// Match the copies again with `accounts`, the prompt's shops written into them.
+    pub fn answer_accounts(&mut self, accounts: Vec<Account>) {
         self.accounts = accounts;
-        self.account_choices.no_sender = no_sender;
         self.assign_accounts();
     }
 
-    pub(crate) fn assign_accounts(&mut self) {
-        assign_accounts(&mut self.copies, &self.accounts, &self.account_choices);
+    fn assign_accounts(&mut self) {
+        assign_accounts(&mut self.copies, &self.accounts);
     }
     /// Keep the copies `choices` names; nothing changes when one cannot apply.
     pub fn choose(&mut self, choices: Choices) -> Result<(), BatchError> {
@@ -199,7 +194,6 @@ pub fn read_draft(request: ReadRequest<'_>) -> Result<Draft, BatchError> {
         couriers: request.workflows.couriers.clone(),
         redo: request.redo,
         accounts: request.accounts.to_vec(),
-        account_choices: AccountChoices::default(),
     };
     draft.assign_accounts();
     Ok(draft)

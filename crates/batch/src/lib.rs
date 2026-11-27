@@ -27,6 +27,6 @@ pub use restore::{RestoreOutcome, RestoreRequest, restore};
 pub use reverted::RevertedPdfs;
 pub use save::{SaveOutcome, SaveProgress, SaveRequest, SaveStage, Saved, save};
 pub use summaries::{
-    AccountSummaryOutcome, AccountSummaryRequest, DAY_SUMMARY_PDF, account_summary,
-    account_summary_file, day_summary, day_summary_file,
+    AccountSummaryOutcome, AccountSummaryRequest, DAY_SUMMARY_PDF, DaySummaryRequest,
+    account_summary, account_summary_file, day_summary, day_summary_file,
 };

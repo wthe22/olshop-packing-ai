@@ -1,13 +1,39 @@
 use jiff::civil::date;
+use packing_engine::accounts::Account;
 use packing_engine::ids::CourierCode;
 use packing_engine::record::{BatchSaved, OutputFile, of_account};
 use packing_engine::workflows::Courier;
 use pdfium_render::prelude::*;
 use testkit::{TempDir, batch, sha, vendor_dir};
 
-use super::content::{ContentRow, Counts, GroupSection, counts, facts, group_sections, picks};
+use super::content::{ContentRow, Counts, GroupSection, counts, group_sections, picks};
 use super::{SummaryFacts, write_summary};
 use crate::facts::{Row, Section};
+
+/// Toko Alfa and Toko Beta, each listing its own shop.
+fn accounts() -> Vec<Account> {
+    ["Toko Alfa", "Toko Beta"]
+        .map(|name| Account {
+            name: name.into(),
+            shops: vec![name.into()],
+        })
+        .into()
+}
+
+/// The facts pages of `record`, a part of `whole`, with [`accounts`].
+fn facts(record: &BatchSaved, whole: &BatchSaved, app: &str, couriers: &[Courier]) -> Vec<Section> {
+    let accounts = accounts();
+    let of = SummaryFacts {
+        date: date(2026, 10, 7),
+        record: whole,
+        account: None,
+        printed: "09:12",
+        app,
+        couriers,
+        accounts: &accounts,
+    };
+    super::content::facts(record, whole, &of)
+}
 
 fn output(file: &str, group: Option<&str>, pages: u16) -> OutputFile {
     OutputFile {
@@ -98,7 +124,7 @@ fn the_facts_page_says_what_the_batch_is() {
     };
     let mut record = record();
     record.orders[2].courier = None;
-    record.orders[2].account = "Toko Beta".into();
+    record.orders[2].shop = Some("Toko Beta".into());
     assert_eq!(
         facts(&record, &record, "0.3.3", &couriers()),
         vec![
@@ -156,8 +182,8 @@ fn the_facts_page_says_what_the_batch_is() {
 #[test]
 fn an_accounts_summary_has_its_own_couriers_and_the_batchs_inputs_but_no_accounts() {
     let mut record = record();
-    record.orders[2].account = "Toko Beta".into();
-    let mine = of_account(&record, "Toko Beta");
+    record.orders[2].shop = Some("Toko Beta".into());
+    let mine = of_account(&record, "Toko Beta", &accounts());
     let sections = facts(&mine, &record, "0.3.3", &couriers());
     let headings: Vec<&str> = sections.iter().map(|s| s.heading.as_str()).collect();
     assert_eq!(
@@ -208,6 +234,7 @@ fn written(tag: &str, record: &BatchSaved, check: impl FnOnce(&Pdfium, &std::pat
             printed: "09:12",
             app: "0.3.3",
             couriers: &couriers,
+            accounts: &accounts(),
         },
     )
     .expect("write the summary");

@@ -13,7 +13,6 @@ fn opened_batch(tag: &str) -> (testkit::TempDir, packing_store::DateFolder) {
     let (data, folder) = date_folder(tag);
     let files = outputs(folder.dir(), 1, "one");
     let mut saved = batch(1, false, files);
-    saved.orders[2].account = "Toko Beta".into();
     saved.orders[2].shop = None;
     saved.orders[2].area = None;
     let printed = RecordBody::PrintedMarked(PrintedMarked {

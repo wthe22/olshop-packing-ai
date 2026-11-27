@@ -14,14 +14,26 @@ mod summary;
 
 use std::path::Path;
 
+/// The account of an order whose shop no account lists (accounts.md, *No account*).
+pub const NO_ACCOUNT: &str = "No account";
+
+/// An account of `config.toml`: its name and the shop names it lists. An order's account is the one
+/// that lists its shop.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Account {
+    pub name: String,
+    pub shops: Vec<String>,
+}
+
 /// What a batch is checked against: the journal as on disk, the lines its commit appends (the
 /// batch's record last), the date folder, which holds the inputs, and the folder that holds the new
-/// outputs.
+/// outputs, and the accounts of `config.toml`.
 pub struct BatchCheck<'a> {
     pub journal: &'a [u8],
     pub append: &'a [u8],
     pub date_dir: &'a Path,
     pub output_dir: &'a Path,
+    pub accounts: &'a [Account],
 }
 
 /// What a reprint is checked against: today's journal as on disk, the `reprint_made` line its
@@ -45,11 +57,12 @@ pub struct RestoreCheck<'a> {
 }
 
 /// What an account's summary of a batch is checked against: the date's journal as on disk, the
-/// live batch, the account and the file written.
+/// live batch, the account, the accounts of `config.toml` and the file written.
 pub struct AccountSummaryCheck<'a> {
     pub journal: &'a [u8],
     pub batch: u8,
     pub account: &'a str,
+    pub accounts: &'a [Account],
     pub path: &'a Path,
 }
 
@@ -87,7 +100,7 @@ pub fn verify_batch(check: &BatchCheck<'_>) -> Findings {
     ledger::check_ledger(batch, &mut findings);
     ledger::check_number(batch, journal.newest, &mut findings);
     ledger::check_orders(batch, &journal.live, &mut findings);
-    ledger::check_accounts(batch, &mut findings);
+    ledger::check_accounts(check.accounts, &mut findings);
     files::check_group_pdfs(batch, &inputs, check.output_dir, &mut findings);
     summary::check_summary(batch, check.output_dir, &mut findings);
     findings
@@ -99,7 +112,7 @@ pub fn verify_account_summary(check: &AccountSummaryCheck<'_>) -> Findings {
     if let Some(lines) = journal::read_lines(check.journal, b"", &mut findings) {
         match lines.live.get(&check.batch) {
             Some(batch) => {
-                summary::check_account_summary(batch, check.account, check.path, &mut findings);
+                summary::check_account_summary(batch, check, &mut findings);
             }
             None => findings.error(format!("batch {} is not live", check.batch)),
         }

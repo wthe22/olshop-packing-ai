@@ -10,8 +10,9 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   answers: [D-APP-37](../../software-design/decisions/accounts.md) (an order's account is the one that lists its
   shop now; *No account* for an order of no listed shop) and [D-APP-38](../../software-design/decisions/app.md)
   (the screens read the views; a view changed by hand is named with Rebuild, Read only, Ignore; a date with
-  no journal takes saves). A new session takes the first task left in that file. No build until all four are
-  done.
+  no journal takes saves). T1 is done: the journal no longer stores an account, *No account* holds the orders of
+  no listed shop, the shop prompt asks only about shops. A new session takes the first task left in that
+  file (T2). No build until all four are done.
 
 - **Handoff of 2026-11-27 (latest) — v0.8.0-alpha.11: Update lists its moves and copies what it changes.**
   The owner's rule ([D-APP-36](../../software-design/decisions/versions.md)): a file only moved or renamed is

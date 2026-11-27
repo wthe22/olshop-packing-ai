@@ -512,8 +512,8 @@ fn a_2_0_batch_keeps_each_orders_skus_as_its_items_and_splits_contents_by_sku() 
             APP,
         )
         .unwrap();
-    // 2.0 kept the SKUs beside each order and wrote no SKU in an item. Orders 01 and 03 share a
-    // content (the same items) with two SKUs; order 02 has its own content.
+    // 2.0 kept the SKUs and the account beside each order and wrote no SKU in an item. Orders 01
+    // and 03 share a content (the same items) with two SKUs; order 02 has its own content.
     with_2_0_batch(&folder, |record| {
         for content in record["contents"].as_array_mut().unwrap() {
             for item in content["items"].as_array_mut().unwrap() {
@@ -527,6 +527,8 @@ fn a_2_0_batch_keeps_each_orders_skus_as_its_items_and_splits_contents_by_sku() 
             .iter_mut()
             .zip(skus)
         {
+            order["account"] = "Toko Lama".into();
+            order["pickup_code"] = serde_json::Value::Null;
             order["skus"] = sku
                 .into_iter()
                 .map(|sku| sku.map_or(serde_json::Value::Null, Into::into))
@@ -556,4 +558,9 @@ fn a_2_0_batch_keeps_each_orders_skus_as_its_items_and_splits_contents_by_sku() 
         "the same items with two SKUs are two contents"
     );
     assert!(saved.orders.iter().all(|order| order.skus.is_empty()));
+    assert!(
+        journal.fold().unknown.is_empty(),
+        "2.0's account, SKUs and empty pickup code are known and passed over: {:?}",
+        journal.fold().unknown
+    );
 }

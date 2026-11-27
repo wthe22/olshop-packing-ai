@@ -30,9 +30,10 @@ pub(crate) fn account_dates_of(
     account: &str,
 ) -> Result<AccountDatesView, String> {
     let today = today();
+    let accounts = settings::accounts(state.program())?;
     let dates = state.index().with(|index| {
         index
-            .account_dates(account)
+            .account_dates(account, &accounts)
             .into_iter()
             .map(|day| AccountDateRow {
                 date: day.date.to_string(),
@@ -85,7 +86,7 @@ pub fn account_new(state: State<'_, AppState>, name: String) -> Result<Vec<Accou
     })
 }
 
-/// **Rename…**: orders saved before keep the name they were saved with.
+/// **Rename…**: the saved orders of its shops show the new name too.
 #[tauri::command]
 pub fn account_rename(
     state: State<'_, AppState>,
@@ -112,7 +113,7 @@ pub fn account_set_shops(
     })
 }
 
-/// **Delete account**: its shops are asked about again, its saved orders keep its name.
+/// **Delete account**: its shops are asked about again, its saved orders are under *No account*.
 #[tauri::command]
 pub fn account_delete(state: State<'_, AppState>, name: String) -> Result<Vec<Account>, String> {
     change(&state, |accounts| {

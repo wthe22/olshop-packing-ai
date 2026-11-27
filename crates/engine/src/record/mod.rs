@@ -168,22 +168,24 @@ pub struct SavedOrder {
     pub tracking_id: Option<TrackingId>,
     pub courier: Option<CourierCode>,
     pub courier_clue: CourierClue,
-    /// The account the order was read as, by its name at the save.
-    pub account: String,
+    /// Written by 2.0 only and never read: an order's account is the account that lists its shop now
+    /// (accounts.md). Kept, and written back only as read, so the field is not named as unknown.
+    #[serde(rename = "account", default, skip_serializing_if = "Option::is_none")]
+    pub account_of_2_0: Option<String>,
     /// The listed shop found on its label, as the account listed it; none: no sender.
     pub shop: Option<String>,
     /// Index into the batch's `contents`.
     pub content: u16,
     /// Written by 2.0 only: the Seller SKU of each of its content's items, in their order.
     /// The fold moves them into the content's items; a saved order of 2.1 never writes them.
-    #[serde(default, skip_serializing)]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub skus: Vec<Option<String>>,
     /// The `Qty Total` the slip prints; none on the Shopee-style slip.
     pub total_quantity: Option<u16>,
     pub ship_by_date: Option<Date>,
     /// Written by 2.0 only: the instant-service label's pickup code, read to give an order with no
     /// tracking ID its tracking ID. A saved order of 2.1 never writes it.
-    #[serde(default, skip_serializing)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pickup_code: Option<String>,
     /// None: saved before the area was read, until an `areas_filled` record names the order.
     pub area: Option<Area>,

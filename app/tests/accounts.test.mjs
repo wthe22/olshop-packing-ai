@@ -146,56 +146,49 @@ test("the dates are asked for again while the index is built", async () => {
 test("the account question needs an account on every row and answers by row", () => {
   const view = {
     accounts: ["Toko Alfa"],
-    shops: [{ name: "Toko Gamma", orders: 12 }],
-    no_sender: [
-      { input: 3, file: "labels_3.pdf", orders: 2, others: { shop: "Toko Gamma" } },
-      { input: 4, file: "labels_4.pdf", orders: 1, others: { account: "Toko Alfa" } },
-      { input: 5, file: "labels_5.pdf", orders: 1, others: null },
+    shops: [
+      { name: "Toko Gamma", orders: 12 },
+      { name: "Toko Delta", orders: 2 },
     ],
   };
   assert.equal(needsShopPrompt(view), true);
-  assert.equal(needsShopPrompt({ accounts: [], shops: [], no_sender: [] }), false);
+  assert.equal(needsShopPrompt({ accounts: [], shops: [] }), false);
 
   const rows = accountRows(view);
-  const [shop, withShop, withAlfa, alone] = rows;
-  assert.deepEqual(shop.choice, { kind: "none" }, "with accounts a shop starts unanswered");
-  assert.equal(valueOf(rows, withShop), "", "a file follows its shop, which has no account yet");
-  assert.equal(valueOf(rows, withAlfa), "listed:Toko Alfa", "a file starts on its other orders' account");
-  assert.equal(valueOf(rows, alone), "");
+  const [gamma, delta] = rows;
+  assert.deepEqual(gamma.choice, { kind: "none" }, "with accounts a shop starts unanswered");
+  assert.equal(valueOf(rows, delta), "");
   assert.equal(canContinue(rows), false);
 
-  shop.choice = choiceOf(shop, "new");
-  assert.deepEqual(shop.choice, { kind: "new", name: "Toko Gamma" }, "a new account starts on the shop name");
-  assert.equal(valueOf(rows, withShop), "as:shop:Toko Gamma", "the file follows to the new account");
+  gamma.choice = choiceOf(gamma, "new");
+  assert.deepEqual(gamma.choice, { kind: "new", name: "Toko Gamma" }, "a new account starts on the shop name");
   assert.deepEqual(
-    listOf(rows, alone, view.accounts).map((entry) => entry.text),
+    listOf(rows, delta, view.accounts).map((entry) => entry.text),
     ["Toko Alfa", "New: Toko Gamma", "New account"],
     "another row's new account is offered",
   );
-  alone.choice = choiceOf(alone, "as:shop:Toko Gamma");
+  delta.choice = choiceOf(delta, "as:shop:Toko Gamma");
+  assert.equal(valueOf(rows, delta), "as:shop:Toko Gamma", "a row follows to another row's new account");
   assert.equal(canContinue(rows), true);
   assert.deepEqual(shopAnswer(rows), {
-    shops: [{ read: "Toko Gamma", account: { new: "Toko Gamma" } }],
-    no_sender: { 3: { listed: "Toko Gamma" }, 4: { listed: "Toko Alfa" }, 5: { listed: "Toko Gamma" } },
+    shops: [
+      { read: "Toko Gamma", account: { new: "Toko Gamma" } },
+      { read: "Toko Delta", account: { listed: "Toko Gamma" } },
+    ],
   });
 
-  shop.choice = { kind: "new", name: "  " };
+  gamma.choice = { kind: "new", name: "  " };
   assert.equal(canContinue(rows), false, "a new account needs a name");
-  alone.choice = choiceOf(alone, "new");
-  assert.deepEqual(alone.choice, { kind: "new", name: "" }, "a file has no name to start on");
-  alone.choice.name = " Toko Baru ";
-  shop.choice = choiceOf(shop, "listed:Toko Alfa");
+  gamma.choice = choiceOf(gamma, "listed:Toko Alfa");
   assert.deepEqual(shopAnswer(rows), {
-    shops: [{ read: "Toko Gamma", account: { listed: "Toko Alfa" } }],
-    no_sender: { 3: { listed: "Toko Alfa" }, 4: { listed: "Toko Alfa" }, 5: { new: "Toko Baru" } },
+    shops: [
+      { read: "Toko Gamma", account: { listed: "Toko Alfa" } },
+      { read: "Toko Delta", account: { listed: "Toko Alfa" } },
+    ],
   });
 
-  const fresh = accountRows({ ...view, accounts: [], no_sender: [] });
+  const fresh = accountRows({ ...view, accounts: [] });
   assert.deepEqual(fresh[0].choice, { kind: "new", name: "Toko Gamma" }, "no account yet: a new one");
-  const only = accountRows({ ...view, shops: [], no_sender: [{ ...view.no_sender[2] }] });
-  assert.equal(valueOf(only, only[0]), "listed:Toko Alfa", "one account and no shop to ask: the file starts on it");
-  const two = { ...view, accounts: ["Toko Alfa", "Toko Beta"], shops: [], no_sender: [{ ...view.no_sender[2] }] };
-  assert.equal(valueOf(accountRows(two), accountRows(two)[0]), "");
 });
 
 test("the accounts of a date are counted over its batches, most orders first", () => {

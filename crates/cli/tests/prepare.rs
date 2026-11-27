@@ -207,7 +207,8 @@ fn an_order_of_an_unlisted_shop_stops_unless_an_account_is_given() {
         record
             .orders
             .iter()
-            .all(|order| order.account == "Toko Alfa")
+            .all(|order| order.shop.is_some() && order.account_of_2_0.is_none()),
+        "each order keeps its shop and no account"
     );
     assert!(
         !setup.data.join("parser.toml").exists(),

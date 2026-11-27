@@ -60,7 +60,7 @@ pub fn unknown_toml_keys<T: DeserializeOwned>(text: &str) -> Vec<UnknownKey> {
 }
 
 /// The fields of `found` that `known` (the same record read and written back by this version) does
-/// not have, as paths: `orders[3].colour`.
+/// not have, as paths: `orders[3].colour`. A field that holds `null` carries nothing and is not named.
 pub fn unknown_json_fields(found: &Value, known: &Value) -> Vec<String> {
     let mut fields = Vec::new();
     walk(found, known, &mut Vec::new(), &mut fields);
@@ -74,6 +74,7 @@ fn walk(found: &Value, known: &Value, path: &mut Vec<Step>, fields: &mut Vec<Str
                 path.push(Step::Key(key.clone()));
                 match known.get(key) {
                     Some(known) => walk(value, known, path, fields),
+                    None if value.is_null() => {}
                     None => fields.push(path_text(path)),
                 }
                 path.pop();

@@ -17,7 +17,7 @@ use packing_store::{
 };
 use packing_verify::{BatchCheck, Findings, verify_batch};
 
-use crate::summaries::delete_account_summaries;
+use crate::summaries::{delete_account_summaries, for_verifier};
 use crate::written::{copy_pages, described, partial};
 use crate::{BatchError, Draft};
 
@@ -104,6 +104,7 @@ pub fn save(request: &SaveRequest<'_>, journal: &mut Journal) -> Result<SaveOutc
         append: &pending.bytes,
         date_dir: dir,
         output_dir: &partial_dir(dir),
+        accounts: &for_verifier(&request.draft.accounts),
     });
     if !findings.is_clean() {
         if !request.save_anyway {
@@ -235,6 +236,7 @@ fn write_outputs(
     let printed = jiff::Zoned::now().strftime("%H:%M").to_string();
     let snapshot = record.clone();
     let couriers = draft.couriers.clone();
+    let accounts = draft.accounts.clone();
     let pages = request.worker.run(move |pdfium| {
         write_summary(
             pdfium,
@@ -246,6 +248,7 @@ fn write_outputs(
                 printed: &printed,
                 app: &app,
                 couriers: &couriers,
+                accounts: &accounts,
             },
         )
     })??;

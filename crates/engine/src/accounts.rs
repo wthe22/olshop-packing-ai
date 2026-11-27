@@ -13,6 +13,9 @@ pub const ACCOUNT_LIMIT: usize = 40;
 /// A shop name is at most this many characters.
 pub const SHOP_LIMIT: usize = 80;
 
+/// The account of an order whose shop no account lists; no account may take its name.
+pub const NO_ACCOUNT: &str = "No account";
+
 /// One account of `packing-settings.toml`: a name and the shop names its labels are sent by.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Account {
@@ -21,7 +24,7 @@ pub struct Account {
     pub shops: Vec<String>,
 }
 
-/// The account an order was read as, and the listed shop found on its label: none when the label
+/// The account an order is read as, and the listed shop found on its label: none when the label
 /// printed no sender.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct OrderAccount {
@@ -74,10 +77,11 @@ pub fn check_account_name(
     if length == 0 || length > ACCOUNT_LIMIT || default_file_name(name) != name {
         return Err(NameError::NotAName);
     }
-    let taken = accounts
-        .iter()
-        .filter(|account| Some(account.name.as_str()) != renamed)
-        .any(|account| account.name.to_lowercase() == name.to_lowercase());
+    let taken = name.to_lowercase() == NO_ACCOUNT.to_lowercase()
+        || accounts
+            .iter()
+            .filter(|account| Some(account.name.as_str()) != renamed)
+            .any(|account| account.name.to_lowercase() == name.to_lowercase());
     if taken {
         return Err(NameError::AccountTaken);
     }
@@ -137,7 +141,7 @@ pub fn create_account(accounts: &mut Vec<Account>, name: &str) -> Result<(), Nam
     Ok(())
 }
 
-/// Give the account `from` the name `to`; its orders saved before keep the old name.
+/// Give the account `from` the name `to`, which its saved orders then show too.
 pub fn rename_account(accounts: &mut [Account], from: &str, to: &str) -> Result<(), NameError> {
     check_account_name(to, accounts, Some(from))?;
     find(accounts, from)?.name = to.to_string();
@@ -174,7 +178,8 @@ pub fn set_shops(
     Ok(())
 }
 
-/// Delete the account `name`: its shops are asked about again, its saved orders keep its name.
+/// Delete the account `name`: its shops are asked about again, its saved orders are under
+/// [`NO_ACCOUNT`].
 pub fn delete_account(accounts: &mut Vec<Account>, name: &str) -> Result<(), NameError> {
     find(accounts, name)?;
     accounts.retain(|account| account.name != name);
@@ -203,6 +208,16 @@ pub fn account_of(sender: &SenderText, accounts: &[Account]) -> Option<OrderAcco
         account: account.name.clone(),
         shop: Some(shop.clone()),
     })
+}
+
+/// The account that lists `shop` now; [`NO_ACCOUNT`] when none does or there is no shop.
+pub fn account_of_shop<'a>(shop: Option<&str>, accounts: &'a [Account]) -> &'a str {
+    shop.and_then(|shop| {
+        accounts
+            .iter()
+            .find(|account| account.shops.iter().any(|listed| same_shop(listed, shop)))
+    })
+    .map_or(NO_ACCOUNT, |account| account.name.as_str())
 }
 
 /// Two shop names are the same with spaces and upper and lower case taken out.

@@ -7,7 +7,9 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 
+use packing_engine::accounts::{Account, account_of_shop};
 use packing_engine::ids::BatchId;
+use packing_engine::record::BatchSaved;
 use packing_engine::workflows::Courier;
 use packing_pdf::PdfError;
 use packing_pdf::day_summary::{DayBatch, DayFacts, write_day_summary};
@@ -19,6 +21,25 @@ use packing_verify::{AccountSummaryCheck, Findings, verify_account_summary};
 use crate::BatchError;
 
 pub const DAY_SUMMARY_PDF: &str = "Day Summary.pdf";
+
+/// Whether `record` holds an order of `account`, as `accounts` gives each its account.
+fn holds_account(record: &BatchSaved, account: &str, accounts: &[Account]) -> bool {
+    record
+        .orders
+        .iter()
+        .any(|order| account_of_shop(order.shop.as_deref(), accounts) == account)
+}
+
+/// The accounts as the verifier takes them: data it reads, not code it shares.
+pub(crate) fn for_verifier(accounts: &[Account]) -> Vec<packing_verify::Account> {
+    accounts
+        .iter()
+        .map(|account| packing_verify::Account {
+            name: account.name.clone(),
+            shops: account.shops.clone(),
+        })
+        .collect()
+}
 
 /// The day summary's file: of all accounts, or `Day Summary - {account}.pdf`.
 pub fn day_summary_file(account: Option<&str>) -> String {
@@ -33,20 +54,32 @@ pub fn account_summary_file(batch: BatchId, account: &str) -> String {
     format!("{batch} Summary - {account}.pdf")
 }
 
-/// Write the date's day summary of all accounts or of `account`, its couriers named by
-/// `couriers`, and return its path. A day summary that a PDF viewer holds open stops the write
-/// with the file named; the old file stays.
-pub fn day_summary(
-    worker: &PdfWorker,
-    folder: &DateFolder,
-    fold: &Fold,
-    couriers: &[Courier],
-    account: Option<&str>,
-) -> Result<PathBuf, BatchError> {
+/// What a day summary is made from: the date's fold, the couriers that name its codes, the accounts
+/// that give each order its account, and the account it is of (none: all accounts).
+pub struct DaySummaryRequest<'a> {
+    pub worker: &'a PdfWorker,
+    pub folder: &'a DateFolder,
+    pub fold: &'a Fold,
+    pub couriers: &'a [Courier],
+    pub accounts: &'a [Account],
+    pub account: Option<&'a str>,
+}
+
+/// Write the date's day summary and return its path. A day summary that a PDF viewer holds open
+/// stops the write with the file named; the old file stays.
+pub fn day_summary(request: &DaySummaryRequest<'_>) -> Result<PathBuf, BatchError> {
+    let DaySummaryRequest {
+        worker,
+        folder,
+        fold,
+        couriers,
+        accounts,
+        account,
+    } = *request;
     let holds = |account: &str| {
         fold.live
             .values()
-            .any(|live| live.saved.orders.iter().any(|o| o.account == account))
+            .any(|live| holds_account(&live.saved, account, accounts))
     };
     if fold.live.is_empty() || account.is_some_and(|account| !holds(account)) {
         return Err(BatchError::NoBatch);
@@ -54,6 +87,7 @@ pub fn day_summary(
     let target = folder.dir().join(day_summary_file(account));
     let partial = partial_of(&target);
     let (fold, out, couriers) = (fold.clone(), partial.clone(), couriers.to_vec());
+    let accounts = accounts.to_vec();
     let account = account.map(str::to_string);
     let printed = now();
     let written = worker.run(move |pdfium| {
@@ -71,6 +105,7 @@ pub fn day_summary(
             printed: &printed,
             couriers: &couriers,
             account: account.as_deref(),
+            accounts: &accounts,
         };
         write_day_summary(pdfium, &out, &facts)
     });
@@ -95,6 +130,8 @@ pub struct AccountSummaryRequest<'a> {
     pub batch: BatchId,
     pub account: &'a str,
     pub couriers: &'a [Courier],
+    /// The accounts of `config.toml`, which give each order its account by its shop.
+    pub accounts: &'a [Account],
     pub app: &'a str,
 }
 
@@ -105,12 +142,7 @@ pub fn account_summary(
 ) -> Result<AccountSummaryOutcome, BatchError> {
     let fold = request.journal.fold();
     let live = fold.live.get(&request.batch).ok_or(BatchError::NoBatch)?;
-    if !live
-        .saved
-        .orders
-        .iter()
-        .any(|o| o.account == request.account)
-    {
+    if !holds_account(&live.saved, request.account, request.accounts) {
         return Err(BatchError::NoBatch);
     }
     let target = request
@@ -123,6 +155,7 @@ pub fn account_summary(
         partial.clone(),
         request.couriers.to_vec(),
     );
+    let accounts = request.accounts.to_vec();
     let (date, account, app, printed) = (
         fold.date,
         request.account.to_string(),
@@ -137,6 +170,7 @@ pub fn account_summary(
             printed: &printed,
             app: &app,
             couriers: &couriers,
+            accounts: &accounts,
         };
         write_summary(pdfium, &out, &facts)
     });
@@ -145,6 +179,7 @@ pub fn account_summary(
         journal: &request.journal.bytes()?,
         batch: request.batch.get(),
         account: request.account,
+        accounts: &for_verifier(request.accounts),
         path: &partial,
     });
     if !findings.is_clean() {

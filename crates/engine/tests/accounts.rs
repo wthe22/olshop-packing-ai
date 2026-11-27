@@ -1,15 +1,9 @@
-//! The shop prompt over a read's copies: each copy's account from its label, a chosen account or
-//! its amended record; the questions about the rest; the names an answer may give.
+//! The shop prompt over a read's copies: each copy's account from its label, No account for a label
+//! with no sender; the questions about the senders no account lists.
 
-use std::collections::BTreeMap;
-
-use packing_engine::account_questions::{
-    AccountChoices, AccountQuestions, NoSenderQuestion, Others, ShopQuestion, account_questions,
-    assign_accounts,
-};
-use packing_engine::accounts::{Account, OrderAccount};
+use packing_engine::account_questions::{ShopQuestion, account_questions, assign_accounts};
+use packing_engine::accounts::{Account, NO_ACCOUNT, NameError, OrderAccount, check_account_name};
 use packing_engine::copies::Copy;
-use packing_engine::ids::OrderId;
 use packing_engine::label::find_sender;
 use packing_engine::text::{PageText, Run};
 use testkit::copy;
@@ -67,45 +61,30 @@ fn a_listed_shop_names_the_account_and_the_rest_is_asked_about() {
         account("Toko Beta", &["Toko Beta"]),
     ];
     let mut copies = read();
-    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
+    assign_accounts(&mut copies, &accounts);
     let given: Vec<_> = copies.iter().map(|copy| copy.account.clone()).collect();
     assert_eq!(
         given,
         [
             found("Toko Alfa", Some("Toko Alfa Official")),
             None,
-            None,
+            found(NO_ACCOUNT, None),
             None,
             None,
             found("Toko Beta", Some("Toko Beta")),
-            None,
-            None,
-        ]
+            found(NO_ACCOUNT, None),
+            found(NO_ACCOUNT, None),
+        ],
+        "a label with no sender is under No account and not asked about"
     );
     assert_eq!(
         account_questions(&copies),
-        AccountQuestions {
-            shops: vec![ShopQuestion {
-                name: "Tok o Gamma".into(),
-                orders: 2,
-                inputs: vec![0, 1],
-            }],
-            no_sender: vec![
-                NoSenderQuestion {
-                    input: 0,
-                    orders: 1,
-                    of_orders: 3,
-                    others: None,
-                },
-                NoSenderQuestion {
-                    input: 1,
-                    orders: 2,
-                    of_orders: 4,
-                    others: None,
-                },
-            ],
-        },
-        "one row per name read, spaces and a stuck digit aside; one per file with no sender"
+        [ShopQuestion {
+            name: "Tok o Gamma".into(),
+            orders: 2,
+            inputs: vec![0, 1],
+        }],
+        "one row per name read, spaces and a stuck digit aside"
     );
 }
 
@@ -117,61 +96,16 @@ fn the_answers_give_every_copy_an_account() {
         account("Toko Gamma", &["Toko Gamma"]),
     ];
     let mut copies = read();
-
-    let choices = AccountChoices {
-        no_sender: BTreeMap::from([(0, "Toko Alfa".to_string())]),
-        recorded: BTreeMap::from([(OrderId::new("580000000000000006"), "Toko Beta".to_string())]),
-    };
-    assign_accounts(&mut copies, &accounts, &choices);
+    assign_accounts(&mut copies, &accounts);
     assert_eq!(copies[1].account, found("Toko Gamma", Some("Toko Gamma")));
-    assert_eq!(copies[2].account, found("Toko Alfa", None));
-    assert_eq!(
-        copies[6].account,
-        found("Toko Beta", None),
-        "an amend keeps the recorded account of a label with no sender"
-    );
-    assert_eq!(
-        account_questions(&copies),
-        AccountQuestions {
-            shops: Vec::new(),
-            no_sender: vec![NoSenderQuestion {
-                input: 1,
-                orders: 1,
-                of_orders: 4,
-                others: None,
-            }],
-        }
-    );
+    assert!(copies.iter().all(|copy| copy.account.is_some()));
+    assert!(account_questions(&copies).is_empty());
 }
 
 #[test]
-fn a_file_with_no_sender_names_where_its_other_orders_go() {
-    let accounts = vec![account("Toko Beta", &["Toko Beta"])];
-    let mut copies = vec![
-        labelled("580000000000000011", 0, Some("Toko Beta")),
-        labelled("580000000000000012", 0, None),
-        labelled("580000000000000013", 1, Some("Toko Gamma")),
-        labelled("580000000000000014", 1, Some("TokoGamma")),
-        labelled("580000000000000015", 1, None),
-        labelled("580000000000000016", 2, Some("Toko Beta")),
-        labelled("580000000000000017", 2, Some("Toko Gamma")),
-        labelled("580000000000000018", 2, None),
-        labelled("580000000000000019", 3, None),
-    ];
-    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
-    let others: Vec<_> = account_questions(&copies)
-        .no_sender
-        .into_iter()
-        .map(|question| (question.input, question.others))
-        .collect();
+fn no_account_may_take_the_name_of_no_account() {
     assert_eq!(
-        others,
-        [
-            (0, Some(Others::Account("Toko Beta".into()))),
-            (1, Some(Others::Shop("Toko Gamma".into()))),
-            (2, None),
-            (3, None),
-        ],
-        "one account, one sender asked about, both, none"
+        check_account_name("no ACCOUNT", &[], None),
+        Err(NameError::AccountTaken)
     );
 }

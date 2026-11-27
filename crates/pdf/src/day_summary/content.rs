@@ -51,10 +51,12 @@ pub(crate) fn sections(facts: &DayFacts<'_>, whole: &DayFacts<'_>) -> Vec<Sectio
         right: None,
         rows,
     };
-    let accounts = facts
-        .account
-        .is_none()
-        .then(|| section("Accounts", account_rows(&account_counts(records()))));
+    let accounts = facts.account.is_none().then(|| {
+        section(
+            "Accounts",
+            account_rows(&account_counts(records(), facts.accounts)),
+        )
+    });
     facts
         .batches
         .iter()

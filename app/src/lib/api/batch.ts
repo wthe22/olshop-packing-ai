@@ -90,12 +90,11 @@ export interface ReadResult {
   plan: PlanView;
 }
 
-// The account question: each shop name no account has and each file with labels that show none.
+// The account question: each shop name no account has.
 export interface ShopPromptView {
   // The accounts the lists offer, in the order they were made.
   accounts: string[];
   shops: ShopRowView[];
-  no_sender: NoSenderRowView[];
 }
 
 // A shop name no account has: the name as first read and its orders.
@@ -104,22 +103,12 @@ export interface ShopRowView {
   orders: number;
 }
 
-// A file whose labels show no shop name: its place in the reading order, its name, how many of its
-// orders show none, and where its other orders go when they go to one place.
-export interface NoSenderRowView {
-  input: number;
-  file: string;
-  orders: number;
-  others: { account: string } | { shop: string } | null;
-}
-
 // Where the owner puts a shop: an account already listed, or a new one by this name.
 export type ShopAccount = { listed: string } | { new: string };
 
-// *Continue*: every row's answer. `no_sender` maps a file's place to its account, for this read only.
+// *Continue*: every row's answer.
 export interface ShopAnswer {
   shops: { read: string; account: ShopAccount }[];
-  no_sender: Record<number, ShopAccount>;
 }
 
 // Repeated orders: the groups of files that repeat each other, and the copy of each order that

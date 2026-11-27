@@ -4,26 +4,10 @@ The owner's answers of 2026-11-27: [D-APP-37](../../software-design/decisions/ac
 account is the account that lists its shop now; *No account* for the rest) and
 [D-APP-38](../../software-design/decisions/app.md) (the screens read the views; the journal is read to
 write, recover, migrate and audit; a hash names a view changed by hand; a date with no journal still works).
-Tasks in order; each is one commit, under the code rules ([code-rules.md](../code-rules.md): one job per
+T1 (an order's account looked up from its shop) is done. Tasks in order; each is one commit, under the code rules ([code-rules.md](../code-rules.md): one job per
 module, size ceiling, no over-generalising, extract on the third copy, comments only for the not obvious,
 proper types). Tests: known-answer fixtures through read → plan → save → verify, tables for fixed truths,
 broken outputs the verifier must catch, coverage not lower.
-
-## T1 — An order's account is looked up from its shop
-
-- The journal stops writing `SavedOrder.account` (journal `2.1`, the one raise of v0.8: read with
-  `#[serde(default)]`, never written, never used). The account comes from `config.toml` wherever it is
-  needed: account counts and `of_account` take the accounts list; an order whose shop no account lists is
-  under **No account** (one constant, a name no account may take).
-- The shop prompt asks only about shops no account lists: the per-file *No shop name* rows go
-  (`engine/account_questions.rs`, `commands/batch/shops.rs`, `ShopPrompt.svelte`). An amend carries no account.
-- Search and its index, the Accounts screen's counts, the sort rules' `account` field, the batch and day
-  summaries, and the account summary buttons look the account up. Rename and Delete then act on saved orders
-  without a write to any journal; the Accounts screen's texts follow `ui/accounts.md`.
-- The verifier reads `config.toml` itself for V4 (no shop under two accounts) and V6 (an account's
-  summary: the orders whose shop it lists; *No account*: the rest). It still uses no other crate.
-- Tests: a table of shop → account (listed, renamed, deleted, none, no sender); an account summary whose
-  account was renamed after the save; a broken account summary the verifier must catch.
 
 ## T2 — `day.toml` holds the views' hashes; a view changed by hand is named
 

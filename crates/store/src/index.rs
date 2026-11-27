@@ -7,6 +7,7 @@ use std::ops::RangeInclusive;
 use std::path::Path;
 
 use jiff::civil::Date;
+use packing_engine::accounts::{Account, account_of_shop};
 use packing_engine::ids::{BatchId, OrderId};
 use packing_engine::record::{Datetime, ItemPick, ReprintMade, SavedOrder};
 use packing_engine::rules::{Condition, FilterFields, FilterLine, evaluate_filter};
@@ -40,6 +41,13 @@ pub struct IndexedOrder {
     pub input_hash: String,
 }
 
+impl IndexedOrder {
+    /// The account that lists its shop in `accounts` now.
+    pub fn account<'a>(&self, accounts: &'a [Account]) -> &'a str {
+        account_of_shop(self.order.shop.as_deref(), accounts)
+    }
+}
+
 /// A date with orders of one account: how many, and in how many batches.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AccountDate {
@@ -48,9 +56,16 @@ pub struct AccountDate {
     pub batches: usize,
 }
 
-impl FilterFields for IndexedOrder {
+/// An indexed order with the account its shop has now, as a filter reads it.
+struct Filtered<'a> {
+    order: &'a IndexedOrder,
+    account: &'a str,
+}
+
+impl FilterFields for Filtered<'_> {
     fn lines(&self) -> Vec<FilterLine<'_>> {
-        self.items
+        self.order
+            .items
             .iter()
             .map(|item| FilterLine {
                 name: &item.name,
@@ -62,27 +77,29 @@ impl FilterFields for IndexedOrder {
     }
 
     fn courier(&self) -> &str {
-        self.order.courier.as_ref().map_or("", |code| code.as_str())
+        let order = &self.order.order;
+        order.courier.as_ref().map_or("", |code| code.as_str())
     }
 
     fn order_id(&self) -> &str {
-        self.order.order_id.as_str()
+        self.order.order.order_id.as_str()
     }
 
     fn tracking_id(&self) -> &str {
-        self.order.tracking_id.as_ref().map_or("", |id| id.as_str())
+        let order = &self.order.order;
+        order.tracking_id.as_ref().map_or("", |id| id.as_str())
     }
 
     fn ship_by(&self) -> Option<Date> {
-        self.order.ship_by_date
+        self.order.order.ship_by_date
     }
 
     fn account(&self) -> &str {
-        &self.order.account
+        self.account
     }
 
     fn shop(&self) -> &str {
-        self.order.shop.as_deref().unwrap_or_default()
+        self.order.order.shop.as_deref().unwrap_or_default()
     }
 }
 
@@ -175,30 +192,35 @@ impl SearchIndex {
     }
 
     /// The orders a filter matches on the dates of `dates`, in printing order; only those dates
-    /// are looked at. `couriers` name the couriers the filter compares.
+    /// are looked at. `couriers` name the couriers the filter compares, `accounts` each order's
+    /// account.
     pub fn search(
         &self,
         filter: &Condition,
         dates: RangeInclusive<Date>,
         couriers: &[Courier],
+        accounts: &[Account],
     ) -> Vec<&IndexedOrder> {
         self.dates
             .range(dates)
             .flat_map(|(_, orders)| orders)
-            .filter(|order| evaluate_filter(filter, *order, couriers))
+            .filter(|order| {
+                let account = order.account(accounts);
+                evaluate_filter(filter, &Filtered { order, account }, couriers)
+            })
             .collect()
     }
 
     /// The dates with saved orders of `account`, newest first: its orders and the batches that
     /// hold them.
-    pub fn account_dates(&self, account: &str) -> Vec<AccountDate> {
+    pub fn account_dates(&self, account: &str, accounts: &[Account]) -> Vec<AccountDate> {
         self.dates
             .iter()
             .rev()
             .filter_map(|(date, orders)| {
                 let mine: Vec<&IndexedOrder> = orders
                     .iter()
-                    .filter(|order| order.order.account == account)
+                    .filter(|order| order.account(accounts) == account)
                     .collect();
                 let mut batches: Vec<BatchId> = mine.iter().map(|order| order.batch).collect();
                 batches.dedup();

@@ -1,14 +1,12 @@
 <script lang="ts">
   // The account question: after the logo prompt, before the Plan screen, one row per shop name no
-  // account has and per file with labels that have no shop name, each with one list
-  // (`shopPrompt.ts`). *New account* shows a box for its name. **Back** (also Esc, the caller's)
+  // account has, each with one list (`shopPrompt.ts`). *New account* shows a box for its name. **Back** (also Esc, the caller's)
   // returns to the file list; **Continue** writes the answers and goes on to the plan.
   import { untrack } from "svelte";
   import type { ShopAnswer, ShopPromptView } from "./api/batch";
   import { accountRows, canContinue, choiceOf, listOf, shopAnswer, valueOf, type AccountRow } from "./shopPrompt";
   import { texts } from "../texts";
   import Dialog from "./Dialog.svelte";
-  import Icon from "./Icon.svelte";
 
   let {
     prompt,
@@ -30,9 +28,6 @@
 
   const ready = $derived(canContinue(rows));
 
-  const who = (row: AccountRow) =>
-    row.subject.kind === "shop" ? row.subject.name : `${row.subject.file}, ${words.noShopName}`;
-
   async function go() {
     busy = true;
     refused = (await onContinue(shopAnswer(rows))) ?? "";
@@ -46,18 +41,13 @@
     {#each rows as row (row.key)}
       <li>
         <span class="who">
-          {#if row.subject.kind === "shop"}
-            <strong>{row.subject.name}</strong>
-          {:else}
-            <span class="muted">{words.noShopName}</span>
-            <span class="file" title={row.subject.file}><Icon name="file" size={14} />{row.subject.file}</span>
-          {/if}
+          <strong>{row.name}</strong>
         </span>
         <span class="orders">{words.orders(row.orders)}</span>
         <span class="account">
           <select
             value={valueOf(rows, row)}
-            aria-label={words.accountOf(who(row))}
+            aria-label={words.accountOf(row.name)}
             onchange={(event) => (row.choice = choiceOf(row, event.currentTarget.value))}
           >
             <option value="" disabled>{words.choose}</option>
@@ -116,10 +106,6 @@
     overflow-wrap: anywhere;
   }
 
-  .muted {
-    color: var(--text-muted);
-  }
-
   .orders {
     display: flex;
     align-items: center;
@@ -138,27 +124,6 @@
   .account input {
     width: 100%;
     box-sizing: border-box;
-  }
-
-  .file {
-    max-width: 100%;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    min-width: 0;
-    padding: 0.05rem 0.45rem;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .file :global(svg) {
-    flex: none;
   }
 
   .refused {

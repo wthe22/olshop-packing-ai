@@ -9,6 +9,7 @@ pub(crate) mod content;
 use std::path::Path;
 
 use jiff::civil::Date;
+use packing_engine::accounts::Account;
 use packing_engine::record::{BatchSaved, of_account};
 use packing_engine::workflows::Courier;
 use pdfium_render::prelude::Pdfium;
@@ -40,6 +41,8 @@ pub struct SummaryFacts<'a> {
     pub app: &'a str,
     /// The couriers of `packing-workflows.toml`, which name the record's courier codes.
     pub couriers: &'a [Courier],
+    /// The accounts of `config.toml`, which give each order its account by its shop.
+    pub accounts: &'a [Account],
 }
 
 /// Write the summary PDF and return its page count.
@@ -49,7 +52,9 @@ pub fn write_summary(
     facts: &SummaryFacts<'_>,
 ) -> Result<usize, PdfError> {
     let whole = facts.record;
-    let mine = facts.account.map(|account| of_account(whole, account));
+    let mine = facts
+        .account
+        .map(|account| of_account(whole, account, facts.accounts));
     let record = mine.as_ref().unwrap_or(whole);
     let counts = content::counts(record);
     let title = format!(
@@ -66,7 +71,7 @@ pub fn write_summary(
     let font_dir = Path::new(FONT_DIR);
     let measure = Measure::new(pdfium, font_dir)?;
     let mut builder = Builder::new(&measure);
-    for section in content::facts(record, whole, facts.app, facts.couriers) {
+    for section in content::facts(record, whole, facts) {
         draw_section(&mut builder, &section, &measure);
     }
     let groups = content::group_sections(record);

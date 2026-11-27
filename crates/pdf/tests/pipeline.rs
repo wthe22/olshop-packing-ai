@@ -7,7 +7,7 @@ mod common;
 use std::collections::BTreeMap;
 use std::sync::atomic::AtomicBool;
 
-use packing_engine::account_questions::{AccountChoices, assign_accounts};
+use packing_engine::account_questions::assign_accounts;
 
 use packing_engine::batch_record::{BatchFacts, batch_saved, saved_orders};
 use packing_engine::copies::read_copies;
@@ -63,7 +63,7 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
         .expect("copies")
         .copies;
     let accounts = shop_accounts(&["Toko Contoh", "Toko Lain"]);
-    assign_accounts(&mut copies, &accounts, &AccountChoices::default());
+    assign_accounts(&mut copies, &accounts);
     let got: Vec<Value> = copies
         .iter()
         .map(|copy| {
@@ -130,7 +130,6 @@ fn the_repeat_fixture_reads_plans_and_records_as_its_answer() {
             .iter()
             .find(|copy| copy["order_id"] == order.order_id.as_str())
             .unwrap();
-        assert_eq!(order.account, copy["sender"], "{}", order.order_id);
         assert_eq!(order.shop.as_deref(), copy["sender"].as_str());
     }
     assert!(saved.orders.iter().all(|order| order.group == "Z"));
