@@ -11,10 +11,10 @@
 │        ▼                                                                            │
 │  packing-batch  the batch steps: read a draft, save, revert, amend, Printed, migrate│
 │        ├──► packing-engine  rules, filters, pages → copies → orders, repeats, plan,  │
-│        │                    order contents, the record of a batch. No PDF, no file   │
+│        │                    order contents, a batch's facts. No PDF, no file         │
 │        ├──► packing-pdf     PDFium: page text and images, copy pages, summary PDF   │
-│        ├──► packing-store   lock, journal, fold, inputs and outputs, views, index   │
-│        └──► packing-verify  lopdf: page digests and the checks of a record          │
+│        ├──► packing-store   lock, the date's files, inputs and outputs, index        │
+│        └──► packing-verify  lopdf: page digests and the checks of a batch           │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 packing-cli (developer tool): the same crates from the command line, for tests and sample runs
 ```
@@ -28,12 +28,12 @@ with the crates that read and write ([verification](verification.md)).
 |---|---|---|
 | `packing-engine` | `regex`, `jiff`, `serde`, `toml` | PDFium, files, the other crates |
 | `packing-pdf` | `packing-engine` (its types), `pdfium-render` | `packing-store`, `packing-verify` |
-| `packing-store` | `packing-engine` (its types), `serde_json`, `toml`, `jiff`, `sha2`, `xxhash-rust` | PDFium, `packing-pdf`, `packing-verify` |
-| `packing-verify` | `lopdf`, `regex`, `serde`, `serde_json`, `sha2`, `xxhash-rust` | `packing-engine`, `packing-pdf`, `packing-store`, PDFium |
+| `packing-store` | `packing-engine` (its types), `toml`, `jiff`, `sha2`, `xxhash-rust` | PDFium, `packing-pdf`, `packing-verify` |
+| `packing-verify` | `lopdf`, `regex`, `serde`, `toml`, `sha2`, `xxhash-rust` | `packing-engine`, `packing-pdf`, `packing-store`, PDFium |
 | `packing-batch` | `packing-engine`, `packing-pdf`, `packing-store`, `packing-verify` | — |
 | `packing-app`, `packing-cli` | all of the above | — |
 
-`packing-verify` reads the journal record as JSON into types of its own, so a field the writer gets wrong
+`packing-verify` reads `day.toml`, `orders.csv` and `order-contents.toml` into types of its own, so a field the writer gets wrong
 is read as written, not as meant.
 
 ## Stack
@@ -45,10 +45,9 @@ is read as written, not as meant.
 | Screens | Svelte 5 + SvelteKit (static adapter) + TypeScript + Vite | Plain CSS, no component library |
 | Read, copy, write PDFs | `pdfium-render` 0.9.4 + `pdfium.dll` (bblanchon/pdfium-binaries, `chromium/7881`) | Text with positions, image bytes, page copy, the summary PDF ([D-APP-1](../decisions/app.md)) |
 | Verify PDFs | `lopdf` | The verifier's only PDF library: page objects, content streams, the summary's text |
-| TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `packing-app.toml`, `parser.toml`, `config.toml`, the views |
-| JSON | `serde`, `serde_json` | The journal |
+| TOML | `toml` (read) + `toml_edit` (write back keeping comments) | `packing-app.toml`, `parser.toml`, `config.toml`, `day.toml`, `order-contents.toml` |
 | Dates | `jiff` | Dates of the labels, `*_time` |
-| Hashes | `xxhash-rust` (XXH3-64), `sha2` (SHA-256) | XXH3-64: logo and shape hashes, page fingerprints and digests, the journal's seals. SHA-256: input and output files; an input's name ends in its first 12 characters |
+| Hashes | `xxhash-rust` (XXH3-64), `sha2` (SHA-256) | XXH3-64: logo and shape hashes, page fingerprints and digests. SHA-256: input files and the date's files; an input's name ends in its first 12 characters |
 | Tests | `cargo test`; `svelte-check` and `node --test` for the screens | Fixtures written by the Rust fixture writer ([testing](../../development/testing.md)) |
 | Build | `tools/make-portable.sh` | No installer; the program folder ([program](program.md#program-folder)) |
 
@@ -57,7 +56,7 @@ is read as written, not as meant.
 PDFium is not thread-safe: all PDFium work runs on one worker thread that owns the library, and the
 batch steps send it jobs; a job opens the files it needs and closes them before it returns. The open
 draft (its copies, orders and plan) is the app's until it is saved or cancelled. The verifier and the
-search index run on their own threads; the journal is written only by the command that holds the draft,
+search index run on their own threads; a date's files are written only by the command that holds the draft,
 one commit at a time.
 
 ## Text runs from PDFium

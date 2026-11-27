@@ -31,7 +31,7 @@
 - This repository is the PC app.
 - Docs (`docs/README.md` has the folder table, the scope list and the writing rules): `business-process/` =
   facts true without the software; `software-design/` = the target system only (no plans, no phases;
-  `workflow/` is every step with its invariants, `data/` the journal and files, `decisions/` and
+  `workflow/` is every step with its invariants, `data/` the stored files, `decisions/` and
   `questions/` inside); `development/` = setup, commands, tests and `plan/` (unfinished
   work only; phase and task numbers live only there); `reviews/` = the owner's feedback on the running
   app, one file per scope; `user-guide/` = how the owner uses the app; `archive/` = superseded records
@@ -42,9 +42,15 @@
   covers them.
 - Naming: timestamps `*_time` (`create_time`, `modify_time`). Orders are identified by `Order ID`; items
   by product name and variation (the platform `SKU ID` is not on the label PDFs). The words of code are the
-  glossary of `code-rules.md` (account, shop, sort rule, label group, group PDF, summary PDF, journal).
-- Data: the journal (`{date}/journal.jsonl`, for every account) is the only truth; every other data file is an
-  input, an output or a view of it, and nothing but the journal decides (`docs/software-design/data/`).
+  glossary of `code-rules.md` (account, shop, sort rule, label group, group PDF, summary PDF).
+- Data: a date's truth is `day.toml`, `orders.csv` and `order-contents.toml`, the owner's design; the other
+  files of a date are its inputs and outputs (`docs/software-design/data/`). Every value is traceable to its
+  source (the label page it was read from); the history of what was done to it is not kept.
+- **Nothing the owner did not approve.** Never add a stored file, a field, a record, a mechanism or a
+  feature the owner did not ask for or approve. A tool an agent needs for its own work (a scratch log, a
+  debug dump, a test helper) stays the agent's: it is never stored in the owner's data, never shipped, and
+  never written into the design as something the owner wants. When a goal of the owner's seems to need new
+  data or machinery, ask first in `docs/software-design/questions/` with the simplest option as the default.
 - Writing: the owner is "the owner", never he/she/they/it/you. The dropship supplier's real name never
   appears: write "the supplier". About 150 lines per file at most; each fact has one home.
 - Setup is one procedure in `docs/development/setup.md`; keep it current when a one-time step changes.

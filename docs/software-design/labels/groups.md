@@ -16,7 +16,7 @@
 - **Order contents**: inside a group PDF, orders with the same **order content** — their lines as
   (product name, variation, quantity, Seller SKU), sorted — are consecutive ([D-APP-20](../decisions/app-features.md),
   [D-LABEL-15](../decisions/label.md)). The printed `Qty Total` is kept with the order
-  ([records](../data/records.md)); the Seller SKU is part of the content, so it splits one. Order contents are sorted by number
+  ([files](../data/files.md)); the Seller SKU is part of the content, so it splits one. Order contents are sorted by number
   of orders (most first), then as text in line order, name first (upper case before lower case; a quantity
   compares as a number). Inside one order content the orders keep their **reading position**: the input's
   place in the batch, then the page.
@@ -39,5 +39,5 @@
 ## The already-saved guard
 
 An order saved in a live batch of the same date, of any account, is left out of a new batch, all its copies
-recorded as left out with the batch that saved it, and listed in a warning with its tracking ID, batch,
+listed as left out with the batch that saved it, and listed in a warning with its tracking ID, batch,
 group and time ([03 Plan](../workflow/03-plan.md#7-orders-already-saved)).

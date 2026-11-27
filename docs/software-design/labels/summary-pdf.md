@@ -53,13 +53,13 @@ The first pages say what the batch is, so the paper alone can be traced:
 |---|---|
 | Accounts | The batch's orders and units per account, most orders first. Only on the summary of all accounts |
 | Couriers | The batch's orders per courier, by the courier's **name** in `parser.toml` (its code when the file no longer names it), most first, *Unknown* last: *86 orders*. The count the owner hands over at the pickup |
-| Warnings | The read warnings. The verifier's findings come after this file is written, so they are on the Day card and in the journal, not here |
+| Warnings | The read warnings. The verifier's findings come after this file is written, so they are on the Day card and in `day.toml`, not here |
 | Inputs | Each input: the name it had, its pages, its short hash — the first 12 characters of its SHA-256, in Consolas, as its stored name ends (R-LABEL-15). Then the ledger in bold: *1000 pages read = 986 written + 14 left out (14 repeats, 0 saved earlier)* |
 | Sort rule · `<name>` | Each group: its code as the key, then *Sepatu · name contains "sepatu"* |
 | Versions | `schema 1.0 · Packing v0.2 · PDFium <version>` |
 
 A section with nothing to list says *none*. The group PDFs are on the group pages; an instant order's
-pickup code is on its own label and in the journal.
+pickup code is on its own label and is its tracking ID.
 
 ## The group pages
 
@@ -80,8 +80,7 @@ What to take from stock for the whole batch: one line per item (product name and
 ## One account
 
 A batch card's account button on the [Day screen](../ui/day.md) writes `{date}/{batch} Summary -
-{account}.pdf` from the batch's record and opens it ([D-APP-29](../decisions/accounts.md)). It is a view
-of the journal: written again on every request, not recorded, never read for a decision; a revert or an
+{account}.pdf` from the batch's files and opens it ([D-APP-29](../decisions/accounts.md)): written again on every request, never read for a decision; a revert or an
 amend deletes it. It is checked before it is kept (V6 on the account's orders); a finding stops it and
 nothing is kept.
 
@@ -96,7 +95,7 @@ nothing is kept.
 ## What the verifier reads
 
 V6 of [verification](../app/verification.md) reads three things back as text and compares them with the
-record: the first page header's `<orders> orders · <units> units · <groups> groups`, the ledger's
+files: the first page header's `<orders> orders · <units> units · <groups> groups`, the ledger's
 `<read> pages read = <written> written + <left> left out`, and each group bar's `<orders> orders · <units>
 units`, in group order, looked for after the ledger. Their words and order are fixed for that reason — a group bar reads *1 orders* —
 and the numbers have no thousands separator. A group bar is told from the header by the header's

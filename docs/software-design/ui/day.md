@@ -44,7 +44,7 @@ The start screen: what has been saved on the open date, for every account, and t
   and the group is done. It can be ticked with or without *Sent* (a small amend whose labels were all
   printed already is ticked at once); while ticked, *Sent* is not shown. It carries no word; its tooltip and
   screen-reader name say *Printed* and name the file.
-- Both marks are saved at once as journal records
+- Both marks are saved at once in `day.toml`
   ([05 After the save](../workflow/05-after-save.md#16-print-sent-and-printed)), so they survive a restart.
   They are notes only: nothing is enforced or blocked. A batch written again by an **Amend** starts with
   neither.
@@ -84,13 +84,12 @@ The start screen: what has been saved on the open date, for every account, and t
   the date's live batches hold more than one account it is a menu: *All accounts*, then each account; while it
   is written the dialog *Writing the day summary* shows and the button is off, so it is written once. It is
   off while the date has no batch.
-- A view changed outside the program (`day.toml`, `orders.csv` or `order-contents.toml`,
-  [D-APP-38](../decisions/app.md)) is a yellow card above the batches: *orders.csv was changed outside the
-  program*, then each file's first five changes as a table (*Line 12*, or *Line 12 · tracking_id* for a cell of
-  `orders.csv`, then the journal's text and the file's) and *3 more changes*. **Rebuild** writes the files again from the journal; **Read only** shows
-  them as they are, hides every write of the date and refuses it until the program starts again; **Ignore**
-  hides the card until then, and the next save to the date writes the files again. Each button's tooltip says
-  so. Once Read only, the card's foot is the line *Read only until the program starts again*.
+- A file changed outside the program (`orders.csv` or `order-contents.toml` whose hash `day.toml` does not
+  hold, [Q-APP-25](../questions/app.md)) is a yellow card above the batches: *orders.csv was changed outside the
+  program*. **Accept** takes the file as it is when it reads and agrees with the other two, and the next
+  save writes its hash; **Read only** shows it, hides every write of the date and refuses it until the
+  program starts again. Each button's tooltip says so. Once Read only, the card's foot is the line *Read only
+  until the program starts again*.
 - An input that is missing or changed is a line above the batches, naming the file and the batches that
   use it ([Messages](messages.md)).
 - A data folder that also holds data of an older version shows one line: *This folder also holds data of

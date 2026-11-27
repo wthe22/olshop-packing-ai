@@ -12,7 +12,7 @@ in [workflow/](../workflow/README.md).
 |---|---|
 | How it is used | Windows program, buttons ([Screens](../ui/README.md)) |
 | Whose labels | Accounts, each a shop owner's shops; an order's account is found from the shop on its label, and a batch may hold several accounts ([accounts](accounts.md)) |
-| The truth | One journal per date, for all accounts; every other file is an input, an output or a view of it ([data](../data/README.md)) |
+| The truth | `day.toml`, `orders.csv` and `order-contents.toml` per date, for all accounts; every other file is an input or an output ([data](../data/README.md)) |
 | Order data | All of it comes from the label and its packing slip ([D-APP-4](../decisions/app.md)) |
 | Plain labels (no packing slip) | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
 | Sorting | A sort rule from `config.toml`, chosen per batch, applied as a proposal; the owner can skip, move or add a group for this batch before saving ([Plan](../ui/plan.md)) |

@@ -85,7 +85,7 @@ name = "Lainnya"
 - **A rule that is off** (`enabled = false`) is kept with its groups and is not offered on New batch; an
   amend of a batch saved with it still uses it. The Sort rules screen switches it; on is written as no key
   ([D-RULES-5](../decisions/rules.md)).
-- **A saved batch keeps a snapshot** of its rule in its journal record, so its outputs stay traceable
+- **A saved batch keeps a snapshot** of its rule in its `day.toml`, so its outputs stay traceable
   whatever the file says later. An **amend** uses the rule of the same name as it is now, so a corrected
   filter applies; when no rule has that name any more, it uses the snapshot ([D-RULES-2](../decisions/rules.md)).
-- **Rename** changes the name here only; old batches keep theirs in the journal.
+- **Rename** changes the name here only; old batches keep theirs in `day.toml`.

@@ -41,13 +41,13 @@ a rule switched off on the Sort rules screen is not listed, [D-RULES-5](../decis
 of the data folder's newest batch is preselected, on whichever date it was saved, so an owner who always
 uses one rule never touches it, and a new day starts on the rule used last. **Back** from the Plan screen
 keeps the rule just read. A rule that is off, or gone, is never preselected: the first rule that is on
-is ([D-RULES-1](../decisions/rules.md)). The batch's record keeps a snapshot of the rule it was saved with.
+is ([D-RULES-1](../decisions/rules.md)). `day.toml` keeps a snapshot of the rule it was saved with.
 
 ## The amend's file list
 
 **Back** on an amend's Plan screen opens this page, titled *Redo batch 2*, so the batch's files can change:
 
-- The batch's own inputs are listed first, from the date folder, in their recorded order, then what the owner added.
+- The batch's own inputs are listed first, from the date folder, in `day.toml`'s order, then what the owner added.
 - The sort rule is shown, not chosen: *Sort rule: default (as now)*, or *default (as saved)* when no rule
   has that name any more ([D-RULES-2](../decisions/rules.md)).
 - **Add files** and a drop add any PDF on the PC; **×** takes a file off, and its orders stay unsaved for a

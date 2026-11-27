@@ -7,7 +7,7 @@ the owner chose that option.
 ## D-APP-27 — Accounts replace workspaces; one folder per date
 
 **Decision.** A shop owner's shops are an **account** (Q-APP-12): its name and shop names, under `accounts`
-in `config.toml`. The data folder holds one folder per date for every account, with one journal;
+in `config.toml`. The data folder holds one folder per date for every account, with three files;
 batch numbers restart at 1 each date (Q-APP-14) and the already-saved guard holds across accounts. A batch may
 hold several accounts' orders; each order names its account and shop. Rename and Delete act on the saved
 orders of its shops too (D-APP-37). v0.4's
@@ -18,7 +18,7 @@ and one count per date is what is printed. *Owner* on screen was confused with t
 the program, as the owner chose.
 
 **Applies to.** [accounts](../app/accounts.md), [data](../data/README.md),
-[journal](../data/journal.md), [records](../data/records.md).
+[files](../data/files.md).
 
 ## D-APP-37 — An order's account is its shop's account now; an order of no listed shop is under *No account*
 
@@ -37,17 +37,17 @@ accounts is noise. Every shipping label of the samples has a sender; the one pag
 list, which stops the batch (D-LABEL-28). An order no account claims must still be found.
 
 **Applies to.** [accounts](../app/accounts.md#the-account-of-an-order), [reading](../labels/reading.md#the-sender),
-[02 Read](../workflow/02-read.md), [New batch](../ui/new-batch.md#the-shop-prompt), [records](../data/records.md).
+[02 Read](../workflow/02-read.md), [New batch](../ui/new-batch.md#the-shop-prompt), [files](../data/files.md).
 
 ## D-APP-29 — One account's summary is made on request; a summary is opened, not printed in the app
 
-**Decision.** The batch's summary PDF of all accounts is saved, verified and recorded as before. An account's
-summary of a batch, and the day summary of all accounts or of one, are made on request from the journal,
+**Decision.** The batch's summary PDF of all accounts is saved and verified as before. An account's
+summary of a batch, and the day summary of all accounts or of one, are made on request from the files,
 checked, and not recorded (Q-APP-15). Summary PDFs have **Open** and no **Print**; group PDFs and reprints
 keep **Print** (D-APP-26).
 
 **Why.** The owner's words: *data only, final summary generated on demand, derived from data*, and no
-**Print** on summaries. One summary per account at every save would double the files and records for a
+**Print** on summaries. One summary per account at every save would double the files for a
 paper that is seldom needed.
 
 **Applies to.** [summary PDF](../labels/summary-pdf.md#one-account), [day summary](../labels/day-summary.md),

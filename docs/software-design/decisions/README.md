@@ -8,7 +8,7 @@ reused. A decision that changes gets a new record that names the one it replaces
 
 | File | Records |
 |---|---|
-| [app.md](app.md) | D-APP-1, D-APP-3, D-APP-4, D-APP-6, D-APP-7, D-APP-9 to D-APP-12, D-APP-32, D-APP-38: PDFium, the schema version, order data from the labels, the courier list, the journal, the screens read the views, one writer, inputs by content, outputs, the verifier, one flat folder per date |
+| [app.md](app.md) | D-APP-1, D-APP-3, D-APP-4, D-APP-6, D-APP-9 to D-APP-12, D-APP-32, D-APP-33, D-APP-39: PDFium, the schema version, order data from the labels, the courier list, a date's truth in day.toml and its two files, one writer, inputs by content, outputs, the verifier, one flat folder per date, migrations ask first |
 | [app-features.md](app-features.md) | D-APP-14 to D-APP-16, D-APP-18 to D-APP-23, D-APP-26, D-APP-30, D-APP-31: the three config files' places, reprint, the search index, the summary PDF, findings stop the save, amend, item identity, ship-by date, repeats, Print and the Sent mark, a revert's saved label PDFs |
 | [versions.md](versions.md) | D-APP-34, D-APP-35: a copy reads its own major version and passes over what it does not know; `day.toml` and the version column of `orders.csv` |
 | [accounts.md](accounts.md) | D-APP-27, D-APP-29, D-APP-37: accounts replace workspaces, an account's summary on request, an order's account is its shop's account now |

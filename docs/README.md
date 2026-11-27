@@ -7,7 +7,7 @@ and an A4 summary per batch, each verified before it is saved. It is a Windows p
 | Folder | Contains | Read when |
 |---|---|---|
 | [`business-process/`](business-process/README.md) | How the packing work is done today and the files it uses. True even without the software | You need to know *why*, or what the real data looks like |
-| [`software-design/`](software-design/README.md) | The target system only: the workflow and its invariants, requirements, data and journal, label and sort rules, the rules file, the app, its screens, `decisions/`, `questions/` | You build, change or check the app |
+| [`software-design/`](software-design/README.md) | The target system only: the workflow and its invariants, requirements, data files, label and sort rules, the rules file, the app, its screens, `decisions/`, `questions/` | You build, change or check the app |
 | [`development/`](development/README.md) | How to set up, build, run and test (`setup.md`, `cli.md`, `app.md`, `testing.md`) and `plan/`: only the unfinished work | You start or continue development |
 | [`reviews/`](reviews/README.md) | The owner's feedback on the running app and ideas, one file per scope | You plan the next round of changes |
 | [`user-guide/`](user-guide/README.md) | How the owner uses the finished app, step by step with pictures | You use the app or change what the owner sees |
@@ -31,7 +31,7 @@ A scope groups the documents of one part of the system. IDs carry it.
 |---|---|---|
 | LABEL | Reading labels and packing slips, courier deduction, label groups and order contents, the summary PDF | `software-design/labels/` |
 | RULES | `parser.toml` (couriers) and `config.toml` (accounts, sort rules) and the filter language | `software-design/rules-file/` |
-| APP | Architecture, accounts, the data folder and the journal, save, revert and amend, the verifier, reprint, the program folder | `software-design/app/`, `software-design/data/`, `software-design/workflow/` |
+| APP | Architecture, accounts, the data folder and a date's files, save, revert and amend, the verifier, reprint, the program folder | `software-design/app/`, `software-design/data/`, `software-design/workflow/` |
 | UI | The window and every screen | `software-design/ui/` |
 
 | ID | Meaning | Lives in |
@@ -70,5 +70,5 @@ still cite old IDs (`D2`, `D24`, …); `archive/id-map.md` maps them to the new 
 | **Label group** | One entry of a sort rule: a code, a name and a filter (`name contains "sepatu"`); the orders it takes are written as one **group PDF**, `2-A Sepatu x88.pdf` |
 | **Summary PDF** | The one A4 sheet set of a batch: the units to take from stock and the batch's facts |
 | **Batch** | One round of arrange shipment → download → prepare, numbered 1, 2, 3, … within a date, across accounts: one label download prepared and saved together |
-| **Journal** | The one file of a date that holds every saved fact, for every account; every other data file is an input, an output or a view of it |
+| **Date files** | `day.toml`, `orders.csv` and `order-contents.toml`: the truth of a date, for every account ([data](software-design/data/files.md)) |
 | **Copy** | One appearance of an order's label in the files. An order with two or more copies in a batch is a repeat |

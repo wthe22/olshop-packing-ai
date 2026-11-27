@@ -14,7 +14,7 @@ The owner of the app prepares the labels of one or more shop owners, each an **a
 | Term | Meaning |
 |---|---|
 | **Account** | One shop owner's shops: a name and the shop names its labels are sent by, in `config.toml`; every order names its account and shop |
-| **Journal** | The one file of a date that holds every saved fact, for every account ([journal](data/journal.md)) |
+| **Date files** | `day.toml`, `orders.csv` and `order-contents.toml`: the truth of a date, for every account ([files](data/files.md)) |
 | **Input PDF** | A label download, stored by its content: `{batch} Input {pdf} {short hash}.pdf` in its date folder |
 | **Sort rule** | A named list of label group rules in `config.toml`; a batch is sorted by one ([rules file](rules-file/README.md)) |
 | **Label group** | One entry of a sort rule: code, name and **filter**. Its filter takes orders from what is left; its orders are written as one **group PDF** |
@@ -64,8 +64,8 @@ Each requirement has a scoped ID `F-<SCOPE>-n` ([scopes](../README.md#scopes)).
   unchanged ([verification](app/verification.md)).
 - **F-APP-8** Accounts, each with the shops whose labels are its orders: an order's account is found from the
   shop on its label, and a shop no account lists is asked about once before the plan ([accounts](app/accounts.md)).
-- **F-APP-9** Every saved fact is kept once, in the journal, and every order is traceable to its input, pages
-  and courier clue; the files a person reads are written from it ([data](data/README.md)).
+- **F-APP-9** Every saved fact is kept once, in the date's three files, and every order is traceable to its input and
+  pages ([data](data/README.md)).
 - **F-APP-10** Saved orders can be found and their labels printed again in one verified PDF; a lost output is
   written again from the stored inputs ([reprint](app/reprint.md)).
 

@@ -30,7 +30,7 @@ When `packing-app.toml` is missing beside the program, or names no data folder:
 ## Update the data folder?
 
 When the data folder holds data this version keeps more of, before any date opens
-([D-APP-33](../decisions/app.md)): a date folder of v0.7, a date whose views are of an older `schema`, or a
+([D-APP-33](../decisions/app.md)): a date folder of v0.7, a date whose files are of an older `schema`, a date with `journal.jsonl`, or a
 batch saved before the receiver's area or the weight was read whose label PDFs are in its date folder. Choosing another data folder (the start's
 **Choose a folder**, Settings › **Change**) asks the same about that folder.
 
@@ -56,9 +56,9 @@ batch saved before the receiver's area or the weight was read whose label PDFs a
 - **Update** runs the dates in order, oldest first; the card then shows its progress under the table: a line
   per date done (*2026-11-24: files moved, addresses and weights of 2 batches read, lists written*) and the
   step running (*Moving files: 2026-11-24, file 3 of 12*, then *Reading labels: 2026-11-24, batch 1, page 3 of
-  120*). Each batch is one append to its date's journal; then the
-  date's views are written. The journal and the views are copied first into `update v{version}` of the
-  date, and each move is listed there ([D-APP-36](../decisions/versions.md)). While another copy of the app writes, Update waits for it. When all are done,
+  120*). A date with `journal.jsonl` has its three files written from it, and the areas and weights read from the labels go
+  straight into `orders.csv`. The journal moves into `update v{version}` of the date, and the files Update changes
+  are copied there first; each move is listed there ([D-APP-36](../decisions/versions.md)). While another copy of the app writes, Update waits for it. When all are done,
   *Done. The data folder is up to date.* and **Continue** opens the Day screen.
 - A batch whose label PDF has changed is named in red on its date's line (*Batch 2 not read: …*) and skipped;
   the rest go on, and the next start asks about it again. A batch whose label PDF is missing is not offered:
@@ -70,7 +70,7 @@ batch saved before the receiver's area or the weight was read whose label PDFs a
 
 The title bar shows a red *Read-only* mark beside the version, and the Day screen shows the line *Read-only:
 this copy changes nothing in the data folder.* under its title. Nothing in the data folder is written: no lock file, no `.partial/` settled,
-no view, no `parser.toml` or `config.toml` written from the bundled copies. What would write is not offered:
+no date file, no `parser.toml` or `config.toml` written from the bundled copies. What would write is not offered:
 **+ New batch**, **Amend**, **Revert**, **Restore**, **Print**, the *Sent* and **Printed** marks, the summaries
 made on request, **Reprint** and the ticks that choose its orders, the Accounts screen's changes, and the Sort
 rules screen's changes (its groups take no input; its switch shows the rule's state). The **Printed** tick shows

@@ -8,7 +8,7 @@
 | `update_data()` | **Update**: the migration, date by date, under the lock; then the folder opens. Emits `migration-step` (the label page being read, each date done) | Each date with its batches read and those skipped, with why |
 | `read_only()` | **Open read-only**: the folder opens without its lock; every command that writes is refused | — |
 | `dates_list()` | The panel: the dates of the data folder from the search index ([accounts](accounts.md#listing-and-opening-dates)) | Per date its orders, whether it is damaged, its folder; whether today has a group PDF not printed |
-| `day_open(date)` | Open a date: the fold and the open-time checks ([journal](../data/journal.md#when-a-date-opens)) | Its batches, groups, sent and printed marks, reprints, findings; or the damage message |
+| `day_open(date)` | Open a date: the open-time checks ([save](../data/save.md#when-a-date-opens)) | Its batches, groups, Sent times and printed ticks, reprints, findings; or the damage message |
 | `check_files(paths)` | SHA-256 and page count of each chosen file; *used in batch n*; one file chosen twice is listed once | The file list |
 | `read_labels(paths, sort_rule, redo)` | Read on the worker thread with the chosen sort rule; `redo` is the batch an amend redoes. Emits `read-progress {page, pages}` | Orders, warnings, unseen logos, the senders and files to ask an account for, repeats, the plan; or the stop |
 | `sort_rules()` | New batch's **Sort rule**: the rules that are on, and the one to preselect ([New batch](../ui/new-batch.md#the-sort-rule)) | The names, the preselected one, the rule used last |
@@ -19,10 +19,10 @@
 | `plan(edits)` | Skip, move, add a one-off group, rename a file; recount | Groups with counts, order contents, file names |
 | `save_batch(save_anyway)` | Write, verify, commit, move ([04 Save](../workflow/04-save.md)). Emits `save-progress {stage, page, pages}` | The saved batch, or the verifier's findings (nothing saved until *Save anyway*) |
 | `revert_last(day, batch, save_to)` / `start_amend(day, batch)` | Revert the newest batch, its label PDFs copied into a new folder of `save_to` or, without one, discarded / read its inputs again for an amend ([05 After the save](../workflow/05-after-save.md)); a `batch` that is no longer the newest is refused | The new folder of the PDFs, when saved / the amend's file list and read |
-| `set_printed(day, batch, group, printed)` | The **Printed** tick: appends `printed_marked` | — |
+| `set_printed(day, batch, group, printed)` | The **Printed** tick: sets the group's `is_printed` | — |
 | `print_output(day, file)` | **Print** a group PDF or a reprint: the output made ready, one not there written again first, like `open_output`; the preview is the front end's | Opened, written again, or not kept with the verifier's findings |
 | `output_pdf(day, file)` | The bytes of an output that is there, for the preview | The PDF's bytes |
-| `set_sent(day, batch, group, sent)` | Appends `print_sent`: `true` once a group PDF's preview is open, `false` from the **Sent** mark's ✕ | — |
+| `set_sent(day, batch, group, sent)` | Sets the group's `press_print_time` to now once its preview is open, clears it from the **Sent** mark's ✕ | — |
 | `restore_output(day, file)` | Write a changed output again ([reprint](reprint.md#restore)) | The date, or the verifier's findings |
 | `open_output(day, file)` | **Open** a group PDF or summary PDF; one that is not there is written again first, like `restore_output` | Opened, written again, or not kept with the verifier's findings |
 | `day_summary(day, account)` | Write the date's [day summary](../labels/day-summary.md), of all accounts (`account` none) or of one, on its own thread, then the window opens it | Its path |
@@ -34,7 +34,7 @@
 | `rule_new(name, copy_from)` / `rule_rename(rule, name)` / `rule_enable(rule, enabled)` / `rule_delete(rule)` | **+ New rule**, **Rename**, the rule's switch (the draft's plan stays as it is), **Delete** | — |
 | `filter_to_tree(text)` / `tree_to_filter(tree)` | The boxes editor: the engine's parser and printer, so the window has no second parser | Tree, or an error with line and column / the text |
 | `search_orders(filter, range)` | Search the index ([reprint](reprint.md#search)) on the dates `from`–`to`, both included; no range searches every date | One row per order with its group file and its trace in pieces (a hash or form as code) |
-| `reprint(orders)` | One PDF of the chosen orders' pages, verified, recorded ([reprint](reprint.md#reprint)) | The file, or the verifier's findings |
+| `reprint(orders)` | One PDF of the chosen orders' pages, verified, committed ([reprint](reprint.md#reprint)) | The file, or the verifier's findings |
 | `open_path(path)` / `show_in_folder(path)` | `explorer.exe "<path>"`, the path the only argument; a path that is not there is refused, since Explorer would open its home page | — |
 | `settings_get()` / `settings_set(data_dir)` | Settings ([settings](../ui/settings.md)) | — |
 | `about()` | The app version, the build time and the PDFium version | — |
@@ -89,14 +89,14 @@ Several copies of the app — on one PC, or on several PCs that share the data f
 ([D-APP-9](../decisions/app.md)).
 
 - **A write** holds the data folder's lock ([data](../data/README.md#one-writer)) and waits while another
-  copy holds it. It folds the date again first when its journal grew since it was read, so every decision
-  is taken from the journal as it is on disk.
+  copy holds it. It reads the date again first when its files changed since they were read, so every decision
+  is taken from the files as they are on disk.
 - **A save** whose orders another copy saved or reverted after the labels were read stops: *read the
   labels again*. Another copy's batch with other orders only moves this one to the next number.
 - **Revert** and **Amend** name the batch the Day screen showed; one that is no longer the newest is refused.
-- **The window looks** each time it gets the focus (`data_changes`): the Day screen reads its date again when the
-  journal grew, or when it was opened while another copy wrote; the panel reads its list again when a
-  date came or went or a journal grew, and the search index takes each such date in again.
+- **The window looks** each time it gets the focus (`data_changes`): the Day screen reads its date again when
+  `day.toml` changed, or when it was opened while another copy wrote; the panel reads its list again when a
+  date came or went or its `day.toml` changed, and the search index takes each such date in again.
 - `parser.toml` and `config.toml` are in the data folder: every copy that uses the folder, on one PC or
   several, shares the accounts, the sort rules and what the app has learned of labels. Every write of
   them holds the data folder's lock and reads the file again first, so another copy's change to another

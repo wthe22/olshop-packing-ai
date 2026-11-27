@@ -2,8 +2,8 @@
 
 ## 7. Orders already saved
 
-- Every order whose Order ID is in a live batch of this date, of any account, (the fold of step 2) is taken
-  out with all its copies, each recorded as left out with the reason `saved_earlier` and that batch. A
+- Every order whose Order ID is in a live batch of this date, of any account, (the files read in step 2) is taken
+  out with all its copies, each listed as left out with the reason `saved_earlier` and that batch. A
   repeat of such an order is not asked about. An amend leaves its own batch out of this set.
 - The orders taken out are one warning: tracking ID, batch, group and time.
 
@@ -23,7 +23,7 @@ An order that still has two or more copies is a **repeat** ([duplicates](../app/
 2. Inputs that repeat each other form **groups**; the [Repeated orders](../ui/duplicates.md) screen opens
    with every group on *Keep the first copies*.
 3. One copy of each repeat stays — the first in reading order, or the one the owner picks. The others are
-   recorded as left out with the reason `repeat` and the copy kept.
+   listed as left out with the reason `repeat` and the copy kept.
 4. Each order is rebuilt from its kept copy alone: its pages, item lines and `Qty Total` check, so a doubled
    sum never shows as a false mismatch.
 
@@ -62,12 +62,12 @@ rest takes: no order is in two groups and none is in none.
   number of orders (most first), then as text, name first; inside one order content the orders keep their
   reading position. They carry no number.
 - **Printing order** of the batch: group by group in plan order, order content by order content, order by
-  order; an order's pages in their own order. This is the order of `orders` in the record
-  ([records](../data/records.md)).
+  order; an order's pages in their own order. This is the order of the rows of `orders.csv`
+  ([files](../data/files.md#orderscsv)).
 - **File names**: `{batch}-{code} {name} x{count}.pdf` by the default file-name rule; the owner may change
   one; two outputs of a batch cannot share a name.
 
-**Keeps:** I6 — the batch number is the fold's next one.
+**Keeps:** I6 — the batch number is the highest live one in `day.toml` + 1.
 
 **Check:**
 

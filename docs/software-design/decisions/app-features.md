@@ -14,7 +14,7 @@ The copies are the owner's: nothing reads them.
 
 **Why.** The owner's choice: the label PDFs are what the batch was made from, so keeping them keeps the batch
 (the group PDFs and summaries can be made again from them). A folder of their own keeps two reverts apart.
-Copied before the commit, the journal is unchanged and a stop at any step leaves the batch live or reverted,
+Copied before the commit, `day.toml` is unchanged and a stop at any step leaves the batch live or reverted,
 at most with a spare copy.
 
 **Applies to.** [05 After the save](../workflow/05-after-save.md#17-revert-newest-live-batch-only),
@@ -45,18 +45,18 @@ dates, which the app reads and writes.
 ## D-APP-14 — Reprint the labels of chosen orders
 
 **Decision.** Search has a tick per row, *Select all results* and **Reprint**: one PDF of the chosen orders'
-pages from the stored inputs, in their original printing order, unchanged, verified, recorded as `reprint_made` in
-today's journal. It never changes a batch or the already-saved guard.
+pages from the stored inputs, in their original printing order, unchanged, verified, committed to
+today's `day.toml`. It never changes a batch or the already-saved guard.
 
 **Why.** The owner's draft: a label sometimes needs printing again (damage, a mistake), and printing twice by
 mistake must be avoidable and traceable.
 
 **Applies to.** [reprint](../app/reprint.md#reprint), [Search](../ui/search.md).
 
-## D-APP-15 — Search runs on an in-memory index of the journals
+## D-APP-15 — Search runs on an in-memory index of the date files
 
-**Decision.** The index is built from every journal of the data folder at start and updated after each commit. It
-is only read; every write decision folds the journal.
+**Decision.** The index is built from every date's `orders.csv` and `order-contents.toml` at start and refreshed after each commit. It
+is only read; every write decision reads the date's files.
 
 **Why.** Fast search over every date, and still one truth.
 
@@ -75,9 +75,9 @@ scopes and layouts, and their setting, are gone.
 ## D-APP-18 — A finding of the verifier stops the save
 
 **Decision.** An error, or a warning alone, stops the save (Q-APP-1). **Save anyway** commits the batch with the
-findings in its record; a reprint or a restore has no *anyway*.
+findings in `day.toml`; a reprint or a restore has no *anyway*.
 
-**Why.** A finding is never a message that scrolls away, and the record keeps what was accepted.
+**Why.** A finding is never a message that scrolls away, and the batch keeps what was accepted.
 
 **Applies to.** [verification](../app/verification.md#two-severities-never-one-list), [Plan](../ui/plan.md#saving).
 
@@ -129,8 +129,8 @@ optional time).
 ## D-APP-26 — Print in the app; a group PDF is marked Sent, then Printed
 
 **Decision.** **Print** opens the web view's print preview of a group PDF or a reprint (the one Chrome shows)
-over the app's window. For a group PDF, opening the preview marks it **Sent** in the journal (`print_sent`);
-the mark's ✕ takes it back. The **Printed** tick stays the owner's mark that the labels came out, and can
+over the app's window. For a group PDF, opening the preview marks it **Sent** (`press_print_time`, shown as *Sent hh:mm*);
+the mark's ✕ clears it. The **Printed** tick stays the owner's mark that the labels came out, and can
 be ticked with or without *Sent*. **Open** stays, and marks nothing.
 
 **Why.** The owner's words (2026-11-05): the app remembers that a print was sent, and *Printed* is the
@@ -141,4 +141,4 @@ code; the app's own print dialog would take weeks for fewer. The PDF is printed 
 app's own page: a PDF opened as a page of its own prints the viewer's empty page, one blank sheet.
 
 **Applies to.** [Day](../ui/day.md), [05 After the save](../workflow/05-after-save.md#16-print-sent-and-printed),
-[journal](../data/journal.md), [records](../data/records.md), [program](../app/program.md).
+[files](../data/files.md), [program](../app/program.md).

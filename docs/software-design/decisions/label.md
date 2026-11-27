@@ -94,11 +94,11 @@ repeat (Q-LABEL-10). Whether an output page is its source page is the verifier's
 
 ## D-LABEL-14 — Each order records the clue that named its courier
 
-**Decision.** A saved order keeps `courier_clue`: the kind, the hash, text or tag, and the tracking-ID form.
+**Decision.** A saved order does not keep the clue that named its courier (Q-APP-26): the page is read again to trace it.
 
-**Why.** A wrong courier can then be traced to the clue that named it.
+**Why.** A wrong courier can still be traced to the clue that named it, from the stored input.
 
-**Applies to.** [courier deduction](../labels/courier.md#the-clue-that-named-it), [records](../data/records.md).
+**Applies to.** [courier deduction](../labels/courier.md#the-clue-that-named-it), [Q-APP-26](../questions/app.md).
 
 ## D-LABEL-15 — Orders with the same items are one order content
 
@@ -110,7 +110,7 @@ order; the summary PDF numbers them ([D-LABEL-19](summaries.md#d-label-19--the-s
 
 **Why.** It is the owner's own word and the data already names it (`order_contents`, `order-contents.toml`).
 
-**Applies to.** [groups](../labels/groups.md#a-group-pdf), [03 Plan](../workflow/03-plan.md#10-order-contents-and-file-names), [records](../data/records.md), [views](../data/views.md), [Plan](../ui/plan.md).
+**Applies to.** [groups](../labels/groups.md#a-group-pdf), [03 Plan](../workflow/03-plan.md#10-order-contents-and-file-names), [files](../data/files.md), [Plan](../ui/plan.md).
 
 ## D-LABEL-21 — An instant label is named by its tag; its header images are never asked about
 
@@ -129,15 +129,13 @@ TikTok instant label of Gojek or Grab could be named (a courier logo on an insta
 
 **Decision.** An order whose label prints no tracking ID and a pickup code under `Kode Pengambilan` takes the
 pickup code as its tracking ID (R-LABEL-16): `BC0000` on the TikTok Shop instant label, `12AB` on the
-Shopee-style one, as the owner chose (Q-LABEL-15). From journal 2.1 the pickup code has no field of its own: the tracking ID is the only one, and a 2.0 record's pickup code is read to give it. The courier is named before,
+Shopee-style one, as the owner chose (Q-LABEL-15). The pickup code has no field of its own: the tracking ID is the only one. The courier is named before,
 from the label as printed (D-LABEL-21), so an instant label is still known by its missing tracking ID.
 
 **Why.** The owner's request: the courier's rider asks for that code, so Search and a `tracking_id` filter
-must find it, and an instant order no longer shows *no tracking ID*. An order saved before this rule reads
-the same: the fold gives its pickup code as its tracking ID, and no file is changed (R-LABEL-18).
+must find it, and an instant order no longer shows *no tracking ID*. (R-LABEL-18).
 
-**Applies to.** [reading](../labels/reading.md#per-order-data), [courier](../labels/courier.md),
-[journal](../data/journal.md#the-fold).
+**Applies to.** [reading](../labels/reading.md#per-order-data), [courier](../labels/courier.md), [files](../data/files.md).
 
 ## D-LABEL-25 — The regular SPX layout's badge is an SPX logo
 
@@ -154,30 +152,26 @@ courier would show as a logo and form that disagree.
 ## D-LABEL-26 — The receiver's area is read as printed
 
 **Decision.** Each order records the receiver's province, city and district as its label prints them
-(R-LABEL-17): in the journal's order record (`area`) and as three columns of `orders.csv`. No spelling is put
+(R-LABEL-17): as three columns of `orders.csv`. No spelling is put
 right and no `Kab.` or `Kota` is taken off; a part the layout does not print is none. Only the spaces of a
 province a line break cut are taken from the list of provinces. A batch saved before gets its area from its
-stored inputs by the migration the owner starts (D-APP-33): one `areas_filled` record per batch.
+stored inputs by the migration the owner starts (D-APP-33), straight into `orders.csv`.
 
 **Why.** The owner's request: the area is on every label, and as printed it is the label's own truth;
 normalising would be a guess the owner did not ask for.
 
-**Applies to.** [reading](../labels/reading.md#the-receivers-area), [records](../data/records.md),
-[views](../data/views.md#orderscsv).
+**Applies to.** [reading](../labels/reading.md#the-receivers-area), [files](../data/files.md#orderscsv).
 
 ## D-LABEL-27 — The weight is read as printed, in grams
 
-**Decision.** Each order records the parcel's weight its label prints (R-LABEL-19): in the journal's order
-record (`weight`: its grams, or *not printed*) and as the `weight_grams` column of `orders.csv`. The TikTok
+**Decision.** Each order records the parcel's weight its label prints (R-LABEL-19): as the `weight_grams` column of `orders.csv` (empty: not printed). The TikTok
 labels print kilograms (`0.490 KG`), the Shopee-style one grams (`450 gr`); both are kept as whole grams. A
-batch saved before gets its weight from its stored inputs by the migration the owner starts (D-APP-33): one
-`weights_filled` record per batch, beside its `areas_filled`. No other field of the label is added: the
+batch saved before gets its weight from its stored inputs by the migration the owner starts (D-APP-33), straight into `orders.csv`. No other field of the label is added: the
 rest is unreliable or of no use to the owner.
 
 **Why.** The owner's request: the weight is worth keeping; it is on every label but the instant ones.
 
-**Applies to.** [reading](../labels/reading.md#the-weight), [records](../data/records.md),
-[views](../data/views.md#orderscsv), [Search](../ui/search.md).
+**Applies to.** [reading](../labels/reading.md#the-weight), [files](../data/files.md#orderscsv), [Search](../ui/search.md).
 
 ## D-LABEL-28 — A packing list stops the batch
 

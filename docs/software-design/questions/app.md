@@ -5,7 +5,7 @@ Answered questions are removed, and their answer goes into [decisions/](../decis
 
 ## Q-APP-18 — The saved orders of a renamed account
 
-An order keeps the account's name it was saved with: the journal is never rewritten
+An order keeps the account's name it was saved with
 ([D-APP-27](../decisions/accounts.md)). After **Rename** of *Toko Alfa* to *Toko Alfa Jaya*, the orders saved
 before are still *Toko Alfa* in Search and in the summaries, and the Accounts screen counts only the orders of
 the name the account has now.
@@ -22,40 +22,42 @@ the name the account has now.
 
 ## Q-APP-24 — A check of a date's data against the current version
 
-A date migrated from an older version, or saved by an older copy, can differ from what this version would write
-from the same journal: a file missing (`orders.csv`, `day.toml`, `order-contents.toml`), a column the older
-version did not write (the shop, the receiver's area, the weight), or a cell left empty that a label gave. Nothing
-tells the owner which. The views are a copy of the journal ([views](../data/views.md)), so most differences can
-be made right from the journal; a value the journal never recorded needs the label PDFs read again.
+A date migrated from an older version, or saved by an older copy, can lack what this version reads from a
+label: the shop, the receiver's area, the weight. Nothing tells the owner which cells are empty because the
+label prints nothing and which because an older version did not read them. Only the stored label PDFs can
+fill them.
 
-The check compares each date's files with what the current version writes from its journal, and names every
-difference: file, column or record, and the order. A difference with no sender on the label (the shop empty)
-is not a difference, since that is what the label holds ([accounts](../app/accounts.md#the-account-of-an-order)).
+- **A. Report only.** The Day screen shows *Check data* for each date; the report names each empty cell
+  that this version would read, and nothing is changed.
+- **B. Report and read labels again.** As A, plus **Read labels again**: it reads the date's stored inputs
+  and fills the empty cells of `orders.csv`, asked first, with its progress shown, like a migration. A date
+  whose input PDFs are missing names the cells as not recoverable. *(Default)*
 
-Where the check is shown and what it offers:
+Rules for both: nothing is written in read-only mode ([D-APP-33](../decisions/app.md)); a fill is a choice
+on screen, never automatic; a date of a newer version is only reported. A cell the label leaves empty (no
+sender) is not reported.
 
-- **A. Report only.** The Day screen shows *Check data* for each date; the report lists the differences, and
-  nothing is changed. Repair is done by hand.
-- **B. Report and regenerate.** As A, plus **Regenerate views** when the differences are only views (a missing
-  or older file, a column or an empty cell the journal can fill). It writes the views from the journal under the
-  lock, like any commit, and never changes a record. *(Default)*
-- **C. B, and re-read.** As B, plus **Read labels again** for a value the journal does not hold (for example the
-  shop of an order saved before the shop was kept). It reads the date's input PDFs and writes the difference as
-  an amend, so the journal keeps the change. Each re-read is asked first and shows its progress.
+## Q-APP-25 — A file of a date changed outside the program
 
-Rules that hold for every option: a check writes nothing in read-only mode ([D-APP-33](../decisions/app.md));
-a repair is a choice on screen, never automatic at start; a date whose views are of a newer version is only
-reported. The check reads the journal and the files and never the PDFs, except for a re-read.
+`day.toml` holds the SHA-256 of `orders.csv`, `order-contents.toml` and itself
+([files](../data/files.md)). A hash that does not match means the file was changed outside the program,
+for example saved by Excel, which turns an Order ID into `5.8E+17`. With no journal there is no second copy
+to rebuild the file from.
 
-**The case that decides C.** A migrated v0.4 date can hold only its `journal.jsonl`, its input PDFs and its output
-PDFs. Then every order's shop is empty in the journal (the v0.4 migration recorded none), and its receiver's area
-and weight are not in it either. Only **Read labels again** can fill them, from the sender line and the label
-itself. Option B alone would rebuild the toml and csv with those cells empty and say nothing more. If no input PDF
-is there, the check names the cells as not recoverable and offers nothing.
+- **A. Accept or Read only.** The Day screen names the file. **Accept** takes it as it is when it reads and
+  agrees with the other two (the next commit writes its hash); **Read only** shows it and writes nothing to
+  the date until the program starts again. An Order ID Excel broke stays broken. *(Default)*
+- **B. A, plus Read labels again.** As A, plus **Read labels again**: `orders.csv` and
+  `order-contents.toml` are written again from the stored inputs of the live batches, in their saved groups
+  and printing order. The marks and the reprints of `day.toml` stay.
+- **C. Read only, always.** The date takes no write until the owner puts the file back by hand.
 
-Options B and C need a decision on the default:
+## Q-APP-26 — The clue that named an order's courier
 
-- **Default for re-reading**: none in B (re-read is opt-in per date, C). Under B the report says *Read labels
-  again needs option C*, and on a migrated date with its input PDFs the report offers C.
-- Where the check lives: a button on the Day screen per date (*Default*) or one list on Settings › Data over
-  all dates.
+Until now each saved order kept `courier_clue` (the logo hash, text or tag that named its courier) in the
+journal ([D-LABEL-14](../decisions/label.md)); `orders.csv` 2.1 has no such column. The order's source page
+(`pdf_num`, `page_start`) is kept, and reading that page again shows the clue.
+
+- **A. Not stored.** A courier named wrong is traced by reading its page again. D-LABEL-14 goes.
+  *(Default)*
+- **B. A column `courier_clue` in `orders.csv`**: the kind and the value, `logo:3f9a0c71b2d4e5f6`.

@@ -1,6 +1,6 @@
 # Decisions: app — sources, data and checks
 
-D-APP-1 to D-APP-12 and D-APP-32. The app's features are in [app-features.md](app-features.md).
+D-APP-1 to D-APP-12, D-APP-32, D-APP-33 and D-APP-39. The app's features are in [app-features.md](app-features.md).
 
 ## D-APP-1 — PDFium reads, copies and writes the PDFs
 
@@ -15,13 +15,13 @@ written files embed whole fonts (about 1.4 MB); they print the same, and the siz
 
 ## D-APP-3 — Data carries an X.Y schema version; no migration
 
-**Decision.** Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at
+**Decision.** Every TOML file and `orders.csv` carry `schema` as an `X.Y` version, starting at
 `1.0`. The schema version is not the app version: app `v0.2` writes `1.0`, and a schema change raises the app
 version. A copy reads every version of its own major and passes over what it does not know (D-APP-34).
 Data of an older major is not read and not changed (D-APP-27: nor deleted; a separate
 script copies v0.4 dates once), except by a migration the owner starts (D-APP-33). A schema is raised once
 for each release the owner's data moves to, never for a development step between two (R-APP-18): the
-owner's data is at v0.7 (`session.toml` `2.0`), so what v0.8 changes is the journal, `day.toml` and `orders.csv` `2.1` and `order-contents.toml` `1.1` (D-APP-35).
+owner's data is at v0.7 (`session.toml` `2.0`), so what v0.8 changes is `day.toml` and `orders.csv` `2.1` and `order-contents.toml` `1.1` (D-APP-35).
 
 **Why.** The owner's choice: the data is a working set, and the labels can be read again.
 
@@ -30,7 +30,7 @@ owner's data is at v0.7 (`session.toml` `2.0`), so what v0.8 changes is the jour
 ## D-APP-4 — Order data comes from the label PDFs only
 
 **Decision.** The platform's order export is not read, by the app or by any rule. Every order field comes from
-the label and its packing slip; `orders.csv` is a view the app writes.
+the label and its packing slip; `orders.csv` is written by the app.
 
 **Why.** The owner's choice: the export is not part of this project any more.
 
@@ -46,45 +46,30 @@ app learns.
 
 **Applies to.** [parser file](../rules-file/parser.md), [courier deduction](../labels/courier.md).
 
-## D-APP-7 — The journal is the only truth
+## D-APP-39 — A date's truth is day.toml, orders.csv and order-contents.toml
 
-**Decision.** Each date has one `journal.jsonl` of sealed records, for every account; a commit is one append and
-`sync_all`; a torn last line is cut and recorded; damage stops the date. It replaces `state.json`.
+**Decision.** The three files of the owner's draft are the truth of a date, for every account, and every
+decision reads them. A change writes them whole into `.partial/` with its outputs; renaming
+`.partial/day.toml` over `day.toml` is the commit. They hold what is true now: no history of saves,
+amends, reverts or marks is kept. `day.toml` holds the SHA-256 of the other two and of itself. It replaces
+D-APP-7 (the journal) and D-APP-38 (the screens read the views).
 
-**Why.** The owner asked for no duplicated truth, ACID without a database, and every value traceable to its
-source. An append-only file of sealed lines commits atomically, shows damage, and keeps what happened.
+**Why.** The owner's words (2026-11-27): the owner's design never had a journal; the only goal is that
+every value is traceable to its source, the label page it was read from, not a history of every action.
+The journal was an agent's reading of "ACID without a database" and added most of the data's complexity.
+A rename commits as atomically as an append.
 
-**Applies to.** [journal](../data/journal.md), [records](../data/records.md).
-
-## D-APP-38 — The screens read the views; the journal is read to write, recover, migrate and audit
-
-**Decision.** `day.toml`, `orders.csv` and `order-contents.toml` are written from the journal after every
-commit, and the screens read them: the dates, the Day screen, Search and its index, the Accounts screen's
-counts, the reprint list and the summaries. The journal is read to write (a commit and its checks, the
-already-saved guard, amend, revert, restore, a reprint's record), to recover, to migrate, by the verifier and
-for the Day screen's journal notes. A missing view or a stale `journal_seq` is written again when the date
-opens, as recovery. `day.toml` keeps the SHA-256 of the other two views and of itself; a view that differs is
-named on the Day screen with **Rebuild** (written again from the journal), **Read only** (the date shows the
-files as they are and takes no write until the program starts again) and **Ignore** (it shows them as they are;
-the next commit writes them again). A date with views and no journal is shown from its views; its first commit,
-asked first, starts its journal with the views' batches (`restored`), which can be reprinted but not amended
-or reverted. It replaces D-APP-8.
-
-**Why.** The owner's words (2026-11-27): the journal is the only truth, kept for recovery, migration and
-audit, not read day to day; a date must stay usable without it. The owner may open a view in Excel but not
-save it there: a save turns an Order ID into `5.8E+17`, which the hash names.
-
-**Applies to.** [views](../data/views.md), [journal](../data/journal.md#when-a-date-opens), [Day](../ui/day.md).
+**Applies to.** [files](../data/files.md), [save](../data/save.md).
 
 ## D-APP-9 — Copies of the app share a data folder; one writes at a time
 
 **Decision.** Several copies of the app may use one data folder at once. The data folder's `.lock` is held
-with `File::try_lock` only for a write; another copy's write waits for it. A write folds the journal again
-when it grew since it was read, and the append refuses a journal that grew meanwhile. Each copy looks for
+with `File::try_lock` only for a write; another copy's write waits for it. A write reads the date's files
+again under the lock before it decides. Each copy looks for
 the others' writes each time the window gets the focus and shows them.
 
 **Why.** The owner wants several people to work on one data folder at the same time. Two writers of one
-journal would interleave their commits; one at a time, each deciding on the journal as it is on disk,
+date would overwrite each other's changes; one at a time, each deciding on the files as they are on disk,
 cannot.
 
 **Applies to.** [data › One writer](../data/README.md#one-writer), [program › Several copies](../app/program.md#several-copies).
@@ -94,7 +79,7 @@ cannot.
 **Decision.** An input is kept in its date folder as `{batch} Input {pdf} {short hash}.pdf` —
 `2 Input 03 61459e8a8203.pdf`: the batch whose record names it, the word *Input*, its `PdfID` on the date in
 two digits, and the first 12 characters of its SHA-256 (R-APP-13). The same bytes named by a second batch are
-stored again under that batch's number. The journal keeps its original name, size and page count. One file
+stored again under that batch's number. `day.toml` keeps its original name, size and page count. One file
 chosen twice is one input. An input whose hash no longer matches is reported, never used.
 
 **Why.** Two downloads with one name cannot overwrite each other, the same bytes are never read twice, and an
@@ -106,14 +91,14 @@ PDF prints beside each input.
 
 ## D-APP-11 — Outputs are written aside, verified, committed, then moved; a lost one is restored
 
-**Decision.** Outputs are written to `.partial/` of the date folder, verified there, then the journal commit,
-then moved into the date folder. On open, the journal decides whether `.partial/` goes forward or back. A lost
-output is written again from the inputs and the journal.
+**Decision.** Outputs are written to `.partial/` of the date folder, verified there, then the commit,
+then moved into the date folder. On open, `.partial/` goes back when it still holds `day.toml`, else forward. A lost
+output is written again from the inputs and the date's files.
 
 **Why.** A batch is saved whole or not at all even when the app stops between two steps, and an output is
 reproducible, so losing one costs nothing.
 
-**Applies to.** [04 Save](../workflow/04-save.md), [journal](../data/journal.md#when-a-date-opens), [reprint](../app/reprint.md#restore).
+**Applies to.** [04 Save](../workflow/04-save.md), [save](../data/save.md#when-a-date-opens), [reprint](../app/reprint.md#restore).
 
 ## D-APP-12 — An independent verifier checks every output
 
@@ -128,13 +113,13 @@ it. On 1,309 pages, every page PDFium copied kept its `lopdf` digest and every p
 
 ## D-APP-32 — One flat folder per date
 
-**Decision.** Every file of a date sits directly in its date folder: the journal, the views, the inputs, the
+**Decision.** Every file of a date sits directly in its date folder: `day.toml`, `orders.csv`, `order-contents.toml`, the inputs, the
 group PDFs, the summary PDF, the reprints and the summaries made on request (R-APP-12); there is no `input/`
 and no `output/`. What an operation writes waits in `.partial/` of the date folder until its commit
 (D-APP-11); an input is copied to `{name}.partial` beside its name and renamed. The names: `{batch} Input
 {pdf} {short hash}.pdf` (D-APP-10), `{batch}-{code} {name} x{count}.pdf`, `{batch} Summary.pdf`,
 `{batch} Summary - {account}.pdf`, `Reprint {n} x{count}.pdf`, `Day Summary.pdf` and `Day Summary -
-{account}.pdf` (R-APP-14, R-APP-15). A name the journal records stays as recorded. A date folder of v0.7
+{account}.pdf` (R-APP-14, R-APP-15). A name `day.toml` records stays as recorded. A date folder of v0.7
 (one with `input/` or `output/` that no Update has listed flat) is converted by the app's migration
 (D-APP-33): each file of its `input/` and `output/` and each summary made on request is moved up under its
 new name, checked by its hash, and listed in the Update's `update.toml` (a label PDF under the name of every
@@ -145,39 +130,40 @@ owner's, and `tools/remove-v07-backup.py` deletes it once every file of it is in
 ([development](../../development/README.md)). In read-only mode the Day screen names each date not yet flat.
 
 **Why.** The owner's choice: one Explorer window shows a date's whole work, a batch's files side by side by
-its number. `.partial/` keeps a save whole as before. The journal is the truth and is never rewritten, so a
-name it records keeps its case.
+its number. `.partial/` keeps a save whole as before.
 
-**Applies to.** [data](../data/README.md), [journal](../data/journal.md#when-a-date-opens),
+**Applies to.** [data](../data/README.md), [save](../data/save.md#when-a-date-opens),
 [04 Save](../workflow/04-save.md), [05 After the save](../workflow/05-after-save.md),
 [accounts › Data of older versions](../app/accounts.md#data-of-older-versions).
 
 ## D-APP-33 — Migrations ask first; read-only writes nothing
 
-**Decision.** The app never migrates data on its own. A migration is a new version of a stored file (a
-view of an older `schema`) or data filled in from the stored PDFs (a field a newer reader records). When
+**Decision.** The app never migrates data on its own. A migration is a new version of a stored file (one
+of an older `schema`, or a date that still has a journal) or data filled in from the stored PDFs (a field a newer reader records). When
 the data folder needs one, the app asks at its start: what would change (which dates, how many batches),
 with **Update** and **Open read-only**; choosing another data folder asks the same. Update shows its
 progress: the step, the date and file, and how far (*Reading labels: 2026-11-25, batch 1, page 3 of
 120*). **Read-only** writes nothing at all in the data folder: no migration, no lock file, no rules file
-from the bundled copy, no recovery of a stopped save, no view, no batch, revert, amend, reprint, mark or
+from the bundled copy, no recovery of a stopped save, no batch, revert, amend, reprint, mark or
 summary; the screens do not offer them, and the back end refuses every write. It lasts until the program
-starts again. Outside read-only mode, recovery and upkeep that change no file's version stay automatic:
-settling `.partial/` and writing a missing or stale view (journal › When a date opens).
+starts again. Outside read-only mode, recovery that changes no file's version stays automatic:
+settling `.partial/` ([save › When a date opens](../data/save.md#when-a-date-opens)).
 
 The migrations, in this order for each date, after the files they change are copied and the moves listed
-([D-APP-36](versions.md)): a date folder of v0.7 is made flat (D-APP-32); the views of
+([D-APP-36](versions.md)): a date folder of v0.7 is made flat (D-APP-32); a date with
+`journal.jsonl` (v0.7, and the test builds of v0.8 before D-APP-39) has its three files written from it, with
+each group PDF's last Print time, and the journal moves into the update folder (D-APP-39); the files of
 another `schema` are written again; the receiver's area and the weight of each order of a live batch saved
-before they were read are read from the batch's stored label PDFs, an `areas_filled` and a `weights_filled`
-record per batch (D-LABEL-26, D-LABEL-27). A batch whose label PDF is missing is not offered (it cannot be read); one whose
-label PDF has changed is skipped and named, and the next start asks again. A damaged journal is passed
-over. The program's own settings, kept in `packing-app.toml` beside the program, still change in read-only
+before they were read are read from the batch's stored label PDFs into `orders.csv` (D-LABEL-26,
+D-LABEL-27). A batch whose label PDF is missing is not offered (it cannot be read); one whose
+label PDF has changed is skipped and named, and the next start asks again. A damaged journal is named and
+passed over. The program's own settings, kept in `packing-app.toml` beside the program, still change in read-only
 mode: the theme, and **Change** of the data folder, which opens the folder chosen as at start and asks again
 when it would be updated. The accounts, sort rules and logos are the data folder's and do not change.
 
 **Why.** The owner's rule: no surprises; a long migration must not look like a frozen program, and the
 owner must be able to look at data without changing it.
 
-**Applies to.** [data](../data/README.md), [journal](../data/journal.md#when-a-date-opens),
-[views](../data/views.md), [01 Start](../workflow/01-start-and-open.md#1-start),
+**Applies to.** [data](../data/README.md), [save](../data/save.md#when-a-date-opens),
+[01 Start](../workflow/01-start-and-open.md#1-start),
 [Start screen](../ui/start.md#update-the-data-folder).

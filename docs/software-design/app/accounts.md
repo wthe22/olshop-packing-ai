@@ -9,7 +9,7 @@ together ([data](../data/README.md#the-data-folder)): a batch may hold the order
 |---|---|
 | **Account** | A name and the shop names its labels are sent by, in `config.toml` |
 | **Shop** | A name an account lists, as the label prints it after `Pengirim` ([reading](../labels/reading.md#the-sender)) |
-| **Date** | A calendar date of the data folder: one folder with its journal, inputs and outputs |
+| **Date** | A calendar date of the data folder: one folder with its three files, inputs and outputs |
 
 ## What a date holds for all accounts
 
@@ -36,7 +36,7 @@ shops = ["Toko Beta"]
 
 - Written by the Accounts screen ([Accounts](../ui/accounts.md)) and by the shop prompt, under the data
   folder's lock, each write reading the file again first so another copy's change is kept. Read when labels
-  are read and by the Accounts screen; never by the fold.
+  are read and by the Accounts screen; never to decide what a saved date holds.
 - It travels with the data folder: every copy that uses the folder shares the list ([D-APP-30](../decisions/app-features.md)),
   and a data folder given to another PC brings its accounts.
 
@@ -53,7 +53,7 @@ shops = ["Toko Beta"]
   ignored ([reading](../labels/reading.md#the-sender)). When several listed names are found, the longest
   wins (`Toko Alfa Official` before `Toko Alfa`), then the one listed first. Its **account** is the account
   that lists that shop in `config.toml` now: not stored, looked up wherever an order is shown, counted,
-  filtered or summarised ([records](../data/records.md)).
+  filtered or summarised ([files](../data/files.md)).
 - **No account** holds every order whose shop no account lists: a shop taken off its account, an order
   saved before shops were kept (v0.4), a label with no sender. It is not in `config.toml`, cannot be made,
   renamed or deleted, and no account can take its name; Search, the counts and the summaries show it like
@@ -90,8 +90,7 @@ deletes anything else in the data folder. It says
 what it found, a line on the Day screen with **Open folder** ([Messages](../ui/messages.md)):
 
 - **v0.1**: `labels/`, `state.json`, `couriers.toml`, `categories.toml` or `categories/`.
-- **v0.4**: a folder not named as a date that holds a `settings.toml` or a date folder with a
-  `journal.jsonl` (a v0.4 workspace).
-- **v0.7**: a date folder that holds `input/` or `output/`. Its journal is read, but its inputs and outputs
+- **v0.4**: a folder not named as a date that holds a `settings.toml` (a v0.4 workspace).
+- **v0.7**: a date folder that holds `input/` or `output/`. Its inputs and outputs
   are not found until the migration has moved them ([D-APP-32](../decisions/app.md)); as the program asks
   for it at its start, the line shows only in read-only mode, and says to start again and choose **Update**.

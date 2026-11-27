@@ -6,17 +6,18 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
 
 ## The search index
 
-- Built in memory at start, on its own thread, by folding every journal of the data folder
-  ([journal](../data/journal.md#the-fold)); after each commit the new record is added. A year of dates
-  folds in about a second; Search shows *Loading* until it is ready.
+- Built in memory at start, on its own thread, by reading the `orders.csv` and `order-contents.toml` of every date of the data folder
+  ([files](../data/files.md)); after each commit its date is read again. A year of dates
+  reads in about a second; Search shows *Loading* until it is ready.
 - One entry per order of a live batch: the fields a filter can use, its account and shop among them
   ([conditions](../rules-file/conditions.md#fields)), its date, batch and label group, the output file and
   the pages it fills there (the pages of the orders of its group before it, in printing order, plus one),
-  and its **trace**: the input's file name and pages, and the courier's clue.
-- Each date's reprints: which orders (by the date they were saved on and their Order ID) each reprint
+  and its **trace**: the input's file name and pages. The courier's clue is not stored: the page is read again
+  to trace it ([Q-APP-26](../questions/app.md)).
+- Each date's reprints: which orders (by their Order ID) each reprint
   printed. Search marks those orders *Reprinted*, and the Day screen lists a reprint's orders from the
   index. A reprint's commit refreshes its date in the index like any other commit.
-- The index is only read. A date whose journal is damaged is left out and named in the panel.
+- The index is only read. A date whose files are damaged is left out and named in the panel.
 
 ## Search
 
@@ -36,31 +37,29 @@ Orders of an open draft are not searched: they are not saved.
 
 **Reprint** writes one PDF of the ticked orders' label pages.
 
-1. **Sources.** For each chosen order, fold its date's journal (not the index) and take the copy its live
-   batch wrote: the input's SHA-256 and the page range. An input that is missing or changed stops the
+1. **Sources.** For each chosen order, read its date's files (not the index) and take the copy its live
+   batch wrote: the input and the page range. An input that is missing or changed stops the
    reprint with its name.
-2. **Order.** The orders in their original printing order: by date, batch, then their place in the
-   batch's record.
+2. **Order.** The orders in their original printing order: by date, batch, then their place in
+   `orders.csv`.
 3. **Write** the pages, unchanged, into `.partial/` of **today's** date, named
    `Reprint {n} x{count}.pdf`, `n` counting the reprints of today.
 4. **Verify**: the file's page *k* has the digest of the source page at *k*, and the page count adds up
    ([verification](verification.md)). A finding stops the reprint; nothing is kept.
-5. **Commit** `reprint_made` in today's journal, with every order's date, batch, input and pages; then
-   move the file into today's date folder.
+5. **Commit** ([save](../data/save.md)): the reprint is added to today's `day.toml` with its order IDs, and the file moves into today's date folder.
 
 A reprint changes no batch: the orders stay saved where they were, the already-saved guard is unchanged,
 and no printed mark moves. The Day screen lists the day's reprints with **Open**.
 
 ## Restore
 
-The open-time check lists an output of a live batch that is missing or changed
-([journal](../data/journal.md#when-a-date-opens)).
-**Restore** on its batch card writes a changed one again; **Open** on a group PDF or summary PDF that is not
+The open-time check lists an output of a live batch that is missing
+([save](../data/save.md#when-a-date-opens)).
+**Restore** on its batch card writes it again; **Open** on a group PDF or summary PDF that is not
 there (missing when the date opened, or deleted since) writes it again first, then opens it:
 
-- a group PDF from the stored inputs and the batch's record — the reprint path, its pages in the recorded order;
-- the summary PDF from the batch's record, in the program's current layout: deleting an old batch's
+- a group PDF from the stored inputs and the files — the reprint path, its pages in `orders.csv` order;
+- the summary PDF from the batch's facts in `day.toml`, in the program's current layout: deleting an old batch's
   summary PDF and pressing **Open** shows its data in today's layout.
 
-The file is verified like the original (V2, V5 or V6), written through `.partial/`, and committed as
-`output_restored` with its new size and SHA-256, which the open-time check uses from then on.
+The file is verified like the original (V2, V5 or V6), written through `.partial/` and committed like any change ([save](../data/save.md)).

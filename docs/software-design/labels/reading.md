@@ -8,7 +8,7 @@
 | `tracking_id` | The label text, in one of the tracking-ID forms of `parser.toml` ([courier](courier.md)); on an instant-service label, which prints none, its `pickup_code` ([D-LABEL-24](../decisions/label.md)) |
 | `courier`, `courier_clue` | Deduced from the label: the courier and the clue that named it ([courier](courier.md)) |
 | `ship_by_date` | The date of the label's `In transit by: dd/mm/yyyy hh:mm`, or of the Shopee-style label's `Batas Kirim: dd-mm-yyyy` ([D-APP-21](../decisions/app-features.md)) |
-| `pickup_code` | The instant-service label's code: two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together); on the Shopee-style instant label two digits and two capital letters after the caption in its own text run (kept in the record; its label prints it) |
+| `pickup_code` | The instant-service label's code: two capital letters and 4 digits printed in large type beside its `Kode Pengambilan` caption, within 30 pt of its line (the page text does not keep the two together); on the Shopee-style instant label two digits and two capital letters after the caption in its own text run (its label prints it; it is stored as the tracking ID) |
 | `account`, `shop` | The listed shop name found in the sender, and the account that lists it ([accounts](../app/accounts.md#the-account-of-an-order)) |
 | `area` | The receiver's province, city and district as printed ([below](#the-receivers-area)) |
 | `weight` | The parcel's weight as printed, in grams ([below](#the-weight)) |
@@ -92,7 +92,7 @@ The slip is read by text position, not by reading order: each text run of the pa
 
 ## The sender
 
-Read for an order's account ([accounts](../app/accounts.md#the-account-of-an-order)); the record keeps the
+Read for an order's account ([accounts](../app/accounts.md#the-account-of-an-order)); `orders.csv` keeps the
 shop name found, not the text.
 Every style prints it with the caption `Pengirim` (`Pengirim :` or `Pengirim:`), in one of four places:
 

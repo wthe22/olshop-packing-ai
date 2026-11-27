@@ -10,7 +10,7 @@
   orders are then found as already saved (step 7). On an amend's selection page the batch being redone is
   never that batch: its own files, chosen again from anywhere, are the same files.
 - A file read from the date's stored inputs, where it is named by its batch, number and hash (an amend's own files), keeps the
-  name its record gives it, so the record, the trace and the summary PDF name the download.
+  name `day.toml` gives it, so `day.toml`, the trace and the summary PDF name the download.
 - The list is **sorted by file name**: the download's name starts with its time and part number, so name
   order is download order. This is the **reading order** of the batch.
 - The **sort rule** is chosen here, among the rules that are on: the rule of the data folder's newest batch, on whichever date, is preselected; the Plan screen's **Back** keeps the rule just read

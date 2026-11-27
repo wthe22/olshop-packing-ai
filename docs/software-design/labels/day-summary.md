@@ -2,8 +2,8 @@
 
 One file for the whole open date, of all accounts or of one, made on request: **Day summary** on the
 [Day screen](../ui/day.md) writes `{date}/Day Summary.pdf` (all accounts) or `{date}/Day Summary -
-{account}.pdf` from the date's journal and opens it in the PC's default PDF viewer. It is a view of the journal ([views](../data/views.md)): written again
-on every request, never read for a decision, not recorded and not checked by the verifier. It holds the
+{account}.pdf` from the date's files and opens it in the PC's default PDF viewer. It says what the files said ([files](../data/files.md#the-summaries-made-on-request)): written again
+on every request, never read for a decision, not checked by the verifier. It holds the
 batches as their Day cards show them, the couriers, the inputs, the day's picks and the day's order
 contents, not the reprints, and is drawn in the [summary PDF](summary-pdf.md#the-layout)'s layout
 ([D-LABEL-20](../decisions/summaries.md), [D-LABEL-23](../decisions/summaries.md)).
@@ -16,7 +16,7 @@ Day summary · All accounts · 2026-10-07                                       
   ─────────────────────────────────────────────────────────────────────────────────────────────
   2-Z     Lainnya                                              41 orders    12 contents
   ─────────────────────────────────────────────────────────────────────────────────────────────
-▓ Batch 1 · saved 07:40 · 3 files · amended                             600 orders · 660 units ▓
+▓ Batch 1 · saved 07:40 · 3 files                                     600 orders · 660 units ▓
   …
 ▓ Couriers                                                                                    ▓
   J&T Express                                                 412 orders
@@ -45,7 +45,7 @@ Day summary · All accounts · 2026-10-07                                       
   <groups> groups · printed hh:mm`, and `page x/y`. Only live batches count, and on an account's day summary only its orders: a batch or a group PDF
   without one of them is left out. A count of one reads singular (*1 order*): nothing reads this file back.
 - **Each batch** is a bar, newest first, as on the Day screen: its number, the time of its newest save,
-  its files, *amended* when it was; at the bar's right its orders and units. Under it each group PDF as a
+  its files; at the bar's right its orders and units. Under it each group PDF as a
   row: `<batch>-<code>` as the key, the group's name, its orders and its order contents (*3 contents*).
 - **Accounts**, on the day summary of all accounts only: the day's orders and units per account, most
   orders first.

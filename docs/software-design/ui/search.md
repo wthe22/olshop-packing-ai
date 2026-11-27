@@ -95,7 +95,7 @@ Where the results are 72 rem wide or more, the label column also holds the group
   and the page. A line the label does not print is left out. For an order saved before the address or the
   weight was read, in a data folder not updated since, *not read yet* stands in its place, grey, and its
   tooltip says to start the program again and choose **Update**. How the courier was named is not shown
-  (the journal keeps it).
+  (it is not stored: [Q-APP-26](../questions/app.md)).
 - **Reprinted**: an order printed again before carries the mark *Reprinted* left of **Open** (*Reprinted 2×* for more);
   its tooltip names each reprint and its date.
 - **Saved orders only**: an open draft's orders have no file yet and are not searched.

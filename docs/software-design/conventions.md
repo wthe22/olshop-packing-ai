@@ -9,12 +9,12 @@ Apply to every design, document and code line of the PC app.
   `SKU ID` is not on the label PDFs, and the Seller SKU is a field of the line ([D-APP-20](decisions/app-features.md)).
 - Dates and batches are identified by their names and numbers in the data folder ([data](data/README.md)),
   an account and a shop by their names ([accounts](app/accounts.md)); an input by its SHA-256; a courier by its code.
-- Every TOML file and the journal's first record carry `schema` as an `X.Y` version, starting at `1.0`. The
+- Every TOML file and `orders.csv` carry `schema` as an `X.Y` version, starting at `1.0`. The
   schema version is separate from the app version; a copy reads every version of its own major and passes over
   what it does not know; data of another major is not read ([D-APP-3](decisions/app.md),
   [D-APP-34](decisions/versions.md)).
-- A saved fact has one home, the journal ([D-APP-7](decisions/app.md)). Anything else that holds it is a view or
-  a cache, rebuilt from the journal and never read for a decision.
+- A saved fact has one home, the date's three files ([D-APP-39](decisions/app.md)). Anything else that holds it
+  is a cache, rebuilt from them and never read for a decision.
 - Requirement IDs (`F-LABEL-3`) are stable references for documents; code, comments and tests do not cite them
   (`tools/check-comments.mjs`).
 - Requirements, decisions, questions and review items carry scoped IDs (`F-UI-1`, `D-APP-2`, `Q-UI-1`,

@@ -29,7 +29,7 @@ So a second copy right after the first (`A A`) is a repeat, and every page belon
 
 ## 2. Orders already saved
 
-An order saved in a live batch of this date, of any account, loses **all** its copies, each recorded as left
+An order saved in a live batch of this date, of any account, loses **all** its copies, each listed as left
 out with the reason `saved_earlier` and the batch that saved it. A repeat of such an order is not asked
 about.
 
@@ -67,7 +67,7 @@ Each order with **one** copy's pages and **one** copy's item lines; the `Qty Tot
 copy. The plan, the order contents and the numbers see the orders as if the repeats had never been in the
 inputs.
 
-Every copy left out is a `LeftOutCopy` of the batch's record ([records](../data/records.md)): the order,
+Every copy left out is a `LeftOutCopy` of the batch in `day.toml` ([files](../data/files.md)): the order,
 where the copy is, the reason, and the copy kept (`repeat`) or the batch that saved it (`saved_earlier`).
 The Day card lists them (**Left out ▸**), the verifier counts them in the ledger
 ([verification](verification.md)), and an amend preselects each repeat's kept copy, so the owner's choices

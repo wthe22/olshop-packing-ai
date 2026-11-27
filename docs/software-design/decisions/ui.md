@@ -14,7 +14,7 @@ Where a record names a former question (`Q-…`), the owner accepted its default
 
 **Decision.** There is no log file (Q-UI-2). *About* shows the versions; errors are shown on screen.
 
-**Why.** The journal of each date already records every save, revert, mark and reprint.
+**Why.** The date's files already hold what is saved.
 
 **Applies to.** [Settings](../ui/settings.md).
 
@@ -24,7 +24,7 @@ Where a record names a former question (`Q-…`), the owner accepted its default
 *Last 7 days*, *Last 30 days*, a *Custom range* or *All days* (Q-UI-3), of every account; the ranges other
 than *Viewed day* end today. *Viewed day* is left out while the viewed date is today. Never *This day*: the
 owner found it could mean many things (R-UI-37). Every saved order is found by every field, since the
-journals keep them all.
+date files keep them all.
 
 **Why.** The open date covers daily use; a reprint of an older label needs the other dates, and a short range
 keeps a search of months of data small.
