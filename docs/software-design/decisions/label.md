@@ -103,8 +103,8 @@ repeat (Q-LABEL-10). Whether an output page is its source page is the verifier's
 ## D-LABEL-15 — Orders with the same items are one order content
 
 **Decision.** Inside a group PDF, the orders with the same **order content** — their item lines as (product
-name, variation, quantity) — are printed next to each other, and the screens call such a block an *order
-content* (Q-LABEL-11). The Seller SKU and the printed `Qty Total` are stored with the order, not with its
+name, variation, quantity, Seller SKU) — are printed next to each other, and the screens call such a block an *order
+content* (Q-LABEL-11). The Seller SKU is part of each item, so orders whose items differ only in Seller SKU are two contents. The printed `Qty Total` is stored with the order, not with its
 content, so one order content is exactly one block. The screens list a group's order contents in printing
 order; the summary PDF numbers them ([D-LABEL-19](summaries.md#d-label-19--the-summary-pdf-one-row-everywhere-couriers-by-name)).
 
@@ -129,7 +129,7 @@ TikTok instant label of Gojek or Grab could be named (a courier logo on an insta
 
 **Decision.** An order whose label prints no tracking ID and a pickup code under `Kode Pengambilan` takes the
 pickup code as its tracking ID (R-LABEL-16): `BC0000` on the TikTok Shop instant label, `12AB` on the
-Shopee-style one, as the owner chose (Q-LABEL-15). The pickup code is still kept in its own field. The courier is named before,
+Shopee-style one, as the owner chose (Q-LABEL-15). From journal 2.1 the pickup code has no field of its own: the tracking ID is the only one, and a 2.0 record's pickup code is read to give it. The courier is named before,
 from the label as printed (D-LABEL-21), so an instant label is still known by its missing tracking ID.
 
 **Why.** The owner's request: the courier's rider asks for that code, so Search and a `tracking_id` filter
@@ -178,3 +178,11 @@ rest is unreliable or of no use to the owner.
 
 **Applies to.** [reading](../labels/reading.md#the-weight), [records](../data/records.md),
 [views](../data/views.md#orderscsv), [Search](../ui/search.md).
+
+## D-LABEL-28 — A packing list stops the batch
+
+**Decision.** A page headed `Packing List` is a packing list the shop prints, not a shipping label. The reader stops the batch on it, wherever it falls and whatever order it names. The stop names the input and the page; the owner removes that page from the input and reads again. A packing list is never read as a slip: it prints no tracking ID and no courier, and after a label of its own order it would add its lines to that copy a second time.
+
+**Why.** The owner does not feed a packing list into the program: it is not a shipping label, and read as a continuation it would add lines to a label's copy.
+
+**Applies to.** [reading](../labels/reading.md#copies-and-multi-page-orders), [copies](../../crates/engine/src/copies/mod.rs).

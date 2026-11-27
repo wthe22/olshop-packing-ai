@@ -98,6 +98,13 @@ fn continuation(order: &str, name: &str, quantity: i64, total: Option<i64>) -> V
     runs
 }
 
+/// A packing list: the shop's page, headed `Packing List`, with no tracking ID and no courier.
+fn packing_list(order: &str, name: &str) -> Vec<Run> {
+    let mut runs = continuation(order, name, 1, None);
+    runs.push(run(5.8, 140.0, "Packing List"));
+    runs
+}
+
 fn pages(inputs: Vec<Vec<PageText>>) -> Vec<PageItem> {
     inputs
         .into_iter()
@@ -240,6 +247,16 @@ fn a_page_that_cannot_be_placed_stops_the_batch() {
                 page(continuation("2", "Sepatu", 1, None), &[]),
             ]],
             "Page 2 of a.pdf is order 580000000000000002",
+        ),
+        (
+            "a packing list after a label of its own order",
+            vec![vec![good(), page(packing_list("1", "Sepatu"), &[])]],
+            "Page 2 of a.pdf is a packing list, not a shipping label",
+        ),
+        (
+            "a packing list alone",
+            vec![vec![page(packing_list("1", "Sepatu"), &[])]],
+            "Page 1 of a.pdf is a packing list, not a shipping label",
         ),
         (
             "a label part without an Order ID",

@@ -53,6 +53,8 @@ when the label page printed none, its deadline ([D-LABEL-12](../decisions/label.
 order. Two copies of one Order ID are a **repeat**, never one longer order
 ([duplicates](../app/duplicates.md), [D-LABEL-12](../decisions/label.md)).
 
+A page headed `Packing List` is a packing list the shop prints, not a shipping label. The reader stops the batch on it, whatever order it names ([D-LABEL-28](../decisions/label.md)).
+
 ## Page fingerprint
 
 The **page fingerprint** names a page by what it prints: XXH3-64 of the page's text runs in page order —

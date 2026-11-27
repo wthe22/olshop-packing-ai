@@ -20,6 +20,7 @@ use crate::orders::{NoSlip, NoSlipFile, PageItem, UnseenLogo};
 use crate::record::{Area, CourierClue, Weight};
 use crate::rules::{FilterFields, FilterLine};
 use crate::slip::{SlipLine, read_slip};
+use crate::text::PageText;
 use crate::workflows::Workflows;
 
 pub use self::fingerprint::page_fingerprint;
@@ -87,6 +88,8 @@ pub enum CopiesStop {
     },
     /// Pages that start a copy and carry no packing slip.
     NoSlip(NoSlip),
+    /// A page headed `Packing List`: the shop's list, not a shipping label.
+    NotLabel { input: String, page: u16 },
 }
 
 impl fmt::Display for CopiesStop {
@@ -113,6 +116,11 @@ impl fmt::Display for CopiesStop {
                  {copy_of}. Download the labels again."
             ),
             CopiesStop::NoSlip(no_slip) => no_slip.fmt(f),
+            CopiesStop::NotLabel { input, page } => write!(
+                f,
+                "Page {page} of {input} is a packing list, not a shipping label. Remove it from \
+                 the input and read again."
+            ),
         }
     }
 }
@@ -144,6 +152,12 @@ where
     for (input, index, page) in pages {
         pages_read += 1;
         let number = index as u16 + 1;
+        if is_packing_list(&page) {
+            return Err(CopiesStop::NotLabel {
+                input: name(input),
+                page: number,
+            });
+        }
         let order_id = find_order_id(&page.text);
         let no_id = OrderId::new("");
         let tracking_id = find_tracking_id(&page.text, order_id.as_ref().unwrap_or(&no_id), &forms);
@@ -236,6 +250,12 @@ where
         unseen_logos: unseen,
         pages: pages_read,
     })
+}
+
+/// A packing list is the shop's own page: it prints no tracking ID and no courier, and it must
+/// never join a copy as a slip.
+fn is_packing_list(page: &PageText) -> bool {
+    page.text.contains("Packing List")
 }
 
 /// The slip half of a split label: a page right after a label page that had no slip, in the same
