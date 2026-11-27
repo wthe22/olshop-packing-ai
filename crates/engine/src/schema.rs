@@ -88,11 +88,11 @@ impl AppVersion {
             Some((numbers, pre)) => (numbers, Some(pre)),
             None => (text, None),
         };
-        let mut numbers: Vec<u64> = numbers
+        let numbers: Vec<u64> = numbers
             .split('.')
             .map(|part| part.parse().ok())
             .collect::<Option<_>>()?;
-        let mut identifiers: Vec<Identifier> = pre
+        let identifiers: Vec<Identifier> = pre
             .into_iter()
             .flat_map(|pre| pre.split('.'))
             .map(|part| match part.parse() {
@@ -100,15 +100,6 @@ impl AppVersion {
                 Err(_) => Identifier::Word(part.to_string()),
             })
             .collect();
-        // Copies of 0.8 wrote `0.8.N-alpha` for `0.8.0-alpha.N`, and journals keep it.
-        if numbers.len() == 3
-            && numbers[..2] == [0, 8]
-            && numbers[2] > 0
-            && identifiers == [Identifier::Word("alpha".into())]
-        {
-            identifiers.push(Identifier::Number(numbers[2]));
-            numbers[2] = 0;
-        }
         let stage = match pre {
             Some(_) => Stage::PreRelease(identifiers),
             None => Stage::Release,
@@ -179,11 +170,7 @@ mod tests {
             ("0.9.0", "0.8.0", true),
             ("0.10.0", "0.9.1", true),
             ("0.8.0-alpha.10", "0.8.0-alpha.10", false),
-            // The journals' `0.8.N-alpha` is `0.8.0-alpha.N`.
-            ("0.8.9-alpha", "0.8.0-alpha.10", false),
-            ("0.8.9-alpha", "0.8.0-alpha.8", true),
-            ("0.8.0-alpha.10", "0.8.9-alpha", true),
-            ("0.8.0-alpha", "0.8.1-alpha", false),
+            ("0.8.0", "0.7.0", true),
             ("next", "0.8.0", false),
         ];
         for (found, ours, want) in cases {

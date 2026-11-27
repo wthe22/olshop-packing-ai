@@ -64,7 +64,7 @@ lists each date it would change:
   date folder. It then reads the addresses and the weights of the batches saved before from their label
   PDFs and writes each date's lists again. A line shows how far it is (*Moving files: 2026-11-25, file 3 of 12*, *Reading labels: 2026-11-25,
   batch 1, page 3 of 120*). No batch, label or PDF is changed or deleted. **Continue** opens the Day screen.
-  Each date it changes gets a folder `update v0.8.0-alpha.10` (the version's number): `update.toml` lists every file
+  Each date it changes gets a folder `update v0.8.0-alpha.11` (the version's number): `update.toml` lists every file
   it moved, from where to where, and the folder keeps a copy of each file whose content it changed (the
   journal, `day.toml` or `session.toml`, `orders.csv`, `order-contents.toml`). Those three lists are the
   program's: every save writes them whole, so a column added to `orders.csv` by hand is not kept; edit a
@@ -81,7 +81,7 @@ that needs it.
 If something looks wrong after an Update, close Packing and run
 `python tools\revert-update.py "<data folder>"` (`--dry-run` first lists what it would do; Python 3.11 or
 later). It moves every file back, deletes what the Update copied or wrote, and puts back each changed file; the
-folder becomes `update v0.8.0-alpha.10 reverted`. A date saved to after the Update is left as it is and named. Once the
+folder becomes `update v0.8.0-alpha.11 reverted`. A date saved to after the Update is left as it is and named. Once the
 dates look right, the update folders can be deleted by hand.
 
 A date converted by version 0.8.0-alpha.8 or older keeps its old folders in `v0.7 backup`. Close Packing, then run

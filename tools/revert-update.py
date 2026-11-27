@@ -7,7 +7,7 @@ The folder is then renamed `update v{version} reverted`.
     python revert-update.py "D:\\Packing\\packing-data"             undo the Update
 
 When the data folder holds Updates of more than one version, it names them and one is given after the
-folder (`... "D:\\Packing\\packing-data" v0.8.0-alpha.10`). Started with nothing (a double-click), it asks
+folder (`... "D:\\Packing\\packing-data" v0.8.0-alpha.11`). Started with nothing (a double-click), it asks
 for the folder, and for the version only when there is more than one.
 
 A date whose journal has changed since the Update (a batch saved, a revert, an amend after it) is left
@@ -204,7 +204,7 @@ def choose_version(data_dir: Path, given, asked: bool):
     if given:
         version = VERSION.match(given)
         if not version:
-            print(f"{given} is not a version (such as v0.8.0-alpha.10).")
+            print(f"{given} is not a version (such as v0.8.0-alpha.11).")
         return version.group(1) if version else None
     found = versions_found(data_dir)
     if not found:

@@ -46,7 +46,7 @@ What to build is in [../software-design/](../software-design/README.md); what th
   of it: `0.8.0-alpha.10`, then `0.8.0-alpha.11`; only the number after `alpha.` goes up, never the patch or
   minor number (`0.8.10-alpha` is wrong). The release is `0.8.0`. The version is set in `Cargo.toml` and
   `app/package.json`, and the docs that show it follow. Journals record it in `app`, compared by
-  `newer_app` in semantic version order (old journals hold `0.8.N-alpha`, read as `0.8.0-alpha.N`).
+  `newer_app` in semantic version order.
 - Documents describe the current state only (no change history; git has that).
 - When the next step is the owner's, end the session with a committed handoff in the status block of
   [plan/README.md](plan/README.md): what to review, where the owner writes answers, and what to do with

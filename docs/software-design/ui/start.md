@@ -36,7 +36,7 @@ batch saved before the receiver's area or the weight was read whose label PDFs a
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ◈ Packing v0.8.0-alpha.10                                                             │
+│  ◈ Packing v0.8.0-alpha.11                                                             │
 │  Update the data folder?                                                               │
 │  Update moves the files of 1 date out of the input and output folders of Packing v0.7  │
 │  into their date folders. It reads the receivers' addresses and the parcels' weights   │
