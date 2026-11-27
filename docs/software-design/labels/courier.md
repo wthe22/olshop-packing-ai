@@ -13,7 +13,7 @@ the label to be wrong in the same way. The clues are the owner's data: `courier_
    **encoded bytes** (PDFium's `FPDFImageObj_GetImageDataRaw`, not the decoded pixels) are hashed with
    XXH3-64 (seed 0) and looked up in `logos`; a hash in `not_courier.logos` is not a logo. Measured stable
    across every sample export: J&T Express `39b9b7b9f61d0e7f`, SiCepat `cf33ed60daa291b1`, iD Express (IDX)
-   `9131c1f94ad363d4`, SPX `4583097ef370a670` (and `7f0d33c143e2ab14` on its `No. Resi` layout, the `REGULAR SERVICE` badge
+   `9131c1f94ad363d4`, SPX `4583097ef370a670` (and `7f0d33c143e2ab14` on its `No. Resi` layout, `bcd088663588a246` a third export, the `REGULAR SERVICE` badge
    `c622a9c866f1abf4` on its regular layout, [D-LABEL-25](../decisions/label.md)), Anteraja `556e376839c5805d` (354×142, one sample page). The
    buying channels' strips are in the bundled `not_courier.logos`: `tokopedia | Shop` `6c1340227db55be4`,
    `tokopedia | TikTok` `c2230c3c5d8c560d`, the Shopee wordmark `07fea99cbec66ae7`, `TikTok Shop`

@@ -14,6 +14,7 @@ const CARGO_SHAPE: &str = "753ccbd14749befa";
 const ANTERAJA_LOGO: &str = "556e376839c5805d";
 /// The `REGULAR SERVICE` badge of the regular SPX layout.
 const SPX_REGULAR_BADGE: &str = "c622a9c866f1abf4";
+const SPX_THIRD_WORDMARK: &str = "bcd088663588a246";
 /// The `Shopee` wordmark: not a courier.
 const SHOPEE_WORDMARK: &str = "07fea99cbec66ae7";
 /// The `tokopedia | Shop` strip: not a courier.
@@ -319,6 +320,15 @@ fn the_courier_and_the_clue_that_named_it() {
             Some("spx"),
             CourierClueKind::Logo,
             Some(SPX_REGULAR_BADGE),
+        ),
+        (
+            "the third export of the SPX wordmark",
+            Some("SPXID00000000001A"),
+            vec![(SPX_THIRD_WORDMARK, None)],
+            &[],
+            Some("spx"),
+            CourierClueKind::Logo,
+            Some(SPX_THIRD_WORDMARK),
         ),
         (
             "a masked logo by its shape",
