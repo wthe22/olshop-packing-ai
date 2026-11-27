@@ -7,7 +7,7 @@
    **Choose a folder**) and writes the file.
 2. **Migration.** Find, reading only, what the migration would change: date folders of v0.7 (with
    `input/` or `output/`, or a backup whose conversion stopped, and no Update that listed it flat), dates whose files are of an older
-   `schema` or still `session.toml`, dates with `journal.jsonl`, and live batches saved before the receiver's area or the weight was read whose label PDFs are in the date
+   `schema` or still `session.toml`, dates with `journal.jsonl`, and live batches saved before the receiver's area, the weight or the shop was read whose label PDFs are in the date
    folder (on a date of v0.7, will be once it is flat); a damaged `journal.jsonl` is passed over. If there is any, the
    [Start](../ui/start.md#update-the-data-folder) screen asks before any date opens: **Update** or **Open
    read-only** ([D-APP-33](../decisions/app.md)). Choosing another data folder asks the same.
@@ -15,7 +15,7 @@
      copied into `update v{version}/` of the date ([D-APP-36](../decisions/versions.md)); a date of v0.7 is
      made flat first ([D-APP-32](../decisions/app.md)): each file moves up under its new name, checked by its
      hash, each move listed in `update.toml` before it is made; a date with `journal.jsonl` has its three files written from it, and the journal moves into the update
-     folder; then the area and weight of the orders without them are read again from the first page of
+     folder; then the area, weight and shop of the orders without them are read again from the first page of
      their copies in the batch's stored label PDFs, straight into `orders.csv`. A batch
      whose label PDF has changed is skipped and named; the next start asks again.
    - **Open read-only**: the steps below run without writing. No lock is taken, a missing rules file is read

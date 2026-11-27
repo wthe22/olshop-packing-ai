@@ -153,9 +153,9 @@ The migrations, in this order for each date, after the files they change are cop
 ([D-APP-36](versions.md)): a date folder of v0.7 is made flat (D-APP-32); a date with
 `journal.jsonl` (v0.7, and the test builds of v0.8 before D-APP-39) has its three files written from it, with
 each group PDF's last Print time, and the journal moves into the update folder (D-APP-39); the files of
-another `schema` are written again; the receiver's area and the weight of each order of a live batch saved
-before they were read are read from the batch's stored label PDFs into `orders.csv` (D-LABEL-26,
-D-LABEL-27). A batch whose label PDF is missing is not offered (it cannot be read); one whose
+another `schema` are written again; the receiver's area, the weight and the shop of each order of a live batch saved
+before they were read (the shop: v0.4) are read from the batch's stored label PDFs into `orders.csv`
+(D-LABEL-26, D-LABEL-27, [accounts](../app/accounts.md#the-account-of-an-order)). A batch whose label PDF is missing is not offered (it cannot be read); one whose
 label PDF has changed is skipped and named, and the next start asks again. A damaged journal is named and
 passed over. The program's own settings, kept in `packing-app.toml` beside the program, still change in read-only
 mode: the theme, and **Change** of the data folder, which opens the folder chosen as at start and asks again

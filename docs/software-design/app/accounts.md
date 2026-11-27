@@ -54,8 +54,9 @@ shops = ["Toko Beta"]
   wins (`Toko Alfa Official` before `Toko Alfa`), then the one listed first. Its **account** is the account
   that lists that shop in `config.toml` now: not stored, looked up wherever an order is shown, counted,
   filtered or summarised ([files](../data/files.md)).
-- **No account** holds every order whose shop no account lists: a shop taken off its account, an order
-  saved before shops were kept (v0.4), a label with no sender. It is not in `config.toml`, cannot be made,
+- **No account** holds every order whose shop no account lists: a shop taken off its account, a label with
+  no sender. An order saved before shops were kept (v0.4) gets its shop from its label by the Update
+  ([D-APP-33](../decisions/app.md)). It is not in `config.toml`, cannot be made,
   renamed or deleted, and no account can take its name; Search, the counts and the summaries show it like
   any account, and only while it has orders.
 - **A sender no account lists** is asked about before the plan, once per name: an account, or **New
