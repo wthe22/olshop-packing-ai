@@ -10,11 +10,14 @@ export const updateTexts = {
     const moves = v07Dates > 0;
     return [
       moves
-        ? `Update moves the files of ${count(v07Dates, "date", "dates")} out of the input and output folders of Packing v0.7 into their date folders, keeping the old folders in v0.7 backup.`
+        ? `Update moves the files of ${count(v07Dates, "date", "dates")} out of the input and output folders of Packing v0.7 into their date folders.`
         : null,
       batches > 0
         ? `${moves ? "It" : "Update"} reads the receivers' addresses and the parcels' weights of ${count(batches, "batch", "batches")} from their label PDFs and writes the files that list each date again.`
         : `${moves ? "It" : "Update"} writes the files that list each date again.`,
+      moves
+        ? "Each date's update folder lists every file moved and keeps a copy of each file changed."
+        : "Each date's update folder keeps a copy of each file changed.",
       "No batch, label or PDF is changed or deleted.",
     ]
       .filter((part) => part !== null)

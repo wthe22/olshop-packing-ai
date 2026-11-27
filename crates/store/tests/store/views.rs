@@ -107,7 +107,20 @@ fn a_newer_copys_views_are_left_to_it() {
     );
     assert_eq!(view(&folder, DAY_TOML), newer);
 
+    // Without a `day.toml`, `orders.csv` tells its own version.
     fs::remove_file(folder.dir().join(DAY_TOML)).unwrap();
+    let csv: String = view(&folder, ORDERS_CSV)
+        .lines()
+        .map(|line| match line.strip_suffix("schema:2.1") {
+            Some(head) => format!("{head}colour,schema:2.5\n"),
+            None => format!("{line},\n"),
+        })
+        .collect();
+    fs::write(folder.dir().join(ORDERS_CSV), &csv).unwrap();
+    assert!(!open_date(&folder).unwrap().views_written);
+    assert_eq!(view(&folder, ORDERS_CSV), csv, "its column is kept");
+    fs::remove_file(folder.dir().join(ORDERS_CSV)).unwrap();
+
     let journal = folder.dir().join("journal.jsonl");
     let mut bytes = fs::read(&journal).unwrap();
     bytes.extend(sealed_line(

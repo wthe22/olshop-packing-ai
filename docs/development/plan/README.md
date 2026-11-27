@@ -6,7 +6,23 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-27)
 
-- **Handoff of 2026-11-27 (latest) — v0.8.8-alpha: nothing is lost; what is not known is named quietly.**
+- **Handoff of 2026-11-27 (latest) — v0.8.9-alpha: Update lists its moves and copies what it changes.**
+  The owner's rule ([D-APP-36](../../software-design/decisions/versions.md)): a file only moved or renamed is
+  not backed up, the move is written down so a script can undo it; a file whose content changes is copied.
+  - **Update** now starts `update v0.8.9\` in each date it changes: `update.toml` lists every move (written
+    before the move) and the folder keeps copies of the journal, `day.toml`/`session.toml`, `orders.csv` and
+    `order-contents.toml`. A date of v0.7 is made flat by moving its files, not copying them: no
+    `v0.7 backup\` any more. A file in the way goes to `replaced\` of the update folder.
+  - **`tools/revert-update.py "<data folder>" v0.8.9`** (`--dry-run` first) undoes it date by date; a date
+    saved to after the Update is left and named. Tried on a made-up v0.7 date: after Update and revert every
+    file had its old name and bytes again.
+  - **`orders.csv`**: an older copy now also reads the version in its last header and leaves a newer one;
+    a column added by hand is still written over by the next save (the guide says to edit a copy).
+  - **To check**: on a copy of a v0.7 date (or a date with `session.toml`), choose Update, look into
+    `update v0.8.9\`, then run the script with `--dry-run` and without.
+  - **Where to answer**: [reviews/app.md](../../reviews/app.md) as `R-APP-20`.
+
+- **Handoff of 2026-11-27 — v0.8.8-alpha: nothing is lost; what is not known is named quietly.**
   The owner's rule ([D-APP-34](../../software-design/decisions/versions.md)): nothing is lost but by an action
   meant to remove it, and what the program does not know in data of its own version is named without
   getting in the way.

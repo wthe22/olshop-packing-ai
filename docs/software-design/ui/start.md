@@ -36,13 +36,14 @@ batch saved before the receiver's area or the weight was read whose label PDFs a
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ◈ Packing v0.8.8-alpha                                                                │
+│  ◈ Packing v0.8.9-alpha                                                                │
 │  Update the data folder?                                                               │
 │  Update moves the files of 1 date out of the input and output folders of Packing v0.7  │
-│  into their date folders, keeping the old folders in v0.7 backup. It reads the         │
-│  receivers' addresses and the parcels' weights of 3 batches from their label PDFs and  │
-│  writes the files that list each date again. No batch, label or PDF is changed or      │
-│  deleted. Read-only shows the data as it is and changes nothing.                       │
+│  into their date folders. It reads the receivers' addresses and the parcels' weights   │
+│  of 3 batches from their label PDFs and writes the files that list each date again.    │
+│  Each date's update folder lists every file moved and keeps a copy of each file        │
+│  changed. No batch, label or PDF is changed or deleted. Read-only shows the data as it │
+│  is and changes nothing.                                                               │
 │  ┌ DATE ─────────────── WHAT CHANGES ──────────────────────────────────────────────┐   │
 │  │ Tue, 24 Nov 2026     Files of v0.7 moved in · Addresses and weights of 2        │   │
 │  │                      batches, 61 orders · the date's lists                      │   │
@@ -56,7 +57,8 @@ batch saved before the receiver's area or the weight was read whose label PDFs a
   per date done (*2026-11-24: files moved, addresses and weights of 2 batches read, lists written*) and the
   step running (*Moving files: 2026-11-24, file 3 of 12*, then *Reading labels: 2026-11-24, batch 1, page 3 of
   120*). Each batch is one append to its date's journal; then the
-  date's views are written. While another copy of the app writes, Update waits for it. When all are done,
+  date's views are written. The journal and the views are copied first into `update v{version}` of the
+  date, and each move is listed there ([D-APP-36](../decisions/versions.md)). While another copy of the app writes, Update waits for it. When all are done,
   *Done. The data folder is up to date.* and **Continue** opens the Day screen.
 - A batch whose label PDF has changed is named in red on its date's line (*Batch 2 not read: …*) and skipped;
   the rest go on, and the next start asks about it again. A batch whose label PDF is missing is not offered:

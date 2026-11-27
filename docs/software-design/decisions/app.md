@@ -124,14 +124,14 @@ and no `output/`. What an operation writes waits in `.partial/` of the date fold
 {pdf} {short hash}.pdf` (D-APP-10), `{batch}-{code} {name} x{count}.pdf`, `{batch} Summary.pdf`,
 `{batch} Summary - {account}.pdf`, `Reprint {n} x{count}.pdf`, `Day Summary.pdf` and `Day Summary -
 {account}.pdf` (R-APP-14, R-APP-15). A name the journal records stays as recorded. A date folder of v0.7
-(one with `input/` or `output/`) is converted by the app's migration (D-APP-33): its `input/`,
-`output/` and summaries made on request move unchanged into `v0.7 backup/` of the date, then each file is
-copied up under its new name and checked by its hash (a label PDF under the name of every batch whose
-record names its bytes, the outputs unchanged, the summaries renamed, `output/.partial/` as
-`.partial/`), and `backup complete.txt` marks the end. The app deletes nothing: the owner's
-`tools/remove-v07-backup.py` deletes a backup once every file of it is in the date folder
-([development](../../development/README.md)). In read-only mode the Day screen names each date that still
-has `input/` or `output/`.
+(one with `input/` or `output/` that no Update has listed flat) is converted by the app's migration
+(D-APP-33): each file of its `input/` and `output/` and each summary made on request is moved up under its
+new name, checked by its hash, and listed in the Update's `update.toml` (a label PDF under the name of every
+batch whose record names its bytes, the outputs unchanged, the summaries renamed, `output/.partial/` as
+`.partial/`; [D-APP-36](versions.md)); an emptied `input/` or `output/` is removed. A `v0.7 backup/` left
+by v0.8.8 or older without `backup complete.txt` is converted from there the same way; one with it is the
+owner's, and `tools/remove-v07-backup.py` deletes it once every file of it is in the date folder
+([development](../../development/README.md)). In read-only mode the Day screen names each date not yet flat.
 
 **Why.** The owner's choice: one Explorer window shows a date's whole work, a batch's files side by side by
 its number. `.partial/` keeps a save whole as before. The journal is the truth and is never rewritten, so a
@@ -154,7 +154,8 @@ summary; the screens do not offer them, and the back end refuses every write. It
 starts again. Outside read-only mode, recovery and upkeep that change no file's version stay automatic:
 settling `.partial/` and writing a missing or stale view (journal › When a date opens).
 
-The migrations, in this order for each date: a date folder of v0.7 is made flat (D-APP-32); the views of
+The migrations, in this order for each date, after the files they change are copied and the moves listed
+([D-APP-36](versions.md)): a date folder of v0.7 is made flat (D-APP-32); the views of
 another `schema` are written again; the receiver's area and the weight of each order of a live batch saved
 before they were read are read from the batch's stored label PDFs, an `areas_filled` and a `weights_filled`
 record per batch (D-LABEL-26, D-LABEL-27). A batch whose label PDF is missing is not offered (it cannot be read); one whose

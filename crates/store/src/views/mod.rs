@@ -49,14 +49,28 @@ pub fn write_views(date_dir: &Path, fold: &Fold) -> Result<(), StoreError> {
 }
 
 /// The views are a newer copy's to write: the journal holds a record or a field a newer copy wrote
-/// and this one does not know, or `day.toml` is of a newer version than this copy writes.
+/// and this one does not know, or `day.toml` or `orders.csv` is of a newer version than this copy
+/// writes.
 fn left_to_a_newer_copy(date_dir: &Path, fold: &Fold) -> bool {
+    let newer = |found: Option<String>| {
+        found
+            .and_then(|found| Schema::parse(&found))
+            .is_some_and(|version| version > VIEWS_SCHEMA)
+    };
     fold.unknown
         .iter()
         .any(|unknown| newer_app(&unknown.app, env!("CARGO_PKG_VERSION")))
-        || views_schema(date_dir, DAY_TOML).is_some_and(|found| {
-            Schema::parse(&found).is_some_and(|version| version > VIEWS_SCHEMA)
-        })
+        || newer(views_schema(date_dir, DAY_TOML))
+        || newer(csv_schema(date_dir))
+}
+
+/// The `X.Y` of the last header of the date's `orders.csv` (`schema:X.Y`); none when there is no
+/// such file or header.
+fn csv_schema(date_dir: &Path) -> Option<String> {
+    let text = fs::read_to_string(date_dir.join(ORDERS_CSV)).ok()?;
+    let header = text.lines().next()?;
+    let last = header.rsplit(',').next()?;
+    last.trim().strip_prefix("schema:").map(str::to_string)
 }
 
 /// Whether the three views are there and `day.toml` says the journal's last `seq`, or they are a

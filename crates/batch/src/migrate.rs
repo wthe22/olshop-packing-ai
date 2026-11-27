@@ -1,7 +1,8 @@
 //! The migration the owner starts (journal.md, *When a date opens*): a date folder of v0.7 is made
 //! flat, each order saved before the receiver's area or the weight was read gets it from its
 //! batch's stored label PDFs, in an `areas_filled` and a `weights_filled` record per batch, and the
-//! date's views are written again in this version's schema (`session.toml` becomes `day.toml`). The caller holds the data folder's lock.
+//! date's views are written again in this version's schema (`session.toml` becomes `day.toml`). The journal
+//! and the views are copied first, and every move is listed. The caller holds the data folder's lock.
 
 use std::collections::BTreeMap;
 use std::sync::mpsc::Sender;
@@ -16,7 +17,7 @@ use packing_pdf::PdfError;
 use packing_pdf::read;
 use packing_pdf::worker::PdfWorker;
 use packing_store::{
-    DateFolder, Journal, batches_to_read, flatten_date, input_path, is_v0_7, sha256_of,
+    DateFolder, Journal, UpdateLog, batches_to_read, flatten_date, input_path, is_v0_7, sha256_of,
     write_views_again,
 };
 
@@ -67,8 +68,10 @@ pub fn migrate_date(
     journal: &mut Journal,
     request: &MigrateRequest<'_>,
 ) -> Result<DateMigrated, BatchError> {
+    let mut log = UpdateLog::open(folder.dir(), request.app)?;
+    log.keep_journal_and_views()?;
     if is_v0_7(folder.dir()) {
-        flatten_date(folder, journal, &mut |file, files| {
+        flatten_date(folder, journal, &mut log, &mut |file, files| {
             let _ = request
                 .progress
                 .send(MigrateProgress::Moving { file, files });
@@ -83,6 +86,7 @@ pub fn migrate_date(
         match read_labels(folder, &saved, request) {
             Ok(filled) => {
                 journal.commit(filled, request.app)?;
+                log.journal_is_now()?;
                 migrated.read += 1;
             }
             Err(error) => migrated.skipped.push(SkippedBatch { batch, error }),

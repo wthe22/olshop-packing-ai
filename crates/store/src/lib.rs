@@ -16,6 +16,7 @@ mod lock;
 mod migrations;
 mod older;
 mod outputs;
+mod update_log;
 mod views;
 
 pub use date::{DateFolder, OpenedDate, open_date, view_date};
@@ -37,6 +38,7 @@ pub use outputs::{
     OutputProblem, OutputState, Settled, check_outputs, discard_partial, move_aside, move_forward,
     partial_dir, replaced_dir, settle_partial,
 };
+pub use update_log::{UPDATE_LOG, UpdateLog, UpdateStep};
 pub use views::{
     DAY_TOML, ORDER_CONTENTS_TOML, ORDERS_CSV, SESSION_TOML, VIEWS_SCHEMA, views_current,
     write_views, write_views_again,

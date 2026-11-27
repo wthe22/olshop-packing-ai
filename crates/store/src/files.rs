@@ -54,6 +54,29 @@ pub(crate) fn move_file(from: &Path, to: &Path) -> Result<(), StoreError> {
     })
 }
 
+/// Copy `source` to `target` through `{name}.partial`, synced and hashed again, then renamed.
+pub(crate) fn copy_checked(
+    source: &Path,
+    target: &Path,
+    sha256: &Sha256,
+) -> Result<(), StoreError> {
+    let name = target.file_name().unwrap_or_default().to_string_lossy();
+    let partial = target.with_file_name(format!("{name}.partial"));
+    let mut from = fs::File::open(source).map_err(|e| StoreError::io(source, e))?;
+    let mut copy = fs::File::create(&partial).map_err(|e| StoreError::io(&partial, e))?;
+    std::io::copy(&mut from, &mut copy)
+        .and_then(|_| copy.sync_all())
+        .map_err(|e| StoreError::io(&partial, e))?;
+    drop(copy);
+    if sha256_of(&partial)? != *sha256 {
+        let _ = fs::remove_file(&partial);
+        return Err(StoreError::InputChanged {
+            path: source.to_path_buf(),
+        });
+    }
+    move_file(&partial, target)
+}
+
 /// The files directly inside `dir`, sorted by name; none when `dir` does not exist.
 pub(crate) fn files_in(dir: &Path) -> Result<Vec<String>, StoreError> {
     let entries = match fs::read_dir(dir) {

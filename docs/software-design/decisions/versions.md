@@ -22,7 +22,7 @@ type or meaning, a record an older copy must apply to be right, a field it needs
   a copy does not know stays where it is: the journal is never rewritten; `parser.toml`, `config.toml` and
   `packing-app.toml` are edited key by key, and an edited table (an account, a label group) keeps its other
   keys and the owner's comments; no view is written of a date whose journal holds a record or a field a newer
-  copy wrote, none over a `day.toml` of a higher Y (the newer copy writes them again); `.partial/` is not
+  copy wrote, none over a `day.toml` or an `orders.csv` of a higher Y (the newer copy writes them again); `.partial/` is not
   settled after a record this copy passed over.
 - What a copy does not know in data of **its own version or older** is not expected, so it is named, quietly:
   a key of the three TOML files in Settings › *Data* (*Kept, not read*: the file, the line, the key); a record
@@ -53,3 +53,29 @@ finds the columns by their headers and passes over that one; a new column goes b
 Excel as before, the version out of the way at the end.
 
 **Applies to.** [views](../data/views.md), [data](../data/README.md).
+
+## D-APP-36 — Update lists what it moves and keeps a copy of what it changes
+
+**Decision.** Before **Update** changes a date, it starts `update v{version}/` in the date folder
+(`update v0.8.9/`): `update.toml`, the list of what it does, and copies of files.
+
+- A file Update only **moves or renames** (a label PDF, output or summary of v0.7, `output/.partial/`) is not
+  copied: `update.toml` names where it was and where it goes, written before the move. A label PDF two
+  batches name is copied to its second name, and the copy is listed. A file in the way that holds other bytes
+  is moved into `replaced/` of the update folder, and listed.
+- A file whose **content** Update changes or removes (the journal it appends to; `day.toml`, `session.toml`,
+  `orders.csv`, `order-contents.toml`) is copied into the update folder first and checked by its hash; a view
+  it writes where there was none is listed as written. A second Update by the same version keeps the first
+  copies.
+- `update.toml` holds the journal's SHA-256 as Update last left it, and `flattened = true` once a date of
+  v0.7 is flat. What v0.7 left that no journal names stays where it is.
+- The owner's `tools/revert-update.py` undoes the Update of one version on every date: it moves each file
+  back, deletes each copy and view it wrote, puts back each file it changed, and renames the folder
+  `update v0.8.9 reverted`. It leaves a date whose journal has changed since (a save after the Update) and
+  names it. The app deletes no update folder; the owner deletes one once the dates look right.
+
+**Why.** The owner's rule: nothing is lost but on purpose. A moved file is not lost, and a list undoes the
+move without a second copy of every PDF; a converted file comes back only from its copy.
+
+**Applies to.** [D-APP-32, D-APP-33](app.md), [01 Start](../workflow/01-start-and-open.md),
+[Start](../ui/start.md#update-the-data-folder), [development](../../development/README.md).

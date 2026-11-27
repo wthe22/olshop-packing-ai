@@ -6,9 +6,11 @@ file and renamed into place; `day.toml` is written last, so its `journal_seq` vo
 A view is never read for a decision. When one is missing or `day.toml`'s `journal_seq` is not the
 journal's last `seq`, all three are written again ([journal › When a date opens](journal.md#when-a-date-opens));
 when its `schema` is older than this version's, or the date still has v0.7's `session.toml`, only by the
-migration the owner starts ([D-APP-33](../decisions/app.md)), which deletes `session.toml`. An older copy
-writes no view of a date whose journal holds a record it passed over, nor over a newer `day.toml`
-([D-APP-34](../decisions/versions.md)).
+migration the owner starts ([D-APP-33](../decisions/app.md)), which first copies them into the date's
+update folder and then deletes `session.toml` ([D-APP-36](../decisions/versions.md)). An older copy writes no
+view of a date whose journal holds a record it passed over, nor over a newer `day.toml` or `orders.csv`
+([D-APP-34](../decisions/versions.md)). A view is the program's: each commit writes it whole, so a column or
+a key added by hand is not kept; the owner edits a copy.
 
 Only live batches appear; a reverted batch is gone from the views and stays in the journal. IDs that
 the journal does not hold (`RuleID`, `OrderContentID`) are numbered by the fold in order of first

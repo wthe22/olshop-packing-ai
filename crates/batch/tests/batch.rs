@@ -27,7 +27,8 @@ use packing_engine::record::{BatchSaved, PrintSent, PrintedMarked, RecordBody};
 use packing_engine::workflows::{SortRule, Workflows, load_bundled};
 use packing_pdf::worker::PdfWorker;
 use packing_store::{
-    DateFolder, Journal, Settled, V0_7_BACKUP, input_path, migrations, open_date, partial_dir,
+    DateFolder, Journal, Settled, UPDATE_LOG, V0_7_BACKUP, input_path, migrations, open_date,
+    partial_dir, sha256_of,
 };
 use testkit::{PdfiumGuard, TempDir, shop_accounts, testdata, vendor_dir};
 
@@ -706,6 +707,7 @@ fn a_batch_saved_before_the_area_and_weight_were_read_gets_them_from_its_stored_
     };
 
     let (older, mut journal) = saved_before_reading(&day, 9, &record, stored);
+    let journal_before = fs::read(older.dir().join("journal.jsonl")).unwrap();
     assert!(
         migrate_date(&older, &mut journal, &request)
             .unwrap()
@@ -733,6 +735,16 @@ fn a_batch_saved_before_the_area_and_weight_were_read_gets_them_from_its_stored_
     let area = record.orders[0].area.clone().unwrap();
     let csv = fs::read_to_string(older.dir().join("orders.csv")).unwrap();
     assert!(csv.contains(&area.province.unwrap()), "the views show it");
+    let update = older.dir().join(format!("update v{APP}"));
+    assert_eq!(
+        fs::read(update.join("journal.jsonl")).unwrap(),
+        journal_before,
+        "the journal is copied before it changes"
+    );
+    let listed = fs::read_to_string(update.join(UPDATE_LOG)).unwrap();
+    assert!(listed.contains("kind = \"kept\"") && listed.contains("file = \"day.toml\""));
+    let after = sha256_of(&older.dir().join("journal.jsonl")).unwrap();
+    assert!(listed.contains(after.as_str()), "{listed}");
 
     let (changed, mut journal) = saved_before_reading(&day, 10, &record, |_| b"changed".to_vec());
     let last_seq = journal.fold().last_seq;
@@ -771,6 +783,11 @@ fn a_batch_saved_before_the_area_and_weight_were_read_gets_them_from_its_stored_
     for output in &record.outputs {
         assert!(flat.dir().join(&output.file).is_file(), "{}", output.file);
     }
-    assert!(flat.dir().join(V0_7_BACKUP).join("input").is_dir());
-    assert!(!flat.dir().join("input").exists());
+    assert!(
+        !flat.dir().join(V0_7_BACKUP).exists(),
+        "no copy of the label PDFs"
+    );
+    assert!(!flat.dir().join("input").exists() && !flat.dir().join("output").exists());
+    let listed = fs::read_to_string(flat.dir().join(format!("update v{APP}")).join(UPDATE_LOG));
+    assert!(listed.unwrap().contains("kind = \"moved\""));
 }
