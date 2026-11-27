@@ -70,7 +70,6 @@ A courier's answer appends the hash to that courier's `logos`; *Not a courier* a
 
 ## The clue that named it
 
-A saved order does not record the clue that named its courier ([Q-APP-26](../questions/app.md),
-[D-LABEL-14](../decisions/label.md)). To trace a courier named wrong, the page is read again from the stored
+A saved order does not record the clue that named its courier ([D-LABEL-29](../decisions/label.md)). To trace a courier named wrong, the page is read again from the stored
 input, and the clue it gives (`logo`, `shape`, `text`, `form` for a page with no header image, `tag`, or
 `none`, with the hash, text or tag and the tracking-ID form that agreed) explains it. Search does not show it.

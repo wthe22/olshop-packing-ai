@@ -6,14 +6,15 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-27)
 
-- **Next (2026-11-27) — the journal goes, [journal-removal.md](journal-removal.md) J1 to J5.** The owner's
+- **Next (2026-11-27) — the journal goes, [journal-removal.md](journal-removal.md) J1 to J6.** The owner's
   decision [D-APP-39](../../software-design/decisions/app.md): `day.toml`, `orders.csv` and
   `order-contents.toml` are the truth of a date, with no history (no *amended*, no record of reverts or
   marks); Print sets `press_print_time`, the tick `is_printed`. The design is written; the code still has the
-  journal. It replaces the data rework's T3 and T4 (T1 and T2 are in the code). Open for the owner, worked to
-  their default meanwhile: [Q-APP-24 to Q-APP-26](../../software-design/questions/app.md) (a check of a date's
-  data, a file changed outside the program, the courier clue); answers go under each question. A new session
-  takes the first task left in journal-removal.md (J1). No build until J5.
+  journal. It replaces the data rework's T3 and T4 (T1 and T2 are in the code). The owner's answers to Q-APP-24 to
+  Q-APP-26 are [D-APP-40, D-APP-41](../../software-design/decisions/date-files.md) (Read labels again for a
+  changed or missing file and for Check data) and [D-LABEL-29](../../software-design/decisions/label.md) (no
+  courier clue). A new session
+  takes the first task left in journal-removal.md (J1). No build until J6.
 
 - **Handoff of 2026-11-27 (latest) — v0.8.0-alpha.11: Update lists its moves and copies what it changes.**
   The owner's rule ([D-APP-36](../../software-design/decisions/versions.md)): a file only moved or renamed is

@@ -84,11 +84,16 @@ The start screen: what has been saved on the open date, for every account, and t
   the date's live batches hold more than one account it is a menu: *All accounts*, then each account; while it
   is written the dialog *Writing the day summary* shows and the button is off, so it is written once. It is
   off while the date has no batch.
-- A file changed outside the program (`orders.csv` or `order-contents.toml` whose hash `day.toml` does not
-  hold, [Q-APP-25](../questions/app.md)) is a yellow card above the batches: *orders.csv was changed outside the
-  program*. **Accept** takes the file as it is when it reads and agrees with the other two, and the next
-  save writes its hash; **Read only** shows it, hides every write of the date and refuses it until the
-  program starts again. Each button's tooltip says so. Once Read only, the card's foot is the line *Read only
+- **Check data** lists each empty cell of the date's orders that this version reads from a label (the shop,
+  the receiver's area, the weight) and offers **Read labels again** ([D-APP-41](../decisions/date-files.md)).
+  With none it says *Every order has what its label holds.* It is off while the date has no batch.
+- A file changed outside the program or missing (`orders.csv` or `order-contents.toml` whose hash
+  `day.toml` does not hold, or that is not there; [D-APP-40](../decisions/date-files.md)) is a yellow card
+  above the batches: *orders.csv was changed outside the program*, or *orders.csv is missing*. **Read labels
+  again** writes both files from the stored label PDFs ([21](../workflow/05-after-save.md#21-read-labels-again));
+  **Accept** (a changed file only) takes the file as it is when it reads and agrees with the other two, and the
+  next save writes its hash; **Read only** shows what is there, hides every write of the date and refuses it
+  until the program starts again. Each button's tooltip says so. Once Read only, the card's foot is the line *Read only
   until the program starts again*.
 - An input that is missing or changed is a line above the batches, naming the file and the batches that
   use it ([Messages](messages.md)).

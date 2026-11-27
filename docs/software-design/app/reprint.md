@@ -13,7 +13,7 @@ output again ([D-APP-14](../decisions/app-features.md), [D-APP-15](../decisions/
   ([conditions](../rules-file/conditions.md#fields)), its date, batch and label group, the output file and
   the pages it fills there (the pages of the orders of its group before it, in printing order, plus one),
   and its **trace**: the input's file name and pages. The courier's clue is not stored: the page is read again
-  to trace it ([Q-APP-26](../questions/app.md)).
+  to trace it ([D-LABEL-29](../decisions/label.md)).
 - Each date's reprints: which orders (by their Order ID) each reprint
   printed. Search marks those orders *Reprinted*, and the Day screen lists a reprint's orders from the
   index. A reprint's commit refreshes its date in the index like any other commit.

@@ -69,7 +69,23 @@ in today's layout; verified (V2, V5 or V6), committed, moved into the date folde
 
 **Keeps:** I5, I12 — a restored file is checked like the original.
 
+## 21. Read labels again
+
+Offered by a changed or missing `orders.csv` or `order-contents.toml` ([D-APP-40](../decisions/date-files.md))
+and by **Check data** ([D-APP-41](../decisions/date-files.md)). Asked first; the question names what will
+change. It shows its progress (*Reading labels: batch 1, page 3 of 120*).
+
+1. For each live batch, oldest first: read its stored inputs in `day.toml`'s order with today's
+   `parser.toml`, then plan with the batch's own sort rule from `day.toml` and its left-out copies as chosen.
+2. Verify the batch's group PDFs against the orders read (V2, V5): the PDFs stay as they are, so the reading
+   must name their pages. A batch that does not match, or an input that is missing or changed, stops the
+   step with its name, and nothing is written.
+3. Commit `orders.csv`, `order-contents.toml` and `day.toml` (its content counts and picking lists); the
+   Sent times, printed ticks and reprints stay.
+
+**Keeps:** I8, I12 — every value comes from its label page, checked against what was printed.
+
 ## Failure model
 
-Each of 16–20 is one commit: before the rename the date is as before; after it the next open settles
+Each of 16–21 is one commit: before the rename the date is as before; after it the next open settles
 `.partial/` by whether it holds `day.toml` ([save](../data/save.md#when-a-date-opens)).

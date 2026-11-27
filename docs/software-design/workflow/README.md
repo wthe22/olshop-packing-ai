@@ -23,7 +23,7 @@ each step against what the shop needs; a step that is wrong is a review item
 | 3–6 | [02 Read](02-read.md) | Chosen files → pages → copies → orders, warnings, courier names |
 | 7–10 | [03 Plan](03-plan.md) | Orders → one copy each → label groups → order contents and file names |
 | 11–15 | [04 Save](04-save.md) | Plan → inputs stored, outputs and files written and verified, the commit |
-| 16–20 | [05 After the save](05-after-save.md) | Print marks, revert, amend, search and reprint, restore |
+| 16–21 | [05 After the save](05-after-save.md) | Print marks, revert, amend, search and reprint, restore, read labels again |
 
 ## What must always hold
 

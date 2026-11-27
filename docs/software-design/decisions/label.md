@@ -92,13 +92,15 @@ repeat (Q-LABEL-10). Whether an output page is its source page is the verifier's
 
 **Applies to.** [reading](../labels/reading.md#page-fingerprint), [verification](../app/verification.md#the-page-digest).
 
-## D-LABEL-14 — Each order records the clue that named its courier
+## D-LABEL-29 — The clue that named an order's courier is not stored
 
-**Decision.** A saved order does not keep the clue that named its courier (Q-APP-26): the page is read again to trace it.
+**Decision.** A saved order keeps its source page, not the clue that named its courier; to trace a courier
+named wrong, the page is read again. It replaces D-LABEL-14.
 
-**Why.** A wrong courier can still be traced to the clue that named it, from the stored input.
+**Why.** The owner's answer to Q-APP-26 (2026-11-27): A. The source page is the trace; the clue is read
+from it again.
 
-**Applies to.** [courier deduction](../labels/courier.md#the-clue-that-named-it), [Q-APP-26](../questions/app.md).
+**Applies to.** [courier deduction](../labels/courier.md#the-clue-that-named-it).
 
 ## D-LABEL-15 — Orders with the same items are one order content
 

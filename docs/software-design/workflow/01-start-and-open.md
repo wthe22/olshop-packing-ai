@@ -41,11 +41,11 @@ Today's date (the PC's date) at start; another from the [panel](../ui/panel.md).
 ([save › When a date opens](../data/save.md#when-a-date-opens)):
 
 1. **`.partial/`** settled: back when it holds `day.toml`, else forward.
-2. **Read** `day.toml`, `orders.csv` and `order-contents.toml`. The result: the live batches with their
+2. **Hashes** of `orders.csv` and `order-contents.toml` compared with `day.toml`; a changed or missing one
+   is named ([D-APP-40](../decisions/date-files.md)).
+3. **Read** `day.toml`, `orders.csv` and `order-contents.toml`. The result: the live batches with their
    orders, groups, files, Sent times and printed ticks; the inputs table; the reprints; the next batch number
    (highest live + 1) and the next `PdfID` (highest held + 1).
-3. **Hashes** of `orders.csv` and `order-contents.toml` compared with `day.toml`; a changed one is named
-   ([Q-APP-25](../questions/app.md)).
 4. **Inputs**: SHA-256 of every input of a live batch, compared with `hash_sha256`.
 5. **Outputs**: each output of a live batch exists; a missing one gets **Restore**.
 

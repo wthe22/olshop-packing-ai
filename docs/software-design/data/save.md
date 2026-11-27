@@ -32,12 +32,14 @@ is skipped):
      into the date folder; the rest is deleted;
    - **forward** otherwise: the change committed. Its files move into the date folder and `replaced/` is
      deleted.
-2. **Read** `day.toml`, `orders.csv` and `order-contents.toml`. A file that does not read, a `date` that is not
-   the folder's, or an order, group or content that one file names and another lacks is **damage**: the date
-   stops with a plain message naming the file and line ([Messages](../ui/messages.md)); it can be viewed,
-   nothing is written to it. It is never a crash, and the app never repairs it.
-3. **Hashes**: a file whose SHA-256 is not the one `day.toml` holds was changed outside the program. It is
-   named on the [Day screen](../ui/day.md) ([Q-APP-25](../questions/app.md)).
+2. **Hashes**: `orders.csv` or `order-contents.toml` that is missing beside `day.toml`, or whose SHA-256 is
+   not the one `day.toml` holds (changed outside the program), is named on the [Day screen](../ui/day.md)
+   with Read labels again, Accept (a changed file) and Read only ([D-APP-40](../decisions/date-files.md)).
+   Until the owner chooses, the date is shown from what is there and takes no write.
+3. **Read** the three files. A file that does not read, a `date` that is not the folder's, or an order,
+   group or content that one file names and another lacks is **damage**: the date stops with a plain message
+   naming the file and line ([Messages](../ui/messages.md)); it can be viewed, nothing is written to it. It is
+   never a crash, and the app never repairs it. A file named in step 2 is damage only once accepted.
 4. **Inputs**: every input of a live batch must exist in the date folder with its `hash_sha256`. One that is
    missing or changed is reported and never used: an amend, reprint or restore that needs it stops with
    its name.

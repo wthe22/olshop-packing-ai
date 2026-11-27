@@ -3,15 +3,16 @@
 The owner's decision of 2026-11-27, [D-APP-39](../../software-design/decisions/app.md): the journal goes;
 a date's three files are the truth and hold no history. The design is in
 [data/files.md](../../software-design/data/files.md) and [data/save.md](../../software-design/data/save.md).
-Open questions, worked to their default until answered: [Q-APP-25](../../software-design/questions/app.md)
-(a file changed outside the program: Accept or Read only) and Q-APP-26 (the courier clue: not stored).
+The owner's answers: [D-APP-40 and D-APP-41](../../software-design/decisions/date-files.md) (a changed or
+missing file, and Check data, both with Read labels again) and [D-LABEL-29](../../software-design/decisions/label.md)
+(the courier clue is not stored).
 This replaces the data rework's T3 and T4.
 
 Tasks in order; each is one commit, under the code rules ([code-rules.md](../code-rules.md): one job per
 module, size ceiling, no over-generalising, extract on the third copy, comments only for the not obvious,
 proper types). Tests: known-answer fixtures through read → plan → save → verify as the backbone, tables for
 fixed truths, broken outputs the verifier must catch, coverage not lower. Nothing the owner did not approve
-(AGENTS.md): no new field, file or mechanism beyond the design. No build until J5.
+(AGENTS.md): no new field, file or mechanism beyond the design. No build until J6.
 
 ## J1 — packing-store: the three files are the date
 
@@ -24,7 +25,8 @@ fixed truths, broken outputs the verifier must catch, coverage not lower. Nothin
 - `LabelGroup` has `press_print_time: Option<Datetime>` and `is_printed: bool`; no `journal_seq`.
 - Another copy's commit is found by the last-line hash of `day.toml`; a write reads the date again under the
   lock.
-- A file changed outside the program: named, with Accept and Read only (Q-APP-25 A).
+- A file changed outside the program or missing: named, with Accept and Read only (D-APP-40); Read labels
+  again comes in J5.
 - Goes: `journal.rs`, `line.rs`, the fold as the date's source, `views/edited.rs`, the `restored` and
   `recovered` records. The fold stays only where J4's migration reads an old journal.
 - Tests: save, amend, revert, mark and reprint give the files of the design; a stop at each step of a commit
@@ -54,7 +56,16 @@ fixed truths, broken outputs the verifier must catch, coverage not lower. Nothin
 - Tests: a v0.7 date and a test-build date give the files the design names; the update folder holds the
   journal; read-only mode writes nothing.
 
-## J5 — Finish
+## J5 — Read labels again and Check data
+
+- [Step 21](../../software-design/workflow/05-after-save.md#21-read-labels-again): each live batch's stored
+  inputs read again, planned with its own sort rule and left-out copies, verified against its group PDFs,
+  then the files committed; offered by a changed or missing file (D-APP-40) and by **Check data** (D-APP-41).
+- Tests: `orders.csv` deleted, and edited as Excel saves it, each gives back the same file; a batch whose
+  group PDF does not match stops with its name and writes nothing; Check data names an empty shop cell and
+  fills it; read-only mode offers neither.
+
+## J6 — Finish
 
 - `docs/development/` (code-rules glossary without *journal*, testing, cli) and the user guide with its
   pictures; the next `alpha.N` version.
