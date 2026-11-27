@@ -4,7 +4,7 @@ Only the unfinished work. A finished task is deleted from this folder in the com
 finished phase moves to `archive/`. Phase and task numbers live only here. The code rules apply to every
 task: a task report states *size gate passed, no new lint suppression, coverage not lower*.
 
-## Status (2026-11-27)
+## Status (2026-11-28)
 
 - **Next (2026-11-27) — the journal goes, [journal-removal.md](journal-removal.md) J1 to J6.** The owner's
   decision [D-APP-39](../../software-design/decisions/app.md): `day.toml`, `orders.csv` and
@@ -22,20 +22,27 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   and a Summary screen read in the app ([D-UI-17 to D-UI-19](../../software-design/decisions/ui-screens.md),
   [D-RULES-7](../../software-design/decisions/rules.md)).
 
-- **Handoff of 2026-11-27 (latest) — v0.8.0-alpha.12: archive on its own page; a short Update question.**
+- **Handoff of 2026-11-28 (latest) — v0.8.0-alpha.12: a full Update; Archive beside Dates; Search items.**
   Built in `target/portable/`. For the owner to try and review:
-  - **Settings › Data › Archive › Open**: each date with its orders and size, by month; tick a date, Shift+click
-    for a range, a month's tick for the month; the foot's **Archive** asks first and deletes the dates' PDFs,
-    keeping their data ([D-APP-43](../../software-design/decisions/date-files.md)). *Automatic* archives dates
-    older than a number of days at each start (off unless set).
+  - **The Update reads what an old batch lacks** from its label PDFs: the area and the weight, the shop of the
+    orders v0.4 saved (each order is under its account again), and a courier or tracking ID left empty; J&T
+    Express saved as `jnt` reads as `jnt-express`. The reader now reads a SiCepat area under a long name, a J&T
+    area above a long address and a wrapped SPX city. A test Update of a copy of the production data left only
+    the weights the labels do not print (358) and the Shopee Qty Total (33) empty.
+  - **`parser.toml`**: a data folder without it gets the bundled one, which knows every SPX logo and the
+    regular SPX label's `CM` tracking ID.
+  - **Archive** beside *Dates* on the panel opens the Archive page: each date with its orders and size, by
+    month; tick a date, Shift+click for a range, a month's tick for the month (a dash when partly ticked); the
+    foot's **Archive** asks first and deletes the dates' PDFs, keeping their data
+    ([D-APP-43](../../software-design/decisions/date-files.md)). *Archive dates older than N days* is a row of
+    Settings › Data (off unless set).
+  - **Search**: the items in one size (quantity, name, variation, the Seller SKU as a chip), the details'
+    chevron beside **Open**, no line or gap under the items, a shop name up to 16 rem.
   - An archived date is muted on the panel and says so in one line on its Day screen; its orders show
     *archived* in Search. No sizes on the panel; the ⋯ menu closes on a click outside and opens upward at the
     bottom.
   - The Update question is two lines; progress is one line and a bar ([D-UI-20](../../software-design/decisions/ui-screens.md)).
   - `tools/update-backup.py revert` undoes an Update; `delete` removes its backup folders.
-  - A test Update of the production data (a local copy) converted all 29 dates. Left empty: the shop of the
-    12,796 orders saved by v0.4 (read again from the labels in J4), and a few labels the reader could not
-    read; their files and pages were given to the owner to inspect.
   Findings go into [docs/reviews/ui.md](../../reviews/ui.md) (screens) or [app.md](../../reviews/app.md); each
   becomes a design change and a task. The next dev task stays J1 above.
 

@@ -53,8 +53,8 @@ fixed truths, broken outputs the verifier must catch, coverage not lower. Nothin
 - A date with `journal.jsonl` (v0.7, and the v0.8 test builds) is a migration
   ([D-APP-33](../../software-design/decisions/app.md)): its three files are written from the journal's fold,
   each group's `press_print_time` from the time of its last `print_sent`; the journal moves into the update
-  folder ([D-APP-36](../../software-design/decisions/versions.md)). Areas, weights and the shops of orders saved by v0.4 (none recorded) fill `orders.csv`, read from the
-  stored inputs.
+  folder ([D-APP-36](../../software-design/decisions/versions.md)). Areas, weights, the shops of orders saved by v0.4 (none recorded) and an empty courier or tracking ID fill `orders.csv`, read from the
+  stored inputs, as the journal-era Update (`crates/batch/src/migrate.rs`) does now; `jnt` is `jnt-express`.
 - Tests: a v0.7 date and a test-build date give the files the design names; the update folder holds the
   journal; read-only mode writes nothing.
 
