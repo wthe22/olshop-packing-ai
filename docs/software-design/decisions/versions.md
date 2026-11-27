@@ -57,7 +57,7 @@ Excel as before, the version out of the way at the end.
 ## D-APP-36 — Update lists what it moves and keeps a copy of what it changes
 
 **Decision.** Before **Update** changes a date, it starts `update v{version}/` in the date folder
-(`update v0.8.9/`): `update.toml`, the list of what it does, and copies of files.
+(`update v0.8.0-alpha.10/`): `update.toml`, the list of what it does, and copies of files.
 
 - A file Update only **moves or renames** (a label PDF, output or summary of v0.7, `output/.partial/`) is not
   copied: `update.toml` names where it was and where it goes, written before the move. A label PDF two
@@ -69,9 +69,10 @@ Excel as before, the version out of the way at the end.
   copies.
 - `update.toml` holds the journal's SHA-256 as Update last left it, and `flattened = true` once a date of
   v0.7 is flat. What v0.7 left that no journal names stays where it is.
-- The owner's `tools/revert-update.py` undoes the Update of one version on every date: it moves each file
+- The owner's `tools/revert-update.py` undoes the Update of one version on every date (the only one there,
+  or the one named when there are several): it moves each file
   back, deletes each copy and view it wrote, puts back each file it changed, and renames the folder
-  `update v0.8.9 reverted`. It leaves a date whose journal has changed since (a save after the Update) and
+  `update v0.8.0-alpha.10 reverted`. It leaves a date whose journal has changed since (a save after the Update) and
   names it. The app deletes no update folder; the owner deletes one once the dates look right.
 
 **Why.** The owner's rule: nothing is lost but on purpose. A moved file is not lost, and a list undoes the

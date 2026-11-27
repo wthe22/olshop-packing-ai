@@ -6,23 +6,26 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-27)
 
-- **Handoff of 2026-11-27 (latest) — v0.8.9-alpha: Update lists its moves and copies what it changes.**
+- **Handoff of 2026-11-27 (latest) — v0.8.0-alpha.10: Update lists its moves and copies what it changes.**
   The owner's rule ([D-APP-36](../../software-design/decisions/versions.md)): a file only moved or renamed is
   not backed up, the move is written down so a script can undo it; a file whose content changes is copied.
-  - **Update** now starts `update v0.8.9\` in each date it changes: `update.toml` lists every move (written
+  - **Update** now starts `update v0.8.0-alpha.10\` in each date it changes: `update.toml` lists every move (written
     before the move) and the folder keeps copies of the journal, `day.toml`/`session.toml`, `orders.csv` and
     `order-contents.toml`. A date of v0.7 is made flat by moving its files, not copying them: no
     `v0.7 backup\` any more. A file in the way goes to `replaced\` of the update folder.
-  - **`tools/revert-update.py "<data folder>" v0.8.9`** (`--dry-run` first) undoes it date by date; a date
+  - **`tools/revert-update.py "<data folder>"`** (`--dry-run` first) undoes it date by date; a date
     saved to after the Update is left and named. Tried on a made-up v0.7 date: after Update and revert every
     file had its old name and bytes again.
+  - **Version numbers** are semver pre-releases: this build is `0.8.0-alpha.10`; the builds called
+    `0.8.1-alpha` to `0.8.9-alpha` were `0.8.0-alpha.1` to `.9`, and journals that hold those are read so.
+    The script needs no version when the data folder holds Updates of only one.
   - **`orders.csv`**: an older copy now also reads the version in its last header and leaves a newer one;
     a column added by hand is still written over by the next save (the guide says to edit a copy).
   - **To check**: on a copy of a v0.7 date (or a date with `session.toml`), choose Update, look into
-    `update v0.8.9\`, then run the script with `--dry-run` and without.
+    `update v0.8.0-alpha.10\`, then run the script with `--dry-run` and without.
   - **Where to answer**: [reviews/app.md](../../reviews/app.md) as `R-APP-20`.
 
-- **Handoff of 2026-11-27 — v0.8.8-alpha: nothing is lost; what is not known is named quietly.**
+- **Handoff of 2026-11-27 — v0.8.0-alpha.8: nothing is lost; what is not known is named quietly.**
   The owner's rule ([D-APP-34](../../software-design/decisions/versions.md)): nothing is lost but by an action
   meant to remove it, and what the program does not know in data of its own version is named without
   getting in the way.
@@ -38,7 +41,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     rename that account on the Accounts screen, and see the key still in the file.
   - **Where to answer**: [reviews/app.md](../../reviews/app.md) as `R-APP-19`.
 
-- **Handoff of 2026-11-27 — v0.8.7-alpha: a copy reads its own major version; `day.toml`.**
+- **Handoff of 2026-11-27 — v0.8.0-alpha.7: a copy reads its own major version; `day.toml`.**
   The owner's answers to Q-APP-21 to 23 ([decisions/versions.md](../../software-design/decisions/versions.md)).
   - **D-APP-34**: a copy reads every `X.Y` of its own X and passes over what it does not know (a key, a
     field, a record type, a column); a higher X says *newer format, update this copy*. The journal stays
@@ -48,11 +51,11 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **D-APP-35**: `session.toml` is `day.toml` (**Update** writes it and deletes `session.toml`);
     `orders.csv` ends with the column `schema:2.1`, its cells empty.
   - **Changed for the owner**: a mistyped key in `config.toml` or `parser.toml` (*enabeld = false*) no longer
-    stops the start; v0.8.8 names it in Settings.
+    stops the start; v0.8.0-alpha.8 names it in Settings.
   - **To check**: **Update** on a copy of the v0.7 data: each date gets `day.toml`, loses `session.toml`, and
     `orders.csv` opens in Excel with the empty *schema:2.1* column at the right.
 
-- **Handoff of 2026-11-26 — v0.8.6-alpha: Search's cards under heads, one row each.** Built,
+- **Handoff of 2026-11-26 — v0.8.0-alpha.6: Search's cards under heads, one row each.** Built,
   checked and pushed; `target/portable/` is rebuilt. No dev task is left.
   - **R-UI-58** ([D-UI-16](../../software-design/decisions/ui.md),
     [ui/search.md](../../software-design/ui/search.md)): the heads *Order*, *Tracking*, *Saved*, *Label* are
@@ -71,7 +74,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     the order and what the label prints), [reviews/ui.md](../../reviews/ui.md) as `R-UI-59`. A new session
     turns each into a task and builds it.
 
-- **Handoff of 2026-11-26 (late) — v0.8.5-alpha: Search shows each order as a card.** Built, checked and
+- **Handoff of 2026-11-26 (late) — v0.8.0-alpha.5: Search shows each order as a card.** Built, checked and
   pushed.
   - **R-UI-57**, the owner's drawing ([D-UI-16](../../software-design/decisions/ui.md),
     [ui/search.md](../../software-design/ui/search.md)): one card per order, no head row. Its head is two
@@ -87,7 +90,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **To check**: Search on the owner's screen at 125 % over a few dates: the columns line up from card to
     card, long names wrap, and a narrower window puts the date and the weight under the shop and courier.
 
-- **Handoff of 2026-11-26 (night) — v0.8.4-alpha: the weight; Search details without repeats; one schema
+- **Handoff of 2026-11-26 (night) — v0.8.0-alpha.4: the weight; Search details without repeats; one schema
   step for v0.8.** Built, checked and pushed.
   - **R-LABEL-19**: each order records the parcel's weight in grams as its label prints it (`Weight :
     0.490 KG` on the TikTok labels, `Weight` `5 KG` on J&T Cargo's, `Berat: 450 gr` on the Shopee-style
@@ -103,7 +106,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **R-UI-56**: Search opens again with its boxes as they were left, while the program runs; the dates start
     from the viewed day. **Reset** beside **Search** empties the boxes and sets the dates back.
   - **R-APP-18** ([D-APP-3](../../software-design/decisions/app.md)): `session.toml` is schema 2.1 for all of
-    v0.8 (v0.7 wrote 2.0); a test copy updated by v0.8.2 or v0.8.3 (2.2) is asked about once more.
+    v0.8 (v0.7 wrote 2.0); a test copy updated by v0.8.0-alpha.2 or v0.8.0-alpha.3 (2.2) is asked about once more.
   - **Q-APP-20 answered** ([D-APP-33](../../software-design/decisions/app.md)): the theme and Settings ›
     **Change** still work in read-only; nothing in the data folder changes. The program already did so.
   - **Tried on a copy** of `2026-11-25` put back into the v0.7 layout: **Update** asked *Files of v0.7 moved
@@ -114,7 +117,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   - **The owner's steps for the v0.7 data**: as below (keep a copy, start, **Update**, check, then
     `remove-v07-backup.py --dry-run`); Search now shows the weight too.
 
-- **Handoff of 2026-11-26 (later) — v0.8.3-alpha: Packing converts a v0.7 data folder itself; Search
+- **Handoff of 2026-11-26 (later) — v0.8.0-alpha.3: Packing converts a v0.7 data folder itself; Search
   shows the whole order.** Built, checked and pushed.
   - **R-APP-17** (the owner's flow: the program converts, a script cleans up): a date folder of v0.7
     (with `input\` or `output\`) is one more line of **Update the data folder?** (*Files of v0.7 moved
@@ -130,14 +133,14 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
     moved in, addresses of 1 batch, 75 orders); read-only changed no file and the Day screen named the
     date as v0.7; **Update** showed the files being moved and the pages being read, put all 11 PDFs back
     under their names with their bytes, filled the addresses of all 75 orders and wrote `session.toml`
-    2.2 (2.1 since v0.8.4); the next start did not ask again; `remove-v07-backup.py --dry-run` named the
+    2.2 (2.1 since v0.8.0-alpha.4); the next start did not ask again; `remove-v07-backup.py --dry-run` named the
     backup and the run without it removed it.
   - **The owner's steps for the v0.7 data**: keep a copy of the data folder. Close every copy of Packing,
     put the new program in place, start it: it asks. **Update**, then look at a few dates (Open opens the
     group PDFs; Search shows the addresses). Then close Packing and run
     `python tools\remove-v07-backup.py "<data folder>" --dry-run`, then without `--dry-run`.
 
-- **Handoff of 2026-11-26 — v0.8.2-alpha: the receiver's area, migrations that ask, read-only.** Built,
+- **Handoff of 2026-11-26 — v0.8.0-alpha.2: the receiver's area, migrations that ask, read-only.** Built,
   checked and pushed; `target/portable/` is rebuilt.
   - **R-LABEL-17**: each order records the receiver's province, city and district as the label prints them
     (the standard, boxed, instant and Shopee-style layouts; empty where a layout prints none), in the
@@ -161,7 +164,7 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 - **Handoff of 2026-11-25 (evening) — v0.8.0-alpha: one flat folder per date; the split and Sameday labels
   read.** Built, checked and pushed; `target/portable/` is rebuilt.
-  - **The conversion of the data folder** is the program's own since v0.8.3 (above); no script runs first.
+  - **The conversion of the data folder** is the program's own since v0.8.0-alpha.3 (above); no script runs first.
   - **R-APP-12 to R-APP-15** ([D-APP-32](../../software-design/decisions/app.md)): every file of a date sits
     in its date folder; what a save writes waits in `.partial\` of the date folder until its commit.
     Inputs `2 Input 03 0a1b2c3d4e5f.pdf` (the batch whose record names them; bytes a second batch uses are

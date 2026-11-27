@@ -39,7 +39,7 @@ Open **Settings** in the title bar. Each row is a setting at the left and its co
   version does not know (a typing slip such as `enabeld`, say): the file, the line and the key. The key stays
   in the file and does nothing; fix or delete it in the file if it was a slip.
 - The accounts and their shops are on the **Accounts** screen ([Accounts](03-changes.md#accounts)), not here.
-- **About** — what the program does, its version (**v0.8.9-alpha**), the time it was built, the PDFium version
+- **About** — what the program does, its version (**v0.8.0-alpha.10**), the time it was built, the PDFium version
   and the journal's schema version.
 
 There are no other settings: the sort rule you used last is preselected, the summary PDF is

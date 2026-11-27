@@ -53,16 +53,67 @@ impl Schema {
     }
 }
 
-/// Whether app version `found` (`0.9.0`, `0.8.7-alpha`) is newer than `ours`, by its numbers; a
-/// version whose numbers do not read is not newer.
+/// Whether app version `found` is newer than `ours` (`0.8.0-alpha.10` after `0.8.0-alpha.9`, `0.8.0`
+/// after both), by semantic version precedence; a version that does not read is not newer.
 pub fn newer_app(found: &str, ours: &str) -> bool {
-    fn numbers(version: &str) -> Option<Vec<u32>> {
-        let numbers = version.split('-').next()?;
-        numbers.split('.').map(|part| part.parse().ok()).collect()
-    }
-    match (numbers(found), numbers(ours)) {
+    match (AppVersion::parse(found), AppVersion::parse(ours)) {
         (Some(found), Some(ours)) => found > ours,
         _ => false,
+    }
+}
+
+/// An app version in semantic version order: the numbers, then a pre-release below its release.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct AppVersion {
+    numbers: Vec<u64>,
+    stage: Stage,
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum Stage {
+    PreRelease(Vec<Identifier>),
+    Release,
+}
+
+/// A pre-release identifier: a number sorts below a word, numbers by value, words by text.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum Identifier {
+    Number(u64),
+    Word(String),
+}
+
+impl AppVersion {
+    fn parse(text: &str) -> Option<Self> {
+        let (numbers, pre) = match text.split_once('-') {
+            Some((numbers, pre)) => (numbers, Some(pre)),
+            None => (text, None),
+        };
+        let mut numbers: Vec<u64> = numbers
+            .split('.')
+            .map(|part| part.parse().ok())
+            .collect::<Option<_>>()?;
+        let mut identifiers: Vec<Identifier> = pre
+            .into_iter()
+            .flat_map(|pre| pre.split('.'))
+            .map(|part| match part.parse() {
+                Ok(number) => Identifier::Number(number),
+                Err(_) => Identifier::Word(part.to_string()),
+            })
+            .collect();
+        // Copies of 0.8 wrote `0.8.N-alpha` for `0.8.0-alpha.N`, and journals keep it.
+        if numbers.len() == 3
+            && numbers[..2] == [0, 8]
+            && numbers[2] > 0
+            && identifiers == [Identifier::Word("alpha".into())]
+        {
+            identifiers.push(Identifier::Number(numbers[2]));
+            numbers[2] = 0;
+        }
+        let stage = match pre {
+            Some(_) => Stage::PreRelease(identifiers),
+            None => Stage::Release,
+        };
+        Some(Self { numbers, stage })
     }
 }
 
@@ -118,14 +169,22 @@ mod tests {
     }
 
     #[test]
-    fn an_app_version_is_newer_by_its_numbers() {
+    fn an_app_version_is_newer_by_semantic_version_order() {
         let cases = [
-            ("0.9.0", "0.8.7-alpha", true),
+            ("0.8.0-alpha.10", "0.8.0-alpha.9", true),
+            ("0.8.0-alpha.9", "0.8.0-alpha.10", false),
+            ("0.8.0-alpha.1", "0.8.0-alpha", true),
+            ("0.8.0-beta", "0.8.0-alpha.10", true),
+            ("0.8.0", "0.8.0-alpha.10", true),
+            ("0.9.0", "0.8.0", true),
             ("0.10.0", "0.9.1", true),
-            ("0.8.7-beta", "0.8.7-alpha", false),
-            ("0.8.6-alpha", "0.8.7-alpha", false),
-            ("0.8.7", "0.8.7-alpha", false),
-            ("next", "0.8.7", false),
+            ("0.8.0-alpha.10", "0.8.0-alpha.10", false),
+            // The journals' `0.8.N-alpha` is `0.8.0-alpha.N`.
+            ("0.8.9-alpha", "0.8.0-alpha.10", false),
+            ("0.8.9-alpha", "0.8.0-alpha.8", true),
+            ("0.8.0-alpha.10", "0.8.9-alpha", true),
+            ("0.8.0-alpha", "0.8.1-alpha", false),
+            ("next", "0.8.0", false),
         ];
         for (found, ours, want) in cases {
             assert_eq!(newer_app(found, ours), want, "{found} after {ours}");

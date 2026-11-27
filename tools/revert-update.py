@@ -1,12 +1,14 @@
-"""Undo the Update of one Packing version on every date of a data folder, from each date's
+"""Undo an Update of Packing on every date of a data folder, from each date's
 `update v{version}\\update.toml` (D-APP-36): each file it moved goes back, each copy and each view it
 wrote is deleted, and each file whose content it changed is put back from the copy beside the list.
 The folder is then renamed `update v{version} reverted`.
 
-    python revert-update.py "D:\\Packing\\packing-data" v0.8.9             undo the Update of v0.8.9
-    python revert-update.py "D:\\Packing\\packing-data" v0.8.9 --dry-run   list what would happen, changing nothing
+    python revert-update.py "D:\\Packing\\packing-data" --dry-run   list what would happen, changing nothing
+    python revert-update.py "D:\\Packing\\packing-data"             undo the Update
 
-Started with nothing (a double-click), it asks for the folder and the version.
+When the data folder holds Updates of more than one version, it names them and one is given after the
+folder (`... "D:\\Packing\\packing-data" v0.8.0-alpha.10`). Started with nothing (a double-click), it asks
+for the folder, and for the version only when there is more than one.
 
 A date whose journal has changed since the Update (a batch saved, a revert, an amend after it) is left
 as it is and named: undoing the Update there would undo that work too. A file the list names that is
@@ -30,6 +32,7 @@ except ImportError:
 
 DATE_FOLDER = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 VERSION = re.compile(r"^v?(\d+\.\d+\.\d+\S*)$")
+UPDATE_FOLDER = re.compile(r"^update v(\d+\.\d+\.\d+\S*)$")
 LOG = "update.toml"
 JOURNAL = "journal.jsonl"
 RETRIES = 5
@@ -180,6 +183,47 @@ def report(run: Run) -> int:
     return 0
 
 
+def date_dirs(data_dir: Path):
+    return sorted(p for p in data_dir.iterdir() if p.is_dir() and DATE_FOLDER.match(p.name))
+
+
+def versions_found(data_dir: Path):
+    """The versions whose Update is in the data folder and not undone yet, by name."""
+    found = set()
+    for date_dir in date_dirs(data_dir):
+        for item in date_dir.iterdir():
+            name = UPDATE_FOLDER.match(item.name)
+            if name and (item / LOG).is_file():
+                found.add(name.group(1))
+    by_number = lambda version: [(0, int(part)) if part.isdigit() else (1, part) for part in re.split(r"[.-]", version)]
+    return sorted(found, key=by_number)
+
+
+def choose_version(data_dir: Path, given, asked: bool):
+    """The version named, the only one there, or the one the owner picks; None to stop."""
+    if given:
+        version = VERSION.match(given)
+        if not version:
+            print(f"{given} is not a version (such as v0.8.0-alpha.10).")
+        return version.group(1) if version else None
+    found = versions_found(data_dir)
+    if not found:
+        print(f"No Update to undo in {data_dir}.")
+        return None
+    if len(found) == 1:
+        print(f"Undoing the Update of v{found[0]}.\n")
+        return found[0]
+    print("More than one Update is there: " + ", ".join(f"v{version}" for version in found) + ".")
+    if not asked:
+        print(f'Name one: python revert-update.py "{data_dir}" v{found[-1]}')
+        return None
+    picked = VERSION.match(input("Which one: ").strip())
+    if not picked or picked.group(1) not in found:
+        print("That is not one of them.")
+        return None
+    return picked.group(1)
+
+
 def main(argv) -> int:
     flags = {"--dry-run"}
     words = [arg for arg in argv if arg not in flags]
@@ -187,27 +231,31 @@ def main(argv) -> int:
     if unknown:
         print(f"Unknown option {unknown[0]}; the option is --dry-run.")
         return 2
-    asked = len(words) < 2
+    asked = not words
     data_dir = Path(words[0] if words else input("Data folder: ").strip().strip('"'))
-    version = VERSION.match(words[1] if len(words) > 1 else input("Version (such as v0.8.9): ").strip())
     if not data_dir.is_dir():
         print(f"{data_dir} is not a folder.")
+        code = 2
+    else:
+        code = undo(data_dir, words[1] if len(words) > 1 else None, asked, "--dry-run" in argv)
+    if asked:
+        input("\nPress Enter to close.")
+    return code
+
+
+def undo(data_dir: Path, given, asked: bool, dry_run: bool) -> int:
+    version = choose_version(data_dir, given, asked)
+    if version is None:
         return 2
-    if not version:
-        print("The version is written as v0.8.9.")
-        return 2
-    run = Run("--dry-run" in argv)
-    folder_name = f"update v{version.group(1)}"
+    run = Run(dry_run)
+    folder_name = f"update v{version}"
     try:
-        for date_dir in sorted(p for p in data_dir.iterdir() if p.is_dir() and DATE_FOLDER.match(p.name)):
+        for date_dir in date_dirs(data_dir):
             process(date_dir, folder_name, run)
     except KeyboardInterrupt:
         print("\nStopped. Run the script again to continue.")
         return 130
-    code = report(run)
-    if asked:
-        input("\nPress Enter to close.")
-    return code
+    return report(run)
 
 
 if __name__ == "__main__":

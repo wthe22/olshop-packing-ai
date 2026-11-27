@@ -129,7 +129,7 @@ and no `output/`. What an operation writes waits in `.partial/` of the date fold
 new name, checked by its hash, and listed in the Update's `update.toml` (a label PDF under the name of every
 batch whose record names its bytes, the outputs unchanged, the summaries renamed, `output/.partial/` as
 `.partial/`; [D-APP-36](versions.md)); an emptied `input/` or `output/` is removed. A `v0.7 backup/` left
-by v0.8.8 or older without `backup complete.txt` is converted from there the same way; one with it is the
+by v0.8.0-alpha.8 or older without `backup complete.txt` is converted from there the same way; one with it is the
 owner's, and `tools/remove-v07-backup.py` deletes it once every file of it is in the date folder
 ([development](../../development/README.md)). In read-only mode the Day screen names each date not yet flat.
 

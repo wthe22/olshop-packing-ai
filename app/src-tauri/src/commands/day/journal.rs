@@ -124,15 +124,15 @@ mod tests {
     #[test]
     fn what_this_version_does_not_know_is_named_once_with_its_lines() {
         let found = [
-            unknown(2, "0.8.7-alpha", field("orders[0].colour")),
-            unknown(2, "0.8.7-alpha", field("orders[1].colour")),
+            unknown(2, "0.8.0-alpha.7", field("orders[0].colour")),
+            unknown(2, "0.8.0-alpha.7", field("orders[1].colour")),
             unknown(3, "0.9.1", UnknownPart::Record),
-            unknown(4, "0.8.5-alpha", UnknownPart::Record),
-            unknown(5, "0.8.7-alpha", field("orders[0].colour")),
+            unknown(4, "0.8.0-alpha.5", UnknownPart::Record),
+            unknown(5, "0.8.0-alpha.7", field("orders[0].colour")),
             unknown(6, "0.9.0", field("note")),
         ];
         assert_eq!(
-            journal_notes(&found, "0.8.7-alpha"),
+            journal_notes(&found, "0.8.0-alpha.7"),
             [
                 "This date holds records of a newer Packing (v0.9.0) that this copy does not know; \
                  they are kept. Update this copy to see all of it.",
@@ -142,6 +142,6 @@ mod tests {
                  and not used.",
             ]
         );
-        assert!(journal_notes(&[], "0.8.7-alpha").is_empty());
+        assert!(journal_notes(&[], "0.8.0-alpha.7").is_empty());
     }
 }

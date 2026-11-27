@@ -16,14 +16,14 @@ use crate::journal::Journal;
 use crate::line::{Entry, parse};
 use crate::update_log::{UpdateLog, listed_flat};
 
-/// Where v0.8.8 and older kept a date's v0.7 folders when it made the date flat.
+/// Where v0.8.0-alpha.8 and older kept a date's v0.7 folders when it made the date flat.
 pub const V0_7_BACKUP: &str = "v0.7 backup";
-/// Written last by v0.8.8 and older: that conversion ran to the end.
+/// Written last by v0.8.0-alpha.8 and older: that conversion ran to the end.
 const COMPLETE: &str = "backup complete.txt";
 /// The subfolders a date folder of v0.7 and older keeps its inputs and outputs in.
 pub(crate) const V0_7_FOLDERS: [&str; 2] = ["input", "output"];
 
-/// Whether the date folder still keeps v0.7's folders, or a backup of v0.8.8 whose conversion
+/// Whether the date folder still keeps v0.7's folders, or a backup of v0.8.0-alpha.8 whose conversion
 /// stopped, and no Update has listed it flat.
 pub fn is_v0_7(dir: &Path) -> bool {
     let old = V0_7_FOLDERS.iter().any(|name| dir.join(name).is_dir()) || stopped_backup(dir);

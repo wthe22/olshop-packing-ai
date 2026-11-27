@@ -1,5 +1,5 @@
 //! A date folder of v0.7 made flat: each file moved up under its v0.8 name and listed in the
-//! Update's `update.toml`, not copied; a conversion of v0.8.8 that stopped is finished from its backup.
+//! Update's `update.toml`, not copied; a conversion of v0.8.0-alpha.8 that stopped is finished from its backup.
 
 use std::fs;
 
@@ -158,7 +158,7 @@ fn assert_moves_listed(log: &UpdateLog, names: &[std::path::PathBuf], label: &Sh
 }
 
 #[test]
-fn a_conversion_of_v0_8_8_that_stopped_is_finished_from_its_backup() {
+fn a_conversion_of_0_8_0_alpha_8_that_stopped_is_finished_from_its_backup() {
     let data = TempDir::new("flatten-stopped");
     let folder = DateFolder::new(data.path(), date(2026, 10, 8));
     let dir = folder.dir().to_path_buf();
