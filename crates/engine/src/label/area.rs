@@ -29,6 +29,11 @@ const INSTANT_GAP: f64 = 14.0;
 /// lines 7.5 to 8.2 pt apart; the city line is 10.5 pt or more under the last.
 const SHOPEE_FIRST_UNDER: f64 = 30.0;
 const SHOPEE_GAP: f64 = 9.5;
+/// The city line's row: a wrapped cell's two lines are 7.5 pt apart around it.
+const CITY_BAND: f64 = 9.0;
+/// The city line's cells start 85 pt or more apart; a wrapped cell's centred lines start within
+/// a few points of each other.
+const CELL_GAP: f64 = 40.0;
 
 /// The provinces, for the spaces of a name a line break cut. Compared without spaces, upper case.
 const PROVINCES: [&str; 41] = [
@@ -77,10 +82,19 @@ const PROVINCES: [&str; 41] = [
 
 /// The receiver's area of a label's first page.
 pub fn find_area(page: &PageText) -> Area {
+    let receiver = caption(page, RECEIVER);
     if let Some(address) = caption(page, ADDRESS) {
-        return instant(page, address);
+        // A J&T label prints its area line under the receiver and an `Alamat :` too.
+        let printed = receiver
+            .map(|receiver| standard(page, receiver))
+            .unwrap_or_default();
+        return if printed.province.is_some() {
+            printed
+        } else {
+            instant(page, address)
+        };
     }
-    let Some(receiver) = caption(page, RECEIVER) else {
+    let Some(receiver) = receiver else {
         return Area::default();
     };
     match caption(page, WEIGHT) {
@@ -157,17 +171,49 @@ fn shopee(page: &PageText, receiver: &Run, weight: &Run) -> Area {
         })
         .collect();
     between.sort_by(|a, b| a.y.total_cmp(&b.y));
-    let city_line = between
-        .iter()
-        .map(|run| on_line(page, run.y))
-        .find(|line| !line.iter().any(|run| run.text.starts_with(CASHLESS)))
-        .unwrap_or_default();
-    let mut city_line = city_line.into_iter().map(|run| part(&run.text));
+    let low = between.iter().find(|run| {
+        !on_line(page, run.y)
+            .iter()
+            .any(|run| run.text.starts_with(CASHLESS))
+    });
+    let band: Vec<&Run> = low.map_or_else(Vec::new, |low| {
+        // The whole width: the district may start right of the sender column.
+        page.runs
+            .iter()
+            .filter(|run| run.x >= receiver.x - SAME_X)
+            .filter(|run| run.y >= low.y - SAME_LINE && run.y - low.y <= CITY_BAND)
+            .collect()
+    });
+    let mut city_line = cells(band).into_iter().map(|text| part(&text));
     Area {
         province,
         city: city_line.next().flatten(),
         district: city_line.next().flatten(),
     }
+}
+
+/// The city line's cells left to right, each a column's runs top to bottom: a cell too long for
+/// its column wraps onto two lines centred on the row (`KOTA JAKARTA` / `SELATAN`).
+fn cells(mut band: Vec<&Run>) -> Vec<String> {
+    band.sort_by(|a, b| a.x.total_cmp(&b.x));
+    let mut columns: Vec<Vec<&Run>> = Vec::new();
+    for run in band {
+        match columns.last_mut() {
+            Some(column) if run.x - column[0].x <= CELL_GAP => column.push(run),
+            _ => columns.push(vec![run]),
+        }
+    }
+    columns
+        .into_iter()
+        .map(|mut column| {
+            column.sort_by(|a, b| b.y.total_cmp(&a.y));
+            column
+                .iter()
+                .map(|run| run.text.as_str())
+                .collect::<Vec<_>>()
+                .join(" ")
+        })
+        .collect()
 }
 
 /// The first run whose text starts with `text`.

@@ -153,6 +153,43 @@ fn each_layout_gives_its_province_city_and_district_as_printed() {
             ),
         ),
         (
+            "Shopee-style: the city wrapped onto a line of its own",
+            page(vec![
+                run(12.7, 316.5, "Penerima:"),
+                run(166.8, 315.8, "Pengirim:"),
+                run(14.1, 291.1, "Jl. Contoh No. 4, CONTOH TENGAH, KOTA"),
+                run(14.1, 283.6, "CONTOH SELATAN, DKI JAKARTA"),
+                run(28.4, 254.5, "KOTA CONTOH"),
+                run(108.7, 250.0, "CONTOH TENGAH"),
+                run(39.3, 247.0, "SELATAN"),
+                run(200.0, 250.0, "Jl Lain"),
+                run(12.7, 235.0, "Berat:"),
+            ]),
+            area(
+                Some("DKI JAKARTA"),
+                Some("KOTA CONTOH SELATAN"),
+                Some("CONTOH TENGAH"),
+            ),
+        ),
+        (
+            "J&T: the area line under the receiver, then a long address under its caption",
+            page(vec![
+                run(19.1, 344.9, "Penerima :"),
+                run(19.4, 335.9, "JAWA TIMUR,KOTA CONTOH,CONTOH TENGAH"),
+                run(19.1, 323.3, "Alamat : Jl. Contoh No. 5"),
+                run(
+                    19.1,
+                    309.3,
+                    "desa contoh kecamatan contoh tengah kota contoh",
+                ),
+            ]),
+            area(
+                Some("JAWA TIMUR"),
+                Some("KOTA CONTOH"),
+                Some("CONTOH TENGAH"),
+            ),
+        ),
+        (
             "no receiver's caption",
             page(vec![run(19.0, 344.1, "Pengirim :")]),
             Area::default(),

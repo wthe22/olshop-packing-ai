@@ -139,7 +139,12 @@ Each layout prints them in its own place, found by its captions:
   stays as read.
 - Shopee-style: a word-by-word line (justified) is one line; a tag (`HOME`, `OFFICE`) right of the caption's
   column and a street's hint above the city line are not read; the tracking ID printed upright at the page's
-  edge is left of the city line's start.
+  edge is left of the city line's start. A cell too long for its column wraps onto two lines centred on the
+  row (`KOTA JAKARTA` / `SELATAN`); a cell is the texts starting within 40 pt of each other, top first.
+- **J&T with an `Alamat :` caption** too: its line under `Penerima` wins; the instant reading is used only
+  when that line is missing, so a long address is never read as the area.
+- **A long name printed over the area line** (SiCepat): text that jumps back left on one line is read as
+  another text, so the area line still starts in the caption's column.
 - On the owner's samples (744 orders of the four layouts) every order reads a province, a city and a
   district.
 

@@ -448,8 +448,9 @@ fn collect_glyphs(text: &PdfPageText) -> Result<Vec<PlacedChar>, PdfError> {
 }
 
 /// Group the placed characters into runs: a run ends at a line change, a horizontal gap wider
-/// than `SPLIT_POINTS`, or a font name/size change; a gap wider than `SPACE_POINTS` inside a run
-/// becomes a space.
+/// than `SPLIT_POINTS` either way, or a font name/size change; a gap wider than `SPACE_POINTS`
+/// inside a run becomes a space. A jump back to the left is another text printed over this one (a
+/// receiver's name long enough to wrap onto the area line).
 fn glyph_runs(items: Vec<PlacedChar>) -> Vec<Run> {
     const SPLIT_POINTS: f64 = 5.0;
     const SPACE_POINTS: f64 = 1.0;
@@ -467,7 +468,7 @@ fn glyph_runs(items: Vec<PlacedChar>) -> Vec<Run> {
         let gap = left - last_right;
         let new_run = !have
             || (origin_y - run_y).abs() > LINE_TOLERANCE
-            || gap > SPLIT_POINTS
+            || gap.abs() > SPLIT_POINTS
             || font != run_font
             || (size - run_size).abs() > 0.01;
         if new_run {
@@ -500,5 +501,45 @@ fn push_run(runs: &mut Vec<Run>, buffer: &mut str, x: f64, y: f64) {
             y,
             text: trimmed.to_string(),
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PlacedChar, glyph_runs};
+
+    fn glyphs(y: f64, x: f64, text: &str) -> Vec<PlacedChar> {
+        text.chars()
+            .enumerate()
+            .map(|(i, ch)| {
+                let left = x + 5.0 * i as f64;
+                (
+                    y,
+                    left,
+                    left + 4.5,
+                    left,
+                    "F".to_string(),
+                    8.0,
+                    ch.to_string(),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_text_printed_over_another_line_is_a_run_of_its_own() {
+        let mut items = glyphs(336.5, 56.0, "N**a");
+        items.extend(glyphs(335.9, 19.4, "JAWA,KOTA,DESA"));
+        let texts: Vec<(f64, String)> = glyph_runs(items)
+            .into_iter()
+            .map(|run| (run.x, run.text))
+            .collect();
+        assert_eq!(
+            texts,
+            [
+                (56.0, "N**a".to_string()),
+                (19.4, "JAWA,KOTA,DESA".to_string())
+            ]
+        );
     }
 }
