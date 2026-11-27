@@ -31,37 +31,27 @@ When `packing-app.toml` is missing beside the program, or names no data folder:
 
 When the data folder holds data this version keeps more of, before any date opens
 ([D-APP-33](../decisions/app.md)): a date folder of v0.7, a date whose files are of an older `schema`, a date with `journal.jsonl`, or a
-batch saved before the receiver's area or the weight was read whose label PDFs are in its date folder. Choosing another data folder (the start's
+batch saved before the receiver's area, the weight or the shop was read whose label PDFs are in its date folder. Choosing another data folder (the start's
 **Choose a folder**, Settings › **Change**) asks the same about that folder.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ◈ Packing v0.8.0-alpha.11                                                             │
+│  ◈ Packing v0.8.0-alpha.12                                                             │
 │  Update the data folder?                                                               │
-│  Update moves the files of 1 date out of the input and output folders of Packing v0.7  │
-│  into their date folders. It reads the receivers' addresses and the parcels' weights   │
-│  of 3 batches from their label PDFs and writes the files that list each date again.    │
-│  Each date's update folder lists every file moved and keeps a copy of each file        │
-│  changed. No batch, label or PDF is changed or deleted. Read-only shows the data as it │
-│  is and changes nothing.                                                               │
-│  ┌ DATE ─────────────── WHAT CHANGES ──────────────────────────────────────────────┐   │
-│  │ Tue, 24 Nov 2026     Files of v0.7 moved in · Addresses and weights of 2        │   │
-│  │                      batches, 61 orders · the date's lists                      │   │
-│  │ Wed, 25 Nov 2026     the date's lists                                           │   │
-│  └─────────────────────────────────────────────────────────────────────────────────┘   │
+│  29 dates were saved by an older Packing. Updating takes a few minutes and keeps a     │
+│  copy of every file it changes.                                                        │
 │                                                     [ Open read-only ]  [ Update ]     │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Update** runs the dates in order, oldest first; the card then shows its progress under the table: a line
-  per date done (*2026-11-24: files moved, addresses and weights of 2 batches read, lists written*) and the
-  step running (*Moving files: 2026-11-24, file 3 of 12*, then *Reading labels: 2026-11-24, batch 1, page 3 of
-  120*). A date with `journal.jsonl` has its three files written from it, and the areas and weights read from the labels go
-  straight into `orders.csv`. The journal moves into `update v{version}` of the date, and the files Update changes
-  are copied there first; each move is listed there ([D-APP-36](../decisions/versions.md)). While another copy of the app writes, Update waits for it. When all are done,
-  *Done. The data folder is up to date.* and **Continue** opens the Day screen.
-- A batch whose label PDF has changed is named in red on its date's line (*Batch 2 not read: …*) and skipped;
-  the rest go on, and the next start asks about it again. A batch whose label PDF is missing is not offered:
+- The card says only how many dates and that a copy is kept ([D-UI-20](../decisions/ui-screens.md)); what
+  each date needs is not listed.
+- **Update** runs the dates in order, oldest first ([01 Start](../workflow/01-start-and-open.md#1-start)). The
+  buttons give way to one line and a bar for the whole run: *Updating 2026-11-24, 3 of 29* and, under it in
+  grey, the step (*Reading labels: page 3 of 120*). While another copy of the app writes, Update waits for it.
+  When all are done the Day screen opens; when a batch was skipped, first one line says so with **Continue**.
+- A batch whose label PDF has changed is skipped (*1 batch not read: 2026-11-24 batch 2, its label PDF has
+  changed.*); the rest go on, and the next start asks about it again. A batch whose label PDF is missing is not offered:
   it cannot be read, and its addresses and weights stay empty.
 - An Update that stops (the data folder cannot be written) says why, and both buttons show again.
 - **Open read-only** opens the Day screen in read-only mode. It is the only way into it.

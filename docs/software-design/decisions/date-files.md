@@ -28,17 +28,19 @@ label holds, and only the stored label PDFs can fill it.
 
 **Applies to.** [Day](../ui/day.md), [21 Read labels again](../workflow/05-after-save.md#21-read-labels-again).
 
-## D-APP-42 — Archive deletes a date's PDFs and keeps its data
+## D-APP-43 — Archive deletes a date's PDFs and keeps its data; one page holds it
 
 **Decision.** **Archive** deletes every PDF of a date folder and keeps its data files. A date is archived when
-none of its live batches' inputs is there; nothing is stored to say so. It is offered for one date (the
-panel's row menu), for a range of dates (Settings › Storage), and on its own for dates older than a number
-of days (`archive_after_days` of `packing-app.toml`, off unless the owner sets it). Each asks first; today is
-never archived. An archived date is muted on the panel and shows its data without the actions that need a
-PDF. Each date's size is shown on the panel ([archive](../app/archive.md)).
+none of its live batches' inputs is there; nothing is stored to say so. Everything about archiving and
+storage is on one [Archive](../ui/archive.md) page, opened from Settings: each date's size, ticks for one date
+or a range (Shift+click), and *Automatic* for dates older than a number of days (`archive_after_days` of
+`packing-app.toml`, off unless the owner sets it). The daily screens show only that a date is archived: a
+muted panel row, one line on its Day screen, *archived* on its orders in Search. Today is never archived.
+It replaces D-APP-42 (archive and sizes on the panel and in Settings).
 
-**Why.** The owner's words (2026-11-27): an old date needs its orders and summaries, not its PDFs; storage
-should stay small; which dates are archived and how much each date takes must be seen at a glance.
+**Why.** The owner's words (2026-11-27): an old date needs its orders and summaries, not its PDFs; the size of
+each folder is not needed after every operation, so storage belongs on a page of its own, not spread over
+the daily screens.
 
-**Applies to.** [archive](../app/archive.md), [panel](../ui/panel.md), [Settings](../ui/settings.md#storage),
+**Applies to.** [archive](../app/archive.md), [Archive page](../ui/archive.md), [panel](../ui/panel.md),
 [Day](../ui/day.md).

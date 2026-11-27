@@ -34,3 +34,16 @@ and opens the PDF. A group PDF's row on the Day screen lists its order contents 
 PDFs are gone ([archive](../app/archive.md)) must still show what it holds.
 
 **Applies to.** [Summary](../ui/summary.md), [Day](../ui/day.md).
+
+## D-UI-20 — A screen says what the owner needs now, in a line or two
+
+**Decision.** A question or a progress card says what will happen and how much in one or two lines (*29
+dates were saved by an older Packing*), never a list of every item it touches; progress is one line and a
+bar. A daily screen shows only what the daily work needs: storage, sizes and other upkeep live on their own
+page ([Archive](../ui/archive.md)).
+
+**Why.** The owner's words (2026-11-27): the owner does not read walls of text, nor needs a folder's size
+after every operation.
+
+**Applies to.** [Start › Update the data folder?](../ui/start.md#update-the-data-folder), [Archive](../ui/archive.md),
+[panel](../ui/panel.md).

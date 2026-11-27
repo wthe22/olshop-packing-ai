@@ -17,6 +17,7 @@ column. Sketches show the English texts and made-up names, IDs and counts.
 | [Summary](summary.md) | A batch's or the open date's summary in the app, without a PDF |
 | [Search](search.md) | Finding saved orders, their trace, and **Reprint** |
 | [Accounts](accounts.md) | One account at a time: its shops, its orders per date, rename and delete |
+| [Archive](archive.md) | Old dates without their PDFs: each date's size, archiving by hand and on its own |
 | [Settings](settings.md) | The theme, the data folder and *About* |
 | [Start](start.md) | The first start: the data folder |
 
