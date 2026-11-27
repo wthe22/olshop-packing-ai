@@ -27,3 +27,18 @@ not recoverable. Nothing is written in read-only mode, nor without the owner's c
 label holds, and only the stored label PDFs can fill it.
 
 **Applies to.** [Day](../ui/day.md), [21 Read labels again](../workflow/05-after-save.md#21-read-labels-again).
+
+## D-APP-42 — Archive deletes a date's PDFs and keeps its data
+
+**Decision.** **Archive** deletes every PDF of a date folder and keeps its data files. A date is archived when
+none of its live batches' inputs is there; nothing is stored to say so. It is offered for one date (the
+panel's row menu), for a range of dates (Settings › Storage), and on its own for dates older than a number
+of days (`archive_after_days` of `packing-app.toml`, off unless the owner sets it). Each asks first; today is
+never archived. An archived date is muted on the panel and shows its data without the actions that need a
+PDF. Each date's size is shown on the panel ([archive](../app/archive.md)).
+
+**Why.** The owner's words (2026-11-27): an old date needs its orders and summaries, not its PDFs; storage
+should stay small; which dates are archived and how much each date takes must be seen at a glance.
+
+**Applies to.** [archive](../app/archive.md), [panel](../ui/panel.md), [Settings](../ui/settings.md#storage),
+[Day](../ui/day.md).

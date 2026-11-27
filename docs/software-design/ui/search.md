@@ -84,6 +84,8 @@ Where the results are 72 rem wide or more, the label column also holds the group
   Total its one line does not add up to, the slip's **Qty Total** stands at their foot under the
   quantities, after a short stroke. **Open** opens the order's group PDF, written again first when it is not
   there any more (as on the [Day](day.md) screen).
+- **An order of an archived date** ([archive](../app/archive.md)) has no tick and no **Open**; its card
+  carries *archived* in grey after the date, and **Select all** passes it over.
 - **Details**: a click on the card (not on its tick or **Open**), or on the bar under its items (a line with
   a chevron at its end), opens the card's details under the bar, one line per head; a click there again
   closes them, and a click inside the open details changes nothing, so their text can be selected. The

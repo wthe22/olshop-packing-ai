@@ -12,7 +12,7 @@ Where the app keeps what it knows. The rules that fill the files are in [../work
 ```
 Packing.exe
 pdfium.dll
-packing-app.toml          where the data folder is, the theme
+packing-app.toml          where the data folder is, the theme, archiving on its own
 packing-data\             the data folder (its name is the owner's choice)
   parser.toml             how labels are read: couriers, courier clues
   config.toml             the accounts and the sort rules
@@ -29,7 +29,8 @@ packing-data\             the data folder (its name is the owner's choice)
 ```
 
 - `packing-app.toml` (beside the program): the app's preferences. Written at the first start
-  ([Start](../ui/start.md)), by Settings › **Change** and **Theme**; each write keeps the other value.
+  ([Start](../ui/start.md)), by Settings › **Change**, **Theme** and **Archive automatically**; each write keeps
+  the other values.
 - `parser.toml` and `config.toml` (in the data folder): the owner's rules
   ([rules files](../rules-file/README.md)). Written from the copies bundled in the program when missing;
   from then on they are the owner's. They travel with the data folder, so a copy on another PC that uses
@@ -40,6 +41,7 @@ Root {
   schema: String // X.Y version, starts at 1.0
   data_dir: Path // absolute, or relative to the program's folder
   theme: Theme   // system (missing: system) | light | dark ([D-UI-8](../decisions/ui.md))
+  archive_after_days: Option<u16> // archive dates older than this ([archive](../app/archive.md)); missing: off
 }
 ```
 A date folder holds the work of one date for every account ([accounts](../app/accounts.md)); batch numbers

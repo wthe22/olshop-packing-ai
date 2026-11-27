@@ -97,6 +97,9 @@ The start screen: what has been saved on the open date, for every account, and t
 - A data folder that also holds data of an older version shows one line: *This folder also holds data of
   Packing v0.4 (`Toko Contoh\`, …). It is not read.* [Open folder]
   ([accounts](../app/accounts.md#data-of-older-versions)).
+- **An archived date** ([archive](../app/archive.md#an-archived-date)) shows the muted line *Archived: the PDFs
+  of this date were removed.* under its title; its cards keep their groups, counts, marks and lists, without
+  **Print**, **Open**, **Restore**, the missing marks, **Amend**, **Revert** and **+ New batch**.
 - A date with nothing saved shows "Nothing saved on this date yet." and **New batch**.
 - **+ New batch** saves into the open date. On a date that is not today it is muted (its tooltip says
   why) and asks first: "Add a batch to Wed, 7 Oct 2026?" — "It is not today: today is Mon, 23 Nov 2026."

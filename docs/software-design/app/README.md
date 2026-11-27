@@ -15,6 +15,7 @@ in [workflow/](../workflow/README.md).
 | The truth | `day.toml`, `orders.csv` and `order-contents.toml` per date, for all accounts; every other file is an input or an output ([data](../data/README.md)) |
 | Order data | All of it comes from the label and its packing slip ([D-APP-4](../decisions/app.md)) |
 | Plain labels (no packing slip) | **Refused**: the batch stops and asks for the *Shipping label + Packing slip* download |
+| Archive | A date's PDFs deleted, its data kept; by hand, for a range, or on its own after a number of days ([archive](archive.md)) |
 | Sorting | A sort rule from `config.toml`, chosen per batch, applied as a proposal; the owner can skip, move or add a group for this batch before saving ([Plan](../ui/plan.md)) |
 | Outputs | One PDF per label group, `{batch}-{code} {name} x{count}.pdf`, and one summary PDF per batch; an account's summary on request ([groups](../labels/groups.md), [summary PDF](../labels/summary-pdf.md)) |
 | Correctness | An independent verifier checks every output before it is committed ([verification](verification.md)) |

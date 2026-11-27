@@ -31,6 +31,6 @@ the summary of a batch or of the date, with an account list, read from the date'
 and opens the PDF. A group PDF's row on the Day screen lists its order contents (**▸**).
 
 **Why.** The owner's words (2026-11-27): a summary should be viewable without making PDFs; and a date whose
-PDFs are gone ([Q-APP-27](../questions/app.md)) must still show what it holds.
+PDFs are gone ([archive](../app/archive.md)) must still show what it holds.
 
 **Applies to.** [Summary](../ui/summary.md), [Day](../ui/day.md).
