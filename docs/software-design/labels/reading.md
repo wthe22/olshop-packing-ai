@@ -81,7 +81,7 @@ The slip is read by text position, not by reading order: each text run of the pa
   a wrap directly after `-`, which joins without one (`FI 2012-` + `2015` → `FI 2012-2015`). The
   Shopee-style instant label (a Shopee slip on a page with `Kode Pengambilan`) breaks a cell at any
   character, so its lines join with nothing between (`Sa` + `mping` → `Samping`); a break that fell on a
-  space loses it ([Q-LABEL-13](../questions/label.md)).
+  space loses it, and a filter compares these fields without spaces ([D-LABEL-30](../decisions/label.md)).
 - **The table's end** is the caption under it — `Qty Total:` on the TikTok and Tokopedia slips, `Pesan:`
   on the Shopee-style slip — so the caption's value and the footer's tracking IDs are not read into the
   last row.

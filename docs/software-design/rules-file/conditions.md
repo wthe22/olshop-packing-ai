@@ -41,7 +41,9 @@ date       = '"' digit digit digit digit "-" digit digit "-" digit digit '"'
 - Keywords, field names and operators are case-insensitive. Spaces and line breaks are free.
 - `not` binds tighter than `and`, `and` tighter than `or`: `not a and b or c` = `((not a) and b) or c`.
 - Text comparison ignores upper and lower case (`honda` = `HONDA`) and trims spaces of the field value. It
-  does not ignore accents.
+  does not ignore accents. On the product name and the Seller SKU it ignores every space, on both sides,
+  so a name the instant label glued (`Standar |Penyangga`) matches as `Standar | Penyangga` does
+  ([D-LABEL-30](../decisions/label.md)).
 - `is_empty` is true when the field has no value; spaces count as none. On an item field it is true when
   one line has none (`seller_sku is_empty`). It is how a filter takes the orders whose courier was not
   named (`courier is_empty`) or that have no tracking ID ([D-RULES-3](../decisions/rules.md)).

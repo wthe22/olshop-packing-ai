@@ -6,6 +6,11 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
 
 ## Status (2026-11-28)
 
+- **Paused (2026-11-28) — the owner decides what goes into v0.8 and what into v0.9.** No build until the
+  owner says. Unbuilt: the journal removal (J1 to J6), the batch screens (U1 to U5), an instant label's unknown
+  tag asked about in the logo prompt (D-LABEL-21) and filters that ignore spaces in a name (D-LABEL-30). The
+  owner's split decides the order; then everything in the owner's v0.8 is built at once (AGENTS.md).
+
 - **Next (2026-11-27) — the journal goes, [journal-removal.md](journal-removal.md) J1 to J6.** The owner's
   decision [D-APP-39](../../software-design/decisions/app.md): `day.toml`, `orders.csv` and
   `order-contents.toml` are the truth of a date, with no history (no *amended*, no record of reverts or

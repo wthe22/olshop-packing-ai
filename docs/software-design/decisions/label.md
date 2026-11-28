@@ -182,3 +182,16 @@ rest is unreliable or of no use to the owner.
 **Why.** The owner does not feed a packing list into the program: it is not a shipping label, and read as a continuation it would add lines to a label's copy.
 
 **Applies to.** [reading](../labels/reading.md#copies-and-multi-page-orders), [copies](../../crates/engine/src/copies/mod.rs).
+
+## D-LABEL-30 — A name the instant label breaks is joined with nothing; filters ignore its spaces
+
+**Decision.** The Shopee-style instant label breaks a product name or Seller SKU at any character, and a
+break on a space prints the space on neither line. Its lines are joined with nothing between (`Sa` + `mping`
+→ `Samping`), and the name is saved as read. Every filter (Search and the sort rules) compares the product
+name and the Seller SKU with every space taken out of both sides, so `Standar |Penyangga` and
+`Standar | Penyangga` match the same filter.
+
+**Why.** The owner's answer to Q-LABEL-13: a word the line broke reads right, and a filter still finds a
+name whose space the break dropped.
+
+**Applies to.** [reading](../labels/reading.md), [conditions](../rules-file/conditions.md).
