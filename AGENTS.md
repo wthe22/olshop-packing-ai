@@ -1,5 +1,15 @@
 # Rules for coding agents
 
+- **Build everything the owner asked for, now.** Every request of the owner's, and every part of it written
+  into the design, is built in full in the session that receives it. Nothing goes into `docs/development/plan/`
+  as later work, and no phase waits for another, unless the owner says so in words. A handoff never ends a
+  session while requested work is unbuilt.
+- **Ask at once.** A choice only the owner can make is asked in chat the moment it is found (options and a
+  recommended default), before building on it; the answer goes into `decisions/`. `questions/` only keeps a
+  question the owner leaves unanswered.
+- **One migration per change of stored data.** A change to the shape of stored data ships together with every
+  other requested change to that data, in one build with its migration, so the owner migrates once. Never ship a
+  build whose data format a requested, unbuilt change will replace.
 - Start with `docs/development/README.md`, then `docs/development/plan/README.md`: the first unfinished
   task there (its file is in `docs/development/plan/`) is the work. Read the design files the task names
   (`docs/software-design/`).
@@ -50,7 +60,7 @@
   feature the owner did not ask for or approve. A tool an agent needs for its own work (a scratch log, a
   debug dump, a test helper) stays the agent's: it is never stored in the owner's data, never shipped, and
   never written into the design as something the owner wants. When a goal of the owner's seems to need new
-  data or machinery, ask first in `docs/software-design/questions/` with the simplest option as the default.
+  data or machinery, ask the owner at once, with the simplest option as the default.
 - Writing: the owner is "the owner", never he/she/they/it/you. The dropship supplier's real name never
   appears: write "the supplier". About 150 lines per file at most; each fact has one home.
 - Setup is one procedure in `docs/development/setup.md`; keep it current when a one-time step changes.
@@ -63,5 +73,4 @@
   owner's, end with a committed handoff in the status block of `docs/development/plan/README.md`: what
   to review, where to write answers, and what to do with each answer. A new session starts there.
 - Shell is Git Bash on Windows. Every tool is Rust or Node.
-- The owner decides open choices: put them in `docs/software-design/questions/` with options and a
-  default, do not pick silently.
+- The owner decides open choices: ask at once (see the top of this file), never pick silently.

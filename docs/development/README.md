@@ -26,6 +26,9 @@ What to build is in [../software-design/](../software-design/README.md); what th
 
 ## Rules
 
+- **Build everything the owner asked for, now; ask at once; one migration per change of stored data** — the
+  first three rules of [AGENTS.md](../../AGENTS.md). `plan/` holds the steps of the work being built, never
+  requested work put off, unless the owner said to put it off.
 - **`samples/`, `work/` and `tmp/` are confidential** (real orders, buyer data). Never commit them, never
   copy real IDs, names or addresses into documents, code, tests or commit messages. They are in `.gitignore`.
 - Committed test data (`testdata/`) is made up; its label PDFs and their answer are written by
@@ -37,13 +40,11 @@ What to build is in [../software-design/](../software-design/README.md); what th
   from `plan/` in the same commit; when a phase is finished its plan moves to `archive/`. Push to
   `origin main` (`https://github.com/wthe22/olshop-packing-ai`).
 - At the end of each phase the owner reviews the running app. Findings go into `../reviews/<scope>.md` as
-  `R-<SCOPE>-n`; the next session turns each into a task in `plan/` or, for a choice, into a question in
-  [../software-design/questions/](../software-design/questions/README.md) with options and a default. The next
-  phase starts after the review.
+  `R-<SCOPE>-n`; the session that reads them builds each at once and asks the owner at once about each choice.
 - A design change found while coding is written into `software-design/` in the same commit. An open choice for
-  the owner goes into `software-design/questions/` with options and a default; it is never picked silently.
+  the owner is asked at once; it is never picked silently.
 - **Version numbers** follow semantic versioning. Before a version is released, every build is a pre-release
-  of it: now `0.8.0-beta.1`, then `0.8.0-beta.2`; only the number after `beta.` goes up, never the patch or
+  of it: now `0.8.0-beta.2`, then `0.8.0-beta.3`; only the number after `beta.` goes up, never the patch or
   minor number (`0.8.10-beta` is wrong). The release is `0.8.0`. The version is set in `Cargo.toml` and
   `app/package.json`, and the docs that show it follow. Journals record it in `app`, compared by
   `newer_app` in semantic version order.
