@@ -5,7 +5,7 @@ app, then print.
 
 ## The window
 
-The title bar has the panel button at the left, the program and its version (**Packing v0.8.0-beta.1**), and at
+The title bar has the panel button at the left, the program and its version (**Packing v0.8.0-beta.2**), and at
 the right **Search** ([finding a saved order](05-search.md)), **Accounts** ([Accounts](03-changes.md#accounts)),
 **Sort rules** and **Settings**. `Esc` closes each of them.
 

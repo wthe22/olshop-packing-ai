@@ -1,9 +1,9 @@
 <script lang="ts">
-  // Search: saved orders found by a filter made with the boxes, over a range
-  // of dates or all of them. Each order is a card (`SearchRow`) that opens its group PDF and its
-  // details and carries its *Reprinted* mark; the ticked cards are reprinted into one PDF from the
-  // bar at the foot. Enter in a box searches, so a scanned tracking ID finds
-  // its order at once. The state and the commands are `search.svelte.ts`.
+  // Search: saved orders found by a filter made with the boxes, over a range of dates or all of them.
+  // Each order is a card (`SearchRow`) that opens its group PDF and its details and carries its
+  // *Reprinted* mark; the *Saved* head sorts them oldest or newest first; the ticked cards are
+  // reprinted into one PDF from the bar at the foot. Enter in a box searches, so a scanned tracking
+  // ID finds its order at once. The state and the commands are `search.svelte.ts`.
   import { onMount } from "svelte";
   import { Search } from "./search.svelte";
   import type { RangePreset } from "./searchRange";
@@ -138,11 +138,16 @@
             {/if}
             <span>{words.columns.order}</span>
             <span>{words.columns.tracking}</span>
-            <span>{words.columns.saved}</span>
+            <button
+              class="sort"
+              title={search.newestFirst ? words.newestFirst : words.oldestFirst}
+              onclick={search.toggleOrder}
+              >{words.columns.saved}<Icon name={search.newestFirst ? "down" : "up"} size={13} /></button
+            >
             <span>{words.columns.label}</span>
             <span></span>
           </div>
-          {#each search.result.rows as row (row.day + row.order_id)}
+          {#each search.rows() as row (row.day + row.order_id)}
             <SearchRow
               {row}
               ticked={search.isTicked(row)}
@@ -348,6 +353,25 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* The *Saved* head is a button that reads as a head, with the arrow of the order shown. */
+  .head button.sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    justify-self: start;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    cursor: pointer;
+  }
+
+  .head button.sort:hover {
+    color: var(--text);
   }
 
   /* The reprint bar stays at the foot of the overlay while the rows scroll under it: the reprint

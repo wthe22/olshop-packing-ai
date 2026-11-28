@@ -6,8 +6,8 @@
   // room); the *Reprinted* mark, **Open** and the details' chevron. Under the head the items, one
   // line each in one size (quantity, name, variation, the Seller SKU as a chip), with the Qty Total
   // at their foot when it says more than the one line. A click on the card, or on the chevron, opens
-  // and closes the rest (`SearchDetails`); only the tick ticks. An order of an archived date has no tick and no **Open**,
-  // and *archived* after its date.
+  // and closes the rest (`SearchDetails`); only the tick ticks. An order of an archived date has
+  // the archive icon in its tick's place and no **Open**.
   import type { SearchRow } from "./api/search";
   import { reprintedMark, totalLine } from "./search.svelte";
   import { texts } from "../texts";
@@ -51,7 +51,11 @@
 </script>
 
 <div class="card" class:ticked {@attach cardClicks}>
-  {#if access.readOnly || row.archived}
+  {#if row.archived}
+    <span class="tick archived" role="img" title={texts.archive.archivedRow} aria-label={texts.archive.archivedRow}
+      ><Icon name="archive" size={16} /></span
+    >
+  {:else if access.readOnly}
     <span class="tick"></span>
   {:else}
     <input class="tick" type="checkbox" aria-label={words.tick(row.order_id)} checked={ticked} onchange={onToggle} />
@@ -71,7 +75,6 @@
   <div class="cell muted">
     {formatShortDay(row.day)}
     {row.batch_time}
-    {#if row.archived}<span class="archived">{texts.archive.searchMark}</span>{/if}
   </div>
   <div class="cell label">
     <span class="strong">{words.batch(row.batch)}</span>
@@ -214,9 +217,11 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* An archived date's order: the archive icon, grey, where the tick would be. */
   .archived {
+    display: flex;
+    justify-content: center;
     color: var(--text-faint);
-    font-style: italic;
   }
 
   .muted {

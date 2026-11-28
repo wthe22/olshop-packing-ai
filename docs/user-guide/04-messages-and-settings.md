@@ -42,7 +42,7 @@ Open **Settings** in the title bar. Each row is a setting at the left and its co
   dates are archived at each start, after the question to update the data folder. Turning it on, or a lower
   number, asks first when it would archive a date at once ([Archiving old dates](#archiving-old-dates)).
 - The accounts and their shops are on the **Accounts** screen ([Accounts](03-changes.md#accounts)), not here.
-- **About** — what the program does, its version (**v0.8.0-beta.1**), the time it was built, the PDFium version
+- **About** — what the program does, its version (**v0.8.0-beta.2**), the time it was built, the PDFium version
   and the journal's schema version.
 
 There are no other settings but the Archive page's: the sort rule you used last is preselected, the summary PDF is
@@ -69,7 +69,7 @@ Archive page: **Archive** beside *Dates* at the top of the panel. `Esc` closes i
   and an account's summary still work; Search still finds the orders.
 - What goes: the date can no longer be printed, amended, reverted, reprinted or read again. The Day screen
   says *Archived: the PDFs of this date were removed.* and shows no **Print**, **Open**, **Restore**,
-  **Amend**, **Revert** or **+ New batch**; in Search its orders say *archived* and take no tick.
+  **Amend**, **Revert** or **+ New batch**; in Search its orders show the archive icon in place of their tick.
 - Today is never archived, and neither is a date with nothing saved.
 - A PDF open in a viewer cannot be deleted: it is named and stays. The label downloads go last, so such a
   date is not archived yet; close the viewer and archive it again.

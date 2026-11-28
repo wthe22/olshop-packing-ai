@@ -12,8 +12,6 @@ export const archiveTexts = {
   archivedRow: "Archived: the PDFs were removed.",
   // Under the Day screen's title.
   dayLine: "Archived: the PDFs of this date were removed.",
-  // After a Search card's date.
-  searchMark: "archived",
   // The dialog line while more than one date is archived.
   progress: (date: string, number: number, of: number) => `Archiving: ${date}, ${number} of ${of}`,
 

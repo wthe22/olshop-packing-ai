@@ -22,7 +22,12 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   and a Summary screen read in the app ([D-UI-17 to D-UI-19](../../software-design/decisions/ui-screens.md),
   [D-RULES-7](../../software-design/decisions/rules.md)).
 
-- **Handoff of 2026-11-28 (latest) — v0.8.0-beta.1: summaries read in the app.** Built in
+- **Handoff of 2026-11-28 (latest) — v0.8.0-beta.2: Search sorts by date.** Built in `target/portable/`.
+  Search's *Saved* head turns the cards newest first and back (oldest first at the start); an archived
+  date's order shows the archive icon in its tick's place, without the word *archived*. Findings go into
+  [docs/reviews/ui.md](../../reviews/ui.md).
+
+- **Handoff of 2026-11-28 — v0.8.0-beta.1: summaries read in the app.** Built in
   `target/portable/`. **Day summary** and a batch's **Summary** open the Summary screen
   ([D-UI-19](../../software-design/decisions/ui-screens.md)): the summary as its PDF prints it, an account
   list, **PDF** (writes and opens it) and **Back**. Nothing is written until **PDF**, so it also works

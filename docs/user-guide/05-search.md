@@ -19,6 +19,7 @@
   name and the **page** the label is on in the group PDF (to find the printed label in its stack).
   **Open** opens that group PDF. Under it the items, one line each: the quantity, the name, the variation
   and the Seller SKU; the slip's Qty Total under them when there are several lines.
+- The cards come oldest first; a click on **Saved** turns them newest first, and another click back.
 - A click on a card (or on the arrow under its items) opens the rest; another click closes it. The rest:
   the receiver's address, the ship-by date, the parcel's weight, the label file it was read from with its
   page and hash (*SHA256: …*), and, when the window had no room for them in the first row, the group's

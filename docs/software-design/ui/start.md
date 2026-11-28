@@ -36,7 +36,7 @@ batch saved before the receiver's area, the weight or the shop was read whose la
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  ◈ Packing v0.8.0-beta.1                                                             │
+│  ◈ Packing v0.8.0-beta.2                                                             │
 │  Update the data folder?                                                               │
 │  29 dates were saved by an older Packing. Updating takes a few minutes and keeps a     │
 │  copy of every file it changes.                                                        │

@@ -12,7 +12,7 @@ the current screen; **Close** returns to it. Searching changes nothing; **Reprin
 │ │ [+ condition] [+ group]                                                           │ [Reset] [       Search       ]   │ │
 │ └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘ │
 │ 3 orders in 2 batches                                                                                                    │
-│   [–] Order                         Tracking                        Saved              Label                             │
+│   [–] Order                         Tracking                        Saved ↑            Label                             │
 │ ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐ │
 │ │ [✓] Toko Alfa 580000000000000042  (J&T Express) JY0000001234      Wed, 7 Oct 09:12   Batch 2 (2-B)  Reprinted [Open] │ │
 │ │     ──────────────────────────────────────────────────────────────────────────────────────────────────────────────── │ │
@@ -68,7 +68,7 @@ Where the results are 72 rem wide or more, the label column also holds the group
 - **Enter** in a box searches, so a scanned Order ID finds its order at once; the first box has the
   focus when Search opens.
 - **Results**: the number of orders and batches, then the **heads** (*Order*, *Tracking*, *Saved*, *Label*,
-  with **Select all** as the tick at their left) and one **card** per order under them
+  with **Select all** as the tick at their left) and one **card** per order under them, oldest first
   ([D-UI-16](../decisions/ui.md), R-UI-58). The card's **head** is one row on the heads' columns, each as
   wide as its longest entry: its tick; its **shop** in grey (*No account* in grey italics when the
   label printed no sender; a name longer than 16 rem ends with dots, whole in its tooltip) and its **Order ID** in bold;
@@ -85,8 +85,11 @@ Where the results are 72 rem wide or more, the label column also holds the group
   does not add up to, the slip's **Qty Total** stands at their foot under the quantities. No line or gap
   follows the items. **Open** opens the order's group PDF, written again first when it is not
   there any more (as on the [Day](day.md) screen).
-- **An order of an archived date** ([archive](../app/archive.md)) has no tick and no **Open**; its card
-  carries *archived* in grey after the date, and **Select all** passes it over.
+- **An order of an archived date** ([archive](../app/archive.md)) has the archive icon in grey in place of
+  its tick (its tooltip: *Archived: the PDFs were removed.*) and no **Open**; **Select all** passes it over.
+- **Order**: *Saved* is a head with an arrow: a click turns the cards newest first (arrow down) and back to
+  oldest first (arrow up), by the date and batch they were saved in; the orders of one batch keep their
+  printing order. It changes nothing else: the ticks and open details stay. Each Search opens oldest first.
 - **Details**: a click on the card (not on its tick or **Open**), or on the chevron, opens the card's details
   under its items, one line per head; a click there again
   closes them, and a click inside the open details changes nothing, so their text can be selected. The

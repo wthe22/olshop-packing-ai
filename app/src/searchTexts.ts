@@ -39,6 +39,9 @@ export const searchTexts = {
     saved: "Saved",
     label: "Label",
   },
+  // The tooltip of the *Saved* head: the order shown, and that a click turns it.
+  oldestFirst: "Oldest first; click for newest first",
+  newestFirst: "Newest first; click for oldest first",
   // At the foot of a card's items.
   total: "Total",
   // In place of the tracking ID of a label that printed none.

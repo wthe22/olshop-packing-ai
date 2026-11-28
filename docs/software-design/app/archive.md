@@ -33,6 +33,6 @@ Nothing is stored to say so. A date with some inputs missing is not archived: it
   groups, counts, order contents, Sent times, printed ticks, warnings and **Left out**; **Print**, **Open**,
   **Restore**, the missing marks, **Amend**, **Revert** and **+ New batch** are not shown. **Day summary** and
   the summaries still work: they are read from the date's files.
-- **Search**: its orders are found and shown; they have no tick for **Reprint** and no **Open**; the trace
-  names the input and pages they came from.
+- **Search**: its orders are found and shown; the archive icon stands in place of their tick for
+  **Reprint**, and they have no **Open**; the trace names the input and pages they came from.
 - The already-saved guard still counts its orders as saved.

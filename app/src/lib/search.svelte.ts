@@ -34,6 +34,8 @@ export class Search {
   // always match the boxes and the scope shown.
   result = $state<api.SearchResults | null>(null);
   ticked = $state<string[]>([]);
+  // The rows newest first; oldest first as the index gives them by default. Changing it keeps the rows.
+  newestFirst = $state(false);
   // The rows whose details are open.
   traced = $state<string[]>([]);
   made = $state<api.ReprintMade | null>(null);
@@ -133,6 +135,14 @@ export class Search {
     this.busy = false;
   };
 
+  // The last search's rows in the order chosen at the *Saved* head.
+  rows = () => sortedRows(this.result?.rows ?? [], this.newestFirst);
+
+  // The *Saved* head: oldest first, or newest first.
+  toggleOrder = () => {
+    this.newestFirst = !this.newestFirst;
+  };
+
   isTicked = (row: api.SearchRow) => this.ticked.includes(key(row));
   isTraced = (row: api.SearchRow) => this.traced.includes(key(row));
 
@@ -213,6 +223,14 @@ function firstTree(): UiTree {
   const tree = newTree();
   tree.root.children.push(newRow("order_id"));
   return tree;
+}
+
+// The rows by the date and batch they were saved in, oldest or newest first; the orders of one batch
+// stay in their printing order either way.
+export function sortedRows(rows: api.SearchRow[], newestFirst: boolean): api.SearchRow[] {
+  const direction = newestFirst ? -1 : 1;
+  const saved = (a: api.SearchRow, b: api.SearchRow) => a.day.localeCompare(b.day) || a.batch - b.batch;
+  return [...rows].sort((a, b) => direction * saved(a, b));
 }
 
 function flip(list: string[], item: string): string[] {

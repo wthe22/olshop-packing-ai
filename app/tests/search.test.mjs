@@ -308,3 +308,24 @@ test("an order of an archived date takes no tick: Select all passes it over, one
   await search.run();
   assert.deepEqual(search.ticked, []);
 });
+
+test("the Saved head sorts the rows oldest or newest first; a batch keeps its printing order; ticks stay", async () => {
+  const at = (order_id, day, batch) => ({ ...row(order_id), day, batch });
+  const rows = [
+    at("580000000000000001", "2026-10-06", 2),
+    at("580000000000000002", "2026-10-07", 1),
+    at("580000000000000003", "2026-10-07", 1),
+    at("580000000000000004", "2026-10-07", 2),
+  ];
+  useBackend({ tree_to_filter: () => "", search_orders: () => ({ ...found, orders: 4, batches: 3, rows }) });
+  const search = new Search(() => "2026-10-07", () => "2026-10-07", () => {});
+  await search.run();
+  const ids = () => search.rows().map((r) => r.order_id.slice(-1));
+  assert.deepEqual(ids(), ["1", "2", "3", "4"], "oldest first at the start");
+  search.toggle(rows[1]);
+  search.toggleOrder();
+  assert.deepEqual(ids(), ["4", "2", "3", "1"]);
+  assert.equal(search.isTicked(rows[1]), true, "sorting keeps the ticks");
+  search.toggleOrder();
+  assert.deepEqual(ids(), ["1", "2", "3", "4"]);
+});
