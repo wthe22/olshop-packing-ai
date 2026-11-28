@@ -22,7 +22,14 @@ task: a task report states *size gate passed, no new lint suppression, coverage 
   and a Summary screen read in the app ([D-UI-17 to D-UI-19](../../software-design/decisions/ui-screens.md),
   [D-RULES-7](../../software-design/decisions/rules.md)).
 
-- **Handoff of 2026-11-28 (latest) — v0.8.0-alpha.12: a full Update; Archive beside Dates; Search items.**
+- **Handoff of 2026-11-28 (latest) — v0.8.0-beta.1: summaries read in the app.** Built in
+  `target/portable/`. **Day summary** and a batch's **Summary** open the Summary screen
+  ([D-UI-19](../../software-design/decisions/ui-screens.md)): the summary as its PDF prints it, an account
+  list, **PDF** (writes and opens it) and **Back**. Nothing is written until **PDF**, so it also works
+  read-only and on an archived date. Search's tick is absent only on an archived date's orders (as
+  designed). Findings go into [docs/reviews/ui.md](../../reviews/ui.md); the next dev task stays J1.
+
+- **Handoff of 2026-11-28 — v0.8.0-alpha.12: a full Update; Archive beside Dates; Search items.**
   Built in `target/portable/`. For the owner to try and review:
   - **The Update reads what an old batch lacks** from its label PDFs: the area and the weight, the shop of the
     orders v0.4 saved (each order is under its account again), and a courier or tracking ID left empty; J&T
